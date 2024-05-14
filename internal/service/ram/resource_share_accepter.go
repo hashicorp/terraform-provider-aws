@@ -51,7 +51,7 @@ func resourceResourceShareAccepter() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"resources": {
+			names.AttrResources: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -188,7 +188,7 @@ func resourceResourceShareAccepterRead(ctx context.Context, d *schema.ResourceDa
 	resourceARNs := tfslices.ApplyToAll(resources, func(r *ram.Resource) string {
 		return aws.StringValue(r.Arn)
 	})
-	d.Set("resources", resourceARNs)
+	d.Set(names.AttrResources, resourceARNs)
 
 	return diags
 }
