@@ -39,9 +39,9 @@ func testAccRepository_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "domain_owner", "aws_codeartifact_domain.test", names.AttrOwner),
 					resource.TestCheckResourceAttrPair(resourceName, "administrator_account", "aws_codeartifact_domain.test", names.AttrOwner),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "upstream.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "external_connections.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "upstream.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "external_connections.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -68,7 +68,7 @@ func testAccRepository_tags(t *testing.T) {
 				Config: testAccRepositoryConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -81,7 +81,7 @@ func testAccRepository_tags(t *testing.T) {
 				Config: testAccRepositoryConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -90,7 +90,7 @@ func testAccRepository_tags(t *testing.T) {
 				Config: testAccRepositoryConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -119,8 +119,8 @@ func testAccRepository_owner(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "domain_owner", "aws_codeartifact_domain.test", names.AttrOwner),
 					resource.TestCheckResourceAttrPair(resourceName, "administrator_account", "aws_codeartifact_domain.test", names.AttrOwner),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "upstream.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "external_connections.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "upstream.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "external_connections.#", acctest.CtZero),
 				),
 			},
 			{
@@ -194,7 +194,7 @@ func testAccRepository_upstreams(t *testing.T) {
 				Config: testAccRepositoryConfig_upstreams2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "upstream.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "upstream.#", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "upstream.0.repository_name", fmt.Sprintf("%s-upstream1", rName)),
 					resource.TestCheckResourceAttr(resourceName, "upstream.1.repository_name", fmt.Sprintf("%s-upstream2", rName)),
 				),
@@ -241,7 +241,7 @@ func testAccRepository_externalConnection(t *testing.T) {
 				Config: testAccRepositoryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "external_connections.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "external_connections.#", acctest.CtZero),
 				),
 			},
 			{
