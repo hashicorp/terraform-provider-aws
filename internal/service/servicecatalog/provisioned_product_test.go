@@ -48,7 +48,7 @@ func TestAccServiceCatalogProvisionedProduct_basic(t *testing.T) {
 					// One output will default to the launched CloudFormation Stack (provisioned outside terraform).
 					// While another output will describe the output parameter configured in the S3 object resource,
 					// which we can check as follows.
-					resource.TestCheckResourceAttr(resourceName, "outputs.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
 						names.AttrDescription: "VPC ID",
 						names.AttrKey:         "VpcID",
@@ -114,7 +114,7 @@ func TestAccServiceCatalogProvisionedProduct_update(t *testing.T) {
 					// One output will default to the launched CloudFormation Stack (provisioned outside terraform).
 					// While another output will describe the output parameter configured in the S3 object resource,
 					// which we can check as follows.
-					resource.TestCheckResourceAttr(resourceName, "outputs.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
 						names.AttrDescription: "VPC ID",
 						names.AttrKey:         "VpcID",
@@ -164,7 +164,7 @@ func TestAccServiceCatalogProvisionedProduct_stackSetProvisioningPreferences(t *
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "stack_set_provisioning_preferences.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "stack_set_provisioning_preferences.0.failure_tolerance_count", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "stack_set_provisioning_preferences.0.max_concurrency_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, "stack_set_provisioning_preferences.0.max_concurrency_count", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "stack_set_provisioning_preferences.0.accounts.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "stack_set_provisioning_preferences.0.regions.#", acctest.CtOne),
 				),
@@ -199,7 +199,7 @@ func TestAccServiceCatalogProvisionedProduct_stackSetProvisioningPreferences(t *
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "stack_set_provisioning_preferences.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "stack_set_provisioning_preferences.#", acctest.CtZero),
 				),
 			},
 		},
@@ -435,7 +435,7 @@ func TestAccServiceCatalogProvisionedProduct_productTagUpdateAfterError(t *testi
 				Config: testAccProvisionedProductConfig_productTagUpdateAfterError_valid(rName, bucketName, "1.0"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.version", "1.0"),
 					acctest.S3BucketHasTag(ctx, bucketName, names.AttrVersion, "1.0"),
 				),
@@ -448,7 +448,7 @@ func TestAccServiceCatalogProvisionedProduct_productTagUpdateAfterError(t *testi
 				Config: testAccProvisionedProductConfig_productTagUpdateAfterError_valid(rName, bucketName, "1.5"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.version", "1.5"),
 					acctest.S3BucketHasTag(ctx, bucketName, names.AttrVersion, "1.5"),
 				),
