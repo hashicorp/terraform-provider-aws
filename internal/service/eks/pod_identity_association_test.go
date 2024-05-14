@@ -106,7 +106,7 @@ func TestAccEKSPodIdentityAssociation_tags(t *testing.T) {
 				Config: testAccPodIdentityAssociationConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPodIdentityAssociationExists(ctx, resourceName, &podidentityassociation),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -129,7 +129,7 @@ func TestAccEKSPodIdentityAssociation_tags(t *testing.T) {
 				Config: testAccPodIdentityAssociationConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPodIdentityAssociationExists(ctx, resourceName, &podidentityassociation),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
