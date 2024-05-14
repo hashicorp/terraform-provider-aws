@@ -43,7 +43,7 @@ func (d *acceleratorDataSource) Schema(ctx context.Context, request datasource.S
 				Optional:   true,
 				Computed:   true,
 			},
-			"attributes": schema.ListAttribute{
+			names.AttrAttributes: schema.ListAttribute{
 				Computed: true,
 				ElementType: types.ObjectType{
 					AttrTypes: map[string]attr.Type{
