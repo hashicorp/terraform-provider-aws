@@ -772,9 +772,9 @@ func flattenGraphQLAPIUserPoolConfig(userPoolConfig *appsync.UserPoolConfig) []i
 	}
 
 	m := map[string]interface{}{
-		"aws_region":     aws.StringValue(userPoolConfig.AwsRegion),
+		"aws_region":            aws.StringValue(userPoolConfig.AwsRegion),
 		names.AttrDefaultAction: aws.StringValue(userPoolConfig.DefaultAction),
-		"user_pool_id":   aws.StringValue(userPoolConfig.UserPoolId),
+		"user_pool_id":          aws.StringValue(userPoolConfig.UserPoolId),
 	}
 
 	if userPoolConfig.AppIdClientRegex != nil {

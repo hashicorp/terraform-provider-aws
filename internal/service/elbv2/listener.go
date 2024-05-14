@@ -1120,7 +1120,7 @@ func flattenLbListenerActionFixedResponseConfig(config *awstypes.FixedResponseAc
 	m := map[string]interface{}{
 		names.AttrContentType: aws.ToString(config.ContentType),
 		"message_body":        aws.ToString(config.MessageBody),
-		names.AttrStatusCode:         aws.ToString(config.StatusCode),
+		names.AttrStatusCode:  aws.ToString(config.StatusCode),
 	}
 
 	return []interface{}{m}
@@ -1177,12 +1177,12 @@ func flattenLbListenerActionRedirectConfig(config *awstypes.RedirectActionConfig
 	}
 
 	m := map[string]interface{}{
-		"host":             aws.ToString(config.Host),
-		names.AttrPath:     aws.ToString(config.Path),
-		names.AttrPort:     aws.ToString(config.Port),
-		names.AttrProtocol: aws.ToString(config.Protocol),
-		"query":            aws.ToString(config.Query),
-		names.AttrStatusCode:      string(config.StatusCode),
+		"host":               aws.ToString(config.Host),
+		names.AttrPath:       aws.ToString(config.Path),
+		names.AttrPort:       aws.ToString(config.Port),
+		names.AttrProtocol:   aws.ToString(config.Protocol),
+		"query":              aws.ToString(config.Query),
+		names.AttrStatusCode: string(config.StatusCode),
 	}
 
 	return []interface{}{m}

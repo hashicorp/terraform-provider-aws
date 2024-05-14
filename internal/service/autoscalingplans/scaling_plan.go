@@ -731,7 +731,7 @@ func flattenScalingInstructions(scalingInstructions []awstypes.ScalingInstructio
 	for _, scalingInstruction := range scalingInstructions {
 		mScalingInstruction := map[string]interface{}{
 			"disable_dynamic_scaling":                  aws.ToBool(scalingInstruction.DisableDynamicScaling),
-			names.AttrMaxCapacity:                             int(aws.ToInt32(scalingInstruction.MaxCapacity)),
+			names.AttrMaxCapacity:                      int(aws.ToInt32(scalingInstruction.MaxCapacity)),
 			"min_capacity":                             int(aws.ToInt32(scalingInstruction.MinCapacity)),
 			"predictive_scaling_max_capacity_behavior": scalingInstruction.PredictiveScalingMaxCapacityBehavior,
 			"predictive_scaling_max_capacity_buffer":   int(aws.ToInt32(scalingInstruction.PredictiveScalingMaxCapacityBuffer)),

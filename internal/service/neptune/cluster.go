@@ -989,7 +989,7 @@ func flattenServerlessV2ScalingConfigurationInfo(serverlessConfig *neptune.Serve
 	}
 
 	m := map[string]interface{}{
-		"min_capacity": aws.Float64Value(serverlessConfig.MinCapacity),
+		"min_capacity":        aws.Float64Value(serverlessConfig.MinCapacity),
 		names.AttrMaxCapacity: aws.Float64Value(serverlessConfig.MaxCapacity),
 	}
 

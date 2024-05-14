@@ -1836,7 +1836,7 @@ func flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettingsAudioLang
 	}
 
 	m := map[string]interface{}{
-		names.AttrLanguageCode:             aws.ToString(in.LanguageCode),
+		names.AttrLanguageCode:      aws.ToString(in.LanguageCode),
 		"language_selection_policy": string(in.LanguageSelectionPolicy),
 	}
 
@@ -1907,9 +1907,9 @@ func flattenInputAttachmentsInputSettingsCaptionSelectors(tfList []types.Caption
 
 	for _, v := range tfList {
 		m := map[string]interface{}{
-			names.AttrName:      aws.ToString(v.Name),
-			names.AttrLanguageCode:     aws.ToString(v.LanguageCode),
-			"selector_settings": flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettings(v.SelectorSettings),
+			names.AttrName:         aws.ToString(v.Name),
+			names.AttrLanguageCode: aws.ToString(v.LanguageCode),
+			"selector_settings":    flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettings(v.SelectorSettings),
 		}
 
 		out = append(out, m)

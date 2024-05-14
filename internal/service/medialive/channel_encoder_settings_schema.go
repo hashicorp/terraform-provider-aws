@@ -5821,7 +5821,7 @@ func flattenAudioDescriptions(od []types.AudioDescription) []interface{} {
 			"audio_type_control":           v.AudioTypeControl,
 			"audio_watermark_settings":     flattenAudioWatermarkSettings(v.AudioWatermarkingSettings),
 			"codec_settings":               flattenAudioDescriptionsCodecSettings(v.CodecSettings),
-			names.AttrLanguageCode:                aws.ToString(v.LanguageCode),
+			names.AttrLanguageCode:         aws.ToString(v.LanguageCode),
 			"language_code_control":        string(v.LanguageCodeControl),
 			"remix_settings":               flattenAudioDescriptionsRemixSettings(v.RemixSettings),
 			"stream_name":                  aws.ToString(v.StreamName),
@@ -6376,7 +6376,7 @@ func flattenHLSCaptionLanguageMappings(in []types.CaptionLanguageMapping) []inte
 	for _, item := range in {
 		m := map[string]interface{}{
 			"caption_channel":      int(aws.ToInt32(item.CaptionChannel)),
-			names.AttrLanguageCode:        aws.ToString(item.LanguageCode),
+			names.AttrLanguageCode: aws.ToString(item.LanguageCode),
 			"language_description": aws.ToString(item.LanguageDescription),
 		}
 
@@ -6695,7 +6695,7 @@ func flattenCaptionDescriptions(tfList []types.CaptionDescription) []interface{}
 			names.AttrName:          aws.ToString(item.Name),
 			"accessibility":         string(item.Accessibility),
 			"destination_settings":  flattenCaptionDescriptionsCaptionDestinationSettings(item.DestinationSettings),
-			names.AttrLanguageCode:         aws.ToString(item.LanguageCode),
+			names.AttrLanguageCode:  aws.ToString(item.LanguageCode),
 			"language_description":  aws.ToString(item.LanguageDescription),
 		}
 

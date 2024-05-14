@@ -495,8 +495,8 @@ var (
 	}
 
 	serviceDescriptorAttrs = map[string]attr.Type{
-		names.AttrProviderName:       types.StringType,
-		names.AttrServiceName: types.StringType,
+		names.AttrProviderName: types.StringType,
+		names.AttrServiceName:  types.StringType,
 	}
 
 	multiplexProgramSettingsAttrs = map[string]attr.Type{
