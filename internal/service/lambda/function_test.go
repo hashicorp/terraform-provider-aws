@@ -76,7 +76,7 @@ func TestAccLambdaFunction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "package_type", string(awstypes.PackageTypeZip)),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", funcName, tflambda.FunctionVersionLatest)),
 					resource.TestCheckResourceAttr(resourceName, "reserved_concurrent_executions", "-1"),
-					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, "false"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, tflambda.FunctionVersionLatest),
 				),
 			},
@@ -2283,7 +2283,7 @@ func TestAccLambdaFunction_skipDestroy(t *testing.T) {
 				Config: testAccFunctionConfig_skipDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, "true"),
 				),
 			},
 		},
@@ -2312,7 +2312,7 @@ func TestAccLambdaFunction_skipDestroyInconsistentPlan(t *testing.T) {
 				Config: testAccFunctionConfig_basic(rName, rName, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckNoResourceAttr(resourceName, "skip_destroy"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrSkipDestroy),
 				),
 			},
 			{
@@ -2320,7 +2320,7 @@ func TestAccLambdaFunction_skipDestroyInconsistentPlan(t *testing.T) {
 				Config:                   testAccFunctionConfig_basic(rName, rName, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, "false"),
 				),
 			},
 		},

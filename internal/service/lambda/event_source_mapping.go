@@ -182,7 +182,7 @@ func resourceEventSourceMapping() *schema.Resource {
 					},
 				},
 			},
-			"function_arn": {
+			names.AttrFunctionARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -538,7 +538,7 @@ func resourceEventSourceMappingRead(ctx context.Context, d *schema.ResourceData,
 	} else {
 		d.Set("filter_criteria", nil)
 	}
-	d.Set("function_arn", output.FunctionArn)
+	d.Set(names.AttrFunctionARN, output.FunctionArn)
 	d.Set("function_name", output.FunctionArn)
 	d.Set("function_response_types", output.FunctionResponseTypes)
 	if output.LastModified != nil {

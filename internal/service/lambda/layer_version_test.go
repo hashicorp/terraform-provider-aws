@@ -50,7 +50,7 @@ func TestAccLambdaLayerVersion_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"filename", names.AttrSkipDestroy},
 			},
 		},
 	})
@@ -101,7 +101,7 @@ func TestAccLambdaLayerVersion_update(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "source_code_hash", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"filename", "source_code_hash", names.AttrSkipDestroy},
 			},
 			{
 				Config: testAccLayerVersionConfig_createBeforeDestroy(rName, "test-fixtures/lambdatest_modified.zip"),
@@ -170,7 +170,7 @@ func TestAccLambdaLayerVersion_s3(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrS3Bucket, "s3_key", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrS3Bucket, "s3_key", names.AttrSkipDestroy},
 			},
 		},
 	})
@@ -199,7 +199,7 @@ func TestAccLambdaLayerVersion_compatibleRuntimes(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"filename", names.AttrSkipDestroy},
 			},
 		},
 	})
@@ -250,7 +250,7 @@ func TestAccLambdaLayerVersion_compatibleArchitectures(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"filename", names.AttrSkipDestroy},
 			},
 		},
 	})
@@ -280,7 +280,7 @@ func TestAccLambdaLayerVersion_description(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"filename", names.AttrSkipDestroy},
 			},
 		},
 	})
@@ -310,7 +310,7 @@ func TestAccLambdaLayerVersion_licenseInfo(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"filename", names.AttrSkipDestroy},
 			},
 		},
 	})
@@ -333,7 +333,7 @@ func TestAccLambdaLayerVersion_skipDestroy(t *testing.T) {
 					testAccCheckLayerVersionExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "lambda", fmt.Sprintf("layer:%s:1", rName)),
 					resource.TestCheckResourceAttr(resourceName, "compatible_runtimes.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, "true"),
 				),
 			},
 			{
@@ -342,7 +342,7 @@ func TestAccLambdaLayerVersion_skipDestroy(t *testing.T) {
 					testAccCheckLayerVersionExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "lambda", fmt.Sprintf("layer:%s:2", rName)),
 					resource.TestCheckResourceAttr(resourceName, "compatible_runtimes.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, "true"),
 				),
 			},
 		},
