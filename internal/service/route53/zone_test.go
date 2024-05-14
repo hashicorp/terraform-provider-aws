@@ -114,8 +114,8 @@ func TestAccRoute53Zone_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, zoneName),
 					resource.TestCheckResourceAttr(resourceName, "name_servers.#", "4"),
 					resource.TestCheckResourceAttrSet(resourceName, "primary_name_server"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "vpc.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "vpc.#", acctest.CtZero),
 				),
 			},
 			{
@@ -314,7 +314,7 @@ func TestAccRoute53Zone_tags(t *testing.T) {
 				Config: testAccZoneConfig_tags1(zoneName, "tag1key", "tag1value"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckZoneExists(ctx, resourceName, &zone),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.tag1key", "tag1value"),
 				),
 			},
@@ -328,7 +328,7 @@ func TestAccRoute53Zone_tags(t *testing.T) {
 				Config: testAccZoneConfig_tags2(zoneName, "tag1key", "tag1valueupdated", "tag2key", "tag2value"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckZoneExists(ctx, resourceName, &zone),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.tag1key", "tag1valueupdated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.tag2key", "tag2value"),
 				),
@@ -337,7 +337,7 @@ func TestAccRoute53Zone_tags(t *testing.T) {
 				Config: testAccZoneConfig_tags1(zoneName, "tag2key", "tag2value"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckZoneExists(ctx, resourceName, &zone),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.tag2key", "tag2value"),
 				),
 			},
@@ -396,7 +396,7 @@ func TestAccRoute53Zone_VPC_multiple(t *testing.T) {
 				Config: testAccZoneConfig_vpcMultiple(rName, zoneName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckZoneExists(ctx, resourceName, &zone),
-					resource.TestCheckResourceAttr(resourceName, "vpc.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "vpc.#", acctest.CtTwo),
 					testAccCheckZoneAssociatesVPC(vpcResourceName1, &zone),
 					testAccCheckZoneAssociatesVPC(vpcResourceName2, &zone),
 				),
@@ -438,7 +438,7 @@ func TestAccRoute53Zone_VPC_updates(t *testing.T) {
 				Config: testAccZoneConfig_vpcMultiple(rName, zoneName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckZoneExists(ctx, resourceName, &zone),
-					resource.TestCheckResourceAttr(resourceName, "vpc.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "vpc.#", acctest.CtTwo),
 					testAccCheckZoneAssociatesVPC(vpcResourceName1, &zone),
 					testAccCheckZoneAssociatesVPC(vpcResourceName2, &zone),
 				),

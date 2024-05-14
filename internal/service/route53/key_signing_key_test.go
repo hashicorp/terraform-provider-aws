@@ -42,7 +42,7 @@ func TestAccRoute53KeySigningKey_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccKeySigningKeyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "digest_algorithm_mnemonic", "SHA-256"),
-					resource.TestCheckResourceAttr(resourceName, "digest_algorithm_type", "2"),
+					resource.TestCheckResourceAttr(resourceName, "digest_algorithm_type", acctest.CtTwo),
 					resource.TestMatchResourceAttr(resourceName, "digest_value", regexache.MustCompile(`^[0-9A-F]+$`)),
 					resource.TestMatchResourceAttr(resourceName, "dnskey_record", regexache.MustCompile(`^257 [0-9]+ [0-9]+ [0-9A-Za-z+/]+={0,3}$`)),
 					resource.TestMatchResourceAttr(resourceName, "ds_record", regexache.MustCompile(`^[0-9]+ [0-9]+ [0-9]+ [0-9A-F]+$`)),
