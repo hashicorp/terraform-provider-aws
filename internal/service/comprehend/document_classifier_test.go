@@ -136,7 +136,7 @@ func TestAccComprehendDocumentClassifier_versionName(t *testing.T) {
 		CheckDestroy:             testAccCheckDocumentClassifierDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDocumentClassifierConfig_versionName(rName, vName1, names.AttrKey, "value1"),
+				Config: testAccDocumentClassifierConfig_versionName(rName, vName1, names.AttrKey, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDocumentClassifierExists(ctx, resourceName, &documentclassifier),
 					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
@@ -145,7 +145,7 @@ func TestAccComprehendDocumentClassifier_versionName(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", ""),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, vName1))),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key", acctest.CtValue1),
 				),
 			},
 			{
@@ -154,7 +154,7 @@ func TestAccComprehendDocumentClassifier_versionName(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDocumentClassifierConfig_versionName(rName, vName2, names.AttrKey, "value2"),
+				Config: testAccDocumentClassifierConfig_versionName(rName, vName2, names.AttrKey, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDocumentClassifierExists(ctx, resourceName, &documentclassifier),
 					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 2),
@@ -163,7 +163,7 @@ func TestAccComprehendDocumentClassifier_versionName(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", ""),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, vName2))),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key", acctest.CtValue2),
 				),
 			},
 			{
@@ -1268,12 +1268,12 @@ func TestAccComprehendDocumentClassifier_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckDocumentClassifierDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDocumentClassifierConfig_tags1(rName, "key1", "value1"),
+				Config: testAccDocumentClassifierConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDocumentClassifierExists(ctx, resourceName, &v1),
 					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -1282,24 +1282,24 @@ func TestAccComprehendDocumentClassifier_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDocumentClassifierConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDocumentClassifierConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDocumentClassifierExists(ctx, resourceName, &v2),
 					testAccCheckDocumentClassifierNotRecreated(&v1, &v2),
 					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccDocumentClassifierConfig_tags1(rName, "key2", "value2"),
+				Config: testAccDocumentClassifierConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDocumentClassifierExists(ctx, resourceName, &v3),
 					testAccCheckDocumentClassifierNotRecreated(&v2, &v3),
 					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},
@@ -1361,7 +1361,7 @@ func TestAccComprehendDocumentClassifier_DefaultTags_providerOnly(t *testing.T) 
 			},
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("providerkey1", "value1"),
+					acctest.ConfigDefaultTags_Tags1("providerkey1", acctest.CtValue1),
 					testAccDocumentClassifierConfig_tags0(rName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1370,7 +1370,7 @@ func TestAccComprehendDocumentClassifier_DefaultTags_providerOnly(t *testing.T) 
 					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", acctest.CtValue1),
 				),
 			},
 		},

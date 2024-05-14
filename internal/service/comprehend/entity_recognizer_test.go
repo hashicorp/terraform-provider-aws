@@ -133,7 +133,7 @@ func TestAccComprehendEntityRecognizer_versionName(t *testing.T) {
 		CheckDestroy:             testAccCheckEntityRecognizerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEntityRecognizerConfig_versionName(rName, vName1, names.AttrKey, "value1"),
+				Config: testAccEntityRecognizerConfig_versionName(rName, vName1, names.AttrKey, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEntityRecognizerExists(ctx, resourceName, &entityrecognizer),
 					testAccCheckEntityRecognizerPublishedVersions(ctx, resourceName, 1),
@@ -142,7 +142,7 @@ func TestAccComprehendEntityRecognizer_versionName(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", ""),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`entity-recognizer/%s/version/%s$`, rName, vName1))),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key", acctest.CtValue1),
 				),
 			},
 			{
@@ -151,7 +151,7 @@ func TestAccComprehendEntityRecognizer_versionName(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEntityRecognizerConfig_versionName(rName, vName2, names.AttrKey, "value2"),
+				Config: testAccEntityRecognizerConfig_versionName(rName, vName2, names.AttrKey, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEntityRecognizerExists(ctx, resourceName, &entityrecognizer),
 					testAccCheckEntityRecognizerPublishedVersions(ctx, resourceName, 2),
@@ -160,7 +160,7 @@ func TestAccComprehendEntityRecognizer_versionName(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", ""),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "comprehend", regexache.MustCompile(fmt.Sprintf(`entity-recognizer/%s/version/%s$`, rName, vName2))),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key", acctest.CtValue2),
 				),
 			},
 			{
@@ -806,12 +806,12 @@ func TestAccComprehendEntityRecognizer_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckEntityRecognizerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEntityRecognizerConfig_tags1(rName, "key1", "value1"),
+				Config: testAccEntityRecognizerConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEntityRecognizerExists(ctx, resourceName, &v1),
 					testAccCheckEntityRecognizerPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -820,24 +820,24 @@ func TestAccComprehendEntityRecognizer_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEntityRecognizerConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccEntityRecognizerConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEntityRecognizerExists(ctx, resourceName, &v2),
 					testAccCheckEntityRecognizerNotRecreated(&v1, &v2),
 					testAccCheckEntityRecognizerPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccEntityRecognizerConfig_tags1(rName, "key2", "value2"),
+				Config: testAccEntityRecognizerConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEntityRecognizerExists(ctx, resourceName, &v3),
 					testAccCheckEntityRecognizerNotRecreated(&v2, &v3),
 					testAccCheckEntityRecognizerPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},
@@ -899,7 +899,7 @@ func TestAccComprehendEntityRecognizer_DefaultTags_providerOnly(t *testing.T) {
 			},
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("providerkey1", "value1"),
+					acctest.ConfigDefaultTags_Tags1("providerkey1", acctest.CtValue1),
 					testAccEntityRecognizerConfig_tags0(rName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -908,7 +908,7 @@ func TestAccComprehendEntityRecognizer_DefaultTags_providerOnly(t *testing.T) {
 					testAccCheckEntityRecognizerPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", acctest.CtValue1),
 				),
 			},
 		},
