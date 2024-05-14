@@ -163,14 +163,14 @@ func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistribution_am
 		CheckDestroy:             testAccCheckDistributionConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionConfigurationConfig_amiTags(rName, "key1", "value1"),
+				Config: testAccDistributionConfigurationConfig_amiTags(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "distribution.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "distribution.*", map[string]string{
 						"ami_distribution_configuration.#":               acctest.CtOne,
 						"ami_distribution_configuration.0.ami_tags.%":    acctest.CtOne,
-						"ami_distribution_configuration.0.ami_tags.key1": "value1",
+						"ami_distribution_configuration.0.ami_tags.key1": acctest.CtValue1,
 					}),
 				),
 			},
@@ -180,7 +180,7 @@ func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistribution_am
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDistributionConfigurationConfig_amiTags(rName, "key2", "value2"),
+				Config: testAccDistributionConfigurationConfig_amiTags(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
@@ -188,7 +188,7 @@ func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistribution_am
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "distribution.*", map[string]string{
 						"ami_distribution_configuration.#":               acctest.CtOne,
 						"ami_distribution_configuration.0.ami_tags.%":    acctest.CtOne,
-						"ami_distribution_configuration.0.ami_tags.key2": "value2",
+						"ami_distribution_configuration.0.ami_tags.key2": acctest.CtValue2,
 					}),
 				),
 			},
@@ -891,11 +891,11 @@ func TestAccImageBuilderDistributionConfiguration_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckDistributionConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionConfigurationConfig_tags1(rName, "key1", "value1"),
+				Config: testAccDistributionConfigurationConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -904,20 +904,20 @@ func TestAccImageBuilderDistributionConfiguration_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDistributionConfigurationConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDistributionConfigurationConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccDistributionConfigurationConfig_tags1(rName, "key2", "value2"),
+				Config: testAccDistributionConfigurationConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},
