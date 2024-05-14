@@ -363,7 +363,7 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 									},
 								},
 							},
-							"health_check": {
+							names.AttrHealthCheck: {
 								Type:     schema.TypeList,
 								Optional: true,
 								MinItems: 0,
@@ -866,7 +866,7 @@ func expandVirtualGatewaySpec(vSpec []interface{}) *appmesh.VirtualGatewaySpec {
 
 			mListener := vListener.(map[string]interface{})
 
-			if vHealthCheck, ok := mListener["health_check"].([]interface{}); ok && len(vHealthCheck) > 0 && vHealthCheck[0] != nil {
+			if vHealthCheck, ok := mListener[names.AttrHealthCheck].([]interface{}); ok && len(vHealthCheck) > 0 && vHealthCheck[0] != nil {
 				healthCheck := &appmesh.VirtualGatewayHealthCheckPolicy{}
 
 				mHealthCheck := vHealthCheck[0].(map[string]interface{})
@@ -1331,7 +1331,7 @@ func flattenVirtualGatewaySpec(spec *appmesh.VirtualGatewaySpec) []interface{} {
 					"timeout_millis":      int(aws.Int64Value(healthCheck.TimeoutMillis)),
 					"unhealthy_threshold": int(aws.Int64Value(healthCheck.UnhealthyThreshold)),
 				}
-				mListener["health_check"] = []interface{}{mHealthCheck}
+				mListener[names.AttrHealthCheck] = []interface{}{mHealthCheck}
 			}
 
 			if portMapping := listener.PortMapping; portMapping != nil {
