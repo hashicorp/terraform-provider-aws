@@ -51,7 +51,7 @@ func ResourceRepositoryPolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"repository_name": {
+			names.AttrRepositoryName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -74,7 +74,7 @@ func resourceRepositoryPolicyPut(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
 	}
 
-	repositoryName := d.Get("repository_name").(string)
+	repositoryName := d.Get(names.AttrRepositoryName).(string)
 	input := &ecrpublic.SetRepositoryPolicyInput{
 		PolicyText:     aws.String(policy),
 		RepositoryName: aws.String(repositoryName),
@@ -134,7 +134,7 @@ func resourceRepositoryPolicyRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.Set(names.AttrPolicy, policyToSet)
 	d.Set("registry_id", output.RegistryId)
-	d.Set("repository_name", output.RepositoryName)
+	d.Set(names.AttrRepositoryName, output.RepositoryName)
 
 	return diags
 }
