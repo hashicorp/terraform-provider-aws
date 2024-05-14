@@ -46,7 +46,7 @@ func testAccFindingAggregator_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFindingAggregatorExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "linking_mode", "SPECIFIED_REGIONS"),
-					resource.TestCheckResourceAttr(resourceName, "specified_regions.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "specified_regions.#", acctest.CtThree),
 				),
 			},
 			{
