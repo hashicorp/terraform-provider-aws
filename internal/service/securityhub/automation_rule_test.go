@@ -75,7 +75,7 @@ func testAccAutomationRule_full(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "actions.0.finding_fields_update.0.related_findings.0.product_arn", "securityhub", regexache.MustCompile("product/aws/inspector")),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.severity.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.severity.0.label", string(types.SeverityLabelCritical)),
-					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.severity.0.product", "0"),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.severity.0.product", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.user_defined_fields.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.workflow.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.workflow.0.status", string(types.WorkflowStatusSuppressed)),
@@ -310,7 +310,7 @@ func testAccAutomationRule_tags(t *testing.T) {
 				Config: testAccAutomationRuleConfig_tags(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutomationRuleExists(ctx, resourceName, &automationRule),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -323,7 +323,7 @@ func testAccAutomationRule_tags(t *testing.T) {
 				Config: testAccAutomationRuleConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutomationRuleExists(ctx, resourceName, &automationRule),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -332,7 +332,7 @@ func testAccAutomationRule_tags(t *testing.T) {
 				Config: testAccAutomationRuleConfig_tags(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutomationRuleExists(ctx, resourceName, &automationRule),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
