@@ -44,7 +44,7 @@ func dataSourceFunction() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"target_arn": {
+						names.AttrTargetARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -169,7 +169,7 @@ func dataSourceFunction() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"role": {
+			names.AttrRole: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -291,7 +291,7 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta in
 	if function.DeadLetterConfig != nil && function.DeadLetterConfig.TargetArn != nil {
 		if err := d.Set("dead_letter_config", []interface{}{
 			map[string]interface{}{
-				"target_arn": aws.ToString(function.DeadLetterConfig.TargetArn),
+				names.AttrTargetARN: aws.ToString(function.DeadLetterConfig.TargetArn),
 			},
 		}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting dead_letter_config: %s", err)
@@ -330,7 +330,7 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta in
 	} else {
 		d.Set("reserved_concurrent_executions", -1)
 	}
-	d.Set("role", function.Role)
+	d.Set(names.AttrRole, function.Role)
 	d.Set("runtime", function.Runtime)
 	d.Set("signing_job_arn", function.SigningJobArn)
 	d.Set("signing_profile_version_arn", function.SigningProfileVersionArn)

@@ -163,7 +163,7 @@ func TestAccLambdaEventSourceMapping_DynamoDB_basic(t *testing.T) {
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "batch_size", "100"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", eventSourceResourceName, "stream_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", eventSourceResourceName, names.AttrStreamARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrFunctionARN, functionResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "function_response_types.#", "0"),

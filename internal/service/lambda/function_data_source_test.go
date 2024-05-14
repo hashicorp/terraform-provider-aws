@@ -47,7 +47,7 @@ func TestAccLambdaFunctionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "qualified_arn", resourceName, "qualified_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "qualified_invoke_arn", resourceName, "qualified_invoke_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "reserved_concurrent_executions", resourceName, "reserved_concurrent_executions"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "role", resourceName, "role"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrRole, resourceName, names.AttrRole),
 					resource.TestCheckResourceAttrPair(dataSourceName, "runtime", resourceName, "runtime"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "signing_job_arn", resourceName, "signing_job_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "signing_profile_version_arn", resourceName, "signing_profile_version_arn"),
