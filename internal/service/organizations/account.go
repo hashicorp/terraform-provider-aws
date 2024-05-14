@@ -264,7 +264,6 @@ func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceAccountImportState(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-
 	if strings.Contains(d.Id(), "_") {
 		parts := strings.Split(d.Id(), "_")
 		if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
