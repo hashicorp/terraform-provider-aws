@@ -38,8 +38,8 @@ func TestAccRedshiftServerlessSnapshot_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrRetentionPeriod, "-1"),
 					resource.TestCheckResourceAttr(resourceName, "admin_username", "admin"),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_account"),
-					resource.TestCheckResourceAttr(resourceName, "accounts_with_provisioned_restore_access.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "accounts_with_restore_access.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "accounts_with_provisioned_restore_access.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "accounts_with_restore_access.#", acctest.CtZero),
 				),
 			},
 			{

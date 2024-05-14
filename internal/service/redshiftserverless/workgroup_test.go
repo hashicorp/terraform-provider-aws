@@ -36,7 +36,7 @@ func TestAccRedshiftServerlessWorkgroup_basic(t *testing.T) {
 					testAccCheckWorkgroupExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "redshift-serverless", regexache.MustCompile("workgroup/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "namespace_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttrSet(resourceName, "workgroup_id"),
 					resource.TestCheckResourceAttr(resourceName, "workgroup_name", rName),
 				),
@@ -68,14 +68,14 @@ func TestAccRedshiftServerlessWorkgroup_baseAndMaxCapacityAndPubliclyAccessible(
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkgroupExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "base_capacity", "128"),
-					resource.TestCheckResourceAttr(resourceName, "max_capacity", "0"),
+					resource.TestCheckResourceAttr(resourceName, "max_capacity", acctest.CtZero),
 				),
 			},
 			{
 				Config: testAccWorkgroupConfig_baseCapacity(rName, 256),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "base_capacity", "256"),
-					resource.TestCheckResourceAttr(resourceName, "max_capacity", "0"),
+					resource.TestCheckResourceAttr(resourceName, "max_capacity", acctest.CtZero),
 				),
 			},
 			{
@@ -112,7 +112,7 @@ func TestAccRedshiftServerlessWorkgroup_baseAndMaxCapacityAndPubliclyAccessible(
 				Config: testAccWorkgroupConfig_baseCapacity(rName, 128),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "base_capacity", "128"),
-					resource.TestCheckResourceAttr(resourceName, "max_capacity", "0"),
+					resource.TestCheckResourceAttr(resourceName, "max_capacity", acctest.CtZero),
 				),
 			},
 		},
@@ -240,7 +240,7 @@ func TestAccRedshiftServerlessWorkgroup_tags(t *testing.T) {
 				Config: testAccWorkgroupConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkgroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -252,7 +252,7 @@ func TestAccRedshiftServerlessWorkgroup_tags(t *testing.T) {
 			{
 				Config: testAccWorkgroupConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -261,7 +261,7 @@ func TestAccRedshiftServerlessWorkgroup_tags(t *testing.T) {
 				Config: testAccWorkgroupConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkgroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
