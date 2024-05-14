@@ -90,11 +90,11 @@ func TestAccLogsDestination_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckDestinationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDestinationConfig_tags1(rName, "key1", "value1"),
+				Config: testAccDestinationConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDestinationExists(ctx, resourceName, &destination),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -103,20 +103,20 @@ func TestAccLogsDestination_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDestinationConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDestinationConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDestinationExists(ctx, resourceName, &destination),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccDestinationConfig_tags1(rName, "key2", "value2"),
+				Config: testAccDestinationConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDestinationExists(ctx, resourceName, &destination),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},
@@ -163,27 +163,27 @@ func TestAccLogsDestination_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDestinationConfig_updateWithTag(rName, 0, "key1", "value1"),
+				Config: testAccDestinationConfig_updateWithTag(rName, 0, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDestinationExists(ctx, resourceName, &destination),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResource1Name, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTargetARN, streamResource1Name, names.AttrARN),
 				),
 			},
 			{
-				Config: testAccDestinationConfig_updateWithTag(rName, 1, "key1", "value1"),
+				Config: testAccDestinationConfig_updateWithTag(rName, 1, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDestinationExists(ctx, resourceName, &destination),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResource2Name, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTargetARN, streamResource2Name, names.AttrARN),
 				),
 			},
 			{
-				Config: testAccDestinationConfig_updateWithTag(rName, 1, "key1", "value1updated"),
+				Config: testAccDestinationConfig_updateWithTag(rName, 1, acctest.CtKey1, "value1updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDestinationExists(ctx, resourceName, &destination),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResource2Name, names.AttrARN),
