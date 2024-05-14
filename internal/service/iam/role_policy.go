@@ -71,7 +71,7 @@ func resourceRolePolicy() *schema.Resource {
 					return json
 				},
 			},
-			"role": {
+			names.AttrRole: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -91,7 +91,7 @@ func resourceRolePolicyPut(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	policyName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
-	roleName := d.Get("role").(string)
+	roleName := d.Get(names.AttrRole).(string)
 	input := &iam.PutRolePolicyInput{
 		PolicyDocument: aws.String(policy),
 		PolicyName:     aws.String(policyName),
@@ -153,7 +153,7 @@ func resourceRolePolicyRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set(names.AttrName, policyName)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(policyName))
 	d.Set(names.AttrPolicy, policyToSet)
-	d.Set("role", roleName)
+	d.Set(names.AttrRole, roleName)
 
 	return diags
 }

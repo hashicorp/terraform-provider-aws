@@ -35,7 +35,7 @@ func dataSourceRoles() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringIsValidRegExp,
 			},
-			"names": {
+			names.AttrNames: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -93,7 +93,7 @@ func dataSourceRolesRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting arns: %s", err)
 	}
 
-	if err := d.Set("names", nms); err != nil {
+	if err := d.Set(names.AttrNames, nms); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting names: %s", err)
 	}
 
