@@ -31,7 +31,7 @@ func TestAccIAMAccessKeysDataSource_basic(t *testing.T) {
 			{
 				Config: testAccAccessKeysDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "access_keys.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "access_keys.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "access_keys.0.create_date", resourceName, "create_date"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "access_keys.0.access_key_id", resourceName, names.AttrID),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "access_keys.0.status", resourceName, names.AttrStatus),
