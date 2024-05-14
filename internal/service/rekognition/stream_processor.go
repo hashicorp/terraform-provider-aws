@@ -78,6 +78,9 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 					stringvalidator.LengthBetween(1, 2048),
 					stringvalidator.RegexMatches(kmsKeyIdRegex, "must conform to: ^[A-Za-z0-9][A-Za-z0-9:_/+=,@.-]$"),
 				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			names.AttrID: framework.IDAttribute(),
 			names.AttrName: schema.StringAttribute{
@@ -97,6 +100,9 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.RegexMatches(roleArnRegex, "must conform to: arn:aws:iam::\\d{12}:role/?[a-zA-Z_0-9+=,.@\\-_/]+"),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -136,6 +142,9 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 										stringvalidator.RegexMatches(kinesisStreamArnRegex, "must conform to: (^arn:([a-z\\d-]+):kinesisvideo:([a-z\\d-]+):\\d{12}:.+$)"),
 									),
 								},
+								PlanModifiers: []planmodifier.String{
+									stringplanmodifier.RequiresReplace(),
+								},
 							},
 						},
 					},
@@ -154,6 +163,9 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 						Required:    true,
 						Validators: []validator.String{
 							stringvalidator.RegexMatches(snsArnRegex, "must conform to: (^arn:aws:sns:.*:\\w{12}:.+$)"),
+						},
+						PlanModifiers: []planmodifier.String{
+							stringplanmodifier.RequiresReplace(),
 						},
 					},
 				},
@@ -243,6 +255,9 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 								Validators: []validator.String{
 									stringvalidator.RegexMatches(kinesisStreamArnRegex, "must conform to: (^arn:([a-z\\d-]+):kinesis:([a-z\\d-]+):\\d{12}:.+$)"),
 								},
+								PlanModifiers: []planmodifier.String{
+									stringplanmodifier.RequiresReplace(),
+								},
 							},
 						},
 					},
@@ -257,12 +272,18 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 									stringvalidator.LengthBetween(3, 255),
 									stringvalidator.RegexMatches(s3bucketRegex, "must conform to: [0-9A-Za-z\\.\\-_]*"),
 								},
+								PlanModifiers: []planmodifier.String{
+									stringplanmodifier.RequiresReplace(),
+								},
 							},
 							"key_prefix": schema.StringAttribute{
 								Description: "The prefix value of the location within the bucket that you want the information to be published to.",
 								Optional:    true,
 								Validators: []validator.String{
 									stringvalidator.LengthAtMost(1024),
+								},
+								PlanModifiers: []planmodifier.String{
+									stringplanmodifier.RequiresReplace(),
 								},
 							},
 						},
@@ -400,8 +421,6 @@ func (r *resourceStreamProcessor) Read(ctx context.Context, req resource.ReadReq
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	// resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *resourceStreamProcessor) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -414,10 +433,19 @@ func (r *resourceStreamProcessor) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
-	if !plan.Name.Equal(state.Name) {
+	if !plan.DataSharingPreference.Equal(state.DataSharingPreference) ||
+		!plan.Settings.Equal(state.Settings) ||
+		!plan.RegionsOfInterest.Equal(state.RegionsOfInterest) {
 
 		in := &rekognition.UpdateStreamProcessorInput{
 			Name: aws.String(plan.Name.ValueString()),
+		}
+
+		if !plan.DataSharingPreference.Equal(state.DataSharingPreference) {
+			resp.Diagnostics.Append(fwflex.Expand(ctx, plan.DataSharingPreference, in.DataSharingPreferenceForUpdate)...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
 		}
 
 		// TIP: -- 4. Call the AWS modify/update function
