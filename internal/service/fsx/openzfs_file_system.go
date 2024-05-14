@@ -268,7 +268,7 @@ func resourceOpenZFSFileSystem() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(64, 512*1024),
 			},
-			"storage_type": {
+			names.AttrStorageType: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -367,7 +367,7 @@ func resourceOpenZFSFileSystemCreate(ctx context.Context, d *schema.ResourceData
 			AutomaticBackupRetentionDays: aws.Int64(int64(d.Get("automatic_backup_retention_days").(int))),
 		},
 		StorageCapacity: aws.Int64(int64(d.Get("storage_capacity").(int))),
-		StorageType:     aws.String(d.Get("storage_type").(string)),
+		StorageType:     aws.String(d.Get(names.AttrStorageType).(string)),
 		SubnetIds:       flex.ExpandStringList(d.Get(names.AttrSubnetIDs).([]interface{})),
 		Tags:            getTagsIn(ctx),
 	}
@@ -377,7 +377,7 @@ func resourceOpenZFSFileSystemCreate(ctx context.Context, d *schema.ResourceData
 			DeploymentType:               aws.String(d.Get("deployment_type").(string)),
 			AutomaticBackupRetentionDays: aws.Int64(int64(d.Get("automatic_backup_retention_days").(int))),
 		},
-		StorageType: aws.String(d.Get("storage_type").(string)),
+		StorageType: aws.String(d.Get(names.AttrStorageType).(string)),
 		SubnetIds:   flex.ExpandStringList(d.Get(names.AttrSubnetIDs).([]interface{})),
 		Tags:        getTagsIn(ctx),
 	}
@@ -508,7 +508,7 @@ func resourceOpenZFSFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("root_volume_id", rootVolumeID)
 	d.Set("route_table_ids", aws.StringValueSlice(openZFSConfig.RouteTableIds))
 	d.Set("storage_capacity", filesystem.StorageCapacity)
-	d.Set("storage_type", filesystem.StorageType)
+	d.Set(names.AttrStorageType, filesystem.StorageType)
 	d.Set(names.AttrSubnetIDs, aws.StringValueSlice(filesystem.SubnetIds))
 	d.Set("throughput_capacity", openZFSConfig.ThroughputCapacity)
 	d.Set(names.AttrVPCID, filesystem.VpcId)

@@ -80,7 +80,7 @@ func TestAccFSxOpenZFSFileSystem_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "skip_final_backup", "false"),
 					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "64"),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", fsx.StorageTypeSsd),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, fsx.StorageTypeSsd),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.0", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -547,7 +547,7 @@ func TestAccFSxOpenZFSFileSystem_storageType(t *testing.T) {
 				Config: testAccOpenZFSFileSystemConfig_storageType(rName, "SSD"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem1),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", "SSD"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "SSD"),
 				),
 			},
 			{
@@ -893,7 +893,7 @@ func TestAccFSxOpenZFSFileSystem_multiAZ(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "skip_final_backup", "true"),
 					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "64"),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", fsx.StorageTypeSsd),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, fsx.StorageTypeSsd),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.0", names.AttrID),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.1", names.AttrID),

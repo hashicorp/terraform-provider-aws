@@ -58,7 +58,7 @@ func TestAccFSxLustreFileSystem_basic(t *testing.T) {
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "1200"),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", fsx.StorageTypeSsd),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, fsx.StorageTypeSsd),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestMatchResourceAttr(resourceName, names.AttrVPCID, regexache.MustCompile(`^vpc-.+`)),
@@ -925,7 +925,7 @@ func TestAccFSxLustreFileSystem_storageTypeHddDriveCacheRead(t *testing.T) {
 				Config: testAccLustreFileSystemConfig_hddStorageType(rName, fsx.DriveCacheTypeRead),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", fsx.StorageTypeHdd),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, fsx.StorageTypeHdd),
 					resource.TestCheckResourceAttr(resourceName, "drive_cache_type", fsx.DriveCacheTypeRead),
 				),
 			},
@@ -955,7 +955,7 @@ func TestAccFSxLustreFileSystem_storageTypeHddDriveCacheNone(t *testing.T) {
 				Config: testAccLustreFileSystemConfig_hddStorageType(rName, fsx.DriveCacheTypeNone),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", fsx.StorageTypeHdd),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, fsx.StorageTypeHdd),
 					resource.TestCheckResourceAttr(resourceName, "drive_cache_type", fsx.DriveCacheTypeNone),
 				),
 			},

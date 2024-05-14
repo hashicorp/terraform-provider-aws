@@ -259,7 +259,7 @@ func resourceWindowsFileSystem() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.IntBetween(32, 65536),
 			},
-			"storage_type": {
+			names.AttrStorageType: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -376,7 +376,7 @@ func resourceWindowsFileSystemCreate(ctx context.Context, d *schema.ResourceData
 		inputB.WindowsConfiguration.SelfManagedActiveDirectoryConfiguration = expandSelfManagedActiveDirectoryConfigurationCreate(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("storage_type"); ok {
+	if v, ok := d.GetOk(names.AttrStorageType); ok {
 		inputC.StorageType = aws.String(v.(string))
 		inputB.StorageType = aws.String(v.(string))
 	}
@@ -456,7 +456,7 @@ func resourceWindowsFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "setting self_managed_active_directory: %s", err)
 	}
 	d.Set("storage_capacity", filesystem.StorageCapacity)
-	d.Set("storage_type", filesystem.StorageType)
+	d.Set(names.AttrStorageType, filesystem.StorageType)
 	d.Set(names.AttrSubnetIDs, aws.StringValueSlice(filesystem.SubnetIds))
 	d.Set("throughput_capacity", windowsConfig.ThroughputCapacity)
 	d.Set(names.AttrVPCID, filesystem.VpcId)

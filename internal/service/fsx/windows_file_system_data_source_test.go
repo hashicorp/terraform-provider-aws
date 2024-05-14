@@ -48,7 +48,7 @@ func TestAccFSxWindowsFileSystemDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "preferred_file_server_ip", resourceName, "preferred_file_server_ip"),
 					resource.TestCheckResourceAttrPair(datasourceName, "preferred_subnet_id", resourceName, "preferred_subnet_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "storage_capacity", resourceName, "storage_capacity"),
-					resource.TestCheckResourceAttrPair(datasourceName, "storage_type", resourceName, "storage_type"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrStorageType, resourceName, names.AttrStorageType),
 					resource.TestCheckResourceAttrPair(datasourceName, "subnet_ids.#", resourceName, "subnet_ids.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(datasourceName, "throughput_capacity", resourceName, "throughput_capacity"),
