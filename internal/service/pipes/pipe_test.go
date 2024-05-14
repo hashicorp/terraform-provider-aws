@@ -787,7 +787,7 @@ func TestAccPipesPipe_dynamoDBSourceCloudWatchLogsTarget(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enrichment_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrSource, "aws_dynamodb_table.source", "stream_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSource, "aws_dynamodb_table.source", names.AttrStreamARN),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.activemq_broker_parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "source_parameters.0.dynamodb_stream_parameters.#", "1"),

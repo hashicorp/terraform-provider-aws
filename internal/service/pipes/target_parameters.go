@@ -533,7 +533,7 @@ func targetParametersSchema() *schema.Schema {
 									validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+[\.][0-9A-Za-z-]+$`), ""),
 								),
 							},
-							"resources": {
+							names.AttrResources: {
 								Type:     schema.TypeSet,
 								Optional: true,
 								MaxItems: 10,
@@ -1669,7 +1669,7 @@ func expandPipeTargetEventBridgeEventBusParameters(tfMap map[string]interface{})
 		apiObject.EndpointId = aws.String(v)
 	}
 
-	if v, ok := tfMap["resources"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrResources].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.Resources = flex.ExpandStringValueSet(v)
 	}
 
@@ -2530,7 +2530,7 @@ func flattenPipeTargetEventBridgeEventBusParameters(apiObject *types.PipeTargetE
 	}
 
 	if v := apiObject.Resources; v != nil {
-		tfMap["resources"] = v
+		tfMap[names.AttrResources] = v
 	}
 
 	if v := apiObject.Source; v != nil {
