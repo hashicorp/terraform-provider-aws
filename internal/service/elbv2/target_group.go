@@ -93,7 +93,7 @@ func ResourceTargetGroup() *schema.Resource {
 							Default:      3,
 							ValidateFunc: validation.IntBetween(2, 10),
 						},
-						"interval": {
+						names.AttrInterval: {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      30,
@@ -402,7 +402,7 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 		tfMap := v.([]interface{})[0].(map[string]interface{})
 
 		input.HealthCheckEnabled = aws.Bool(tfMap[names.AttrEnabled].(bool))
-		input.HealthCheckIntervalSeconds = aws.Int64(int64(tfMap["interval"].(int)))
+		input.HealthCheckIntervalSeconds = aws.Int64(int64(tfMap[names.AttrInterval].(int)))
 		input.HealthyThresholdCount = aws.Int64(int64(tfMap["healthy_threshold"].(int)))
 		input.UnhealthyThresholdCount = aws.Int64(int64(tfMap["unhealthy_threshold"].(int)))
 
@@ -598,7 +598,7 @@ func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 			input := &elbv2.ModifyTargetGroupInput{
 				HealthCheckEnabled:         aws.Bool(tfMap[names.AttrEnabled].(bool)),
-				HealthCheckIntervalSeconds: aws.Int64(int64(tfMap["interval"].(int))),
+				HealthCheckIntervalSeconds: aws.Int64(int64(tfMap[names.AttrInterval].(int))),
 				HealthyThresholdCount:      aws.Int64(int64(tfMap["healthy_threshold"].(int))),
 				TargetGroupArn:             aws.String(d.Id()),
 				UnhealthyThresholdCount:    aws.Int64(int64(tfMap["unhealthy_threshold"].(int))),
@@ -1099,7 +1099,7 @@ func flattenTargetGroupHealthCheck(apiObject *elbv2.TargetGroup) []interface{} {
 	tfMap := map[string]interface{}{
 		names.AttrEnabled:     aws.BoolValue(apiObject.HealthCheckEnabled),
 		"healthy_threshold":   int(aws.Int64Value(apiObject.HealthyThresholdCount)),
-		"interval":            int(aws.Int64Value(apiObject.HealthCheckIntervalSeconds)),
+		names.AttrInterval:    int(aws.Int64Value(apiObject.HealthCheckIntervalSeconds)),
 		names.AttrPort:        aws.StringValue(apiObject.HealthCheckPort),
 		names.AttrProtocol:    aws.StringValue(apiObject.HealthCheckProtocol),
 		names.AttrTimeout:     int(aws.Int64Value(apiObject.HealthCheckTimeoutSeconds)),
