@@ -9,16 +9,22 @@ import (
 )
 
 const (
-	CtFalseCaps   = "FALSE"
-	CtKey1        = "key1"
-	CtKey2        = "key2"
-	CtOne         = "1"
-	CtTagsPercent = "tags.%"
-	CtTrueCaps    = "TRUE"
-	CtTwo         = "2"
-	CtValue1      = "value1"
-	CtValue2      = "value2"
-	CtZero        = "0"
+	CtFalseCaps      = "FALSE"
+	CtKey1           = "key1"
+	CtKey2           = "key2"
+	CtOne            = "1"
+	CtResourceTags   = "resource_tags"
+	CtTagsAllPercent = "tags_all.%"
+	CtTagsKey1       = "tags.key1"
+	CtTagsKey2       = "tags.key2"
+	CtTagsPercent    = "tags.%"
+	CtThree          = "3"
+	CtTrueCaps       = "TRUE"
+	CtTwo            = "2"
+	CtValue1         = "value1"
+	CtValue1Updated  = "value1updated"
+	CtValue2         = "value2"
+	CtZero           = "0"
 )
 
 // ConstOrQuote returns the constant name for the given attribute if it exists.
@@ -26,16 +32,22 @@ const (
 // generated code and templates.
 func ConstOrQuote(constant string) string {
 	allConstants := map[string]string{
-		"FALSE":  "CtFalseCaps",
-		"key1":   "CtKey1",
-		"key2":   "CtKey2",
-		"1":      "CtOne",
-		"tags.%": "CtTagsPercent",
-		"TRUE":   "CtTrueCaps",
-		"2":      "CtTwo",
-		"value1": "CtValue1",
-		"value2": "CtValue2",
-		"0":      "CtZero",
+		"FALSE":         "CtFalseCaps",
+		"key1":          "CtKey1",
+		"key2":          "CtKey2",
+		"1":             "CtOne",
+		"resource_tags": "CtResourceTags",
+		"tags_all.%":    "CtTagsAllPercent",
+		"tags.key1":     "CtTagsKey1",
+		"tags.key2":     "CtTagsKey2",
+		"tags.%":        "CtTagsPercent",
+		"3":             "CtThree",
+		"TRUE":          "CtTrueCaps",
+		"2":             "CtTwo",
+		"value1":        "CtValue1",
+		"value1updated": "CtValue1Updated",
+		"value2":        "CtValue2",
+		"0":             "CtZero",
 	}
 
 	if v, ok := allConstants[constant]; ok {

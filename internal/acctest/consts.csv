@@ -1,10 +1,16 @@
 0,Zero
 1,One
 2,Two
+3,Three
 FALSE,FalseCaps
 TRUE,TrueCaps
 key1,Key1
 key2,Key2
+resource_tags,ResourceTags
 tags.%,TagsPercent
+tags.key1,TagsKey1
+tags.key2,TagsKey2
+tags_all.%,TagsAllPercent
 value1,Value1
+value1updated,Value1Updated
 value2,Value2
