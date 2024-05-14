@@ -36,7 +36,7 @@ func TestAccAPIGatewayIntegrationResponse_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIntegrationResponseExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "content_handling", ""),
-					resource.TestCheckResourceAttr(resourceName, "response_parameters.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "response_parameters.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "response_parameters.method.response.header.Content-Type", "integration.response.body.type"),
 					resource.TestCheckResourceAttr(resourceName, "response_templates.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "response_templates.application/json", ""),
