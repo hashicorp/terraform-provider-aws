@@ -699,12 +699,12 @@ func testResponsePlan_action(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"action.0.ssm_automation.0.parameter.0.values.0",
-						"value1",
+						acctest.CtValue1,
 					),
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"action.0.ssm_automation.0.parameter.0.values.1",
-						"value2",
+						acctest.CtValue2,
 					),
 					resource.TestCheckResourceAttr(
 						resourceName,
