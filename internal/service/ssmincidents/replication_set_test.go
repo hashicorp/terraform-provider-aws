@@ -46,7 +46,7 @@ func testReplicationSet_basic(t *testing.T) {
 				Config: testAccReplicationSetConfig_basicTwoRegion(region1, region2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "region.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "region.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "region.*", map[string]string{
 						names.AttrName:      region1,
 						names.AttrKMSKeyARN: "DefaultKey",
@@ -110,7 +110,7 @@ func testReplicationSet_updateRegionsWithoutCMK(t *testing.T) {
 				Config: testAccReplicationSetConfig_basicTwoRegion(region1, region2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "region.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "region.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "region.*", map[string]string{
 						names.AttrName:      region1,
 						names.AttrKMSKeyARN: "DefaultKey",
@@ -191,7 +191,7 @@ func testReplicationSet_updateRegionsWithCMK(t *testing.T) {
 				Config: testAccReplicationSetConfig_twoRegionWithCMK(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "region.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "region.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "region.*", map[string]string{
 						names.AttrName: acctest.Region(),
 					}),
@@ -268,9 +268,9 @@ func testReplicationSet_updateTags(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, rVal1Ini),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags_all."+rProviderKey1, rProviderVal1Ini),
 					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
 				),
@@ -287,9 +287,9 @@ func testReplicationSet_updateTags(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, rVal1Updated),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags_all."+rProviderKey1, rProviderVal1Upd),
 					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
 				),
@@ -306,7 +306,7 @@ func testReplicationSet_updateTags(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey2, rVal2),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey3, rVal3),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "4"),
@@ -348,7 +348,7 @@ func testReplicationSet_updateEmptyTags(t *testing.T) {
 				Config: testAccReplicationSetConfig_oneTag(rKey1, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, ""),
 					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
 				),
@@ -362,7 +362,7 @@ func testReplicationSet_updateEmptyTags(t *testing.T) {
 				Config: testAccReplicationSetConfig_twoTags(rKey1, "", rKey2, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, ""),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey2, ""),
 					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
@@ -377,7 +377,7 @@ func testReplicationSet_updateEmptyTags(t *testing.T) {
 				Config: testAccReplicationSetConfig_oneTag(rKey1, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, ""),
 					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
 				),
