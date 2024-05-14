@@ -244,19 +244,19 @@ func testAccPolicy_resourceTags(t *testing.T) {
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_resourceTags1(rName, "key1", "value1"),
+				Config: testAccPolicyConfig_resourceTags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "resource_tags.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "resource_tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "resource_tags.key1", acctest.CtValue1),
 				),
 			},
 			{
-				Config: testAccPolicyConfig_resourceTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccPolicyConfig_resourceTags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "resource_tags.%", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "resource_tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "resource_tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "resource_tags.key2", acctest.CtValue2),
 				),
 			},
 		},
@@ -280,19 +280,19 @@ func testAccPolicy_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_tags1(rName, "key1", "value1"),
+				Config: testAccPolicyConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
-				Config: testAccPolicyConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccPolicyConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},
