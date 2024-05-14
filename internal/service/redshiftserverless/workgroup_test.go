@@ -68,35 +68,35 @@ func TestAccRedshiftServerlessWorkgroup_baseAndMaxCapacityAndPubliclyAccessible(
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkgroupExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "base_capacity", "128"),
-					resource.TestCheckResourceAttr(resourceName, "max_capacity", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, acctest.CtZero),
 				),
 			},
 			{
 				Config: testAccWorkgroupConfig_baseCapacity(rName, 256),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "base_capacity", "256"),
-					resource.TestCheckResourceAttr(resourceName, "max_capacity", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, acctest.CtZero),
 				),
 			},
 			{
 				Config: testAccWorkgroupConfig_baseAndMaxCapacityAndPubliclyAccessible(rName, 64, 128, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "base_capacity", "64"),
-					resource.TestCheckResourceAttr(resourceName, "max_capacity", "128"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, "128"),
 				),
 			},
 			{
 				Config: testAccWorkgroupConfig_baseAndMaxCapacityAndPubliclyAccessible(rName, 128, 256, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "base_capacity", "128"),
-					resource.TestCheckResourceAttr(resourceName, "max_capacity", "256"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, "256"),
 				),
 			},
 			{
 				Config: testAccWorkgroupConfig_baseAndMaxCapacityAndPubliclyAccessible(rName, 512, 5632, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "base_capacity", "512"),
-					resource.TestCheckResourceAttr(resourceName, "max_capacity", "5632"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, "5632"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, "false"),
 				),
 			},
@@ -104,7 +104,7 @@ func TestAccRedshiftServerlessWorkgroup_baseAndMaxCapacityAndPubliclyAccessible(
 				Config: testAccWorkgroupConfig_baseAndMaxCapacityAndPubliclyAccessible(rName, 128, 256, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "base_capacity", "128"),
-					resource.TestCheckResourceAttr(resourceName, "max_capacity", "256"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, "256"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, "true"),
 				),
 			},
@@ -112,7 +112,7 @@ func TestAccRedshiftServerlessWorkgroup_baseAndMaxCapacityAndPubliclyAccessible(
 				Config: testAccWorkgroupConfig_baseCapacity(rName, 128),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "base_capacity", "128"),
-					resource.TestCheckResourceAttr(resourceName, "max_capacity", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, acctest.CtZero),
 				),
 			},
 		},
