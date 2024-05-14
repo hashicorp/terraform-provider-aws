@@ -44,7 +44,7 @@ func TestAccS3BucketReplicationConfiguration_basic(t *testing.T) {
 				Config: testAccBucketReplicationConfigurationConfig_basic(rName, string(types.StorageClassStandard)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrID:                  "foobar",
@@ -60,7 +60,7 @@ func TestAccS3BucketReplicationConfiguration_basic(t *testing.T) {
 				Config: testAccBucketReplicationConfigurationConfig_basic(rName, string(types.StorageClassGlacier)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrID:                  "foobar",
@@ -76,7 +76,7 @@ func TestAccS3BucketReplicationConfiguration_basic(t *testing.T) {
 				Config: testAccBucketReplicationConfigurationConfig_sseKMSEncryptedObjects(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrID:     "foobar",
@@ -325,7 +325,7 @@ func TestAccS3BucketReplicationConfiguration_configurationRuleDestinationAccessC
 				Config: testAccBucketReplicationConfigurationConfig_accessControlTranslation(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrID:     "foobar",
@@ -349,7 +349,7 @@ func TestAccS3BucketReplicationConfiguration_configurationRuleDestinationAccessC
 				Config: testAccBucketReplicationConfigurationConfig_sseKMSEncryptedObjectsAndAccessControlTranslation(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrID:     "foobar",
@@ -403,7 +403,7 @@ func TestAccS3BucketReplicationConfiguration_configurationRuleDestinationAddAcce
 				Config: testAccBucketReplicationConfigurationConfig_rulesDestination(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrID:                  "foobar",
@@ -425,7 +425,7 @@ func TestAccS3BucketReplicationConfiguration_configurationRuleDestinationAddAcce
 				Config: testAccBucketReplicationConfigurationConfig_accessControlTranslation(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrID:     "foobar",
@@ -472,7 +472,7 @@ func TestAccS3BucketReplicationConfiguration_replicationTimeControl(t *testing.T
 				Config: testAccBucketReplicationConfigurationConfig_rtc(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrID:                                        "foobar",
@@ -526,7 +526,7 @@ func TestAccS3BucketReplicationConfiguration_replicaModifications(t *testing.T) 
 				Config: testAccBucketReplicationConfigurationConfig_replicaMods(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrID:                         "foobar",
@@ -575,7 +575,7 @@ func TestAccS3BucketReplicationConfiguration_withoutId(t *testing.T) {
 				Config: testAccBucketReplicationConfigurationConfig_prefixNoID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "rule.0.id"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.prefix", "foo"),
@@ -617,7 +617,7 @@ func TestAccS3BucketReplicationConfiguration_withoutStorageClass(t *testing.T) {
 				Config: testAccBucketReplicationConfigurationConfig_noStorageClass(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrID:     "foobar",
@@ -660,7 +660,7 @@ func TestAccS3BucketReplicationConfiguration_schemaV2(t *testing.T) {
 				Config: testAccBucketReplicationConfigurationConfig_v2NoTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrID:                         "foobar",
@@ -702,7 +702,7 @@ func TestAccS3BucketReplicationConfiguration_schemaV2SameRegion(t *testing.T) {
 				Config: testAccBucketReplicationConfigurationConfig_schemaV2SameRegion(rName, rNameDestination),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrID:                         "testid",
@@ -787,7 +787,7 @@ func TestAccS3BucketReplicationConfiguration_existingObjectReplication(t *testin
 				Config: testAccBucketReplicationConfigurationConfig_existingObject(rName, rNameDestination),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrID:                           "testid",
@@ -834,7 +834,7 @@ func TestAccS3BucketReplicationConfiguration_filter_emptyConfigurationBlock(t *t
 				Config: testAccBucketReplicationConfigurationConfig_filterEmptyBlock(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrID:                         "foobar",
@@ -877,7 +877,7 @@ func TestAccS3BucketReplicationConfiguration_filter_emptyPrefix(t *testing.T) {
 				Config: testAccBucketReplicationConfigurationConfig_filterEmptyPrefix(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrID:                         "foobar",
@@ -924,7 +924,7 @@ func TestAccS3BucketReplicationConfiguration_filter_tagFilter(t *testing.T) {
 				Config: testAccBucketReplicationConfigurationConfig_filterTag(rName, "testkey", "testvalue"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrID:                         "foobar",
@@ -969,7 +969,7 @@ func TestAccS3BucketReplicationConfiguration_filter_andOperator(t *testing.T) {
 				Config: testAccBucketReplicationConfigurationConfig_filterAndOperatorPrefixAndTags(rName, "testkey1", "testvalue1", "testkey2", "testvalue2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrID:                         "foobar",
@@ -996,7 +996,7 @@ func TestAccS3BucketReplicationConfiguration_filter_andOperator(t *testing.T) {
 				Config: testAccBucketReplicationConfigurationConfig_filterAndOperatorTags(rName, "testkey1", "testvalue1", "testkey2", "testvalue2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrID:                         "foobar",
@@ -1045,7 +1045,7 @@ func TestAccS3BucketReplicationConfiguration_filter_withoutId(t *testing.T) {
 				Config: testAccBucketReplicationConfigurationConfig_filterNoID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "role", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "rule.0.id"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.#", "1"),

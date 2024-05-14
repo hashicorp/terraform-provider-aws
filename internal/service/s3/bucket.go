@@ -408,7 +408,7 @@ func resourceBucket() *schema.Resource {
 				Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"role": {
+						names.AttrRole: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -2427,7 +2427,7 @@ func expandBucketReplicationConfiguration(ctx context.Context, l []interface{}) 
 
 	apiObject := &types.ReplicationConfiguration{}
 
-	if v, ok := tfMap["role"].(string); ok {
+	if v, ok := tfMap[names.AttrRole].(string); ok {
 		apiObject.Role = aws.String(v)
 	}
 
@@ -2609,7 +2609,7 @@ func flattenBucketReplicationConfiguration(ctx context.Context, apiObject *types
 	m := make(map[string]interface{})
 
 	if apiObject.Role != nil {
-		m["role"] = aws.ToString(apiObject.Role)
+		m[names.AttrRole] = aws.ToString(apiObject.Role)
 	}
 
 	if len(apiObject.Rules) > 0 {
