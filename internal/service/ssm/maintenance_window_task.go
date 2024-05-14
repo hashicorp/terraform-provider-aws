@@ -83,7 +83,7 @@ func ResourceMaintenanceWindowTask() *schema.Resource {
 				Required: true,
 			},
 
-			"service_role_arn": {
+			names.AttrServiceRoleARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -284,7 +284,7 @@ func ResourceMaintenanceWindowTask() *schema.Resource {
 										},
 									},
 
-									"service_role_arn": {
+									names.AttrServiceRoleARN: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: verify.ValidARN,
@@ -485,7 +485,7 @@ func expandTaskInvocationRunCommandParameters(config []interface{}) *ssm.Mainten
 	if attr, ok := configParam[names.AttrParameter]; ok && len(attr.(*schema.Set).List()) > 0 {
 		params.Parameters = expandTaskInvocationCommonParameters(attr.(*schema.Set).List())
 	}
-	if attr, ok := configParam["service_role_arn"]; ok && len(attr.(string)) != 0 {
+	if attr, ok := configParam[names.AttrServiceRoleARN]; ok && len(attr.(string)) != 0 {
 		params.ServiceRoleArn = aws.String(attr.(string))
 	}
 	if attr, ok := configParam["timeout_seconds"]; ok && attr.(int) != 0 {
@@ -526,7 +526,7 @@ func flattenTaskInvocationRunCommandParameters(parameters *ssm.MaintenanceWindow
 		result[names.AttrParameter] = flattenTaskInvocationCommonParameters(parameters.Parameters)
 	}
 	if parameters.ServiceRoleArn != nil {
-		result["service_role_arn"] = aws.StringValue(parameters.ServiceRoleArn)
+		result[names.AttrServiceRoleARN] = aws.StringValue(parameters.ServiceRoleArn)
 	}
 	if parameters.TimeoutSeconds != nil {
 		result["timeout_seconds"] = aws.Int64Value(parameters.TimeoutSeconds)
@@ -703,7 +703,7 @@ func resourceMaintenanceWindowTaskCreate(ctx context.Context, d *schema.Resource
 		params.Targets = expandTargets(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("service_role_arn"); ok {
+	if v, ok := d.GetOk(names.AttrServiceRoleARN); ok {
 		params.ServiceRoleArn = aws.String(v.(string))
 	}
 
@@ -758,7 +758,7 @@ func resourceMaintenanceWindowTaskRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("max_concurrency", resp.MaxConcurrency)
 	d.Set("max_errors", resp.MaxErrors)
 	d.Set("task_type", resp.TaskType)
-	d.Set("service_role_arn", resp.ServiceRoleArn)
+	d.Set(names.AttrServiceRoleARN, resp.ServiceRoleArn)
 	d.Set("task_arn", resp.TaskArn)
 	d.Set(names.AttrPriority, resp.Priority)
 	d.Set(names.AttrName, resp.Name)
@@ -800,7 +800,7 @@ func resourceMaintenanceWindowTaskUpdate(ctx context.Context, d *schema.Resource
 		Replace:      aws.Bool(true),
 	}
 
-	if v, ok := d.GetOk("service_role_arn"); ok {
+	if v, ok := d.GetOk(names.AttrServiceRoleARN); ok {
 		params.ServiceRoleArn = aws.String(v.(string))
 	}
 
