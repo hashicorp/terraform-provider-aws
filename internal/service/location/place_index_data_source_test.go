@@ -28,7 +28,7 @@ func TestAccLocationPlaceIndexDataSource_indexName(t *testing.T) {
 			{
 				Config: testAccPlaceIndexDataSourceConfig_indexName(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "create_time", resourceName, "create_time"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrCreateTime, resourceName, names.AttrCreateTime),
 					resource.TestCheckResourceAttrPair(dataSourceName, "data_source", resourceName, "data_source"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "data_source_configuration.#", resourceName, "data_source_configuration.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "data_source_configuration.0.intended_use", resourceName, "data_source_configuration.0.intended_use"),

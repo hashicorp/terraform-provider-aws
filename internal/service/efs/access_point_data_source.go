@@ -88,7 +88,7 @@ func DataSourceAccessPoint() *schema.Resource {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									"permissions": {
+									names.AttrPermissions: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},

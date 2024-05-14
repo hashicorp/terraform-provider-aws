@@ -46,7 +46,7 @@ func flattenRegions(regions map[string]types.RegionInfo) []map[string]interface{
 		region[names.AttrKMSKeyARN] = aws.ToString(regionData.SseKmsKeyId)
 
 		if v := regionData.StatusMessage; v != nil {
-			region["status_message"] = aws.ToString(v)
+			region[names.AttrStatusMessage] = aws.ToString(v)
 		}
 
 		tfRegionData = append(tfRegionData, region)

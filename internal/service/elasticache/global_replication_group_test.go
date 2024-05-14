@@ -673,12 +673,12 @@ func TestAccElastiCacheGlobalReplicationGroup_SetNumNodeGroupsOnCreate_Decrease(
 					testAccCheckGlobalReplicationGroupExists(ctx, resourceName, &globalReplicationGroup),
 					testAccCheckReplicationGroupExists(ctx, primaryReplicationGroupResourceName, &primaryReplicationGroup),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "global_node_groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "global_node_groups.#", acctest.CtOne),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "global_node_groups.*", map[string]*regexp.Regexp{
 						"global_node_group_id": regexache.MustCompile(fmt.Sprintf("^[a-z]+-%s-0001$", rName)),
 						"slots":                regexache.MustCompile("^0-16383$"), // all slots
 					}),
-					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "1"),
+					resource.TestCheckResourceAttr(resourceName, "num_node_groups", acctest.CtOne),
 					resource.TestCheckResourceAttr(primaryReplicationGroupResourceName, "num_node_groups", "3"),
 				),
 			},
@@ -800,12 +800,12 @@ func TestAccElastiCacheGlobalReplicationGroup_SetNumNodeGroupsOnUpdate_Decrease(
 					testAccCheckGlobalReplicationGroupExists(ctx, resourceName, &globalReplicationGroup),
 					testAccCheckReplicationGroupExists(ctx, primaryReplicationGroupResourceName, &primaryReplicationGroup),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "global_node_groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "global_node_groups.#", acctest.CtOne),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "global_node_groups.*", map[string]*regexp.Regexp{
 						"global_node_group_id": regexache.MustCompile(fmt.Sprintf("^[a-z]+-%s-0001$", rName)),
 						"slots":                regexache.MustCompile("^0-16383$"), // all slots
 					}),
-					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "1"),
+					resource.TestCheckResourceAttr(resourceName, "num_node_groups", acctest.CtOne),
 					resource.TestCheckResourceAttr(primaryReplicationGroupResourceName, "num_node_groups", "2"),
 				),
 			},

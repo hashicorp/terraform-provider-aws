@@ -37,7 +37,7 @@ func testAccVoiceConnectorTerminationCredentials_basic(t *testing.T) {
 				Config: testAccVoiceConnectorTerminationCredentialsConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorTerminationCredentialsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "credentials.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credentials.#", acctest.CtOne),
 				),
 			},
 			{
@@ -94,7 +94,7 @@ func testAccVoiceConnectorTerminationCredentials_update(t *testing.T) {
 				Config: testAccVoiceConnectorTerminationCredentialsConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorTerminationCredentialsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "credentials.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credentials.#", acctest.CtOne),
 				),
 			},
 			{

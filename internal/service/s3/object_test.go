@@ -1177,7 +1177,7 @@ func TestAccS3Object_tags_EmptyTag_OnCreate(t *testing.T) {
 				Config: testAccObjectConfig_tags1(rName, key, "key1", ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", ""),
 				),
 			},
@@ -1209,7 +1209,7 @@ func TestAccS3Object_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				Config: testAccObjectConfig_tags1(rName, key, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -1250,7 +1250,7 @@ func TestAccS3Object_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				Config: testAccObjectConfig_tags1(rName, key, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -1258,7 +1258,7 @@ func TestAccS3Object_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				Config: testAccObjectConfig_tags1(rName, key, "key1", ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", ""),
 				),
 			},
@@ -1293,7 +1293,7 @@ func TestAccS3Object_DefaultTags_providerOnly(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1"),
 				),
 			},
@@ -2020,9 +2020,9 @@ func TestAccS3Object_directoryBucket(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", ""),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", ""),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_retain_until_date", ""),
-					resource.TestCheckResourceAttr(resourceName, "override_provider.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "override_provider.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "override_provider.0.default_tags.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "override_provider.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "override_provider.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "override_provider.0.default_tags.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "override_provider.0.default_tags.0.tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption", "AES256"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrSource),

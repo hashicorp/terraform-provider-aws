@@ -30,7 +30,7 @@ func TestAccCECostCategoryDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostCategoryExists(ctx, resourceName, &output),
 					resource.TestCheckResourceAttrPair(dataSourceName, "cost_category_arn", resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(dataSourceName, "default_value", resourceName, "default_value"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDefaultValue, resourceName, names.AttrDefaultValue),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "rule_version", resourceName, "rule_version"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "rule.%", resourceName, "rule.%"),

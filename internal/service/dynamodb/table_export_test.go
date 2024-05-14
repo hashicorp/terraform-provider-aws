@@ -51,7 +51,7 @@ func TestAccDynamoDBTableExport_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "s3_sse_kms_key_id", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "manifest_files_s3_key"),
 					resource.TestCheckResourceAttrSet(resourceName, "export_time"),
-					resource.TestCheckResourceAttrSet(resourceName, "start_time"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrStartTime),
 					resource.TestCheckResourceAttrSet(resourceName, "end_time"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "dynamodb", regexache.MustCompile(
 						fmt.Sprintf("table\\/%s\\/export\\/+.", rName),
@@ -104,7 +104,7 @@ func TestAccDynamoDBTableExport_kms(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "s3_sse_kms_key_id", kmsKeyResourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "manifest_files_s3_key"),
 					resource.TestCheckResourceAttrSet(resourceName, "export_time"),
-					resource.TestCheckResourceAttrSet(resourceName, "start_time"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrStartTime),
 					resource.TestCheckResourceAttrSet(resourceName, "end_time"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "dynamodb", regexache.MustCompile(
 						fmt.Sprintf("table\\/%s\\/export\\/+.", rName),
@@ -157,7 +157,7 @@ func TestAccDynamoDBTableExport_s3Prefix(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "s3_sse_kms_key_id", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "manifest_files_s3_key"),
 					resource.TestCheckResourceAttrSet(resourceName, "export_time"),
-					resource.TestCheckResourceAttrSet(resourceName, "start_time"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrStartTime),
 					resource.TestCheckResourceAttrSet(resourceName, "end_time"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "dynamodb", regexache.MustCompile(
 						fmt.Sprintf("table\\/%s\\/export\\/+.", rName),

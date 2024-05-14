@@ -53,7 +53,7 @@ func testAccOrganizationCustomPolicyRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "resource_types_scope.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tag_key_scope", ""),
 					resource.TestCheckResourceAttr(resourceName, "tag_value_scope", ""),
-					resource.TestCheckResourceAttr(resourceName, "trigger_types.#", "1")),
+					resource.TestCheckResourceAttr(resourceName, "trigger_types.#", acctest.CtOne)),
 			},
 			{
 				ResourceName:      resourceName,

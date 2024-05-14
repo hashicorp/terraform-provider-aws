@@ -81,7 +81,7 @@ func ResourceCatalogTable() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"comment": {
+						names.AttrComment: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(0, 255),
@@ -124,7 +124,7 @@ func ResourceCatalogTable() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"comment": {
+									names.AttrComment: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(0, 255),
@@ -763,7 +763,7 @@ func expandColumns(columns []interface{}) []*glue.Column {
 			Name: aws.String(elementMap[names.AttrName].(string)),
 		}
 
-		if v, ok := elementMap["comment"]; ok {
+		if v, ok := elementMap[names.AttrComment]; ok {
 			column.Comment = aws.String(v.(string))
 		}
 
@@ -952,7 +952,7 @@ func flattenColumn(c *glue.Column) map[string]interface{} {
 	}
 
 	if v := aws.StringValue(c.Comment); v != "" {
-		column["comment"] = v
+		column[names.AttrComment] = v
 	}
 
 	if v := c.Parameters; v != nil {

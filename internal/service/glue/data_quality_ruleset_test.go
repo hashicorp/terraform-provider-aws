@@ -150,7 +150,7 @@ func TestAccGlueDataQualityRuleset_targetTableRequired(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityRulesetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "target_table.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_table.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "target_table.0.catalog_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.database_name", "aws_glue_catalog_database.test", names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.table_name", "aws_glue_catalog_table.test", names.AttrName),
@@ -185,7 +185,7 @@ func TestAccGlueDataQualityRuleset_targetTableFull(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityRulesetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "target_table.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_table.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.catalog_id", "aws_glue_catalog_table.test", names.AttrCatalogID),
 					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.database_name", "aws_glue_catalog_database.test", names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.table_name", "aws_glue_catalog_table.test", names.AttrName),
@@ -218,7 +218,7 @@ func TestAccGlueDataQualityRuleset_tags(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDataQualityRulesetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -242,7 +242,7 @@ func TestAccGlueDataQualityRuleset_tags(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDataQualityRulesetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

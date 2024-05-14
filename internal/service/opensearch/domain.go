@@ -266,7 +266,7 @@ func ResourceDomain() *schema.Resource {
 							Optional:         true,
 							DiffSuppressFunc: suppressComputedDedicatedMaster,
 						},
-						"instance_count": {
+						names.AttrInstanceCount: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Default:  1,
@@ -420,11 +420,11 @@ func ResourceDomain() *schema.Resource {
 							Computed:     true,
 							ValidateFunc: validation.IntAtLeast(125),
 						},
-						"volume_size": {
+						names.AttrVolumeSize: {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
-						"volume_type": {
+						names.AttrVolumeType: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -1244,7 +1244,7 @@ func expandClusterConfig(m map[string]interface{}) *opensearchservice.ClusterCon
 		}
 	}
 
-	if v, ok := m["instance_count"]; ok {
+	if v, ok := m[names.AttrInstanceCount]; ok {
 		config.InstanceCount = aws.Int64(int64(v.(int)))
 	}
 
@@ -1336,7 +1336,7 @@ func flattenClusterConfig(c *opensearchservice.ClusterConfig) []map[string]inter
 		m["dedicated_master_type"] = aws.StringValue(c.DedicatedMasterType)
 	}
 	if c.InstanceCount != nil {
-		m["instance_count"] = aws.Int64Value(c.InstanceCount)
+		m[names.AttrInstanceCount] = aws.Int64Value(c.InstanceCount)
 	}
 	if c.InstanceType != nil {
 		m[names.AttrInstanceType] = aws.StringValue(c.InstanceType)

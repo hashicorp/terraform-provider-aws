@@ -41,7 +41,7 @@ func TestAccAppConfigConfigurationProfileDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "location_uri", "hosted"),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(dataSourceName, "retrieval_role_arn", ""),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.key1", "value1"),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrType, "AWS.Freeform"),
 					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "validator.*", map[string]string{

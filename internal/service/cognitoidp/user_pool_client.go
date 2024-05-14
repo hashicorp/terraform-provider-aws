@@ -121,7 +121,7 @@ func (r *userPoolClientResource) Schema(ctx context.Context, request resource.Sc
 					setplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"client_secret": schema.StringAttribute{
+			names.AttrClientSecret: schema.StringAttribute{
 				Computed:  true,
 				Sensitive: true,
 				PlanModifiers: []planmodifier.String{

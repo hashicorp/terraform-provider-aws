@@ -102,7 +102,7 @@ func resourceObjectLambdaAccessPoint() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"function_arn": {
+															names.AttrFunctionARN: {
 																Type:         schema.TypeString,
 																Required:     true,
 																ValidateFunc: verify.ValidARN,
@@ -416,7 +416,7 @@ func expandObjectLambdaContentTransformation(tfMap map[string]interface{}) types
 func expandLambdaTransformation(tfMap map[string]interface{}) types.AwsLambdaTransformation {
 	apiObject := types.AwsLambdaTransformation{}
 
-	if v, ok := tfMap["function_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrFunctionARN].(string); ok && v != "" {
 		apiObject.FunctionArn = aws.String(v)
 	}
 
@@ -493,7 +493,7 @@ func flattenLambdaTransformation(apiObject types.AwsLambdaTransformation) map[st
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.FunctionArn; v != nil {
-		tfMap["function_arn"] = aws.ToString(v)
+		tfMap[names.AttrFunctionARN] = aws.ToString(v)
 	}
 
 	if v := apiObject.FunctionPayload; v != nil {

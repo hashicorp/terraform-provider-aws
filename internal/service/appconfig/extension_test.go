@@ -68,7 +68,7 @@ func TestAccAppConfigExtension_ActionPoint(t *testing.T) {
 				Config: testAccExtensionConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "action_point.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action_point.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "action_point.*", map[string]string{
 						"point": "ON_DEPLOYMENT_COMPLETE",
 					}),
@@ -105,7 +105,7 @@ func TestAccAppConfigExtension_ActionPoint(t *testing.T) {
 				Config: testAccExtensionConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "action_point.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action_point.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "action_point.*", map[string]string{
 						"point": "ON_DEPLOYMENT_COMPLETE",
 					}),
@@ -139,7 +139,7 @@ func TestAccAppConfigExtension_Parameter(t *testing.T) {
 				Config: testAccExtensionConfig_parameter1(rName, pName1, pDescription1, pRequiredTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:        pName1,
 						names.AttrDescription: pDescription1,
@@ -173,7 +173,7 @@ func TestAccAppConfigExtension_Parameter(t *testing.T) {
 				Config: testAccExtensionConfig_parameter1(rName, pName2, pDescription2, pRequiredFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:        pName2,
 						names.AttrDescription: pDescription2,
@@ -272,7 +272,7 @@ func TestAccAppConfigExtension_tags(t *testing.T) {
 				Config: testAccExtensionConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -294,7 +294,7 @@ func TestAccAppConfigExtension_tags(t *testing.T) {
 				Config: testAccExtensionConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

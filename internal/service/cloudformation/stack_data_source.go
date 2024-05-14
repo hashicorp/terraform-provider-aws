@@ -38,7 +38,7 @@ func dataSourceStack() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"iam_role_arn": {
+			names.AttrIAMRoleARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -92,7 +92,7 @@ func dataSourceStackRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	d.Set(names.AttrDescription, stack.Description)
 	d.Set("disable_rollback", stack.DisableRollback)
-	d.Set("iam_role_arn", stack.RoleARN)
+	d.Set(names.AttrIAMRoleARN, stack.RoleARN)
 	if len(stack.NotificationARNs) > 0 {
 		d.Set("notification_arns", stack.NotificationARNs)
 	}

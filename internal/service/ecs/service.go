@@ -414,7 +414,7 @@ func ResourceService() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"timeout": {
+									names.AttrTimeout: {
 										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 1,
@@ -453,7 +453,7 @@ func ResourceService() *schema.Resource {
 														},
 													},
 												},
-												"kms_key": {
+												names.AttrKMSKey: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
@@ -507,7 +507,7 @@ func ResourceService() *schema.Resource {
 			},
 			// modeled after null_resource & aws_api_gateway_deployment
 			// only for _updates in-place_ rather than replacements
-			"triggers": {
+			names.AttrTriggers: {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Computed: true,
@@ -748,7 +748,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("platform_version", service.PlatformVersion)
 	d.Set("enable_execute_command", service.EnableExecuteCommand)
 
-	d.Set("triggers", d.Get("triggers"))
+	d.Set(names.AttrTriggers, d.Get(names.AttrTriggers))
 
 	// Save cluster in the same format
 	if strings.HasPrefix(d.Get("cluster").(string), "arn:"+meta.(*conns.AWSClient).Partition+":ecs:") {
@@ -1098,14 +1098,14 @@ func triggersCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta inter
 		fnd = v.(bool)
 	}
 
-	if d.HasChange("triggers") && !fnd {
-		return d.Clear("triggers")
+	if d.HasChange(names.AttrTriggers) && !fnd {
+		return d.Clear(names.AttrTriggers)
 	}
 
-	if d.HasChange("triggers") && fnd {
-		o, n := d.GetChange("triggers")
+	if d.HasChange(names.AttrTriggers) && fnd {
+		o, n := d.GetChange(names.AttrTriggers)
 		if len(o.(map[string]interface{})) > 0 && len(n.(map[string]interface{})) == 0 {
-			return d.Clear("triggers")
+			return d.Clear(names.AttrTriggers)
 		}
 
 		return nil
@@ -1492,7 +1492,7 @@ func expandServices(srv []interface{}) []*ecs.ServiceConnectService {
 			config.PortName = aws.String(v)
 		}
 
-		if v, ok := raw["timeout"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := raw[names.AttrTimeout].([]interface{}); ok && len(v) > 0 {
 			config.Timeout = expandTimeout(v)
 		}
 
@@ -1538,7 +1538,7 @@ func expandTLS(tls []interface{}) *ecs.ServiceConnectTlsConfiguration {
 	if v, ok := raw["issuer_cert_authority"].([]interface{}); ok && len(v) > 0 {
 		tlsConfig.IssuerCertificateAuthority = expandIssuerCertAuthority(v)
 	}
-	if v, ok := raw["kms_key"].(string); ok && v != "" {
+	if v, ok := raw[names.AttrKMSKey].(string); ok && v != "" {
 		tlsConfig.KmsKey = aws.String(v)
 	}
 	if v, ok := raw[names.AttrRoleARN].(string); ok && v != "" {

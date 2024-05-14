@@ -73,7 +73,7 @@ func resourceParameter() *schema.Resource {
 				Computed:     true,
 				ExactlyOneOf: []string{"insecure_value", names.AttrValue},
 			},
-			"key_id": {
+			names.AttrKeyID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -168,7 +168,7 @@ func resourceParameterCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("key_id"); ok && typ == awstypes.ParameterTypeSecureString {
+	if v, ok := d.GetOk(names.AttrKeyID); ok && typ == awstypes.ParameterTypeSecureString {
 		input.KeyId = aws.String(v.(string))
 	}
 
@@ -272,7 +272,7 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("allowed_pattern", detail.AllowedPattern)
 	d.Set("data_type", detail.DataType)
 	d.Set(names.AttrDescription, detail.Description)
-	d.Set("key_id", detail.KeyId)
+	d.Set(names.AttrKeyID, detail.KeyId)
 	d.Set("tier", detail.Tier)
 
 	return diags
@@ -305,8 +305,8 @@ func resourceParameterUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
-		if d.HasChange("key_id") && typ == awstypes.ParameterTypeSecureString {
-			input.KeyId = aws.String(d.Get("key_id").(string))
+		if d.HasChange(names.AttrKeyID) && typ == awstypes.ParameterTypeSecureString {
+			input.KeyId = aws.String(d.Get(names.AttrKeyID).(string))
 		}
 
 		// Retrieve the value set in the config directly to counteract the DiffSuppressFunc above.

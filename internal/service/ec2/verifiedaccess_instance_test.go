@@ -186,7 +186,7 @@ func testAccVerifiedAccessInstance_tags(t *testing.T, semaphore tfsync.Semaphore
 				Config: testAccVerifiedAccessInstanceConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -205,7 +205,7 @@ func testAccVerifiedAccessInstance_tags(t *testing.T, semaphore tfsync.Semaphore
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v3),
 					testAccCheckVerifiedAccessInstanceNotRecreated(&v2, &v3),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

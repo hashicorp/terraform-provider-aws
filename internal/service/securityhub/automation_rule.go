@@ -223,7 +223,7 @@ func (r *automationRuleResource) Schema(ctx context.Context, request resource.Sc
 						"resource_application_arn":           stringFilterSchemaFramework(ctx),
 						"resource_application_name":          stringFilterSchemaFramework(ctx),
 						"resource_details_other":             mapFilterSchemaFramework(ctx),
-						"resource_id":                        stringFilterSchemaFramework(ctx),
+						names.AttrResourceID:                 stringFilterSchemaFramework(ctx),
 						"resource_partition":                 stringFilterSchemaFramework(ctx),
 						"resource_region":                    stringFilterSchemaFramework(ctx),
 						"resource_tags":                      mapFilterSchemaFramework(ctx),

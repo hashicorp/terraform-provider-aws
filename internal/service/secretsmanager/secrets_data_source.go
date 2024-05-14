@@ -29,7 +29,7 @@ func dataSourceSecrets() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			names.AttrFilter: namevaluesfiltersv2.Schema(),
-			"names": {
+			names.AttrNames: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -65,7 +65,7 @@ func dataSourceSecretsRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set(names.AttrARNs, tfslices.ApplyToAll(results, func(v types.SecretListEntry) string { return aws.ToString(v.ARN) }))
-	d.Set("names", tfslices.ApplyToAll(results, func(v types.SecretListEntry) string { return aws.ToString(v.Name) }))
+	d.Set(names.AttrNames, tfslices.ApplyToAll(results, func(v types.SecretListEntry) string { return aws.ToString(v.Name) }))
 
 	return diags
 }

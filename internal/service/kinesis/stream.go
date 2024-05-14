@@ -111,7 +111,7 @@ func resourceStream() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"retention_period": {
+			names.AttrRetentionPeriod: {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      24,
@@ -181,7 +181,7 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		d.SetId(aws.ToString(streamDescription.StreamARN))
 	}
 
-	if v, ok := d.GetOk("retention_period"); ok && v.(int) > 0 {
+	if v, ok := d.GetOk(names.AttrRetentionPeriod); ok && v.(int) > 0 {
 		input := &kinesis.IncreaseStreamRetentionPeriodInput{
 			RetentionPeriodHours: aws.Int32(int32(v.(int))),
 			StreamName:           aws.String(name),
@@ -268,7 +268,7 @@ func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("encryption_type", stream.EncryptionType)
 	d.Set(names.AttrKMSKeyID, stream.KeyId)
 	d.Set(names.AttrName, stream.StreamName)
-	d.Set("retention_period", stream.RetentionPeriodHours)
+	d.Set(names.AttrRetentionPeriod, stream.RetentionPeriodHours)
 	streamMode := types.StreamModeProvisioned
 	if details := stream.StreamModeDetails; details != nil {
 		streamMode = details.StreamMode
@@ -336,8 +336,8 @@ func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	if d.HasChange("retention_period") {
-		oraw, nraw := d.GetChange("retention_period")
+	if d.HasChange(names.AttrRetentionPeriod) {
+		oraw, nraw := d.GetChange(names.AttrRetentionPeriod)
 		o := oraw.(int)
 		n := nraw.(int)
 

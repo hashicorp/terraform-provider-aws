@@ -51,15 +51,15 @@ func TestAccFSxLustreFileSystem_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "export_path", ""),
 					resource.TestCheckResourceAttr(resourceName, "import_path", ""),
 					resource.TestCheckResourceAttr(resourceName, "imported_file_chunk_size", "0"),
-					resource.TestCheckResourceAttr(resourceName, "log_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.level", "DISABLED"),
 					resource.TestCheckResourceAttrSet(resourceName, "mount_name"),
 					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "2"),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "1200"),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", fsx.StorageTypeSsd),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, fsx.StorageTypeSsd),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestMatchResourceAttr(resourceName, names.AttrVPCID, regexache.MustCompile(`^vpc-.+`)),
 					resource.TestMatchResourceAttr(resourceName, "weekly_maintenance_start_time", regexache.MustCompile(`^\d:\d\d:\d\d$`)),
@@ -273,7 +273,7 @@ func TestAccFSxLustreFileSystem_securityGroupIDs(t *testing.T) {
 				Config: testAccLustreFileSystemConfig_securityGroupIDs1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem1),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.CtOne),
 				),
 			},
 			{
@@ -429,7 +429,7 @@ func TestAccFSxLustreFileSystem_tags(t *testing.T) {
 				Config: testAccLustreFileSystemConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -454,7 +454,7 @@ func TestAccFSxLustreFileSystem_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem3),
 					testAccCheckLustreFileSystemNotRecreated(&filesystem2, &filesystem3),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -536,7 +536,7 @@ func TestAccFSxLustreFileSystem_automaticBackupRetentionDays(t *testing.T) {
 				Config: testAccLustreFileSystemConfig_automaticBackupRetentionDays(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem1),
-					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "1"),
+					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", acctest.CtOne),
 				),
 			},
 		},
@@ -744,7 +744,7 @@ func TestAccFSxLustreFileSystem_logConfig(t *testing.T) {
 				Config: testAccLustreFileSystemConfig_log(rName, "WARN_ONLY"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem),
-					resource.TestCheckResourceAttr(resourceName, "log_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.level", "WARN_ONLY"),
 					resource.TestCheckResourceAttrSet(resourceName, "log_configuration.0.destination"),
 				),
@@ -759,7 +759,7 @@ func TestAccFSxLustreFileSystem_logConfig(t *testing.T) {
 				Config: testAccLustreFileSystemConfig_log(rName, "ERROR_ONLY"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem),
-					resource.TestCheckResourceAttr(resourceName, "log_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.level", "ERROR_ONLY"),
 					resource.TestCheckResourceAttrSet(resourceName, "log_configuration.0.destination"),
 				),
@@ -784,7 +784,7 @@ func TestAccFSxLustreFileSystem_rootSquashConfig(t *testing.T) {
 				Config: testAccLustreFileSystemConfig_rootSquash(rName, "365534:65534"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem),
-					resource.TestCheckResourceAttr(resourceName, "root_squash_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "root_squash_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "root_squash_configuration.0.root_squash", "365534:65534"),
 				),
 			},
@@ -798,7 +798,7 @@ func TestAccFSxLustreFileSystem_rootSquashConfig(t *testing.T) {
 				Config: testAccLustreFileSystemConfig_rootSquash(rName, "355534:64534"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem),
-					resource.TestCheckResourceAttr(resourceName, "root_squash_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "root_squash_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "root_squash_configuration.0.root_squash", "355534:64534"),
 				),
 			},
@@ -925,7 +925,7 @@ func TestAccFSxLustreFileSystem_storageTypeHddDriveCacheRead(t *testing.T) {
 				Config: testAccLustreFileSystemConfig_hddStorageType(rName, fsx.DriveCacheTypeRead),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", fsx.StorageTypeHdd),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, fsx.StorageTypeHdd),
 					resource.TestCheckResourceAttr(resourceName, "drive_cache_type", fsx.DriveCacheTypeRead),
 				),
 			},
@@ -955,7 +955,7 @@ func TestAccFSxLustreFileSystem_storageTypeHddDriveCacheNone(t *testing.T) {
 				Config: testAccLustreFileSystemConfig_hddStorageType(rName, fsx.DriveCacheTypeNone),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", fsx.StorageTypeHdd),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, fsx.StorageTypeHdd),
 					resource.TestCheckResourceAttr(resourceName, "drive_cache_type", fsx.DriveCacheTypeNone),
 				),
 			},

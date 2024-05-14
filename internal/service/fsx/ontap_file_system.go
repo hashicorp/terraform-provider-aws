@@ -201,7 +201,7 @@ func resourceONTAPFileSystem() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.IntBetween(1024, 1024*1024),
 			},
-			"storage_type": {
+			names.AttrStorageType: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -273,7 +273,7 @@ func resourceONTAPFileSystemCreate(ctx context.Context, d *schema.ResourceData, 
 			PreferredSubnetId:            aws.String(d.Get("preferred_subnet_id").(string)),
 		},
 		StorageCapacity: aws.Int64(int64(d.Get("storage_capacity").(int))),
-		StorageType:     aws.String(d.Get("storage_type").(string)),
+		StorageType:     aws.String(d.Get(names.AttrStorageType).(string)),
 		SubnetIds:       flex.ExpandStringList(d.Get(names.AttrSubnetIDs).([]interface{})),
 		Tags:            getTagsIn(ctx),
 	}
@@ -379,7 +379,7 @@ func resourceONTAPFileSystemRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("preferred_subnet_id", ontapConfig.PreferredSubnetId)
 	d.Set("route_table_ids", aws.StringValueSlice(ontapConfig.RouteTableIds))
 	d.Set("storage_capacity", filesystem.StorageCapacity)
-	d.Set("storage_type", filesystem.StorageType)
+	d.Set(names.AttrStorageType, filesystem.StorageType)
 	d.Set(names.AttrSubnetIDs, aws.StringValueSlice(filesystem.SubnetIds))
 	if aws.StringValue(ontapConfig.DeploymentType) == fsx.OntapDeploymentTypeSingleAz2 {
 		d.Set("throughput_capacity", nil)

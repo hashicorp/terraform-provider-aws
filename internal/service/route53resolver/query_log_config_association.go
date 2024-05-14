@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_route53_resolver_query_log_config_association")
@@ -36,7 +37,7 @@ func ResourceQueryLogConfigAssociation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"resource_id": {
+			names.AttrResourceID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -50,7 +51,7 @@ func resourceQueryLogConfigAssociationCreate(ctx context.Context, d *schema.Reso
 
 	input := &route53resolver.AssociateResolverQueryLogConfigInput{
 		ResolverQueryLogConfigId: aws.String(d.Get("resolver_query_log_config_id").(string)),
-		ResourceId:               aws.String(d.Get("resource_id").(string)),
+		ResourceId:               aws.String(d.Get(names.AttrResourceID).(string)),
 	}
 
 	output, err := conn.AssociateResolverQueryLogConfigWithContext(ctx, input)
@@ -84,7 +85,7 @@ func resourceQueryLogConfigAssociationRead(ctx context.Context, d *schema.Resour
 	}
 
 	d.Set("resolver_query_log_config_id", queryLogConfigAssociation.ResolverQueryLogConfigId)
-	d.Set("resource_id", queryLogConfigAssociation.ResourceId)
+	d.Set(names.AttrResourceID, queryLogConfigAssociation.ResourceId)
 
 	return nil
 }
@@ -95,7 +96,7 @@ func resourceQueryLogConfigAssociationDelete(ctx context.Context, d *schema.Reso
 	log.Printf("[DEBUG] Deleting Route53 Resolver Query Log Config Association: %s", d.Id())
 	_, err := conn.DisassociateResolverQueryLogConfigWithContext(ctx, &route53resolver.DisassociateResolverQueryLogConfigInput{
 		ResolverQueryLogConfigId: aws.String(d.Get("resolver_query_log_config_id").(string)),
-		ResourceId:               aws.String(d.Get("resource_id").(string)),
+		ResourceId:               aws.String(d.Get(names.AttrResourceID).(string)),
 	})
 
 	if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {

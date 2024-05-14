@@ -30,7 +30,7 @@ func TestAccAPIGatewayVPCLinkDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrStatus),
-					resource.TestCheckResourceAttrSet(dataSourceName, "status_message"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrStatusMessage),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "target_arns.#", resourceName, "target_arns.#"),
 				),

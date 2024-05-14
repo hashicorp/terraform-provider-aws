@@ -227,7 +227,7 @@ func pivotTableVisualSchema() *schema.Schema {
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"role": stringSchema(false, validation.StringInSlice(quicksight.PivotTableConditionalFormattingScopeRole_Values(), false)),
+																names.AttrRole: stringSchema(false, validation.StringInSlice(quicksight.PivotTableConditionalFormattingScopeRole_Values(), false)),
 															},
 														},
 													},
@@ -1169,7 +1169,7 @@ func expandPivotTableConditionalFormattingScope(tfList []interface{}) *quicksigh
 
 	options := &quicksight.PivotTableConditionalFormattingScope{}
 
-	if v, ok := tfMap["role"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrRole].(string); ok && v != "" {
 		options.Role = aws.String(v)
 	}
 
@@ -1740,7 +1740,7 @@ func flattenPivotTableConditionalFormattingScope(apiObject *quicksight.PivotTabl
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Role != nil {
-		tfMap["role"] = aws.StringValue(apiObject.Role)
+		tfMap[names.AttrRole] = aws.StringValue(apiObject.Role)
 	}
 
 	return []interface{}{tfMap}

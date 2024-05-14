@@ -32,7 +32,7 @@ func TestAccKinesisStreamDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "closed_shards.#", "0"),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(dataSourceName, "open_shards.#", "2"),
-					resource.TestCheckResourceAttr(dataSourceName, "retention_period", "72"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrRetentionPeriod, "72"),
 					resource.TestCheckResourceAttr(dataSourceName, "shard_level_metrics.#", "2"),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrStatus, "ACTIVE"),
 					resource.TestCheckResourceAttr(dataSourceName, "stream_mode_details.0.stream_mode", "PROVISIONED"),

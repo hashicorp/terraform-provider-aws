@@ -89,7 +89,7 @@ func ResourceComponent() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(imagebuilder.Platform_Values(), false),
 			},
-			"skip_destroy": {
+			names.AttrSkipDestroy: {
 				Type:     schema.TypeBool,
 				Default:  false,
 				Optional: true,
@@ -246,7 +246,7 @@ func resourceComponentUpdate(ctx context.Context, d *schema.ResourceData, meta i
 func resourceComponentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	if v, ok := d.GetOk("skip_destroy"); ok && v.(bool) {
+	if v, ok := d.GetOk(names.AttrSkipDestroy); ok && v.(bool) {
 		log.Printf("[DEBUG] Retaining Imagebuilder Component version %q", d.Id())
 		return diags
 	}

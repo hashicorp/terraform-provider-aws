@@ -93,7 +93,7 @@ func TestAccFSxOpenZFSSnapshot_tags(t *testing.T) {
 				Config: testAccOpenZFSSnapshotConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSSnapshotExists(ctx, resourceName, &snapshot),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -115,7 +115,7 @@ func TestAccFSxOpenZFSSnapshot_tags(t *testing.T) {
 				Config: testAccOpenZFSSnapshotConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSSnapshotExists(ctx, resourceName, &snapshot),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

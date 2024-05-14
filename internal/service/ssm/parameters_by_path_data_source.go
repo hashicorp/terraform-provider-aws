@@ -28,7 +28,7 @@ func dataSourceParametersByPath() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"names": {
+			names.AttrNames: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -89,7 +89,7 @@ func dataSourceParametersReadByPath(ctx context.Context, d *schema.ResourceData,
 	d.Set(names.AttrARNs, tfslices.ApplyToAll(output, func(v awstypes.Parameter) string {
 		return aws.ToString(v.ARN)
 	}))
-	d.Set("names", tfslices.ApplyToAll(output, func(v awstypes.Parameter) string {
+	d.Set(names.AttrNames, tfslices.ApplyToAll(output, func(v awstypes.Parameter) string {
 		return aws.ToString(v.Name)
 	}))
 	d.Set("types", tfslices.ApplyToAll(output, func(v awstypes.Parameter) awstypes.ParameterType {

@@ -299,7 +299,7 @@ func TestAccAPIGatewayDeployment_variables(t *testing.T) {
 				Config: testAccDeploymentConfig_variables(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
-					resource.TestCheckResourceAttr(resourceName, "variables.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "variables.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "variables.key1", "value1"),
 				),
 			},

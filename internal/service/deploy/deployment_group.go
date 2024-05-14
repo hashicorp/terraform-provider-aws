@@ -281,7 +281,7 @@ func resourceDeploymentGroup() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"cluster_name": {
+						names.AttrClusterName: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.NoZeroValues,
@@ -413,7 +413,7 @@ func resourceDeploymentGroup() *schema.Resource {
 				Default:          types.OutdatedInstancesStrategyUpdate,
 				ValidateDiagFunc: enum.Validate[types.OutdatedInstancesStrategy](),
 			},
-			"service_role_arn": {
+			names.AttrServiceRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -457,7 +457,7 @@ func resourceDeploymentGroupCreate(ctx context.Context, d *schema.ResourceData, 
 
 	applicationName := d.Get("app_name").(string)
 	deploymentGroupName := d.Get("deployment_group_name").(string)
-	serviceRoleArn := d.Get("service_role_arn").(string)
+	serviceRoleArn := d.Get(names.AttrServiceRoleARN).(string)
 	input := &codedeploy.CreateDeploymentGroupInput{
 		ApplicationName:     aws.String(applicationName),
 		DeploymentGroupName: aws.String(deploymentGroupName),
@@ -605,7 +605,7 @@ func resourceDeploymentGroupRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "setting on_premises_instance_tag_filter: %s", err)
 	}
 	d.Set("outdated_instances_strategy", group.OutdatedInstancesStrategy)
-	d.Set("service_role_arn", group.ServiceRoleArn)
+	d.Set(names.AttrServiceRoleARN, group.ServiceRoleArn)
 	if err := d.Set("trigger_configuration", flattenTriggerConfigs(group.TriggerConfigurations)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting trigger_configuration: %s", err)
 	}
@@ -620,7 +620,7 @@ func resourceDeploymentGroupUpdate(ctx context.Context, d *schema.ResourceData, 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		// required fields
 		applicationName := d.Get("app_name").(string)
-		serviceRoleArn := d.Get("service_role_arn").(string)
+		serviceRoleArn := d.Get(names.AttrServiceRoleARN).(string)
 
 		input := codedeploy.UpdateDeploymentGroupInput{
 			ApplicationName: aws.String(applicationName),
@@ -905,7 +905,7 @@ func expandECSServices(l []interface{}) []types.ECSService {
 		m := mRaw.(map[string]interface{})
 
 		ecsService := types.ECSService{
-			ClusterName: aws.String(m["cluster_name"].(string)),
+			ClusterName: aws.String(m[names.AttrClusterName].(string)),
 			ServiceName: aws.String(m[names.AttrServiceName].(string)),
 		}
 
@@ -1202,7 +1202,7 @@ func flattenECSServices(ecsServices []types.ECSService) []interface{} {
 
 	for _, ecsService := range ecsServices {
 		m := map[string]interface{}{
-			"cluster_name":        aws.ToString(ecsService.ClusterName),
+			names.AttrClusterName: aws.ToString(ecsService.ClusterName),
 			names.AttrServiceName: aws.ToString(ecsService.ServiceName),
 		}
 

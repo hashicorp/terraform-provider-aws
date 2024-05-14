@@ -43,7 +43,7 @@ func TestAccLambdaLayerVersionPermission_basic_byARN(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
 			},
 		},
 	})
@@ -74,7 +74,7 @@ func TestAccLambdaLayerVersionPermission_basic_byName(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
 			},
 		},
 	})
@@ -106,7 +106,7 @@ func TestAccLambdaLayerVersionPermission_org(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
 			},
 		},
 	})
@@ -137,7 +137,7 @@ func TestAccLambdaLayerVersionPermission_account(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
 			},
 		},
 	})
@@ -182,14 +182,14 @@ func TestAccLambdaLayerVersionPermission_skipDestroy(t *testing.T) {
 				Config: testAccLayerVersionPermissionConfig_skipDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerVersionPermissionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, "true"),
 				),
 			},
 			{
 				Config: testAccLayerVersionPermissionConfig_skipDestroy(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerVersionPermissionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, "true"),
 				),
 			},
 		},

@@ -37,8 +37,8 @@ func TestAccRedshiftEndpointAccess_basic(t *testing.T) {
 					testAccCheckEndpointAccessExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_name", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "5439"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint.#", acctest.CtOne),
 					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
 					resource.TestCheckResourceAttrPair(resourceName, "subnet_group_name", "aws_redshift_subnet_group.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrClusterIdentifier, "aws_redshift_cluster.test", names.AttrClusterIdentifier),
@@ -70,7 +70,7 @@ func TestAccRedshiftEndpointAccess_sgs(t *testing.T) {
 				Config: testAccEndpointAccessConfig_sgs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointAccessExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", acctest.CtOne),
 				),
 			},
 			{

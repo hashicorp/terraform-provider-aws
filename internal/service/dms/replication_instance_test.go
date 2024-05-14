@@ -47,11 +47,11 @@ func TestAccDMSReplicationInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "replication_instance_arn"),
 					resource.TestCheckResourceAttr(resourceName, "replication_instance_class", replicationInstanceClass),
 					resource.TestCheckResourceAttr(resourceName, "replication_instance_id", rName),
-					resource.TestCheckResourceAttr(resourceName, "replication_instance_private_ips.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "replication_instance_public_ips.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "replication_instance_private_ips.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "replication_instance_public_ips.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "replication_subnet_group_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", acctest.CtOne),
 				),
 			},
 			{
@@ -387,7 +387,7 @@ func TestAccDMSReplicationInstance_publiclyAccessible(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, "true"),
-					resource.TestCheckResourceAttr(resourceName, "replication_instance_public_ips.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "replication_instance_public_ips.#", acctest.CtOne),
 				),
 			},
 			{
@@ -453,7 +453,7 @@ func TestAccDMSReplicationInstance_tags(t *testing.T) {
 				Config: testAccReplicationInstanceConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -476,7 +476,7 @@ func TestAccDMSReplicationInstance_tags(t *testing.T) {
 				Config: testAccReplicationInstanceConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -499,7 +499,7 @@ func TestAccDMSReplicationInstance_vpcSecurityGroupIDs(t *testing.T) {
 				Config: testAccReplicationInstanceConfig_vpcSecurityGroupIDs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", acctest.CtOne),
 				),
 			},
 			{

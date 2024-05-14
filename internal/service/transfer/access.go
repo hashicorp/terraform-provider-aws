@@ -108,7 +108,7 @@ func ResourceAccess() *schema.Resource {
 				},
 			},
 
-			"role": {
+			names.AttrRole: {
 				Type: schema.TypeString,
 				// Although Role is required in the API it is not currently returned on Read.
 				// Required:     true,
@@ -163,7 +163,7 @@ func resourceAccessCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.PosixProfile = expandUserPOSIXUser(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("role"); ok {
+	if v, ok := d.GetOk(names.AttrRole); ok {
 		input.Role = aws.String(v.(string))
 	}
 
@@ -266,8 +266,8 @@ func resourceAccessUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.PosixProfile = expandUserPOSIXUser(d.Get("posix_profile").([]interface{}))
 	}
 
-	if d.HasChange("role") {
-		input.Role = aws.String(d.Get("role").(string))
+	if d.HasChange(names.AttrRole) {
+		input.Role = aws.String(d.Get(names.AttrRole).(string))
 	}
 
 	log.Printf("[DEBUG] Updating Transfer Access: %s", input)

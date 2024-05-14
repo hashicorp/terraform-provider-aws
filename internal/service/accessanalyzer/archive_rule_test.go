@@ -94,7 +94,7 @@ filter {
 				Config: testAccArchiveRuleConfig_updateFilters(rName, filters),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckArchiveRuleExists(ctx, resourceName, &archiveRule),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.criteria", "error"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.exists", "true"),
 				),
@@ -114,7 +114,7 @@ filter {
 				Config: testAccArchiveRuleConfig_updateFilters(rName, filtersRemoved),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckArchiveRuleExists(ctx, resourceName, &archiveRule),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.criteria", "isPublic"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.eq.0", "true"),
 				),

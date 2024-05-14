@@ -179,7 +179,7 @@ func TestAccTransferConnector_tags(t *testing.T) {
 				Config: testAccConnectorConfig_tags1(rName, "http://www.example.com", "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectorExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -201,7 +201,7 @@ func TestAccTransferConnector_tags(t *testing.T) {
 				Config: testAccConnectorConfig_tags1(rName, "http://www.example.com", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectorExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

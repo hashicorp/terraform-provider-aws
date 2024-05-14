@@ -44,7 +44,7 @@ func testAccApp_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "domain_id", "aws_sagemaker_domain.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "user_profile_name", "aws_sagemaker_user_profile.test", "user_profile_name"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`app/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "resource_spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "resource_spec.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "resource_spec.0.sagemaker_image_arn"),
 					resource.TestCheckResourceAttr(resourceName, "resource_spec.0.instance_type", "system"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -113,7 +113,7 @@ func testAccApp_resourceSpec(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, "app_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "resource_spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "resource_spec.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "resource_spec.0.instance_type", "system"),
 					resource.TestCheckResourceAttrSet(resourceName, "resource_spec.0.sagemaker_image_arn"),
 				),
@@ -149,7 +149,7 @@ func testAccApp_resourceSpecLifecycle(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, "app_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "resource_spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "resource_spec.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "resource_spec.0.instance_type", "system"),
 					resource.TestCheckResourceAttrSet(resourceName, "resource_spec.0.sagemaker_image_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_spec.0.lifecycle_config_arn", "aws_sagemaker_studio_lifecycle_config.test", names.AttrARN),
@@ -184,7 +184,7 @@ func testAccApp_tags(t *testing.T) {
 				Config: testAccAppConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -206,7 +206,7 @@ func testAccApp_tags(t *testing.T) {
 				Config: testAccAppConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

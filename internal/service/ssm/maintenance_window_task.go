@@ -80,7 +80,7 @@ func resourceMaintenanceWindowTask() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntAtLeast(0),
 			},
-			"service_role_arn": {
+			names.AttrServiceRoleARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -195,7 +195,7 @@ func resourceMaintenanceWindowTask() *schema.Resource {
 											},
 										},
 									},
-									"comment": {
+									names.AttrComment: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(0, 100),
@@ -267,7 +267,7 @@ func resourceMaintenanceWindowTask() *schema.Resource {
 											},
 										},
 									},
-									"service_role_arn": {
+									names.AttrServiceRoleARN: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: verify.ValidARN,
@@ -356,7 +356,7 @@ func resourceMaintenanceWindowTaskCreate(ctx context.Context, d *schema.Resource
 		input.Priority = aws.Int32(int32(v.(int)))
 	}
 
-	if v, ok := d.GetOk("service_role_arn"); ok {
+	if v, ok := d.GetOk(names.AttrServiceRoleARN); ok {
 		input.ServiceRoleArn = aws.String(v.(string))
 	}
 
@@ -410,7 +410,7 @@ func resourceMaintenanceWindowTaskRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("max_errors", output.MaxErrors)
 	d.Set(names.AttrName, output.Name)
 	d.Set(names.AttrPriority, output.Priority)
-	d.Set("service_role_arn", output.ServiceRoleArn)
+	d.Set(names.AttrServiceRoleARN, output.ServiceRoleArn)
 	if err := d.Set("targets", flattenTargets(output.Targets)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting targets: %s", err)
 	}
@@ -459,7 +459,7 @@ func resourceMaintenanceWindowTaskUpdate(ctx context.Context, d *schema.Resource
 		input.Name = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("service_role_arn"); ok {
+	if v, ok := d.GetOk(names.AttrServiceRoleARN); ok {
 		input.ServiceRoleArn = aws.String(v.(string))
 	}
 
@@ -672,7 +672,7 @@ func expandTaskInvocationRunCommandParameters(tfList []interface{}) *awstypes.Ma
 	if v, ok := tfMap["cloudwatch_config"]; ok && len(v.([]interface{})) > 0 {
 		apiObject.CloudWatchOutputConfig = expandTaskInvocationRunCommandParametersCloudWatchConfig(v.([]interface{}))
 	}
-	if v, ok := tfMap["comment"]; ok && len(v.(string)) != 0 {
+	if v, ok := tfMap[names.AttrComment]; ok && len(v.(string)) != 0 {
 		apiObject.Comment = aws.String(v.(string))
 	}
 	if v, ok := tfMap["document_hash"]; ok && len(v.(string)) != 0 {
@@ -696,7 +696,7 @@ func expandTaskInvocationRunCommandParameters(tfList []interface{}) *awstypes.Ma
 	if v, ok := tfMap[names.AttrParameter]; ok && len(v.(*schema.Set).List()) > 0 {
 		apiObject.Parameters = expandTaskInvocationCommonParameters(v.(*schema.Set).List())
 	}
-	if v, ok := tfMap["service_role_arn"]; ok && len(v.(string)) != 0 {
+	if v, ok := tfMap[names.AttrServiceRoleARN]; ok && len(v.(string)) != 0 {
 		apiObject.ServiceRoleArn = aws.String(v.(string))
 	}
 	if v, ok := tfMap["timeout_seconds"]; ok && v.(int) != 0 {
@@ -713,7 +713,7 @@ func flattenTaskInvocationRunCommandParameters(apiObject *awstypes.MaintenanceWi
 		tfMap["cloudwatch_config"] = flattenTaskInvocationRunCommandParametersCloudWatchConfig(apiObject.CloudWatchOutputConfig)
 	}
 	if apiObject.Comment != nil {
-		tfMap["comment"] = aws.ToString(apiObject.Comment)
+		tfMap[names.AttrComment] = aws.ToString(apiObject.Comment)
 	}
 	if apiObject.DocumentHash != nil {
 		tfMap["document_hash"] = aws.ToString(apiObject.DocumentHash)
@@ -735,7 +735,7 @@ func flattenTaskInvocationRunCommandParameters(apiObject *awstypes.MaintenanceWi
 		tfMap[names.AttrParameter] = flattenTaskInvocationCommonParameters(apiObject.Parameters)
 	}
 	if apiObject.ServiceRoleArn != nil {
-		tfMap["service_role_arn"] = aws.ToString(apiObject.ServiceRoleArn)
+		tfMap[names.AttrServiceRoleARN] = aws.ToString(apiObject.ServiceRoleArn)
 	}
 	if apiObject.TimeoutSeconds != nil {
 		tfMap["timeout_seconds"] = aws.ToInt32(apiObject.TimeoutSeconds)

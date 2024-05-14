@@ -114,7 +114,7 @@ func resourceAssociation() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(3, 63),
 						},
-						"s3_key_prefix": {
+						names.AttrS3KeyPrefix: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(0, 500),
@@ -474,7 +474,7 @@ func expandAssociationOutputLocation(tfList []interface{}) *awstypes.InstanceAss
 		OutputS3BucketName: aws.String(tfMap[names.AttrS3BucketName].(string)),
 	}
 
-	if v, ok := tfMap["s3_key_prefix"]; ok {
+	if v, ok := tfMap[names.AttrS3KeyPrefix]; ok {
 		s3OutputLocation.OutputS3KeyPrefix = aws.String(v.(string))
 	}
 
@@ -498,7 +498,7 @@ func flattenAssociationOutputLocation(apiObject *awstypes.InstanceAssociationOut
 	tfMap[names.AttrS3BucketName] = aws.ToString(apiObject.S3Location.OutputS3BucketName)
 
 	if apiObject.S3Location.OutputS3KeyPrefix != nil {
-		tfMap["s3_key_prefix"] = aws.ToString(apiObject.S3Location.OutputS3KeyPrefix)
+		tfMap[names.AttrS3KeyPrefix] = aws.ToString(apiObject.S3Location.OutputS3KeyPrefix)
 	}
 
 	if apiObject.S3Location.OutputS3Region != nil {

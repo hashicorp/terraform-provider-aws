@@ -74,7 +74,7 @@ func testAccFileCache_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "lustre_configuration.0.per_unit_storage_throughput", "1000"),
 					resource.TestCheckResourceAttr(resourceName, "lustre_configuration.0.weekly_maintenance_start_time", "2:05:00"),
 					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "1200"),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.CtOne),
 				),
 			},
 			{
@@ -211,7 +211,7 @@ func testAccFileCache_dataRepositoryAssociation_nfs(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "data_repository_association.0.file_cache_path", "/ns1"),
 					resource.TestCheckResourceAttr(resourceName, "data_repository_association.0.nfs.0.dns_ips.0", "192.168.0.1"),
 					resource.TestCheckResourceAttr(resourceName, "data_repository_association.0.nfs.0.version", "NFS3"),
-					resource.TestCheckResourceAttr(resourceName, "data_repository_association_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_repository_association_ids.#", acctest.CtOne),
 				),
 			},
 			{
@@ -246,7 +246,7 @@ func testAccFileCache_dataRepositoryAssociation_s3(t *testing.T) {
 					testAccCheckFileCacheExists(ctx, resourceName, &filecache),
 					resource.TestCheckResourceAttr(resourceName, "data_repository_association.0.data_repository_path", "s3://"+rName),
 					resource.TestCheckResourceAttr(resourceName, "data_repository_association.0.file_cache_path", "/ns1"),
-					resource.TestCheckResourceAttr(resourceName, "data_repository_association_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_repository_association_ids.#", acctest.CtOne),
 				),
 			},
 			{
@@ -328,7 +328,7 @@ func testAccFileCache_securityGroupID(t *testing.T) {
 				Config: testAccFileCacheConfig_securityGroupID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileCacheExists(ctx, resourceName, &filecache1),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.CtOne),
 				),
 			},
 			{
@@ -361,7 +361,7 @@ func testAccFileCache_tags(t *testing.T) {
 				Config: testAccFileCacheConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileCacheExists(ctx, resourceName, &filecache1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},

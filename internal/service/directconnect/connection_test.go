@@ -53,7 +53,7 @@ func TestAccDirectConnectConnection_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"request_macsec", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"request_macsec", names.AttrSkipDestroy},
 			},
 		},
 	})
@@ -123,7 +123,7 @@ func TestAccDirectConnectConnection_encryptionMode(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "encryption_mode", "no_encrypt"),
 					resource.TestCheckResourceAttrSet(resourceName, "location"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, connectionName),
-					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, "true"),
 				),
 			},
 			{
@@ -134,7 +134,7 @@ func TestAccDirectConnectConnection_encryptionMode(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "encryption_mode", "should_encrypt"),
 					resource.TestCheckResourceAttrSet(resourceName, "location"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, connectionName),
-					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, "true"),
 				),
 			},
 		},
@@ -171,7 +171,7 @@ func TestAccDirectConnectConnection_macsecRequested(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"request_macsec", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"request_macsec", names.AttrSkipDestroy},
 			},
 		},
 	})
@@ -207,7 +207,7 @@ func TestAccDirectConnectConnection_providerName(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"request_macsec", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"request_macsec", names.AttrSkipDestroy},
 			},
 		},
 	})
@@ -229,7 +229,7 @@ func TestAccDirectConnectConnection_skipDestroy(t *testing.T) {
 				Config: testAccConnectionConfig_skipDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &connection),
-					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, "true"),
 				),
 			},
 		},
@@ -253,7 +253,7 @@ func TestAccDirectConnectConnection_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &connection),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -262,7 +262,7 @@ func TestAccDirectConnectConnection_tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"request_macsec", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"request_macsec", names.AttrSkipDestroy},
 			},
 			{
 				Config: testAccConnectionConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
@@ -279,7 +279,7 @@ func TestAccDirectConnectConnection_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &connection),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

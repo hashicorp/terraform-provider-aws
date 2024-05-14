@@ -266,12 +266,12 @@ func TestAccFinSpaceKxEnvironment_attachmentNetworkACLConfiguration(t *testing.T
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transit_gateway_configuration.*", map[string]string{
 						"routable_cidr_space": "100.64.0.0/26",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_configuration.0.attachment_network_acl_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_configuration.0.attachment_network_acl_configuration.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transit_gateway_configuration.0.attachment_network_acl_configuration.*", map[string]string{
 						names.AttrProtocol: "6",
 						"rule_action":      "allow",
 						"cidr_block":       "0.0.0.0/0",
-						"rule_number":      "1",
+						"rule_number":      acctest.CtOne,
 					}),
 				),
 			},
@@ -287,7 +287,7 @@ func TestAccFinSpaceKxEnvironment_attachmentNetworkACLConfiguration(t *testing.T
 						names.AttrProtocol: "6",
 						"rule_action":      "allow",
 						"cidr_block":       "0.0.0.0/0",
-						"rule_number":      "1",
+						"rule_number":      acctest.CtOne,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transit_gateway_configuration.0.attachment_network_acl_configuration.*", map[string]string{
 						names.AttrProtocol: "4",
@@ -304,12 +304,12 @@ func TestAccFinSpaceKxEnvironment_attachmentNetworkACLConfiguration(t *testing.T
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transit_gateway_configuration.*", map[string]string{
 						"routable_cidr_space": "100.64.0.0/26",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_configuration.0.attachment_network_acl_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_configuration.0.attachment_network_acl_configuration.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transit_gateway_configuration.0.attachment_network_acl_configuration.*", map[string]string{
 						names.AttrProtocol: "6",
 						"rule_action":      "allow",
 						"cidr_block":       "0.0.0.0/0",
-						"rule_number":      "1",
+						"rule_number":      acctest.CtOne,
 					}),
 				),
 			},
@@ -340,7 +340,7 @@ func TestAccFinSpaceKxEnvironment_tags(t *testing.T) {
 				Config: testAccKxEnvironmentConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxEnvironmentExists(ctx, resourceName, &kxenvironment),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -357,7 +357,7 @@ func TestAccFinSpaceKxEnvironment_tags(t *testing.T) {
 				Config: testAccKxEnvironmentConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxEnvironmentExists(ctx, resourceName, &kxenvironment),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

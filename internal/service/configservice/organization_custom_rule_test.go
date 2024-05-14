@@ -49,7 +49,7 @@ func testAccOrganizationCustomRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "resource_types_scope.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tag_key_scope", ""),
 					resource.TestCheckResourceAttr(resourceName, "tag_value_scope", ""),
-					resource.TestCheckResourceAttr(resourceName, "trigger_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_types.#", acctest.CtOne),
 				),
 			},
 			{
@@ -154,7 +154,7 @@ func testAccOrganizationCustomRule_ExcludedAccounts(t *testing.T) {
 				Config: testAccOrganizationCustomRuleConfig_excludedAccounts1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationCustomRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", acctest.CtOne),
 				),
 			},
 			{
@@ -334,7 +334,7 @@ func testAccOrganizationCustomRule_ResourceTypesScope(t *testing.T) {
 				Config: testAccOrganizationCustomRuleConfig_resourceTypesScope1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationCustomRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "resource_types_scope.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "resource_types_scope.#", acctest.CtOne),
 				),
 			},
 			{
@@ -439,7 +439,7 @@ func testAccOrganizationCustomRule_TriggerTypes(t *testing.T) {
 				Config: testAccOrganizationCustomRuleConfig_triggerTypes1(rName, "ScheduledNotification"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationCustomRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "trigger_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_types.#", acctest.CtOne),
 				),
 			},
 			{

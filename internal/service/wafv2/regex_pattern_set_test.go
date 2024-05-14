@@ -188,7 +188,7 @@ func TestAccWAFV2RegexPatternSet_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegexPatternSetExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/regexpatternset/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.Tag1", "Value1"),
 				),
 			},
@@ -213,7 +213,7 @@ func TestAccWAFV2RegexPatternSet_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegexPatternSetExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/regexpatternset/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.Tag2", "Value2"),
 				),
 			},

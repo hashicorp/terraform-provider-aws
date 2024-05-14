@@ -38,7 +38,7 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"created_time": {
+			names.AttrCreatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -139,7 +139,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.SetId(aws.StringValue(matchedInstance.Id))
 	d.Set(names.AttrARN, matchedInstance.Arn)
 	if matchedInstance.CreatedTime != nil {
-		d.Set("created_time", matchedInstance.CreatedTime.Format(time.RFC3339))
+		d.Set(names.AttrCreatedTime, matchedInstance.CreatedTime.Format(time.RFC3339))
 	}
 	d.Set("identity_management_type", matchedInstance.IdentityManagementType)
 	d.Set("inbound_calls_enabled", matchedInstance.InboundCallsEnabled)

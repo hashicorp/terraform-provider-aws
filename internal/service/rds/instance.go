@@ -536,7 +536,7 @@ func ResourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"resource_id": {
+			names.AttrResourceID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -641,7 +641,7 @@ func ResourceInstance() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"storage_type": {
+			names.AttrStorageType: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -856,7 +856,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.StorageThroughput = aws.Int64(int64(v.(int)))
 		}
 
-		if v, ok := d.GetOk("storage_type"); ok {
+		if v, ok := d.GetOk(names.AttrStorageType); ok {
 			input.StorageType = aws.String(v.(string))
 		}
 
@@ -1070,7 +1070,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.StorageThroughput = aws.Int64(int64(v.(int)))
 		}
 
-		if v, ok := d.GetOk("storage_type"); ok {
+		if v, ok := d.GetOk(names.AttrStorageType); ok {
 			input.StorageType = aws.String(v.(string))
 		}
 
@@ -1311,7 +1311,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			requiresModifyDbInstance = true
 		}
 
-		if v, ok := d.GetOk("storage_type"); ok {
+		if v, ok := d.GetOk(names.AttrStorageType); ok {
 			modifyDbInstanceInput.StorageType = aws.String(v.(string))
 			requiresModifyDbInstance = true
 		}
@@ -1511,11 +1511,11 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.Port = aws.Int64(int64(v.(int)))
 		}
 
-		if v, ok := d.GetOk("storage_type"); ok {
+		if v, ok := d.GetOk(names.AttrStorageType); ok {
 			input.StorageType = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("storage_type"); ok {
+		if v, ok := d.GetOk(names.AttrStorageType); ok {
 			input.StorageType = aws.String(v.(string))
 		}
 
@@ -1722,7 +1722,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.StorageThroughput = aws.Int64(int64(v.(int)))
 		}
 
-		if v, ok := d.GetOk("storage_type"); ok {
+		if v, ok := d.GetOk(names.AttrStorageType); ok {
 			input.StorageType = aws.String(v.(string))
 		}
 
@@ -1921,11 +1921,11 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("replica_mode", v.ReplicaMode)
 	d.Set("replicas", aws.StringValueSlice(v.ReadReplicaDBInstanceIdentifiers))
 	d.Set("replicate_source_db", v.ReadReplicaSourceDBInstanceIdentifier)
-	d.Set("resource_id", v.DbiResourceId)
+	d.Set(names.AttrResourceID, v.DbiResourceId)
 	d.Set(names.AttrStatus, v.DBInstanceStatus)
 	d.Set("storage_encrypted", v.StorageEncrypted)
 	d.Set("storage_throughput", v.StorageThroughput)
-	d.Set("storage_type", v.StorageType)
+	d.Set(names.AttrStorageType, v.StorageType)
 	d.Set("timezone", v.Timezone)
 	d.Set(names.AttrUsername, v.MasterUsername)
 	var vpcSecurityGroupIDs []string
@@ -2092,7 +2092,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 			// id changes here
 			d.SetId(aws.StringValue(target.DbiResourceId))
-			d.Set("resource_id", target.DbiResourceId)
+			d.Set(names.AttrResourceID, target.DbiResourceId)
 
 			log.Printf("[DEBUG] Updating RDS DB Instance (%s): Deleting Blue/Green Deployment source", d.Get(names.AttrIdentifier).(string))
 
@@ -2403,9 +2403,9 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 		}
 	}
 
-	if d.HasChange("storage_type") {
+	if d.HasChange(names.AttrStorageType) {
 		needsModify = true
-		input.StorageType = aws.String(d.Get("storage_type").(string))
+		input.StorageType = aws.String(d.Get(names.AttrStorageType).(string))
 
 		if slices.Contains([]string{storageTypeIO1, storageTypeIO2}, aws.StringValue(input.StorageType)) {
 			input.Iops = aws.Int32(int32(d.Get(names.AttrIOPS).(int)))
@@ -2541,7 +2541,7 @@ func resourceInstanceImport(_ context.Context, d *schema.ResourceData, meta inte
 
 // See https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html#gp3-storage.
 func isStorageTypeGP3BelowAllocatedStorageThreshold(d *schema.ResourceData) bool {
-	if storageType := d.Get("storage_type").(string); storageType != storageTypeGP3 {
+	if storageType := d.Get(names.AttrStorageType).(string); storageType != storageTypeGP3 {
 		return false
 	}
 

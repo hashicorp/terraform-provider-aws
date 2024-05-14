@@ -39,7 +39,7 @@ func TestAccRedshiftCluster_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrAvailabilityZone, "data.aws_availability_zones.available", "names.0"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_nodes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_nodes.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_nodes.0.public_ip_address"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_type", "single-node"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, "true"),
@@ -322,7 +322,7 @@ func TestAccRedshiftCluster_snapshotCopy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "snapshot_copy.0.destination_region", "data.aws_region.alternate", names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "snapshot_copy.0.retention_period", "1"),
+					resource.TestCheckResourceAttr(resourceName, "snapshot_copy.0.retention_period", acctest.CtOne),
 				),
 			},
 			{
@@ -367,7 +367,7 @@ func TestAccRedshiftCluster_iamRoles(t *testing.T) {
 				Config: testAccClusterConfig_updateIAMRoles(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", acctest.CtOne),
 				),
 			},
 		},
@@ -421,7 +421,7 @@ func TestAccRedshiftCluster_updateNodeCount(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "number_of_nodes", "1"),
+					resource.TestCheckResourceAttr(resourceName, "number_of_nodes", acctest.CtOne),
 				),
 			},
 			{
@@ -483,7 +483,7 @@ func TestAccRedshiftCluster_tags(t *testing.T) {
 				Config: testAccClusterConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -511,7 +511,7 @@ func TestAccRedshiftCluster_tags(t *testing.T) {
 				Config: testAccClusterConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

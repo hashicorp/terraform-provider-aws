@@ -47,7 +47,7 @@ func resourceAccelerator() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"attributes": {
+			names.AttrAttributes: {
 				Type:             schema.TypeList,
 				Optional:         true,
 				MaxItems:         1,
@@ -168,7 +168,7 @@ func resourceAcceleratorCreate(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Accelerator (%s) deploy: %s", d.Id(), err)
 	}
 
-	if v, ok := d.GetOk("attributes"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrAttributes); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input := expandUpdateAcceleratorAttributesInput(v.([]interface{})[0].(map[string]interface{}))
 		input.AcceleratorArn = aws.String(d.Id())
 
@@ -218,7 +218,7 @@ func resourceAcceleratorRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading Global Accelerator Accelerator (%s) attributes: %s", d.Id(), err)
 	}
 
-	if err := d.Set("attributes", []interface{}{flattenAcceleratorAttributes(acceleratorAttributes)}); err != nil {
+	if err := d.Set(names.AttrAttributes, []interface{}{flattenAcceleratorAttributes(acceleratorAttributes)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting attributes: %s", err)
 	}
 
@@ -251,8 +251,8 @@ func resourceAcceleratorUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	if d.HasChange("attributes") {
-		o, n := d.GetChange("attributes")
+	if d.HasChange(names.AttrAttributes) {
+		o, n := d.GetChange(names.AttrAttributes)
 		if len(o.([]interface{})) > 0 && o.([]interface{})[0] != nil {
 			if len(n.([]interface{})) > 0 && n.([]interface{})[0] != nil {
 				oInput := expandUpdateAcceleratorAttributesInput(o.([]interface{})[0].(map[string]interface{}))

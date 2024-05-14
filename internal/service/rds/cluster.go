@@ -531,7 +531,7 @@ func ResourceCluster() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"storage_type": {
+			names.AttrStorageType: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -548,7 +548,7 @@ func ResourceCluster() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			verify.SetTagsDiff,
-			customdiff.ForceNewIf("storage_type", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ForceNewIf(names.AttrStorageType, func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
 				// Aurora supports mutation of the storage_type parameter, other engines do not
 				return !strings.HasPrefix(d.Get("engine").(string), "aurora")
 			}),
@@ -557,10 +557,10 @@ func ResourceCluster() *schema.Resource {
 					return nil
 				}
 				// The control plane will always return an empty string if a cluster is created with a storage_type of aurora
-				old, new := diff.GetChange("storage_type")
+				old, new := diff.GetChange(names.AttrStorageType)
 
 				if new.(string) == "aurora" && old.(string) == "" {
-					if err := diff.SetNew("storage_type", ""); err != nil {
+					if err := diff.SetNew(names.AttrStorageType, ""); err != nil {
 						return err
 					}
 					return nil
@@ -1103,7 +1103,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.StorageEncrypted = aws.Bool(v.(bool))
 		}
 
-		if v, ok := d.GetOkExists("storage_type"); ok {
+		if v, ok := d.GetOkExists(names.AttrStorageType); ok {
 			input.StorageType = aws.String(v.(string))
 		}
 
@@ -1257,7 +1257,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		d.Set("serverlessv2_scaling_configuration", nil)
 	}
 	d.Set("storage_encrypted", dbc.StorageEncrypted)
-	d.Set("storage_type", dbc.StorageType)
+	d.Set(names.AttrStorageType, dbc.StorageType)
 	var securityGroupIDs []string
 	for _, v := range dbc.VpcSecurityGroups {
 		securityGroupIDs = append(securityGroupIDs, aws.StringValue(v.VpcSecurityGroupId))
@@ -1432,8 +1432,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			}
 		}
 
-		if d.HasChange("storage_type") {
-			input.StorageType = aws.String(d.Get("storage_type").(string))
+		if d.HasChange(names.AttrStorageType) {
+			input.StorageType = aws.String(d.Get(names.AttrStorageType).(string))
 		}
 
 		if d.HasChange(names.AttrVPCSecurityGroupIDs) {

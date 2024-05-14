@@ -111,7 +111,7 @@ func testAccTransitGatewayPeeringAttachment_tags(t *testing.T, semaphore tfsync.
 				Config: testAccTransitGatewayPeeringAttachmentConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayPeeringAttachmentExists(ctx, resourceName, &transitGatewayPeeringAttachment),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -134,7 +134,7 @@ func testAccTransitGatewayPeeringAttachment_tags(t *testing.T, semaphore tfsync.
 				Config: testAccTransitGatewayPeeringAttachmentConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayPeeringAttachmentExists(ctx, resourceName, &transitGatewayPeeringAttachment),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -176,7 +176,7 @@ func testAccTransitGatewayPeeringAttachment_differentAccount(t *testing.T, semap
 					resource.TestCheckResourceAttr(resourceName, "peer_region", acctest.AlternateRegion()),
 					resource.TestCheckResourceAttrPair(resourceName, "peer_transit_gateway_id", transitGatewayResourceNamePeer, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayID, transitGatewayResourceName, names.AttrID),
 				),

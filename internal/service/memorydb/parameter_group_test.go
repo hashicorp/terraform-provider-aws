@@ -40,7 +40,7 @@ func TestAccMemoryDBParameterGroup_basic(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "memorydb", "parametergroup/"+rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "family", "memorydb_redis6"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "memorydb_redis6"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrID, rName),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
@@ -51,7 +51,7 @@ func TestAccMemoryDBParameterGroup_basic(t *testing.T) {
 						names.AttrName:  "active-defrag-cycle-min",
 						names.AttrValue: "10",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.Test", "test"),
 				),
 			},
@@ -111,12 +111,12 @@ func TestAccMemoryDBParameterGroup_update_parameters(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccParameterGroupConfig_one(rName, "timeout", "0"), // 0 is the default value
+				Config: testAccParameterGroupConfig_one(rName, names.AttrTimeout, "0"), // 0 is the default value
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
-						names.AttrName:  "timeout",
+						names.AttrName:  names.AttrTimeout,
 						names.AttrValue: "0",
 					}),
 				),
@@ -130,12 +130,12 @@ func TestAccMemoryDBParameterGroup_update_parameters(t *testing.T) {
 				ImportStateVerifyIgnore: []string{names.AttrParameter},
 			},
 			{
-				Config: testAccParameterGroupConfig_one(rName, "timeout", "20"),
+				Config: testAccParameterGroupConfig_one(rName, names.AttrTimeout, "20"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
-						names.AttrName:  "timeout",
+						names.AttrName:  names.AttrTimeout,
 						names.AttrValue: "20",
 					}),
 				),
@@ -146,12 +146,12 @@ func TestAccMemoryDBParameterGroup_update_parameters(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccParameterGroupConfig_multiple(rName, "timeout", "20", "activerehashing", "no"),
+				Config: testAccParameterGroupConfig_multiple(rName, names.AttrTimeout, "20", "activerehashing", "no"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
-						names.AttrName:  "timeout",
+						names.AttrName:  names.AttrTimeout,
 						names.AttrValue: "20",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
@@ -166,12 +166,12 @@ func TestAccMemoryDBParameterGroup_update_parameters(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccParameterGroupConfig_one(rName, "timeout", "20"),
+				Config: testAccParameterGroupConfig_one(rName, names.AttrTimeout, "20"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
-						names.AttrName:  "timeout",
+						names.AttrName:  names.AttrTimeout,
 						names.AttrValue: "20",
 					}),
 				),
@@ -242,9 +242,9 @@ func TestAccMemoryDBParameterGroup_update_tags(t *testing.T) {
 				Config: testAccParameterGroupConfig_tags1(rName, "Key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.Key1", "value1"),
 				),
 			},

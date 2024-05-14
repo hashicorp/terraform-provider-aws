@@ -37,7 +37,7 @@ func TestAccRedshiftParameterGroup_basic(t *testing.T) {
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "redshift", fmt.Sprintf("parametergroup:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
-					resource.TestCheckResourceAttr(resourceName, "family", "redshift-1.0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "redshift-1.0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
@@ -106,7 +106,7 @@ func TestAccRedshiftParameterGroup_update(t *testing.T) {
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "redshift", fmt.Sprintf("parametergroup:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
-					resource.TestCheckResourceAttr(resourceName, "family", "redshift-1.0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "redshift-1.0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -123,7 +123,7 @@ func TestAccRedshiftParameterGroup_update(t *testing.T) {
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "redshift", fmt.Sprintf("parametergroup:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
-					resource.TestCheckResourceAttr(resourceName, "family", "redshift-1.0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "redshift-1.0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
@@ -162,7 +162,7 @@ func TestAccRedshiftParameterGroup_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test parameter group for terraform"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -184,7 +184,7 @@ func TestAccRedshiftParameterGroup_tags(t *testing.T) {
 				Config: testAccParameterGroupConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

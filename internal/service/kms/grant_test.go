@@ -38,7 +38,7 @@ func TestAccKMSGrant_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "operations.*", "Encrypt"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "operations.*", "Decrypt"),
 					resource.TestCheckResourceAttrPair(resourceName, "grantee_principal", "aws_iam_role.test", names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, "key_id", "aws_kms_key.test", "key_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKeyID, "aws_kms_key.test", names.AttrKeyID),
 				),
 			},
 			{
@@ -68,7 +68,7 @@ func TestAccKMSGrant_withConstraints(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGrantExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "constraints.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "constraints.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "constraints.*", map[string]string{
 						"encryption_context_equals.%":   "2",
 						"encryption_context_equals.baz": "kaz",
@@ -88,7 +88,7 @@ func TestAccKMSGrant_withConstraints(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGrantExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "constraints.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "constraints.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "constraints.*", map[string]string{
 						"encryption_context_subset.%":   "2",
 						"encryption_context_subset.baz": "kaz",
@@ -178,7 +178,7 @@ func TestAccKMSGrant_arn(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "operations.*", "Encrypt"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "operations.*", "Decrypt"),
 					resource.TestCheckResourceAttrPair(resourceName, "grantee_principal", "aws_iam_role.test", names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, "key_id", "aws_kms_key.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKeyID, "aws_kms_key.test", names.AttrARN),
 				),
 			},
 			{
@@ -264,7 +264,7 @@ func TestAccKMSGrant_crossAccountARN(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "operations.*", "Encrypt"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "operations.*", "Decrypt"),
 					resource.TestCheckResourceAttrPair(resourceName, "grantee_principal", "aws_iam_role.test", names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, "key_id", "aws_kms_key.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKeyID, "aws_kms_key.test", names.AttrARN),
 				),
 			},
 			{
@@ -299,7 +299,7 @@ func TestAccKMSGrant_service(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "operations.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "operations.*", "Encrypt"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "operations.*", "Decrypt"),
-					resource.TestCheckResourceAttrPair(resourceName, "key_id", "aws_kms_key.test", "key_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKeyID, "aws_kms_key.test", names.AttrKeyID),
 				),
 			},
 			{

@@ -38,7 +38,7 @@ func TestAccAppAutoScalingTarget_basic(t *testing.T) {
 					testAccCheckTargetExists(ctx, resourceName, &target),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "max_capacity", "3"),
-					resource.TestCheckResourceAttr(resourceName, "min_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "min_capacity", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "scalable_dimension", "ecs:service:DesiredCount"),
 					resource.TestCheckResourceAttr(resourceName, "service_namespace", "ecs"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -104,7 +104,7 @@ func TestAccAppAutoScalingTarget_tags(t *testing.T) {
 				Config: testAccTargetConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &target),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -127,7 +127,7 @@ func TestAccAppAutoScalingTarget_tags(t *testing.T) {
 				Config: testAccTargetConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &target),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -215,14 +215,14 @@ func TestAccAppAutoScalingTarget_multipleTargets(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, writeResourceName, &writeTarget),
 					resource.TestCheckResourceAttr(writeResourceName, "service_namespace", "dynamodb"),
-					resource.TestCheckResourceAttr(writeResourceName, "resource_id", "table/"+rName),
+					resource.TestCheckResourceAttr(writeResourceName, names.AttrResourceID, "table/"+rName),
 					resource.TestCheckResourceAttr(writeResourceName, "scalable_dimension", "dynamodb:table:WriteCapacityUnits"),
-					resource.TestCheckResourceAttr(writeResourceName, "min_capacity", "1"),
+					resource.TestCheckResourceAttr(writeResourceName, "min_capacity", acctest.CtOne),
 					resource.TestCheckResourceAttr(writeResourceName, "max_capacity", "10"),
 
 					testAccCheckTargetExists(ctx, readResourceName, &readTarget),
 					resource.TestCheckResourceAttr(readResourceName, "service_namespace", "dynamodb"),
-					resource.TestCheckResourceAttr(readResourceName, "resource_id", "table/"+rName),
+					resource.TestCheckResourceAttr(readResourceName, names.AttrResourceID, "table/"+rName),
 					resource.TestCheckResourceAttr(readResourceName, "scalable_dimension", "dynamodb:table:ReadCapacityUnits"),
 					resource.TestCheckResourceAttr(readResourceName, "min_capacity", "2"),
 					resource.TestCheckResourceAttr(readResourceName, "max_capacity", "15"),
@@ -808,7 +808,7 @@ func testAccTargetImportStateIdFunc(resourceName string) resource.ImportStateIdF
 
 		id := fmt.Sprintf("%s/%s/%s",
 			rs.Primary.Attributes["service_namespace"],
-			rs.Primary.Attributes["resource_id"],
+			rs.Primary.Attributes[names.AttrResourceID],
 			rs.Primary.Attributes["scalable_dimension"])
 		return id, nil
 	}

@@ -35,7 +35,7 @@ func ResourceInstance() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"attributes": {
+			names.AttrAttributes: {
 				Type:     schema.TypeMap,
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -70,7 +70,7 @@ func resourceInstancePut(ctx context.Context, d *schema.ResourceData, meta inter
 
 	instanceID := d.Get(names.AttrInstanceID).(string)
 	input := &servicediscovery.RegisterInstanceInput{
-		Attributes:       flex.ExpandStringMap(d.Get("attributes").(map[string]interface{})),
+		Attributes:       flex.ExpandStringMap(d.Get(names.AttrAttributes).(map[string]interface{})),
 		CreatorRequestId: aws.String(id.UniqueId()),
 		InstanceId:       aws.String(instanceID),
 		ServiceId:        aws.String(d.Get("service_id").(string)),
@@ -116,7 +116,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		delete(attributes, "AWS_INSTANCE_IPV4")
 	}
 
-	d.Set("attributes", aws.StringValueMap(attributes))
+	d.Set(names.AttrAttributes, aws.StringValueMap(attributes))
 	d.Set(names.AttrInstanceID, instance.Id)
 
 	return nil

@@ -48,7 +48,7 @@ func resourceDeliveryChannel() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"s3_key_prefix": {
+			names.AttrS3KeyPrefix: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -92,7 +92,7 @@ func resourceDeliveryChannelPut(ctx context.Context, d *schema.ResourceData, met
 		},
 	}
 
-	if v, ok := d.GetOk("s3_key_prefix"); ok {
+	if v, ok := d.GetOk(names.AttrS3KeyPrefix); ok {
 		input.DeliveryChannel.S3KeyPrefix = aws.String(v.(string))
 	}
 
@@ -147,7 +147,7 @@ func resourceDeliveryChannelRead(ctx context.Context, d *schema.ResourceData, me
 
 	d.Set(names.AttrName, channel.Name)
 	d.Set(names.AttrS3BucketName, channel.S3BucketName)
-	d.Set("s3_key_prefix", channel.S3KeyPrefix)
+	d.Set(names.AttrS3KeyPrefix, channel.S3KeyPrefix)
 	d.Set("s3_kms_key_arn", channel.S3KmsKeyArn)
 	if channel.ConfigSnapshotDeliveryProperties != nil {
 		d.Set("snapshot_delivery_properties", flattenSnapshotDeliveryProperties(channel.ConfigSnapshotDeliveryProperties))

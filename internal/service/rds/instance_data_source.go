@@ -185,7 +185,7 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"resource_id": {
+			names.AttrResourceID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -197,7 +197,7 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"storage_type": {
+			names.AttrStorageType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -297,10 +297,10 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set(names.AttrPreferredMaintenanceWindow, instance.PreferredMaintenanceWindow)
 	d.Set(names.AttrPubliclyAccessible, instance.PubliclyAccessible)
 	d.Set("replicate_source_db", instance.ReadReplicaSourceDBInstanceIdentifier)
-	d.Set("resource_id", instance.DbiResourceId)
+	d.Set(names.AttrResourceID, instance.DbiResourceId)
 	d.Set("storage_encrypted", instance.StorageEncrypted)
 	d.Set("storage_throughput", instance.StorageThroughput)
-	d.Set("storage_type", instance.StorageType)
+	d.Set(names.AttrStorageType, instance.StorageType)
 	d.Set("timezone", instance.Timezone)
 	vpcSecurityGroupIDs := tfslices.ApplyToAll(instance.VpcSecurityGroups, func(v *rds.VpcSecurityGroupMembership) string {
 		return aws.StringValue(v.VpcSecurityGroupId)

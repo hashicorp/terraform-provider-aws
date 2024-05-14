@@ -116,7 +116,7 @@ func testAccAgreement_tags(t *testing.T) {
 				Config: testAccAgreementConfig_tags1(rName, baseDirectory, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgreementExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -139,7 +139,7 @@ func testAccAgreement_tags(t *testing.T) {
 				Config: testAccAgreementConfig_tags1(rName, baseDirectory, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgreementExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

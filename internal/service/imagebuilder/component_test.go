@@ -56,7 +56,7 @@ func TestAccImageBuilderComponent_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
 			},
 		},
 	})
@@ -107,7 +107,7 @@ func TestAccImageBuilderComponent_changeDescription(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
 			},
 		},
 	})
@@ -135,7 +135,7 @@ func TestAccImageBuilderComponent_description(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
 			},
 		},
 	})
@@ -164,7 +164,7 @@ func TestAccImageBuilderComponent_kmsKeyID(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
 			},
 		},
 	})
@@ -192,7 +192,7 @@ func TestAccImageBuilderComponent_Platform_windows(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
 			},
 		},
 	})
@@ -213,14 +213,14 @@ func TestAccImageBuilderComponent_supportedOsVersions(t *testing.T) {
 				Config: testAccComponentConfig_supportedOsVersions(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckComponentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "supported_os_versions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "supported_os_versions.#", acctest.CtOne),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
 			},
 		},
 	})
@@ -241,7 +241,7 @@ func TestAccImageBuilderComponent_tags(t *testing.T) {
 				Config: testAccComponentConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckComponentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -249,7 +249,7 @@ func TestAccImageBuilderComponent_tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
 			},
 			{
 				Config: testAccComponentConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
@@ -264,7 +264,7 @@ func TestAccImageBuilderComponent_tags(t *testing.T) {
 				Config: testAccComponentConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckComponentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -293,7 +293,7 @@ func TestAccImageBuilderComponent_uri(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy", names.AttrURI},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, names.AttrURI},
 			},
 		},
 	})

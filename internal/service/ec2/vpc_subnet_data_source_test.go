@@ -201,7 +201,7 @@ func TestAccVPCSubnetDataSource_enableLniAtDeviceIndex(t *testing.T) {
 			{
 				Config: testAccVPCSubnetDataSourceConfig_enableLniAtDeviceIndex(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dsResourceName, "enable_lni_at_device_index", "1"),
+					resource.TestCheckResourceAttr(dsResourceName, "enable_lni_at_device_index", acctest.CtOne),
 				),
 			},
 		},

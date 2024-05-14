@@ -243,7 +243,7 @@ func resourceCluster() *schema.Resource {
 														},
 													},
 												},
-												"volume_size": {
+												names.AttrVolumeSize: {
 													Type:     schema.TypeInt,
 													Optional: true,
 													// https://docs.aws.amazon.com/msk/1.0/apireference/clusters.html#clusters-model-ebsstorageinfo
@@ -305,7 +305,7 @@ func resourceCluster() *schema.Resource {
 					},
 				},
 			},
-			"cluster_name": {
+			names.AttrClusterName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -542,7 +542,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
-	name := d.Get("cluster_name").(string)
+	name := d.Get(names.AttrClusterName).(string)
 	input := &kafka.CreateClusterInput{
 		ClusterName:         aws.String(name),
 		KafkaVersion:        aws.String(d.Get("kafka_version").(string)),
@@ -675,7 +675,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	} else {
 		d.Set("client_authentication", nil)
 	}
-	d.Set("cluster_name", cluster.ClusterName)
+	d.Set(names.AttrClusterName, cluster.ClusterName)
 	clusterUUID, _ := clusterUUIDFromARN(clusterARN)
 	d.Set("cluster_uuid", clusterUUID)
 	if cluster.CurrentBrokerSoftwareInfo != nil {
@@ -1294,7 +1294,7 @@ func expandEBSStorageInfo(tfMap map[string]interface{}) *types.EBSStorageInfo {
 		apiObject.ProvisionedThroughput = expandProvisionedThroughput(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["volume_size"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrVolumeSize].(int); ok && v != 0 {
 		apiObject.VolumeSize = aws.Int32(int32(v))
 	}
 
@@ -1738,7 +1738,7 @@ func flattenEBSStorageInfo(apiObject *types.EBSStorageInfo) []interface{} {
 	}
 
 	if v := apiObject.VolumeSize; v != nil {
-		tfMap["volume_size"] = aws.ToInt32(v)
+		tfMap[names.AttrVolumeSize] = aws.ToInt32(v)
 	}
 
 	return []interface{}{tfMap}

@@ -46,7 +46,7 @@ func testAccInstanceAccessControlAttributes_basic(t *testing.T) {
 				Config: testAccInstanceAccessControlAttributesConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceAccessControlAttributesExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "attribute.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "attribute.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
 				),
 			},

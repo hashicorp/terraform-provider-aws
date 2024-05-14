@@ -184,7 +184,7 @@ func TestAccEventsPermission_condition(t *testing.T) {
 				Config: testAccPermissionConfig_conditionOrganization(statementID, "o-1234567890"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "condition.0.key", "aws:PrincipalOrgID"),
 					resource.TestCheckResourceAttr(resourceName, "condition.0.type", "StringEquals"),
 					resource.TestCheckResourceAttr(resourceName, "condition.0.value", "o-1234567890"),
@@ -194,7 +194,7 @@ func TestAccEventsPermission_condition(t *testing.T) {
 				Config: testAccPermissionConfig_conditionOrganization(statementID, "o-0123456789"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "condition.0.key", "aws:PrincipalOrgID"),
 					resource.TestCheckResourceAttr(resourceName, "condition.0.type", "StringEquals"),
 					resource.TestCheckResourceAttr(resourceName, "condition.0.value", "o-0123456789"),

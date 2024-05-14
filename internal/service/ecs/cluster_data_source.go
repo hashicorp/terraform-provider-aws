@@ -25,7 +25,7 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"cluster_name": {
+			names.AttrClusterName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -84,8 +84,8 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	clusterName := d.Get("cluster_name").(string)
-	cluster, err := FindClusterByNameOrARN(ctx, conn, d.Get("cluster_name").(string))
+	clusterName := d.Get(names.AttrClusterName).(string)
+	cluster, err := FindClusterByNameOrARN(ctx, conn, d.Get(names.AttrClusterName).(string))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ECS Cluster (%s): %s", clusterName, err)

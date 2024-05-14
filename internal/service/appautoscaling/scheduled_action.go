@@ -49,7 +49,7 @@ func resourceScheduledAction() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"resource_id": {
+			names.AttrResourceID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -97,7 +97,7 @@ func resourceScheduledAction() *schema.Resource {
 			},
 			// The AWS API normalizes start_time and end_time to UTC. Uses
 			// suppressEquivalentTime to allow any timezone to be used.
-			"start_time": {
+			names.AttrStartTime: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateFunc:     validation.IsRFC3339Time,
@@ -116,7 +116,7 @@ func resourceScheduledActionPut(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppAutoScalingClient(ctx)
 
-	name, serviceNamespace, resourceID := d.Get(names.AttrName).(string), d.Get("service_namespace").(string), d.Get("resource_id").(string)
+	name, serviceNamespace, resourceID := d.Get(names.AttrName).(string), d.Get("service_namespace").(string), d.Get(names.AttrResourceID).(string)
 	id := strings.Join([]string{name, serviceNamespace, resourceID}, "-")
 	input := &applicationautoscaling.PutScheduledActionInput{
 		ResourceId:          aws.String(resourceID),
@@ -132,7 +132,7 @@ func resourceScheduledActionPut(ctx context.Context, d *schema.ResourceData, met
 		}
 		input.ScalableTargetAction = expandScalableTargetAction(d.Get("scalable_target_action").([]interface{}))
 		input.Schedule = aws.String(d.Get(names.AttrSchedule).(string))
-		if v, ok := d.GetOk("start_time"); ok {
+		if v, ok := d.GetOk(names.AttrStartTime); ok {
 			t, _ := time.Parse(time.RFC3339, v.(string))
 			input.StartTime = aws.Time(t)
 		}
@@ -148,7 +148,7 @@ func resourceScheduledActionPut(ctx context.Context, d *schema.ResourceData, met
 		if d.HasChange(names.AttrSchedule) {
 			input.Schedule = aws.String(d.Get(names.AttrSchedule).(string))
 		}
-		if v, ok := d.GetOk("start_time"); ok {
+		if v, ok := d.GetOk(names.AttrStartTime); ok {
 			t, _ := time.Parse(time.RFC3339, v.(string))
 			input.StartTime = aws.Time(t)
 		}
@@ -179,7 +179,7 @@ func resourceScheduledActionRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppAutoScalingClient(ctx)
 
-	scheduledAction, err := findScheduledActionByFourPartKey(ctx, conn, d.Get(names.AttrName).(string), d.Get("service_namespace").(string), d.Get("resource_id").(string), d.Get("scalable_dimension").(string))
+	scheduledAction, err := findScheduledActionByFourPartKey(ctx, conn, d.Get(names.AttrName).(string), d.Get("service_namespace").(string), d.Get(names.AttrResourceID).(string), d.Get("scalable_dimension").(string))
 
 	if tfresource.NotFound(err) && !d.IsNewResource() {
 		log.Printf("[WARN] Application Auto Scaling Scheduled Action (%s) not found, removing from state", d.Id())
@@ -200,7 +200,7 @@ func resourceScheduledActionRead(ctx context.Context, d *schema.ResourceData, me
 	}
 	d.Set(names.AttrSchedule, scheduledAction.Schedule)
 	if scheduledAction.StartTime != nil {
-		d.Set("start_time", scheduledAction.StartTime.Format(time.RFC3339))
+		d.Set(names.AttrStartTime, scheduledAction.StartTime.Format(time.RFC3339))
 	}
 	d.Set("timezone", scheduledAction.Timezone)
 
@@ -213,7 +213,7 @@ func resourceScheduledActionDelete(ctx context.Context, d *schema.ResourceData, 
 
 	log.Printf("[DEBUG] Deleting Application Auto Scaling Scheduled Action: %s", d.Id())
 	_, err := conn.DeleteScheduledAction(ctx, &applicationautoscaling.DeleteScheduledActionInput{
-		ResourceId:          aws.String(d.Get("resource_id").(string)),
+		ResourceId:          aws.String(d.Get(names.AttrResourceID).(string)),
 		ScalableDimension:   awstypes.ScalableDimension(d.Get("scalable_dimension").(string)),
 		ScheduledActionName: aws.String(d.Get(names.AttrName).(string)),
 		ServiceNamespace:    awstypes.ServiceNamespace(d.Get("service_namespace").(string)),

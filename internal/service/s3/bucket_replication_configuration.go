@@ -43,7 +43,7 @@ func resourceBucketReplicationConfiguration() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 63),
 			},
-			"role": {
+			names.AttrRole: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -320,7 +320,7 @@ func resourceBucketReplicationConfigurationCreate(ctx context.Context, d *schema
 	input := &s3.PutBucketReplicationInput{
 		Bucket: aws.String(bucket),
 		ReplicationConfiguration: &types.ReplicationConfiguration{
-			Role:  aws.String(d.Get("role").(string)),
+			Role:  aws.String(d.Get(names.AttrRole).(string)),
 			Rules: expandReplicationRules(ctx, d.Get(names.AttrRule).([]interface{})),
 		},
 	}
@@ -385,7 +385,7 @@ func resourceBucketReplicationConfigurationRead(ctx context.Context, d *schema.R
 	}
 
 	d.Set(names.AttrBucket, d.Id())
-	d.Set("role", rc.Role)
+	d.Set(names.AttrRole, rc.Role)
 	if err := d.Set(names.AttrRule, flattenReplicationRules(ctx, rc.Rules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 	}
@@ -400,7 +400,7 @@ func resourceBucketReplicationConfigurationUpdate(ctx context.Context, d *schema
 	input := &s3.PutBucketReplicationInput{
 		Bucket: aws.String(d.Id()),
 		ReplicationConfiguration: &types.ReplicationConfiguration{
-			Role:  aws.String(d.Get("role").(string)),
+			Role:  aws.String(d.Get(names.AttrRole).(string)),
 			Rules: expandReplicationRules(ctx, d.Get(names.AttrRule).([]interface{})),
 		},
 	}

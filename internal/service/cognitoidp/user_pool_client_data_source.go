@@ -83,7 +83,7 @@ func dataSourceUserPoolClient() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"client_secret": {
+			names.AttrClientSecret: {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
@@ -204,7 +204,7 @@ func dataSourceUserPoolClientRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("refresh_token_validity", userPoolClient.RefreshTokenValidity)
 	d.Set("access_token_validity", userPoolClient.AccessTokenValidity)
 	d.Set("id_token_validity", userPoolClient.IdTokenValidity)
-	d.Set("client_secret", userPoolClient.ClientSecret)
+	d.Set(names.AttrClientSecret, userPoolClient.ClientSecret)
 	d.Set("allowed_oauth_flows", flex.FlattenStringSet(userPoolClient.AllowedOAuthFlows))
 	d.Set("allowed_oauth_flows_user_pool_client", userPoolClient.AllowedOAuthFlowsUserPoolClient)
 	d.Set("allowed_oauth_scopes", flex.FlattenStringSet(userPoolClient.AllowedOAuthScopes))

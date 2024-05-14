@@ -38,8 +38,8 @@ func testAccInsight_basic(t *testing.T) {
 					testAccCheckInsightExists(ctx, resourceName),
 					testAccCheckInsightARN(resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "filters.0.aws_account_id.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filters.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "filters.0.aws_account_id.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.aws_account_id.*", map[string]string{
 						"comparison":    string(types.StringFilterComparisonEquals),
 						names.AttrValue: "1234567890",
@@ -97,10 +97,10 @@ func testAccInsight_DateFilters(t *testing.T) {
 				Config: testAccInsightConfig_dateFiltersDateRange(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInsightExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "filters.0.created_at.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filters.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "filters.0.created_at.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.created_at.*", map[string]string{
-						"date_range.#":       "1",
+						"date_range.#":       acctest.CtOne,
 						"date_range.0.unit":  string(types.DateRangeUnitDays),
 						"date_range.0.value": "5",
 					}),
@@ -115,8 +115,8 @@ func testAccInsight_DateFilters(t *testing.T) {
 				Config: testAccInsightConfig_dateFiltersStartEnd(rName, startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInsightExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "filters.0.created_at.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filters.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "filters.0.created_at.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.created_at.*", map[string]string{
 						"start": startDate,
 						"end":   endDate,
@@ -147,8 +147,8 @@ func testAccInsight_IPFilters(t *testing.T) {
 				Config: testAccInsightConfig_ipFilters(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInsightExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "filters.0.network_destination_ipv4.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filters.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "filters.0.network_destination_ipv4.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.network_destination_ipv4.*", map[string]string{
 						"cidr": "10.0.0.0/16",
 					}),
@@ -178,8 +178,8 @@ func testAccInsight_KeywordFilters(t *testing.T) {
 				Config: testAccInsightConfig_keywordFilters(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInsightExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "filters.0.keyword.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filters.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "filters.0.keyword.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.keyword.*", map[string]string{
 						names.AttrValue: rName,
 					}),
@@ -209,8 +209,8 @@ func testAccInsight_MapFilters(t *testing.T) {
 				Config: testAccInsightConfig_mapFilters(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInsightExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "filters.0.product_fields.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filters.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "filters.0.product_fields.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.product_fields.*", map[string]string{
 						"comparison":    string(types.MapFilterComparisonEquals),
 						names.AttrKey:   "key1",
@@ -242,7 +242,7 @@ func testAccInsight_MultipleFilters(t *testing.T) {
 				Config: testAccInsightConfig_multipleFilters(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInsightExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filters.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "filters.0.aws_account_id.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.aws_account_id.*", map[string]string{
 						"comparison":    string(types.StringFilterComparisonEquals),
@@ -274,8 +274,8 @@ func testAccInsight_MultipleFilters(t *testing.T) {
 				Config: testAccInsightConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInsightExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "filters.0.aws_account_id.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filters.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "filters.0.aws_account_id.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.aws_account_id.*", map[string]string{
 						"comparison":    string(types.StringFilterComparisonEquals),
 						names.AttrValue: "1234567890",
@@ -339,8 +339,8 @@ func testAccInsight_NumberFilters(t *testing.T) {
 				Config: testAccInsightConfig_numberFilters(rName, "eq = 50.5"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInsightExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "filters.0.confidence.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filters.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "filters.0.confidence.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.confidence.*", map[string]string{
 						"eq": "50.5",
 					}),
@@ -355,8 +355,8 @@ func testAccInsight_NumberFilters(t *testing.T) {
 				Config: testAccInsightConfig_numberFilters(rName, "gte = 50.5"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInsightExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "filters.0.confidence.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filters.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "filters.0.confidence.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.confidence.*", map[string]string{
 						"gte": "50.5",
 					}),
@@ -366,8 +366,8 @@ func testAccInsight_NumberFilters(t *testing.T) {
 				Config: testAccInsightConfig_numberFilters(rName, "lte = 50.5"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInsightExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "filters.0.confidence.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filters.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "filters.0.confidence.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.confidence.*", map[string]string{
 						"lte": "50.5",
 					}),
@@ -397,7 +397,7 @@ func testAccInsight_GroupByAttribute(t *testing.T) {
 				Config: testAccInsightConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInsightExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filters.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "group_by_attribute", "AwsAccountId"),
 				),
 			},
@@ -405,7 +405,7 @@ func testAccInsight_GroupByAttribute(t *testing.T) {
 				Config: testAccInsightConfig_updateGroupByAttribute(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInsightExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filters.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "group_by_attribute", "CompanyName"),
 				),
 			},
@@ -433,8 +433,8 @@ func testAccInsight_WorkflowStatus(t *testing.T) {
 				Config: testAccInsightConfig_workflowStatus(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInsightExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "filters.0.workflow_status.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filters.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "filters.0.workflow_status.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.workflow_status.*", map[string]string{
 						"comparison":    string(types.StringFilterComparisonEquals),
 						names.AttrValue: string(types.WorkflowStatusNew),

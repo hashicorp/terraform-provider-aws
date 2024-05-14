@@ -42,8 +42,8 @@ func TestAccFSxOpenZFSVolume_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "data_compression_type", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "delete_volume_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "nfs_exports.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "nfs_exports.0.client_configurations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "nfs_exports.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "nfs_exports.0.client_configurations.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "nfs_exports.0.client_configurations.0.clients", "*"),
 					acctest.CheckResourceAttrGreaterThanValue(resourceName, "nfs_exports.0.client_configurations.0.options.#", 0),
 					resource.TestCheckResourceAttrSet(resourceName, "parent_volume_id"),
@@ -135,7 +135,7 @@ func TestAccFSxOpenZFSVolume_tags(t *testing.T) {
 				Config: testAccOpenZFSVolumeConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -159,7 +159,7 @@ func TestAccFSxOpenZFSVolume_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume3),
 					testAccCheckOpenZFSVolumeNotRecreated(&volume2, &volume3),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -184,9 +184,9 @@ func TestAccFSxOpenZFSVolume_copyTags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume1),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshots", "true"),
-					resource.TestCheckResourceAttr(resourceName, "delete_volume_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "delete_volume_options.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "delete_volume_options.0", "DELETE_CHILD_VOLUMES_AND_SNAPSHOTS"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -204,9 +204,9 @@ func TestAccFSxOpenZFSVolume_copyTags(t *testing.T) {
 					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume2),
 					testAccCheckOpenZFSVolumeRecreated(&volume1, &volume2),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshots", "false"),
-					resource.TestCheckResourceAttr(resourceName, "delete_volume_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "delete_volume_options.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "delete_volume_options.0", "DELETE_CHILD_VOLUMES_AND_SNAPSHOTS"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -413,8 +413,8 @@ func TestAccFSxOpenZFSVolume_nfsExports(t *testing.T) {
 				Config: testAccOpenZFSVolumeConfig_nfsExports1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume1),
-					resource.TestCheckResourceAttr(resourceName, "nfs_exports.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "nfs_exports.0.client_configurations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "nfs_exports.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "nfs_exports.0.client_configurations.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "nfs_exports.0.client_configurations.0.clients", "10.0.1.0/24"),
 					resource.TestCheckResourceAttr(resourceName, "nfs_exports.0.client_configurations.0.options.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "nfs_exports.0.client_configurations.0.options.0", "async"),
@@ -431,7 +431,7 @@ func TestAccFSxOpenZFSVolume_nfsExports(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume2),
 					testAccCheckOpenZFSVolumeNotRecreated(&volume1, &volume2),
-					resource.TestCheckResourceAttr(resourceName, "nfs_exports.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "nfs_exports.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "nfs_exports.0.client_configurations.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "nfs_exports.0.client_configurations.*", map[string]string{
 						"clients":   "10.0.1.0/24",
@@ -465,7 +465,7 @@ func TestAccFSxOpenZFSVolume_userAndGroupQuotas(t *testing.T) {
 				Config: testAccOpenZFSVolumeConfig_userAndGroupQuotas1(rName, 256),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume1),
-					resource.TestCheckResourceAttr(resourceName, "user_and_group_quotas.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "user_and_group_quotas.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user_and_group_quotas.*", map[string]string{
 						names.AttrID:                 "10",
 						"storage_capacity_quota_gib": "256",

@@ -73,7 +73,7 @@ func DataSourceClusterSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"most_recent": {
+			names.AttrMostRecent: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -151,7 +151,7 @@ func dataSourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, 
 
 	var snapshot *rds.DBClusterSnapshot
 	if len(snapshots) > 1 {
-		if d.Get("most_recent").(bool) {
+		if d.Get(names.AttrMostRecent).(bool) {
 			snapshot = mostRecentClusterSnapshot(snapshots)
 		} else {
 			return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more specific search criteria.")

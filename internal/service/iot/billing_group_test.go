@@ -37,12 +37,12 @@ func TestAccIoTBillingGroup_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBillingGroupExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "iot", regexache.MustCompile(fmt.Sprintf("billinggroup/%s$", rName))),
-					resource.TestCheckResourceAttr(resourceName, "metadata.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "metadata.0.creation_date"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "properties.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.CtOne),
 				),
 			},
 			{
@@ -94,7 +94,7 @@ func TestAccIoTBillingGroup_tags(t *testing.T) {
 				Config: testAccBillingGroupConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBillingGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -116,7 +116,7 @@ func TestAccIoTBillingGroup_tags(t *testing.T) {
 				Config: testAccBillingGroupConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBillingGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -140,9 +140,9 @@ func TestAccIoTBillingGroup_properties(t *testing.T) {
 				Config: testAccBillingGroupConfig_properties(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBillingGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "properties.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "properties.0.description", "test description 1"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.CtOne),
 				),
 			},
 			{
@@ -154,7 +154,7 @@ func TestAccIoTBillingGroup_properties(t *testing.T) {
 				Config: testAccBillingGroupConfig_propertiesUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBillingGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "properties.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "properties.0.description", "test description 2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "2"),
 				),

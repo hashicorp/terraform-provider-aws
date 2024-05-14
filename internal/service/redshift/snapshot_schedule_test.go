@@ -38,7 +38,7 @@ func TestAccRedshiftSnapshotSchedule_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSnapshotScheduleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "definitions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "definitions.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr(resourceName, "definitions.*", "rate(12 hours)"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, rName),
@@ -98,7 +98,7 @@ func TestAccRedshiftSnapshotSchedule_tags(t *testing.T) {
 				Config: testAccSnapshotScheduleConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotScheduleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -123,7 +123,7 @@ func TestAccRedshiftSnapshotSchedule_tags(t *testing.T) {
 				Config: testAccSnapshotScheduleConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotScheduleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -226,7 +226,7 @@ func TestAccRedshiftSnapshotSchedule_update(t *testing.T) {
 				Config: testAccSnapshotScheduleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotScheduleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "definitions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "definitions.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr(resourceName, "definitions.*", "rate(12 hours)"),
 				),
 			},

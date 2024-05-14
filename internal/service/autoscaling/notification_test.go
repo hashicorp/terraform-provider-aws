@@ -34,12 +34,12 @@ func TestAccAutoScalingNotification_basic(t *testing.T) {
 				Config: testAccNotificationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNotificationExists(ctx, resourceName, groups),
-					resource.TestCheckResourceAttr(resourceName, "group_names.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "group_names.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr(resourceName, "group_names.*", rName),
 					resource.TestCheckResourceAttr(resourceName, "notifications.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "notifications.*", "autoscaling:EC2_INSTANCE_LAUNCH"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "notifications.*", "autoscaling:EC2_INSTANCE_TERMINATE"),
-					resource.TestCheckResourceAttrSet(resourceName, "topic_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrTopicARN),
 				),
 			},
 		},
@@ -87,7 +87,7 @@ func TestAccAutoScalingNotification_update(t *testing.T) {
 				Config: testAccNotificationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotificationExists(ctx, resourceName, groups1),
-					resource.TestCheckResourceAttr(resourceName, "group_names.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "group_names.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr(resourceName, "group_names.*", rName),
 					resource.TestCheckResourceAttr(resourceName, "notifications.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "notifications.*", "autoscaling:EC2_INSTANCE_LAUNCH"),

@@ -38,7 +38,7 @@ func TestAccBackupPlan_basic(t *testing.T) {
 					testAccCheckPlanExists(ctx, resourceName, &plan),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "backup", regexache.MustCompile(`backup-plan:.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"rule_name":         rName,
 						"target_vault_name": rName,
@@ -75,7 +75,7 @@ func TestAccBackupPlan_withTags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
@@ -92,7 +92,7 @@ func TestAccBackupPlan_withTags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2b"),
@@ -104,7 +104,7 @@ func TestAccBackupPlan_withTags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -185,7 +185,7 @@ func TestAccBackupPlan_withRules(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"rule_name":         rName,
 						"target_vault_name": rName,
@@ -216,10 +216,10 @@ func TestAccBackupPlan_withLifecycle(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"rule_name":                      rName,
-						"lifecycle.#":                    "1",
+						"lifecycle.#":                    acctest.CtOne,
 						"lifecycle.0.cold_storage_after": "7",
 					}),
 				),
@@ -234,10 +234,10 @@ func TestAccBackupPlan_withLifecycle(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"rule_name":                rName,
-						"lifecycle.#":              "1",
+						"lifecycle.#":              acctest.CtOne,
 						"lifecycle.0.delete_after": "120",
 					}),
 				),
@@ -247,10 +247,10 @@ func TestAccBackupPlan_withLifecycle(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"rule_name":                      rName,
-						"lifecycle.#":                    "1",
+						"lifecycle.#":                    acctest.CtOne,
 						"lifecycle.0.cold_storage_after": "30",
 						"lifecycle.0.delete_after":       "180",
 					}),
@@ -261,10 +261,10 @@ func TestAccBackupPlan_withLifecycle(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"rule_name":                      rName,
-						"lifecycle.#":                    "1",
+						"lifecycle.#":                    acctest.CtOne,
 						"lifecycle.0.cold_storage_after": "30",
 						"lifecycle.0.delete_after":       "180",
 						"lifecycle.0.opt_in_to_archive_for_supported_resources": "true",
@@ -276,7 +276,7 @@ func TestAccBackupPlan_withLifecycle(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"rule_name":   rName,
 						"lifecycle.#": "0",
@@ -304,7 +304,7 @@ func TestAccBackupPlan_withRecoveryPointTags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"rule_name":                rName,
 						"target_vault_name":        rName,
@@ -328,7 +328,7 @@ func TestAccBackupPlan_withRecoveryPointTags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"rule_name":                rName,
 						"target_vault_name":        rName,
@@ -347,7 +347,7 @@ func TestAccBackupPlan_withRecoveryPointTags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"rule_name":         rName,
 						"target_vault_name": rName,
@@ -378,13 +378,13 @@ func TestAccBackupPlan_RuleCopyAction_sameRegion(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"rule_name":                      rName,
-						"lifecycle.#":                    "1",
+						"lifecycle.#":                    acctest.CtOne,
 						"lifecycle.0.cold_storage_after": "30",
 						"lifecycle.0.delete_after":       "180",
-						"copy_action.#":                  "1",
+						"copy_action.#":                  acctest.CtOne,
 					}),
 				),
 			},
@@ -398,13 +398,13 @@ func TestAccBackupPlan_RuleCopyAction_sameRegion(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"rule_name":                      rName,
-						"lifecycle.#":                    "1",
+						"lifecycle.#":                    acctest.CtOne,
 						"lifecycle.0.cold_storage_after": "30",
 						"lifecycle.0.delete_after":       "180",
-						"copy_action.#":                  "1",
+						"copy_action.#":                  acctest.CtOne,
 					}),
 				),
 			},
@@ -413,7 +413,7 @@ func TestAccBackupPlan_RuleCopyAction_sameRegion(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"rule_name":     rName,
 						"lifecycle.#":   "0",
@@ -442,11 +442,11 @@ func TestAccBackupPlan_RuleCopyAction_noLifecycle(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"rule_name":     rName,
 						"lifecycle.#":   "0",
-						"copy_action.#": "1",
+						"copy_action.#": acctest.CtOne,
 					}),
 				),
 			},
@@ -460,13 +460,13 @@ func TestAccBackupPlan_RuleCopyAction_noLifecycle(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"rule_name":                      rName,
-						"lifecycle.#":                    "1",
+						"lifecycle.#":                    acctest.CtOne,
 						"lifecycle.0.cold_storage_after": "30",
 						"lifecycle.0.delete_after":       "180",
-						"copy_action.#":                  "1",
+						"copy_action.#":                  acctest.CtOne,
 					}),
 				),
 			},
@@ -475,11 +475,11 @@ func TestAccBackupPlan_RuleCopyAction_noLifecycle(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"rule_name":     rName,
 						"lifecycle.#":   "0",
-						"copy_action.#": "1",
+						"copy_action.#": acctest.CtOne,
 					}),
 				),
 			},
@@ -504,10 +504,10 @@ func TestAccBackupPlan_RuleCopyAction_multiple(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"rule_name":                      rName,
-						"lifecycle.#":                    "1",
+						"lifecycle.#":                    acctest.CtOne,
 						"lifecycle.0.cold_storage_after": "30",
 						"lifecycle.0.delete_after":       "180",
 						"copy_action.#":                  "2",
@@ -544,13 +544,13 @@ func TestAccBackupPlan_RuleCopyAction_crossRegion(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"rule_name":                      rName,
-						"lifecycle.#":                    "1",
+						"lifecycle.#":                    acctest.CtOne,
 						"lifecycle.0.cold_storage_after": "30",
 						"lifecycle.0.delete_after":       "180",
-						"copy_action.#":                  "1",
+						"copy_action.#":                  acctest.CtOne,
 					}),
 				),
 			},
@@ -581,9 +581,9 @@ func TestAccBackupPlan_advancedBackupSetting(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "advanced_backup_setting.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "advanced_backup_setting.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_backup_setting.*", map[string]string{
-						"backup_options.%":          "1",
+						"backup_options.%":          acctest.CtOne,
 						"backup_options.WindowsVSS": names.AttrEnabled,
 						names.AttrResourceType:      "EC2",
 					}),
@@ -599,9 +599,9 @@ func TestAccBackupPlan_advancedBackupSetting(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "advanced_backup_setting.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "advanced_backup_setting.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_backup_setting.*", map[string]string{
-						"backup_options.%":          "1",
+						"backup_options.%":          acctest.CtOne,
 						"backup_options.WindowsVSS": "disabled",
 						names.AttrResourceType:      "EC2",
 					}),
@@ -629,13 +629,13 @@ func TestAccBackupPlan_enableContinuousBackup(t *testing.T) {
 					testAccCheckPlanExists(ctx, resourceName, &plan),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "backup", regexache.MustCompile(`backup-plan:.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"rule_name":                rName,
 						"target_vault_name":        rName,
 						names.AttrSchedule:         "cron(0 12 * * ? *)",
 						"enable_continuous_backup": "true",
-						"lifecycle.#":              "1",
+						"lifecycle.#":              acctest.CtOne,
 						"lifecycle.0.delete_after": "35",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),

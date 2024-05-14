@@ -26,7 +26,7 @@ func testAccRegisteredDomain_tags(t *testing.T) {
 			{
 				Config: testAccRegisteredDomainConfig_tags1(domainName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -46,7 +46,7 @@ func testAccRegisteredDomain_tags(t *testing.T) {
 			{
 				Config: testAccRegisteredDomainConfig_tags1(domainName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -95,7 +95,7 @@ func testAccRegisteredDomain_contacts(t *testing.T) {
 			{
 				Config: testAccRegisteredDomainConfig_contacts(domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "admin_contact.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "admin_contact.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.address_line_1", "99 High Street"),
 					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.address_line_2", "Flat 1a"),
 					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.city", "Little Nowhere"),
@@ -108,7 +108,7 @@ func testAccRegisteredDomain_contacts(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.organization_name", "Support"),
 					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.phone_number", "+44.123456789"),
 					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.zip_code", "ST1 1AB"),
-					resource.TestCheckResourceAttr(resourceName, "billing_contact.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "billing_contact.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "billing_contact.0.address_line_1", "1 Mawson Street"),
 					resource.TestCheckResourceAttr(resourceName, "billing_contact.0.address_line_2", "Unit 2"),
 					resource.TestCheckResourceAttr(resourceName, "billing_contact.0.city", "Mawson"),
@@ -122,7 +122,7 @@ func testAccRegisteredDomain_contacts(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "billing_contact.0.phone_number", "+61.412345679"),
 					resource.TestCheckResourceAttr(resourceName, "billing_contact.0.state", "ACT"),
 					resource.TestCheckResourceAttr(resourceName, "billing_contact.0.zip_code", "2606"),
-					resource.TestCheckResourceAttr(resourceName, "registrant_contact.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "registrant_contact.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.address_line_1", "100 Main Street"),
 					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.city", "New York City"),
 					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.contact_type", "COMPANY"),
@@ -134,7 +134,7 @@ func testAccRegisteredDomain_contacts(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.phone_number", "+1.2025551234"),
 					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.state", "NY"),
 					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.zip_code", "10001"),
-					resource.TestCheckResourceAttr(resourceName, "tech_contact.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tech_contact.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tech_contact.0.address_line_1", "The Castle"),
 					resource.TestCheckResourceAttr(resourceName, "tech_contact.0.city", "Prague"),
 					resource.TestCheckResourceAttr(resourceName, "tech_contact.0.contact_type", "PERSON"),
@@ -149,7 +149,7 @@ func testAccRegisteredDomain_contacts(t *testing.T) {
 			{
 				Config: testAccRegisteredDomainConfig_contactsUpdated(domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "admin_contact.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "admin_contact.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.address_line_1", "101 2nd St #700"),
 					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.city", "San Francisco"),
 					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.contact_type", "COMPANY"),
@@ -162,7 +162,7 @@ func testAccRegisteredDomain_contacts(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.phone_number", "+1.4155551234"),
 					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.state", "CA"),
 					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.zip_code", "94105"),
-					resource.TestCheckResourceAttr(resourceName, "billing_contact.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "billing_contact.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "billing_contact.0.address_line_1", "101 2nd St #700"),
 					resource.TestCheckResourceAttr(resourceName, "billing_contact.0.city", "San Francisco"),
 					resource.TestCheckResourceAttr(resourceName, "billing_contact.0.contact_type", "COMPANY"),
@@ -175,7 +175,7 @@ func testAccRegisteredDomain_contacts(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "billing_contact.0.phone_number", "+1.4155551234"),
 					resource.TestCheckResourceAttr(resourceName, "billing_contact.0.state", "CA"),
 					resource.TestCheckResourceAttr(resourceName, "billing_contact.0.zip_code", "94105"),
-					resource.TestCheckResourceAttr(resourceName, "registrant_contact.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "registrant_contact.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.address_line_1", "101 2nd St #700"),
 					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.city", "San Francisco"),
 					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.contact_type", "COMPANY"),
@@ -188,7 +188,7 @@ func testAccRegisteredDomain_contacts(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.phone_number", "+1.4155551234"),
 					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.state", "CA"),
 					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.zip_code", "94105"),
-					resource.TestCheckResourceAttr(resourceName, "tech_contact.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tech_contact.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tech_contact.0.address_line_1", "101 2nd St #700"),
 					resource.TestCheckResourceAttr(resourceName, "tech_contact.0.city", "San Francisco"),
 					resource.TestCheckResourceAttr(resourceName, "tech_contact.0.contact_type", "COMPANY"),
@@ -256,7 +256,7 @@ func testAccRegisteredDomain_nameservers(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name_server.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "name_server.0.name", fmt.Sprintf("ns1.%s", domainName)),
-					resource.TestCheckResourceAttr(resourceName, "name_server.0.glue_ips.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "name_server.0.glue_ips.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr(resourceName, "name_server.0.glue_ips.*", "1.1.1.1"),
 					resource.TestCheckResourceAttr(resourceName, "name_server.1.name", "ns2.worldnic.com"),
 					resource.TestCheckResourceAttr(resourceName, "name_server.1.glue_ips.#", "0"),

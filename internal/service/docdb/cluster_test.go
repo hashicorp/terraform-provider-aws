@@ -53,7 +53,7 @@ func TestAccDocDBCluster_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrApplyImmediately),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(fmt.Sprintf("cluster:%s", rName))),
 					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, rName),
 					resource.TestCheckResourceAttr(resourceName, "cluster_identifier_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "cluster_members.#", "0"),
@@ -80,9 +80,9 @@ func TestAccDocDBCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "skip_final_snapshot", "true"),
 					resource.TestCheckNoResourceAttr(resourceName, "snapshot_identifier"),
 					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", acctest.CtOne),
 				),
 			},
 			{
@@ -211,7 +211,7 @@ func TestAccDocDBCluster_tags(t *testing.T) {
 				Config: testAccClusterConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -240,7 +240,7 @@ func TestAccDocDBCluster_tags(t *testing.T) {
 				Config: testAccClusterConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -783,7 +783,7 @@ func TestAccDocDBCluster_updateEngineMajorVersion(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrApplyImmediately, "true"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(fmt.Sprintf("cluster:%s", rName))),
 					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, rName),
 					resource.TestCheckResourceAttr(resourceName, "cluster_identifier_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "cluster_members.#", "0"),
@@ -808,9 +808,9 @@ func TestAccDocDBCluster_updateEngineMajorVersion(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "skip_final_snapshot", "true"),
 					resource.TestCheckNoResourceAttr(resourceName, "snapshot_identifier"),
 					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", acctest.CtOne),
 				),
 			},
 			{
@@ -829,7 +829,7 @@ func TestAccDocDBCluster_updateEngineMajorVersion(t *testing.T) {
 				Config: testAccClusterConfig_engineVersion(rName, "5.0.0"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "cluster_members.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_members.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "db_cluster_parameter_group_name", "default.docdb5.0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "5.0.0"),
 				),
@@ -854,7 +854,7 @@ func TestAccDocDBCluster_storageType(t *testing.T) {
 				Config: testAccClusterConfig_storageType(rName, "standard"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, ""),
 				),
 			},
 			{
@@ -873,14 +873,14 @@ func TestAccDocDBCluster_storageType(t *testing.T) {
 				Config: testAccClusterConfig_storageType(rName, "iopt1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", "iopt1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "iopt1"),
 				),
 			},
 			{
 				Config: testAccClusterConfig_storageType(rName, "standard"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, ""),
 				),
 			},
 		},

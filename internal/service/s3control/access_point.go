@@ -137,7 +137,7 @@ func resourceAccessPoint() *schema.Resource {
 					},
 				},
 			},
-			"vpc_configuration": {
+			names.AttrVPCConfiguration: {
 				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
@@ -179,7 +179,7 @@ func resourceAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.PublicAccessBlockConfiguration = expandPublicAccessBlockConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("vpc_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrVPCConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.VpcConfiguration = expandVPCConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -296,11 +296,11 @@ func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta i
 		d.Set("public_access_block_configuration", nil)
 	}
 	if output.VpcConfiguration != nil {
-		if err := d.Set("vpc_configuration", []interface{}{flattenVPCConfiguration(output.VpcConfiguration)}); err != nil {
+		if err := d.Set(names.AttrVPCConfiguration, []interface{}{flattenVPCConfiguration(output.VpcConfiguration)}); err != nil {
 			return diag.Errorf("setting vpc_configuration: %s", err)
 		}
 	} else {
-		d.Set("vpc_configuration", nil)
+		d.Set(names.AttrVPCConfiguration, nil)
 	}
 
 	policy, status, err := findAccessPointPolicyAndStatusByTwoPartKey(ctx, conn, accountID, name)

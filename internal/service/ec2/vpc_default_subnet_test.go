@@ -236,7 +236,7 @@ func testAccDefaultSubnet_Existing_privateDNSNameOptionsOnLaunch(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_hostname_type_on_launch", "resource-name"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
 				),

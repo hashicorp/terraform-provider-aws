@@ -76,7 +76,7 @@ func TestAccIVSChatRoom_tags(t *testing.T) {
 				Config: testAccRoomConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoomExists(ctx, resourceName, &room),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -98,7 +98,7 @@ func TestAccIVSChatRoom_tags(t *testing.T) {
 				Config: testAccRoomConfig_tags1("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoomExists(ctx, resourceName, &room),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -199,7 +199,7 @@ func TestAccIVSChatRoom_loggingConfiguration(t *testing.T) {
 				Config: testAccRoomConfig_loggingConfiguration1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoomExists(ctx, resourceName, &room1),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration_identifiers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration_identifiers.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "logging_configuration_identifiers.0", "aws_ivschat_logging_configuration.test1", names.AttrARN),
 				),
 			},
@@ -223,7 +223,7 @@ func TestAccIVSChatRoom_loggingConfiguration(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoomExists(ctx, resourceName, &room3),
 					testAccCheckRoomNotRecreated(&room2, &room3),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration_identifiers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration_identifiers.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "logging_configuration_identifiers.0", "aws_ivschat_logging_configuration.test3", names.AttrARN),
 				),
 			},

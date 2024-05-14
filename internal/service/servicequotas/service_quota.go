@@ -42,7 +42,7 @@ func ResourceServiceQuota() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"default_value": {
+			names.AttrDefaultValue: {
 				Type:     schema.TypeFloat,
 				Computed: true,
 			},
@@ -202,7 +202,7 @@ func resourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	d.Set("adjustable", defaultQuota.Adjustable)
 	d.Set(names.AttrARN, defaultQuota.QuotaArn)
-	d.Set("default_value", defaultQuota.Value)
+	d.Set(names.AttrDefaultValue, defaultQuota.Value)
 	d.Set("quota_code", defaultQuota.QuotaCode)
 	d.Set("quota_name", defaultQuota.QuotaName)
 	d.Set("service_code", defaultQuota.ServiceCode)

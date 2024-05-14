@@ -387,7 +387,7 @@ func resourceCluster() *schema.Resource {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
-							"instance_count": {
+							names.AttrInstanceCount: {
 								Type:         schema.TypeInt,
 								Optional:     true,
 								Default:      1,
@@ -613,7 +613,7 @@ func resourceCluster() *schema.Resource {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
-							"instance_count": {
+							names.AttrInstanceCount: {
 								Type:         schema.TypeInt,
 								Optional:     true,
 								ForceNew:     true,
@@ -805,7 +805,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		m := l[0].(map[string]interface{})
 
 		instanceGroup := &emr.InstanceGroupConfig{
-			InstanceCount: aws.Int64(int64(m["instance_count"].(int))),
+			InstanceCount: aws.Int64(int64(m[names.AttrInstanceCount].(int))),
 			InstanceRole:  aws.String(emr.InstanceRoleTypeMaster),
 			InstanceType:  aws.String(m[names.AttrInstanceType].(string)),
 			Market:        aws.String(emr.MarketTypeOnDemand),
@@ -826,7 +826,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		m := l[0].(map[string]interface{})
 
 		instanceGroup := &emr.InstanceGroupConfig{
-			InstanceCount: aws.Int64(int64(m["instance_count"].(int))),
+			InstanceCount: aws.Int64(int64(m[names.AttrInstanceCount].(int))),
 			InstanceRole:  aws.String(emr.InstanceRoleTypeCore),
 			InstanceType:  aws.String(m[names.AttrInstanceType].(string)),
 			Market:        aws.String(emr.MarketTypeOnDemand),
@@ -1713,13 +1713,13 @@ func flattenCoreInstanceGroup(instanceGroup *emr.InstanceGroup) ([]interface{}, 
 	}
 
 	m := map[string]interface{}{
-		"autoscaling_policy":   autoscalingPolicy,
-		"bid_price":            aws.StringValue(instanceGroup.BidPrice),
-		"ebs_config":           flattenEBSConfig(instanceGroup.EbsBlockDevices),
-		names.AttrID:           aws.StringValue(instanceGroup.Id),
-		"instance_count":       aws.Int64Value(instanceGroup.RequestedInstanceCount),
-		names.AttrInstanceType: aws.StringValue(instanceGroup.InstanceType),
-		names.AttrName:         aws.StringValue(instanceGroup.Name),
+		"autoscaling_policy":    autoscalingPolicy,
+		"bid_price":             aws.StringValue(instanceGroup.BidPrice),
+		"ebs_config":            flattenEBSConfig(instanceGroup.EbsBlockDevices),
+		names.AttrID:            aws.StringValue(instanceGroup.Id),
+		names.AttrInstanceCount: aws.Int64Value(instanceGroup.RequestedInstanceCount),
+		names.AttrInstanceType:  aws.StringValue(instanceGroup.InstanceType),
+		names.AttrName:          aws.StringValue(instanceGroup.Name),
 	}
 
 	return []interface{}{m}, nil
@@ -1731,12 +1731,12 @@ func flattenMasterInstanceGroup(instanceGroup *emr.InstanceGroup) []interface{} 
 	}
 
 	m := map[string]interface{}{
-		"bid_price":            aws.StringValue(instanceGroup.BidPrice),
-		"ebs_config":           flattenEBSConfig(instanceGroup.EbsBlockDevices),
-		names.AttrID:           aws.StringValue(instanceGroup.Id),
-		"instance_count":       aws.Int64Value(instanceGroup.RequestedInstanceCount),
-		names.AttrInstanceType: aws.StringValue(instanceGroup.InstanceType),
-		names.AttrName:         aws.StringValue(instanceGroup.Name),
+		"bid_price":             aws.StringValue(instanceGroup.BidPrice),
+		"ebs_config":            flattenEBSConfig(instanceGroup.EbsBlockDevices),
+		names.AttrID:            aws.StringValue(instanceGroup.Id),
+		names.AttrInstanceCount: aws.Int64Value(instanceGroup.RequestedInstanceCount),
+		names.AttrInstanceType:  aws.StringValue(instanceGroup.InstanceType),
+		names.AttrName:          aws.StringValue(instanceGroup.Name),
 	}
 
 	return []interface{}{m}

@@ -29,7 +29,7 @@ func TestAccAPIGatewayV2APIsDataSource_name(t *testing.T) {
 			{
 				Config: testAccAPIsDataSourceConfig_name(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSource1Name, "ids.#", "1"),
+					resource.TestCheckResourceAttr(dataSource1Name, "ids.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(dataSource2Name, "ids.#", "2"),
 				),
 			},
@@ -53,8 +53,8 @@ func TestAccAPIGatewayV2APIsDataSource_protocolType(t *testing.T) {
 			{
 				Config: testAccAPIsDataSourceConfig_protocolType(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSource1Name, "ids.#", "1"),
-					resource.TestCheckResourceAttr(dataSource2Name, "ids.#", "1"),
+					resource.TestCheckResourceAttr(dataSource1Name, "ids.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(dataSource2Name, "ids.#", acctest.CtOne),
 				),
 			},
 		},
@@ -78,7 +78,7 @@ func TestAccAPIGatewayV2APIsDataSource_tags(t *testing.T) {
 			{
 				Config: testAccAPIsDataSourceConfig_tags(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSource1Name, "ids.#", "1"),
+					resource.TestCheckResourceAttr(dataSource1Name, "ids.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(dataSource2Name, "ids.#", "2"),
 					resource.TestCheckResourceAttr(dataSource3Name, "ids.#", "0"),
 				),

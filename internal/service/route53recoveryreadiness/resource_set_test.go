@@ -45,7 +45,7 @@ func TestAccRoute53RecoveryReadinessResourceSet_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceSetExists(ctx, resourceName),
 					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "route53-recovery-readiness", regexache.MustCompile(`resource-set.+`)),
-					resource.TestCheckResourceAttr(resourceName, "resources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "resources.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -110,7 +110,7 @@ func TestAccRoute53RecoveryReadinessResourceSet_tags(t *testing.T) {
 				Config: testAccResourceSetConfig_tags1(rName, cwArn, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -132,7 +132,7 @@ func TestAccRoute53RecoveryReadinessResourceSet_tags(t *testing.T) {
 				Config: testAccResourceSetConfig_tags1(rName, cwArn, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -163,7 +163,7 @@ func TestAccRoute53RecoveryReadinessResourceSet_readinessScope(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceSetExists(ctx, resourceName),
 					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "route53-recovery-readiness", regexache.MustCompile(`resource-set.+`)),
-					resource.TestCheckResourceAttr(resourceName, "resources.0.readiness_scopes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "resources.0.readiness_scopes.#", acctest.CtOne),
 				),
 			},
 			{
@@ -321,7 +321,7 @@ func TestAccRoute53RecoveryReadinessResourceSet_timeout(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceSetExists(ctx, resourceName),
 					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "route53-recovery-readiness", regexache.MustCompile(`resource-set.+`)),
-					resource.TestCheckResourceAttr(resourceName, "resources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "resources.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},

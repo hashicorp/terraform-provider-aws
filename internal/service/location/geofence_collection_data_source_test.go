@@ -31,7 +31,7 @@ func TestAccLocationGeofenceCollectionDataSource_basic(t *testing.T) {
 					testAccCheckGeofenceCollectionExists(ctx, dataSourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "collection_arn", resourceName, "collection_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "collection_name", resourceName, "collection_name"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "create_time", resourceName, "create_time"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrCreateTime, resourceName, names.AttrCreateTime),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrKMSKeyID, resourceName, names.AttrKMSKeyID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "update_time", resourceName, "update_time"),

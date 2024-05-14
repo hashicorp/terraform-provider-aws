@@ -79,7 +79,7 @@ func dataSourceServerCertificate() *schema.Resource {
 				Computed: true,
 			},
 
-			"certificate_chain": {
+			names.AttrCertificateChain: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -162,7 +162,7 @@ func dataSourceServerCertificateRead(ctx context.Context, d *schema.ResourceData
 	}
 	d.Set("upload_date", serverCertificateResp.ServerCertificate.ServerCertificateMetadata.UploadDate.Format(time.RFC3339))
 	d.Set("certificate_body", serverCertificateResp.ServerCertificate.CertificateBody)
-	d.Set("certificate_chain", serverCertificateResp.ServerCertificate.CertificateChain)
+	d.Set(names.AttrCertificateChain, serverCertificateResp.ServerCertificate.CertificateChain)
 
 	return diags
 }

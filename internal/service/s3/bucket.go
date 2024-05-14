@@ -167,7 +167,7 @@ func resourceBucket() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"permissions": {
+						names.AttrPermissions: {
 							Type:     schema.TypeSet,
 							Required: true,
 							Set:      schema.HashString,
@@ -408,7 +408,7 @@ func resourceBucket() *schema.Resource {
 				Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"role": {
+						names.AttrRole: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -1988,7 +1988,7 @@ func expandBucketGrants(l []interface{}) []types.Grant {
 			continue
 		}
 
-		if v, ok := tfMap["permissions"].(*schema.Set); ok {
+		if v, ok := tfMap[names.AttrPermissions].(*schema.Set); ok {
 			for _, rawPermission := range v.List() {
 				permission, ok := rawPermission.(string)
 				if !ok {
@@ -2030,7 +2030,7 @@ func flattenBucketGrants(apiObject *s3.GetBucketAclOutput) []interface{} {
 	getGrant := func(grants []interface{}, grantee map[string]interface{}) (interface{}, bool) {
 		for _, grant := range grants {
 			tfMap := grant.(map[string]interface{})
-			if tfMap[names.AttrType] == grantee[names.AttrType] && tfMap[names.AttrID] == grantee[names.AttrID] && tfMap[names.AttrURI] == grantee[names.AttrURI] && tfMap["permissions"].(*schema.Set).Len() > 0 {
+			if tfMap[names.AttrType] == grantee[names.AttrType] && tfMap[names.AttrID] == grantee[names.AttrID] && tfMap[names.AttrURI] == grantee[names.AttrURI] && tfMap[names.AttrPermissions].(*schema.Set).Len() > 0 {
 				return grant, true
 			}
 		}
@@ -2055,9 +2055,9 @@ func flattenBucketGrants(apiObject *s3.GetBucketAclOutput) []interface{} {
 		}
 
 		if v, ok := getGrant(results, m); ok {
-			v.(map[string]interface{})["permissions"].(*schema.Set).Add(string(apiObject.Permission))
+			v.(map[string]interface{})[names.AttrPermissions].(*schema.Set).Add(string(apiObject.Permission))
 		} else {
-			m["permissions"] = schema.NewSet(schema.HashString, []interface{}{string(apiObject.Permission)})
+			m[names.AttrPermissions] = schema.NewSet(schema.HashString, []interface{}{string(apiObject.Permission)})
 			results = append(results, m)
 		}
 	}
@@ -2427,7 +2427,7 @@ func expandBucketReplicationConfiguration(ctx context.Context, l []interface{}) 
 
 	apiObject := &types.ReplicationConfiguration{}
 
-	if v, ok := tfMap["role"].(string); ok {
+	if v, ok := tfMap[names.AttrRole].(string); ok {
 		apiObject.Role = aws.String(v)
 	}
 
@@ -2609,7 +2609,7 @@ func flattenBucketReplicationConfiguration(ctx context.Context, apiObject *types
 	m := make(map[string]interface{})
 
 	if apiObject.Role != nil {
-		m["role"] = aws.ToString(apiObject.Role)
+		m[names.AttrRole] = aws.ToString(apiObject.Role)
 	}
 
 	if len(apiObject.Rules) > 0 {

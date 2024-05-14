@@ -38,9 +38,9 @@ func TestAccSSMAssociation_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "apply_only_at_cron_interval", "false"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, "aws_instance.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "output_location.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "targets.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "targets.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.key", "InstanceIds"),
-					resource.TestCheckResourceAttr(resourceName, "targets.0.values.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "targets.0.values.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "targets.0.values.0", "aws_instance.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "document_version", "$DEFAULT"),
@@ -171,7 +171,7 @@ targets {
 				Config: testAccAssociationConfig_basicTargets(rName, oneTarget),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "targets.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "targets.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.key", "tag:Name"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.values.0", "acceptanceTest"),
 				),
@@ -196,7 +196,7 @@ targets {
 				Config: testAccAssociationConfig_basicTargets(rName, oneTarget),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "targets.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "targets.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.key", "tag:Name"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.values.0", "acceptanceTest"),
 				),
@@ -330,7 +330,7 @@ func TestAccSSMAssociation_withDocumentVersion(t *testing.T) {
 				Config: testAccAssociationConfig_basicDocumentVersion(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "document_version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "document_version", acctest.CtOne),
 				),
 			},
 			{
@@ -401,7 +401,7 @@ func TestAccSSMAssociation_withOutputLocation_s3Region(t *testing.T) {
 				Config: testAccAssociationConfig_outputLocationS3Region(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "output_location.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "output_location.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "output_location.0.s3_bucket_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "output_location.0.s3_region", acctest.Region()),
 				),
@@ -415,7 +415,7 @@ func TestAccSSMAssociation_withOutputLocation_s3Region(t *testing.T) {
 				Config: testAccAssociationConfig_outputLocationUpdateS3Region(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "output_location.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "output_location.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "output_location.0.s3_bucket_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "output_location.0.s3_region", acctest.AlternateRegion()),
 				),
@@ -429,7 +429,7 @@ func TestAccSSMAssociation_withOutputLocation_s3Region(t *testing.T) {
 				Config: testAccAssociationConfig_outputLocationNoS3Region(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "output_location.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "output_location.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "output_location.0.s3_region", ""),
 				),
 			},

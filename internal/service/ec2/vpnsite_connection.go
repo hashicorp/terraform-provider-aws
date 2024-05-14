@@ -613,7 +613,7 @@ func resourceVPNConnection() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"status_message": {
+						names.AttrStatusMessage: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -1537,7 +1537,7 @@ func flattenVGWTelemetry(apiObject *ec2.VgwTelemetry) map[string]interface{} {
 	}
 
 	if v := apiObject.StatusMessage; v != nil {
-		tfMap["status_message"] = aws.StringValue(v)
+		tfMap[names.AttrStatusMessage] = aws.StringValue(v)
 	}
 
 	return tfMap

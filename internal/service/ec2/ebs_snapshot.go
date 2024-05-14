@@ -103,7 +103,7 @@ func ResourceEBSSnapshot() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"volume_size": {
+			names.AttrVolumeSize: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -204,7 +204,7 @@ func resourceEBSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set(names.AttrOwnerID, snapshot.OwnerId)
 	d.Set("storage_tier", snapshot.StorageTier)
 	d.Set("volume_id", snapshot.VolumeId)
-	d.Set("volume_size", snapshot.VolumeSize)
+	d.Set(names.AttrVolumeSize, snapshot.VolumeSize)
 
 	setTagsOutV2(ctx, snapshot.Tags)
 

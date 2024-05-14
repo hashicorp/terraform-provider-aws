@@ -172,13 +172,13 @@ func ResourceContainerRecipe() *schema.Resource {
 													ForceNew:     true,
 													ValidateFunc: validation.IntBetween(125, 1000),
 												},
-												"volume_size": {
+												names.AttrVolumeSize: {
 													Type:         schema.TypeInt,
 													Optional:     true,
 													ForceNew:     true,
 													ValidateFunc: validation.IntBetween(1, 16000),
 												},
-												"volume_type": {
+												names.AttrVolumeType: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ForceNew:     true,
@@ -254,7 +254,7 @@ func ResourceContainerRecipe() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"repository_name": {
+						names.AttrRepositoryName: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 1024),

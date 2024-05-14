@@ -35,7 +35,7 @@ func TestAccWorkSpaces_serial(t *testing.T) {
 			"basic":                  testAccWorkspace_basic,
 			"recreate":               testAccWorkspace_recreate,
 			names.AttrTags:           testAccWorkspace_tags,
-			"timeout":                testAccWorkspace_timeout,
+			names.AttrTimeout:        testAccWorkspace_timeout,
 			"validateRootVolumeSize": testAccWorkspace_validateRootVolumeSize,
 			"validateUserVolumeSize": testAccWorkspace_validateUserVolumeSize,
 			"workspaceProperties":    testAccWorkspace_workspaceProperties,

@@ -96,7 +96,7 @@ func TestAccIPAMScope_tags(t *testing.T) {
 				Config: testAccIPAMScopeConfig_tags("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMScopeExists(ctx, resourceName, &scope),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -118,7 +118,7 @@ func TestAccIPAMScope_tags(t *testing.T) {
 				Config: testAccIPAMScopeConfig_tags("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMScopeExists(ctx, resourceName, &scope),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

@@ -62,7 +62,7 @@ func resourcePolicy() *schema.Resource {
 				Optional: true,
 				Default:  "StepScaling",
 			},
-			"resource_id": {
+			names.AttrResourceID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -327,7 +327,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).AppAutoScalingClient(ctx)
 
 	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.FailedResourceAccessException](ctx, propagationTimeout, func() (interface{}, error) {
-		return findScalingPolicyByFourPartKey(ctx, conn, d.Get(names.AttrName).(string), d.Get("service_namespace").(string), d.Get("resource_id").(string), d.Get("scalable_dimension").(string))
+		return findScalingPolicyByFourPartKey(ctx, conn, d.Get(names.AttrName).(string), d.Get("service_namespace").(string), d.Get(names.AttrResourceID).(string), d.Get("scalable_dimension").(string))
 	})
 
 	if tfresource.NotFound(err) && !d.IsNewResource() {
@@ -347,7 +347,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set(names.AttrARN, output.PolicyARN)
 	d.Set(names.AttrName, output.PolicyName)
 	d.Set("policy_type", output.PolicyType)
-	d.Set("resource_id", output.ResourceId)
+	d.Set(names.AttrResourceID, output.ResourceId)
 	d.Set("scalable_dimension", output.ScalableDimension)
 	d.Set("service_namespace", output.ServiceNamespace)
 	if err := d.Set("step_scaling_policy_configuration", flattenStepScalingPolicyConfiguration(output.StepScalingPolicyConfiguration)); err != nil {
@@ -366,7 +366,7 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta inte
 
 	input := &applicationautoscaling.DeleteScalingPolicyInput{
 		PolicyName:        aws.String(d.Get(names.AttrName).(string)),
-		ResourceId:        aws.String(d.Get("resource_id").(string)),
+		ResourceId:        aws.String(d.Get(names.AttrResourceID).(string)),
 		ScalableDimension: awstypes.ScalableDimension(d.Get("scalable_dimension").(string)),
 		ServiceNamespace:  awstypes.ServiceNamespace(d.Get("service_namespace").(string)),
 	}
@@ -399,7 +399,7 @@ func resourcePolicyImport(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.SetId(name)
 	d.Set(names.AttrName, name)
-	d.Set("resource_id", resourceID)
+	d.Set(names.AttrResourceID, resourceID)
 	d.Set("scalable_dimension", scalableDimension)
 	d.Set("service_namespace", serviceNamespace)
 
@@ -655,7 +655,7 @@ func expandPredefinedMetricSpecification(configured []interface{}) *awstypes.Pre
 func expandPutScalingPolicyInput(d *schema.ResourceData) *applicationautoscaling.PutScalingPolicyInput {
 	apiObject := &applicationautoscaling.PutScalingPolicyInput{
 		PolicyName: aws.String(d.Get(names.AttrName).(string)),
-		ResourceId: aws.String(d.Get("resource_id").(string)),
+		ResourceId: aws.String(d.Get(names.AttrResourceID).(string)),
 	}
 
 	if v, ok := d.GetOk("policy_type"); ok {

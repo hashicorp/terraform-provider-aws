@@ -31,7 +31,7 @@ func TestAccServiceCatalogProductDataSource_basic(t *testing.T) {
 				Config: testAccProductDataSourceConfig_basic(rName, "beskrivning", "supportbeskrivning", domain, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, "created_time", dataSourceName, "created_time"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCreatedTime, dataSourceName, names.AttrCreatedTime),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDescription, dataSourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(resourceName, "distributor", dataSourceName, "distributor"),
 					resource.TestCheckResourceAttrPair(resourceName, "has_default_path", dataSourceName, "has_default_path"),
@@ -68,7 +68,7 @@ func TestAccServiceCatalogProductDataSource_physicalID(t *testing.T) {
 				Config: testAccProductDataSourceConfig_physicalID(rName, domain, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, "created_time", dataSourceName, "created_time"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCreatedTime, dataSourceName, names.AttrCreatedTime),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDescription, dataSourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(resourceName, "distributor", dataSourceName, "distributor"),
 					resource.TestCheckResourceAttrPair(resourceName, "has_default_path", dataSourceName, "has_default_path"),

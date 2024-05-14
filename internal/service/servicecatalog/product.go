@@ -56,7 +56,7 @@ func ResourceProduct() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_time": {
+			names.AttrCreatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -245,7 +245,7 @@ func resourceProductRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.Set(names.AttrARN, output.ProductViewDetail.ProductARN)
 	if output.ProductViewDetail.CreatedTime != nil {
-		d.Set("created_time", output.ProductViewDetail.CreatedTime.Format(time.RFC3339))
+		d.Set(names.AttrCreatedTime, output.ProductViewDetail.CreatedTime.Format(time.RFC3339))
 	}
 	d.Set(names.AttrDescription, pvs.ShortDescription)
 	d.Set("distributor", pvs.Distributor)

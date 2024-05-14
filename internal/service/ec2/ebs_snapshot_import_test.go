@@ -111,7 +111,7 @@ func TestAccEC2EBSSnapshotImport_tags(t *testing.T) {
 				Config: testAccEBSSnapshotImportConfig_tags1(t, rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -128,7 +128,7 @@ func TestAccEC2EBSSnapshotImport_tags(t *testing.T) {
 				Config: testAccEBSSnapshotImportConfig_tags1(t, rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

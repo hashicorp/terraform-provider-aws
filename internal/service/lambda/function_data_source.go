@@ -44,7 +44,7 @@ func dataSourceFunction() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"target_arn": {
+						names.AttrTargetARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -55,7 +55,7 @@ func dataSourceFunction() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"environment": {
+			names.AttrEnvironment: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -169,7 +169,7 @@ func dataSourceFunction() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"role": {
+			names.AttrRole: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -194,7 +194,7 @@ func dataSourceFunction() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
-			"timeout": {
+			names.AttrTimeout: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -291,7 +291,7 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta in
 	if function.DeadLetterConfig != nil && function.DeadLetterConfig.TargetArn != nil {
 		if err := d.Set("dead_letter_config", []interface{}{
 			map[string]interface{}{
-				"target_arn": aws.ToString(function.DeadLetterConfig.TargetArn),
+				names.AttrTargetARN: aws.ToString(function.DeadLetterConfig.TargetArn),
 			},
 		}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting dead_letter_config: %s", err)
@@ -300,7 +300,7 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta in
 		d.Set("dead_letter_config", []interface{}{})
 	}
 	d.Set(names.AttrDescription, function.Description)
-	if err := d.Set("environment", flattenEnvironment(function.Environment)); err != nil {
+	if err := d.Set(names.AttrEnvironment, flattenEnvironment(function.Environment)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting environment: %s", err)
 	}
 	if err := d.Set("ephemeral_storage", flattenEphemeralStorage(function.EphemeralStorage)); err != nil {
@@ -330,13 +330,13 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta in
 	} else {
 		d.Set("reserved_concurrent_executions", -1)
 	}
-	d.Set("role", function.Role)
+	d.Set(names.AttrRole, function.Role)
 	d.Set("runtime", function.Runtime)
 	d.Set("signing_job_arn", function.SigningJobArn)
 	d.Set("signing_profile_version_arn", function.SigningProfileVersionArn)
 	d.Set("source_code_hash", function.CodeSha256)
 	d.Set("source_code_size", function.CodeSize)
-	d.Set("timeout", function.Timeout)
+	d.Set(names.AttrTimeout, function.Timeout)
 	tracingConfigMode := awstypes.TracingModePassThrough
 	if function.TracingConfig != nil {
 		tracingConfigMode = function.TracingConfig.Mode

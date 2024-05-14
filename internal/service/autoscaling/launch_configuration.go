@@ -100,13 +100,13 @@ func resourceLaunchConfiguration() *schema.Resource {
 							Computed: true,
 							ForceNew: true,
 						},
-						"volume_size": {
+						names.AttrVolumeSize: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
-						"volume_type": {
+						names.AttrVolumeType: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -259,13 +259,13 @@ func resourceLaunchConfiguration() *schema.Resource {
 							Computed: true,
 							ForceNew: true,
 						},
-						"volume_size": {
+						names.AttrVolumeSize: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
-						"volume_type": {
+						names.AttrVolumeType: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -566,11 +566,11 @@ func expandBlockDeviceMappingForEBSBlockDevice(tfMap map[string]interface{}) aws
 		apiObject.Ebs.Throughput = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["volume_size"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrVolumeSize].(int); ok && v != 0 {
 		apiObject.Ebs.VolumeSize = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["volume_type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrVolumeType].(string); ok && v != "" {
 		apiObject.Ebs.VolumeType = aws.String(v)
 	}
 
@@ -616,11 +616,11 @@ func expandBlockDeviceMappingForRootBlockDevice(tfMap map[string]interface{}) aw
 		apiObject.Ebs.Throughput = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["volume_size"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrVolumeSize].(int); ok && v != 0 {
 		apiObject.Ebs.VolumeSize = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["volume_type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrVolumeType].(string); ok && v != "" {
 		apiObject.Ebs.VolumeType = aws.String(v)
 	}
 
@@ -685,11 +685,11 @@ func flattenBlockDeviceMappings(apiObjects []awstypes.BlockDeviceMapping, rootDe
 			}
 
 			if v := v.VolumeSize; v != nil {
-				tfMap["volume_size"] = aws.ToInt32(v)
+				tfMap[names.AttrVolumeSize] = aws.ToInt32(v)
 			}
 
 			if v := v.VolumeType; v != nil {
-				tfMap["volume_type"] = aws.ToString(v)
+				tfMap[names.AttrVolumeType] = aws.ToString(v)
 			}
 		}
 

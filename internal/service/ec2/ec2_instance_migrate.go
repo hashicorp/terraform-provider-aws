@@ -98,8 +98,8 @@ func WriteV1BlockDevice(
 		delete(oldBd, names.AttrDeleteOnTermination)
 		delete(oldBd, names.AttrEncrypted)
 		delete(oldBd, names.AttrIOPS)
-		delete(oldBd, "volume_size")
-		delete(oldBd, "volume_type")
+		delete(oldBd, names.AttrVolumeSize)
+		delete(oldBd, names.AttrVolumeType)
 	}
 	for attr, val := range oldBd {
 		attrKey := fmt.Sprintf("%s.%d.%s", bdType, code, attr)

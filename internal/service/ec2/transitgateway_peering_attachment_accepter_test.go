@@ -78,7 +78,7 @@ func testAccTransitGatewayPeeringAttachmentAccepter_tags(t *testing.T, semaphore
 				Config: testAccTransitGatewayPeeringAttachmentAccepterConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayPeeringAttachmentExists(ctx, resourceName, &transitGatewayPeeringAttachment),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -101,7 +101,7 @@ func testAccTransitGatewayPeeringAttachmentAccepter_tags(t *testing.T, semaphore
 				Config: testAccTransitGatewayPeeringAttachmentAccepterConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayPeeringAttachmentExists(ctx, resourceName, &transitGatewayPeeringAttachment),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -136,7 +136,7 @@ func testAccTransitGatewayPeeringAttachmentAccepter_differentAccount(t *testing.
 					resource.TestCheckResourceAttrPair(resourceName, "peer_account_id", transitGatewayResourceNamePeer, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, "peer_region", acctest.AlternateRegion()),
 					resource.TestCheckResourceAttrPair(resourceName, "peer_transit_gateway_id", transitGatewayResourceNamePeer, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayID, transitGatewayResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayAttachmentID, peeringAttachmentName, names.AttrID),

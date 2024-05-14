@@ -1372,7 +1372,7 @@ func expandResponseInspection(tfList []interface{}) *awstypes.ResponseInspection
 	if v, ok := m["body_contains"].([]interface{}); ok && len(v) > 0 {
 		out.BodyContains = expandBodyContains(v)
 	}
-	if v, ok := m["header"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m[names.AttrHeader].([]interface{}); ok && len(v) > 0 {
 		out.Header = expandHeader(v)
 	}
 	if v, ok := m[names.AttrJSON].([]interface{}); ok && len(v) > 0 {
@@ -1527,7 +1527,7 @@ func expandRateBasedStatementCustomKeys(l []interface{}) []awstypes.RateBasedSta
 		if v, ok := m["http_method"]; ok && len(v.([]interface{})) > 0 {
 			r.HTTPMethod = &awstypes.RateLimitHTTPMethod{}
 		}
-		if v, ok := m["header"]; ok {
+		if v, ok := m[names.AttrHeader]; ok {
 			r.Header = expandRateLimitHeader(v.([]interface{}))
 		}
 		if v, ok := m["ip"]; ok && len(v.([]interface{})) > 0 {
@@ -2768,7 +2768,7 @@ func flattenResponseInspection(apiObject *awstypes.ResponseInspection) []interfa
 		m["body_contains"] = flattenBodyContains(apiObject.BodyContains)
 	}
 	if apiObject.Header != nil {
-		m["header"] = flattenHeader(apiObject.Header)
+		m[names.AttrHeader] = flattenHeader(apiObject.Header)
 	}
 	if apiObject.Json != nil {
 		m[names.AttrJSON] = flattenResponseInspectionJSON(apiObject.Json)
@@ -2925,7 +2925,7 @@ func flattenRateBasedStatementCustomKeys(apiObject []awstypes.RateBasedStatement
 			}
 		}
 		if o.Header != nil {
-			tfMap["header"] = flattenRateLimitHeader(o.Header)
+			tfMap[names.AttrHeader] = flattenRateLimitHeader(o.Header)
 		}
 		if o.IP != nil {
 			tfMap["ip"] = []interface{}{

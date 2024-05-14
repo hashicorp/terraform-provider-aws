@@ -118,11 +118,11 @@ func DataSourceContainerRecipe() *schema.Resource {
 													Type:     schema.TypeInt,
 													Computed: true,
 												},
-												"volume_size": {
+												names.AttrVolumeSize: {
 													Type:     schema.TypeInt,
 													Computed: true,
 												},
-												"volume_type": {
+												names.AttrVolumeType: {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
@@ -173,7 +173,7 @@ func DataSourceContainerRecipe() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"repository_name": {
+						names.AttrRepositoryName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

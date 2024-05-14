@@ -35,13 +35,13 @@ func TestAccCognitoIDPIdentityProvider_basic(t *testing.T) {
 				Config: testAccIdentityProviderConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIdentityProviderExists(ctx, resourceName, &identityProvider),
-					resource.TestCheckResourceAttr(resourceName, "attribute_mapping.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "attribute_mapping.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "attribute_mapping.username", "sub"),
 					resource.TestCheckResourceAttr(resourceName, "provider_details.%", "9"),
 					resource.TestCheckResourceAttr(resourceName, "provider_details.authorize_scopes", names.AttrEmail),
 					resource.TestCheckResourceAttr(resourceName, "provider_details.authorize_url", "https://accounts.google.com/o/oauth2/v2/auth"),
 					resource.TestCheckResourceAttr(resourceName, "provider_details.client_id", "test-url.apps.googleusercontent.com"),
-					resource.TestCheckResourceAttr(resourceName, "provider_details.client_secret", "client_secret"),
+					resource.TestCheckResourceAttr(resourceName, "provider_details.client_secret", names.AttrClientSecret),
 					resource.TestCheckResourceAttr(resourceName, "provider_details.attributes_url", "https://people.googleapis.com/v1/people/me?personFields="),
 					resource.TestCheckResourceAttr(resourceName, "provider_details.attributes_url_add_attributes", "true"),
 					resource.TestCheckResourceAttr(resourceName, "provider_details.token_request_method", "POST"),
@@ -97,7 +97,7 @@ func TestAccCognitoIDPIdentityProvider_idpIdentifiers(t *testing.T) {
 				Config: testAccIdentityProviderConfig_identifier(rName, "test"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIdentityProviderExists(ctx, resourceName, &identityProvider),
-					resource.TestCheckResourceAttr(resourceName, "idp_identifiers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "idp_identifiers.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "idp_identifiers.0", "test"),
 				),
 			},
@@ -110,7 +110,7 @@ func TestAccCognitoIDPIdentityProvider_idpIdentifiers(t *testing.T) {
 				Config: testAccIdentityProviderConfig_identifier(rName, "test2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIdentityProviderExists(ctx, resourceName, &identityProvider),
-					resource.TestCheckResourceAttr(resourceName, "idp_identifiers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "idp_identifiers.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "idp_identifiers.0", "test2"),
 				),
 			},
@@ -134,7 +134,7 @@ func TestAccCognitoIDPIdentityProvider_saml(t *testing.T) {
 				Config: testAccIdentityProviderConfig_saml(rName, "false"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIdentityProviderExists(ctx, resourceName, &identityProvider),
-					resource.TestCheckResourceAttr(resourceName, "attribute_mapping.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "attribute_mapping.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "attribute_mapping.email", names.AttrEmail),
 					resource.TestCheckNoResourceAttr(resourceName, "idp_identifiers.#"),
 					resource.TestCheckResourceAttr(resourceName, "provider_details.%", "4"),
@@ -155,7 +155,7 @@ func TestAccCognitoIDPIdentityProvider_saml(t *testing.T) {
 				Config: testAccIdentityProviderConfig_saml(rName, "true"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIdentityProviderExists(ctx, resourceName, &identityProvider),
-					resource.TestCheckResourceAttr(resourceName, "attribute_mapping.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "attribute_mapping.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "attribute_mapping.email", names.AttrEmail),
 					resource.TestCheckNoResourceAttr(resourceName, "idp_identifiers.#"),
 					resource.TestCheckResourceAttr(resourceName, "provider_details.%", "4"),
