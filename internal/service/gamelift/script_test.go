@@ -49,7 +49,7 @@ func TestAccGameLiftScript_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_location.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "storage_location.0.bucket", fmt.Sprintf("prod-gamescale-scripts-%s", region)),
 					resource.TestCheckResourceAttrSet(resourceName, "storage_location.0.key"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -65,7 +65,7 @@ func TestAccGameLiftScript_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`script/script-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "storage_location.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 		},
@@ -93,7 +93,7 @@ func TestAccGameLiftScript_tags(t *testing.T) {
 				Config: testAccScriptConfig_basicTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScriptExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -107,7 +107,7 @@ func TestAccGameLiftScript_tags(t *testing.T) {
 				Config: testAccScriptConfig_basicTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScriptExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -116,7 +116,7 @@ func TestAccGameLiftScript_tags(t *testing.T) {
 				Config: testAccScriptConfig_basicTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScriptExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
