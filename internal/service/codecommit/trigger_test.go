@@ -33,9 +33,9 @@ func TestAccCodeCommitTrigger_basic(t *testing.T) {
 				Config: testAccTriggerConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTriggerExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "trigger.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trigger.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "trigger.0.branches.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "trigger.0.events.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trigger.0.events.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "trigger.0.events.0", "all"),
 					resource.TestCheckResourceAttr(resourceName, "trigger.0.name", rName),
 				),
