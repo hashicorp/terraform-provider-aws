@@ -36,7 +36,7 @@ func Test_GetRoleNameFromARN(t *testing.T) {
 	}{
 		{"empty", "", ""},
 		{
-			"role",
+			names.AttrRole,
 			"arn:aws:iam::0123456789:role/EcsService", //lintignore:AWSAT005
 			"EcsService",
 		},
