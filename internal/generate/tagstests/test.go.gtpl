@@ -95,8 +95,8 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -109,8 +109,8 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -119,8 +119,8 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
@@ -135,8 +135,8 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
@@ -146,8 +146,8 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 				},
@@ -163,8 +163,8 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 				},
@@ -176,8 +176,8 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
-					"resource_tags": nil,
+					acctest.CtRName:         config.StringVariable(rName),
+					names.AttrResourceTags: nil,
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -190,8 +190,8 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
-					"resource_tags": nil,
+					acctest.CtRName:         config.StringVariable(rName),
+					names.AttrResourceTags: nil,
 				},
 				{{- template "ImportBody" .ImportIgnore -}}
 				{{ if .NoRemoveTags -}}
@@ -214,8 +214,8 @@ func {{ template "testname" . }}_tags_null(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
 				},
@@ -227,8 +227,8 @@ func {{ template "testname" . }}_tags_null(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
 				},
@@ -237,8 +237,8 @@ func {{ template "testname" . }}_tags_null(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
-					"resource_tags": nil,
+					acctest.CtRName:         config.StringVariable(rName),
+					names.AttrResourceTags: nil,
 				},
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: false,
@@ -256,8 +256,8 @@ func {{ template "testname" . }}_tags_AddOnUpdate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
-					"resource_tags": nil,
+					acctest.CtRName:         config.StringVariable(rName),
+					names.AttrResourceTags: nil,
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -267,8 +267,8 @@ func {{ template "testname" . }}_tags_AddOnUpdate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -281,8 +281,8 @@ func {{ template "testname" . }}_tags_AddOnUpdate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -304,8 +304,8 @@ func {{ template "testname" . }}_tags_EmptyTag_OnCreate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
@@ -318,8 +318,8 @@ func {{ template "testname" . }}_tags_EmptyTag_OnCreate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
@@ -328,8 +328,8 @@ func {{ template "testname" . }}_tags_EmptyTag_OnCreate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
-					"resource_tags": nil,
+					acctest.CtRName:         config.StringVariable(rName),
+					names.AttrResourceTags: nil,
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -339,8 +339,8 @@ func {{ template "testname" . }}_tags_EmptyTag_OnCreate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
-					"resource_tags": nil,
+					acctest.CtRName:         config.StringVariable(rName),
+					names.AttrResourceTags: nil,
 				},
 				{{- template "ImportBody" .ImportIgnore -}}
 			},
@@ -360,8 +360,8 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -374,8 +374,8 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 						acctest.CtKey2: config.StringVariable(""),
 					}),
@@ -390,8 +390,8 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 						acctest.CtKey2: config.StringVariable(""),
 					}),
@@ -401,8 +401,8 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -415,8 +415,8 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -438,8 +438,8 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -452,8 +452,8 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
@@ -466,8 +466,8 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
@@ -487,11 +487,11 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"resource_tags": nil,
+					names.AttrResourceTags: nil,
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -504,11 +504,11 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"resource_tags": nil,
+					names.AttrResourceTags: nil,
 				},
 				{{- template "ImportBody" .ImportIgnore -}}
 			},
@@ -516,12 +516,12 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					"resource_tags": nil,
+					names.AttrResourceTags: nil,
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -535,12 +535,12 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					"resource_tags": nil,
+					names.AttrResourceTags: nil,
 				},
 				{{- template "ImportBody" .ImportIgnore -}}
 			},
@@ -548,11 +548,11 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					"resource_tags": nil,
+					names.AttrResourceTags: nil,
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -568,11 +568,11 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					"resource_tags": nil,
+					names.AttrResourceTags: nil,
 				},
 				{{- template "ImportBody" .ImportIgnore -}}
 				{{ if .NoRemoveTags -}}
@@ -583,8 +583,8 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
-					"resource_tags": nil,
+					acctest.CtRName:         config.StringVariable(rName),
+					names.AttrResourceTags: nil,
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -599,8 +599,8 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
-					"resource_tags": nil,
+					acctest.CtRName:         config.StringVariable(rName),
+					names.AttrResourceTags: nil,
 				},
 				{{- template "ImportBody" .ImportIgnore -}}
 				{{ if .NoRemoveTags -}}
@@ -621,11 +621,11 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"providerkey1": config.StringVariable("providervalue1"),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						"resourcekey1": config.StringVariable("resourcevalue1"),
 					}),
 				},
@@ -642,11 +642,11 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"providerkey1": config.StringVariable("providervalue1"),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						"resourcekey1": config.StringVariable("resourcevalue1"),
 					}),
 				},
@@ -656,11 +656,11 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"providerkey1": config.StringVariable("providervalue1updated"),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						"resourcekey1": config.StringVariable("resourcevalue1updated"),
 						"resourcekey2": config.StringVariable("resourcevalue2"),
 					}),
@@ -680,11 +680,11 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"providerkey1": config.StringVariable("providervalue1updated"),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						"resourcekey1": config.StringVariable("resourcevalue1updated"),
 						"resourcekey2": config.StringVariable("resourcevalue2"),
 					}),
@@ -695,8 +695,8 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
-					"resource_tags": nil,
+					acctest.CtRName:         config.StringVariable(rName),
+					names.AttrResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -711,8 +711,8 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
-					"resource_tags": nil,
+					acctest.CtRName:         config.StringVariable(rName),
+					names.AttrResourceTags: nil,
 				},
 				{{- template "ImportBody" .ImportIgnore -}}
 				{{ if .NoRemoveTags -}}
@@ -733,11 +733,11 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("providervalue1"),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("resourcevalue1"),
 					}),
 				},
@@ -753,11 +753,11 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("providervalue1"),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("resourcevalue1"),
 					}),
 				},
@@ -767,12 +767,12 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("providervalue1"),
 						"overlapkey2": config.StringVariable("providervalue2"),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("resourcevalue1"),
 						"overlapkey2": config.StringVariable("resourcevalue2"),
 					}),
@@ -791,12 +791,12 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("providervalue1"),
 						"overlapkey2": config.StringVariable("providervalue2"),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("resourcevalue1"),
 						"overlapkey2": config.StringVariable("resourcevalue2"),
 					}),
@@ -807,11 +807,11 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("providervalue1"),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("resourcevalue2"),
 					}),
 				},
@@ -827,11 +827,11 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("providervalue1"),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("resourcevalue2"),
 					}),
 				},
@@ -851,8 +851,8 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly(t *testin
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -868,11 +868,11 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly(t *testin
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"resource_tags": nil,
+					names.AttrResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -885,11 +885,11 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly(t *testin
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"resource_tags": nil,
+					names.AttrResourceTags: nil,
 				},
 				{{- template "ImportBody" .ImportIgnore -}}
 			},
@@ -907,11 +907,11 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToResourceOnly(t *testin
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"resource_tags": nil,
+					names.AttrResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -924,8 +924,8 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToResourceOnly(t *testin
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -941,8 +941,8 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToResourceOnly(t *testin
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -965,11 +965,11 @@ func {{ template "testname" . }}_tags_DefaultTags_emptyResourceTag(t *testing.T)
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
@@ -985,11 +985,11 @@ func {{ template "testname" . }}_tags_DefaultTags_emptyResourceTag(t *testing.T)
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
@@ -1012,11 +1012,11 @@ func {{ template "testname" . }}_tags_DefaultTags_nullOverlappingResourceTag(t *
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable("providervalue1"),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
 				},
@@ -1031,11 +1031,11 @@ func {{ template "testname" . }}_tags_DefaultTags_nullOverlappingResourceTag(t *
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable("providervalue1"),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
 				},
@@ -1058,11 +1058,11 @@ func {{ template "testname" . }}_tags_DefaultTags_nullNonOverlappingResourceTag(
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"providerkey1": config.StringVariable("providervalue1"),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						"resourcekey1": nil,
 					}),
 				},
@@ -1077,11 +1077,11 @@ func {{ template "testname" . }}_tags_DefaultTags_nullNonOverlappingResourceTag(
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"providerkey1": config.StringVariable("providervalue1"),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						"resourcekey1": nil,
 					}),
 				},
@@ -1101,7 +1101,7 @@ func {{ template "testname" . }}_tags_ComputedTag_OnCreate(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tagsComputed1/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					acctest.CtRName:         config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1126,7 +1126,7 @@ func {{ template "testname" . }}_tags_ComputedTag_OnCreate(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tagsComputed1/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					acctest.CtRName:         config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				{{- template "ImportBody" .ImportIgnore -}}
@@ -1145,8 +1145,8 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -1160,7 +1160,7 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tagsComputed2/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					acctest.CtRName:         config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
 					"knownTagKey":   config.StringVariable(acctest.CtKey1),
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
@@ -1188,7 +1188,7 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tagsComputed2/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					acctest.CtRName:         config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
 					"knownTagKey":   config.StringVariable(acctest.CtKey1),
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
@@ -1209,8 +1209,8 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Replace(t *testing.T)
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -1224,7 +1224,7 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Replace(t *testing.T)
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tagsComputed1/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					acctest.CtRName:         config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1249,7 +1249,7 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Replace(t *testing.T)
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tagsComputed1/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					acctest.CtRName:         config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				{{- template "ImportBody" .ImportIgnore -}}
