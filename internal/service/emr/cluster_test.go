@@ -57,7 +57,7 @@ func TestAccEMRCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "ec2_attributes.0.instance_profile", "aws_iam_instance_profile.emr_instance_profile", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "scale_down_behavior", "TERMINATE_AT_TASK_COMPLETION"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_root_volume_size", "21"),
-					resource.TestCheckResourceAttrPair(resourceName, "service_role", "aws_iam_role.emr_service", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrServiceRole, "aws_iam_role.emr_service", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "autoscaling_role", "aws_iam_role.emr_autoscaling_role", names.AttrARN),
 					resource.TestCheckNoResourceAttr(resourceName, "additional_info"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.#", acctest.CtZero),
