@@ -28,7 +28,7 @@ func testResponsePlan_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rTitle := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rImpact := "3"
+	rImpact := acctest.CtThree
 
 	resourceName := "aws_ssmincidents_response_plan.test"
 
@@ -42,12 +42,12 @@ func testResponsePlan_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckResponsePlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResponsePlanConfig_basic(rName, rTitle, rImpact),
+				Config: testAccResponsePlanConfig_basic(rName, rTitle, acctest.CtThree),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.title", rTitle),
-					resource.TestCheckResourceAttr(resourceName, "incident_template.0.impact", rImpact),
+					resource.TestCheckResourceAttr(resourceName, "incident_template.0.impact", acctest.CtThree),
 
 					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", fmt.Sprintf("response-plan/%s", rName)),
 				),
@@ -193,7 +193,7 @@ func testResponsePlan_updateTags(t *testing.T) {
 					testAccCheckResponsePlanExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, rVal1Ini),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags_all."+rProviderKey1, rProviderVal1Ini),
 				),
 			},
@@ -212,7 +212,7 @@ func testResponsePlan_updateTags(t *testing.T) {
 					testAccCheckResponsePlanExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, rVal1Upd),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags_all."+rProviderKey1, rProviderVal1Upd),
 				),
 			},
@@ -232,7 +232,7 @@ func testResponsePlan_updateTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey2, rVal2),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey3, rVal3),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "4"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all."+rProviderKey2, rProviderVal2),
 					resource.TestCheckResourceAttr(resourceName, "tags_all."+rProviderKey3, rProviderVal3),
 				),
@@ -325,7 +325,7 @@ func testResponsePlan_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rTitle := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	impact := "3"
+	impact := acctest.CtThree
 	resourceName := "aws_ssmincidents_response_plan.test"
 
 	resource.Test(t, resource.TestCase{
@@ -338,7 +338,7 @@ func testResponsePlan_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckResponsePlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResponsePlanConfig_basic(rName, rTitle, impact),
+				Config: testAccResponsePlanConfig_basic(rName, rTitle, acctest.CtThree),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssmincidents.ResourceResponsePlan(), resourceName),
