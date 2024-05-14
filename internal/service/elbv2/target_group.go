@@ -75,7 +75,7 @@ func ResourceTargetGroup() *schema.Resource {
 				Default:      300,
 				ValidateFunc: nullable.ValidateTypeStringNullableIntBetween(0, 3600),
 			},
-			"health_check": {
+			names.AttrHealthCheck: {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
@@ -398,7 +398,7 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	if v, ok := d.GetOk("health_check"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrHealthCheck); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		tfMap := v.([]interface{})[0].(map[string]interface{})
 
 		input.HealthCheckEnabled = aws.Bool(tfMap[names.AttrEnabled].(bool))
@@ -537,7 +537,7 @@ func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.Set(names.AttrARN, targetGroup.TargetGroupArn)
 	d.Set("arn_suffix", TargetGroupSuffixFromARN(targetGroup.TargetGroupArn))
-	if err := d.Set("health_check", flattenTargetGroupHealthCheck(targetGroup)); err != nil {
+	if err := d.Set(names.AttrHealthCheck, flattenTargetGroupHealthCheck(targetGroup)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting health_check: %s", err)
 	}
 	d.Set(names.AttrIPAddressType, targetGroup.IpAddressType)
@@ -592,8 +592,8 @@ func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 	protocol := d.Get(names.AttrProtocol).(string)
 	targetType := d.Get("target_type").(string)
 
-	if d.HasChange("health_check") {
-		if v, ok := d.GetOk("health_check"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if d.HasChange(names.AttrHealthCheck) {
+		if v, ok := d.GetOk(names.AttrHealthCheck); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			tfMap := v.([]interface{})[0].(map[string]interface{})
 
 			input := &elbv2.ModifyTargetGroupInput{
@@ -988,11 +988,11 @@ func TargetGroupSuffixFromARN(arn *string) string {
 
 func resourceTargetGroupCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta any) error {
 	healthCheck := make(map[string]any)
-	if healthChecks := diff.Get("health_check").([]interface{}); len(healthChecks) == 1 {
+	if healthChecks := diff.Get(names.AttrHealthCheck).([]interface{}); len(healthChecks) == 1 {
 		healthCheck = healthChecks[0].(map[string]interface{})
 	}
 
-	healtCheckPath := cty.GetAttrPath("health_check").IndexInt(0)
+	healtCheckPath := cty.GetAttrPath(names.AttrHealthCheck).IndexInt(0)
 
 	if p, ok := healthCheck[names.AttrProtocol].(string); ok && strings.ToUpper(p) == elbv2.ProtocolEnumTcp {
 		if m := healthCheck["matcher"].(string); m != "" {
@@ -1038,9 +1038,9 @@ func customizeDiffTargetGroupTargetTypeLambda(_ context.Context, diff *schema.Re
 		return nil
 	}
 
-	if healthChecks := diff.Get("health_check").([]interface{}); len(healthChecks) == 1 {
+	if healthChecks := diff.Get(names.AttrHealthCheck).([]interface{}); len(healthChecks) == 1 {
 		healthCheck := healthChecks[0].(map[string]interface{})
-		healtCheckPath := cty.GetAttrPath("health_check").IndexInt(0)
+		healtCheckPath := cty.GetAttrPath(names.AttrHealthCheck).IndexInt(0)
 		healthCheckProtocol := healthCheck[names.AttrProtocol].(string)
 
 		if healthCheckProtocol == elbv2.ProtocolEnumTcp {
@@ -1318,9 +1318,9 @@ func targetGroupRuntimeValidation(d *schema.ResourceData, diags *diag.Diagnostic
 			))
 		}
 
-		if healthChecks := d.Get("health_check").([]interface{}); len(healthChecks) == 1 {
+		if healthChecks := d.Get(names.AttrHealthCheck).([]interface{}); len(healthChecks) == 1 {
 			healthCheck := healthChecks[0].(map[string]interface{})
-			path := cty.GetAttrPath("health_check")
+			path := cty.GetAttrPath(names.AttrHealthCheck)
 
 			if healthCheckProtocol := healthCheck[names.AttrProtocol].(string); healthCheckProtocol != "" {
 				*diags = append(*diags, errs.NewAttributeConflictsWhenWillBeError(

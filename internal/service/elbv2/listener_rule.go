@@ -312,7 +312,7 @@ func ResourceListenerRule() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"client_secret": {
+									names.AttrClientSecret: {
 										Type:      schema.TypeString,
 										Required:  true,
 										Sensitive: true,
