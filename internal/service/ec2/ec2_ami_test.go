@@ -41,7 +41,7 @@ func TestAccEC2AMI_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "architecture", "x86_64"),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`image/ami-.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrDeleteOnTermination: "true",
 						names.AttrDeviceName:          "/dev/sda1",
@@ -239,7 +239,7 @@ func TestAccEC2AMI_ephemeralBlockDevices(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "architecture", "x86_64"),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`image/ami-.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrDeleteOnTermination: "true",
 						names.AttrDeviceName:          "/dev/sda1",
@@ -366,7 +366,7 @@ func TestAccEC2AMI_tags(t *testing.T) {
 				Config: testAccAMIConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMIExists(ctx, resourceName, &ami),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -391,7 +391,7 @@ func TestAccEC2AMI_tags(t *testing.T) {
 				Config: testAccAMIConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMIExists(ctx, resourceName, &ami),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

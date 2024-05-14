@@ -42,7 +42,7 @@ func TestAccVPCManagedPrefixListsDataSource_tags(t *testing.T) {
 			{
 				Config: testAccVPCManagedPrefixListsDataSourceConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_ec2_managed_prefix_lists.test", "ids.#", "1"),
+					resource.TestCheckResourceAttr("data.aws_ec2_managed_prefix_lists.test", "ids.#", acctest.CtOne),
 				),
 			},
 		},

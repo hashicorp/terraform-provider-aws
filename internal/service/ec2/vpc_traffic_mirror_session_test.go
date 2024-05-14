@@ -107,7 +107,7 @@ func TestAccVPCTrafficMirrorSession_tags(t *testing.T) {
 				Config: testAccVPCTrafficMirrorSessionConfig_tags1(rName, "key1", "value1", session),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorSessionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -129,7 +129,7 @@ func TestAccVPCTrafficMirrorSession_tags(t *testing.T) {
 				Config: testAccVPCTrafficMirrorSessionConfig_tags1(rName, "key2", "value2", session),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorSessionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

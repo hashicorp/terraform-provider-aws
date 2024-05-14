@@ -79,7 +79,7 @@ func testAccTransitGatewayRouteTablesDataSource_tags(t *testing.T, semaphore tfs
 			{
 				Config: testAccTransitGatewayRouteTablesDataSourceConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "ids.#", acctest.CtOne),
 				),
 			},
 		},

@@ -59,7 +59,7 @@ func testAccIPAMResourceDiscovery_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
 					resource.TestCheckResourceAttrPair(resourceName, "ipam_resource_discovery_region", dataSourceRegion, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "is_default", "false"),
-					resource.TestCheckResourceAttr(resourceName, "operating_regions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "operating_regions.#", acctest.CtOne),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -159,7 +159,7 @@ func testAccIPAMResourceDiscovery_tags(t *testing.T) {
 				Config: testAccIPAMResourceDiscoveryConfig_tags("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMResourceDiscoveryExists(ctx, resourceName, &rd),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -179,7 +179,7 @@ func testAccIPAMResourceDiscovery_tags(t *testing.T) {
 			{
 				Config: testAccIPAMResourceDiscoveryConfig_tags("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
