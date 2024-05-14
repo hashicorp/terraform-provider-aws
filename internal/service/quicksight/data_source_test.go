@@ -48,7 +48,7 @@ func TestAccQuickSightDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.0.manifest_file_location.0.bucket", rName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.0.manifest_file_location.0.key", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, quicksight.DataSourceTypeS3),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -102,7 +102,7 @@ func TestAccQuickSightDataSource_tags(t *testing.T) {
 				Config: testAccDataSourceConfig_tags1(rId, rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -115,7 +115,7 @@ func TestAccQuickSightDataSource_tags(t *testing.T) {
 				Config: testAccDataSourceConfig_tags2(rId, rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -124,7 +124,7 @@ func TestAccQuickSightDataSource_tags(t *testing.T) {
 				Config: testAccDataSourceConfig_tags1(rId, rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -188,7 +188,7 @@ func TestAccQuickSightDataSource_permissions(t *testing.T) {
 				Config: testAccDataSourceConfig_basic(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
-					resource.TestCheckResourceAttr(resourceName, "permission.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "permission.#", acctest.CtZero),
 				),
 			},
 		},
@@ -231,7 +231,7 @@ func TestAccQuickSightDataSource_name(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.0.manifest_file_location.0.bucket", rName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.0.manifest_file_location.0.key", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, quicksight.DataSourceTypeS3),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 		},
