@@ -291,7 +291,7 @@ func ResourceChannel() *schema.Resource {
 																	MaxItems: 1,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
-																			"language_code": {
+																			names.AttrLanguageCode: {
 																				Type:     schema.TypeString,
 																				Required: true,
 																			},
@@ -366,7 +366,7 @@ func ResourceChannel() *schema.Resource {
 														Type:     schema.TypeString,
 														Required: true,
 													},
-													"language_code": {
+													names.AttrLanguageCode: {
 														Type:     schema.TypeString,
 														Optional: true,
 													},
@@ -1302,7 +1302,7 @@ func expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioLangua
 	m := tfList[0].(map[string]interface{})
 
 	var out types.AudioLanguageSelection
-	if v, ok := m["language_code"].(string); ok && len(v) > 0 {
+	if v, ok := m[names.AttrLanguageCode].(string); ok && len(v) > 0 {
 		out.LanguageCode = aws.String(v)
 	}
 	if v, ok := m["language_selection_policy"].(string); ok && len(v) > 0 {
@@ -1399,7 +1399,7 @@ func expandInputAttachmentInputSettingsCaptionSelectors(tfList []interface{}) []
 		if v, ok := m[names.AttrName].(string); ok && v != "" {
 			o.Name = aws.String(v)
 		}
-		if v, ok := m["language_code"].(string); ok && v != "" {
+		if v, ok := m[names.AttrLanguageCode].(string); ok && v != "" {
 			o.LanguageCode = aws.String(v)
 		}
 		if v, ok := m["selector_settings"].([]interface{}); ok && len(v) > 0 {
@@ -1836,7 +1836,7 @@ func flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettingsAudioLang
 	}
 
 	m := map[string]interface{}{
-		"language_code":             aws.ToString(in.LanguageCode),
+		names.AttrLanguageCode:             aws.ToString(in.LanguageCode),
 		"language_selection_policy": string(in.LanguageSelectionPolicy),
 	}
 
@@ -1908,7 +1908,7 @@ func flattenInputAttachmentsInputSettingsCaptionSelectors(tfList []types.Caption
 	for _, v := range tfList {
 		m := map[string]interface{}{
 			names.AttrName:      aws.ToString(v.Name),
-			"language_code":     aws.ToString(v.LanguageCode),
+			names.AttrLanguageCode:     aws.ToString(v.LanguageCode),
 			"selector_settings": flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettings(v.SelectorSettings),
 		}
 
