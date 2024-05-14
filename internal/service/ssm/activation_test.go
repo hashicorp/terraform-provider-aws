@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go/service/ssm"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func TestAccSSMActivation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ssmActivation ssm.Activation
+	var ssmActivation awstypes.Activation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssm_activation.test"
@@ -56,7 +56,7 @@ func TestAccSSMActivation_basic(t *testing.T) {
 
 func TestAccSSMActivation_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ssmActivation ssm.Activation
+	var ssmActivation awstypes.Activation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssm_activation.test"
@@ -91,7 +91,7 @@ func TestAccSSMActivation_tags(t *testing.T) {
 
 func TestAccSSMActivation_expirationDate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ssmActivation ssm.Activation
+	var ssmActivation awstypes.Activation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	expirationDate := time.Now().Add(48 * time.Hour).UTC().Format(time.RFC3339)
@@ -124,7 +124,7 @@ func TestAccSSMActivation_expirationDate(t *testing.T) {
 
 func TestAccSSMActivation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ssmActivation ssm.Activation
+	var ssmActivation awstypes.Activation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssm_activation.test"
@@ -147,18 +147,14 @@ func TestAccSSMActivation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckActivationExists(ctx context.Context, n string, v *ssm.Activation) resource.TestCheckFunc {
+func testAccCheckActivationExists(ctx context.Context, n string, v *awstypes.Activation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No SSM Activation ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient(ctx)
 
 		output, err := tfssm.FindActivationByID(ctx, conn, rs.Primary.ID)
 
@@ -174,7 +170,7 @@ func testAccCheckActivationExists(ctx context.Context, n string, v *ssm.Activati
 
 func testAccCheckActivationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ssm_activation" {

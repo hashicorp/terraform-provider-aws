@@ -246,7 +246,6 @@ import (
 	ses_sdkv1 "github.com/aws/aws-sdk-go/service/ses"
 	sfn_sdkv1 "github.com/aws/aws-sdk-go/service/sfn"
 	simpledb_sdkv1 "github.com/aws/aws-sdk-go/service/simpledb"
-	ssm_sdkv1 "github.com/aws/aws-sdk-go/service/ssm"
 	storagegateway_sdkv1 "github.com/aws/aws-sdk-go/service/storagegateway"
 	transfer_sdkv1 "github.com/aws/aws-sdk-go/service/transfer"
 	worklink_sdkv1 "github.com/aws/aws-sdk-go/service/worklink"
@@ -1080,10 +1079,6 @@ func (c *AWSClient) SNSClient(ctx context.Context) *sns_sdkv2.Client {
 
 func (c *AWSClient) SQSClient(ctx context.Context) *sqs_sdkv2.Client {
 	return errs.Must(client[*sqs_sdkv2.Client](ctx, c, names.SQS, make(map[string]any)))
-}
-
-func (c *AWSClient) SSMConn(ctx context.Context) *ssm_sdkv1.SSM {
-	return errs.Must(conn[*ssm_sdkv1.SSM](ctx, c, names.SSM, make(map[string]any)))
 }
 
 func (c *AWSClient) SSMClient(ctx context.Context) *ssm_sdkv2.Client {
