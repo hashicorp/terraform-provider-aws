@@ -40,6 +40,16 @@ rules:
       - pattern: '"1"'
     severity: ERROR
     fix: "acctest.CtOne"
+  - id: literal-RName-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.CtRName` for the string literal "rName" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    patterns:
+      - pattern: '"rName"'
+    severity: ERROR
+    fix: "acctest.CtRName"
   - id: literal-TagsAllPercent-string-test-constant
     languages: [go]
     message: Use the constant `acctest.CtTagsAllPercent` for the string literal "tags_all.%" in test files
