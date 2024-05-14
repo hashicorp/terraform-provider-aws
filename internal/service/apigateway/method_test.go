@@ -135,7 +135,7 @@ func TestAccAPIGatewayMethod_cognitoAuthorizer(t *testing.T) {
 					testAccCheckMethodExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "authorization", "COGNITO_USER_POOLS"),
 					resource.TestCheckResourceAttrSet(resourceName, "authorizer_id"),
-					resource.TestCheckResourceAttr(resourceName, "authorization_scopes.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "authorization_scopes.#", acctest.CtThree),
 				),
 			},
 			{
