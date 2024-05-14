@@ -50,7 +50,7 @@ func TestAccAutoScalingPlansScalingPlan_basicDynamicScaling(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "scaling_instruction.*", map[string]string{
 						"customized_load_metric_specification.#": acctest.CtZero,
 						"disable_dynamic_scaling":                "false",
-						"max_capacity":                           acctest.CtThree,
+						names.AttrMaxCapacity:                           acctest.CtThree,
 						"min_capacity":                           acctest.CtZero,
 						"predefined_load_metric_specification.#": acctest.CtZero,
 						names.AttrResourceID:                     fmt.Sprintf("autoScalingGroup/%s", rName),
@@ -110,7 +110,7 @@ func TestAccAutoScalingPlansScalingPlan_basicPredictiveScaling(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "scaling_instruction.*", map[string]string{
 						"customized_load_metric_specification.#": acctest.CtZero,
 						"disable_dynamic_scaling":                "true",
-						"max_capacity":                           acctest.CtThree,
+						names.AttrMaxCapacity:                           acctest.CtThree,
 						"min_capacity":                           acctest.CtZero,
 						"predefined_load_metric_specification.#": acctest.CtOne,
 						"predefined_load_metric_specification.0.predefined_load_metric_type": "ASGTotalCPUUtilization",
@@ -174,7 +174,7 @@ func TestAccAutoScalingPlansScalingPlan_basicUpdate(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "scaling_instruction.*", map[string]string{
 						"customized_load_metric_specification.#": acctest.CtZero,
 						"disable_dynamic_scaling":                "false",
-						"max_capacity":                           acctest.CtThree,
+						names.AttrMaxCapacity:                           acctest.CtThree,
 						"min_capacity":                           acctest.CtZero,
 						"predefined_load_metric_specification.#": acctest.CtZero,
 						names.AttrResourceID:                     fmt.Sprintf("autoScalingGroup/%s", rName),
@@ -207,7 +207,7 @@ func TestAccAutoScalingPlansScalingPlan_basicUpdate(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "scaling_instruction.*", map[string]string{
 						"customized_load_metric_specification.#": acctest.CtZero,
 						"disable_dynamic_scaling":                "true",
-						"max_capacity":                           acctest.CtThree,
+						names.AttrMaxCapacity:                           acctest.CtThree,
 						"min_capacity":                           acctest.CtZero,
 						"predefined_load_metric_specification.#": acctest.CtOne,
 						"predefined_load_metric_specification.0.predefined_load_metric_type": "ASGTotalCPUUtilization",
@@ -291,7 +291,7 @@ func TestAccAutoScalingPlansScalingPlan_DynamicScaling_customizedScalingMetricSp
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "scaling_instruction.*", map[string]string{
 						"customized_load_metric_specification.#": acctest.CtZero,
 						"disable_dynamic_scaling":                "false",
-						"max_capacity":                           acctest.CtThree,
+						names.AttrMaxCapacity:                           acctest.CtThree,
 						"min_capacity":                           acctest.CtZero,
 						"predefined_load_metric_specification.#": acctest.CtZero,
 						names.AttrResourceID:                     fmt.Sprintf("autoScalingGroup/%s", rName),
@@ -330,7 +330,7 @@ func TestAccAutoScalingPlansScalingPlan_DynamicScaling_customizedScalingMetricSp
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "scaling_instruction.*", map[string]string{
 						"customized_load_metric_specification.#": acctest.CtZero,
 						"disable_dynamic_scaling":                "false",
-						"max_capacity":                           acctest.CtThree,
+						names.AttrMaxCapacity:                           acctest.CtThree,
 						"min_capacity":                           acctest.CtZero,
 						"predefined_load_metric_specification.#": acctest.CtZero,
 						names.AttrResourceID:                     fmt.Sprintf("autoScalingGroup/%s", rName),
