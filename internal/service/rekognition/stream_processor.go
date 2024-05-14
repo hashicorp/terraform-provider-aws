@@ -171,25 +171,29 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 									Description: "The box representing a region of interest on screen.",
 									Attributes: map[string]schema.Attribute{
 										"height": schema.Float64Attribute{
-											Optional: true,
+											Optional:    true,
+											Description: "Height of the bounding box as a ratio of the overall image height.",
 											Validators: []validator.Float64{
 												float64validator.Between(0.0, 1.0),
 											},
 										},
 										"left": schema.Float64Attribute{
-											Optional: true,
+											Description: "Left coordinate of the bounding box as a ratio of overall image width.",
+											Optional:    true,
 											Validators: []validator.Float64{
 												float64validator.Between(0.0, 1.0),
 											},
 										},
 										"top": schema.Float64Attribute{
-											Optional: true,
+											Description: "Top coordinate of the bounding box as a ratio of overall image height.",
+											Optional:    true,
 											Validators: []validator.Float64{
 												float64validator.Between(0.0, 1.0),
 											},
 										},
 										"width": schema.Float64Attribute{
-											Optional: true,
+											Description: "Width of the bounding box as a ratio of the overall image width.",
+											Optional:    true,
 											Validators: []validator.Float64{
 												float64validator.Between(0.0, 1.0),
 											},
@@ -201,13 +205,15 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 									Description: "Specifies a shape made up of up to 10 Point objects to define a region of interest.",
 									Attributes: map[string]schema.Attribute{
 										"x": schema.Float64Attribute{
-											Optional: true,
+											Description: "The value of the X coordinate for a point on a Polygon.",
+											Optional:    true,
 											Validators: []validator.Float64{
 												float64validator.Between(0.0, 1.0),
 											},
 										},
 										"y": schema.Float64Attribute{
-											Optional: true,
+											Description: "The value of the Y coordinate for a point on a Polygon.",
+											Optional:    true,
 											Validators: []validator.Float64{
 												float64validator.Between(0.0, 1.0),
 											},
