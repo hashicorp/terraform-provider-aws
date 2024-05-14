@@ -46,7 +46,7 @@ func TestAccTranscribeLanguageModel_basic(t *testing.T) {
 					testAccCheckLanguageModelExists(ctx, resourceName, &languageModel),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "base_model_name", "NarrowBand"),
-					resource.TestCheckResourceAttr(resourceName, "language_code", "en-US"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrLanguageCode, "en-US"),
 				),
 			},
 			{

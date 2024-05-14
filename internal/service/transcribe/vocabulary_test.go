@@ -47,7 +47,7 @@ func TestAccTranscribeVocabulary_basic(t *testing.T) {
 					testAccCheckVocabularyExists(ctx, resourceName, &vocabulary),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "download_uri"),
-					resource.TestCheckResourceAttr(resourceName, "language_code", "en-US"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrLanguageCode, "en-US"),
 				),
 			},
 			{
@@ -86,7 +86,7 @@ func TestAccTranscribeVocabulary_basicPhrases(t *testing.T) {
 					testAccCheckVocabularyExists(ctx, resourceName, &vocabulary),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "download_uri"),
-					resource.TestCheckResourceAttr(resourceName, "language_code", "en-US"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrLanguageCode, "en-US"),
 				),
 			},
 		},
