@@ -213,8 +213,8 @@ func testAccInsight_MapFilters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "filters.0.product_fields.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.product_fields.*", map[string]string{
 						"comparison":    string(types.MapFilterComparisonEquals),
-						names.AttrKey:   "key1",
-						names.AttrValue: "value1",
+						names.AttrKey:   acctest.CtKey1,
+						names.AttrValue: acctest.CtValue1,
 					}),
 				),
 			},
@@ -255,13 +255,13 @@ func testAccInsight_MultipleFilters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "filters.0.product_fields.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.product_fields.*", map[string]string{
 						"comparison":    string(types.MapFilterComparisonEquals),
-						names.AttrKey:   "key1",
-						names.AttrValue: "value1",
+						names.AttrKey:   acctest.CtKey1,
+						names.AttrValue: acctest.CtValue1,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.product_fields.*", map[string]string{
 						"comparison":    string(types.MapFilterComparisonEquals),
-						names.AttrKey:   "key2",
-						names.AttrValue: "value2",
+						names.AttrKey:   acctest.CtKey2,
+						names.AttrValue: acctest.CtValue2,
 					}),
 				),
 			},
