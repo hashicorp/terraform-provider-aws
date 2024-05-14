@@ -43,7 +43,7 @@ func TestAccDeployDeploymentGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "app_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "deployment_group_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "deployment_config_name", "CodeDeployDefault.OneAtATime"),
-					resource.TestCheckResourceAttrPair(resourceName, "service_role_arn", "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrServiceRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "blue_green_deployment_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ec2_tag_set.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ec2_tag_filter.#", "1"),
@@ -68,7 +68,7 @@ func TestAccDeployDeploymentGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "app_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "deployment_group_name", rName+"-updated"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_config_name", "CodeDeployDefault.OneAtATime"),
-					resource.TestCheckResourceAttrPair(resourceName, "service_role_arn", "aws_iam_role.test_updated", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrServiceRoleARN, "aws_iam_role.test_updated", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "ec2_tag_set.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ec2_tag_filter.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ec2_tag_filter.*", map[string]string{
