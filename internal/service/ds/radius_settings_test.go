@@ -49,7 +49,7 @@ func TestAccDSRadiusSettings_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "authentication_protocol", "PAP"),
 					resource.TestCheckResourceAttr(resourceName, "display_label", "test"),
 					resource.TestCheckResourceAttr(resourceName, "radius_port", "1812"),
-					resource.TestCheckResourceAttr(resourceName, "radius_retries", "3"),
+					resource.TestCheckResourceAttr(resourceName, "radius_retries", acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "radius_servers.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr(resourceName, "radius_servers.*", radiusServer),
 					resource.TestCheckResourceAttr(resourceName, "radius_timeout", "30"),
