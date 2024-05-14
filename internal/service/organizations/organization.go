@@ -242,7 +242,7 @@ func resourceOrganizationRead(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
-	org, err := FindOrganization(ctx, conn)
+	org, err := findOrganization(ctx, conn)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Organization does not exist, removing from state: %s", d.Id())
@@ -297,7 +297,7 @@ func resourceOrganizationRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	// ConstraintViolationException: The request failed because the organization does not have all features enabled. Please enable all features in your organization and then retry.
 	if aws.StringValue(org.FeatureSet) == organizations.OrganizationFeatureSetAll {
-		awsServiceAccessPrincipals, err = FindEnabledServicePrincipalNames(ctx, conn)
+		awsServiceAccessPrincipals, err = findEnabledServicePrincipalNames(ctx, conn)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading Organization (%s) service principals: %s", d.Id(), err)
@@ -329,7 +329,7 @@ func resourceOrganizationUpdate(ctx context.Context, d *schema.ResourceData, met
 		add, del := flex.ExpandStringValueSet(ns.Difference(os)), flex.ExpandStringValueSet(os.Difference(ns))
 
 		for _, principal := range del {
-			if err := DisableServicePrincipal(ctx, conn, principal); err != nil {
+			if err := disableServicePrincipal(ctx, conn, principal); err != nil {
 				return sdkdiag.AppendErrorf(diags, "disabling AWS Service Access (%s) in Organization (%s): %s", principal, d.Id(), err)
 			}
 		}
@@ -414,7 +414,7 @@ func resourceOrganizationDelete(ctx context.Context, d *schema.ResourceData, met
 func resourceOrganizationImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
-	org, err := FindOrganization(ctx, conn)
+	org, err := findOrganization(ctx, conn)
 
 	if err != nil {
 		return nil, err
@@ -428,8 +428,7 @@ func resourceOrganizationImport(ctx context.Context, d *schema.ResourceData, met
 	return []*schema.ResourceData{d}, nil
 }
 
-// FindOrganization is called from the acctest package and so can't be made private and exported as "test-only".
-func FindOrganization(ctx context.Context, conn *organizations.Organizations) (*organizations.Organization, error) {
+func findOrganization(ctx context.Context, conn *organizations.Organizations) (*organizations.Organization, error) {
 	input := &organizations.DescribeOrganizationInput{}
 
 	output, err := conn.DescribeOrganizationWithContext(ctx, input)
@@ -473,8 +472,7 @@ func findAccounts(ctx context.Context, conn *organizations.Organizations) ([]*or
 	return output, nil
 }
 
-// FindEnabledServicePrincipalNames is called from the service/ram package.
-func FindEnabledServicePrincipalNames(ctx context.Context, conn *organizations.Organizations) ([]string, error) {
+func findEnabledServicePrincipalNames(ctx context.Context, conn *organizations.Organizations) ([]string, error) {
 	output, err := findEnabledServicePrincipals(ctx, conn)
 
 	if err != nil {
@@ -635,8 +633,7 @@ func waitDefaultRootPolicyTypeEnabled(ctx context.Context, conn *organizations.O
 	return err
 }
 
-// DisableServicePrincipal is called from the service/ram package.
-func DisableServicePrincipal(ctx context.Context, conn *organizations.Organizations, servicePrincipal string) error {
+func disableServicePrincipal(ctx context.Context, conn *organizations.Organizations, servicePrincipal string) error {
 	input := &organizations.DisableAWSServiceAccessInput{
 		ServicePrincipal: aws.String(servicePrincipal),
 	}

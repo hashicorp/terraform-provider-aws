@@ -87,7 +87,7 @@ func resourceIPAMOrganizationAdminAccountCreate(ctx context.Context, d *schema.R
 
 func resourceIPAMOrganizationAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	org_conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
+	org_conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
 	input := &organizations.ListDelegatedAdministratorsInput{
 		ServicePrincipal: aws.String(IPAMServicePrincipal),

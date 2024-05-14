@@ -159,7 +159,7 @@ func dataSourceOrganizationRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
-	org, err := FindOrganization(ctx, conn)
+	org, err := findOrganization(ctx, conn)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Organizations Organization: %s", err)
@@ -208,7 +208,7 @@ func dataSourceOrganizationRead(ctx context.Context, d *schema.ResourceData, met
 
 		// ConstraintViolationException: The request failed because the organization does not have all features enabled. Please enable all features in your organization and then retry.
 		if aws.StringValue(org.FeatureSet) == organizations.OrganizationFeatureSetAll {
-			awsServiceAccessPrincipals, err = FindEnabledServicePrincipalNames(ctx, conn)
+			awsServiceAccessPrincipals, err = findEnabledServicePrincipalNames(ctx, conn)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "reading Organization (%s) service principals: %s", d.Id(), err)

@@ -1017,7 +1017,7 @@ func PreCheckInspector2(ctx context.Context, t *testing.T) {
 func PreCheckOrganizationsAccount(ctx context.Context, t *testing.T) {
 	t.Helper()
 
-	_, err := tforganizations.FindOrganization(ctx, Provider.Meta().(*conns.AWSClient).OrganizationsConn(ctx))
+	_, err := tforganizations.FindOrganization(ctx, Provider.Meta().(*conns.AWSClient).OrganizationsClient(ctx))
 
 	if tfresource.NotFound(err) {
 		return
@@ -1033,7 +1033,7 @@ func PreCheckOrganizationsAccount(ctx context.Context, t *testing.T) {
 func PreCheckOrganizationsEnabled(ctx context.Context, t *testing.T) {
 	t.Helper()
 
-	_, err := tforganizations.FindOrganization(ctx, Provider.Meta().(*conns.AWSClient).OrganizationsConn(ctx))
+	_, err := tforganizations.FindOrganization(ctx, Provider.Meta().(*conns.AWSClient).OrganizationsClient(ctx))
 
 	if tfresource.NotFound(err) {
 		t.Skip("this AWS account must be an existing member of an AWS Organization")
@@ -1053,7 +1053,7 @@ func PreCheckOrganizationManagementAccountWithProvider(ctx context.Context, t *t
 	t.Helper()
 
 	awsClient := providerF().Meta().(*conns.AWSClient)
-	organization, err := tforganizations.FindOrganization(ctx, awsClient.OrganizationsConn(ctx))
+	organization, err := tforganizations.FindOrganization(ctx, awsClient.OrganizationsClient(ctx))
 
 	if err != nil {
 		t.Fatalf("describing AWS Organization: %s", err)
@@ -1079,7 +1079,7 @@ func PreCheckOrganizationMemberAccountWithProvider(ctx context.Context, t *testi
 	t.Helper()
 
 	awsClient := providerF().Meta().(*conns.AWSClient)
-	organization, err := tforganizations.FindOrganization(ctx, awsClient.OrganizationsConn(ctx))
+	organization, err := tforganizations.FindOrganization(ctx, awsClient.OrganizationsClient(ctx))
 
 	if err != nil {
 		t.Fatalf("describing AWS Organization: %s", err)
