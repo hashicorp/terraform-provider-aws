@@ -24,7 +24,7 @@ var (
 	FindDefaultDefaultPatchBaselineIDByOperatingSystem = findDefaultDefaultPatchBaselineIDByOperatingSystem
 	FindDocumentByName                                 = findDocumentByName
 	FindMaintenanceWindowByID                          = findMaintenanceWindowByID
-	FindMaintenanceWindowTargetByID                    = findMaintenanceWindowTargetByID
+	FindMaintenanceWindowTargetByTwoPartKey            = findMaintenanceWindowTargetByTwoPartKey
 	FindMaintenanceWindowTaskByTwoPartKey              = findMaintenanceWindowTaskByTwoPartKey
 	FindParameterByName                                = findParameterByName
 	FindPatchBaselineByID                              = findPatchBaselineByID
