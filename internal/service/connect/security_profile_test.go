@@ -161,7 +161,7 @@ func testAccSecurityProfile_updateTags(t *testing.T) {
 				Config: testAccSecurityProfileConfig_tagsUpdated(rName, rName2, names.AttrTags),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityProfileExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Security Profile"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2b"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "Value3"),

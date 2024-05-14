@@ -484,7 +484,7 @@ func testAccQueue_updateTags(t *testing.T) {
 				Config: testAccQueueConfig_tagsUpdated(rName, rName2, names.AttrTags),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Queue"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2b"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "Value3"),
