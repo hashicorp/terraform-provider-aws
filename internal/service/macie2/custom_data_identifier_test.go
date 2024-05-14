@@ -201,7 +201,7 @@ func testAccCustomDataIdentifier_WithTags(t *testing.T) {
 					testAccCheckCustomDataIdentifierExists(ctx, resourceName, &macie2Output),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform-"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key", names.AttrValue),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "value2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "value3"),
