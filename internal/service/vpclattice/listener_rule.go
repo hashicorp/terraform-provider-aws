@@ -73,7 +73,7 @@ func ResourceListenerRule() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"status_code": {
+									names.AttrStatusCode: {
 										Type:     schema.TypeInt,
 										Required: true,
 									},
@@ -438,7 +438,7 @@ func flattenRuleActionMemberFixedResponse(apiObject *types.RuleActionMemberFixed
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Value.StatusCode; v != nil {
-		tfMap["status_code"] = aws.ToInt32(v)
+		tfMap[names.AttrStatusCode] = aws.ToInt32(v)
 	}
 
 	return tfMap
@@ -688,7 +688,7 @@ func expandRuleAction(tfMap map[string]interface{}) types.RuleAction {
 func expandFixedResponseAction(tfMap map[string]interface{}) *types.RuleActionMemberFixedResponse {
 	apiObject := &types.RuleActionMemberFixedResponse{}
 
-	if v, ok := tfMap["status_code"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrStatusCode].(int); ok && v != 0 {
 		apiObject.Value.StatusCode = aws.Int32(int32(v))
 	}
 
