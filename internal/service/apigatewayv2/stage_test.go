@@ -709,7 +709,7 @@ func TestAccAPIGatewayV2Stage_routeSettingsWebSocket(t *testing.T) {
 					testAccCheckStageExecutionARN(resourceName, "execution_arn", &apiId, &v),
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("wss://.+\\.execute-api\\.%s.amazonaws\\.com/%s", acctest.Region(), rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "route_settings.#", acctest.CtThree),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route_settings.*", map[string]string{
 						"data_trace_enabled":       "false",
 						"detailed_metrics_enabled": "false",
