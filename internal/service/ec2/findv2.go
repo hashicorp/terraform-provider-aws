@@ -910,3 +910,64 @@ func FindIPAMScopeByID(ctx context.Context, conn *ec2.Client, id string) (*awsty
 
 	return output, nil
 }
+
+func FindVPCV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcsInput) (*awstypes.Vpc, error) {
+	output, err := FindVPCsV2(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func FindVPCsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcsInput) ([]awstypes.Vpc, error) {
+	var output []awstypes.Vpc
+
+	pages := ec2.NewDescribeVpcsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCIDNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Vpcs...)
+
+	}
+
+	return output, nil
+}
+
+func FindVPCIPv6CIDRBlockAssociationByIDV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VpcIpv6CidrBlockAssociation, *awstypes.Vpc, error) {
+	input := &ec2.DescribeVpcsInput{
+		Filters: newAttributeFilterListV2(map[string]string{
+			"ipv6-cidr-block-association.association-id": id,
+		}),
+	}
+
+	vpc, err := FindVPCV2(ctx, conn, input)
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	for _, association := range vpc.Ipv6CidrBlockAssociationSet {
+		if aws.ToString(association.AssociationId) == id {
+			if state := association.Ipv6CidrBlockState.State; state == awstypes.VpcCidrBlockStateCodeDisassociated {
+				return nil, nil, &retry.NotFoundError{Message: string(state)}
+			}
+
+			return &association, vpc, nil
+		}
+	}
+
+	return nil, nil, &retry.NotFoundError{}
+}
