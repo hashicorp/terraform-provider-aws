@@ -433,7 +433,7 @@ func resourcePipeline() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"default_value": {
+						names.AttrDefaultValue: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -963,7 +963,7 @@ func expandVariableDeclaration(tfMap map[string]interface{}) *types.PipelineVari
 
 	apiObject := &types.PipelineVariableDeclaration{}
 
-	if v, ok := tfMap["default_value"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDefaultValue].(string); ok && v != "" {
 		apiObject.DefaultValue = aws.String(v)
 	}
 
@@ -1404,7 +1404,7 @@ func flattenVariableDeclaration(apiObject types.PipelineVariableDeclaration) map
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.DefaultValue; v != nil {
-		tfMap["default_value"] = aws.ToString(v)
+		tfMap[names.AttrDefaultValue] = aws.ToString(v)
 	}
 
 	if v := apiObject.Description; v != nil {
