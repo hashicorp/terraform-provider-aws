@@ -40,6 +40,46 @@ rules:
       - pattern: '"1"'
     severity: ERROR
     fix: "acctest.CtOne"
+  - id: literal-ResourceTags-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.CtResourceTags` for the string literal "resource_tags"
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    patterns:
+      - pattern: '"resource_tags"'
+    severity: ERROR
+    fix: "acctest.CtResourceTags"
+  - id: literal-TagsAllPercent-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.CtTagsAllPercent` for the string literal "tags_all.%"
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    patterns:
+      - pattern: '"tags_all.%"'
+    severity: ERROR
+    fix: "acctest.CtTagsAllPercent"
+  - id: literal-TagsKey1-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.CtTagsKey1` for the string literal "tags.key1"
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    patterns:
+      - pattern: '"tags.key1"'
+    severity: ERROR
+    fix: "acctest.CtTagsKey1"
+  - id: literal-TagsKey2-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.CtTagsKey2` for the string literal "tags.key2"
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    patterns:
+      - pattern: '"tags.key2"'
+    severity: ERROR
+    fix: "acctest.CtTagsKey2"
   - id: literal-TagsPercent-string-test-constant
     languages: [go]
     message: Use the constant `acctest.CtTagsPercent` for the string literal "tags.%"
@@ -50,6 +90,16 @@ rules:
       - pattern: '"tags.%"'
     severity: ERROR
     fix: "acctest.CtTagsPercent"
+  - id: literal-Three-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.CtThree` for the string literal "3"
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    patterns:
+      - pattern: '"3"'
+    severity: ERROR
+    fix: "acctest.CtThree"
   - id: literal-TrueCaps-string-test-constant
     languages: [go]
     message: Use the constant `acctest.CtTrueCaps` for the string literal "TRUE"
@@ -80,6 +130,16 @@ rules:
       - pattern: '"value1"'
     severity: ERROR
     fix: "acctest.CtValue1"
+  - id: literal-Value1Updated-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.CtValue1Updated` for the string literal "value1updated"
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    patterns:
+      - pattern: '"value1updated"'
+    severity: ERROR
+    fix: "acctest.CtValue1Updated"
   - id: literal-Value2-string-test-constant
     languages: [go]
     message: Use the constant `acctest.CtValue2` for the string literal "value2"
