@@ -45,10 +45,12 @@ func resourcePrincipalAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-				ValidateFunc: validation.Any(
+				ValidateFunc: validation.All(
 					validation.StringIsNotEmpty,
-					verify.ValidAccountID,
-					verify.ValidARN,
+					validation.Any(
+						verify.ValidAccountID,
+						verify.ValidARN,
+					),
 				),
 			},
 			"resource_share_arn": {
