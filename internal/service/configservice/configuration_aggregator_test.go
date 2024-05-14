@@ -44,7 +44,7 @@ func TestAccConfigServiceConfigurationAggregator_account(t *testing.T) {
 					acctest.CheckResourceAttrAccountID(resourceName, "account_aggregation_source.0.account_ids.0"),
 					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.0.regions.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "account_aggregation_source.0.regions.0", "data.aws_region.current", names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -102,13 +102,13 @@ func TestAccConfigServiceConfigurationAggregator_switch(t *testing.T) {
 				Config: testAccConfigurationAggregatorConfig_account(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "organization_aggregation_source.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "organization_aggregation_source.#", acctest.CtZero),
 				),
 			},
 			{
 				Config: testAccConfigurationAggregatorConfig_organization(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "organization_aggregation_source.#", acctest.CtOne),
 				),
 			},
@@ -132,7 +132,7 @@ func TestAccConfigServiceConfigurationAggregator_tags(t *testing.T) {
 				Config: testAccConfigurationAggregatorConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &ca),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -140,7 +140,7 @@ func TestAccConfigServiceConfigurationAggregator_tags(t *testing.T) {
 				Config: testAccConfigurationAggregatorConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &ca),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -154,7 +154,7 @@ func TestAccConfigServiceConfigurationAggregator_tags(t *testing.T) {
 				Config: testAccConfigurationAggregatorConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &ca),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
