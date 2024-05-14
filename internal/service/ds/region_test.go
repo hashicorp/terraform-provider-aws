@@ -40,9 +40,9 @@ func TestAccDSRegion_basic(t *testing.T) {
 				Config: testAccRegionConfig_basic(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRegionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "desired_number_of_domain_controllers", "2"),
+					resource.TestCheckResourceAttr(resourceName, "desired_number_of_domain_controllers", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "region_name", acctest.AlternateRegion()),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -104,7 +104,7 @@ func TestAccDSRegion_tags(t *testing.T) {
 				Config: testAccRegionConfig_tags1(rName, domainName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -117,7 +117,7 @@ func TestAccDSRegion_tags(t *testing.T) {
 				Config: testAccRegionConfig_tags2(rName, domainName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -126,7 +126,7 @@ func TestAccDSRegion_tags(t *testing.T) {
 				Config: testAccRegionConfig_tags1(rName, domainName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -155,7 +155,7 @@ func TestAccDSRegion_desiredNumberOfDomainControllers(t *testing.T) {
 				Config: testAccRegionConfig_desiredNumberOfDomainControllers(rName, domainName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "desired_number_of_domain_controllers", "2"),
+					resource.TestCheckResourceAttr(resourceName, "desired_number_of_domain_controllers", acctest.CtTwo),
 				),
 			},
 			{
