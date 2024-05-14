@@ -89,7 +89,7 @@ func DataSourceDevEnvironment() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"repository_name": {
+						names.AttrRepositoryName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
