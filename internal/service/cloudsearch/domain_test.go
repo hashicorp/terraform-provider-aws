@@ -40,13 +40,13 @@ func TestAccCloudSearchDomain_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "endpoint_options.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_options.0.enforce_https", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_options.0.tls_security_policy"),
-					resource.TestCheckResourceAttr(resourceName, "index_field.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "index_field.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "multi_az", "false"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "scaling_parameters.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "scaling_parameters.0.desired_instance_type", ""),
-					resource.TestCheckResourceAttr(resourceName, "scaling_parameters.0.desired_partition_count", "0"),
-					resource.TestCheckResourceAttr(resourceName, "scaling_parameters.0.desired_replication_count", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_parameters.0.desired_partition_count", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "scaling_parameters.0.desired_replication_count", acctest.CtZero),
 				),
 			},
 			{
@@ -98,11 +98,11 @@ func TestAccCloudSearchDomain_indexFields(t *testing.T) {
 				Config: testAccDomainConfig_indexFields(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccDomainExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "index_field.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "index_field.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "index_field.*", map[string]string{
 						names.AttrName:         "int_test",
 						names.AttrType:         "int",
-						names.AttrDefaultValue: "2",
+						names.AttrDefaultValue: acctest.CtTwo,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "index_field.*", map[string]string{
 						names.AttrName: "literal_test",
@@ -167,7 +167,7 @@ func TestAccCloudSearchDomain_sourceFields(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "index_field.*", map[string]string{
 						names.AttrName:         "int_test",
 						names.AttrType:         "int",
-						names.AttrDefaultValue: "2",
+						names.AttrDefaultValue: acctest.CtTwo,
 						"source_fields":        "",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "index_field.*", map[string]string{
@@ -196,7 +196,7 @@ func TestAccCloudSearchDomain_sourceFields(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "index_field.*", map[string]string{
 						names.AttrName:         "int_test",
 						names.AttrType:         "int",
-						names.AttrDefaultValue: "2",
+						names.AttrDefaultValue: acctest.CtTwo,
 						"source_fields":        "",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "index_field.*", map[string]string{
@@ -282,7 +282,7 @@ func TestAccCloudSearchDomain_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scaling_parameters.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "scaling_parameters.0.desired_instance_type", "search.medium"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_parameters.0.desired_partition_count", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "scaling_parameters.0.desired_replication_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_parameters.0.desired_replication_count", acctest.CtTwo),
 				),
 			},
 		},
