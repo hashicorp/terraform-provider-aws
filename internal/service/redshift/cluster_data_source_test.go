@@ -100,7 +100,7 @@ func TestAccRedshiftClusterDataSource_logging(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "enable_logging", "true"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrBucketName, bucketResourceName, names.AttrBucket),
-					resource.TestCheckResourceAttr(dataSourceName, "s3_key_prefix", "cluster-logging/"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrS3KeyPrefix, "cluster-logging/"),
 				),
 			},
 		},
