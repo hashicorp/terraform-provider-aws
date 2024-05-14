@@ -310,7 +310,7 @@ func TestAccNetworkFirewallLoggingConfiguration_S3LogDestination_prefix(t *testi
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
-						"log_destination.%":          "2",
+						"log_destination.%":          acctest.CtTwo,
 						"log_destination.bucketName": bucketName,
 						"log_destination.prefix":     "update-prefix",
 					}),
@@ -446,7 +446,7 @@ func TestAccNetworkFirewallLoggingConfiguration_updateToMultipleLogDestinations(
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
 						"log_destination.%":              acctest.CtOne,
 						"log_destination.deliveryStream": streamName,
@@ -496,7 +496,7 @@ func TestAccNetworkFirewallLoggingConfiguration_updateToSingleAlertTypeLogDestin
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
 						"log_destination.%":        acctest.CtOne,
 						"log_destination.logGroup": logGroupName,
@@ -552,7 +552,7 @@ func TestAccNetworkFirewallLoggingConfiguration_updateToSingleFlowTypeLogDestina
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
 						"log_destination.%":        acctest.CtOne,
 						"log_destination.logGroup": logGroupName,
