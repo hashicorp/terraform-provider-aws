@@ -44,7 +44,7 @@ func TestAccObservabilityAccessManagerLinkDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "resource_types.0", "AWS::CloudWatch::Metric"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "sink_arn"),
 					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(dataSourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 		},
