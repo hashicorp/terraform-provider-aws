@@ -197,7 +197,7 @@ func TestAccKendraFaq_tags(t *testing.T) {
 				Config: testAccFaqConfig_tags1(rName, rName2, rName3, rName4, rName5, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFaqExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -210,7 +210,7 @@ func TestAccKendraFaq_tags(t *testing.T) {
 				Config: testAccFaqConfig_tags2(rName, rName2, rName3, rName4, rName5, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFaqExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -219,7 +219,7 @@ func TestAccKendraFaq_tags(t *testing.T) {
 				Config: testAccFaqConfig_tags1(rName, rName2, rName3, rName4, rName5, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFaqExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

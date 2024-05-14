@@ -44,7 +44,7 @@ func TestAccKendraExperience_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExperienceExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "kendra", regexache.MustCompile(`index/.+/experience/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "endpoints.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "index_id", "aws_kendra_index.test", names.AttrID),
@@ -117,7 +117,7 @@ func TestAccKendraExperience_Description(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExperienceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.CtZero),
 				),
 			},
 			{
@@ -143,7 +143,7 @@ func TestAccKendraExperience_Description(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExperienceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.CtZero),
 				),
 			},
 		},
@@ -175,7 +175,7 @@ func TestAccKendraExperience_Name(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExperienceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.CtZero),
 				),
 			},
 			{
@@ -222,7 +222,7 @@ func TestAccKendraExperience_roleARN(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExperienceExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.CtZero),
 				),
 			},
 			{
@@ -376,7 +376,7 @@ func TestAccKendraExperience_Configuration_ContentSourceConfiguration_updateFaqI
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.direct_put_content", "false"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.faq_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.faq_ids.#", acctest.CtZero),
 				),
 			},
 			{
@@ -516,7 +516,7 @@ func TestAccKendraExperience_Configuration_ContentSourceConfigurationWithUserIde
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.content_source_configuration.0.direct_put_content", "true"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.user_identity_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.user_identity_configuration.#", acctest.CtZero),
 				),
 			},
 			{
