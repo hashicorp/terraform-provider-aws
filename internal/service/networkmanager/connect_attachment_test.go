@@ -44,7 +44,7 @@ func TestAccNetworkManagerConnectAttachment_basic(t *testing.T) {
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "segment_name", "shared"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 				),
 			},
 			{
@@ -80,7 +80,7 @@ func TestAccNetworkManagerConnectAttachment_basic_NoDependsOn(t *testing.T) {
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "segment_name", "shared"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 				),
 			},
 			{
@@ -140,7 +140,7 @@ func TestAccNetworkManagerConnectAttachment_protocolNoEncap(t *testing.T) {
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "segment_name", "shared"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 				),
 			},
 			{
@@ -168,7 +168,7 @@ func TestAccNetworkManagerConnectAttachment_tags(t *testing.T) {
 				Config: testAccConnectAttachmentConfig_tags1(rName, "segment", "shared"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.segment", "shared"),
 				),
 			},
@@ -185,7 +185,7 @@ func TestAccNetworkManagerConnectAttachment_tags(t *testing.T) {
 				Config: testAccConnectAttachmentConfig_tags1(rName, "segment", "shared"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.segment", "shared"),
 				),
 			},

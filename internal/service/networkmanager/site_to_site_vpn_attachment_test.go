@@ -44,7 +44,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`attachment/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "attachment_policy_rule_number", "1"),
+					resource.TestCheckResourceAttr(resourceName, "attachment_policy_rule_number", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "attachment_type", "SITE_TO_SITE_VPN"),
 					resource.TestCheckResourceAttrPair(resourceName, "core_network_arn", coreNetworkResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "core_network_id"),
@@ -53,7 +53,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, vpnResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "segment_name", "shared"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "vpn_connection_arn", vpnResourceName, names.AttrARN),
 				),
 			},
@@ -116,7 +116,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags(t *testing.T) {
 				Config: testAccSiteToSiteVPNAttachmentConfig_tags1(rName, vpnIP, "segment", "shared", bgpASN),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.segment", "shared"),
 				),
 			},
@@ -133,7 +133,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags(t *testing.T) {
 				Config: testAccSiteToSiteVPNAttachmentConfig_tags1(rName, vpnIP, "segment", "shared", bgpASN),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.segment", "shared"),
 				),
 			},
