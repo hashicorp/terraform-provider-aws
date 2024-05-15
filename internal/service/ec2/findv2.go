@@ -519,7 +519,6 @@ func FindCarrierGateways(ctx context.Context, conn *ec2.Client, input *ec2.Descr
 		}
 
 		output = append(output, page.CarrierGateways...)
-
 	}
 
 	return output, nil
