@@ -39,12 +39,12 @@ func TestAccRoute53ResolverEndpoint_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "direction", "INBOUND"),
 					resource.TestCheckResourceAttrPair(resourceName, "host_vpc_id", vpcResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "ip_address.#", acctest.CtThree),
+					resource.TestCheckResourceAttr(resourceName, "ip_address.#", acctest.Ct3),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ""),
-					resource.TestCheckResourceAttr(resourceName, "protocols.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "protocols.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "resolver_endpoint_type", "IPV4"),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -96,7 +96,7 @@ func TestAccRoute53ResolverEndpoint_tags(t *testing.T) {
 				Config: testAccEndpointConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName, &ep),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -109,7 +109,7 @@ func TestAccRoute53ResolverEndpoint_tags(t *testing.T) {
 				Config: testAccEndpointConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName, &ep),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -118,7 +118,7 @@ func TestAccRoute53ResolverEndpoint_tags(t *testing.T) {
 				Config: testAccEndpointConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName, &ep),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -145,9 +145,9 @@ func TestAccRoute53ResolverEndpoint_updateOutbound(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName, &ep),
 					resource.TestCheckResourceAttr(resourceName, "direction", "OUTBOUND"),
-					resource.TestCheckResourceAttr(resourceName, "ip_address.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "ip_address.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, initialName),
-					resource.TestCheckResourceAttr(resourceName, "protocols.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "protocols.#", acctest.Ct1),
 				),
 			},
 			{
@@ -155,9 +155,9 @@ func TestAccRoute53ResolverEndpoint_updateOutbound(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName, &ep),
 					resource.TestCheckResourceAttr(resourceName, "direction", "OUTBOUND"),
-					resource.TestCheckResourceAttr(resourceName, "ip_address.#", acctest.CtThree),
+					resource.TestCheckResourceAttr(resourceName, "ip_address.#", acctest.Ct3),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, updatedName),
-					resource.TestCheckResourceAttr(resourceName, "protocols.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "protocols.#", acctest.Ct2),
 				),
 			},
 		},
