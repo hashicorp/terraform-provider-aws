@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	terraformsdk "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -292,7 +291,7 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) strin
 	client := meta.RedshiftDataClient(ctx)
 
 	_, err := client.ListDatabases(ctx, &redshiftdata_sdkv2.ListDatabasesInput{
-		Database: aws_sdkv2.String(acctest.CtTest),
+		Database: aws_sdkv2.String("test"),
 	},
 		func(opts *redshiftdata_sdkv2.Options) {
 			opts.APIOptions = append(opts.APIOptions,
