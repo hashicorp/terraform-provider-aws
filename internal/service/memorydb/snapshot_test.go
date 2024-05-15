@@ -51,7 +51,7 @@ func TestAccMemoryDBSnapshot_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSource, "manual"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tags.Test", acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, "tags.Test", "test"),
 				),
 			},
 			{

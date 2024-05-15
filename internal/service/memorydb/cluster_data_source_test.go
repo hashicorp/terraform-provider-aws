@@ -61,7 +61,7 @@ func TestAccMemoryDBClusterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrSNSTopicARN, resourceName, names.AttrSNSTopicARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "subnet_group_name", resourceName, "subnet_group_name"),
 					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.Test", acctest.CtTest),
+					resource.TestCheckResourceAttr(dataSourceName, "tags.Test", "test"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tls_enabled", resourceName, "tls_enabled"),
 				),
 			},

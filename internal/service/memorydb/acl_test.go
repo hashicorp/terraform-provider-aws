@@ -38,7 +38,7 @@ func TestAccMemoryDBACL_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "minimum_engine_version"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tags.Test", acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, "tags.Test", "test"),
 					resource.TestCheckResourceAttr(resourceName, "user_names.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "user_names.*", "aws_memorydb_user.test.0", names.AttrUserName),
 				),

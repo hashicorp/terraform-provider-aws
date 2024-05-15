@@ -52,7 +52,7 @@ func TestAccMemoryDBParameterGroup_basic(t *testing.T) {
 						names.AttrValue: acctest.Ct10,
 					}),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tags.Test", acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, "tags.Test", "test"),
 				),
 			},
 			{

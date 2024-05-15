@@ -46,7 +46,7 @@ func TestAccMemoryDBSnapshotDataSource_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, names.AttrSource, resourceName, names.AttrSource),
 					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.Test", acctest.CtTest),
+					resource.TestCheckResourceAttr(dataSourceName, "tags.Test", "test"),
 				),
 			},
 		},
