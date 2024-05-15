@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccConfigService_serial(t *testing.T) {
@@ -24,7 +23,7 @@ func TestAccConfigService_serial(t *testing.T) {
 			"scopeTagKey":      testAccConfigRule_Scope_TagKey,
 			"scopeTagKeyEmpty": testAccConfigRule_Scope_TagKey_Empty,
 			"scopeTagValue":    testAccConfigRule_Scope_TagValue,
-			names.AttrTags:     testAccConfigRule_tags,
+			"tags":             testAccConfigRule_tags,
 			"disappears":       testAccConfigRule_disappears,
 		},
 		"ConfigurationRecorderStatus": {
@@ -104,11 +103,11 @@ func TestAccConfigService_serial(t *testing.T) {
 			"TagValueScope":             testAccOrganizationManagedRule_TagValueScope,
 		},
 		"RemediationConfiguration": {
-			acctest.CtBasic:  testAccRemediationConfiguration_basic,
-			"basicBackward":  testAccRemediationConfiguration_basicBackwardCompatible,
-			"disappears":     testAccRemediationConfiguration_disappears,
-			"updates":        testAccRemediationConfiguration_updates,
-			names.AttrValues: testAccRemediationConfiguration_values,
+			acctest.CtBasic: testAccRemediationConfiguration_basic,
+			"basicBackward": testAccRemediationConfiguration_basicBackwardCompatible,
+			"disappears":    testAccRemediationConfiguration_disappears,
+			"updates":       testAccRemediationConfiguration_updates,
+			"values":        testAccRemediationConfiguration_values,
 		},
 		"RetentionConfiguration": {
 			acctest.CtBasic: testAccRetentionConfiguration_basic,

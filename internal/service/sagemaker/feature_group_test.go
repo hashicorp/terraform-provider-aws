@@ -27,7 +27,7 @@ func TestAccSageMakerFeatureGroup_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                 testAccFeatureGroup_basic,
 		"storageType":                   testAccFeatureGroup_storageType,
-		names.AttrDescription:           testAccFeatureGroup_description,
+		"description":                   testAccFeatureGroup_description,
 		"disappears":                    TestAccSageMakerFeatureGroup_disappears,
 		"multipleFeatures":              testAccFeatureGroup_multipleFeatures,
 		"offlineConfig_basic":           testAccFeatureGroup_offlineConfig_basic,
@@ -36,7 +36,7 @@ func TestAccSageMakerFeatureGroup_serial(t *testing.T) {
 		"offlineConfig_providedCatalog": TestAccSageMakerFeatureGroup_Offline_providedCatalog,
 		"onlineConfigSecurityConfig":    testAccFeatureGroup_onlineConfigSecurityConfig,
 		"onlineConfig_TTLDuration":      testAccFeatureGroup_onlineConfigTTLDuration,
-		names.AttrTags:                  testAccFeatureGroup_tags,
+		"tags":                          testAccFeatureGroup_tags,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)

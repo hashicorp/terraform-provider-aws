@@ -30,7 +30,7 @@ func TestAccACMPCACertificateAuthority_tags(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -44,7 +44,7 @@ func TestAccACMPCACertificateAuthority_tags(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -59,7 +59,7 @@ func TestAccACMPCACertificateAuthority_tags(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
@@ -75,7 +75,7 @@ func TestAccACMPCACertificateAuthority_tags(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
@@ -91,7 +91,7 @@ func TestAccACMPCACertificateAuthority_tags(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 				},
@@ -105,7 +105,7 @@ func TestAccACMPCACertificateAuthority_tags(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 				},
@@ -119,8 +119,8 @@ func TestAccACMPCACertificateAuthority_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
-					names.AttrResourceTags: nil,
+					acctest.CtRName: config.StringVariable(rName),
+					"resource_tags": nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, resourceName, &v),
@@ -130,8 +130,8 @@ func TestAccACMPCACertificateAuthority_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
-					names.AttrResourceTags: nil,
+					acctest.CtRName: config.StringVariable(rName),
+					"resource_tags": nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -160,7 +160,7 @@ func TestAccACMPCACertificateAuthority_tags_null(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
 				},
@@ -173,7 +173,7 @@ func TestAccACMPCACertificateAuthority_tags_null(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
 				},
@@ -187,8 +187,8 @@ func TestAccACMPCACertificateAuthority_tags_null(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
-					names.AttrResourceTags: nil,
+					acctest.CtRName: config.StringVariable(rName),
+					"resource_tags": nil,
 				},
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: false,
@@ -212,8 +212,8 @@ func TestAccACMPCACertificateAuthority_tags_AddOnUpdate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
-					names.AttrResourceTags: nil,
+					acctest.CtRName: config.StringVariable(rName),
+					"resource_tags": nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, resourceName, &v),
@@ -224,7 +224,7 @@ func TestAccACMPCACertificateAuthority_tags_AddOnUpdate(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -238,7 +238,7 @@ func TestAccACMPCACertificateAuthority_tags_AddOnUpdate(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -269,7 +269,7 @@ func TestAccACMPCACertificateAuthority_tags_EmptyTag_OnCreate(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
@@ -283,7 +283,7 @@ func TestAccACMPCACertificateAuthority_tags_EmptyTag_OnCreate(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
@@ -297,8 +297,8 @@ func TestAccACMPCACertificateAuthority_tags_EmptyTag_OnCreate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
-					names.AttrResourceTags: nil,
+					acctest.CtRName: config.StringVariable(rName),
+					"resource_tags": nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, resourceName, &v),
@@ -308,8 +308,8 @@ func TestAccACMPCACertificateAuthority_tags_EmptyTag_OnCreate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
-					names.AttrResourceTags: nil,
+					acctest.CtRName: config.StringVariable(rName),
+					"resource_tags": nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -338,7 +338,7 @@ func TestAccACMPCACertificateAuthority_tags_EmptyTag_OnUpdate_Add(t *testing.T) 
 				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -352,7 +352,7 @@ func TestAccACMPCACertificateAuthority_tags_EmptyTag_OnUpdate_Add(t *testing.T) 
 				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 						acctest.CtKey2: config.StringVariable(""),
 					}),
@@ -368,7 +368,7 @@ func TestAccACMPCACertificateAuthority_tags_EmptyTag_OnUpdate_Add(t *testing.T) 
 				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 						acctest.CtKey2: config.StringVariable(""),
 					}),
@@ -384,7 +384,7 @@ func TestAccACMPCACertificateAuthority_tags_EmptyTag_OnUpdate_Add(t *testing.T) 
 				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -398,7 +398,7 @@ func TestAccACMPCACertificateAuthority_tags_EmptyTag_OnUpdate_Add(t *testing.T) 
 				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -429,7 +429,7 @@ func TestAccACMPCACertificateAuthority_tags_EmptyTag_OnUpdate_Replace(t *testing
 				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -443,7 +443,7 @@ func TestAccACMPCACertificateAuthority_tags_EmptyTag_OnUpdate_Replace(t *testing
 				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
@@ -457,7 +457,7 @@ func TestAccACMPCACertificateAuthority_tags_EmptyTag_OnUpdate_Replace(t *testing
 				ConfigDirectory: config.StaticDirectory("testdata/CertificateAuthority/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
@@ -491,7 +491,7 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_providerOnly(t *testing.
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					names.AttrResourceTags: nil,
+					"resource_tags": nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, resourceName, &v),
@@ -508,7 +508,7 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_providerOnly(t *testing.
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					names.AttrResourceTags: nil,
+					"resource_tags": nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -526,7 +526,7 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_providerOnly(t *testing.
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					names.AttrResourceTags: nil,
+					"resource_tags": nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, resourceName, &v),
@@ -545,7 +545,7 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_providerOnly(t *testing.
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					names.AttrResourceTags: nil,
+					"resource_tags": nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -562,7 +562,7 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_providerOnly(t *testing.
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					names.AttrResourceTags: nil,
+					"resource_tags": nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, resourceName, &v),
@@ -579,7 +579,7 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_providerOnly(t *testing.
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					names.AttrResourceTags: nil,
+					"resource_tags": nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -592,8 +592,8 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_providerOnly(t *testing.
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
-					names.AttrResourceTags: nil,
+					acctest.CtRName: config.StringVariable(rName),
+					"resource_tags": nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, resourceName, &v),
@@ -605,8 +605,8 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_providerOnly(t *testing.
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
-					names.AttrResourceTags: nil,
+					acctest.CtRName: config.StringVariable(rName),
+					"resource_tags": nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -638,7 +638,7 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_nonOverlapping(t *testin
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						"providerkey1": config.StringVariable(acctest.CtProviderValue1),
 					}),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"resourcekey1": config.StringVariable(acctest.CtResourceValue1),
 					}),
 				},
@@ -659,7 +659,7 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_nonOverlapping(t *testin
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						"providerkey1": config.StringVariable(acctest.CtProviderValue1),
 					}),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"resourcekey1": config.StringVariable(acctest.CtResourceValue1),
 					}),
 				},
@@ -678,7 +678,7 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_nonOverlapping(t *testin
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						"providerkey1": config.StringVariable("providervalue1updated"),
 					}),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"resourcekey1": config.StringVariable("resourcevalue1updated"),
 						"resourcekey2": config.StringVariable(acctest.CtResourceValue2),
 					}),
@@ -702,7 +702,7 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_nonOverlapping(t *testin
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						"providerkey1": config.StringVariable("providervalue1updated"),
 					}),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"resourcekey1": config.StringVariable("resourcevalue1updated"),
 						"resourcekey2": config.StringVariable(acctest.CtResourceValue2),
 					}),
@@ -718,8 +718,8 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_nonOverlapping(t *testin
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
-					names.AttrResourceTags: nil,
+					acctest.CtRName: config.StringVariable(rName),
+					"resource_tags": nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, resourceName, &v),
@@ -731,8 +731,8 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_nonOverlapping(t *testin
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
-					names.AttrResourceTags: nil,
+					acctest.CtRName: config.StringVariable(rName),
+					"resource_tags": nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -764,7 +764,7 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_overlapping(t *testing.T
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable(acctest.CtProviderValue1),
 					}),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable(acctest.CtResourceValue1),
 					}),
 				},
@@ -784,7 +784,7 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_overlapping(t *testing.T
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable(acctest.CtProviderValue1),
 					}),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable(acctest.CtResourceValue1),
 					}),
 				},
@@ -804,7 +804,7 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_overlapping(t *testing.T
 						"overlapkey1": config.StringVariable(acctest.CtProviderValue1),
 						"overlapkey2": config.StringVariable("providervalue2"),
 					}),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable(acctest.CtResourceValue1),
 						"overlapkey2": config.StringVariable(acctest.CtResourceValue2),
 					}),
@@ -828,7 +828,7 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_overlapping(t *testing.T
 						"overlapkey1": config.StringVariable(acctest.CtProviderValue1),
 						"overlapkey2": config.StringVariable("providervalue2"),
 					}),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable(acctest.CtResourceValue1),
 						"overlapkey2": config.StringVariable(acctest.CtResourceValue2),
 					}),
@@ -848,7 +848,7 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_overlapping(t *testing.T
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable(acctest.CtProviderValue1),
 					}),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable(acctest.CtResourceValue2),
 					}),
 				},
@@ -868,7 +868,7 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_overlapping(t *testing.T
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable(acctest.CtProviderValue1),
 					}),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable(acctest.CtResourceValue2),
 					}),
 				},
@@ -899,7 +899,7 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_updateToProviderOnly(t *
 				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -919,7 +919,7 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_updateToProviderOnly(t *
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					names.AttrResourceTags: nil,
+					"resource_tags": nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, resourceName, &v),
@@ -936,7 +936,7 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_updateToProviderOnly(t *
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					names.AttrResourceTags: nil,
+					"resource_tags": nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -968,7 +968,7 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_updateToResourceOnly(t *
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					names.AttrResourceTags: nil,
+					"resource_tags": nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, resourceName, &v),
@@ -982,7 +982,7 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_updateToResourceOnly(t *
 				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -999,7 +999,7 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_updateToResourceOnly(t *
 				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -1033,7 +1033,7 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_emptyResourceTag(t *test
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
@@ -1053,7 +1053,7 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_emptyResourceTag(t *test
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
@@ -1087,7 +1087,7 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_nullOverlappingResourceT
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
 				},
@@ -1106,7 +1106,7 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_nullOverlappingResourceT
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
 				},
@@ -1140,7 +1140,7 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_nullNonOverlappingResour
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						"providerkey1": config.StringVariable(acctest.CtProviderValue1),
 					}),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"resourcekey1": nil,
 					}),
 				},
@@ -1159,7 +1159,7 @@ func TestAccACMPCACertificateAuthority_tags_DefaultTags_nullNonOverlappingResour
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						"providerkey1": config.StringVariable(acctest.CtProviderValue1),
 					}),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"resourcekey1": nil,
 					}),
 				},
@@ -1244,7 +1244,7 @@ func TestAccACMPCACertificateAuthority_tags_ComputedTag_OnUpdate_Add(t *testing.
 				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -1318,7 +1318,7 @@ func TestAccACMPCACertificateAuthority_tags_ComputedTag_OnUpdate_Replace(t *test
 				ConfigDirectory:          config.StaticDirectory("testdata/CertificateAuthority/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},

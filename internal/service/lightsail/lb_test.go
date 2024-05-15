@@ -34,9 +34,9 @@ func TestAccLightsailLoadBalancer_serial(t *testing.T) {
 		"lb": {
 			acctest.CtBasic:     testAccLoadBalancer_basic,
 			"disappears":        testAccLoadBalancer_disappears,
-			names.AttrName:      testAccLoadBalancer_name,
+			"name":              testAccLoadBalancer_name,
 			"health_check_path": testAccLoadBalancer_healthCheckPath,
-			names.AttrTags:      testAccLoadBalancer_tags,
+			"tags":              testAccLoadBalancer_tags,
 		},
 		"lb_attachment": {
 			acctest.CtBasic: testAccLoadBalancerAttachment_basic,
@@ -57,7 +57,7 @@ func TestAccLightsailLoadBalancer_serial(t *testing.T) {
 		"lb_stickiness_policy": {
 			acctest.CtBasic:   testAccLoadBalancerStickinessPolicy_basic,
 			"cookie_duration": testAccLoadBalancerStickinessPolicy_cookieDuration,
-			names.AttrEnabled: testAccLoadBalancerStickinessPolicy_enabled,
+			"enabled":         testAccLoadBalancerStickinessPolicy_enabled,
 			"disappears":      testAccLoadBalancerStickinessPolicy_disappears,
 		},
 	}

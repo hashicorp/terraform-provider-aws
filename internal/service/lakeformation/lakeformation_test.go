@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccLakeFormation_serial(t *testing.T) {
@@ -32,7 +31,7 @@ func TestAccLakeFormation_serial(t *testing.T) {
 		},
 		"PermissionsBasic": {
 			acctest.CtBasic:       testAccPermissions_basic,
-			names.AttrDatabase:    testAccPermissions_database,
+			"database":            testAccPermissions_database,
 			"databaseIAMAllowed":  testAccPermissions_databaseIAMAllowed,
 			"databaseMultiple":    testAccPermissions_databaseMultiple,
 			"dataCellsFilter":     testAccPermissions_dataCellsFilter,
@@ -45,7 +44,7 @@ func TestAccLakeFormation_serial(t *testing.T) {
 		"PermissionsDataSource": {
 			acctest.CtBasic:    testAccPermissionsDataSource_basic,
 			"dataCellsFilter":  testAccPermissionsDataSource_dataCellsFilter,
-			names.AttrDatabase: testAccPermissionsDataSource_database,
+			"database":         testAccPermissionsDataSource_database,
 			"dataLocation":     testAccPermissionsDataSource_dataLocation,
 			"lfTag":            testAccPermissionsDataSource_lfTag,
 			"lfTagPolicy":      testAccPermissionsDataSource_lfTagPolicy,
@@ -74,7 +73,7 @@ func TestAccLakeFormation_serial(t *testing.T) {
 			acctest.CtBasic:   testAccLFTag_basic,
 			"disappears":      testAccLFTag_disappears,
 			"tagKeyComplex":   testAccLFTag_TagKey_complex,
-			names.AttrValues:  testAccLFTag_Values,
+			"values":          testAccLFTag_Values,
 			"valuesOverFifty": testAccLFTag_Values_overFifty,
 		},
 		"ResourceLFTag": {
@@ -85,7 +84,7 @@ func TestAccLakeFormation_serial(t *testing.T) {
 		},
 		"ResourceLFTags": {
 			acctest.CtBasic:        testAccResourceLFTags_basic,
-			names.AttrDatabase:     testAccResourceLFTags_database,
+			"database":             testAccResourceLFTags_database,
 			"databaseMultipleTags": testAccResourceLFTags_databaseMultipleTags,
 			"disappears":           testAccResourceLFTags_disappears,
 			"hierarchy":            testAccResourceLFTags_hierarchy,

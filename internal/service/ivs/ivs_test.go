@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccIVS_serial(t *testing.T) {
@@ -17,7 +16,7 @@ func TestAccIVS_serial(t *testing.T) {
 		"PlaybackKeyPair": {
 			acctest.CtBasic: testAccPlaybackKeyPair_basic,
 			"update":        testAccPlaybackKeyPair_update,
-			names.AttrTags:  testAccPlaybackKeyPair_tags,
+			"tags":          testAccPlaybackKeyPair_tags,
 			"disappears":    testAccPlaybackKeyPair_disappears,
 		},
 	}

@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testReplicationSet_basic(t *testing.T) {
+func testAccReplicationSet_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -67,7 +67,7 @@ func testReplicationSet_basic(t *testing.T) {
 	})
 }
 
-func testReplicationSet_updateRegionsWithoutCMK(t *testing.T) {
+func testAccReplicationSet_updateRegionsWithoutCMK(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -152,7 +152,7 @@ func testReplicationSet_updateRegionsWithoutCMK(t *testing.T) {
 	})
 }
 
-func testReplicationSet_updateRegionsWithCMK(t *testing.T) {
+func testAccReplicationSet_updateRegionsWithCMK(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -228,7 +228,7 @@ func testReplicationSet_updateRegionsWithCMK(t *testing.T) {
 	})
 }
 
-func testReplicationSet_updateTags(t *testing.T) {
+func testAccReplicationSet_updateTags(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -324,7 +324,7 @@ func testReplicationSet_updateTags(t *testing.T) {
 	})
 }
 
-func testReplicationSet_updateEmptyTags(t *testing.T) {
+func testAccReplicationSet_updateEmptyTags(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -386,7 +386,7 @@ func testReplicationSet_updateEmptyTags(t *testing.T) {
 	})
 }
 
-func testReplicationSet_disappears(t *testing.T) {
+func testAccReplicationSet_disappears(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}

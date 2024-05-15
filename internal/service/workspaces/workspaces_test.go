@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccWorkSpaces_serial(t *testing.T) {
@@ -20,7 +19,7 @@ func TestAccWorkSpaces_serial(t *testing.T) {
 			"ipGroupIds":                  testAccDirectory_ipGroupIDs,
 			"selfServicePermissions":      testAccDirectory_selfServicePermissions,
 			"subnetIDs":                   testAccDirectory_subnetIDs,
-			names.AttrTags:                testAccDirectory_tags,
+			"tags":                        testAccDirectory_tags,
 			"workspaceAccessProperties":   testAccDirectory_workspaceAccessProperties,
 			"workspaceCreationProperties": testAccDirectory_workspaceCreationProperties,
 			"workspaceCreationProperties_customSecurityGroupId_defaultOu": testAccDirectory_workspaceCreationProperties_customSecurityGroupId_defaultOu,
@@ -29,16 +28,16 @@ func TestAccWorkSpaces_serial(t *testing.T) {
 			acctest.CtBasic:       testAccIPGroup_basic,
 			"disappears":          testAccIPGroup_disappears,
 			"multipleDirectories": testAccIPGroup_MultipleDirectories,
-			names.AttrTags:        testAccIPGroup_tags,
+			"tags":                testAccIPGroup_tags,
 		},
 		"Workspace": {
-			acctest.CtBasic:                           testAccWorkspace_basic,
-			"recreate":                                testAccWorkspace_recreate,
-			names.AttrTags:                            testAccWorkspace_tags,
-			names.AttrTimeout:                         testAccWorkspace_timeout,
-			"validateRootVolumeSize":                  testAccWorkspace_validateRootVolumeSize,
-			"validateUserVolumeSize":                  testAccWorkspace_validateUserVolumeSize,
-			"workspaceProperties":                     testAccWorkspace_workspaceProperties,
+			acctest.CtBasic:          testAccWorkspace_basic,
+			"recreate":               testAccWorkspace_recreate,
+			"tags":                   testAccWorkspace_tags,
+			"timeout":                testAccWorkspace_timeout,
+			"validateRootVolumeSize": testAccWorkspace_validateRootVolumeSize,
+			"validateUserVolumeSize": testAccWorkspace_validateUserVolumeSize,
+			"workspaceProperties":    testAccWorkspace_workspaceProperties,
 			"workspaceProperties_runningModeAlwaysOn": testAccWorkspace_workspaceProperties_runningModeAlwaysOn,
 		},
 	}

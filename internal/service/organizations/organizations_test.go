@@ -48,7 +48,7 @@ func TestAccOrganizations_serial(t *testing.T) {
 			acctest.CtBasic:                      testAccOrganizationalUnit_basic,
 			"disappears":                         testAccOrganizationalUnit_disappears,
 			"update":                             testAccOrganizationalUnit_update,
-			names.AttrTags:                       testAccOrganizationalUnit_tags,
+			"tags":                               testAccOrganizationalUnit_tags,
 			"DataSource_basic":                   testAccOrganizationalUnitDataSource_basic,
 			"ChildAccountsDataSource_basic":      testAccOrganizationalUnitChildAccountsDataSource_basic,
 			"DescendantAccountsDataSource_basic": testAccOrganizationalUnitDescendantAccountsDataSource_basic,
@@ -80,7 +80,7 @@ func TestAccOrganizations_serial(t *testing.T) {
 		"ResourcePolicy": {
 			acctest.CtBasic: testAccResourcePolicy_basic,
 			"disappears":    testAccResourcePolicy_disappears,
-			names.AttrTags:  testAccResourcePolicy_tags,
+			"tags":          testAccResourcePolicy_tags,
 		},
 		"DelegatedAdministrator": {
 			acctest.CtBasic: testAccDelegatedAdministrator_basic,
