@@ -48,12 +48,12 @@ func TestAccGlueUserDefinedFunction_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccUserDefinedFunctionConfig_basic(rName, acctest.CtTest),
+				Config: testAccUserDefinedFunctionConfig_basic(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserDefinedFunctionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "class_name", acctest.CtTest),
-					resource.TestCheckResourceAttr(resourceName, "owner_name", acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, "class_name", "test"),
+					resource.TestCheckResourceAttr(resourceName, "owner_name", "test"),
 					resource.TestCheckResourceAttr(resourceName, "owner_type", "GROUP"),
 				),
 			},
