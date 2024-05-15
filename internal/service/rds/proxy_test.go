@@ -49,7 +49,7 @@ func TestAccRDSProxy_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "auth.*", map[string]string{
 						"auth_scheme":               "SECRETS",
 						"client_password_auth_type": "MYSQL_NATIVE_PASSWORD",
-						names.AttrDescription:       acctest.CtTest,
+						names.AttrDescription:       "test",
 						"iam_auth":                  "DISABLED",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "debug_logging", "false"),
@@ -334,7 +334,7 @@ func TestAccRDSProxy_authDescription(t *testing.T) {
 					testAccCheckProxyExists(ctx, resourceName, &dbProxy),
 					resource.TestCheckResourceAttr(resourceName, "auth.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "auth.*", map[string]string{
-						names.AttrDescription: acctest.CtTest,
+						names.AttrDescription: "test",
 					}),
 				),
 			},
