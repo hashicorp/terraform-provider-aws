@@ -837,3 +837,22 @@ func findVPCEndpointRouteTableAssociationExistsV2(ctx context.Context, conn *ec2
 		LastError: fmt.Errorf("VPC Endpoint (%s) Route Table (%s) Association not found", vpcEndpointID, routeTableID),
 	}
 }
+
+// findVPCEndpointSecurityGroupAssociationExistsV2 returns NotFoundError if no association for the specified VPC endpoint and security group IDs is found.
+func findVPCEndpointSecurityGroupAssociationExistsV2(ctx context.Context, conn *ec2.Client, vpcEndpointID, securityGroupID string) error {
+	vpcEndpoint, err := findVPCEndpointByIDV2(ctx, conn, vpcEndpointID)
+
+	if err != nil {
+		return err
+	}
+
+	for _, group := range vpcEndpoint.Groups {
+		if aws.ToString(group.GroupId) == securityGroupID {
+			return nil
+		}
+	}
+
+	return &retry.NotFoundError{
+		LastError: fmt.Errorf("VPC Endpoint (%s) Security Group (%s) Association not found", vpcEndpointID, securityGroupID),
+	}
+}
