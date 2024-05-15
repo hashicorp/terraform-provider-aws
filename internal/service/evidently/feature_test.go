@@ -57,7 +57,7 @@ func TestAccEvidentlyFeature_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "variations.*", map[string]string{
 						names.AttrName:         "Variation1",
 						"value.#":              acctest.Ct1,
-						"value.0.string_value": acctest.CtTest,
+						"value.0.string_value": "test",
 					}),
 				),
 			},
