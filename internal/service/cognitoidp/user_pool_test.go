@@ -390,7 +390,7 @@ func TestAccCognitoIDPUserPool_MFA_sms(t *testing.T) {
 					testAccCheckUserPoolExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "ON"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.external_id", acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.external_id", "test"),
 					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", acctest.Ct0),
 				),
@@ -413,7 +413,7 @@ func TestAccCognitoIDPUserPool_MFA_sms(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "ON"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.external_id", acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.external_id", "test"),
 					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", acctest.Ct0),
 				),
@@ -441,7 +441,7 @@ func TestAccCognitoIDPUserPool_MFA_smsAndSoftwareTokenMFA(t *testing.T) {
 					testAccCheckUserPoolExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "ON"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.external_id", acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.external_id", "test"),
 					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.0.enabled", "false"),
@@ -457,7 +457,7 @@ func TestAccCognitoIDPUserPool_MFA_smsAndSoftwareTokenMFA(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "ON"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.external_id", acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.external_id", "test"),
 					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.0.enabled", "true"),
@@ -494,7 +494,7 @@ func TestAccCognitoIDPUserPool_MFA_smsToSoftwareTokenMFA(t *testing.T) {
 					testAccCheckUserPoolExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "ON"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.external_id", acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.external_id", "test"),
 					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", acctest.Ct0),
 				),
@@ -598,7 +598,7 @@ func TestAccCognitoIDPUserPool_MFA_softwareTokenMFAToSMS(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "ON"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.external_id", acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.external_id", "test"),
 					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", acctest.Ct0),
 				),
@@ -658,12 +658,12 @@ func TestAccCognitoIDPUserPool_sms(t *testing.T) {
 		CheckDestroy:             testAccCheckUserPoolDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserPoolConfig_smsConfigurationExternalID(rName, acctest.CtTest),
+				Config: testAccUserPoolConfig_smsConfigurationExternalID(rName, "test"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.external_id", acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.external_id", "test"),
 					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, names.AttrARN),
 				),
 			},
@@ -680,11 +680,11 @@ func TestAccCognitoIDPUserPool_sms(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccUserPoolConfig_smsConfigurationExternalID(rName, acctest.CtTest),
+				Config: testAccUserPoolConfig_smsConfigurationExternalID(rName, "test"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.external_id", acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.external_id", "test"),
 					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, names.AttrARN),
 				),
 			},
@@ -738,12 +738,12 @@ func TestAccCognitoIDPUserPool_SMS_externalID(t *testing.T) {
 		CheckDestroy:             testAccCheckUserPoolDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserPoolConfig_smsConfigurationExternalID(rName, acctest.CtTest),
+				Config: testAccUserPoolConfig_smsConfigurationExternalID(rName, "test"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.external_id", acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.external_id", "test"),
 					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, names.AttrARN),
 				),
 			},
@@ -779,12 +779,12 @@ func TestAccCognitoIDPUserPool_SMS_snsCallerARN(t *testing.T) {
 		CheckDestroy:             testAccCheckUserPoolDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserPoolConfig_smsConfigurationExternalID(rName, acctest.CtTest),
+				Config: testAccUserPoolConfig_smsConfigurationExternalID(rName, "test"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.external_id", acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.external_id", "test"),
 					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, names.AttrARN),
 				),
 			},
@@ -798,7 +798,7 @@ func TestAccCognitoIDPUserPool_SMS_snsCallerARN(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.external_id", acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.external_id", "test"),
 					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, names.AttrARN),
 				),
 			},
@@ -2053,7 +2053,7 @@ resource "aws_cognito_user_pool" "test" {
 }
 
 func testAccUserPoolConfig_mfaConfigurationSMSConfiguration(rName string) string {
-	return acctest.ConfigCompose(testAccUserPoolSMSConfigurationConfig_base(rName, acctest.CtTest), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccUserPoolSMSConfigurationConfig_base(rName, "test"), fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   mfa_configuration = "ON"
   name              = %[1]q
@@ -2074,7 +2074,7 @@ resource "aws_cognito_user_pool" "test" {
 }
 
 func testAccUserPoolConfig_mfaConfigurationSMSConfigurationAndSoftwareTokenMFAConfigurationEnabled(rName string, enabled bool) string {
-	return acctest.ConfigCompose(testAccUserPoolSMSConfigurationConfig_base(rName, acctest.CtTest), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccUserPoolSMSConfigurationConfig_base(rName, "test"), fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   mfa_configuration = "ON"
   name              = %[1]q
@@ -2141,7 +2141,7 @@ resource "aws_cognito_user_pool" "test" {
 }
 
 func testAccUserPoolConfig_smsConfigurationSNSRegion(rName string, snsRegion string) string {
-	return acctest.ConfigCompose(testAccUserPoolSMSConfigurationConfig_base(rName, acctest.CtTest), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccUserPoolSMSConfigurationConfig_base(rName, "test"), fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
 
@@ -2155,7 +2155,7 @@ resource "aws_cognito_user_pool" "test" {
 }
 
 func testAccUserPoolConfig_smsConfigurationSNSCallerARN2(rName string) string {
-	return acctest.ConfigCompose(testAccUserPoolSMSConfigurationConfig_base(rName+"-2", acctest.CtTest), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccUserPoolSMSConfigurationConfig_base(rName+"-2", "test"), fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
 

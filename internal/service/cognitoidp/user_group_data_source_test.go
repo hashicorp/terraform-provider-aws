@@ -31,7 +31,7 @@ func TestAccCognitoIDPUserGroupDataSource_basic(t *testing.T) {
 			{
 				Config: testAccUserGroupDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrDescription, acctest.CtTest),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrDescription, "test"),
 				),
 			},
 		},

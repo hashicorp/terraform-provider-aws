@@ -94,11 +94,11 @@ func TestAccCognitoIDPIdentityProvider_idpIdentifiers(t *testing.T) {
 		CheckDestroy:             testAccCheckIdentityProviderDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIdentityProviderConfig_identifier(rName, acctest.CtTest),
+				Config: testAccIdentityProviderConfig_identifier(rName, "test"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIdentityProviderExists(ctx, resourceName, &identityProvider),
 					resource.TestCheckResourceAttr(resourceName, "idp_identifiers.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "idp_identifiers.0", acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, "idp_identifiers.0", "test"),
 				),
 			},
 			{
