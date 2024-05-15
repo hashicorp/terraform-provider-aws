@@ -153,12 +153,12 @@ func resourceKeySigningKeyCreate(ctx context.Context, d *schema.ResourceData, me
 
 	if output.ChangeInfo != nil {
 		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for Route 53 Key Signing Key (%s) create: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Route 53 Key Signing Key (%s) synchronize: %s", d.Id(), err)
 		}
 	}
 
 	if _, err := waitKeySigningKeyStatusUpdated(ctx, conn, hostedZoneID, name, status); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Route 53 Key Signing Key (%s) status (%s): %s", d.Id(), status, err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Route 53 Key Signing Key (%s) status update: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceKeySigningKeyRead(ctx, d, meta)...)
@@ -307,7 +307,7 @@ func resourceKeySigningKeyDelete(ctx context.Context, d *schema.ResourceData, me
 
 	if output.ChangeInfo != nil {
 		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for Route 53 Key Signing Key (%s) delete: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Route 53 Key Signing Key (%s) synchronize: %s", d.Id(), err)
 		}
 	}
 

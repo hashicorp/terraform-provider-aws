@@ -13,20 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindHostedZoneDNSSEC(ctx context.Context, conn *route53.Route53, hostedZoneID string) (*route53.GetDNSSECOutput, error) {
-	input := &route53.GetDNSSECInput{
-		HostedZoneId: aws.String(hostedZoneID),
-	}
-
-	output, err := conn.GetDNSSECWithContext(ctx, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
-}
-
 func FindQueryLoggingConfigByID(ctx context.Context, conn *route53.Route53, id string) (*route53.QueryLoggingConfig, error) {
 	input := &route53.GetQueryLoggingConfigInput{
 		Id: aws.String(id),

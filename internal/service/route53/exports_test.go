@@ -5,14 +5,18 @@ package route53
 
 // Exports for use in tests only.
 var (
-	ResourceCIDRCollection = newResourceCIDRCollection
-	ResourceCIDRLocation   = newResourceCIDRLocation
-	ResourceKeySigningKey  = resourceKeySigningKey
+	ResourceCIDRCollection   = newResourceCIDRCollection
+	ResourceCIDRLocation     = newResourceCIDRLocation
+	ResourceHostedZoneDNSSEC = resourceHostedZoneDNSSEC
+	ResourceKeySigningKey    = resourceKeySigningKey
 
 	CIDRLocationParseResourceID   = cidrLocationParseResourceID
 	FindCIDRCollectionByID        = findCIDRCollectionByID
 	FindCIDRLocationByTwoPartKey  = findCIDRLocationByTwoPartKey
+	FindHostedZoneDNSSECByZoneID  = findHostedZoneDNSSECByZoneID
 	FindKeySigningKeyByTwoPartKey = findKeySigningKeyByTwoPartKey
 	KeySigningKeyStatusActive     = keySigningKeyStatusActive
 	KeySigningKeyStatusInactive   = keySigningKeyStatusInactive
+	ServeSignatureNotSigning      = serveSignatureNotSigning
+	ServeSignatureSigning         = serveSignatureSigning
 )

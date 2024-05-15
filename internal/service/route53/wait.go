@@ -15,31 +15,8 @@ import (
 )
 
 const (
-	hostedZoneDNSSECStatusTimeout = 5 * time.Minute
-
 	trafficPolicyInstanceOperationTimeout = 4 * time.Minute
 )
-
-func waitHostedZoneDNSSECStatusUpdated(ctx context.Context, conn *route53.Route53, hostedZoneID string, status string) (*route53.DNSSECStatus, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
-		Target:     []string{status},
-		Refresh:    statusHostedZoneDNSSEC(ctx, conn, hostedZoneID),
-		MinTimeout: 5 * time.Second,
-		Timeout:    hostedZoneDNSSECStatusTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*route53.DNSSECStatus); ok {
-		if serveSignature := aws.StringValue(output.ServeSignature); serveSignature == ServeSignatureInternalFailure {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusMessage)))
-		}
-
-		return output, err
-	}
-
-	return nil, err
-}
 
 func waitTrafficPolicyInstanceStateCreated(ctx context.Context, conn *route53.Route53, id string) (*route53.TrafficPolicyInstance, error) {
 	stateConf := &retry.StateChangeConf{

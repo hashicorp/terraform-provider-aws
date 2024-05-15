@@ -12,22 +12,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusHostedZoneDNSSEC(ctx context.Context, conn *route53.Route53, hostedZoneID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		hostedZoneDnssec, err := FindHostedZoneDNSSEC(ctx, conn, hostedZoneID)
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		if hostedZoneDnssec == nil || hostedZoneDnssec.Status == nil {
-			return nil, "", nil
-		}
-
-		return hostedZoneDnssec.Status, aws.StringValue(hostedZoneDnssec.Status.ServeSignature), nil
-	}
-}
-
 func statusTrafficPolicyInstanceState(ctx context.Context, conn *route53.Route53, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindTrafficPolicyInstanceByID(ctx, conn, id)

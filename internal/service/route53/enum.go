@@ -4,12 +4,6 @@
 package route53
 
 const (
-	ServeSignatureActionNeeded    = "ACTION_NEEDED"
-	ServeSignatureDeleting        = "DELETING"
-	ServeSignatureInternalFailure = "INTERNAL_FAILURE"
-	ServeSignatureNotSigning      = "NOT_SIGNING"
-	ServeSignatureSigning         = "SIGNING"
-
 	TrafficPolicyInstanceStateApplied  = "Applied"
 	TrafficPolicyInstanceStateCreating = "Creating"
 	TrafficPolicyInstanceStateDeleting = "Deleting"
