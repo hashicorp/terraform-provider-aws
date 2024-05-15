@@ -436,6 +436,25 @@ func (r *resourceStreamProcessor) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
+	planMap := &rekognition.CreateStreamProcessorInput{}
+	stateMap := &rekognition.CreateStreamProcessorInput{}
+	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, planMap)...)
+	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, stateMap)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	in := &rekognition.UpdateStreamProcessorInput{
+		Name:               planMap.Name,
+		ParametersToDelete: []awstypes.StreamProcessorParameterToDelete{},
+	}
+
+	if planMap.DataSharingPreference.OptIn != stateMap.DataSharingPreference.OptIn {
+		in.DataSharingPreferenceForUpdate = &awstypes.StreamProcessorDataSharingPreference{
+			OptIn: planMap.DataSharingPreference.OptIn,
+		}
+	}
+
 	// the update api uses different property names(<prop>ForUpdate) and request shape, so we can't just flex into the request :(
 	if !plan.DataSharingPreference.Equal(state.DataSharingPreference) ||
 		!plan.Settings.Equal(state.Settings) ||
