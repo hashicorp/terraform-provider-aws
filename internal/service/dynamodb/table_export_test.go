@@ -143,7 +143,7 @@ func TestAccDynamoDBTableExport_s3Prefix(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableExportConfig_s3Prefix(rName, acctest.CtTest),
+				Config: testAccTableExportConfig_s3Prefix(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTableExportExists(ctx, resourceName, &tableexport),
 					resource.TestCheckResourceAttr(resourceName, "export_format", "DYNAMODB_JSON"),
@@ -151,7 +151,7 @@ func TestAccDynamoDBTableExport_s3Prefix(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "item_count", acctest.Ct0),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrS3Bucket, s3BucketResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "s3_bucket_owner", ""),
-					resource.TestCheckResourceAttr(resourceName, "s3_prefix", acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, "s3_prefix", "test"),
 					resource.TestCheckResourceAttr(resourceName, "s3_sse_algorithm", "AES256"),
 					resource.TestCheckResourceAttr(resourceName, "s3_sse_kms_key_id", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "manifest_files_s3_key"),
