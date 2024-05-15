@@ -386,7 +386,7 @@ semconstants: semgrep-validate
 	@echo "make: applying constants fixes locally with Semgrep --autofix"
 	@SEMGREP_TIMEOUT=300 semgrep --error --metrics=off --autofix \
 		--config .ci/.semgrep-constants.yml \
-		--config .ci/.semgrep-test-constants.yml	
+		--config .ci/.semgrep-test-constants.yml
 
 semgrep-validate: ## Validate semgrep configuration files
 	@echo "make: validating Semgrep configuration files..."
