@@ -6,7 +6,6 @@ package organizations
 import (
 	"context"
 	"log"
-	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -97,7 +96,7 @@ func resourceOrganizationalUnitCreate(ctx context.Context, d *schema.ResourceDat
 		Tags:     getTagsIn(ctx),
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.FinalizingOrganizationException](ctx, 4*time.Minute, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.FinalizingOrganizationException](ctx, organizationFinalizationTimeout, func() (interface{}, error) {
 		return conn.CreateOrganizationalUnit(ctx, input)
 	})
 

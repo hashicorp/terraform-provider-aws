@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
@@ -64,7 +63,7 @@ func resourcePolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData,
 		TargetId: aws.String(targetID),
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 4*time.Minute, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, organizationFinalizationTimeout, func() (interface{}, error) {
 		return conn.AttachPolicyWithContext(ctx, input)
 	}, organizations.ErrCodeFinalizingOrganizationException)
 

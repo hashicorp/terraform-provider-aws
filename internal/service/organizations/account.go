@@ -136,7 +136,7 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.RoleName = aws.String(v.(string))
 		}
 
-		outputRaw, err := tfresource.RetryWhenIsA[*awstypes.FinalizingOrganizationException](ctx, 4*time.Minute,
+		outputRaw, err := tfresource.RetryWhenIsA[*awstypes.FinalizingOrganizationException](ctx, organizationFinalizationTimeout,
 			func() (interface{}, error) {
 				return conn.CreateGovCloudAccount(ctx, input)
 			})
@@ -161,7 +161,7 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.RoleName = aws.String(v.(string))
 		}
 
-		outputRaw, err := tfresource.RetryWhenIsA[*awstypes.FinalizingOrganizationException](ctx, 4*time.Minute,
+		outputRaw, err := tfresource.RetryWhenIsA[*awstypes.FinalizingOrganizationException](ctx, organizationFinalizationTimeout,
 			func() (interface{}, error) {
 				return conn.CreateAccount(ctx, input)
 			})

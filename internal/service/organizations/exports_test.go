@@ -9,6 +9,7 @@ var (
 	ResourceDelegatedAdministrator = resourceDelegatedAdministrator
 	ResourceOrganization           = resourceOrganization
 	ResourceOrganizationalUnit     = resourceOrganizationalUnit
+	ResourcePolicy                 = resourcePolicy
 
 	FindAccountByID                        = findAccountByID
 	FindDelegatedAdministratorByTwoPartKey = findDelegatedAdministratorByTwoPartKey

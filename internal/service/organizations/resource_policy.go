@@ -6,7 +6,6 @@ package organizations
 import (
 	"context"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
@@ -75,7 +74,7 @@ func resourceResourcePolicyCreate(ctx context.Context, d *schema.ResourceData, m
 		Tags:    getTagsIn(ctx),
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 4*time.Minute, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, organizationFinalizationTimeout, func() (interface{}, error) {
 		return conn.PutResourcePolicyWithContext(ctx, input)
 	}, organizations.ErrCodeFinalizingOrganizationException)
 

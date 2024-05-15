@@ -106,7 +106,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourcePolicy,
+			Factory:  resourcePolicy,
 			TypeName: "aws_organizations_policy",
 			Name:     "Policy",
 			Tags: &types.ServicePackageResourceTags{
