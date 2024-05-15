@@ -31,7 +31,7 @@ func TestAccIAMUser_tags(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/User/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -45,7 +45,7 @@ func TestAccIAMUser_tags(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/User/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -60,7 +60,7 @@ func TestAccIAMUser_tags(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/User/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
@@ -76,7 +76,7 @@ func TestAccIAMUser_tags(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/User/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
@@ -92,7 +92,7 @@ func TestAccIAMUser_tags(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/User/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 				},
@@ -106,7 +106,7 @@ func TestAccIAMUser_tags(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/User/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 				},
@@ -120,8 +120,8 @@ func TestAccIAMUser_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/User/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
-					names.AttrResourceTags: nil,
+					acctest.CtRName: config.StringVariable(rName),
+					"resource_tags": nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &v),
@@ -131,8 +131,8 @@ func TestAccIAMUser_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/User/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
-					names.AttrResourceTags: nil,
+					acctest.CtRName: config.StringVariable(rName),
+					"resource_tags": nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -161,7 +161,7 @@ func TestAccIAMUser_tags_null(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/User/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
 				},
@@ -174,7 +174,7 @@ func TestAccIAMUser_tags_null(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/User/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
 				},
@@ -188,8 +188,8 @@ func TestAccIAMUser_tags_null(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/User/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
-					names.AttrResourceTags: nil,
+					acctest.CtRName: config.StringVariable(rName),
+					"resource_tags": nil,
 				},
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: false,
@@ -213,8 +213,8 @@ func TestAccIAMUser_tags_AddOnUpdate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/User/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
-					names.AttrResourceTags: nil,
+					acctest.CtRName: config.StringVariable(rName),
+					"resource_tags": nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &v),
@@ -225,7 +225,7 @@ func TestAccIAMUser_tags_AddOnUpdate(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/User/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -239,7 +239,7 @@ func TestAccIAMUser_tags_AddOnUpdate(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/User/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -270,7 +270,7 @@ func TestAccIAMUser_tags_EmptyTag_OnCreate(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/User/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
@@ -284,7 +284,7 @@ func TestAccIAMUser_tags_EmptyTag_OnCreate(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/User/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
@@ -298,8 +298,8 @@ func TestAccIAMUser_tags_EmptyTag_OnCreate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/User/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
-					names.AttrResourceTags: nil,
+					acctest.CtRName: config.StringVariable(rName),
+					"resource_tags": nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &v),
@@ -309,8 +309,8 @@ func TestAccIAMUser_tags_EmptyTag_OnCreate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/User/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
-					names.AttrResourceTags: nil,
+					acctest.CtRName: config.StringVariable(rName),
+					"resource_tags": nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -339,7 +339,7 @@ func TestAccIAMUser_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/User/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -353,7 +353,7 @@ func TestAccIAMUser_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/User/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 						acctest.CtKey2: config.StringVariable(""),
 					}),
@@ -369,7 +369,7 @@ func TestAccIAMUser_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/User/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 						acctest.CtKey2: config.StringVariable(""),
 					}),
@@ -385,7 +385,7 @@ func TestAccIAMUser_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/User/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -399,7 +399,7 @@ func TestAccIAMUser_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/User/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -430,7 +430,7 @@ func TestAccIAMUser_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/User/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -444,7 +444,7 @@ func TestAccIAMUser_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/User/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
@@ -458,7 +458,7 @@ func TestAccIAMUser_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/User/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
@@ -492,7 +492,7 @@ func TestAccIAMUser_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					names.AttrResourceTags: nil,
+					"resource_tags": nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &v),
@@ -509,7 +509,7 @@ func TestAccIAMUser_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					names.AttrResourceTags: nil,
+					"resource_tags": nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -527,7 +527,7 @@ func TestAccIAMUser_tags_DefaultTags_providerOnly(t *testing.T) {
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					names.AttrResourceTags: nil,
+					"resource_tags": nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &v),
@@ -546,7 +546,7 @@ func TestAccIAMUser_tags_DefaultTags_providerOnly(t *testing.T) {
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					names.AttrResourceTags: nil,
+					"resource_tags": nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -563,7 +563,7 @@ func TestAccIAMUser_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					names.AttrResourceTags: nil,
+					"resource_tags": nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &v),
@@ -580,7 +580,7 @@ func TestAccIAMUser_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					names.AttrResourceTags: nil,
+					"resource_tags": nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -593,8 +593,8 @@ func TestAccIAMUser_tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/User/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
-					names.AttrResourceTags: nil,
+					acctest.CtRName: config.StringVariable(rName),
+					"resource_tags": nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &v),
@@ -606,8 +606,8 @@ func TestAccIAMUser_tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/User/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
-					names.AttrResourceTags: nil,
+					acctest.CtRName: config.StringVariable(rName),
+					"resource_tags": nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -639,7 +639,7 @@ func TestAccIAMUser_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						"providerkey1": config.StringVariable(acctest.CtProviderValue1),
 					}),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"resourcekey1": config.StringVariable(acctest.CtResourceValue1),
 					}),
 				},
@@ -660,7 +660,7 @@ func TestAccIAMUser_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						"providerkey1": config.StringVariable(acctest.CtProviderValue1),
 					}),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"resourcekey1": config.StringVariable(acctest.CtResourceValue1),
 					}),
 				},
@@ -679,7 +679,7 @@ func TestAccIAMUser_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						"providerkey1": config.StringVariable("providervalue1updated"),
 					}),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"resourcekey1": config.StringVariable("resourcevalue1updated"),
 						"resourcekey2": config.StringVariable(acctest.CtResourceValue2),
 					}),
@@ -703,7 +703,7 @@ func TestAccIAMUser_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						"providerkey1": config.StringVariable("providervalue1updated"),
 					}),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"resourcekey1": config.StringVariable("resourcevalue1updated"),
 						"resourcekey2": config.StringVariable(acctest.CtResourceValue2),
 					}),
@@ -719,8 +719,8 @@ func TestAccIAMUser_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/User/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
-					names.AttrResourceTags: nil,
+					acctest.CtRName: config.StringVariable(rName),
+					"resource_tags": nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &v),
@@ -732,8 +732,8 @@ func TestAccIAMUser_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/User/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
-					names.AttrResourceTags: nil,
+					acctest.CtRName: config.StringVariable(rName),
+					"resource_tags": nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -765,7 +765,7 @@ func TestAccIAMUser_tags_DefaultTags_overlapping(t *testing.T) {
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable(acctest.CtProviderValue1),
 					}),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable(acctest.CtResourceValue1),
 					}),
 				},
@@ -785,7 +785,7 @@ func TestAccIAMUser_tags_DefaultTags_overlapping(t *testing.T) {
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable(acctest.CtProviderValue1),
 					}),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable(acctest.CtResourceValue1),
 					}),
 				},
@@ -805,7 +805,7 @@ func TestAccIAMUser_tags_DefaultTags_overlapping(t *testing.T) {
 						"overlapkey1": config.StringVariable(acctest.CtProviderValue1),
 						"overlapkey2": config.StringVariable("providervalue2"),
 					}),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable(acctest.CtResourceValue1),
 						"overlapkey2": config.StringVariable(acctest.CtResourceValue2),
 					}),
@@ -829,7 +829,7 @@ func TestAccIAMUser_tags_DefaultTags_overlapping(t *testing.T) {
 						"overlapkey1": config.StringVariable(acctest.CtProviderValue1),
 						"overlapkey2": config.StringVariable("providervalue2"),
 					}),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable(acctest.CtResourceValue1),
 						"overlapkey2": config.StringVariable(acctest.CtResourceValue2),
 					}),
@@ -849,7 +849,7 @@ func TestAccIAMUser_tags_DefaultTags_overlapping(t *testing.T) {
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable(acctest.CtProviderValue1),
 					}),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable(acctest.CtResourceValue2),
 					}),
 				},
@@ -869,7 +869,7 @@ func TestAccIAMUser_tags_DefaultTags_overlapping(t *testing.T) {
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable(acctest.CtProviderValue1),
 					}),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable(acctest.CtResourceValue2),
 					}),
 				},
@@ -900,7 +900,7 @@ func TestAccIAMUser_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 				ConfigDirectory:          config.StaticDirectory("testdata/User/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -920,7 +920,7 @@ func TestAccIAMUser_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					names.AttrResourceTags: nil,
+					"resource_tags": nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &v),
@@ -937,7 +937,7 @@ func TestAccIAMUser_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					names.AttrResourceTags: nil,
+					"resource_tags": nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -969,7 +969,7 @@ func TestAccIAMUser_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					names.AttrResourceTags: nil,
+					"resource_tags": nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &v),
@@ -983,7 +983,7 @@ func TestAccIAMUser_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 				ConfigDirectory:          config.StaticDirectory("testdata/User/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -1000,7 +1000,7 @@ func TestAccIAMUser_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 				ConfigDirectory:          config.StaticDirectory("testdata/User/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -1034,7 +1034,7 @@ func TestAccIAMUser_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
@@ -1054,7 +1054,7 @@ func TestAccIAMUser_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
@@ -1088,7 +1088,7 @@ func TestAccIAMUser_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
 				},
@@ -1107,7 +1107,7 @@ func TestAccIAMUser_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
 				},
@@ -1141,7 +1141,7 @@ func TestAccIAMUser_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T)
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						"providerkey1": config.StringVariable(acctest.CtProviderValue1),
 					}),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"resourcekey1": nil,
 					}),
 				},
@@ -1160,7 +1160,7 @@ func TestAccIAMUser_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T)
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						"providerkey1": config.StringVariable(acctest.CtProviderValue1),
 					}),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"resourcekey1": nil,
 					}),
 				},
@@ -1245,7 +1245,7 @@ func TestAccIAMUser_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 				ConfigDirectory:          config.StaticDirectory("testdata/User/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -1319,7 +1319,7 @@ func TestAccIAMUser_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 				ConfigDirectory:          config.StaticDirectory("testdata/User/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},

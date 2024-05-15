@@ -11,6 +11,8 @@ rules:
     patterns:
       - pattern: '"{{ .Literal }}"'
       - pattern-not-regex: '"{{ .Literal }}":\s+test\w+,'
+      - pattern-not-inside: |
+          config.Variables{ ... }
     severity: ERROR
     fix: "names.Attr{{ .Constant }}"
 {{ end -}}
