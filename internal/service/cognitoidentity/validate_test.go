@@ -123,7 +123,7 @@ func TestValidProviderDeveloperName(t *testing.T) {
 	t.Parallel()
 
 	validValues := []string{
-		acctest.CtOne,
+		acctest.Ct1,
 		"foo",
 		"1.2",
 		"foo1-bar2-baz3",
