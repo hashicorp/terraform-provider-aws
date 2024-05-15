@@ -66,7 +66,7 @@ import (
 func {{ template "testname" . }}_tagsSerial(t *testing.T) {
 	t.Helper()
 
-	t.Run("basic", {{ template "testname" . }}_tags)
+	t.Run(acctest.CtBasic, {{ template "testname" . }}_tags)
 	t.Run("null", {{ template "testname" . }}_tags_null)
 	t.Run("AddOnUpdate", {{ template "testname" . }}_tags_AddOnUpdate)
 	t.Run("EmptyTag_OnCreate", {{ template "testname" . }}_tags_EmptyTag_OnCreate)

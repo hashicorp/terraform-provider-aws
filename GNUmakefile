@@ -167,7 +167,7 @@ docscheck: ## Check provider documentation
 		-require-resource-subcategory
 	@misspell -error -source text CHANGELOG.md .changelog
 
-fixconstants: semconstants fiximports fmt
+fixconstants: fiximports fmt semconstants fiximports fmt
 
 fiximports:
 	@echo "make: fixing source code imports with goimports..."

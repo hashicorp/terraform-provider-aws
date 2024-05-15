@@ -200,16 +200,6 @@ rules:
       - pattern: '"tags.%"'
     severity: ERROR
     fix: "acctest.CtTagsPercent"
-  - id: literal-Test-string-test-constant
-    languages: [go]
-    message: Use the constant `acctest.CtTest` for the string literal "test" in test files
-    paths:
-      include:
-        - "internal/service/**/*_test.go"
-    patterns:
-      - pattern: '"test"'
-    severity: ERROR
-    fix: "acctest.CtTest"
   - id: literal-TrueCaps-string-test-constant
     languages: [go]
     message: Use the constant `acctest.CtTrueCaps` for the string literal "TRUE" in test files

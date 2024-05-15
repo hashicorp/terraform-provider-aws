@@ -29,7 +29,6 @@ const (
 	CtTagsKey1       = "tags.key1"
 	CtTagsKey2       = "tags.key2"
 	CtTagsPercent    = "tags.%"
-	CtTest           = "test"
 	CtTrueCaps       = "TRUE"
 	CtValue1         = "value1"
 	CtValue1Updated  = "value1updated"
@@ -61,7 +60,6 @@ func ConstOrQuote(constant string) string {
 		"tags.key1":      "CtTagsKey1",
 		"tags.key2":      "CtTagsKey2",
 		"tags.%":         "CtTagsPercent",
-		"test":           "CtTest",
 		"TRUE":           "CtTrueCaps",
 		"value1":         "CtValue1",
 		"value1updated":  "CtValue1Updated",
