@@ -50,6 +50,7 @@ var (
 	FindVPCEndpointByIDV2                           = findVPCEndpointByIDV2
 	FindVPCEndpointRouteTableAssociationExistsV2    = findVPCEndpointRouteTableAssociationExistsV2
 	FindVPCEndpointSecurityGroupAssociationExistsV2 = findVPCEndpointSecurityGroupAssociationExistsV2
+	FindVPCEndpointSubnetAssociationExistsV2        = findVPCEndpointSubnetAssociationExistsV2
 	FindVPCEndpointServiceConfigurationByIDV2       = findVPCEndpointServiceConfigurationByIDV2
 	FindVPNGatewayRoutePropagationExistsV2          = findVPNGatewayRoutePropagationExistsV2
 	FlattenNetworkInterfacePrivateIPAddresses       = flattenNetworkInterfacePrivateIPAddresses

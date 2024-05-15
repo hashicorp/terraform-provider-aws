@@ -856,3 +856,22 @@ func findVPCEndpointSecurityGroupAssociationExistsV2(ctx context.Context, conn *
 		LastError: fmt.Errorf("VPC Endpoint (%s) Security Group (%s) Association not found", vpcEndpointID, securityGroupID),
 	}
 }
+
+// findVPCEndpointSubnetAssociationExistsV2 returns NotFoundError if no association for the specified VPC endpoint and subnet IDs is found.
+func findVPCEndpointSubnetAssociationExistsV2(ctx context.Context, conn *ec2.Client, vpcEndpointID string, subnetID string) error {
+	vpcEndpoint, err := findVPCEndpointByIDV2(ctx, conn, vpcEndpointID)
+
+	if err != nil {
+		return err
+	}
+
+	for _, vpcEndpointSubnetID := range vpcEndpoint.SubnetIds {
+		if vpcEndpointSubnetID == subnetID {
+			return nil
+		}
+	}
+
+	return &retry.NotFoundError{
+		LastError: fmt.Errorf("VPC Endpoint (%s) Subnet (%s) Association not found", vpcEndpointID, subnetID),
+	}
+}
