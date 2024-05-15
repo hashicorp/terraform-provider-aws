@@ -1039,6 +1039,10 @@ func PreCheckOrganizationManagementAccountWithProvider(ctx context.Context, t *t
 	awsClient := providerF().Meta().(*conns.AWSClient)
 	organization, err := tforganizations.FindOrganization(ctx, awsClient.OrganizationsClient(ctx))
 
+	if tfresource.NotFound(err) {
+		t.Skip("this AWS account must be an existing member of an AWS Organization")
+	}
+
 	if err != nil {
 		t.Fatalf("describing AWS Organization: %s", err)
 	}
@@ -1064,6 +1068,10 @@ func PreCheckOrganizationMemberAccountWithProvider(ctx context.Context, t *testi
 
 	awsClient := providerF().Meta().(*conns.AWSClient)
 	organization, err := tforganizations.FindOrganization(ctx, awsClient.OrganizationsClient(ctx))
+
+	if tfresource.NotFound(err) {
+		t.Skip("this AWS account must be an existing member of an AWS Organization")
+	}
 
 	if err != nil {
 		t.Fatalf("describing AWS Organization: %s", err)
