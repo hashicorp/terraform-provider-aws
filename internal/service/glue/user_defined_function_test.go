@@ -23,7 +23,6 @@ import (
 func TestAccGlueUserDefinedFunction_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	updated := "test"
 	resourceName := "aws_glue_user_defined_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -49,12 +48,12 @@ func TestAccGlueUserDefinedFunction_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccUserDefinedFunctionConfig_basic(rName, updated),
+				Config: testAccUserDefinedFunctionConfig_basic(rName, acctest.CtTest),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserDefinedFunctionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "class_name", updated),
-					resource.TestCheckResourceAttr(resourceName, "owner_name", updated),
+					resource.TestCheckResourceAttr(resourceName, "class_name", acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, "owner_name", acctest.CtTest),
 					resource.TestCheckResourceAttr(resourceName, "owner_type", "GROUP"),
 				),
 			},
@@ -77,7 +76,7 @@ func TestAccGlueUserDefinedFunction_Resource_uri(t *testing.T) {
 				Config: testAccUserDefinedFunctionConfig_resourceURI1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserDefinedFunctionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "resource_uris.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "resource_uris.#", acctest.Ct1),
 				),
 			},
 			{
@@ -89,14 +88,14 @@ func TestAccGlueUserDefinedFunction_Resource_uri(t *testing.T) {
 				Config: testAccUserDefinedFunctionConfig_resourceURI2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserDefinedFunctionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "resource_uris.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "resource_uris.#", acctest.Ct2),
 				),
 			},
 			{
 				Config: testAccUserDefinedFunctionConfig_resourceURI1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserDefinedFunctionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "resource_uris.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "resource_uris.#", acctest.Ct1),
 				),
 			},
 		},
