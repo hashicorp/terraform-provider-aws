@@ -64,7 +64,7 @@ func TestProject_nameValidation(t *testing.T) {
 		ErrCount int
 	}{
 		{Value: "_test", ErrCount: 1},
-		{Value: acctest.CtTest, ErrCount: 0},
+		{Value: "test", ErrCount: 0},
 		{Value: "1_test", ErrCount: 0},
 		{Value: "test**1", ErrCount: 1},
 		{Value: sdkacctest.RandString(256), ErrCount: 1},
@@ -540,7 +540,7 @@ func TestAccCodeBuildProject_fileSystemLocations(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "environment.0.privileged_mode", "true"),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.type", string(types.EnvironmentTypeLinuxContainer)),
 					resource.TestCheckResourceAttr(resourceName, "file_system_locations.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "file_system_locations.0.identifier", acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, "file_system_locations.0.identifier", "test"),
 					resource.TestMatchResourceAttr(resourceName, "file_system_locations.0.location", regexache.MustCompile(`/directory-path$`)),
 					resource.TestCheckResourceAttr(resourceName, "file_system_locations.0.mount_options", "nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=450,retrans=3"),
 					resource.TestCheckResourceAttr(resourceName, "file_system_locations.0.mount_point", "/mount1"),
@@ -557,7 +557,7 @@ func TestAccCodeBuildProject_fileSystemLocations(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "file_system_locations.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "file_system_locations.0.identifier", acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, "file_system_locations.0.identifier", "test"),
 					resource.TestMatchResourceAttr(resourceName, "file_system_locations.0.location", regexache.MustCompile(`/directory-path$`)),
 					resource.TestCheckResourceAttr(resourceName, "file_system_locations.0.mount_options", "nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=450,retrans=3"),
 					resource.TestCheckResourceAttr(resourceName, "file_system_locations.0.mount_point", "/mount2"),
