@@ -220,15 +220,33 @@ enum.x
 -updateTags(...)
 +updateTagsV2(...)
 
-# Replace generated newTagFilterList function with the V2 variant.
+# Replace generated newFilter function with the V2 variant.
 @@
 @@
--newTagFilterList(...)
-+newTagFilterListV2(...)
+-newFilter(...)
++newFilterV2(...)
+
+# Replace generated newAttributeFilterList function with the V2 variant.
+@@
+@@
+-newAttributeFilterList(...)
++newAttributeFilterListV2(...)
 
 # Replace generated newCustomFilterList function with the V2 variant.
 @@
 @@
 -newCustomFilterList(...)
 +newCustomFilterListV2(...)
+
+# Replace generated newCustomFilterListFramework function with the V2 variant.
+@@
+@@
+-newCustomFilterListFramework(...)
++newCustomFilterListFrameworkV2(...)
+
+# Replace generated newTagFilterList function with the V2 variant.
+@@
+@@
+-newTagFilterList(...)
++newTagFilterListV2(...)
 {{- end }}
