@@ -83,14 +83,15 @@ The following arguments are required:
 The following arguments are optional:
 
 * `description` - (Optional) Description of the alias.
-* `routing_configuration` - (Optional) Details about the routing configuration of the alias. See [`routing_configuration` block](#routing_configuration-block) for details.
+* `routing_configuration` - (Optional) Details about the routing configuration of the alias. See [`routing_configuration` Block](#routing_configuration-block) for details.
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### `routing_configuration` block
+### `routing_configuration` Block
 
 The `routing_configuration` configuration block supports the following arguments:
 
-* `agent_version` - (Required) Version of the agent with which the alias is associated.
+* `agent_version` - (Optional) Version of the agent with which the alias is associated.
+* `provisioned_throughput` - (Optional) ARN of the Provisioned Throughput assigned to the agent alias.
 
 ## Attribute Reference
 
