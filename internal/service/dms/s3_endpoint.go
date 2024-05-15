@@ -71,7 +71,7 @@ func ResourceS3Endpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"external_id": {
+			names.AttrExternalID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -419,7 +419,7 @@ func resourceS3EndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("endpoint_id", endpoint.EndpointIdentifier)
 	d.Set(names.AttrEndpointType, strings.ToLower(*endpoint.EndpointType)) // For some reason the AWS API only accepts lowercase type but returns it as uppercase
 	d.Set("engine_display_name", endpoint.EngineDisplayName)
-	d.Set("external_id", endpoint.ExternalId)
+	d.Set(names.AttrExternalID, endpoint.ExternalId)
 	// d.Set("external_table_definition", endpoint.ExternalTableDefinition) // set from s3 settings
 	d.Set(names.AttrKMSKeyARN, endpoint.KmsKeyId)
 	// d.Set("service_access_role_arn", endpoint.ServiceAccessRoleArn) // set from s3 settings

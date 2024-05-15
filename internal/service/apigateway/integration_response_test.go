@@ -42,7 +42,7 @@ func TestAccAPIGatewayIntegrationResponse_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "response_templates.application/json", ""),
 					resource.TestCheckResourceAttr(resourceName, "response_templates.application/xml", "#set($inputRoot = $input.path('$'))\n{ }"),
 					resource.TestCheckResourceAttr(resourceName, "selection_pattern", ".*"),
-					resource.TestCheckResourceAttr(resourceName, "status_code", "400"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatusCode, "400"),
 				),
 			},
 			{
@@ -61,7 +61,7 @@ func TestAccAPIGatewayIntegrationResponse_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "response_templates.application/json", "$input.path('$')"),
 					resource.TestCheckResourceAttr(resourceName, "response_templates.application/xml", ""),
 					resource.TestCheckResourceAttr(resourceName, "selection_pattern", ""),
-					resource.TestCheckResourceAttr(resourceName, "status_code", "400"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatusCode, "400"),
 				),
 			},
 		},
@@ -101,7 +101,7 @@ func testAccCheckIntegrationResponseExists(ctx context.Context, n string, v *api
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
-		output, err := tfapigateway.FindIntegrationResponseByFourPartKey(ctx, conn, rs.Primary.Attributes["http_method"], rs.Primary.Attributes[names.AttrResourceID], rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes["status_code"])
+		output, err := tfapigateway.FindIntegrationResponseByFourPartKey(ctx, conn, rs.Primary.Attributes["http_method"], rs.Primary.Attributes[names.AttrResourceID], rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes[names.AttrStatusCode])
 
 		if err != nil {
 			return err
@@ -122,7 +122,7 @@ func testAccCheckIntegrationResponseDestroy(ctx context.Context) resource.TestCh
 				continue
 			}
 
-			_, err := tfapigateway.FindIntegrationResponseByFourPartKey(ctx, conn, rs.Primary.Attributes["http_method"], rs.Primary.Attributes[names.AttrResourceID], rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes["status_code"])
+			_, err := tfapigateway.FindIntegrationResponseByFourPartKey(ctx, conn, rs.Primary.Attributes["http_method"], rs.Primary.Attributes[names.AttrResourceID], rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes[names.AttrStatusCode])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -146,7 +146,7 @@ func testAccIntegrationResponseImportStateIdFunc(resourceName string) resource.I
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s/%s/%s/%s", rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes[names.AttrResourceID], rs.Primary.Attributes["http_method"], rs.Primary.Attributes["status_code"]), nil
+		return fmt.Sprintf("%s/%s/%s/%s", rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes[names.AttrResourceID], rs.Primary.Attributes["http_method"], rs.Primary.Attributes[names.AttrStatusCode]), nil
 	}
 }
 

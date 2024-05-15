@@ -47,7 +47,7 @@ func TestAccKendraFaq_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttrSet(resourceName, "faq_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "index_id", "aws_kendra_index.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "language_code", "en"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrLanguageCode, "en"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName5),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_faq", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "s3_path.#", acctest.CtOne),
@@ -162,7 +162,7 @@ func TestAccKendraFaq_languageCode(t *testing.T) {
 				Config: testAccFaqConfig_languageCode(rName, rName2, rName3, rName4, rName5, languageCode),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFaqExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "language_code", languageCode),
+					resource.TestCheckResourceAttr(resourceName, names.AttrLanguageCode, languageCode),
 				),
 			},
 			{

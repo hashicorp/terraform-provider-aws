@@ -47,7 +47,7 @@ func TestAccCognitoIDPIdentityProvider_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "provider_details.token_request_method", "POST"),
 					resource.TestCheckResourceAttr(resourceName, "provider_details.token_url", "https://www.googleapis.com/oauth2/v4/token"),
 					resource.TestCheckResourceAttr(resourceName, "provider_details.oidc_issuer", "https://accounts.google.com"),
-					resource.TestCheckResourceAttr(resourceName, "provider_name", "Google"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProviderName, "Google"),
 					resource.TestCheckResourceAttr(resourceName, "provider_type", "Google"),
 				),
 			},
@@ -68,7 +68,7 @@ func TestAccCognitoIDPIdentityProvider_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "provider_details.token_request_method", "POST"),
 					resource.TestCheckResourceAttr(resourceName, "provider_details.token_url", "https://www.googleapis.com/oauth2/v4/token"),
 					resource.TestCheckResourceAttr(resourceName, "provider_details.oidc_issuer", "https://accounts.google.com"),
-					resource.TestCheckResourceAttr(resourceName, "provider_name", "Google"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProviderName, "Google"),
 					resource.TestCheckResourceAttr(resourceName, "provider_type", "Google"),
 				),
 			},
@@ -142,7 +142,7 @@ func TestAccCognitoIDPIdentityProvider_saml(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "provider_details.EncryptedResponses", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "provider_details.MetadataFile"),
 					resource.TestCheckResourceAttr(resourceName, "provider_details.SSORedirectBindingURI", "https://terraform-dev-ed.my.salesforce.com/idp/endpoint/HttpRedirect"),
-					resource.TestCheckResourceAttr(resourceName, "provider_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProviderName, rName),
 					resource.TestCheckResourceAttr(resourceName, "provider_type", "SAML"),
 				),
 			},
@@ -163,7 +163,7 @@ func TestAccCognitoIDPIdentityProvider_saml(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "provider_details.EncryptedResponses", "true"),
 					resource.TestCheckResourceAttrSet(resourceName, "provider_details.MetadataFile"),
 					resource.TestCheckResourceAttr(resourceName, "provider_details.SSORedirectBindingURI", "https://terraform-dev-ed.my.salesforce.com/idp/endpoint/HttpRedirect"),
-					resource.TestCheckResourceAttr(resourceName, "provider_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProviderName, rName),
 					resource.TestCheckResourceAttr(resourceName, "provider_type", "SAML"),
 				),
 			},
@@ -228,7 +228,7 @@ func testAccCheckIdentityProviderDestroy(ctx context.Context) resource.TestCheck
 				continue
 			}
 
-			_, err := tfcognitoidp.FindIdentityProviderByTwoPartKey(ctx, conn, rs.Primary.Attributes["user_pool_id"], rs.Primary.Attributes["provider_name"])
+			_, err := tfcognitoidp.FindIdentityProviderByTwoPartKey(ctx, conn, rs.Primary.Attributes["user_pool_id"], rs.Primary.Attributes[names.AttrProviderName])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -254,7 +254,7 @@ func testAccCheckIdentityProviderExists(ctx context.Context, n string, v *cognit
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
-		output, err := tfcognitoidp.FindIdentityProviderByTwoPartKey(ctx, conn, rs.Primary.Attributes["user_pool_id"], rs.Primary.Attributes["provider_name"])
+		output, err := tfcognitoidp.FindIdentityProviderByTwoPartKey(ctx, conn, rs.Primary.Attributes["user_pool_id"], rs.Primary.Attributes[names.AttrProviderName])
 
 		if err != nil {
 			return err

@@ -691,7 +691,7 @@ func TestAccGlueJob_pythonShell(t *testing.T) {
 				Config: testAccJobConfig_pythonShell(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, "max_capacity", "0.0625"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, "0.0625"),
 					resource.TestCheckResourceAttr(resourceName, "command.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "command.0.script_location", "testscriptlocation"),
 					resource.TestCheckResourceAttr(resourceName, "command.0.name", "pythonshell"),
@@ -785,7 +785,7 @@ func TestAccGlueJob_maxCapacity(t *testing.T) {
 				Config: testAccJobConfig_maxCapacity(rName, 10),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, "max_capacity", "10"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, "10"),
 					resource.TestCheckResourceAttr(resourceName, "command.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "command.0.script_location", "testscriptlocation"),
 					resource.TestCheckResourceAttr(resourceName, "command.0.name", "glueetl"),
@@ -795,7 +795,7 @@ func TestAccGlueJob_maxCapacity(t *testing.T) {
 				Config: testAccJobConfig_maxCapacity(rName, 15),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, "max_capacity", "15"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, "15"),
 				),
 			},
 			{

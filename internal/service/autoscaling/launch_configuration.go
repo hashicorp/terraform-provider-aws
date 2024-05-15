@@ -88,7 +88,7 @@ func resourceLaunchConfiguration() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 						},
-						"snapshot_id": {
+						names.AttrSnapshotID: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -558,7 +558,7 @@ func expandBlockDeviceMappingForEBSBlockDevice(tfMap map[string]interface{}) aws
 		apiObject.Ebs.Iops = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["snapshot_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrSnapshotID].(string); ok && v != "" {
 		apiObject.Ebs.SnapshotId = aws.String(v)
 	}
 
@@ -717,7 +717,7 @@ func flattenBlockDeviceMappings(apiObjects []awstypes.BlockDeviceMapping, rootDe
 
 		if v := apiObject.Ebs; v != nil {
 			if v := v.SnapshotId; v != nil {
-				tfMap["snapshot_id"] = aws.ToString(v)
+				tfMap[names.AttrSnapshotID] = aws.ToString(v)
 			}
 		}
 

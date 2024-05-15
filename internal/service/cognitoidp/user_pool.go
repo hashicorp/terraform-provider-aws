@@ -486,7 +486,7 @@ func resourceUserPool() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"external_id": {
+						names.AttrExternalID: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -1232,7 +1232,7 @@ func expandSMSConfiguration(tfList []interface{}) *cognitoidentityprovider.SmsCo
 
 	apiObject := &cognitoidentityprovider.SmsConfigurationType{}
 
-	if v, ok := tfMap["external_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrExternalID].(string); ok && v != "" {
 		apiObject.ExternalId = aws.String(v)
 	}
 
@@ -1271,7 +1271,7 @@ func flattenSMSConfiguration(apiObject *cognitoidentityprovider.SmsConfiguration
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.ExternalId; v != nil {
-		tfMap["external_id"] = aws.StringValue(v)
+		tfMap[names.AttrExternalID] = aws.StringValue(v)
 	}
 
 	if v := apiObject.SnsCallerArn; v != nil {

@@ -173,13 +173,13 @@ func TestAccAPIGatewayV2Integration_dataMappingHTTP(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "request_templates.%", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "response_parameters.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "response_parameters.*", map[string]string{
-						"status_code":                    "500",
+						names.AttrStatusCode:             "500",
 						"mappings.%":                     acctest.CtTwo,
 						"mappings.append:header.header1": "$context.requestId",
 						"mappings.overwrite:statuscode":  "403",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "response_parameters.*", map[string]string{
-						"status_code":                  "404",
+						names.AttrStatusCode:           "404",
 						"mappings.%":                   acctest.CtOne,
 						"mappings.append:header.error": "$stageVariables.environmentId",
 					}),
@@ -210,7 +210,7 @@ func TestAccAPIGatewayV2Integration_dataMappingHTTP(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "request_templates.%", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "response_parameters.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "response_parameters.*", map[string]string{
-						"status_code":                    "500",
+						names.AttrStatusCode:             "500",
 						"mappings.%":                     acctest.CtTwo,
 						"mappings.append:header.header1": "$context.requestId",
 						"mappings.overwrite:statuscode":  "403",

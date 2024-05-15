@@ -124,7 +124,7 @@ func TestAccCodeBuildProject_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "secondary_sources.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "secondary_source_version.#", acctest.CtZero),
-					resource.TestCheckResourceAttrPair(resourceName, "service_role", roleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrServiceRole, roleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "source.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "source.0.git_clone_depth", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "source.0.insecure_ssl", "false"),

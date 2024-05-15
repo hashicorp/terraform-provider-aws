@@ -51,8 +51,8 @@ func TestAccLightsailBucket_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "support_code"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrURL),
-					resource.TestCheckResourceAttrSet(resourceName, "force_delete"),
-					resource.TestCheckResourceAttr(resourceName, "force_delete", "false"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrForceDelete),
+					resource.TestCheckResourceAttr(resourceName, names.AttrForceDelete, "false"),
 				),
 			},
 			{
@@ -60,7 +60,7 @@ func TestAccLightsailBucket_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_delete",
+					names.AttrForceDelete,
 				},
 			},
 		},
@@ -96,7 +96,7 @@ func TestAccLightsailBucket_BundleId(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_delete",
+					names.AttrForceDelete,
 				},
 			},
 			{
@@ -165,7 +165,7 @@ func TestAccLightsailBucket_tags(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_delete",
+					names.AttrForceDelete,
 				},
 			},
 			{
@@ -261,7 +261,7 @@ func TestAccLightsailBucket_forceDelete(t *testing.T) {
 				Config: testAccBucketConfig_forceDelete(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "force_delete", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrForceDelete, "true"),
 				),
 			},
 			{
@@ -269,7 +269,7 @@ func TestAccLightsailBucket_forceDelete(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_delete",
+					names.AttrForceDelete,
 				},
 			},
 		},

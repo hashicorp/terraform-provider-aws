@@ -49,7 +49,7 @@ func TestAccRedshiftEndpointAuthorization_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_delete"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDelete},
 			},
 		},
 	})
@@ -82,7 +82,7 @@ func TestAccRedshiftEndpointAuthorization_vpcs(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_delete"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDelete},
 			},
 			{
 				Config: testAccEndpointAuthorizationConfig_vpcsUpdated(rName),
