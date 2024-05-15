@@ -172,7 +172,7 @@ func TestAccCloudFrontContinuousDeploymentPolicy_trafficConfig(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccContinuousDeploymentPolicyConfig_TrafficConfig_singleHeader(false, "aws-cf-cd-test", acctest.CtTest),
+				Config: testAccContinuousDeploymentPolicyConfig_TrafficConfig_singleHeader(false, "aws-cf-cd-test", "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContinuousDeploymentPolicyExists(ctx, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
@@ -180,7 +180,7 @@ func TestAccCloudFrontContinuousDeploymentPolicy_trafficConfig(t *testing.T) {
 						names.AttrType:                  "SingleHeader",
 						"single_header_config.#":        acctest.Ct1,
 						"single_header_config.0.header": "aws-cf-cd-test",
-						"single_header_config.0.value":  acctest.CtTest,
+						"single_header_config.0.value":  "test",
 					}),
 				),
 			},
