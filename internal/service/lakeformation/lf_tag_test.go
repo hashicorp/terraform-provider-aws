@@ -40,7 +40,7 @@ func TestReadLFTagID(t *testing.T) {
 			expectError: true,
 		},
 		"invalid_id": {
-			val:         acctest.CtTest,
+			val:         "test",
 			expectError: true,
 		},
 		"valid_key_simple": {
