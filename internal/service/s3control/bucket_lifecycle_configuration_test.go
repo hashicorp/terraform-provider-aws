@@ -33,7 +33,7 @@ func TestAccS3ControlBucketLifecycleConfiguration_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketLifecycleConfigurationConfig_ruleID(rName, acctest.CtTest),
+				Config: testAccBucketLifecycleConfigurationConfig_ruleID(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3control_bucket.test", names.AttrARN),
@@ -41,7 +41,7 @@ func TestAccS3ControlBucketLifecycleConfiguration_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"expiration.#":      acctest.Ct1,
 						"expiration.0.days": "365",
-						names.AttrID:        acctest.CtTest,
+						names.AttrID:        "test",
 						names.AttrStatus:    string(types.ExpirationStatusEnabled),
 					}),
 				),
@@ -67,7 +67,7 @@ func TestAccS3ControlBucketLifecycleConfiguration_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketLifecycleConfigurationConfig_ruleID(rName, acctest.CtTest),
+				Config: testAccBucketLifecycleConfigurationConfig_ruleID(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3control.ResourceBucketLifecycleConfiguration(), resourceName),
