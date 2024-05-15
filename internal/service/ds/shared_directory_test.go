@@ -40,7 +40,7 @@ func TestAccDSSharedDirectory_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSharedDirectoryExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "method", "HANDSHAKE"),
-					resource.TestCheckResourceAttr(resourceName, "notes", acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, "notes", "test"),
 					resource.TestCheckResourceAttrSet(resourceName, "shared_directory_id"),
 				),
 			},

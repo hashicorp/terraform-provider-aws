@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfds "github.com/hashicorp/terraform-provider-aws/internal/service/ds"
 )
 
@@ -37,7 +36,7 @@ func TestDirectoryIDValidator(t *testing.T) {
 			val: types.StringValue("a3b15b67b8"),
 			expectedDiagnostics: diag.Diagnostics{
 				diag.NewAttributeErrorDiagnostic(
-					path.Root(acctest.CtTest),
+					path.Root("test"),
 					"Invalid Attribute Value Match",
 					`Attribute test must be a valid Directory Service Directory ID, got: a3b15b67b8`,
 				),
@@ -47,7 +46,7 @@ func TestDirectoryIDValidator(t *testing.T) {
 			val: types.StringValue("d-abcdefghij"),
 			expectedDiagnostics: diag.Diagnostics{
 				diag.NewAttributeErrorDiagnostic(
-					path.Root(acctest.CtTest),
+					path.Root("test"),
 					"Invalid Attribute Value Match",
 					`Attribute test must be a valid Directory Service Directory ID, got: d-abcdefghij`,
 				),
@@ -63,8 +62,8 @@ func TestDirectoryIDValidator(t *testing.T) {
 			ctx := context.Background()
 
 			request := validator.StringRequest{
-				Path:           path.Root(acctest.CtTest),
-				PathExpression: path.MatchRoot(acctest.CtTest),
+				Path:           path.Root("test"),
+				PathExpression: path.MatchRoot("test"),
 				ConfigValue:    test.val,
 			}
 			response := validator.StringResponse{}
@@ -98,10 +97,10 @@ func TestDomainWithTrailingDotValidatorValidator(t *testing.T) {
 			val: types.StringValue("directory.test."),
 		},
 		"invalid 1": {
-			val: types.StringValue(acctest.CtTest),
+			val: types.StringValue("test"),
 			expectedDiagnostics: diag.Diagnostics{
 				diag.NewAttributeErrorDiagnostic(
-					path.Root(acctest.CtTest),
+					path.Root("test"),
 					"Invalid Attribute Value Match",
 					`Attribute test must be a fully qualified domain name and may end with a trailing period, got: test`,
 				),
@@ -117,8 +116,8 @@ func TestDomainWithTrailingDotValidatorValidator(t *testing.T) {
 			ctx := context.Background()
 
 			request := validator.StringRequest{
-				Path:           path.Root(acctest.CtTest),
-				PathExpression: path.MatchRoot(acctest.CtTest),
+				Path:           path.Root("test"),
+				PathExpression: path.MatchRoot("test"),
 				ConfigValue:    test.val,
 			}
 			response := validator.StringResponse{}
@@ -152,7 +151,7 @@ func TestTrustPasswordValidator(t *testing.T) {
 			val: types.StringValue("pass\nword"),
 			expectedDiagnostics: diag.Diagnostics{
 				diag.NewAttributeErrorDiagnostic(
-					path.Root(acctest.CtTest),
+					path.Root("test"),
 					"Invalid Attribute Value Match",
 					"Attribute test can contain upper- and lower-case letters, numbers, and punctuation characters, got: pass\nword",
 				),
@@ -168,8 +167,8 @@ func TestTrustPasswordValidator(t *testing.T) {
 			ctx := context.Background()
 
 			request := validator.StringRequest{
-				Path:           path.Root(acctest.CtTest),
-				PathExpression: path.MatchRoot(acctest.CtTest),
+				Path:           path.Root("test"),
+				PathExpression: path.MatchRoot("test"),
 				ConfigValue:    test.val,
 			}
 			response := validator.StringResponse{}
