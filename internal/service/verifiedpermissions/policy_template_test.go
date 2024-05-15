@@ -82,11 +82,11 @@ func TestAccVerifiedPermissionsPolicyTemplate_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccPolicyTemplateConfig_basic("permit (principal in ?principal, action in PhotoFlash::Action::\"FullPhotoAccess\", resource == ?resource);", acctest.CtTest),
+				Config: testAccPolicyTemplateConfig_basic("permit (principal in ?principal, action in PhotoFlash::Action::\"FullPhotoAccess\", resource == ?resource);", "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyTemplateExists(ctx, resourceName, &policytemplate),
 					resource.TestCheckResourceAttr(resourceName, "statement", "permit (principal in ?principal, action in PhotoFlash::Action::\"FullPhotoAccess\", resource == ?resource);"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
 				),
 			},
 		},
