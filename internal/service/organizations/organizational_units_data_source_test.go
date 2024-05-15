@@ -31,7 +31,7 @@ func testAccOrganizationalUnitsDataSource_basic(t *testing.T) {
 				Config: testAccOrganizationalUnitsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanValue(topOUDataSourceName, "children.#", 0),
-					resource.TestCheckResourceAttr(newOUDataSourceName, "children.#", "0"),
+					resource.TestCheckResourceAttr(newOUDataSourceName, "children.#", acctest.Ct0),
 				),
 			},
 		},

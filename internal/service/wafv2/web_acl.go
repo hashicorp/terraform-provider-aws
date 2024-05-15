@@ -77,7 +77,7 @@ func resourceWebACL() *schema.Resource {
 				"captcha_config":       outerCaptchaConfigSchema(),
 				"challenge_config":     outerChallengeConfigSchema(),
 				"custom_response_body": customResponseBodySchema(),
-				"default_action": {
+				names.AttrDefaultAction: {
 					Type:     schema.TypeList,
 					Required: true,
 					MaxItems: 1,
@@ -187,7 +187,7 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		AssociationConfig: expandAssociationConfig(d.Get("association_config").([]interface{})),
 		CaptchaConfig:     expandCaptchaConfig(d.Get("captcha_config").([]interface{})),
 		ChallengeConfig:   expandChallengeConfig(d.Get("challenge_config").([]interface{})),
-		DefaultAction:     expandDefaultAction(d.Get("default_action").([]interface{})),
+		DefaultAction:     expandDefaultAction(d.Get(names.AttrDefaultAction).([]interface{})),
 		Name:              aws.String(name),
 		Rules:             expandWebACLRules(d.Get(names.AttrRule).(*schema.Set).List()),
 		Scope:             awstypes.Scope(d.Get(names.AttrScope).(string)),
@@ -253,7 +253,7 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if err := d.Set("custom_response_body", flattenCustomResponseBodies(webACL.CustomResponseBodies)); err != nil {
 		return diag.Errorf("setting custom_response_body: %s", err)
 	}
-	if err := d.Set("default_action", flattenDefaultAction(webACL.DefaultAction)); err != nil {
+	if err := d.Set(names.AttrDefaultAction, flattenDefaultAction(webACL.DefaultAction)); err != nil {
 		return diag.Errorf("setting default_action: %s", err)
 	}
 	d.Set(names.AttrDescription, webACL.Description)
@@ -294,7 +294,7 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			AssociationConfig: expandAssociationConfig(d.Get("association_config").([]interface{})),
 			CaptchaConfig:     expandCaptchaConfig(d.Get("captcha_config").([]interface{})),
 			ChallengeConfig:   expandChallengeConfig(d.Get("challenge_config").([]interface{})),
-			DefaultAction:     expandDefaultAction(d.Get("default_action").([]interface{})),
+			DefaultAction:     expandDefaultAction(d.Get(names.AttrDefaultAction).([]interface{})),
 			Id:                aws.String(aclID),
 			LockToken:         aws.String(aclLockToken),
 			Name:              aws.String(aclName),

@@ -36,7 +36,7 @@ func TestAccEventsArchive_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckArchiveExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, archiveName),
-					resource.TestCheckResourceAttr(resourceName, "retention_days", "0"),
+					resource.TestCheckResourceAttr(resourceName, "retention_days", acctest.Ct0),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "events", fmt.Sprintf("archive/%s", archiveName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "event_pattern", ""),
@@ -170,7 +170,7 @@ func TestAccEventsArchive_retentionSetOnCreation(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckArchiveExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, archiveName),
-					resource.TestCheckResourceAttr(resourceName, "retention_days", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "retention_days", acctest.Ct1),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "events", fmt.Sprintf("archive/%s", archiveName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "event_pattern", ""),

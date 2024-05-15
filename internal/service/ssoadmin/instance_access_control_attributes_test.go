@@ -22,10 +22,10 @@ func TestAccSSOAdmin_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"InstanceAccessControlAttributes": {
-			"basic":      testAccInstanceAccessControlAttributes_basic,
-			"disappears": testAccInstanceAccessControlAttributes_disappears,
-			"multiple":   testAccInstanceAccessControlAttributes_multiple,
-			"update":     testAccInstanceAccessControlAttributes_update,
+			acctest.CtBasic: testAccInstanceAccessControlAttributes_basic,
+			"disappears":    testAccInstanceAccessControlAttributes_disappears,
+			"multiple":      testAccInstanceAccessControlAttributes_multiple,
+			"update":        testAccInstanceAccessControlAttributes_update,
 		},
 	}
 
@@ -46,7 +46,7 @@ func testAccInstanceAccessControlAttributes_basic(t *testing.T) {
 				Config: testAccInstanceAccessControlAttributesConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceAccessControlAttributesExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "attribute.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "attribute.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
 				),
 			},
@@ -95,7 +95,7 @@ func testAccInstanceAccessControlAttributes_multiple(t *testing.T) {
 				Config: testAccInstanceAccessControlAttributesConfig_multiple(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceAccessControlAttributesExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "attribute.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "attribute.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
 				),
 			},

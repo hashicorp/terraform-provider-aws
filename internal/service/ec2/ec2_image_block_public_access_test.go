@@ -16,7 +16,7 @@ func TestAccEC2ImageBlockPublicAccess_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		"basic": testAccImageBlockPublicAccess_basic,
+		acctest.CtBasic: testAccImageBlockPublicAccess_basic,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)

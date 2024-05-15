@@ -31,7 +31,7 @@ func TestAccRedshiftClusterIAMRoles_basic(t *testing.T) {
 				Config: testAccClusterIAMRolesConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "iam_role_arns.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "iam_role_arns.#", acctest.Ct1),
 				),
 			},
 			{
@@ -43,14 +43,14 @@ func TestAccRedshiftClusterIAMRoles_basic(t *testing.T) {
 				Config: testAccClusterIAMRolesConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "iam_role_arns.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "iam_role_arns.#", acctest.Ct2),
 				),
 			},
 			{
 				Config: testAccClusterIAMRolesConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "iam_role_arns.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "iam_role_arns.#", acctest.Ct1),
 				),
 			},
 		},

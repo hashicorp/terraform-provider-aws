@@ -47,17 +47,17 @@ func TestAccMemoryDBCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "node_type", "db.t4g.small"),
-					resource.TestCheckResourceAttr(resourceName, "num_replicas_per_shard", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "num_shards", "2"),
+					resource.TestCheckResourceAttr(resourceName, "num_replicas_per_shard", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "num_shards", acctest.Ct2),
 					resource.TestCheckResourceAttrSet(resourceName, "parameter_group_name"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "6379"),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", "aws_security_group.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "shards.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "shards.#", acctest.Ct2),
 					resource.TestMatchResourceAttr(resourceName, "shards.0.name", regexache.MustCompile(`^000[12]$`)),
-					resource.TestCheckResourceAttr(resourceName, "shards.0.num_nodes", "2"),
+					resource.TestCheckResourceAttr(resourceName, "shards.0.num_nodes", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "shards.0.slots", "0-8191"),
-					resource.TestCheckResourceAttr(resourceName, "shards.0.nodes.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "shards.0.nodes.#", acctest.Ct2),
 					resource.TestCheckResourceAttrSet(resourceName, "shards.0.nodes.0.availability_zone"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "shards.0.nodes.0.create_time"),
 					resource.TestMatchResourceAttr(resourceName, "shards.0.nodes.0.name", regexache.MustCompile(`^`+rName+`-000[12]-00[12]$`)),
@@ -67,7 +67,7 @@ func TestAccMemoryDBCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "snapshot_window"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSNSTopicARN, ""),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_group_name", "aws_memorydb_subnet_group.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags.Test", "test"),
 					resource.TestCheckResourceAttr(resourceName, "tls_enabled", "true"),
 				),
@@ -109,16 +109,16 @@ func TestAccMemoryDBCluster_defaults(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "node_type", "db.t4g.small"),
-					resource.TestCheckResourceAttr(resourceName, "num_replicas_per_shard", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "num_shards", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "num_replicas_per_shard", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "num_shards", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "parameter_group_name"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "6379"),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", "0"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, "snapshot_window"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSNSTopicARN, ""),
 					resource.TestCheckResourceAttr(resourceName, "subnet_group_name", "default"), // created automatically & matches the default vpc
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "tls_enabled", "true"),
 				),
 			},
@@ -611,7 +611,7 @@ func TestAccMemoryDBCluster_Update_numShards_scaleUp(t *testing.T) {
 				Config: testAccClusterConfig_numShards(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "num_shards", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "num_shards", acctest.Ct1),
 				),
 			},
 			{
@@ -623,7 +623,7 @@ func TestAccMemoryDBCluster_Update_numShards_scaleUp(t *testing.T) {
 				Config: testAccClusterConfig_numShards(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "num_shards", "2"),
+					resource.TestCheckResourceAttr(resourceName, "num_shards", acctest.Ct2),
 				),
 			},
 		},
@@ -648,7 +648,7 @@ func TestAccMemoryDBCluster_Update_numShards_scaleDown(t *testing.T) {
 				Config: testAccClusterConfig_numShards(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "num_shards", "2"),
+					resource.TestCheckResourceAttr(resourceName, "num_shards", acctest.Ct2),
 				),
 			},
 			{
@@ -660,7 +660,7 @@ func TestAccMemoryDBCluster_Update_numShards_scaleDown(t *testing.T) {
 				Config: testAccClusterConfig_numShards(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "num_shards", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "num_shards", acctest.Ct1),
 				),
 			},
 		},
@@ -685,7 +685,7 @@ func TestAccMemoryDBCluster_Update_numReplicasPerShard_scaleUp(t *testing.T) {
 				Config: testAccClusterConfig_numReplicasPerShard(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "num_replicas_per_shard", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "num_replicas_per_shard", acctest.Ct1),
 				),
 			},
 			{
@@ -697,7 +697,7 @@ func TestAccMemoryDBCluster_Update_numReplicasPerShard_scaleUp(t *testing.T) {
 				Config: testAccClusterConfig_numReplicasPerShard(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "num_replicas_per_shard", "2"),
+					resource.TestCheckResourceAttr(resourceName, "num_replicas_per_shard", acctest.Ct2),
 				),
 			},
 		},
@@ -722,7 +722,7 @@ func TestAccMemoryDBCluster_Update_numReplicasPerShard_scaleDown(t *testing.T) {
 				Config: testAccClusterConfig_numReplicasPerShard(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "num_replicas_per_shard", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "num_replicas_per_shard", acctest.Ct1),
 				),
 			},
 			{
@@ -734,7 +734,7 @@ func TestAccMemoryDBCluster_Update_numReplicasPerShard_scaleDown(t *testing.T) {
 				Config: testAccClusterConfig_numReplicasPerShard(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "num_replicas_per_shard", "0"),
+					resource.TestCheckResourceAttr(resourceName, "num_replicas_per_shard", acctest.Ct0),
 				),
 			},
 		},
@@ -802,7 +802,7 @@ func TestAccMemoryDBCluster_Update_securityGroupIds(t *testing.T) {
 				Config: testAccClusterConfig_securityGroups(rName, 2, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", "aws_security_group.test.0", names.AttrID),
 				),
 			},
@@ -815,7 +815,7 @@ func TestAccMemoryDBCluster_Update_securityGroupIds(t *testing.T) {
 				Config: testAccClusterConfig_securityGroups(rName, 2, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "2"), // add one
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct2), // add one
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", "aws_security_group.test.0", names.AttrID),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", "aws_security_group.test.1", names.AttrID),
 				),
@@ -833,7 +833,7 @@ func TestAccMemoryDBCluster_Update_securityGroupIds(t *testing.T) {
 				Config: testAccClusterConfig_securityGroups(rName, 2, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.CtOne), // remove one
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct1), // remove one
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", "aws_security_group.test.0", names.AttrID),
 				),
 			},
@@ -861,7 +861,7 @@ func TestAccMemoryDBCluster_Update_snapshotRetentionLimit(t *testing.T) {
 				Config: testAccClusterConfig_snapshotRetentionLimit(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", "2"),
+					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", acctest.Ct2),
 				),
 			},
 			{
@@ -885,7 +885,7 @@ func TestAccMemoryDBCluster_Update_snapshotRetentionLimit(t *testing.T) {
 				Config: testAccClusterConfig_snapshotRetentionLimit(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", "0"),
+					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", acctest.Ct0),
 				),
 			},
 			{
@@ -1002,8 +1002,8 @@ func TestAccMemoryDBCluster_Update_tags(t *testing.T) {
 				Config: testAccClusterConfig_tags0(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -1012,15 +1012,15 @@ func TestAccMemoryDBCluster_Update_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterConfig_tags2(rName, "Key1", "value1", "Key2", "value2"),
+				Config: testAccClusterConfig_tags2(rName, "Key1", acctest.CtValue1, "Key2", acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "value2"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.Key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.Key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.Key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.Key2", acctest.CtValue2),
 				),
 			},
 			{
@@ -1029,13 +1029,13 @@ func TestAccMemoryDBCluster_Update_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterConfig_tags1(rName, "Key1", "value1"),
+				Config: testAccClusterConfig_tags1(rName, "Key1", acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.Key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.Key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -1047,8 +1047,8 @@ func TestAccMemoryDBCluster_Update_tags(t *testing.T) {
 				Config: testAccClusterConfig_tags0(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct0),
 				),
 			},
 			{

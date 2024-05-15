@@ -153,17 +153,17 @@ func TestAccECSTaskDefinition_DockerVolume_basic(t *testing.T) {
 				Config: testAccTaskDefinitionConfig_dockerVolumes(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
-					resource.TestCheckResourceAttr(resourceName, "volume.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "volume.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "volume.*", map[string]string{
 						names.AttrName:                                     rName,
-						"docker_volume_configuration.#":                    acctest.CtOne,
+						"docker_volume_configuration.#":                    acctest.Ct1,
 						"docker_volume_configuration.0.driver":             "local",
 						"docker_volume_configuration.0.scope":              "shared",
 						"docker_volume_configuration.0.autoprovision":      "true",
-						"docker_volume_configuration.0.driver_opts.%":      "2",
+						"docker_volume_configuration.0.driver_opts.%":      acctest.Ct2,
 						"docker_volume_configuration.0.driver_opts.device": "tmpfs",
 						"docker_volume_configuration.0.driver_opts.uid":    "1000",
-						"docker_volume_configuration.0.labels.%":           "2",
+						"docker_volume_configuration.0.labels.%":           acctest.Ct2,
 						"docker_volume_configuration.0.labels.environment": "test",
 						"docker_volume_configuration.0.labels.stack":       "april",
 					}),
@@ -196,10 +196,10 @@ func TestAccECSTaskDefinition_DockerVolume_minimal(t *testing.T) {
 				Config: testAccTaskDefinitionConfig_dockerVolumesMinimal(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
-					resource.TestCheckResourceAttr(resourceName, "volume.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "volume.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "volume.*", map[string]string{
 						names.AttrName:                                rName,
-						"docker_volume_configuration.#":               acctest.CtOne,
+						"docker_volume_configuration.#":               acctest.Ct1,
 						"docker_volume_configuration.0.autoprovision": "true",
 					}),
 				),
@@ -231,7 +231,7 @@ func TestAccECSTaskDefinition_runtimePlatform(t *testing.T) {
 				Config: testAccTaskDefinitionConfig_runtimePlatformMinimal(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
-					resource.TestCheckResourceAttr(resourceName, "runtime_platform.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "runtime_platform.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "runtime_platform.*", map[string]string{
 						"operating_system_family": "LINUX",
 						"cpu_architecture":        "X86_64",
@@ -265,7 +265,7 @@ func TestAccECSTaskDefinition_Fargate_runtimePlatform(t *testing.T) {
 				Config: testAccTaskDefinitionConfig_fargateRuntimePlatformMinimal(rName, true, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
-					resource.TestCheckResourceAttr(resourceName, "runtime_platform.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "runtime_platform.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "runtime_platform.*", map[string]string{
 						"operating_system_family": "WINDOWS_SERVER_2019_CORE",
 						"cpu_architecture":        "X86_64",
@@ -299,7 +299,7 @@ func TestAccECSTaskDefinition_Fargate_runtimePlatformWithoutArch(t *testing.T) {
 				Config: testAccTaskDefinitionConfig_fargateRuntimePlatformMinimal(rName, false, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
-					resource.TestCheckResourceAttr(resourceName, "runtime_platform.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "runtime_platform.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "runtime_platform.*", map[string]string{
 						"operating_system_family": "WINDOWS_SERVER_2019_CORE",
 					}),
@@ -332,10 +332,10 @@ func TestAccECSTaskDefinition_EFSVolume_minimal(t *testing.T) {
 				Config: testAccTaskDefinitionConfig_efsVolumeMinimal(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
-					resource.TestCheckResourceAttr(resourceName, "volume.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "volume.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "volume.*", map[string]string{
 						names.AttrName:               rName,
-						"efs_volume_configuration.#": acctest.CtOne,
+						"efs_volume_configuration.#": acctest.Ct1,
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "volume.*.efs_volume_configuration.0.file_system_id", "aws_efs_file_system.test", names.AttrID),
 				),
@@ -367,10 +367,10 @@ func TestAccECSTaskDefinition_EFSVolume_basic(t *testing.T) {
 				Config: testAccTaskDefinitionConfig_efsVolume(rName, "/home/test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
-					resource.TestCheckResourceAttr(resourceName, "volume.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "volume.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "volume.*", map[string]string{
 						names.AttrName:                              rName,
-						"efs_volume_configuration.#":                acctest.CtOne,
+						"efs_volume_configuration.#":                acctest.Ct1,
 						"efs_volume_configuration.0.root_directory": "/home/test",
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "volume.*.efs_volume_configuration.0.file_system_id", "aws_efs_file_system.test", names.AttrID),
@@ -403,10 +403,10 @@ func TestAccECSTaskDefinition_EFSVolume_transitEncryptionMinimal(t *testing.T) {
 				Config: testAccTaskDefinitionConfig_transitEncryptionEFSVolumeMinimal(rName, "null"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
-					resource.TestCheckResourceAttr(resourceName, "volume.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "volume.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "volume.*", map[string]string{
 						names.AttrName:                                  rName,
-						"efs_volume_configuration.#":                    acctest.CtOne,
+						"efs_volume_configuration.#":                    acctest.Ct1,
 						"efs_volume_configuration.0.root_directory":     "/",
 						"efs_volume_configuration.0.transit_encryption": "ENABLED",
 						// "efs_volume_configuration.0.transit_encryption_port": "0",
@@ -441,10 +441,10 @@ func TestAccECSTaskDefinition_EFSVolume_transitEncryption(t *testing.T) {
 				Config: testAccTaskDefinitionConfig_transitEncryptionEFSVolume(rName, "ENABLED", 2999),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
-					resource.TestCheckResourceAttr(resourceName, "volume.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "volume.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "volume.*", map[string]string{
 						names.AttrName:                                       rName,
-						"efs_volume_configuration.#":                         acctest.CtOne,
+						"efs_volume_configuration.#":                         acctest.Ct1,
 						"efs_volume_configuration.0.root_directory":          "/home/test",
 						"efs_volume_configuration.0.transit_encryption":      "ENABLED",
 						"efs_volume_configuration.0.transit_encryption_port": "2999",
@@ -479,10 +479,10 @@ func TestAccECSTaskDefinition_EFSVolume_transitEncryptionDisabled(t *testing.T) 
 				Config: testAccTaskDefinitionConfig_transitEncryptionEFSVolumeDisabled(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
-					resource.TestCheckResourceAttr(resourceName, "volume.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "volume.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "volume.*", map[string]string{
 						names.AttrName:                                  rName,
-						"efs_volume_configuration.#":                    acctest.CtOne,
+						"efs_volume_configuration.#":                    acctest.Ct1,
 						"efs_volume_configuration.0.root_directory":     "/",
 						"efs_volume_configuration.0.transit_encryption": "DISABLED",
 					}),
@@ -516,14 +516,14 @@ func TestAccECSTaskDefinition_EFSVolume_accessPoint(t *testing.T) {
 				Config: testAccTaskDefinitionConfig_efsAccessPoint(rName, "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
-					resource.TestCheckResourceAttr(resourceName, "volume.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "volume.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "volume.*", map[string]string{
 						names.AttrName:                                          rName,
-						"efs_volume_configuration.#":                            acctest.CtOne,
+						"efs_volume_configuration.#":                            acctest.Ct1,
 						"efs_volume_configuration.0.root_directory":             "/",
 						"efs_volume_configuration.0.transit_encryption":         "ENABLED",
 						"efs_volume_configuration.0.transit_encryption_port":    "2999",
-						"efs_volume_configuration.0.authorization_config.#":     acctest.CtOne,
+						"efs_volume_configuration.0.authorization_config.#":     acctest.Ct1,
 						"efs_volume_configuration.0.authorization_config.0.iam": "DISABLED",
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "volume.*.efs_volume_configuration.0.file_system_id", "aws_efs_file_system.test", names.AttrID),
@@ -566,12 +566,12 @@ func TestAccECSTaskDefinition_fsxWinFileSystem(t *testing.T) {
 				Config: testAccTaskDefinitionConfig_fsxVolume(domainName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
-					resource.TestCheckResourceAttr(resourceName, "volume.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "volume.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "volume.*", map[string]string{
 						names.AttrName: rName,
-						"fsx_windows_file_server_volume_configuration.#":                        acctest.CtOne,
+						"fsx_windows_file_server_volume_configuration.#":                        acctest.Ct1,
 						"fsx_windows_file_server_volume_configuration.0.root_directory":         "\\data",
-						"fsx_windows_file_server_volume_configuration.0.authorization_config.#": acctest.CtOne,
+						"fsx_windows_file_server_volume_configuration.0.authorization_config.#": acctest.Ct1,
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "volume.*.fsx_windows_file_server_volume_configuration.0.file_system_id", "aws_fsx_windows_file_system.test", names.AttrID),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "volume.*.fsx_windows_file_server_volume_configuration.0.authorization_config.0.credentials_parameter", "aws_secretsmanager_secret_version.test", names.AttrARN),
@@ -606,7 +606,7 @@ func TestAccECSTaskDefinition_DockerVolume_taskScoped(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					testAccCheckTaskDefinitionDockerVolumeConfigurationAutoprovisionNil(&def),
-					resource.TestCheckResourceAttr(resourceName, "volume.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "volume.#", acctest.Ct1),
 				),
 			},
 		},
@@ -787,7 +787,7 @@ func TestAccECSTaskDefinition_constraint(t *testing.T) {
 				Config: testAccTaskDefinitionConfig_constraint(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
-					resource.TestCheckResourceAttr(resourceName, "placement_constraints.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "placement_constraints.#", acctest.Ct1),
 					testAccCheckTaskDefinitionConstraintsAttrs(&def),
 				),
 			},
@@ -884,7 +884,7 @@ func TestAccECSTaskDefinition_Fargate_basic(t *testing.T) {
 				Config: testAccTaskDefinitionConfig_fargate(rName, `[{"protocol": "tcp", "containerPort": 8000}]`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
-					resource.TestCheckResourceAttr(resourceName, "requires_compatibilities.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "requires_compatibilities.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "cpu", "256"),
 					resource.TestCheckResourceAttr(resourceName, "memory", "512"),
 				),
@@ -921,10 +921,10 @@ func TestAccECSTaskDefinition_Fargate_ephemeralStorage(t *testing.T) {
 				Config: testAccTaskDefinitionConfig_fargateEphemeralStorage(rName, `[{"protocol": "tcp", "containerPort": 8000}]`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
-					resource.TestCheckResourceAttr(resourceName, "requires_compatibilities.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "requires_compatibilities.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "cpu", "256"),
 					resource.TestCheckResourceAttr(resourceName, "memory", "512"),
-					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage.0.size_in_gib", "30"),
 				),
 			},
@@ -991,7 +991,7 @@ func TestAccECSTaskDefinition_disappears(t *testing.T) {
 			},
 			{
 				Config: testAccTaskDefinitionConfig_basic(rName),
-				Check:  resource.TestCheckResourceAttr(resourceName, "revision", "2"), // should get re-created
+				Check:  resource.TestCheckResourceAttr(resourceName, "revision", acctest.Ct2), // should get re-created
 			},
 		},
 	})
@@ -1010,11 +1010,11 @@ func TestAccECSTaskDefinition_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefinitionConfig_tags1(rName, "key1", "value1"),
+				Config: testAccTaskDefinitionConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -1025,20 +1025,20 @@ func TestAccECSTaskDefinition_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
 			{
-				Config: testAccTaskDefinitionConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccTaskDefinitionConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccTaskDefinitionConfig_tags1(rName, "key2", "value2"),
+				Config: testAccTaskDefinitionConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -1100,7 +1100,7 @@ func TestAccECSTaskDefinition_inferenceAccelerator(t *testing.T) {
 				Config: testAccTaskDefinitionConfig_inferenceAccelerator(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
-					resource.TestCheckResourceAttr(resourceName, "inference_accelerator.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "inference_accelerator.#", acctest.Ct1),
 				),
 			},
 			{

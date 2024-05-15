@@ -65,7 +65,7 @@ func ResourceListener() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"default_action": {
+			names.AttrDefaultAction: {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				MinItems: 1,
@@ -78,7 +78,7 @@ func ResourceListener() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"status_code": {
+									names.AttrStatusCode: {
 										Type:     schema.TypeInt,
 										Required: true,
 									},
@@ -170,7 +170,7 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	in := &vpclattice.CreateListenerInput{
 		Name:          aws.String(d.Get(names.AttrName).(string)),
-		DefaultAction: expandDefaultAction(d.Get("default_action").([]interface{})),
+		DefaultAction: expandDefaultAction(d.Get(names.AttrDefaultAction).([]interface{})),
 		Protocol:      types.ListenerProtocol(d.Get(names.AttrProtocol).(string)),
 		Tags:          getTagsIn(ctx),
 	}
@@ -244,7 +244,7 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("service_arn", out.ServiceArn)
 	d.Set("service_identifier", out.ServiceId)
 
-	if err := d.Set("default_action", flattenListenerRuleActions(out.DefaultAction)); err != nil {
+	if err := d.Set(names.AttrDefaultAction, flattenListenerRuleActions(out.DefaultAction)); err != nil {
 		return create.DiagError(names.VPCLattice, create.ErrActionSetting, ResNameListener, d.Id(), err)
 	}
 
@@ -264,8 +264,8 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		// Cannot edit listener name, protocol, or port after creation
-		if d.HasChanges("default_action") {
-			in.DefaultAction = expandDefaultAction(d.Get("default_action").([]interface{}))
+		if d.HasChanges(names.AttrDefaultAction) {
+			in.DefaultAction = expandDefaultAction(d.Get(names.AttrDefaultAction).([]interface{}))
 		}
 
 		log.Printf("[DEBUG] Updating VPC Lattice Listener (%s): %#v", d.Id(), in)
@@ -351,7 +351,7 @@ func flattenFixedResponseAction(response *types.FixedResponseAction) []interface
 	tfMap := map[string]interface{}{}
 
 	if v := response.StatusCode; v != nil {
-		tfMap["status_code"] = aws.ToInt32(v)
+		tfMap[names.AttrStatusCode] = aws.ToInt32(v)
 	}
 
 	return []interface{}{tfMap}
@@ -449,7 +449,7 @@ func expandDefaultActionFixedResponseStatus(l []interface{}) *types.FixedRespons
 
 	fixedResponseAction := &types.FixedResponseAction{}
 
-	if v, ok := lRaw["status_code"].(int); ok {
+	if v, ok := lRaw[names.AttrStatusCode].(int); ok {
 		fixedResponseAction.StatusCode = aws.Int32(int32(v))
 	}
 

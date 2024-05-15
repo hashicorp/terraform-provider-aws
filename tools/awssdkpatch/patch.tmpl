@@ -14,6 +14,13 @@ var x identifier
 arn.x
 
 @@
+var x identifier
+@@
+-import "github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
++import "github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+tfawserr.x
+
+@@
 @@
 -aws.BoolValue
 +aws.ToBool

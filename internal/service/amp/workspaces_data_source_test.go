@@ -61,9 +61,9 @@ func TestAccAMPWorkspacesDataSource_aliasPrefix(t *testing.T) { // nosemgrep:ci.
 			{
 				Config: testAccWorkspacesDataSourceConfig_aliasPrefix(rName, rCount),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "aliases.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(dataSourceName, "arns.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(dataSourceName, "workspace_ids.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(dataSourceName, "aliases.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "arns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "workspace_ids.#", acctest.Ct1),
 				),
 			},
 		},

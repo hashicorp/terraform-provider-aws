@@ -51,12 +51,12 @@ func TestAccBatchJobQueue_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", fmt.Sprintf("job-queue/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "compute_environments.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "compute_environments.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_environments.0", "aws_batch_compute_environment.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, batch.JQStateEnabled),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -85,12 +85,12 @@ func TestAccBatchJobQueue_basicCEO(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", fmt.Sprintf("job-queue/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_order.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_order.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_environment_order.0.compute_environment", "aws_batch_compute_environment.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, batch.JQStateEnabled),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -200,7 +200,7 @@ func TestAccBatchJobQueue_ComputeEnvironments_multiple(t *testing.T) {
 				Config: testAccJobQueueConfig_ComputeEnvironments_multiple(rName, batch.JQStateEnabled),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
-					resource.TestCheckResourceAttr(resourceName, "compute_environments.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "compute_environments.#", acctest.Ct3),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_environments.0", "aws_batch_compute_environment.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_environments.1", "aws_batch_compute_environment.more.0", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_environments.2", "aws_batch_compute_environment.more.1", names.AttrARN),
@@ -215,7 +215,7 @@ func TestAccBatchJobQueue_ComputeEnvironments_multiple(t *testing.T) {
 				Config: testAccJobQueueConfig_ComputeEnvironments_multipleReorder(rName, batch.JQStateEnabled),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
-					resource.TestCheckResourceAttr(resourceName, "compute_environments.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "compute_environments.#", acctest.Ct3),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_environments.0", "aws_batch_compute_environment.more.0", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_environments.1", "aws_batch_compute_environment.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_environments.2", "aws_batch_compute_environment.more.1", names.AttrARN),
@@ -246,7 +246,7 @@ func TestAccBatchJobQueue_ComputeEnvironmentOrder_multiple(t *testing.T) {
 				Config: testAccJobQueueConfig_ComputeEnvironmentOrder_multiple(rName, batch.JQStateEnabled, 1, 2, 3),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_order.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_order.#", acctest.Ct3),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_environment_order.0.compute_environment", "aws_batch_compute_environment.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_environment_order.1.compute_environment", "aws_batch_compute_environment.more.0", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_environment_order.2.compute_environment", "aws_batch_compute_environment.more.1", names.AttrARN),
@@ -256,10 +256,10 @@ func TestAccBatchJobQueue_ComputeEnvironmentOrder_multiple(t *testing.T) {
 				Config: testAccJobQueueConfig_ComputeEnvironmentOrder_multiple(rName, batch.JQStateEnabled, 2, 1, 3),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_order.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_order.0.order", "2"),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_order.1.order", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_order.2.order", "3"),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_order.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_order.0.order", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_order.1.order", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_order.2.order", acctest.Ct3),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_environment_order.0.compute_environment", "aws_batch_compute_environment.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_environment_order.1.compute_environment", "aws_batch_compute_environment.more.0", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_environment_order.2.compute_environment", "aws_batch_compute_environment.more.1", names.AttrARN),
@@ -314,14 +314,14 @@ func TestAccBatchJobQueue_priority(t *testing.T) {
 				Config: testAccJobQueueConfig_priority(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, acctest.Ct1),
 				),
 			},
 			{
 				Config: testAccJobQueueConfig_priority(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue2),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, acctest.Ct2),
 				),
 			},
 			{

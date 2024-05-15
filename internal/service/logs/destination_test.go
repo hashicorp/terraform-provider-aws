@@ -40,7 +40,7 @@ func TestAccLogsDestination_basic(t *testing.T) {
 					testAccCheckDestinationExists(ctx, resourceName, &destination),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "logs", regexache.MustCompile(`destination:.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTargetARN, streamResourceName, names.AttrARN),
 				),
 			},
@@ -90,11 +90,11 @@ func TestAccLogsDestination_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckDestinationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDestinationConfig_tags1(rName, "key1", "value1"),
+				Config: testAccDestinationConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDestinationExists(ctx, resourceName, &destination),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -103,20 +103,20 @@ func TestAccLogsDestination_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDestinationConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDestinationConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDestinationExists(ctx, resourceName, &destination),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccDestinationConfig_tags1(rName, "key2", "value2"),
+				Config: testAccDestinationConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDestinationExists(ctx, resourceName, &destination),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -144,7 +144,7 @@ func TestAccLogsDestination_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDestinationExists(ctx, resourceName, &destination),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResource1Name, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTargetARN, streamResource1Name, names.AttrARN),
 				),
 			},
@@ -158,37 +158,37 @@ func TestAccLogsDestination_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDestinationExists(ctx, resourceName, &destination),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResource2Name, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTargetARN, streamResource2Name, names.AttrARN),
 				),
 			},
 			{
-				Config: testAccDestinationConfig_updateWithTag(rName, 0, "key1", "value1"),
+				Config: testAccDestinationConfig_updateWithTag(rName, 0, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDestinationExists(ctx, resourceName, &destination),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResource1Name, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTargetARN, streamResource1Name, names.AttrARN),
 				),
 			},
 			{
-				Config: testAccDestinationConfig_updateWithTag(rName, 1, "key1", "value1"),
+				Config: testAccDestinationConfig_updateWithTag(rName, 1, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDestinationExists(ctx, resourceName, &destination),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResource2Name, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTargetARN, streamResource2Name, names.AttrARN),
 				),
 			},
 			{
-				Config: testAccDestinationConfig_updateWithTag(rName, 1, "key1", "value1updated"),
+				Config: testAccDestinationConfig_updateWithTag(rName, 1, acctest.CtKey1, acctest.CtValue1Updated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDestinationExists(ctx, resourceName, &destination),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResource2Name, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTargetARN, streamResource2Name, names.AttrARN),
 				),
 			},

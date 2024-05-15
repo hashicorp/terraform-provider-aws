@@ -22,4 +22,6 @@ var (
 	FindUserByTwoPartKey                    = findUserByTwoPartKey
 	FindUserPoolByID                        = findUserPoolByID
 	FindUserPoolUICustomizationByTwoPartKey = findUserPoolUICustomizationByTwoPartKey
+
+	SkipFlatteningStringAttributeContraints = skipFlatteningStringAttributeContraints
 )
