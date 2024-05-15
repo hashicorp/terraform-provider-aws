@@ -716,7 +716,7 @@ data "aws_ec2_instance_type_offerings" "available" {
 func testAccGameServerGroupConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccGameServerGroupConfig_iam(rName, acctest.CtTest),
+		testAccGameServerGroupConfig_iam(rName, "test"),
 		testAccGameServerGroupInstanceTypeOfferingsConfig(),
 		testAccGameServerGroupLaunchTemplateConfig(rName),
 		fmt.Sprintf(`
@@ -746,7 +746,7 @@ resource "aws_gamelift_game_server_group" "test" {
 func testAccGameServerGroupConfig_autoScalingPolicy(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccGameServerGroupConfig_iam(rName, acctest.CtTest),
+		testAccGameServerGroupConfig_iam(rName, "test"),
 		testAccGameServerGroupInstanceTypeOfferingsConfig(),
 		testAccGameServerGroupLaunchTemplateConfig(rName),
 		fmt.Sprintf(`
@@ -781,7 +781,7 @@ resource "aws_gamelift_game_server_group" "test" {
 func testAccGameServerGroupConfig_autoScalingPolicyEstimatedInstanceWarmup(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccGameServerGroupConfig_iam(rName, acctest.CtTest),
+		testAccGameServerGroupConfig_iam(rName, "test"),
 		testAccGameServerGroupInstanceTypeOfferingsConfig(),
 		testAccGameServerGroupLaunchTemplateConfig(rName),
 		fmt.Sprintf(`
@@ -817,7 +817,7 @@ resource "aws_gamelift_game_server_group" "test" {
 func testAccGameServerGroupConfig_balancingStrategy(rName string, balancingStrategy string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccGameServerGroupConfig_iam(rName, acctest.CtTest),
+		testAccGameServerGroupConfig_iam(rName, "test"),
 		testAccGameServerGroupInstanceTypeOfferingsConfig(),
 		testAccGameServerGroupLaunchTemplateConfig(rName),
 		fmt.Sprintf(`
@@ -848,7 +848,7 @@ resource "aws_gamelift_game_server_group" "test" {
 func testAccGameServerGroupConfig_name(rName string, gameServerGroupName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccGameServerGroupConfig_iam(rName, acctest.CtTest),
+		testAccGameServerGroupConfig_iam(rName, "test"),
 		testAccGameServerGroupInstanceTypeOfferingsConfig(),
 		testAccGameServerGroupLaunchTemplateConfig(rName),
 		fmt.Sprintf(`
@@ -878,7 +878,7 @@ resource "aws_gamelift_game_server_group" "test" {
 func testAccGameServerGroupConfig_instanceDefinition(rName string, count int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccGameServerGroupConfig_iam(rName, acctest.CtTest),
+		testAccGameServerGroupConfig_iam(rName, "test"),
 		testAccGameServerGroupInstanceTypeOfferingsConfig(),
 		testAccGameServerGroupLaunchTemplateConfig(rName),
 		fmt.Sprintf(`
@@ -908,7 +908,7 @@ resource "aws_gamelift_game_server_group" "test" {
 func testAccGameServerGroupConfig_instanceDefinitionWeightedCapacity(rName string, weightedCapacity string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccGameServerGroupConfig_iam(rName, acctest.CtTest),
+		testAccGameServerGroupConfig_iam(rName, "test"),
 		testAccGameServerGroupInstanceTypeOfferingsConfig(),
 		testAccGameServerGroupLaunchTemplateConfig(rName),
 		fmt.Sprintf(`
@@ -939,7 +939,7 @@ resource "aws_gamelift_game_server_group" "test" {
 func testAccGameServerGroupConfig_launchTemplateID(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccGameServerGroupConfig_iam(rName, acctest.CtTest),
+		testAccGameServerGroupConfig_iam(rName, "test"),
 		testAccGameServerGroupInstanceTypeOfferingsConfig(),
 		testAccGameServerGroupLaunchTemplateConfig(rName),
 		fmt.Sprintf(`
@@ -969,7 +969,7 @@ resource "aws_gamelift_game_server_group" "test" {
 func testAccGameServerGroupConfig_launchTemplateName(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccGameServerGroupConfig_iam(rName, acctest.CtTest),
+		testAccGameServerGroupConfig_iam(rName, "test"),
 		testAccGameServerGroupInstanceTypeOfferingsConfig(),
 		testAccGameServerGroupLaunchTemplateConfig(rName),
 		fmt.Sprintf(`
@@ -999,7 +999,7 @@ resource "aws_gamelift_game_server_group" "test" {
 func testAccGameServerGroupConfig_launchTemplateVersion(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccGameServerGroupConfig_iam(rName, acctest.CtTest),
+		testAccGameServerGroupConfig_iam(rName, "test"),
 		testAccGameServerGroupInstanceTypeOfferingsConfig(),
 		testAccGameServerGroupLaunchTemplateConfig(rName),
 		fmt.Sprintf(`
@@ -1030,7 +1030,7 @@ resource "aws_gamelift_game_server_group" "test" {
 func testAccGameServerGroupConfig_maxSize(rName string, maxSize string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccGameServerGroupConfig_iam(rName, acctest.CtTest),
+		testAccGameServerGroupConfig_iam(rName, "test"),
 		testAccGameServerGroupInstanceTypeOfferingsConfig(),
 		testAccGameServerGroupLaunchTemplateConfig(rName),
 		fmt.Sprintf(`
@@ -1060,7 +1060,7 @@ resource "aws_gamelift_game_server_group" "test" {
 func testAccGameServerGroupConfig_minSize(rName string, minSize string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccGameServerGroupConfig_iam(rName, acctest.CtTest),
+		testAccGameServerGroupConfig_iam(rName, "test"),
 		testAccGameServerGroupInstanceTypeOfferingsConfig(),
 		testAccGameServerGroupLaunchTemplateConfig(rName),
 		fmt.Sprintf(`
@@ -1090,7 +1090,7 @@ resource "aws_gamelift_game_server_group" "test" {
 func testAccGameServerGroupConfig_protectionPolicy(rName string, gameServerProtectionPolicy string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccGameServerGroupConfig_iam(rName, acctest.CtTest),
+		testAccGameServerGroupConfig_iam(rName, "test"),
 		testAccGameServerGroupInstanceTypeOfferingsConfig(),
 		testAccGameServerGroupLaunchTemplateConfig(rName),
 		fmt.Sprintf(`
@@ -1151,7 +1151,7 @@ resource "aws_gamelift_game_server_group" "test" {
 func testAccGameServerGroupConfig_vpcSubnets(rName string, count int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
-		testAccGameServerGroupConfig_iam(rName, acctest.CtTest),
+		testAccGameServerGroupConfig_iam(rName, "test"),
 		testAccGameServerGroupInstanceTypeOfferingsConfig(),
 		testAccGameServerGroupLaunchTemplateConfig(rName),
 		fmt.Sprintf(`
