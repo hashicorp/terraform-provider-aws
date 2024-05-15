@@ -1,13 +1,15 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package globalaccelerator
+package globalaccelerator_test
 
 import (
 	"regexp"
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfglobalaccelerator "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
 )
 
 func TestEndpointGroupARNToListenerARN(t *testing.T) {
@@ -26,7 +28,7 @@ func TestEndpointGroupARNToListenerARN(t *testing.T) {
 		},
 		{
 			TestName:      "unparsable ARN",
-			InputARN:      "test",
+			InputARN:      acctest.CtTest,
 			ExpectedError: regexache.MustCompile(`parsing ARN`),
 		},
 		{
@@ -51,7 +53,7 @@ func TestEndpointGroupARNToListenerARN(t *testing.T) {
 		t.Run(testCase.TestName, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := endpointGroupARNToListenerARN(testCase.InputARN)
+			got, err := tfglobalaccelerator.EndpointGroupARNToListenerARN(testCase.InputARN)
 
 			if err == nil && testCase.ExpectedError != nil {
 				t.Fatalf("expected error %s, got no error", testCase.ExpectedError.String())
@@ -88,7 +90,7 @@ func TestListenerOrEndpointGroupARNToAcceleratorARN(t *testing.T) {
 		},
 		{
 			TestName:      "unparsable ARN",
-			InputARN:      "test",
+			InputARN:      acctest.CtTest,
 			ExpectedError: regexache.MustCompile(`parsing ARN`),
 		},
 		{
@@ -118,7 +120,7 @@ func TestListenerOrEndpointGroupARNToAcceleratorARN(t *testing.T) {
 		t.Run(testCase.TestName, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := listenerOrEndpointGroupARNToAcceleratorARN(testCase.InputARN)
+			got, err := tfglobalaccelerator.ListenerOrEndpointGroupARNToAcceleratorARN(testCase.InputARN)
 
 			if err == nil && testCase.ExpectedError != nil {
 				t.Fatalf("expected error %s, got no error", testCase.ExpectedError.String())
