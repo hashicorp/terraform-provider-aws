@@ -414,3 +414,31 @@ func waitVPCEndpointServiceDeletedV2(ctx context.Context, conn *ec2.Client, id s
 
 	return nil, err
 }
+
+func waitVPCEndpointRouteTableAssociationReadyV2(ctx context.Context, conn *ec2.Client, vpcEndpointID, routeTableID string) error {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{},
+		Target:                    enum.Slice(VPCEndpointRouteTableAssociationStatusReady),
+		Refresh:                   statusVPCEndpointRouteTableAssociationV2(ctx, conn, vpcEndpointID, routeTableID),
+		Timeout:                   ec2PropagationTimeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
+}
+
+func waitVPCEndpointRouteTableAssociationDeletedV2(ctx context.Context, conn *ec2.Client, vpcEndpointID, routeTableID string) error {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(VPCEndpointRouteTableAssociationStatusReady),
+		Target:                    []string{},
+		Refresh:                   statusVPCEndpointRouteTableAssociationV2(ctx, conn, vpcEndpointID, routeTableID),
+		Timeout:                   ec2PropagationTimeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
+}

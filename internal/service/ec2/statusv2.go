@@ -199,3 +199,19 @@ func statusVPCEndpointServiceStateDeletedV2(ctx context.Context, conn *ec2.Clien
 		return output, string(output.ServiceState), nil
 	}
 }
+
+func statusVPCEndpointRouteTableAssociationV2(ctx context.Context, conn *ec2.Client, vpcEndpointID, routeTableID string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		err := findVPCEndpointRouteTableAssociationExistsV2(ctx, conn, vpcEndpointID, routeTableID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return "", VPCEndpointRouteTableAssociationStatusReady, nil
+	}
+}

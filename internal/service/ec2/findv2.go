@@ -818,3 +818,22 @@ func findVPCEndpointServicesV2(ctx context.Context, conn *ec2.Client, input *ec2
 
 	return serviceDetails, serviceNames, nil
 }
+
+// findVPCEndpointRouteTableAssociationExistsV2 returns NotFoundError if no association for the specified VPC endpoint and route table IDs is found.
+func findVPCEndpointRouteTableAssociationExistsV2(ctx context.Context, conn *ec2.Client, vpcEndpointID string, routeTableID string) error {
+	vpcEndpoint, err := findVPCEndpointByIDV2(ctx, conn, vpcEndpointID)
+
+	if err != nil {
+		return err
+	}
+
+	for _, vpcEndpointRouteTableID := range vpcEndpoint.RouteTableIds {
+		if vpcEndpointRouteTableID == routeTableID {
+			return nil
+		}
+	}
+
+	return &retry.NotFoundError{
+		LastError: fmt.Errorf("VPC Endpoint (%s) Route Table (%s) Association not found", vpcEndpointID, routeTableID),
+	}
+}

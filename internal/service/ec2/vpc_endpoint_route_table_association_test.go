@@ -70,14 +70,14 @@ func TestAccVPCEndpointRouteTableAssociation_disappears(t *testing.T) {
 
 func testAccCheckVPCEndpointRouteTableAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpc_endpoint_route_table_association" {
 				continue
 			}
 
-			err := tfec2.FindVPCEndpointRouteTableAssociationExists(ctx, conn, rs.Primary.Attributes[names.AttrVPCEndpointID], rs.Primary.Attributes["route_table_id"])
+			err := tfec2.FindVPCEndpointRouteTableAssociationExistsV2(ctx, conn, rs.Primary.Attributes[names.AttrVPCEndpointID], rs.Primary.Attributes["route_table_id"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -105,9 +105,9 @@ func testAccCheckVPCEndpointRouteTableAssociationExists(ctx context.Context, n s
 			return fmt.Errorf("No VPC Endpoint Route Table Association ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		return tfec2.FindVPCEndpointRouteTableAssociationExists(ctx, conn, rs.Primary.Attributes[names.AttrVPCEndpointID], rs.Primary.Attributes["route_table_id"])
+		return tfec2.FindVPCEndpointRouteTableAssociationExistsV2(ctx, conn, rs.Primary.Attributes[names.AttrVPCEndpointID], rs.Primary.Attributes["route_table_id"])
 	}
 }
 
