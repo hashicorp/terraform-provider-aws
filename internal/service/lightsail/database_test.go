@@ -48,7 +48,7 @@ func TestAccLightsailDatabase_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "blueprint_id", "mysql_8_0"),
 					resource.TestCheckResourceAttr(resourceName, "bundle_id", "micro_1_0"),
 					resource.TestCheckResourceAttr(resourceName, "master_database_name", "testdatabasename"),
-					resource.TestCheckResourceAttr(resourceName, "master_username", acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, "master_username", "test"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
