@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -151,6 +152,10 @@ func resourceDelegatedAdministratorDelete(ctx context.Context, d *schema.Resourc
 		AccountId:        aws.String(accountID),
 		ServicePrincipal: aws.String(servicePrincipal),
 	})
+
+	if errs.IsA[*awstypes.AccountNotRegisteredException](err) {
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Organizations Delegated Administrator (%s): %s", d.Id(), err)
