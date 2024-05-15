@@ -41,7 +41,7 @@ func TestAccApplicationInsightsApplication_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "auto_config_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "cwe_monitor_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "ops_center_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -58,7 +58,7 @@ func TestAccApplicationInsightsApplication_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "auto_config_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "cwe_monitor_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "ops_center_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 		},
@@ -86,7 +86,7 @@ func TestAccApplicationInsightsApplication_autoConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "auto_config_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "cwe_monitor_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "ops_center_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -114,7 +114,7 @@ func TestAccApplicationInsightsApplication_tags(t *testing.T) {
 				Config: testAccApplicationConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -127,7 +127,7 @@ func TestAccApplicationInsightsApplication_tags(t *testing.T) {
 				Config: testAccApplicationConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -136,7 +136,7 @@ func TestAccApplicationInsightsApplication_tags(t *testing.T) {
 				Config: testAccApplicationConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
