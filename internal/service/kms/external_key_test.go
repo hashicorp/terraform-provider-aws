@@ -48,7 +48,7 @@ func TestAccKMSExternalKey_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "key_usage", "ENCRYPT_DECRYPT"),
 					resource.TestCheckResourceAttr(resourceName, "multi_region", "false"),
 					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`Enable IAM User Permissions`)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "valid_to", ""),
 				),
 			},
@@ -384,7 +384,7 @@ func TestAccKMSExternalKey_tags(t *testing.T) {
 				Config: testAccExternalKeyConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExternalKeyExists(ctx, resourceName, &key1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -402,7 +402,7 @@ func TestAccKMSExternalKey_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExternalKeyExists(ctx, resourceName, &key2),
 					testAccCheckExternalKeyNotRecreated(&key1, &key2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -412,7 +412,7 @@ func TestAccKMSExternalKey_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExternalKeyExists(ctx, resourceName, &key3),
 					testAccCheckExternalKeyNotRecreated(&key2, &key3),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -421,7 +421,7 @@ func TestAccKMSExternalKey_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExternalKeyExists(ctx, resourceName, &key3),
 					testAccCheckExternalKeyNotRecreated(&key2, &key3),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -565,7 +565,7 @@ func testAccCheckExternalKeyExists(ctx context.Context, n string, v *awstypes.Ke
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSClient(ctx)
 
-		outputRaw, err := tfresource.RetryWhenNotFound(ctx, tfkms.KMSPropagationTimeout, func() (interface{}, error) {
+		outputRaw, err := tfresource.RetryWhenNotFound(ctx, tfkms.PropagationTimeout, func() (interface{}, error) {
 			return tfkms.FindKeyByID(ctx, conn, rs.Primary.ID)
 		})
 
