@@ -95,7 +95,7 @@ func TestAccAPIGatewayBasePathMapping_updates(t *testing.T) {
 				Config: testAccBasePathMappingConfig_basic(name, key, certificate, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBasePathExists(ctx, resourceName, &confFirst),
-					testAccCheckBasePathStageAttribute(&confFirst, acctest.CtTest),
+					testAccCheckBasePathStageAttribute(&confFirst, "test"),
 				),
 			},
 			{

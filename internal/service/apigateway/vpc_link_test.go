@@ -31,12 +31,12 @@ func TestAccAPIGatewayVPCLink_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckVPCLinkDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCLinkConfig_basic(rName, acctest.CtTest),
+				Config: testAccVPCLinkConfig_basic(rName, "test"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCLinkExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/vpclinks/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
 					resource.TestCheckResourceAttr(resourceName, "target_arns.#", acctest.Ct1),
 				),
 			},
@@ -116,7 +116,7 @@ func TestAccAPIGatewayVPCLink_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckVPCLinkDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCLinkConfig_basic(rName, acctest.CtTest),
+				Config: testAccVPCLinkConfig_basic(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCLinkExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceVPCLink(), resourceName),
