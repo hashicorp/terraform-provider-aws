@@ -1,13 +1,15 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package cloudformation
+package cloudformation_test
 
 import (
 	"regexp"
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
 )
 
 func TestTypeVersionARNToTypeARNAndVersionID(t *testing.T) {
@@ -27,7 +29,7 @@ func TestTypeVersionARNToTypeARNAndVersionID(t *testing.T) {
 		},
 		{
 			TestName:      "unparsable ARN",
-			InputARN:      "test",
+			InputARN:      acctest.CtTest,
 			ExpectedError: regexache.MustCompile(`parsing ARN`),
 		},
 		{
@@ -58,7 +60,7 @@ func TestTypeVersionARNToTypeARNAndVersionID(t *testing.T) {
 		t.Run(testCase.TestName, func(t *testing.T) {
 			t.Parallel()
 
-			gotTypeARN, gotVersionID, err := typeVersionARNToTypeARNAndVersionID(testCase.InputARN)
+			gotTypeARN, gotVersionID, err := tfcloudformation.TypeVersionARNToTypeARNAndVersionID(testCase.InputARN)
 
 			if err == nil && testCase.ExpectedError != nil {
 				t.Fatalf("expected error %s, got no error", testCase.ExpectedError.String())

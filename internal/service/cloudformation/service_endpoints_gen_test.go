@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/servicemocks"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	terraformsdk "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -237,7 +238,7 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) strin
 	client := meta.CloudFormationClient(ctx)
 
 	_, err := client.ListStackInstances(ctx, &cloudformation_sdkv2.ListStackInstancesInput{
-		StackSetName: aws_sdkv2.String("test"),
+		StackSetName: aws_sdkv2.String(acctest.CtTest),
 	},
 		func(opts *cloudformation_sdkv2.Options) {
 			opts.APIOptions = append(opts.APIOptions,
