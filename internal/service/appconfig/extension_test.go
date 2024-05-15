@@ -40,7 +40,7 @@ func TestAccAppConfigExtension_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appconfig", regexache.MustCompile(`extension/*`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "action_point.0.point", "ON_DEPLOYMENT_COMPLETE"),
-					resource.TestCheckResourceAttr(resourceName, "action_point.0.action.0.name", acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, "action_point.0.action.0.name", "test"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
 				),
 			},
@@ -73,7 +73,7 @@ func TestAccAppConfigExtension_ActionPoint(t *testing.T) {
 						"point": "ON_DEPLOYMENT_COMPLETE",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "action_point.*.action.*", map[string]string{
-						names.AttrName: acctest.CtTest,
+						names.AttrName: "test",
 					}),
 				),
 			},
@@ -94,7 +94,7 @@ func TestAccAppConfigExtension_ActionPoint(t *testing.T) {
 						"point": "ON_DEPLOYMENT_ROLLED_BACK",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "action_point.*.action.*", map[string]string{
-						names.AttrName: acctest.CtTest,
+						names.AttrName: "test",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "action_point.*.action.*", map[string]string{
 						names.AttrName: "test2",
@@ -110,7 +110,7 @@ func TestAccAppConfigExtension_ActionPoint(t *testing.T) {
 						"point": "ON_DEPLOYMENT_COMPLETE",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "action_point.*.action.*", map[string]string{
-						names.AttrName: acctest.CtTest,
+						names.AttrName: "test",
 					}),
 				),
 			},
