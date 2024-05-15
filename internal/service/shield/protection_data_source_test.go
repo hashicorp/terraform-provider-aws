@@ -211,9 +211,9 @@ func testAccProtectionDataSource_route53HostedZoneByArn(hostedZoneName string) s
 data "aws_shield_protection" "test" {
   resource_arn = "arn:${data.aws_partition.current.partition}:route53:::hostedzone/${aws_route53_zone.test.zone_id}"
 
-	depends_on = [
-		aws_shield_protection.test
-	]
+  depends_on = [
+	aws_shield_protection.test
+  ]
 }
 `))
 }
@@ -334,9 +334,9 @@ func testAccProtectionDataSource_elbByArn(rName string) string {
 data "aws_shield_protection" "test" {
   resource_arn = aws_elb.test.arn
 
-	depends_on = [
-		aws_shield_protection.test
-	]
+  depends_on = [
+	aws_shield_protection.test
+  ]
 }
 `))
 }
@@ -346,7 +346,7 @@ func testAccProtectionDataSource_elbById(rName string) string {
 		testAccProtectionDataSourceConfig_elb(rName),
 		fmt.Sprintf(`
 data "aws_shield_protection" "test" {
-	protection_id = aws_shield_protection.test.id
+  protection_id = aws_shield_protection.test.id
 }
 `))
 }
@@ -443,9 +443,9 @@ func testAccProtectionDataSource_albByArn(rName string) string {
 data "aws_shield_protection" "test" {
   resource_arn = aws_lb.test.arn
 
-	depends_on = [
-		aws_shield_protection.test
-	]
+  depends_on = [
+	aws_shield_protection.test
+  ]
 }
 `))
 }
@@ -455,7 +455,7 @@ func testAccProtectionDataSource_albById(rName string) string {
 		testAccProtectionDataSourceConfig_alb(rName),
 		fmt.Sprintf(`
 data "aws_shield_protection" "test" {
-	protection_id = aws_shield_protection.test.id
+  protection_id = aws_shield_protection.test.id
 }
 `))
 }
@@ -535,7 +535,6 @@ resource "aws_cloudfront_distribution" "test" {
 resource "aws_shield_protection" "test" {
   name         = %[1]q
   resource_arn = aws_cloudfront_distribution.test.arn
-
 }
 `, rName, retainOnDelete)
 }
@@ -547,9 +546,9 @@ func testAccProtectionDataSource_cloudfrontByArn(rName string, retainOnDelete st
 data "aws_shield_protection" "test" {
   resource_arn = aws_cloudfront_distribution.test.arn
 
-	depends_on = [
-		aws_shield_protection.test
-	]
+  depends_on = [
+	aws_shield_protection.test
+  ]
 }
 `))
 }
@@ -559,7 +558,7 @@ func testAccProtectionDataSource_cloudfrontById(rName string, retainOnDelete str
 		testAccProtectionDataSourceConfig_cloudfront(rName, retainOnDelete),
 		fmt.Sprintf(`
 data "aws_shield_protection" "test" {
-	protection_id = aws_shield_protection.test.id
+  protection_id = aws_shield_protection.test.id
 }
 `))
 }
@@ -604,9 +603,9 @@ func testAccProtectionDataSource_elasticIPAddressByArn(rName string) string {
 data "aws_shield_protection" "test" {
   resource_arn = "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:eip-allocation/${aws_eip.test.id}"
 
-	depends_on = [
-		aws_shield_protection.test
-	]
+  depends_on = [
+	aws_shield_protection.test
+  ]
 }
 `))
 }
@@ -616,7 +615,7 @@ func testAccProtectionDataSource_elasticIPAddressById(rName string) string {
 		testAccProtectionDataSourceConfig_elasticIPAddress(rName),
 		fmt.Sprintf(`
 data "aws_shield_protection" "test" {
-	protection_id = aws_shield_protection.test.id
+  protection_id = aws_shield_protection.test.id
 }
 `))
 }
@@ -643,9 +642,9 @@ func testAccProtectionDataSource_globalAcceleratorByArn(rName string) string {
 data "aws_shield_protection" "test" {
   resource_arn = aws_globalaccelerator_accelerator.test.id
 
-	depends_on = [
-		aws_shield_protection.test
-	]
+  depends_on = [
+	aws_shield_protection.test
+  ]
 }
 `))
 }
@@ -655,7 +654,7 @@ func testAccProtectionDataSource_globalAcceleratorById(rName string) string {
 		testAccProtectionDataSourceConfig_globalAccelerator(rName),
 		fmt.Sprintf(`
 data "aws_shield_protection" "test" {
-	protection_id = aws_shield_protection.test.id
+  protection_id = aws_shield_protection.test.id
 }
 `))
 }
