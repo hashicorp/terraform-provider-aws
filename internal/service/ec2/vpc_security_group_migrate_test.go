@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -24,10 +23,10 @@ func TestSecurityGroupMigrateState(t *testing.T) {
 		"v0": {
 			StateVersion: 0,
 			Attributes: map[string]string{
-				names.AttrName: acctest.CtTest,
+				names.AttrName: "test",
 			},
 			Expected: map[string]string{
-				names.AttrName:           acctest.CtTest,
+				names.AttrName:           "test",
 				"revoke_rules_on_delete": "false",
 			},
 		},

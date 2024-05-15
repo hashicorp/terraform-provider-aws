@@ -68,7 +68,7 @@ func TestAccIPAMPool_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "auto_import", "true"),
 					resource.TestCheckResourceAttr(resourceName, "aws_service", ""),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
 					resource.TestCheckResourceAttrSet(resourceName, "ipam_scope_type"),
 					resource.TestCheckResourceAttr(resourceName, "locale", "None"),
 					resource.TestCheckResourceAttrSet(resourceName, "pool_depth"),

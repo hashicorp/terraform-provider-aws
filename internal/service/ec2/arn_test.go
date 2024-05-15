@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -29,7 +28,7 @@ func TestInstanceProfileARNToName(t *testing.T) {
 		},
 		{
 			TestName:      "unparsable ARN",
-			InputARN:      acctest.CtTest,
+			InputARN:      "test",
 			ExpectedError: regexache.MustCompile(`parsing ARN`),
 		},
 		{

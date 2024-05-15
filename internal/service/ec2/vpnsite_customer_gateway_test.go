@@ -140,7 +140,7 @@ func TestAccSiteVPNCustomerGateway_deviceName(t *testing.T) {
 				Config: testAccSiteVPNCustomerGatewayConfig_deviceName(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerGatewayExists(ctx, resourceName, &gateway),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDeviceName, acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeviceName, "test"),
 				),
 			},
 			{

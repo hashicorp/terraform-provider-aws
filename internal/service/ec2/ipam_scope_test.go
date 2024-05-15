@@ -31,10 +31,10 @@ func TestAccIPAMScope_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckIPAMScopeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIPAMScopeConfig_basic(acctest.CtTest),
+				Config: testAccIPAMScopeConfig_basic("test"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPAMScopeExists(ctx, resourceName, &scope),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
 					resource.TestCheckResourceAttrPair(resourceName, "ipam_arn", ipamName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "ipam_id", ipamName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "is_default", "false"),
@@ -70,7 +70,7 @@ func TestAccIPAMScope_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckIPAMScopeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIPAMScopeConfig_basic(acctest.CtTest),
+				Config: testAccIPAMScopeConfig_basic("test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMScopeExists(ctx, resourceName, &scope),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceIPAMScope(), resourceName),

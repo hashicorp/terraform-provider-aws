@@ -1627,7 +1627,7 @@ func TestAccEC2Instance_BlockDeviceTags_ebsAndRoot(t *testing.T) {
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.%", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.Name", rName),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.Purpose", acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.Purpose", "test"),
 				),
 			},
 			{

@@ -790,7 +790,7 @@ resource "aws_security_group" "test" {
 }
 
 func testAccClientVPNEndpointConfig_basic(t *testing.T, rName string) string {
-	return acctest.ConfigCompose(testAccClientVPNEndpointConfig_acmCertificateBase(t, acctest.CtTest), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClientVPNEndpointConfig_acmCertificateBase(t, "test"), fmt.Sprintf(`
 resource "aws_ec2_client_vpn_endpoint" "test" {
   server_certificate_arn = aws_acm_certificate.test.arn
   client_cidr_block      = "10.0.0.0/16"
@@ -814,7 +814,7 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 func testAccClientVPNEndpointConfig_clientConnectOptions(t *testing.T, rName string, enabled bool, lambdaFunctionIndex int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLambdaBase(rName, rName, rName),
-		testAccClientVPNEndpointConfig_acmCertificateBase(t, acctest.CtTest),
+		testAccClientVPNEndpointConfig_acmCertificateBase(t, "test"),
 		fmt.Sprintf(`
 resource "aws_lambda_function" "test1" {
   filename      = "test-fixtures/lambdatest.zip"
@@ -864,7 +864,7 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 }
 
 func testAccClientVPNEndpointConfig_clientLoginBannerOptions(t *testing.T, rName string, enabled bool, bannerText string) string {
-	return acctest.ConfigCompose(testAccClientVPNEndpointConfig_acmCertificateBase(t, acctest.CtTest), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClientVPNEndpointConfig_acmCertificateBase(t, "test"), fmt.Sprintf(`
 locals {
   enabled     = %[2]t
   text        = %[3]q
@@ -897,7 +897,7 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 }
 
 func testAccClientVPNEndpointConfig_connectionLogOptions(t *testing.T, rName string, logStreamIndex int) string {
-	return acctest.ConfigCompose(testAccClientVPNEndpointConfig_acmCertificateBase(t, acctest.CtTest), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClientVPNEndpointConfig_acmCertificateBase(t, "test"), fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
 }
@@ -940,7 +940,7 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 }
 
 func testAccClientVPNEndpointConfig_dnsServers(t *testing.T, rName string) string {
-	return acctest.ConfigCompose(testAccClientVPNEndpointConfig_acmCertificateBase(t, acctest.CtTest), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClientVPNEndpointConfig_acmCertificateBase(t, "test"), fmt.Sprintf(`
 resource "aws_ec2_client_vpn_endpoint" "test" {
   server_certificate_arn = aws_acm_certificate.test.arn
   client_cidr_block      = "10.0.0.0/16"
@@ -964,7 +964,7 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 }
 
 func testAccClientVPNEndpointConfig_dnsServersUpdated(t *testing.T, rName string) string {
-	return acctest.ConfigCompose(testAccClientVPNEndpointConfig_acmCertificateBase(t, acctest.CtTest), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClientVPNEndpointConfig_acmCertificateBase(t, "test"), fmt.Sprintf(`
 resource "aws_ec2_client_vpn_endpoint" "test" {
   server_certificate_arn = aws_acm_certificate.test.arn
   client_cidr_block      = "10.0.0.0/16"
@@ -989,7 +989,7 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 
 func testAccClientVPNEndpointConfig_microsoftAD(t *testing.T, rName, domain string) string {
 	return acctest.ConfigCompose(
-		testAccClientVPNEndpointConfig_acmCertificateBase(t, acctest.CtTest),
+		testAccClientVPNEndpointConfig_acmCertificateBase(t, "test"),
 		testAccClientVPNEndpointConfig_msADBase(rName, domain),
 		fmt.Sprintf(`
 resource "aws_ec2_client_vpn_endpoint" "test" {
@@ -1014,7 +1014,7 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 
 func testAccClientVPNEndpointConfig_mutualAuthAndMicrosoftAD(t *testing.T, rName, domain string) string {
 	return acctest.ConfigCompose(
-		testAccClientVPNEndpointConfig_acmCertificateBase(t, acctest.CtTest),
+		testAccClientVPNEndpointConfig_acmCertificateBase(t, "test"),
 		testAccClientVPNEndpointConfig_msADBase(rName, domain),
 		fmt.Sprintf(`
 resource "aws_ec2_client_vpn_endpoint" "test" {
@@ -1044,7 +1044,7 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 
 func testAccClientVPNEndpointConfig_federatedAuth(t *testing.T, rName, idpEntityID string) string {
 	return acctest.ConfigCompose(
-		testAccClientVPNEndpointConfig_acmCertificateBase(t, acctest.CtTest),
+		testAccClientVPNEndpointConfig_acmCertificateBase(t, "test"),
 		fmt.Sprintf(`
 resource "aws_iam_saml_provider" "test" {
   name                   = %[1]q
@@ -1072,7 +1072,7 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 }
 
 func testAccClientVPNEndpointConfig_federatedAuthAndSelfServiceSAMLProvider(t *testing.T, rName, idpEntityID string) string {
-	return acctest.ConfigCompose(testAccClientVPNEndpointConfig_acmCertificateBase(t, acctest.CtTest), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClientVPNEndpointConfig_acmCertificateBase(t, "test"), fmt.Sprintf(`
 resource "aws_iam_saml_provider" "test1" {
   name                   = %[1]q
   saml_metadata_document = templatefile("./test-fixtures/saml-metadata.xml.tpl", { entity_id = %[2]q })
@@ -1105,7 +1105,7 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 }
 
 func testAccClientVPNEndpointConfig_tags1(t *testing.T, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccClientVPNEndpointConfig_acmCertificateBase(t, acctest.CtTest), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClientVPNEndpointConfig_acmCertificateBase(t, "test"), fmt.Sprintf(`
 resource "aws_ec2_client_vpn_endpoint" "test" {
   server_certificate_arn = aws_acm_certificate.test.arn
   client_cidr_block      = "10.0.0.0/16"
@@ -1127,7 +1127,7 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 }
 
 func testAccClientVPNEndpointConfig_tags2(t *testing.T, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccClientVPNEndpointConfig_acmCertificateBase(t, acctest.CtTest), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClientVPNEndpointConfig_acmCertificateBase(t, "test"), fmt.Sprintf(`
 resource "aws_ec2_client_vpn_endpoint" "test" {
   server_certificate_arn = aws_acm_certificate.test.arn
   client_cidr_block      = "10.0.0.0/16"
@@ -1210,7 +1210,7 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 }
 
 func testAccClientVPNEndpointConfig_selfServicePortal(t *testing.T, rName, selfServicePortal, idpEntityID string) string {
-	return acctest.ConfigCompose(testAccClientVPNEndpointConfig_acmCertificateBase(t, acctest.CtTest), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClientVPNEndpointConfig_acmCertificateBase(t, "test"), fmt.Sprintf(`
 resource "aws_iam_saml_provider" "test" {
   name                   = %[1]q
   saml_metadata_document = templatefile("./test-fixtures/saml-metadata.xml.tpl", { entity_id = %[3]q })
@@ -1239,7 +1239,7 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 
 func testAccClientVPNEndpointConfig_securityGroups(t *testing.T, rName string, nSecurityGroups int) string {
 	return acctest.ConfigCompose(
-		testAccClientVPNEndpointConfig_acmCertificateBase(t, acctest.CtTest),
+		testAccClientVPNEndpointConfig_acmCertificateBase(t, "test"),
 		testAccClientVPNEndpointConfig_vpcBase(rName),
 		fmt.Sprintf(`
 locals {
