@@ -31,9 +31,9 @@ func TestAccRDSInstancesDataSource_filter(t *testing.T) {
 				Config: testAccInstancesDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttr(dataSourceName, "instance_arns.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(dataSourceName, "instance_arns.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(dataSourceName, "instance_arns.0", resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(dataSourceName, "instance_identifiers.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(dataSourceName, "instance_identifiers.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(dataSourceName, "instance_identifiers.0", resourceName, names.AttrIdentifier),
 				),
 			},
@@ -58,9 +58,9 @@ func TestAccRDSInstancesDataSource_tags(t *testing.T) {
 				Config: testAccInstancesDataSourceConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttr(dataSourceName, "instance_arns.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(dataSourceName, "instance_arns.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(dataSourceName, "instance_arns.0", resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(dataSourceName, "instance_identifiers.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(dataSourceName, "instance_identifiers.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(dataSourceName, "instance_identifiers.0", resourceName, names.AttrIdentifier),
 				),
 			},
