@@ -66,8 +66,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_organizations_policies_for_target",
 		},
 		{
-			Factory:  DataSourcePolicy,
+			Factory:  dataSourcePolicy,
 			TypeName: "aws_organizations_policy",
+			Name:     "Policy",
 		},
 		{
 			Factory:  dataSourceResourceTags,
