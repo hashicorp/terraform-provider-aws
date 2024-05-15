@@ -36,9 +36,9 @@ func TestAccAPIGatewayMethodResponse_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMethodResponseExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "http_method", "GET"),
-					resource.TestCheckResourceAttr(resourceName, "response_models.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "response_models.%", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "response_models.application/json", "Error"),
-					resource.TestCheckResourceAttr(resourceName, "response_parameters.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "response_parameters.%", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "response_parameters.method.response.header.Content-Type", "true"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatusCode, "400"),
 				),
@@ -54,9 +54,9 @@ func TestAccAPIGatewayMethodResponse_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMethodResponseExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "http_method", "GET"),
-					resource.TestCheckResourceAttr(resourceName, "response_models.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "response_models.%", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "response_models.application/json", "Empty"),
-					resource.TestCheckResourceAttr(resourceName, "response_parameters.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "response_parameters.%", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "response_parameters.method.response.header.Host", "false"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatusCode, "400"),
 				),

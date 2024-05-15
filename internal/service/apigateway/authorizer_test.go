@@ -88,7 +88,7 @@ func TestAccAPIGatewayAuthorizer_cognito(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "COGNITO_USER_POOLS"),
-					resource.TestCheckResourceAttr(resourceName, "provider_arns.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "provider_arns.#", acctest.Ct2),
 				),
 			},
 			{
@@ -102,7 +102,7 @@ func TestAccAPIGatewayAuthorizer_cognito(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "COGNITO_USER_POOLS"),
-					resource.TestCheckResourceAttr(resourceName, "provider_arns.#", acctest.CtThree),
+					resource.TestCheckResourceAttr(resourceName, "provider_arns.#", acctest.Ct3),
 				),
 			},
 		},
@@ -128,7 +128,7 @@ func TestAccAPIGatewayAuthorizer_Cognito_authorizerCredentials(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "authorizer_credentials", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "COGNITO_USER_POOLS"),
-					resource.TestCheckResourceAttr(resourceName, "provider_arns.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "provider_arns.#", acctest.Ct2),
 				),
 			},
 			{
@@ -174,7 +174,7 @@ func TestAccAPIGatewayAuthorizer_switchAuthType(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "COGNITO_USER_POOLS"),
-					resource.TestCheckResourceAttr(resourceName, "provider_arns.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "provider_arns.#", acctest.Ct2),
 				),
 			},
 			{
@@ -282,7 +282,7 @@ func TestAccAPIGatewayAuthorizer_Zero_ttl(t *testing.T) {
 				Config: testAccAuthorizerConfig_lambdaNoCache(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthorizerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "authorizer_result_ttl_in_seconds", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "authorizer_result_ttl_in_seconds", acctest.Ct0),
 				),
 			},
 			{
