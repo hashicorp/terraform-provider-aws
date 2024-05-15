@@ -433,6 +433,7 @@ func (r *resourceStreamProcessor) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
+	// the update api uses slightly different property names, so we can't just flex the state into the request :(
 	if !plan.DataSharingPreference.Equal(state.DataSharingPreference) ||
 		!plan.Settings.Equal(state.Settings) ||
 		!plan.RegionsOfInterest.Equal(state.RegionsOfInterest) {
@@ -442,10 +443,23 @@ func (r *resourceStreamProcessor) Update(ctx context.Context, req resource.Updat
 		}
 
 		if !plan.DataSharingPreference.Equal(state.DataSharingPreference) {
-			resp.Diagnostics.Append(fwflex.Expand(ctx, plan.DataSharingPreference, in.DataSharingPreferenceForUpdate)...)
-			if resp.Diagnostics.HasError() {
-				return
+			dsp, diags := plan.DataSharingPreference.ToPtr(ctx)
+			resp.Diagnostics.Append(diags...)
+			in.DataSharingPreferenceForUpdate = &awstypes.StreamProcessorDataSharingPreference{
+				OptIn: dsp.OptIn.ValueBool(),
 			}
+		}
+
+		if !plan.Settings.Equal(state.Settings) {
+			p, diags := plan.Settings.ToPtr(ctx)
+			resp.Diagnostics.Append(diags...)
+
+			ch, diags := p.ConnectedHome.ToPtr(ctx)
+			resp.Diagnostics.Append(diags...)
+
+			// s := &awstypes.StreamProcessorSettingsForUpdate{}
+
+			in.SettingsForUpdate = &awstypes.StreamProcessorSettingsForUpdate{}
 		}
 
 		// TIP: -- 4. Call the AWS modify/update function
