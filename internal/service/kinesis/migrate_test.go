@@ -17,7 +17,7 @@ func testResourceStreamStateDataV0() map[string]interface{} {
 		names.AttrARN:             "arn:aws:test:us-east-1:123456789012:test", //lintignore:AWSAT003,AWSAT005
 		"encryption_type":         "NONE",
 		names.AttrKMSKeyID:        "",
-		names.AttrName:            "test",
+		names.AttrName:            acctest.CtTest,
 		names.AttrRetentionPeriod: 24,
 		"shard_count":             1,
 		"shard_level_metrics":     []interface{}{},
