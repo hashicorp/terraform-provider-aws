@@ -35,7 +35,7 @@ func DataSourceListener() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"default_action": {
+			names.AttrDefaultAction: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -45,7 +45,7 @@ func DataSourceListener() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"status_code": {
+									names.AttrStatusCode: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
@@ -148,7 +148,7 @@ func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("service_id", out.ServiceId)
 
 	// Flatten complex default_action attribute - uses flatteners from listener.go
-	if err := d.Set("default_action", flattenListenerRuleActionsDataSource(out.DefaultAction)); err != nil {
+	if err := d.Set(names.AttrDefaultAction, flattenListenerRuleActionsDataSource(out.DefaultAction)); err != nil {
 		return create.DiagError(names.VPCLattice, create.ErrActionSetting, DSNameListener, d.Id(), err)
 	}
 
@@ -216,7 +216,7 @@ func flattenRuleActionMemberFixedResponseDataSource(response *types.FixedRespons
 	tfMap := map[string]interface{}{}
 
 	if v := response.StatusCode; v != nil {
-		tfMap["status_code"] = aws.ToInt32(v)
+		tfMap[names.AttrStatusCode] = aws.ToInt32(v)
 	}
 
 	return []interface{}{tfMap}

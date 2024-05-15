@@ -47,7 +47,7 @@ func testAccInstance_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "instance_alias", regexache.MustCompile(rName)),
 					resource.TestCheckResourceAttr(resourceName, "multi_party_conference_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "outbound_calls_enabled", "true"),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "service_role", "iam", regexache.MustCompile(`role/aws-service-role/connect.amazonaws.com/.+`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrServiceRole, "iam", regexache.MustCompile(`role/aws-service-role/connect.amazonaws.com/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, connect.InstanceStatusActive),
 				),
 			},

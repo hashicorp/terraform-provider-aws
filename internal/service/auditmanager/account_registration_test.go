@@ -24,9 +24,9 @@ func TestAccAuditManagerAccountRegistration_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		"basic":      testAccAccountRegistration_basic,
-		"disappears": testAccAccountRegistration_disappears,
-		"kms key":    testAccAccountRegistration_optionalKMSKey,
+		acctest.CtBasic: testAccAccountRegistration_basic,
+		"disappears":    testAccAccountRegistration_disappears,
+		"kms key":       testAccAccountRegistration_optionalKMSKey,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)

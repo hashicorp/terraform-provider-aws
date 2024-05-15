@@ -28,7 +28,7 @@ func TestAccSageMakerPrebuiltECRImageDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrID, expectedID),
 					resource.TestCheckResourceAttr(dataSourceName, "registry_id", expectedID),
-					resource.TestCheckResourceAttr(dataSourceName, "registry_path", tfsagemaker.PrebuiltECRImageCreatePath(expectedID, acctest.Region(), acctest.PartitionDNSSuffix(), "kmeans", acctest.CtOne)),
+					resource.TestCheckResourceAttr(dataSourceName, "registry_path", tfsagemaker.PrebuiltECRImageCreatePath(expectedID, acctest.Region(), acctest.PartitionDNSSuffix(), "kmeans", acctest.Ct1)),
 				),
 			},
 		},

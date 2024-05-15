@@ -38,12 +38,12 @@ func TestAccVPCManagedPrefixList_basic(t *testing.T) {
 					testAccManagedPrefixListExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "IPv4"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`prefix-list/pl-[[:xdigit:]]+`)),
-					resource.TestCheckResourceAttr(resourceName, "entry.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "max_entries", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "entry.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "max_entries", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
 				),
 			},
 			{
@@ -56,7 +56,7 @@ func TestAccVPCManagedPrefixList_basic(t *testing.T) {
 				ResourceName: resourceName,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccManagedPrefixListExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "max_entries", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "max_entries", acctest.Ct2),
 				),
 			},
 		},
@@ -130,7 +130,7 @@ func TestAccVPCManagedPrefixList_Entry_cidr(t *testing.T) {
 				ResourceName: resourceName,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccManagedPrefixListExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "entry.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "entry.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "entry.*", map[string]string{
 						"cidr":                "1.0.0.0/8",
 						names.AttrDescription: "Test1",
@@ -139,7 +139,7 @@ func TestAccVPCManagedPrefixList_Entry_cidr(t *testing.T) {
 						"cidr":                "2.0.0.0/8",
 						names.AttrDescription: "Test2",
 					}),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
 				),
 			},
 			{
@@ -152,7 +152,7 @@ func TestAccVPCManagedPrefixList_Entry_cidr(t *testing.T) {
 				ResourceName: resourceName,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccManagedPrefixListExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "entry.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "entry.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "entry.*", map[string]string{
 						"cidr":                "1.0.0.0/8",
 						names.AttrDescription: "Test1",
@@ -161,7 +161,7 @@ func TestAccVPCManagedPrefixList_Entry_cidr(t *testing.T) {
 						"cidr":                "3.0.0.0/8",
 						names.AttrDescription: "Test3",
 					}),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct2),
 				),
 			},
 			{
@@ -189,7 +189,7 @@ func TestAccVPCManagedPrefixList_Entry_description(t *testing.T) {
 				ResourceName: resourceName,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccManagedPrefixListExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "entry.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "entry.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "entry.*", map[string]string{
 						"cidr":                "1.0.0.0/8",
 						names.AttrDescription: "description1",
@@ -198,7 +198,7 @@ func TestAccVPCManagedPrefixList_Entry_description(t *testing.T) {
 						"cidr":                "2.0.0.0/8",
 						names.AttrDescription: "description1",
 					}),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
 				),
 			},
 			{
@@ -211,7 +211,7 @@ func TestAccVPCManagedPrefixList_Entry_description(t *testing.T) {
 				ResourceName: resourceName,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccManagedPrefixListExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "entry.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "entry.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "entry.*", map[string]string{
 						"cidr":                "1.0.0.0/8",
 						names.AttrDescription: "description2",
@@ -220,7 +220,7 @@ func TestAccVPCManagedPrefixList_Entry_description(t *testing.T) {
 						"cidr":                "2.0.0.0/8",
 						names.AttrDescription: "description2",
 					}),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "3"), // description-only updates require two operations
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct3), // description-only updates require two operations
 				),
 			},
 		},
@@ -243,7 +243,7 @@ func TestAccVPCManagedPrefixList_updateEntryAndMaxEntry(t *testing.T) {
 				ResourceName: resourceName,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccManagedPrefixListExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "entry.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "entry.#", acctest.Ct2),
 				),
 			},
 			{
@@ -251,7 +251,7 @@ func TestAccVPCManagedPrefixList_updateEntryAndMaxEntry(t *testing.T) {
 				ResourceName: resourceName,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccManagedPrefixListExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "entry.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "entry.#", acctest.Ct3),
 				),
 			},
 			{
@@ -264,7 +264,7 @@ func TestAccVPCManagedPrefixList_updateEntryAndMaxEntry(t *testing.T) {
 				ResourceName: resourceName,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccManagedPrefixListExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "entry.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "entry.#", acctest.Ct1),
 				),
 			},
 		},
@@ -289,7 +289,7 @@ func TestAccVPCManagedPrefixList_name(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccManagedPrefixListExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
 				),
 			},
 			{
@@ -303,7 +303,7 @@ func TestAccVPCManagedPrefixList_name(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccManagedPrefixListExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
 				),
 			},
 		},
@@ -322,12 +322,12 @@ func TestAccVPCManagedPrefixList_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckManagedPrefixListDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCManagedPrefixListConfig_tags1(rName, "key1", "value1"),
+				Config: testAccVPCManagedPrefixListConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccManagedPrefixListExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
 				),
 			},
 			{
@@ -336,22 +336,22 @@ func TestAccVPCManagedPrefixList_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVPCManagedPrefixListConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccVPCManagedPrefixListConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccManagedPrefixListExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
 				),
 			},
 			{
-				Config: testAccVPCManagedPrefixListConfig_tags1(rName, "key2", "value2"),
+				Config: testAccVPCManagedPrefixListConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccManagedPrefixListExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
 				),
 			},
 		},

@@ -36,10 +36,10 @@ func TestAccGlacierVault_basic(t *testing.T) {
 				Config: testAccVaultConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(ctx, resourceName, &vault),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "glacier", regexache.MustCompile(`vaults/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "notification.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "notification.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "access_policy", ""),
 				),
 			},
@@ -69,8 +69,8 @@ func TestAccGlacierVault_notification(t *testing.T) {
 				Config: testAccVaultConfig_notification(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(ctx, resourceName, &vault),
-					resource.TestCheckResourceAttr(resourceName, "notification.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "notification.0.events.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "notification.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "notification.0.events.#", acctest.Ct2),
 					resource.TestCheckResourceAttrPair(resourceName, "notification.0.sns_topic", snsResourceName, names.AttrARN),
 				),
 			},
@@ -83,15 +83,15 @@ func TestAccGlacierVault_notification(t *testing.T) {
 				Config: testAccVaultConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(ctx, resourceName, &vault),
-					resource.TestCheckResourceAttr(resourceName, "notification.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "notification.#", acctest.Ct0),
 				),
 			},
 			{
 				Config: testAccVaultConfig_notification(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(ctx, resourceName, &vault),
-					resource.TestCheckResourceAttr(resourceName, "notification.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "notification.0.events.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "notification.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "notification.0.events.#", acctest.Ct2),
 					resource.TestCheckResourceAttrPair(resourceName, "notification.0.sns_topic", snsResourceName, names.AttrARN),
 				),
 			},
@@ -156,11 +156,11 @@ func TestAccGlacierVault_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckVaultDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVaultConfig_tags1(rName, "key1", "value1"),
+				Config: testAccVaultConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(ctx, resourceName, &vault),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -169,20 +169,20 @@ func TestAccGlacierVault_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVaultConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccVaultConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(ctx, resourceName, &vault),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccVaultConfig_tags1(rName, "key2", "value2"),
+				Config: testAccVaultConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(ctx, resourceName, &vault),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -229,10 +229,10 @@ func TestAccGlacierVault_ignoreEquivalent(t *testing.T) {
 				Config: testAccVaultConfig_policyOrder(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(ctx, resourceName, &vault),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "glacier", regexache.MustCompile(`vaults/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "notification.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "notification.#", acctest.Ct0),
 					resource.TestMatchResourceAttr(resourceName, "access_policy", regexache.MustCompile(fmt.Sprintf(`"Sid":"%s"`, rName))),
 				),
 			},

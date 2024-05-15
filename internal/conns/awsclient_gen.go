@@ -18,6 +18,7 @@ import (
 	appintegrations_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appintegrations"
 	applicationautoscaling_sdkv2 "github.com/aws/aws-sdk-go-v2/service/applicationautoscaling"
 	apprunner_sdkv2 "github.com/aws/aws-sdk-go-v2/service/apprunner"
+	appstream_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appstream"
 	athena_sdkv2 "github.com/aws/aws-sdk-go-v2/service/athena"
 	auditmanager_sdkv2 "github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	autoscaling_sdkv2 "github.com/aws/aws-sdk-go-v2/service/autoscaling"
@@ -173,7 +174,6 @@ import (
 	xray_sdkv2 "github.com/aws/aws-sdk-go-v2/service/xray"
 	applicationinsights_sdkv1 "github.com/aws/aws-sdk-go/service/applicationinsights"
 	appmesh_sdkv1 "github.com/aws/aws-sdk-go/service/appmesh"
-	appstream_sdkv1 "github.com/aws/aws-sdk-go/service/appstream"
 	appsync_sdkv1 "github.com/aws/aws-sdk-go/service/appsync"
 	backup_sdkv1 "github.com/aws/aws-sdk-go/service/backup"
 	batch_sdkv1 "github.com/aws/aws-sdk-go/service/batch"
@@ -313,8 +313,8 @@ func (c *AWSClient) AppRunnerClient(ctx context.Context) *apprunner_sdkv2.Client
 	return errs.Must(client[*apprunner_sdkv2.Client](ctx, c, names.AppRunner, make(map[string]any)))
 }
 
-func (c *AWSClient) AppStreamConn(ctx context.Context) *appstream_sdkv1.AppStream {
-	return errs.Must(conn[*appstream_sdkv1.AppStream](ctx, c, names.AppStream, make(map[string]any)))
+func (c *AWSClient) AppStreamClient(ctx context.Context) *appstream_sdkv2.Client {
+	return errs.Must(client[*appstream_sdkv2.Client](ctx, c, names.AppStream, make(map[string]any)))
 }
 
 func (c *AWSClient) AppSyncConn(ctx context.Context) *appsync_sdkv1.AppSync {

@@ -42,19 +42,19 @@ func TestAccSageMakerNotebookInstance_basic(t *testing.T) {
 				Config: testAccNotebookInstanceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNotebookInstanceExists(ctx, resourceName, &notebook),
-					resource.TestCheckResourceAttr(resourceName, "accelerator_types.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "additional_code_repositories.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "accelerator_types.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "additional_code_repositories.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "default_code_repository", ""),
 					resource.TestCheckResourceAttr(resourceName, "direct_internet_access", "Enabled"),
-					resource.TestCheckResourceAttr(resourceName, "instance_metadata_service_configuration.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "instance_metadata_service_configuration.0.minimum_instance_metadata_service_version", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "instance_metadata_service_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "instance_metadata_service_configuration.0.minimum_instance_metadata_service_version", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "ml.t2.medium"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "platform_identifier", "notebook-al1-v1"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "root_access", "Enabled"),
-					resource.TestCheckResourceAttr(resourceName, "security_groups.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "security_groups.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrURL),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVolumeSize, "5"),
 				),
@@ -85,11 +85,11 @@ func TestAccSageMakerNotebookInstance_imds(t *testing.T) {
 		CheckDestroy:             testAccCheckNotebookInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNotebookInstanceConfig_imds(rName, acctest.CtTwo),
+				Config: testAccNotebookInstanceConfig_imds(rName, acctest.Ct2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotebookInstanceExists(ctx, resourceName, &notebook),
-					resource.TestCheckResourceAttr(resourceName, "instance_metadata_service_configuration.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "instance_metadata_service_configuration.0.minimum_instance_metadata_service_version", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "instance_metadata_service_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "instance_metadata_service_configuration.0.minimum_instance_metadata_service_version", acctest.Ct2),
 				),
 			},
 			{
@@ -98,11 +98,11 @@ func TestAccSageMakerNotebookInstance_imds(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccNotebookInstanceConfig_imds(rName, acctest.CtOne),
+				Config: testAccNotebookInstanceConfig_imds(rName, acctest.Ct1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotebookInstanceExists(ctx, resourceName, &notebook),
-					resource.TestCheckResourceAttr(resourceName, "instance_metadata_service_configuration.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "instance_metadata_service_configuration.0.minimum_instance_metadata_service_version", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "instance_metadata_service_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "instance_metadata_service_configuration.0.minimum_instance_metadata_service_version", acctest.Ct1),
 				),
 			},
 		},
@@ -260,11 +260,11 @@ func TestAccSageMakerNotebookInstance_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckNotebookInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNotebookInstanceConfig_tags1(rName, "key1", "value1"),
+				Config: testAccNotebookInstanceConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotebookInstanceExists(ctx, resourceName, &notebook),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -273,20 +273,20 @@ func TestAccSageMakerNotebookInstance_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccNotebookInstanceConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccNotebookInstanceConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotebookInstanceExists(ctx, resourceName, &notebook),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccNotebookInstanceConfig_tags1(rName, "key2", "value2"),
+				Config: testAccNotebookInstanceConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotebookInstanceExists(ctx, resourceName, &notebook),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -453,7 +453,7 @@ func TestAccSageMakerNotebookInstance_DirectInternet_access(t *testing.T) {
 					testAccCheckNotebookInstanceExists(ctx, resourceName, &notebook),
 					resource.TestCheckResourceAttr(resourceName, "direct_internet_access", "Disabled"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, "aws_subnet.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "security_groups.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "security_groups.#", acctest.Ct1),
 					resource.TestMatchResourceAttr(resourceName, names.AttrNetworkInterfaceID, regexache.MustCompile("eni-.*")),
 				),
 			},
@@ -468,7 +468,7 @@ func TestAccSageMakerNotebookInstance_DirectInternet_access(t *testing.T) {
 					testAccCheckNotebookInstanceExists(ctx, resourceName, &notebook),
 					resource.TestCheckResourceAttr(resourceName, "direct_internet_access", "Enabled"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, "aws_subnet.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "security_groups.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "security_groups.#", acctest.Ct1),
 					resource.TestMatchResourceAttr(resourceName, names.AttrNetworkInterfaceID, regexache.MustCompile("eni-.*")),
 				),
 			},
@@ -542,7 +542,7 @@ func TestAccSageMakerNotebookInstance_AdditionalCode_repositories(t *testing.T) 
 				Config: testAccNotebookInstanceConfig_additionalCodeRepository1(rName, "https://github.com/hashicorp/terraform-provider-aws.git"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotebookInstanceExists(ctx, resourceName, &notebook),
-					resource.TestCheckResourceAttr(resourceName, "additional_code_repositories.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "additional_code_repositories.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "additional_code_repositories.*", "https://github.com/hashicorp/terraform-provider-aws.git"),
 				),
 			},
@@ -555,14 +555,14 @@ func TestAccSageMakerNotebookInstance_AdditionalCode_repositories(t *testing.T) 
 				Config: testAccNotebookInstanceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotebookInstanceExists(ctx, resourceName, &notebook),
-					resource.TestCheckResourceAttr(resourceName, "additional_code_repositories.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "additional_code_repositories.#", acctest.Ct0),
 				),
 			},
 			{
 				Config: testAccNotebookInstanceConfig_additionalCodeRepository2(rName, "https://github.com/hashicorp/terraform-provider-aws.git", "https://github.com/hashicorp/terraform.git"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotebookInstanceExists(ctx, resourceName, &notebook),
-					resource.TestCheckResourceAttr(resourceName, "additional_code_repositories.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "additional_code_repositories.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemAttr(resourceName, "additional_code_repositories.*", "https://github.com/hashicorp/terraform-provider-aws.git"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "additional_code_repositories.*", "https://github.com/hashicorp/terraform.git"),
 				),
@@ -571,7 +571,7 @@ func TestAccSageMakerNotebookInstance_AdditionalCode_repositories(t *testing.T) 
 				Config: testAccNotebookInstanceConfig_additionalCodeRepository1(rName, "https://github.com/hashicorp/terraform-provider-aws.git"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotebookInstanceExists(ctx, resourceName, &notebook),
-					resource.TestCheckResourceAttr(resourceName, "additional_code_repositories.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "additional_code_repositories.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "additional_code_repositories.*", "https://github.com/hashicorp/terraform-provider-aws.git"),
 				),
 			},
@@ -644,7 +644,7 @@ func TestAccSageMakerNotebookInstance_acceleratorTypes(t *testing.T) {
 				Config: testAccNotebookInstanceConfig_acceleratorType(rName, "ml.eia2.medium"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotebookInstanceExists(ctx, resourceName, &notebook),
-					resource.TestCheckResourceAttr(resourceName, "accelerator_types.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "accelerator_types.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "accelerator_types.*", "ml.eia2.medium"),
 				),
 			},
@@ -657,7 +657,7 @@ func TestAccSageMakerNotebookInstance_acceleratorTypes(t *testing.T) {
 				Config: testAccNotebookInstanceConfig_acceleratorType(rName, "ml.eia2.large"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotebookInstanceExists(ctx, resourceName, &notebook),
-					resource.TestCheckResourceAttr(resourceName, "accelerator_types.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "accelerator_types.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "accelerator_types.*", "ml.eia2.large"),
 				),
 			},
@@ -665,7 +665,7 @@ func TestAccSageMakerNotebookInstance_acceleratorTypes(t *testing.T) {
 				Config: testAccNotebookInstanceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotebookInstanceExists(ctx, resourceName, &notebook),
-					resource.TestCheckResourceAttr(resourceName, "accelerator_types.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "accelerator_types.#", acctest.Ct0),
 				),
 			},
 		},

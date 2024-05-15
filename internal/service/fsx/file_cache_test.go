@@ -26,7 +26,7 @@ func TestAccFSxFileCache_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"FSxFileCache": {
-			"basic":            testAccFileCache_basic,
+			acctest.CtBasic:    testAccFileCache_basic,
 			"disappears":       testAccFileCache_disappears,
 			names.AttrKMSKeyID: testAccFileCache_kmsKeyID,
 			"copy_tags_to_data_repository_associations": testAccFileCache_copyTagsToDataRepositoryAssociations,
@@ -74,7 +74,7 @@ func testAccFileCache_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "lustre_configuration.0.per_unit_storage_throughput", "1000"),
 					resource.TestCheckResourceAttr(resourceName, "lustre_configuration.0.weekly_maintenance_start_time", "2:05:00"),
 					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "1200"),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct1),
 				),
 			},
 			{
@@ -137,11 +137,11 @@ func testAccFileCache_copyTagsToDataRepositoryAssociations(t *testing.T) {
 		CheckDestroy:             testAccCheckFileCacheDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFileCacheConfig_copyTagsToDataRepositoryAssociations(rName, "key1", "value1", "key2", "value2"),
+				Config: testAccFileCacheConfig_copyTagsToDataRepositoryAssociations(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileCacheExists(ctx, resourceName, &filecache1),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_data_repository_associations", "true"),
-					resource.TestCheckResourceAttr(resourceName, "data_repository_association.0.tags.%", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "data_repository_association.0.tags.%", acctest.Ct2),
 				),
 			},
 			{
@@ -174,7 +174,7 @@ func testAccFileCache_dataRepositoryAssociation_multiple(t *testing.T) {
 				Config: testAccFileCacheConfig_multiple_associations(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileCacheExists(ctx, resourceName, &filecache),
-					resource.TestCheckResourceAttr(resourceName, "data_repository_association_ids.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "data_repository_association_ids.#", acctest.Ct2),
 				),
 			},
 			{
@@ -211,7 +211,7 @@ func testAccFileCache_dataRepositoryAssociation_nfs(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "data_repository_association.0.file_cache_path", "/ns1"),
 					resource.TestCheckResourceAttr(resourceName, "data_repository_association.0.nfs.0.dns_ips.0", "192.168.0.1"),
 					resource.TestCheckResourceAttr(resourceName, "data_repository_association.0.nfs.0.version", "NFS3"),
-					resource.TestCheckResourceAttr(resourceName, "data_repository_association_ids.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "data_repository_association_ids.#", acctest.Ct1),
 				),
 			},
 			{
@@ -246,7 +246,7 @@ func testAccFileCache_dataRepositoryAssociation_s3(t *testing.T) {
 					testAccCheckFileCacheExists(ctx, resourceName, &filecache),
 					resource.TestCheckResourceAttr(resourceName, "data_repository_association.0.data_repository_path", "s3://"+rName),
 					resource.TestCheckResourceAttr(resourceName, "data_repository_association.0.file_cache_path", "/ns1"),
-					resource.TestCheckResourceAttr(resourceName, "data_repository_association_ids.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "data_repository_association_ids.#", acctest.Ct1),
 				),
 			},
 			{
@@ -328,7 +328,7 @@ func testAccFileCache_securityGroupID(t *testing.T) {
 				Config: testAccFileCacheConfig_securityGroupID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileCacheExists(ctx, resourceName, &filecache1),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct1),
 				),
 			},
 			{
@@ -358,11 +358,11 @@ func testAccFileCache_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckFileCacheDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFileCacheConfig_tags1(rName, "key1", "value1"),
+				Config: testAccFileCacheConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileCacheExists(ctx, resourceName, &filecache1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -372,13 +372,13 @@ func testAccFileCache_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"copy_tags_to_data_repository_associations"},
 			},
 			{
-				Config: testAccFileCacheConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccFileCacheConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileCacheExists(ctx, resourceName, &filecache2),
 					testAccCheckFileCacheNotRecreated(&filecache1, &filecache2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{

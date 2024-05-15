@@ -30,7 +30,7 @@ func TestAccRoute53ResolverQueryLogConfigDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccQueryLogConfigDataSourceConfig_basic(rName, "key1", "value1"),
+				Config: testAccQueryLogConfigDataSourceConfig_basic(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDestinationARN, resourceName, names.AttrDestinationARN),
@@ -40,7 +40,7 @@ func TestAccRoute53ResolverQueryLogConfigDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "resolver_query_log_config_id", resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "share_status", resourceName, "share_status"),
 					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.key1", resourceName, "tags.key1"),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsKey1, resourceName, acctest.CtTagsKey1),
 				),
 			},
 		},
@@ -63,7 +63,7 @@ func TestAccRoute53ResolverQueryLogConfigDataSource_filter(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccQueryLogConfigDataSourceConfig_filter(rName, "key1", "value1"),
+				Config: testAccQueryLogConfigDataSourceConfig_filter(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDestinationARN, resourceName, names.AttrDestinationARN),
@@ -73,7 +73,7 @@ func TestAccRoute53ResolverQueryLogConfigDataSource_filter(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "resolver_query_log_config_id", resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "share_status", resourceName, "share_status"),
 					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.key1", resourceName, "tags.key1"),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsKey1, resourceName, acctest.CtTagsKey1),
 				),
 			},
 		},

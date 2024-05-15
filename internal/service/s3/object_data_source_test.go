@@ -43,11 +43,11 @@ func TestAccS3ObjectDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrContentType, resourceName, names.AttrContentType),
 					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
 					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
-					resource.TestCheckResourceAttr(dataSourceName, "metadata.%", acctest.CtZero),
+					resource.TestCheckResourceAttr(dataSourceName, "metadata.%", acctest.Ct0),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_legal_hold_status", resourceName, "object_lock_legal_hold_status"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_mode", resourceName, "object_lock_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_retain_until_date", resourceName, "object_lock_retain_until_date"),
-					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 		},
@@ -93,7 +93,7 @@ func TestAccS3ObjectDataSource_readableBody(t *testing.T) {
 				Config: testAccObjectDataSourceConfig_readableBody(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "body", "yes"),
-					resource.TestCheckResourceAttr(dataSourceName, "content_length", "3"),
+					resource.TestCheckResourceAttr(dataSourceName, "content_length", acctest.Ct3),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrContentType, resourceName, names.AttrContentType),
 					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
 					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
@@ -197,7 +197,7 @@ func TestAccS3ObjectDataSource_allParams(t *testing.T) {
 					// Currently unsupported in aws_s3_object resource
 					resource.TestCheckResourceAttr(dataSourceName, "expires", ""),
 					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
-					resource.TestCheckResourceAttr(dataSourceName, "metadata.%", acctest.CtZero),
+					resource.TestCheckResourceAttr(dataSourceName, "metadata.%", acctest.Ct0),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_legal_hold_status", resourceName, "object_lock_legal_hold_status"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_mode", resourceName, "object_lock_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_retain_until_date", resourceName, "object_lock_retain_until_date"),
@@ -206,7 +206,7 @@ func TestAccS3ObjectDataSource_allParams(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "sse_kms_key_id", ""),
 					// Supported, but difficult to reproduce in short testing time
 					resource.TestCheckResourceAttrPair(dataSourceName, "storage_class", resourceName, "storage_class"),
-					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttrPair(dataSourceName, "version_id", resourceName, "version_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "website_redirect_location", resourceName, "website_redirect"),
 				),
@@ -297,19 +297,19 @@ func TestAccS3ObjectDataSource_leadingSlash(t *testing.T) {
 				Config: conf,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName1, "body", "yes"),
-					resource.TestCheckResourceAttr(dataSourceName1, "content_length", "3"),
+					resource.TestCheckResourceAttr(dataSourceName1, "content_length", acctest.Ct3),
 					resource.TestCheckResourceAttrPair(dataSourceName1, names.AttrContentType, resourceName, names.AttrContentType),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "etag", resourceName, "etag"),
 					resource.TestMatchResourceAttr(dataSourceName1, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
 
 					resource.TestCheckResourceAttr(dataSourceName2, "body", "yes"),
-					resource.TestCheckResourceAttr(dataSourceName2, "content_length", "3"),
+					resource.TestCheckResourceAttr(dataSourceName2, "content_length", acctest.Ct3),
 					resource.TestCheckResourceAttrPair(dataSourceName2, names.AttrContentType, resourceName, names.AttrContentType),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "etag", resourceName, "etag"),
 					resource.TestMatchResourceAttr(dataSourceName2, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
 
 					resource.TestCheckResourceAttr(dataSourceName3, "body", "yes"),
-					resource.TestCheckResourceAttr(dataSourceName3, "content_length", "3"),
+					resource.TestCheckResourceAttr(dataSourceName3, "content_length", acctest.Ct3),
 					resource.TestCheckResourceAttrPair(dataSourceName3, names.AttrContentType, resourceName, names.AttrContentType),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "etag", resourceName, "etag"),
 					resource.TestMatchResourceAttr(dataSourceName3, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
@@ -343,15 +343,15 @@ func TestAccS3ObjectDataSource_multipleSlashes(t *testing.T) {
 				Config: conf,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName1, "body", "yes"),
-					resource.TestCheckResourceAttr(dataSourceName1, "content_length", "3"),
+					resource.TestCheckResourceAttr(dataSourceName1, "content_length", acctest.Ct3),
 					resource.TestCheckResourceAttrPair(dataSourceName1, names.AttrContentType, resourceName1, names.AttrContentType),
 
 					resource.TestCheckResourceAttr(dataSourceName2, "body", "yes"),
-					resource.TestCheckResourceAttr(dataSourceName2, "content_length", "3"),
+					resource.TestCheckResourceAttr(dataSourceName2, "content_length", acctest.Ct3),
 					resource.TestCheckResourceAttrPair(dataSourceName2, names.AttrContentType, resourceName1, names.AttrContentType),
 
 					resource.TestCheckResourceAttr(dataSourceName3, "body", "no"),
-					resource.TestCheckResourceAttr(dataSourceName3, "content_length", acctest.CtTwo),
+					resource.TestCheckResourceAttr(dataSourceName3, "content_length", acctest.Ct2),
 					resource.TestCheckResourceAttrPair(dataSourceName3, names.AttrContentType, resourceName2, names.AttrContentType),
 				),
 			},
@@ -399,13 +399,13 @@ func TestAccS3ObjectDataSource_leadingDotSlash(t *testing.T) {
 				Config: conf,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName1, "body", "yes"),
-					resource.TestCheckResourceAttr(dataSourceName1, "content_length", "3"),
+					resource.TestCheckResourceAttr(dataSourceName1, "content_length", acctest.Ct3),
 					resource.TestCheckResourceAttrPair(dataSourceName1, names.AttrContentType, resourceName, names.AttrContentType),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "etag", resourceName, "etag"),
 					resource.TestMatchResourceAttr(dataSourceName1, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
 
 					resource.TestCheckResourceAttr(dataSourceName2, "body", "yes"),
-					resource.TestCheckResourceAttr(dataSourceName2, "content_length", "3"),
+					resource.TestCheckResourceAttr(dataSourceName2, "content_length", acctest.Ct3),
 					resource.TestCheckResourceAttrPair(dataSourceName2, names.AttrContentType, resourceName, names.AttrContentType),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "etag", resourceName, "etag"),
 					resource.TestMatchResourceAttr(dataSourceName2, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
@@ -438,19 +438,19 @@ func TestAccS3ObjectDataSource_leadingMultipleSlashes(t *testing.T) {
 				Config: conf,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName1, "body", "yes"),
-					resource.TestCheckResourceAttr(dataSourceName1, "content_length", "3"),
+					resource.TestCheckResourceAttr(dataSourceName1, "content_length", acctest.Ct3),
 					resource.TestCheckResourceAttrPair(dataSourceName1, names.AttrContentType, resourceName, names.AttrContentType),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "etag", resourceName, "etag"),
 					resource.TestMatchResourceAttr(dataSourceName1, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
 
 					resource.TestCheckResourceAttr(dataSourceName2, "body", "yes"),
-					resource.TestCheckResourceAttr(dataSourceName2, "content_length", "3"),
+					resource.TestCheckResourceAttr(dataSourceName2, "content_length", acctest.Ct3),
 					resource.TestCheckResourceAttrPair(dataSourceName2, names.AttrContentType, resourceName, names.AttrContentType),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "etag", resourceName, "etag"),
 					resource.TestMatchResourceAttr(dataSourceName2, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
 
 					resource.TestCheckResourceAttr(dataSourceName3, "body", "yes"),
-					resource.TestCheckResourceAttr(dataSourceName3, "content_length", "3"),
+					resource.TestCheckResourceAttr(dataSourceName3, "content_length", acctest.Ct3),
 					resource.TestCheckResourceAttrPair(dataSourceName3, names.AttrContentType, resourceName, names.AttrContentType),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "etag", resourceName, "etag"),
 					resource.TestMatchResourceAttr(dataSourceName3, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
@@ -501,8 +501,8 @@ func TestAccS3ObjectDataSource_metadata(t *testing.T) {
 			{
 				Config: testAccObjectDataSourceConfig_metadata(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "metadata.%", acctest.CtTwo),
-					resource.TestCheckResourceAttr(dataSourceName, "metadata.key1", "value1"),
+					resource.TestCheckResourceAttr(dataSourceName, "metadata.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(dataSourceName, "metadata.key1", acctest.CtValue1),
 					resource.TestCheckResourceAttr(dataSourceName, "metadata.key2", "Value2"),
 				),
 			},
@@ -527,16 +527,16 @@ func TestAccS3ObjectDataSource_metadataUppercaseKey(t *testing.T) {
 				Config: testAccObjectDataSourceConfig_metadataBucketOnly(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketAddObjectWithMetadata(ctx, bucketResourceName, key, map[string]string{
-						"key1": "value1",
-						"Key2": "Value2",
+						acctest.CtKey1: acctest.CtValue1,
+						"Key2":         "Value2",
 					}),
 				),
 			},
 			{
 				Config: testAccObjectDataSourceConfig_metadataBucketAndDS(rName, key),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "metadata.%", acctest.CtTwo),
-					resource.TestCheckResourceAttr(dataSourceName, "metadata.key1", "value1"),
+					resource.TestCheckResourceAttr(dataSourceName, "metadata.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(dataSourceName, "metadata.key1", acctest.CtValue1),
 					// https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/service/s3#HeadObjectOutput
 					// Map keys will be normalized to lower-case.
 					resource.TestCheckResourceAttr(dataSourceName, "metadata.key2", "Value2"),
@@ -571,11 +571,11 @@ func TestAccS3ObjectDataSource_directoryBucket(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrContentType, resourceName, names.AttrContentType),
 					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
 					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
-					resource.TestCheckResourceAttr(dataSourceName, "metadata.%", acctest.CtZero),
+					resource.TestCheckResourceAttr(dataSourceName, "metadata.%", acctest.Ct0),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_legal_hold_status", resourceName, "object_lock_legal_hold_status"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_mode", resourceName, "object_lock_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_retain_until_date", resourceName, "object_lock_retain_until_date"),
-					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 		},

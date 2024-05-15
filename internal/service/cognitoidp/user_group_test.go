@@ -97,7 +97,7 @@ func TestAccCognitoIDPUserGroup_complex(t *testing.T) {
 					testAccCheckUserGroupExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, groupName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "This is the user group description"),
-					resource.TestCheckResourceAttr(resourceName, "precedence", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "precedence", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
 				),
 			},

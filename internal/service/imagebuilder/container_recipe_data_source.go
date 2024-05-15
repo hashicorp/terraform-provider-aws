@@ -110,7 +110,7 @@ func DataSourceContainerRecipe() *schema.Resource {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												"snapshot_id": {
+												names.AttrSnapshotID: {
 													Type:     schema.TypeString,
 													Computed: true,
 												},

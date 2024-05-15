@@ -30,7 +30,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"App": {
-			"basic":                 testAccApp_basic,
+			acctest.CtBasic:         testAccApp_basic,
 			"disappears":            testAccApp_disappears,
 			names.AttrTags:          testAccApp_tags,
 			"resourceSpec":          testAccApp_resourceSpec,
@@ -38,14 +38,14 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"space":                 testAccApp_space,
 		},
 		"Domain": {
-			"basic":                                    testAccDomain_basic,
-			"disappears":                               testAccDomain_tags,
-			names.AttrTags:                             testAccDomain_disappears,
-			"tensorboardAppSettings":                   testAccDomain_tensorboardAppSettings,
-			"tensorboardAppSettingsWithImage":          testAccDomain_tensorboardAppSettingsWithImage,
-			"kernelGatewayAppSettings":                 testAccDomain_kernelGatewayAppSettings,
-			"kernelGatewayAppSettings_customImage":     testAccDomain_kernelGatewayAppSettings_customImage,
-			"kernelGatewayAppSettings_lifecycleConfig": testAccDomain_kernelGatewayAppSettings_lifecycleConfig,
+			acctest.CtBasic:                                          testAccDomain_basic,
+			"disappears":                                             testAccDomain_tags,
+			names.AttrTags:                                           testAccDomain_disappears,
+			"tensorboardAppSettings":                                 testAccDomain_tensorboardAppSettings,
+			"tensorboardAppSettingsWithImage":                        testAccDomain_tensorboardAppSettingsWithImage,
+			"kernelGatewayAppSettings":                               testAccDomain_kernelGatewayAppSettings,
+			"kernelGatewayAppSettings_customImage":                   testAccDomain_kernelGatewayAppSettings_customImage,
+			"kernelGatewayAppSettings_lifecycleConfig":               testAccDomain_kernelGatewayAppSettings_lifecycleConfig,
 			"kernelGatewayAppSettings_defaultResourceAndCustomImage": testAccDomain_kernelGatewayAppSettings_defaultResourceSpecAndCustomImage,
 			"jupyterServerAppSettings":                               testAccDomain_jupyterServerAppSettings,
 			"codeEditorAppSettings":                                  testAccDomain_codeEditorAppSettings,
@@ -70,14 +70,14 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"spaceStorageSettings":                                   testAccDomain_spaceStorageSettings,
 		},
 		"FlowDefinition": {
-			"basic":                          testAccFlowDefinition_basic,
+			acctest.CtBasic:                  testAccFlowDefinition_basic,
 			"disappears":                     testAccFlowDefinition_disappears,
 			names.AttrTags:                   testAccFlowDefinition_tags,
 			"HumanLoopConfigPublicWorkforce": testAccFlowDefinition_humanLoopConfig_publicWorkforce,
 			"HumanLoopRequestSource":         testAccFlowDefinition_humanLoopRequestSource,
 		},
 		"Space": {
-			"basic":                    testAccSpace_basic,
+			acctest.CtBasic:            testAccSpace_basic,
 			"disappears":               testAccSpace_tags,
 			names.AttrTags:             testAccSpace_disappears,
 			"kernelGatewayAppSettings": testAccSpace_kernelGatewayAppSettings,
@@ -90,7 +90,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"customFileSystem":                         testAccSpace_customFileSystem,
 		},
 		"UserProfile": {
-			"basic":                                    testAccUserProfile_basic,
+			acctest.CtBasic:                            testAccUserProfile_basic,
 			"disappears":                               testAccUserProfile_tags,
 			names.AttrTags:                             testAccUserProfile_disappears,
 			"tensorboardAppSettings":                   testAccUserProfile_tensorboardAppSettings,
@@ -115,7 +115,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"OidcConfig":         testAccWorkteam_oidcConfig,
 		},
 		"Servicecatalog": {
-			"basic": testAccServicecatalogPortfolioStatus_basic,
+			acctest.CtBasic: testAccServicecatalogPortfolioStatus_basic,
 		},
 	}
 

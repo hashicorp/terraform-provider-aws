@@ -35,12 +35,12 @@ func TestAccVPCNetworkInsightsAnalysis_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkInsightsAnalysisExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`network-insights-analysis/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "filter_in_arns.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "filter_in_arns.#", acctest.Ct0),
 					resource.TestCheckResourceAttrPair(resourceName, "network_insights_path_id", "aws_ec2_network_insights_path.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "path_found", "true"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "start_date"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "succeeded"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "wait_for_completion", "true"),
 				),
 			},
@@ -89,11 +89,11 @@ func TestAccVPCNetworkInsightsAnalysis_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckNetworkInsightsAnalysisDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCNetworkInsightsAnalysisConfig_tags1(rName, "key1", "value1"),
+				Config: testAccVPCNetworkInsightsAnalysisConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsAnalysisExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -103,20 +103,20 @@ func TestAccVPCNetworkInsightsAnalysis_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"wait_for_completion"},
 			},
 			{
-				Config: testAccVPCNetworkInsightsAnalysisConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccVPCNetworkInsightsAnalysisConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsAnalysisExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccVPCNetworkInsightsAnalysisConfig_tags1(rName, "key2", "value2"),
+				Config: testAccVPCNetworkInsightsAnalysisConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsAnalysisExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},

@@ -104,7 +104,7 @@ func DataSourceDevEnvironment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status_reason": {
+			names.AttrStatusReason: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -142,7 +142,7 @@ func dataSourceDevEnvironmentRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("inactivity_timeout_minutes", out.InactivityTimeoutMinutes)
 	d.Set("persistent_storage", flattenPersistentStorage(out.PersistentStorage))
 	d.Set(names.AttrStatus, out.Status)
-	d.Set("status_reason", out.StatusReason)
+	d.Set(names.AttrStatusReason, out.StatusReason)
 
 	if err := d.Set("ides", flattenIdes(out.Ides)); err != nil {
 		return create.AppendDiagError(diags, names.CodeCatalyst, create.ErrActionSetting, ResNameDevEnvironment, d.Id(), err)

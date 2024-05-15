@@ -92,7 +92,7 @@ func (m *multiplexProgram) Schema(ctx context.Context, req resource.SchemaReques
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"provider_name": schema.StringAttribute{
+									names.AttrProviderName: schema.StringAttribute{
 										Required: true,
 									},
 									names.AttrServiceName: schema.StringAttribute{
@@ -495,8 +495,8 @@ var (
 	}
 
 	serviceDescriptorAttrs = map[string]attr.Type{
-		"provider_name":       types.StringType,
-		names.AttrServiceName: types.StringType,
+		names.AttrProviderName: types.StringType,
+		names.AttrServiceName:  types.StringType,
 	}
 
 	multiplexProgramSettingsAttrs = map[string]attr.Type{
@@ -533,7 +533,7 @@ func flattenServiceDescriptor(ctx context.Context, sd *mltypes.MultiplexProgramS
 	}
 
 	attrs := map[string]attr.Value{}
-	attrs["provider_name"] = flex.StringToFrameworkLegacy(ctx, sd.ProviderName)
+	attrs[names.AttrProviderName] = flex.StringToFrameworkLegacy(ctx, sd.ProviderName)
 	attrs[names.AttrServiceName] = flex.StringToFrameworkLegacy(ctx, sd.ServiceName)
 
 	vals := types.ObjectValueMust(serviceDescriptorAttrs, attrs)
