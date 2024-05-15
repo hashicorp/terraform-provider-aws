@@ -102,11 +102,11 @@ func TestAccSSMParameter_updateValue(t *testing.T) {
 		CheckDestroy:             testAccCheckParameterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccParameterConfig_basic(name, "String", acctest.CtTest),
+				Config: testAccParameterConfig_basic(name, "String", "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterExists(ctx, resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrValue, acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "test"),
 					resource.TestCheckNoResourceAttr(resourceName, "overwrite"),
 				),
 			},
@@ -148,12 +148,12 @@ func TestAccSSMParameter_updateDescription(t *testing.T) {
 		CheckDestroy:             testAccCheckParameterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccParameterConfig_description(name, names.AttrDescription, "String", acctest.CtTest),
+				Config: testAccParameterConfig_description(name, names.AttrDescription, "String", "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterExists(ctx, resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, names.AttrDescription),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrValue, acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "test"),
 					resource.TestCheckNoResourceAttr(resourceName, "overwrite"),
 				),
 			},
@@ -164,12 +164,12 @@ func TestAccSSMParameter_updateDescription(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"overwrite"},
 			},
 			{
-				Config: testAccParameterConfig_description(name, "updated description", "String", acctest.CtTest),
+				Config: testAccParameterConfig_description(name, "updated description", "String", "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterExists(ctx, resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "updated description"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrValue, acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "test"),
 					resource.TestCheckNoResourceAttr(resourceName, "overwrite"),
 				),
 			},
