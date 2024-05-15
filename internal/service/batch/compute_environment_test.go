@@ -297,7 +297,7 @@ func TestAccBatchComputeEnvironment_eksConfiguration(t *testing.T) {
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
 					resource.TestCheckResourceAttr(resourceName, "eks_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "eks_configuration.0.eks_cluster_arn", eksClusterResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "eks_configuration.0.kubernetes_namespace", acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, "eks_configuration.0.kubernetes_namespace", "test"),
 				),
 			},
 		},
