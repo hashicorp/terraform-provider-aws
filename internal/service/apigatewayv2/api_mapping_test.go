@@ -40,7 +40,7 @@ func TestAccAPIGatewayV2APIMapping_serial(t *testing.T) {
 	})
 
 	testCases := map[string]func(t *testing.T, rName string, certificateArn *string){
-		"basic":         testAccAPIMapping_basic,
+		acctest.CtBasic: testAccAPIMapping_basic,
 		"disappears":    testAccAPIMapping_disappears,
 		"ApiMappingKey": testAccAPIMapping_key,
 	}
