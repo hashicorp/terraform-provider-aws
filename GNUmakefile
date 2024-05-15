@@ -171,7 +171,7 @@ fixconstants: semconstants fiximports fmt
 
 fiximports:
 	@echo "make: fixing source code imports with goimports..."
-	@goimports -w internal/**/*.go
+	@find internal -name "*.go" -type f -exec goimports -w {} \;
 
 fmt: ## Fix Go source formatting
 	@echo "make: fixing source code with gofmt..."
