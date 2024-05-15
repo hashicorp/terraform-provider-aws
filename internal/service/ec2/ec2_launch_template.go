@@ -85,7 +85,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: verify.ValidARN,
 									},
-									"snapshot_id": {
+									names.AttrSnapshotID: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -1389,7 +1389,7 @@ func expandLaunchTemplateEBSBlockDeviceRequest(tfMap map[string]interface{}) *ec
 		apiObject.KmsKeyId = aws.String(v)
 	}
 
-	if v, ok := tfMap["snapshot_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrSnapshotID].(string); ok && v != "" {
 		apiObject.SnapshotId = aws.String(v)
 	}
 
@@ -2411,7 +2411,7 @@ func flattenLaunchTemplateEBSBlockDevice(apiObject *ec2.LaunchTemplateEbsBlockDe
 	}
 
 	if v := apiObject.SnapshotId; v != nil {
-		tfMap["snapshot_id"] = aws.StringValue(v)
+		tfMap[names.AttrSnapshotID] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Throughput; v != nil {

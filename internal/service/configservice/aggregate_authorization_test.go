@@ -86,11 +86,11 @@ func TestAccConfigServiceAggregateAuthorization_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckAggregateAuthorizationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAggregateAuthorizationConfig_tags1(accountID, "key1", "value1"),
+				Config: testAccAggregateAuthorizationConfig_tags1(accountID, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &aa),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -99,20 +99,20 @@ func TestAccConfigServiceAggregateAuthorization_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAggregateAuthorizationConfig_tags2(accountID, "key1", "value1updated", "key2", "value2"),
+				Config: testAccAggregateAuthorizationConfig_tags2(accountID, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &aa),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccAggregateAuthorizationConfig_tags1(accountID, "key2", "value2"),
+				Config: testAccAggregateAuthorizationConfig_tags1(accountID, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &aa),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},

@@ -15,4 +15,5 @@ var (
 	FindStackSetByName                      = findStackSetByName
 	FindTypeByARN                           = findTypeByARN
 	StackSetInstanceResourceIDPartCount     = stackSetInstanceResourceIDPartCount
+	TypeVersionARNToTypeARNAndVersionID     = typeVersionARNToTypeARNAndVersionID
 )

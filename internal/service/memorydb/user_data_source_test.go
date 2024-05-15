@@ -32,7 +32,7 @@ func TestAccMemoryDBUserDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "authentication_mode.0.password_count", resourceName, "authentication_mode.0.password_count"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "authentication_mode.0.type", resourceName, "authentication_mode.0.type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "minimum_engine_version", resourceName, "minimum_engine_version"),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.Test", resourceName, "tags.Test"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrUserName, resourceName, names.AttrUserName),
 				),

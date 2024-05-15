@@ -40,7 +40,7 @@ func testAccCheckOutpostInstanceTypesAttributes(dataSourceName string) resource.
 			return fmt.Errorf("Not found: %s", dataSourceName)
 		}
 
-		if v := rs.Primary.Attributes["instance_types.#"]; v == "0" {
+		if v := rs.Primary.Attributes["instance_types.#"]; v == acctest.Ct0 {
 			return fmt.Errorf("expected at least one instance_types result, got none")
 		}
 

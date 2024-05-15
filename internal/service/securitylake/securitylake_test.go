@@ -25,21 +25,21 @@ func TestAccSecurityLake_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"AWSLogSource": {
-			"basic":         testAccAWSLogSource_basic,
+			acctest.CtBasic: testAccAWSLogSource_basic,
 			"disappears":    testAccAWSLogSource_disappears,
 			"multiple":      testAccAWSLogSource_multiple,
 			"multiRegion":   testAccAWSLogSource_multiRegion,
 			"sourceVersion": testAccAWSLogSource_sourceVersion,
 		},
 		"CustomLogSource": {
-			"basic":         testAccCustomLogSource_basic,
+			acctest.CtBasic: testAccCustomLogSource_basic,
 			"disappears":    testAccCustomLogSource_disappears,
 			"eventClasses":  testAccCustomLogSource_eventClasses,
 			"multiple":      testAccCustomLogSource_multiple,
 			"sourceVersion": testAccCustomLogSource_sourceVersion,
 		},
 		"DataLake": {
-			"basic":           testAccDataLake_basic,
+			acctest.CtBasic:   testAccDataLake_basic,
 			"disappears":      testAccDataLake_disappears,
 			names.AttrTags:    testAccDataLake_tags,
 			"lifecycle":       testAccDataLake_lifeCycle,
@@ -48,7 +48,7 @@ func TestAccSecurityLake_serial(t *testing.T) {
 		},
 		"Subscriber": {
 			"accessType":      testAccSubscriber_accessType,
-			"basic":           testAccSubscriber_basic,
+			acctest.CtBasic:   testAccSubscriber_basic,
 			"customLogs":      testAccSubscriber_customLogSource,
 			"disappears":      testAccSubscriber_disappears,
 			"multipleSources": testAccSubscriber_multipleSources,

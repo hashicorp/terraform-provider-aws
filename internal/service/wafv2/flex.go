@@ -1378,7 +1378,7 @@ func expandResponseInspection(tfList []interface{}) *awstypes.ResponseInspection
 	if v, ok := m[names.AttrJSON].([]interface{}); ok && len(v) > 0 {
 		out.Json = expandResponseInspectionJSON(v)
 	}
-	if v, ok := m["status_code"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m[names.AttrStatusCode].([]interface{}); ok && len(v) > 0 {
 		out.StatusCode = expandStatusCode(v)
 	}
 
@@ -2774,7 +2774,7 @@ func flattenResponseInspection(apiObject *awstypes.ResponseInspection) []interfa
 		m[names.AttrJSON] = flattenResponseInspectionJSON(apiObject.Json)
 	}
 	if apiObject.StatusCode != nil {
-		m["status_code"] = flattenStatusCode(apiObject.StatusCode)
+		m[names.AttrStatusCode] = flattenStatusCode(apiObject.StatusCode)
 	}
 
 	return []interface{}{m}

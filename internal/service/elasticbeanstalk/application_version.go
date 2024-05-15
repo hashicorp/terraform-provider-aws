@@ -61,7 +61,7 @@ func ResourceApplicationVersion() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"force_delete": {
+			names.AttrForceDelete: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -155,7 +155,7 @@ func resourceApplicationVersionDelete(ctx context.Context, d *schema.ResourceDat
 	application := d.Get("application").(string)
 	name := d.Id()
 
-	if !d.Get("force_delete").(bool) {
+	if !d.Get(names.AttrForceDelete).(bool) {
 		environments, err := versionUsedBy(ctx, application, name, conn)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "deleting Elastic Beanstalk Application Version (%s): %s", d.Id(), err)

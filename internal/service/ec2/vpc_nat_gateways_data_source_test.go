@@ -25,10 +25,10 @@ func TestAccVPCNATGatewaysDataSource_basic(t *testing.T) {
 			{
 				Config: testAccVPCNATGatewaysDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_nat_gateways.by_vpc_id", "ids.#", "2"),
-					resource.TestCheckResourceAttr("data.aws_nat_gateways.by_tags", "ids.#", acctest.CtOne),
-					resource.TestCheckResourceAttr("data.aws_nat_gateways.by_filter", "ids.#", "3"),
-					resource.TestCheckResourceAttr("data.aws_nat_gateways.empty", "ids.#", "0"),
+					resource.TestCheckResourceAttr("data.aws_nat_gateways.by_vpc_id", "ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr("data.aws_nat_gateways.by_tags", "ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr("data.aws_nat_gateways.by_filter", "ids.#", acctest.Ct3),
+					resource.TestCheckResourceAttr("data.aws_nat_gateways.empty", "ids.#", acctest.Ct0),
 				),
 			},
 		},

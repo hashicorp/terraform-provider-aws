@@ -22,7 +22,7 @@ func TestAccAppRunnerDefaultAutoScalingConfigurationVersion_serial(t *testing.T)
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		"basic": testAccDefaultAutoScalingConfigurationVersion_basic,
+		acctest.CtBasic: testAccDefaultAutoScalingConfigurationVersion_basic,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)

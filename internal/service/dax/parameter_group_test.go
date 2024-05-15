@@ -35,7 +35,7 @@ func TestAccDAXParameterGroup_basic(t *testing.T) {
 				Config: testAccParameterGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "parameters.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.#", acctest.Ct2),
 				),
 			},
 			{
@@ -47,7 +47,7 @@ func TestAccDAXParameterGroup_basic(t *testing.T) {
 				Config: testAccParameterGroupConfig_parameters(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "parameters.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.#", acctest.Ct2),
 				),
 			},
 		},

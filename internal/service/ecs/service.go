@@ -310,7 +310,7 @@ func ResourceService() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"propagate_tags": {
+			names.AttrPropagateTags: {
 				Type:     schema.TypeString,
 				Optional: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
@@ -617,7 +617,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.PlatformVersion = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("propagate_tags"); ok {
+	if v, ok := d.GetOk(names.AttrPropagateTags); ok {
 		input.PropagateTags = aws.String(v.(string))
 	}
 
@@ -744,7 +744,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("health_check_grace_period_seconds", service.HealthCheckGracePeriodSeconds)
 	d.Set("launch_type", service.LaunchType)
 	d.Set("enable_ecs_managed_tags", service.EnableECSManagedTags)
-	d.Set("propagate_tags", service.PropagateTags)
+	d.Set(names.AttrPropagateTags, service.PropagateTags)
 	d.Set("platform_version", service.PlatformVersion)
 	d.Set("enable_execute_command", service.EnableExecuteCommand)
 
@@ -948,8 +948,8 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.PlatformVersion = aws.String(d.Get("platform_version").(string))
 		}
 
-		if d.HasChange("propagate_tags") {
-			input.PropagateTags = aws.String(d.Get("propagate_tags").(string))
+		if d.HasChange(names.AttrPropagateTags) {
+			input.PropagateTags = aws.String(d.Get(names.AttrPropagateTags).(string))
 		}
 
 		if d.HasChange("service_connect_configuration") {

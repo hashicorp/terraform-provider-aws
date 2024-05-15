@@ -42,7 +42,7 @@ func TestAccDSTrust_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrustExists(ctx, resourceName, &v),
 					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`^t-\w{10}`)),
-					resource.TestCheckResourceAttr(resourceName, "conditional_forwarder_ip_addrs.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "conditional_forwarder_ip_addrs.#", acctest.Ct2),
 					resource.TestCheckResourceAttrPair(resourceName, "directory_id", "aws_directory_service_directory.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "remote_domain_name", domainNameOther),
 					resource.TestCheckResourceAttr(resourceName, "selective_auth", string(awstypes.SelectiveAuthDisabled)),
@@ -403,7 +403,7 @@ func TestAccDSTrust_ConditionalForwarderIPs(t *testing.T) {
 				Config: testAccTrustConfig_basic(rName, domainName, domainNameOther),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrustExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "conditional_forwarder_ip_addrs.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "conditional_forwarder_ip_addrs.#", acctest.Ct2),
 				),
 			},
 			{
@@ -420,7 +420,7 @@ func TestAccDSTrust_ConditionalForwarderIPs(t *testing.T) {
 				Config: testAccTrustConfig_ConditionalForwarderIPs(rName, domainName, domainNameOther),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrustExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "conditional_forwarder_ip_addrs.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "conditional_forwarder_ip_addrs.#", acctest.Ct1),
 				),
 			},
 			{
@@ -459,7 +459,7 @@ func TestAccDSTrust_deleteAssociatedConditionalForwarder(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrustExists(ctx, resourceName, &v),
 					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`^t-\w{10}`)),
-					resource.TestCheckResourceAttr(resourceName, "conditional_forwarder_ip_addrs.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "conditional_forwarder_ip_addrs.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "delete_associated_conditional_forwarder", "true"),
 				),
 			},

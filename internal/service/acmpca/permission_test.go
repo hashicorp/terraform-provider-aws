@@ -34,7 +34,7 @@ func TestAccACMPCAPermission_basic(t *testing.T) {
 				Config: testAccPermissionConfig_basic(commonName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName, &permission),
-					resource.TestCheckResourceAttr(resourceName, "actions.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "actions.#", acctest.Ct3),
 					resource.TestCheckTypeSetElemAttr(resourceName, "actions.*", "GetCertificate"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "actions.*", "IssueCertificate"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "actions.*", "ListPermissions"),

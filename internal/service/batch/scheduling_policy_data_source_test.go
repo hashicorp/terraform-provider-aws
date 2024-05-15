@@ -33,7 +33,7 @@ func TestAccBatchSchedulingPolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "fair_share_policy.0.share_decay_seconds", resourceName, "fair_share_policy.0.share_decay_seconds"),
 					resource.TestCheckResourceAttrPair(datasourceName, "fair_share_policy.0.share_distribution.#", resourceName, "fair_share_policy.0.share_distribution.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 				),
 			},
 		},

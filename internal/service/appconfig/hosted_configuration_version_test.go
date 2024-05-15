@@ -43,7 +43,7 @@ func TestAccAppConfigHostedConfigurationVersion_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrContent, "{\"foo\":\"bar\"}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrContentType, "application/json"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
-					resource.TestCheckResourceAttr(resourceName, "version_number", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "version_number", acctest.Ct1),
 				),
 			},
 			{

@@ -53,7 +53,7 @@ func ResourceMedicalVocabulary() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"language_code": {
+			names.AttrLanguageCode: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -85,7 +85,7 @@ func resourceMedicalVocabularyCreate(ctx context.Context, d *schema.ResourceData
 	in := &transcribe.CreateMedicalVocabularyInput{
 		VocabularyName:    aws.String(vocabularyName),
 		VocabularyFileUri: aws.String(d.Get("vocabulary_file_uri").(string)),
-		LanguageCode:      types.LanguageCode(d.Get("language_code").(string)),
+		LanguageCode:      types.LanguageCode(d.Get(names.AttrLanguageCode).(string)),
 		Tags:              getTagsIn(ctx),
 	}
 
@@ -133,7 +133,7 @@ func resourceMedicalVocabularyRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set(names.AttrARN, arn)
 	d.Set("download_uri", out.DownloadUri)
 	d.Set("vocabulary_name", out.VocabularyName)
-	d.Set("language_code", out.LanguageCode)
+	d.Set(names.AttrLanguageCode, out.LanguageCode)
 
 	return nil
 }
@@ -144,7 +144,7 @@ func resourceMedicalVocabularyUpdate(ctx context.Context, d *schema.ResourceData
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		in := &transcribe.UpdateMedicalVocabularyInput{
 			VocabularyName: aws.String(d.Id()),
-			LanguageCode:   types.LanguageCode(d.Get("language_code").(string)),
+			LanguageCode:   types.LanguageCode(d.Get(names.AttrLanguageCode).(string)),
 		}
 
 		if d.HasChanges("vocabulary_file_uri") {

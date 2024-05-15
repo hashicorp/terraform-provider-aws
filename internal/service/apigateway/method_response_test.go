@@ -36,11 +36,11 @@ func TestAccAPIGatewayMethodResponse_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMethodResponseExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "http_method", "GET"),
-					resource.TestCheckResourceAttr(resourceName, "response_models.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "response_models.%", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "response_models.application/json", "Error"),
-					resource.TestCheckResourceAttr(resourceName, "response_parameters.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "response_parameters.%", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "response_parameters.method.response.header.Content-Type", "true"),
-					resource.TestCheckResourceAttr(resourceName, "status_code", "400"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatusCode, "400"),
 				),
 			},
 			{
@@ -54,11 +54,11 @@ func TestAccAPIGatewayMethodResponse_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMethodResponseExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "http_method", "GET"),
-					resource.TestCheckResourceAttr(resourceName, "response_models.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "response_models.%", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "response_models.application/json", "Empty"),
-					resource.TestCheckResourceAttr(resourceName, "response_parameters.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "response_parameters.%", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "response_parameters.method.response.header.Host", "false"),
-					resource.TestCheckResourceAttr(resourceName, "status_code", "400"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatusCode, "400"),
 				),
 			},
 		},
@@ -98,7 +98,7 @@ func testAccCheckMethodResponseExists(ctx context.Context, n string, v *apigatew
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
-		output, err := tfapigateway.FindMethodResponseByFourPartKey(ctx, conn, rs.Primary.Attributes["http_method"], rs.Primary.Attributes[names.AttrResourceID], rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes["status_code"])
+		output, err := tfapigateway.FindMethodResponseByFourPartKey(ctx, conn, rs.Primary.Attributes["http_method"], rs.Primary.Attributes[names.AttrResourceID], rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes[names.AttrStatusCode])
 
 		if err != nil {
 			return err
@@ -119,7 +119,7 @@ func testAccCheckMethodResponseDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			_, err := tfapigateway.FindMethodResponseByFourPartKey(ctx, conn, rs.Primary.Attributes["http_method"], rs.Primary.Attributes[names.AttrResourceID], rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes["status_code"])
+			_, err := tfapigateway.FindMethodResponseByFourPartKey(ctx, conn, rs.Primary.Attributes["http_method"], rs.Primary.Attributes[names.AttrResourceID], rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes[names.AttrStatusCode])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -143,7 +143,7 @@ func testAccMethodResponseImportStateIdFunc(resourceName string) resource.Import
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s/%s/%s/%s", rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes[names.AttrResourceID], rs.Primary.Attributes["http_method"], rs.Primary.Attributes["status_code"]), nil
+		return fmt.Sprintf("%s/%s/%s/%s", rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes[names.AttrResourceID], rs.Primary.Attributes["http_method"], rs.Primary.Attributes[names.AttrStatusCode]), nil
 	}
 }
 

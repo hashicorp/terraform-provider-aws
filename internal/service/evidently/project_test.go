@@ -52,7 +52,7 @@ func TestAccEvidentlyProject_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "launch_count"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.ProjectStatusAvailable)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Test Project"),
 				),
 			},
@@ -75,7 +75,7 @@ func TestAccEvidentlyProject_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "launch_count"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Test Project"),
 				),
 			},
@@ -104,7 +104,7 @@ func TestAccEvidentlyProject_tags(t *testing.T) {
 				Config: testAccProjectConfig_basic(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Test Project"),
 				),
 			},
@@ -117,7 +117,7 @@ func TestAccEvidentlyProject_tags(t *testing.T) {
 				Config: testAccProjectConfig_tags1(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Test Project"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2a"),
 				),
@@ -131,7 +131,7 @@ func TestAccEvidentlyProject_tags(t *testing.T) {
 				Config: testAccProjectConfig_tags2(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct3),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Test Project"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2b"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "Value3"),
@@ -165,8 +165,8 @@ func TestAccEvidentlyProject_updateDataDeliveryCloudWatchLogGroup(t *testing.T) 
 				Config: testAccProjectConfig_dataDeliveryCloudWatchLogs(rName, rName2, rName3, rName4, rName5, "first"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "data_delivery.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "data_delivery.0.cloudwatch_logs.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "data_delivery.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "data_delivery.0.cloudwatch_logs.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "data_delivery.0.cloudwatch_logs.0.log_group", "aws_cloudwatch_log_group.test", names.AttrName)),
 			},
 			{
@@ -178,8 +178,8 @@ func TestAccEvidentlyProject_updateDataDeliveryCloudWatchLogGroup(t *testing.T) 
 				Config: testAccProjectConfig_dataDeliveryCloudWatchLogs(rName, rName2, rName3, rName4, rName5, "second"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "data_delivery.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "data_delivery.0.cloudwatch_logs.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "data_delivery.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "data_delivery.0.cloudwatch_logs.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "data_delivery.0.cloudwatch_logs.0.log_group", "aws_cloudwatch_log_group.test2", names.AttrName)),
 			},
 		},
@@ -211,8 +211,8 @@ func TestAccEvidentlyProject_updateDataDeliveryS3Bucket(t *testing.T) {
 				Config: testAccProjectConfig_dataDeliveryS3Bucket(rName, rName2, rName3, rName4, rName5, prefix, "first"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "data_delivery.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "data_delivery.0.s3_destination.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "data_delivery.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "data_delivery.0.s3_destination.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "data_delivery.0.s3_destination.0.bucket", "aws_s3_bucket.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "data_delivery.0.s3_destination.0.prefix", prefix),
 				),
@@ -226,8 +226,8 @@ func TestAccEvidentlyProject_updateDataDeliveryS3Bucket(t *testing.T) {
 				Config: testAccProjectConfig_dataDeliveryS3Bucket(rName, rName2, rName3, rName4, rName5, prefix, "second"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "data_delivery.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "data_delivery.0.s3_destination.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "data_delivery.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "data_delivery.0.s3_destination.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "data_delivery.0.s3_destination.0.bucket", "aws_s3_bucket.test2", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "data_delivery.0.s3_destination.0.prefix", prefix),
 				),
@@ -262,8 +262,8 @@ func TestAccEvidentlyProject_updateDataDeliveryS3Prefix(t *testing.T) {
 				Config: testAccProjectConfig_dataDeliveryS3Bucket(rName, rName2, rName3, rName4, rName5, originalPrefix, "first"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "data_delivery.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "data_delivery.0.s3_destination.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "data_delivery.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "data_delivery.0.s3_destination.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "data_delivery.0.s3_destination.0.bucket", "aws_s3_bucket.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "data_delivery.0.s3_destination.0.prefix", originalPrefix),
 				),
@@ -277,8 +277,8 @@ func TestAccEvidentlyProject_updateDataDeliveryS3Prefix(t *testing.T) {
 				Config: testAccProjectConfig_dataDeliveryS3Bucket(rName, rName2, rName3, rName4, rName5, updatedPrefix, "first"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "data_delivery.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "data_delivery.0.s3_destination.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "data_delivery.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "data_delivery.0.s3_destination.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "data_delivery.0.s3_destination.0.bucket", "aws_s3_bucket.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "data_delivery.0.s3_destination.0.prefix", updatedPrefix),
 				),
@@ -312,8 +312,8 @@ func TestAccEvidentlyProject_updateDataDeliveryCloudWatchToS3(t *testing.T) {
 				Config: testAccProjectConfig_dataDeliveryCloudWatchLogs(rName, rName2, rName3, rName4, rName5, "first"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "data_delivery.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "data_delivery.0.cloudwatch_logs.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "data_delivery.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "data_delivery.0.cloudwatch_logs.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "data_delivery.0.cloudwatch_logs.0.log_group", "aws_cloudwatch_log_group.test", names.AttrName)),
 			},
 			{
@@ -325,8 +325,8 @@ func TestAccEvidentlyProject_updateDataDeliveryCloudWatchToS3(t *testing.T) {
 				Config: testAccProjectConfig_dataDeliveryS3Bucket(rName, rName2, rName3, rName4, rName5, prefix, "first"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "data_delivery.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "data_delivery.0.s3_destination.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "data_delivery.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "data_delivery.0.s3_destination.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "data_delivery.0.s3_destination.0.bucket", "aws_s3_bucket.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "data_delivery.0.s3_destination.0.prefix", prefix),
 				),

@@ -15,9 +15,9 @@ func TestAccControlTower_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"LandingZone": {
-			"basic":        testAccLandingZone_basic,
-			"disappears":   testAccLandingZone_disappears,
-			names.AttrTags: testAccLandingZone_tags,
+			acctest.CtBasic: testAccLandingZone_basic,
+			"disappears":    testAccLandingZone_disappears,
+			names.AttrTags:  testAccLandingZone_tags,
 		},
 	}
 

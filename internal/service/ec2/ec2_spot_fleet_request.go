@@ -166,7 +166,7 @@ func ResourceSpotFleetRequest() *schema.Resource {
 										Computed: true,
 										ForceNew: true,
 									},
-									"snapshot_id": {
+									names.AttrSnapshotID: {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
@@ -1344,7 +1344,7 @@ func readSpotFleetBlockDeviceMappingsFromConfig(ctx context.Context, d map[strin
 				DeleteOnTermination: aws.Bool(bd[names.AttrDeleteOnTermination].(bool)),
 			}
 
-			if v, ok := bd["snapshot_id"].(string); ok && v != "" {
+			if v, ok := bd[names.AttrSnapshotID].(string); ok && v != "" {
 				ebs.SnapshotId = aws.String(v)
 			}
 
@@ -1980,7 +1980,7 @@ func ebsBlockDevicesToSet(bdm []*ec2.BlockDeviceMapping, rootDevName *string) *s
 			}
 
 			if ebs.SnapshotId != nil {
-				m["snapshot_id"] = aws.StringValue(ebs.SnapshotId)
+				m[names.AttrSnapshotID] = aws.StringValue(ebs.SnapshotId)
 			}
 
 			if ebs.Encrypted != nil {
@@ -2110,7 +2110,7 @@ func hashEBSBlockDevice(v interface{}) int {
 	if name, ok := m[names.AttrDeviceName]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", name.(string)))
 	}
-	if id, ok := m["snapshot_id"]; ok {
+	if id, ok := m[names.AttrSnapshotID]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", id.(string)))
 	}
 	return create.StringHashcode(buf.String())
