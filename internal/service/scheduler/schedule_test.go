@@ -103,7 +103,7 @@ func TestResourceScheduleParseID(t *testing.T) {
 		{
 			ID:           "default/test",
 			GroupName:    "default",
-			ScheduleName: acctest.CtTest,
+			ScheduleName: "test",
 			Fails:        false,
 		},
 		{
@@ -1404,7 +1404,7 @@ func TestAccSchedulerSchedule_targetRoleARN(t *testing.T) {
 		CheckDestroy:             testAccCheckScheduleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScheduleConfig_targetRoleARN(name, acctest.CtTest),
+				Config: testAccScheduleConfig_targetRoleARN(name, "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
 					resource.TestCheckResourceAttrPair(resourceName, "target.0.role_arn", "aws_iam_role.test", names.AttrARN),
