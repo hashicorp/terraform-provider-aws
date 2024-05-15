@@ -10,10 +10,12 @@ var (
 	ResourceOrganization           = resourceOrganization
 	ResourceOrganizationalUnit     = resourceOrganizationalUnit
 	ResourcePolicy                 = resourcePolicy
+	ResourcePolicyAttachment       = resourcePolicyAttachment
 
 	FindAccountByID                        = findAccountByID
 	FindDelegatedAdministratorByTwoPartKey = findDelegatedAdministratorByTwoPartKey
 	FindOrganizationalUnitByID             = findOrganizationalUnitByID
+	FindPolicyAttachmentByTwoPartKey       = findPolicyAttachmentByTwoPartKey
 	FindPolicyByID                         = findPolicyByID
 	FindResourcePolicy                     = findResourcePolicy
 )
