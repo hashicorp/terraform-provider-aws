@@ -294,7 +294,7 @@ func TestAccEMRInstanceGroup_EBS_ebsOptimized(t *testing.T) {
 				Config: testAccInstanceGroupConfig_ebs(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "ebs_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "ebs_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "true"),
 				),
 			},
@@ -309,7 +309,7 @@ func TestAccEMRInstanceGroup_EBS_ebsOptimized(t *testing.T) {
 				Config: testAccInstanceGroupConfig_ebs(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "ebs_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "ebs_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "false"),
 				),
 			},

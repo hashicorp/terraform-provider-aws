@@ -32,7 +32,7 @@ func TestAccQLDBLedgerDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrKMSKey, resourceName, names.AttrKMSKey),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, "permissions_mode", resourceName, "permissions_mode"),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 				),
 			},
 		},

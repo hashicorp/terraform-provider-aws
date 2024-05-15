@@ -35,8 +35,8 @@ func TestAccNetworkManagerSite_basic(t *testing.T) {
 					testAccCheckSiteExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "location.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "location.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -84,11 +84,11 @@ func TestAccNetworkManagerSite_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckSiteDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteConfig_tags1(rName, "key1", "value1"),
+				Config: testAccSiteConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSiteExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -98,20 +98,20 @@ func TestAccNetworkManagerSite_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSiteConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccSiteConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSiteExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccSiteConfig_tags1(rName, "key2", "value2"),
+				Config: testAccSiteConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSiteExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -168,7 +168,7 @@ func TestAccNetworkManagerSite_location(t *testing.T) {
 				Config: testAccSiteConfig_location(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSiteExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "location.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "location.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "location.0.address", "Stuart, FL"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.latitude", "27.198"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.longitude", "-80.253"),
@@ -184,7 +184,7 @@ func TestAccNetworkManagerSite_location(t *testing.T) {
 				Config: testAccSiteConfig_locationUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSiteExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "location.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "location.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "location.0.address", "Brisbane, QLD"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.latitude", "-27.470"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.longitude", "153.026"),

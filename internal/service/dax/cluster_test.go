@@ -49,7 +49,7 @@ func TestAccDAXCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, "node_type", "dax.t3.small"),
 					resource.TestCheckResourceAttr(
-						resourceName, "replication_factor", acctest.CtOne),
+						resourceName, "replication_factor", acctest.Ct1),
 					resource.TestCheckResourceAttr(
 						resourceName, names.AttrDescription, "test cluster"),
 					resource.TestMatchResourceAttr(
@@ -67,7 +67,7 @@ func TestAccDAXCluster_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(
 						resourceName, names.AttrPort, regexache.MustCompile(`^\d+$`)),
 					resource.TestCheckResourceAttr(
-						resourceName, "server_side_encryption.#", acctest.CtOne),
+						resourceName, "server_side_encryption.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(
 						resourceName, "server_side_encryption.0.enabled", "false"),
 				),
@@ -98,7 +98,7 @@ func TestAccDAXCluster_resize(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dc),
 					resource.TestCheckResourceAttr(
-						resourceName, "replication_factor", acctest.CtOne),
+						resourceName, "replication_factor", acctest.Ct1),
 				),
 			},
 			{
@@ -111,7 +111,7 @@ func TestAccDAXCluster_resize(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dc),
 					resource.TestCheckResourceAttr(
-						resourceName, "replication_factor", "2"),
+						resourceName, "replication_factor", acctest.Ct2),
 				),
 			},
 			{
@@ -119,7 +119,7 @@ func TestAccDAXCluster_resize(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dc),
 					resource.TestCheckResourceAttr(
-						resourceName, "replication_factor", acctest.CtOne),
+						resourceName, "replication_factor", acctest.Ct1),
 				),
 			},
 		},
@@ -142,7 +142,7 @@ func TestAccDAXCluster_Encryption_disabled(t *testing.T) {
 				Config: testAccClusterConfig_encryption(rString, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dc),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "false"),
 				),
 			},
@@ -177,7 +177,7 @@ func TestAccDAXCluster_Encryption_enabled(t *testing.T) {
 				Config: testAccClusterConfig_encryption(rString, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dc),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
 				),
 			},

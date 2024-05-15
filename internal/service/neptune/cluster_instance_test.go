@@ -57,11 +57,11 @@ func TestAccNeptuneClusterInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, strconv.Itoa(tfneptune.DefaultPort)),
 					resource.TestCheckResourceAttrSet(resourceName, "preferred_backup_window"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPreferredMaintenanceWindow),
-					resource.TestCheckResourceAttr(resourceName, "promotion_tier", "3"),
+					resource.TestCheckResourceAttr(resourceName, "promotion_tier", acctest.Ct3),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, "false"),
 					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "standard"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "writer", "true"),
 				),
 			},
@@ -176,11 +176,11 @@ func TestAccNeptuneClusterInstance_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterInstanceConfig_tags1(rName, "key1", "value1"),
+				Config: testAccClusterInstanceConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -189,20 +189,20 @@ func TestAccNeptuneClusterInstance_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterInstanceConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccClusterInstanceConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccClusterInstanceConfig_tags1(rName, "key2", "value2"),
+				Config: testAccClusterInstanceConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},

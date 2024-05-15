@@ -80,12 +80,12 @@ func testAccGraph_tags(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, names.DetectiveServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGraphConfig_tags1("key1", "value1"),
+				Config: testAccGraphConfig_tags1(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGraphExists(ctx, resourceName, &graph),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -94,20 +94,20 @@ func testAccGraph_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGraphConfig_tags2("key1", "value1updated", "key2", "value2"),
+				Config: testAccGraphConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGraphExists(ctx, resourceName, &graph),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccGraphConfig_tags1("key2", "value2"),
+				Config: testAccGraphConfig_tags1(acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGraphExists(ctx, resourceName, &graph),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},

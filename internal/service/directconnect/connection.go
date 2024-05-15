@@ -93,7 +93,7 @@ func ResourceConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"provider_name": {
+			names.AttrProviderName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -213,7 +213,7 @@ func ResourceConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"provider_name": {
+			names.AttrProviderName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -249,7 +249,7 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 		Tags:           getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("provider_name"); ok {
+	if v, ok := d.GetOk(names.AttrProviderName); ok {
 		input.ProviderName = aws.String(v.(string))
 	}
 
@@ -299,7 +299,7 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("owner_account_id", connection.OwnerAccount)
 	d.Set("partner_name", connection.PartnerName)
 	d.Set("port_encryption_status", connection.PortEncryptionStatus)
-	d.Set("provider_name", connection.ProviderName)
+	d.Set(names.AttrProviderName, connection.ProviderName)
 	d.Set("vlan_id", connection.Vlan)
 
 	// d.Set("request_macsec", d.Get("request_macsec").(bool))

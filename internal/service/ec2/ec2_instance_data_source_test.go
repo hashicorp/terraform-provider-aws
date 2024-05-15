@@ -28,7 +28,7 @@ func TestAccEC2InstanceDataSource_basic(t *testing.T) {
 				Config: testAccInstanceDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceType, resourceName, names.AttrInstanceType),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckNoResourceAttr(datasourceName, "user_data_base64"),
@@ -55,7 +55,7 @@ func TestAccEC2InstanceDataSource_tags(t *testing.T) {
 				Config: testAccInstanceDataSourceConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceType, resourceName, names.AttrInstanceType),
 					resource.TestCheckResourceAttrSet(datasourceName, "launch_time"),
 				),
@@ -79,7 +79,7 @@ func TestAccEC2InstanceDataSource_azUserData(t *testing.T) {
 				Config: testAccInstanceDataSourceConfig_azUser(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceType, resourceName, names.AttrInstanceType),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrAvailabilityZone, resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrPair(datasourceName, "user_data", resourceName, "user_data"),
@@ -332,7 +332,7 @@ func TestAccEC2InstanceDataSource_keyPair(t *testing.T) {
 				Config: testAccInstanceDataSourceConfig_keyPair(rName, publicKey),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceType, resourceName, names.AttrInstanceType),
 					resource.TestCheckResourceAttrSet(datasourceName, "launch_time"),
 					resource.TestCheckResourceAttrPair(datasourceName, "key_name", resourceName, "key_name"),
@@ -593,14 +593,14 @@ func TestAccEC2InstanceDataSource_autoRecovery(t *testing.T) {
 			{
 				Config: testAccInstanceDataSourceConfig_autoRecovery(rName, "default"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "maintenance_options.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(datasourceName, "maintenance_options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(datasourceName, "maintenance_options.0.auto_recovery", "default"),
 				),
 			},
 			{
 				Config: testAccInstanceDataSourceConfig_autoRecovery(rName, "disabled"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "maintenance_options.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(datasourceName, "maintenance_options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(datasourceName, "maintenance_options.0.auto_recovery", "disabled"),
 				),
 			},
@@ -746,7 +746,7 @@ func TestAccEC2InstanceDataSource_timeout(t *testing.T) {
 				Config: testAccInstanceDataSourceConfig_timeout(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrSet(datasourceName, "launch_time"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceType, resourceName, names.AttrInstanceType),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),

@@ -99,14 +99,14 @@ func ResourceEBSVolume() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Computed:     true,
-				AtLeastOneOf: []string{names.AttrSize, "snapshot_id"},
+				AtLeastOneOf: []string{names.AttrSize, names.AttrSnapshotID},
 			},
-			"snapshot_id": {
+			names.AttrSnapshotID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				AtLeastOneOf: []string{names.AttrSize, "snapshot_id"},
+				AtLeastOneOf: []string{names.AttrSize, names.AttrSnapshotID},
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -159,7 +159,7 @@ func resourceEBSVolumeCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.Size = aws.Int32(int32(value.(int)))
 	}
 
-	if value, ok := d.GetOk("snapshot_id"); ok {
+	if value, ok := d.GetOk(names.AttrSnapshotID); ok {
 		input.SnapshotId = aws.String(value.(string))
 	}
 
@@ -217,7 +217,7 @@ func resourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("multi_attach_enabled", volume.MultiAttachEnabled)
 	d.Set("outpost_arn", volume.OutpostArn)
 	d.Set(names.AttrSize, volume.Size)
-	d.Set("snapshot_id", volume.SnapshotId)
+	d.Set(names.AttrSnapshotID, volume.SnapshotId)
 	d.Set("throughput", volume.Throughput)
 	d.Set(names.AttrType, volume.VolumeType)
 

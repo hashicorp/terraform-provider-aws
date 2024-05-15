@@ -43,7 +43,7 @@ func TestAccGlobalAcceleratorAcceleratorDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSource1Name, "ip_sets.0.ip_addresses.1", resourceName, "ip_sets.0.ip_addresses.1"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "ip_sets.0.ip_family", resourceName, "ip_sets.0.ip_family"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, names.AttrName, resourceName, names.AttrName),
-					resource.TestCheckResourceAttrPair(dataSource1Name, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSource1Name, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 
 					resource.TestCheckResourceAttrPair(dataSource2Name, "attributes.#", resourceName, "attributes.#"),
 					resource.TestCheckResourceAttrPair(dataSource2Name, "attributes.0.flow_logs_enabled", resourceName, "attributes.0.flow_logs_enabled"),
@@ -60,7 +60,7 @@ func TestAccGlobalAcceleratorAcceleratorDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSource2Name, "ip_sets.0.ip_addresses.1", resourceName, "ip_sets.0.ip_addresses.1"),
 					resource.TestCheckResourceAttrPair(dataSource2Name, "ip_sets.0.ip_family", resourceName, "ip_sets.0.ip_family"),
 					resource.TestCheckResourceAttrPair(dataSource2Name, names.AttrName, resourceName, names.AttrName),
-					resource.TestCheckResourceAttrPair(dataSource2Name, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSource2Name, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 				),
 			},
 		},

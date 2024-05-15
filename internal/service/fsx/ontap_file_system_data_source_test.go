@@ -47,7 +47,7 @@ func TestAccFSxONTAPFileSystemDataSource_Id(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "storage_capacity", resourceName, "storage_capacity"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrStorageType, resourceName, names.AttrStorageType),
 					resource.TestCheckResourceAttrPair(datasourceName, "subnet_ids.#", resourceName, "subnet_ids.#"),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(datasourceName, "throughput_capacity", resourceName, "throughput_capacity"),
 					resource.TestCheckResourceAttrPair(datasourceName, "throughput_capacity_per_ha_pair", resourceName, "throughput_capacity_per_ha_pair"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrVPCID, resourceName, names.AttrVPCID),

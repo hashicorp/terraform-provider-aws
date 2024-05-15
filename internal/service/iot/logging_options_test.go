@@ -17,8 +17,8 @@ func TestAccIoTLoggingOptions_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		"basic":  testAccLoggingOptions_basic,
-		"update": testAccLoggingOptions_update,
+		acctest.CtBasic: testAccLoggingOptions_basic,
+		"update":        testAccLoggingOptions_update,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)

@@ -42,7 +42,7 @@ func resourceWebACL() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"default_action": {
+			names.AttrDefaultAction: {
 				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1,
@@ -173,7 +173,7 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	output, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &wafregional.CreateWebACLInput{
 			ChangeToken:   token,
-			DefaultAction: expandAction(d.Get("default_action").([]interface{})),
+			DefaultAction: expandAction(d.Get(names.AttrDefaultAction).([]interface{})),
 			MetricName:    aws.String(d.Get(names.AttrMetricName).(string)),
 			Name:          aws.String(name),
 			Tags:          getTagsIn(ctx),
@@ -212,7 +212,7 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		_, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 			input := &wafregional.UpdateWebACLInput{
 				ChangeToken:   token,
-				DefaultAction: expandAction(d.Get("default_action").([]interface{})),
+				DefaultAction: expandAction(d.Get(names.AttrDefaultAction).([]interface{})),
 				Updates:       diffWebACLRules([]interface{}{}, rules),
 				WebACLId:      aws.String(d.Id()),
 			}
@@ -252,7 +252,7 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 		Resource:  "webacl/" + d.Id(),
 	}.String()
 	d.Set(names.AttrARN, arn)
-	if err := d.Set("default_action", flattenAction(webACL.DefaultAction)); err != nil {
+	if err := d.Set(names.AttrDefaultAction, flattenAction(webACL.DefaultAction)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting default_action: %s", err)
 	}
 	d.Set(names.AttrMetricName, webACL.MetricName)
@@ -288,14 +288,14 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
 	region := meta.(*conns.AWSClient).Region
 
-	if d.HasChanges("default_action", names.AttrRule) {
+	if d.HasChanges(names.AttrDefaultAction, names.AttrRule) {
 		o, n := d.GetChange(names.AttrRule)
 		oldR, newR := o.(*schema.Set).List(), n.(*schema.Set).List()
 
 		_, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 			input := &wafregional.UpdateWebACLInput{
 				ChangeToken:   token,
-				DefaultAction: expandAction(d.Get("default_action").([]interface{})),
+				DefaultAction: expandAction(d.Get(names.AttrDefaultAction).([]interface{})),
 				Updates:       diffWebACLRules(oldR, newR),
 				WebACLId:      aws.String(d.Id()),
 			}
@@ -344,7 +344,7 @@ func resourceWebACLDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		_, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 			input := &wafregional.UpdateWebACLInput{
 				ChangeToken:   token,
-				DefaultAction: expandAction(d.Get("default_action").([]interface{})),
+				DefaultAction: expandAction(d.Get(names.AttrDefaultAction).([]interface{})),
 				Updates:       diffWebACLRules(rules, []interface{}{}),
 				WebACLId:      aws.String(d.Id()),
 			}

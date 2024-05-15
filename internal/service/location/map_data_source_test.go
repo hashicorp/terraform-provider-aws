@@ -34,7 +34,7 @@ func TestAccLocationMapDataSource_mapName(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(dataSourceName, "map_arn", resourceName, "map_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "map_name", resourceName, "map_name"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(dataSourceName, "update_time", resourceName, "update_time"),
 				),
 			},

@@ -1,11 +1,13 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package dms
+package dms_test
 
 import (
 	"testing"
 
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -82,8 +84,8 @@ func TestTaskSettingsEqual(t *testing.T) {
 				expected: true,
 			},
 			"not equal": {
-				a:        "value1",
-				b:        "value2",
+				a:        acctest.CtValue1,
+				b:        acctest.CtValue2,
 				expected: false,
 			},
 			"both null": {
@@ -105,14 +107,14 @@ func TestTaskSettingsEqual(t *testing.T) {
 		"map": {
 			"equal": {
 				a: map[string]any{
-					"key1": names.AttrValue,
-					"key2": map[string]any{
+					acctest.CtKey1: names.AttrValue,
+					acctest.CtKey2: map[string]any{
 						"key3": names.AttrValue,
 					},
 				},
 				b: map[string]any{
-					"key1": names.AttrValue,
-					"key2": map[string]any{
+					acctest.CtKey1: names.AttrValue,
+					acctest.CtKey2: map[string]any{
 						"key3": names.AttrValue,
 					},
 				},
@@ -120,29 +122,29 @@ func TestTaskSettingsEqual(t *testing.T) {
 			},
 			"not equal": {
 				a: map[string]any{
-					"key1": names.AttrValue,
-					"key2": map[string]any{
-						"key3": "value1",
+					acctest.CtKey1: names.AttrValue,
+					acctest.CtKey2: map[string]any{
+						"key3": acctest.CtValue1,
 					},
 				},
 				b: map[string]any{
-					"key1": names.AttrValue,
-					"key2": map[string]any{
-						"key3": "value2",
+					acctest.CtKey1: names.AttrValue,
+					acctest.CtKey2: map[string]any{
+						"key3": acctest.CtValue2,
 					},
 				},
 				expected: false,
 			},
 			"proposed null": {
 				a: map[string]any{
-					"key1": names.AttrValue,
-					"key2": map[string]any{
+					acctest.CtKey1: names.AttrValue,
+					acctest.CtKey2: map[string]any{
 						"key3": names.AttrValue,
 					},
 				},
 				b: map[string]any{
-					"key1": nil,
-					"key2": map[string]any{
+					acctest.CtKey1: nil,
+					acctest.CtKey2: map[string]any{
 						"key3": names.AttrValue,
 					},
 				},
@@ -161,7 +163,7 @@ func TestTaskSettingsEqual(t *testing.T) {
 				t.Run(name, func(t *testing.T) {
 					t.Parallel()
 
-					if taskSettingsEqual(test.a, test.b) != test.expected {
+					if tfdms.TaskSettingsEqual(test.a, test.b) != test.expected {
 						t.Fatalf("expected %v, got %v", test.expected, !test.expected)
 					}
 				})

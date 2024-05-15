@@ -50,7 +50,7 @@ func TestAccCloudFormationType_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "An example resource schema demonstrating some basic constructs and validation rules."),
 					resource.TestCheckResourceAttr(resourceName, names.AttrExecutionRoleARN, ""),
 					resource.TestCheckResourceAttr(resourceName, "is_default_version", "true"),
-					resource.TestCheckResourceAttr(resourceName, "logging_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "provisioning_type", string(awstypes.ProvisioningTypeFullyMutable)),
 					resource.TestCheckResourceAttr(resourceName, "schema_handler_package", fmt.Sprintf("s3://%s/test", rName)),
 					resource.TestMatchResourceAttr(resourceName, names.AttrSchema, regexache.MustCompile(`^\{.*`)),
@@ -137,7 +137,7 @@ func TestAccCloudFormationType_logging(t *testing.T) {
 				Config: testAccTypeConfig_logging(rName, zipPath, typeName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTypeExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "logging_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "logging_config.0.log_group_name", cloudwatchLogGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, "logging_config.0.log_role_arn", iamRoleResourceName, names.AttrARN),
 				),

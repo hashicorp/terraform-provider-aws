@@ -15,6 +15,8 @@ BUG FIXES:
 * resource/aws_dynamodb_table: Fix `UnknownOperationException: Tagging is not currently supported in DynamoDB Local` errors on resource Read ([#37472](https://github.com/hashicorp/terraform-provider-aws/issues/37472))
 * resource/aws_glue_job: Fix `interface conversion: interface {} is nil, not map[string]interface {}` panic when `notify_delay_after` is empty (`null`) ([#37347](https://github.com/hashicorp/terraform-provider-aws/issues/37347))
 * resource/aws_lakeformation_data_cells_filter: Fix inconsistent `state` error when using `row_filter.all_rows_wildcard` ([#37433](https://github.com/hashicorp/terraform-provider-aws/issues/37433))
+* resource/aws_organizations_account: Allow import of accounts with IAM access to the AWS Billing and Cost Management console ([#35662](https://github.com/hashicorp/terraform-provider-aws/issues/35662))
+* resource/aws_ram_principal_association: Correct plan-time validation of `principal` to fix `panic: unexpected format for ID parts ([...]), the following id parts indexes are blank ([1])` ([#37450](https://github.com/hashicorp/terraform-provider-aws/issues/37450))
 
 ## 5.49.0 (May 10, 2024)
 

@@ -124,7 +124,7 @@ func ResourceAMI() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"snapshot_id": {
+						names.AttrSnapshotID: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -154,7 +154,7 @@ func ResourceAMI() *schema.Resource {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
 					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m["snapshot_id"].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrSnapshotID].(string)))
 					return create.StringHashcode(buf.String())
 				},
 			},
@@ -343,7 +343,7 @@ func resourceAMICreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 			var snapshot string
 
-			if v, ok := tfMap["snapshot_id"].(string); ok && v != "" {
+			if v, ok := tfMap[names.AttrSnapshotID].(string); ok && v != "" {
 				snapshot = v
 			}
 
@@ -511,7 +511,7 @@ func resourceAMIDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 		req := &ec2.DeleteSnapshotInput{}
 		for _, ebsBlockDevI := range ebsBlockDevsSet.List() {
 			ebsBlockDev := ebsBlockDevI.(map[string]interface{})
-			snapshotId := ebsBlockDev["snapshot_id"].(string)
+			snapshotId := ebsBlockDev[names.AttrSnapshotID].(string)
 			if snapshotId != "" {
 				req.SnapshotId = aws.String(snapshotId)
 				_, err := conn.DeleteSnapshotWithContext(ctx, req)
@@ -623,7 +623,7 @@ func expandBlockDeviceMappingForAMIEBSBlockDevice(tfMap map[string]interface{}) 
 	}
 
 	// "Parameter encrypted is invalid. You cannot specify the encrypted flag if specifying a snapshot id in a block device mapping."
-	if v, ok := tfMap["snapshot_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrSnapshotID].(string); ok && v != "" {
 		apiObject.Ebs.SnapshotId = aws.String(v)
 	} else if v, ok := tfMap[names.AttrEncrypted].(bool); ok {
 		apiObject.Ebs.Encrypted = aws.Bool(v)
@@ -702,7 +702,7 @@ func flattenBlockDeviceMappingForAMIEBSBlockDevice(apiObject *ec2.BlockDeviceMap
 	}
 
 	if v := apiObject.Ebs.SnapshotId; v != nil {
-		tfMap["snapshot_id"] = aws.StringValue(v)
+		tfMap[names.AttrSnapshotID] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Ebs.Throughput; v != nil {

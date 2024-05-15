@@ -76,13 +76,13 @@ func ResourceTaskSet() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"external_id": {
+			names.AttrExternalID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 				Computed: true,
 			},
-			"force_delete": {
+			names.AttrForceDelete: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -289,7 +289,7 @@ func resourceTaskSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.CapacityProviderStrategy = expandCapacityProviderStrategy(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("external_id"); ok {
+	if v, ok := d.GetOk(names.AttrExternalID); ok {
 		input.ExternalId = aws.String(v.(string))
 	}
 
@@ -410,7 +410,7 @@ func resourceTaskSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("cluster", cluster)
 	d.Set("launch_type", taskSet.LaunchType)
 	d.Set("platform_version", taskSet.PlatformVersion)
-	d.Set("external_id", taskSet.ExternalId)
+	d.Set(names.AttrExternalID, taskSet.ExternalId)
 	d.Set("service", service)
 	d.Set(names.AttrStatus, taskSet.Status)
 	d.Set("stability_status", taskSet.StabilityStatus)
@@ -491,7 +491,7 @@ func resourceTaskSetDelete(ctx context.Context, d *schema.ResourceData, meta int
 		Cluster: aws.String(cluster),
 		Service: aws.String(service),
 		TaskSet: aws.String(taskSetId),
-		Force:   aws.Bool(d.Get("force_delete").(bool)),
+		Force:   aws.Bool(d.Get(names.AttrForceDelete).(bool)),
 	}
 
 	_, err = conn.DeleteTaskSetWithContext(ctx, input)

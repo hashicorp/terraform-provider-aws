@@ -35,7 +35,7 @@ func TestAccEC2EBSSnapshotDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "owner_alias", resourceName, "owner_alias"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrOwnerID, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "storage_tier", resourceName, "storage_tier"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(dataSourceName, "volume_id", resourceName, "volume_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrVolumeSize, resourceName, names.AttrVolumeSize),
 				),
