@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccFMS_serial(t *testing.T) {
@@ -27,7 +26,7 @@ func TestAccFMS_serial(t *testing.T) {
 			"policyOption":           testAccPolicy_policyOption,
 			"resourceTags":           testAccPolicy_resourceTags,
 			"securityGroup":          testAccPolicy_securityGroup,
-			names.AttrTags:           testAccPolicy_tags,
+			"tags":                   testAccPolicy_tags,
 			"update":                 testAccPolicy_update,
 		},
 	}

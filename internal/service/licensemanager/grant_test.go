@@ -39,7 +39,7 @@ func TestAccLicenseManagerGrant_serial(t *testing.T) {
 		"grant": {
 			acctest.CtBasic: testAccGrant_basic,
 			"disappears":    testAccGrant_disappears,
-			names.AttrName:  testAccGrant_name,
+			"name":          testAccGrant_name,
 		},
 		"grant_accepter": {
 			acctest.CtBasic: testAccGrantAccepter_basic,

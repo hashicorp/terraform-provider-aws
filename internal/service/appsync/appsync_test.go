@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAppSync_serial(t *testing.T) {
@@ -16,17 +15,17 @@ func TestAccAppSync_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"APIKey": {
-			acctest.CtBasic:       testAccAPIKey_basic,
-			names.AttrDescription: testAccAPIKey_description,
-			"expires":             testAccAPIKey_expires,
+			acctest.CtBasic: testAccAPIKey_basic,
+			"description":   testAccAPIKey_description,
+			"expires":       testAccAPIKey_expires,
 		},
 		"DataSource": {
 			acctest.CtBasic:                 testAccDataSource_basic,
-			names.AttrDescription:           testAccDataSource_description,
+			"description":                   testAccDataSource_description,
 			"DynamoDB_region":               testAccDataSource_DynamoDB_region,
 			"DynamoDB_useCallerCredentials": testAccDataSource_DynamoDB_useCallerCredentials,
 			"HTTP_endpoint":                 testAccDataSource_HTTP_endpoint,
-			names.AttrType:                  testAccDataSource_type,
+			"type":                          testAccDataSource_type,
 			"Type_dynamoDB":                 testAccDataSource_Type_dynamoDB,
 			"Type_http":                     testAccDataSource_Type_http,
 			"Type_http_auth":                testAccDataSource_Type_httpAuth,
@@ -37,13 +36,13 @@ func TestAccAppSync_serial(t *testing.T) {
 			"Type_eventBridge":              testAccDataSource_Type_eventBridge,
 		},
 		"GraphQLAPI": {
-			acctest.CtBasic:                             testAccGraphQLAPI_basic,
-			"disappears":                                testAccGraphQLAPI_disappears,
-			names.AttrTags:                              testAccGraphQLAPI_tags,
-			names.AttrSchema:                            testAccGraphQLAPI_schema,
-			"authenticationType":                        testAccGraphQLAPI_authenticationType,
-			"AuthenticationType_apiKey":                 testAccGraphQLAPI_AuthenticationType_apiKey,
-			"AuthenticationType_awsIAM":                 testAccGraphQLAPI_AuthenticationType_iam,
+			acctest.CtBasic:             testAccGraphQLAPI_basic,
+			"disappears":                testAccGraphQLAPI_disappears,
+			"tags":                      testAccGraphQLAPI_tags,
+			"schema":                    testAccGraphQLAPI_schema,
+			"authenticationType":        testAccGraphQLAPI_authenticationType,
+			"AuthenticationType_apiKey": testAccGraphQLAPI_AuthenticationType_apiKey,
+			"AuthenticationType_awsIAM": testAccGraphQLAPI_AuthenticationType_iam,
 			"AuthenticationType_amazonCognitoUserPools": testAccGraphQLAPI_AuthenticationType_amazonCognitoUserPools,
 			"AuthenticationType_openIDConnect":          testAccGraphQLAPI_AuthenticationType_openIDConnect,
 			"AuthenticationType_awsLambda":              testAccGraphQLAPI_AuthenticationType_lambda,
@@ -54,7 +53,7 @@ func TestAccAppSync_serial(t *testing.T) {
 			"OpenIDConnect_clientID":                    testAccGraphQLAPI_OpenIDConnect_clientID,
 			"OpenIDConnect_iatTTL":                      testAccGraphQLAPI_OpenIDConnect_iatTTL,
 			"OpenIDConnect_issuer":                      testAccGraphQLAPI_OpenIDConnect_issuer,
-			names.AttrName:                              testAccGraphQLAPI_name,
+			"name":                                      testAccGraphQLAPI_name,
 			"UserPool_awsRegion":                        testAccGraphQLAPI_UserPool_region,
 			"UserPool_defaultAction":                    testAccGraphQLAPI_UserPool_defaultAction,
 			"LambdaAuthorizerConfig_authorizerUri":      testAccGraphQLAPI_LambdaAuthorizerConfig_authorizerURI,
@@ -76,7 +75,7 @@ func TestAccAppSync_serial(t *testing.T) {
 			acctest.CtBasic:           testAccFunction_basic,
 			"code":                    testAccFunction_code,
 			"disappears":              testAccFunction_disappears,
-			names.AttrDescription:     testAccFunction_description,
+			"description":             testAccFunction_description,
 			"responseMappingTemplate": testAccFunction_responseMappingTemplate,
 			"sync":                    testAccFunction_syncConfig,
 		},
@@ -102,9 +101,9 @@ func TestAccAppSync_serial(t *testing.T) {
 			"disappears":    testAccType_disappears,
 		},
 		"DomainName": {
-			acctest.CtBasic:       testAccDomainName_basic,
-			"disappears":          testAccDomainName_disappears,
-			names.AttrDescription: testAccDomainName_description,
+			acctest.CtBasic: testAccDomainName_basic,
+			"disappears":    testAccDomainName_disappears,
+			"description":   testAccDomainName_description,
 		},
 		"DomainNameAssociation": {
 			acctest.CtBasic: testAccDomainNameAPIAssociation_basic,
