@@ -24,7 +24,7 @@ application-autoscaling,applicationautoscaling,applicationautoscaling,applicatio
 applicationcostprofiler,applicationcostprofiler,applicationcostprofiler,applicationcostprofiler,,applicationcostprofiler,,,ApplicationCostProfiler,ApplicationCostProfiler,,1,,,aws_applicationcostprofiler_,,applicationcostprofiler_,Application Cost Profiler,AWS,,x,,,,,ApplicationCostProfiler,,,
 discovery,discovery,applicationdiscoveryservice,applicationdiscoveryservice,,discovery,,applicationdiscovery;applicationdiscoveryservice,Discovery,ApplicationDiscoveryService,,1,,,aws_discovery_,,discovery_,Application Discovery,AWS,,x,,,,,Application Discovery Service,,,
 mgn,mgn,mgn,mgn,,mgn,,,Mgn,Mgn,,1,,,aws_mgn_,,mgn_,Application Migration (Mgn),AWS,,x,,,,,mgn,,,
-appstream,appstream,appstream,appstream,,appstream,,,AppStream,AppStream,,1,,,aws_appstream_,,appstream_,AppStream 2.0,Amazon,,,,,,,AppStream,ListAssociatedFleets,,
+appstream,appstream,appstream,appstream,,appstream,,,AppStream,AppStream,,,2,,aws_appstream_,,appstream_,AppStream 2.0,Amazon,,,,,,,AppStream,ListAssociatedFleets,"StackName: aws_sdkv2.String(""test"")",
 appsync,appsync,appsync,appsync,,appsync,,,AppSync,AppSync,,1,,,aws_appsync_,,appsync_,AppSync,AWS,,,,,,,AppSync,ListDomainNames,,
 ,,,,,,,,,,,,,,,,,Artifact,AWS,x,,,,,,,,,No SDK support
 athena,athena,athena,athena,,athena,,,Athena,Athena,,,2,,aws_athena_,,athena_,Athena,Amazon,,,,,,,Athena,ListDataCatalogs,,
