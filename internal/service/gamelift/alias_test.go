@@ -51,12 +51,12 @@ func TestAccGameLiftAlias_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(ctx, resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`alias/alias-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "routing_strategy.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "routing_strategy.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "routing_strategy.0.message", message),
 					resource.TestCheckResourceAttr(resourceName, "routing_strategy.0.type", "TERMINAL"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, aliasName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -69,12 +69,12 @@ func TestAccGameLiftAlias_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(ctx, resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`alias/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "routing_strategy.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "routing_strategy.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "routing_strategy.0.message", uMessage),
 					resource.TestCheckResourceAttr(resourceName, "routing_strategy.0.type", "TERMINAL"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, uAliasName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, uDescription),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 		},
@@ -102,7 +102,7 @@ func TestAccGameLiftAlias_tags(t *testing.T) {
 				Config: testAccAliasConfig_basicTags1(aliasName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -115,7 +115,7 @@ func TestAccGameLiftAlias_tags(t *testing.T) {
 				Config: testAccAliasConfig_basicTags2(aliasName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -124,7 +124,7 @@ func TestAccGameLiftAlias_tags(t *testing.T) {
 				Config: testAccAliasConfig_basicTags1(aliasName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -182,7 +182,7 @@ func TestAccGameLiftAlias_fleetRouting(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(ctx, resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`alias/alias-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "routing_strategy.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "routing_strategy.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "routing_strategy.0.fleet_id"),
 					resource.TestCheckResourceAttr(resourceName, "routing_strategy.0.type", "SIMPLE"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, aliasName),

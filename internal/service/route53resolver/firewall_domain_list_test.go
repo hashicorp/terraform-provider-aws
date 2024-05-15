@@ -36,9 +36,9 @@ func TestAccRoute53ResolverFirewallDomainList_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallDomainListExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "domains.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "domains.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -69,7 +69,7 @@ func TestAccRoute53ResolverFirewallDomainList_domains(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallDomainListExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "domains.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "domains.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "domains.*", domainName1),
 				),
 			},
@@ -83,7 +83,7 @@ func TestAccRoute53ResolverFirewallDomainList_domains(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallDomainListExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "domains.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "domains.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "domains.*", domainName2),
 				),
 			},
@@ -92,7 +92,7 @@ func TestAccRoute53ResolverFirewallDomainList_domains(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallDomainListExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "domains.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "domains.#", acctest.Ct0),
 				),
 			},
 		},
@@ -140,7 +140,7 @@ func TestAccRoute53ResolverFirewallDomainList_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallDomainListExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -154,7 +154,7 @@ func TestAccRoute53ResolverFirewallDomainList_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallDomainListExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -164,7 +164,7 @@ func TestAccRoute53ResolverFirewallDomainList_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallDomainListExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},

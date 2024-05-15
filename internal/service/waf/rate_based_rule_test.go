@@ -24,7 +24,7 @@ import (
 func TestAccWAFRateBasedRule_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"resource": {
-			"basic":              testAccWAFRateBasedRule_basic,
+			acctest.CtBasic:      testAccWAFRateBasedRule_basic,
 			"changeNameForceNew": testAccWAFRateBasedRule_changeNameForceNew,
 			"disappears":         testAccWAFRateBasedRule_disappears,
 			"changePredicates":   testAccWAFRateBasedRule_changePredicates,
@@ -33,7 +33,7 @@ func TestAccWAFRateBasedRule_serial(t *testing.T) {
 			"Tags":               testAccWAFRateBasedRule_tags,
 		},
 		"data_source": {
-			"basic": testAccWAFRateBasedRuleDataSource_basic,
+			acctest.CtBasic: testAccWAFRateBasedRuleDataSource_basic,
 		},
 	}
 
@@ -58,7 +58,7 @@ func testAccWAFRateBasedRule_basic(t *testing.T) {
 					testAccCheckRateBasedRuleExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "waf", regexache.MustCompile(`ratebasedrule/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafRuleName),
-					resource.TestCheckResourceAttr(resourceName, "predicates.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "predicates.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, wafRuleName),
 				),
 			},
@@ -89,7 +89,7 @@ func testAccWAFRateBasedRule_changeNameForceNew(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRateBasedRuleExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafRuleName),
-					resource.TestCheckResourceAttr(resourceName, "predicates.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "predicates.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, wafRuleName),
 				),
 			},
@@ -98,7 +98,7 @@ func testAccWAFRateBasedRule_changeNameForceNew(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRateBasedRuleExists(ctx, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafRuleNewName),
-					resource.TestCheckResourceAttr(resourceName, "predicates.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "predicates.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, wafRuleNewName),
 				),
 			},
@@ -156,7 +156,7 @@ func testAccWAFRateBasedRule_changePredicates(t *testing.T) {
 					testAccCheckIPSetExists(ctx, "aws_waf_ipset.ipset", &ipset),
 					testAccCheckRateBasedRuleExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleName),
-					resource.TestCheckResourceAttr(resourceName, "predicates.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "predicates.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicates.*", map[string]string{
 						"negated":      "false",
 						names.AttrType: "IPMatch",
@@ -169,7 +169,7 @@ func testAccWAFRateBasedRule_changePredicates(t *testing.T) {
 					testAccCheckByteMatchSetExists(ctx, "aws_waf_byte_match_set.set", &byteMatchSet),
 					testAccCheckRateBasedRuleExists(ctx, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleName),
-					resource.TestCheckResourceAttr(resourceName, "predicates.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "predicates.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicates.*", map[string]string{
 						"negated":      "true",
 						names.AttrType: "ByteMatch",
@@ -206,7 +206,7 @@ func testAccWAFRateBasedRule_changeRateLimit(t *testing.T) {
 					testAccCheckRateBasedRuleExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleName),
 					resource.TestCheckResourceAttr(resourceName, "rate_limit", "4000"),
-					resource.TestCheckResourceAttr(resourceName, "predicates.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "predicates.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicates.*", map[string]string{
 						"negated":      "false",
 						names.AttrType: "IPMatch",
@@ -220,7 +220,7 @@ func testAccWAFRateBasedRule_changeRateLimit(t *testing.T) {
 					testAccCheckRateBasedRuleExists(ctx, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleName),
 					resource.TestCheckResourceAttr(resourceName, "rate_limit", "3000"),
-					resource.TestCheckResourceAttr(resourceName, "predicates.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "predicates.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicates.*", map[string]string{
 						"negated":      "false",
 						names.AttrType: "IPMatch",
@@ -253,7 +253,7 @@ func testAccWAFRateBasedRule_noPredicates(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRateBasedRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleName),
-					resource.TestCheckResourceAttr(resourceName, "predicates.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "predicates.#", acctest.Ct0),
 				),
 			},
 			{
@@ -283,7 +283,7 @@ func testAccWAFRateBasedRule_tags(t *testing.T) {
 					testAccCheckRateBasedRuleExists(ctx, resourceName, &rule),
 					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "waf", regexache.MustCompile(`ratebasedrule/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -292,7 +292,7 @@ func testAccWAFRateBasedRule_tags(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRateBasedRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -302,7 +302,7 @@ func testAccWAFRateBasedRule_tags(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRateBasedRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},

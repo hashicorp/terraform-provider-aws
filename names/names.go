@@ -28,6 +28,7 @@ const (
 	AccessAnalyzerEndpointID             = "access-analyzer"
 	ACMPCAEndpointID                     = "acm-pca"
 	AMPEndpointID                        = "aps"
+	AppStreamEndpointID                  = "appstream2"
 	ApplicationAutoscalingEndpointID     = "application-autoscaling"
 	AppIntegrationsEndpointID            = "app-integrations"
 	AppConfigEndpointID                  = "appconfig"

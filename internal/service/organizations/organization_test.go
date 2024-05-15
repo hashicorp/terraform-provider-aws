@@ -36,22 +36,22 @@ func testAccOrganization_basic(t *testing.T) {
 				Config: testAccOrganizationConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOrganizationExists(ctx, resourceName, &organization),
-					resource.TestCheckResourceAttr(resourceName, "accounts.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "accounts.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "accounts.0.arn", resourceName, "master_account_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "accounts.0.email", resourceName, "master_account_email"),
 					resource.TestCheckResourceAttrPair(resourceName, "accounts.0.id", resourceName, "master_account_id"),
 					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "organizations", regexache.MustCompile(`organization/o-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "aws_service_access_principals.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "aws_service_access_principals.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "feature_set", organizations.OrganizationFeatureSetAll),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "master_account_arn", "organizations", regexache.MustCompile(`account/o-.+/.+`)),
 					resource.TestMatchResourceAttr(resourceName, "master_account_email", regexache.MustCompile(`.+@.+`)),
 					acctest.CheckResourceAttrAccountID(resourceName, "master_account_id"),
-					resource.TestCheckResourceAttr(resourceName, "non_master_accounts.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "roots.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "non_master_accounts.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "roots.#", acctest.Ct1),
 					resource.TestMatchResourceAttr(resourceName, "roots.0.id", regexache.MustCompile(`r-[0-9a-z]{4,32}`)),
 					resource.TestCheckResourceAttrSet(resourceName, "roots.0.name"),
 					resource.TestCheckResourceAttrSet(resourceName, "roots.0.arn"),
-					resource.TestCheckResourceAttr(resourceName, "roots.0.policy_types.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "roots.0.policy_types.#", acctest.Ct0),
 				),
 			},
 			{
@@ -101,7 +101,7 @@ func testAccOrganization_serviceAccessPrincipals(t *testing.T) {
 				Config: testAccOrganizationConfig_serviceAccessPrincipals1("config.amazonaws.com"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(ctx, resourceName, &organization),
-					resource.TestCheckResourceAttr(resourceName, "aws_service_access_principals.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "aws_service_access_principals.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "aws_service_access_principals.*", "config.amazonaws.com"),
 				),
 			},
@@ -114,7 +114,7 @@ func testAccOrganization_serviceAccessPrincipals(t *testing.T) {
 				Config: testAccOrganizationConfig_serviceAccessPrincipals2("config.amazonaws.com", "ds.amazonaws.com"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(ctx, resourceName, &organization),
-					resource.TestCheckResourceAttr(resourceName, "aws_service_access_principals.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "aws_service_access_principals.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemAttr(resourceName, "aws_service_access_principals.*", "config.amazonaws.com"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "aws_service_access_principals.*", "ds.amazonaws.com"),
 				),
@@ -123,7 +123,7 @@ func testAccOrganization_serviceAccessPrincipals(t *testing.T) {
 				Config: testAccOrganizationConfig_serviceAccessPrincipals1("fms.amazonaws.com"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(ctx, resourceName, &organization),
-					resource.TestCheckResourceAttr(resourceName, "aws_service_access_principals.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "aws_service_access_principals.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "aws_service_access_principals.*", "fms.amazonaws.com"),
 				),
 			},
@@ -146,7 +146,7 @@ func testAccOrganization_EnabledPolicyTypes(t *testing.T) {
 				Config: testAccOrganizationConfig_enabledPolicyTypes1(organizations.PolicyTypeServiceControlPolicy),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(ctx, resourceName, &organization),
-					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.0", organizations.PolicyTypeServiceControlPolicy),
 				),
 			},
@@ -159,14 +159,14 @@ func testAccOrganization_EnabledPolicyTypes(t *testing.T) {
 				Config: testAccOrganizationConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(ctx, resourceName, &organization),
-					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", acctest.Ct0),
 				),
 			},
 			{
 				Config: testAccOrganizationConfig_enabledPolicyTypes1(organizations.PolicyTypeAiservicesOptOutPolicy),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(ctx, resourceName, &organization),
-					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.0", organizations.PolicyTypeAiservicesOptOutPolicy),
 				),
 			},
@@ -174,7 +174,7 @@ func testAccOrganization_EnabledPolicyTypes(t *testing.T) {
 				Config: testAccOrganizationConfig_enabledPolicyTypes1(organizations.PolicyTypeServiceControlPolicy),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(ctx, resourceName, &organization),
-					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.0", organizations.PolicyTypeServiceControlPolicy),
 				),
 			},
@@ -182,7 +182,7 @@ func testAccOrganization_EnabledPolicyTypes(t *testing.T) {
 				Config: testAccOrganizationConfig_enabledPolicyTypes1(organizations.PolicyTypeBackupPolicy),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(ctx, resourceName, &organization),
-					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.0", organizations.PolicyTypeBackupPolicy),
 				),
 			},
@@ -190,7 +190,7 @@ func testAccOrganization_EnabledPolicyTypes(t *testing.T) {
 				Config: testAccOrganizationConfig_enabledPolicyTypes1(organizations.PolicyTypeTagPolicy),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(ctx, resourceName, &organization),
-					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.0", organizations.PolicyTypeTagPolicy),
 				),
 			},
@@ -203,14 +203,14 @@ func testAccOrganization_EnabledPolicyTypes(t *testing.T) {
 				Config: testAccOrganizationConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(ctx, resourceName, &organization),
-					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", acctest.Ct0),
 				),
 			},
 			{
 				Config: testAccOrganizationConfig_enabledPolicyTypes1(organizations.PolicyTypeTagPolicy),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(ctx, resourceName, &organization),
-					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", acctest.Ct1),
 				),
 			},
 		},

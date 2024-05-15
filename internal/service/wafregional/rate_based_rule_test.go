@@ -37,7 +37,7 @@ func TestAccWAFRegionalRateBasedRule_basic(t *testing.T) {
 					testAccCheckRateBasedRuleExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "waf-regional", regexache.MustCompile(`ratebasedrule/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafRuleName),
-					resource.TestCheckResourceAttr(resourceName, "predicate.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "predicate.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, wafRuleName),
 				),
 			},
@@ -65,7 +65,7 @@ func TestAccWAFRegionalRateBasedRule_tags(t *testing.T) {
 				Config: testAccRateBasedRuleConfig_tags1(wafRuleName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRateBasedRuleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -78,7 +78,7 @@ func TestAccWAFRegionalRateBasedRule_tags(t *testing.T) {
 				Config: testAccRateBasedRuleConfig_tags2(wafRuleName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRateBasedRuleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -87,7 +87,7 @@ func TestAccWAFRegionalRateBasedRule_tags(t *testing.T) {
 				Config: testAccRateBasedRuleConfig_tags1(wafRuleName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRateBasedRuleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -113,7 +113,7 @@ func TestAccWAFRegionalRateBasedRule_changeNameForceNew(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRateBasedRuleExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafRuleName),
-					resource.TestCheckResourceAttr(resourceName, "predicate.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "predicate.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, wafRuleName),
 				),
 			},
@@ -123,7 +123,7 @@ func TestAccWAFRegionalRateBasedRule_changeNameForceNew(t *testing.T) {
 					testAccCheckRateBasedRuleExists(ctx, resourceName, &after),
 					testAccCheckRateBasedRuleIdDiffers(&before, &after),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafRuleNewName),
-					resource.TestCheckResourceAttr(resourceName, "predicate.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "predicate.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, wafRuleNewName),
 				),
 			},
@@ -180,7 +180,7 @@ func TestAccWAFRegionalRateBasedRule_changePredicates(t *testing.T) {
 					testAccCheckIPSetExists(ctx, "aws_wafregional_ipset.ipset", &ipset),
 					testAccCheckRateBasedRuleExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleName),
-					resource.TestCheckResourceAttr(resourceName, "predicate.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "predicate.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicate.*", map[string]string{
 						"negated":      "false",
 						names.AttrType: "IPMatch",
@@ -193,7 +193,7 @@ func TestAccWAFRegionalRateBasedRule_changePredicates(t *testing.T) {
 					testAccCheckByteMatchSetExists(ctx, "aws_wafregional_byte_match_set.set", &byteMatchSet),
 					testAccCheckRateBasedRuleExists(ctx, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleName),
-					resource.TestCheckResourceAttr(resourceName, "predicate.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "predicate.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicate.*", map[string]string{
 						"negated":      "true",
 						names.AttrType: "ByteMatch",
@@ -265,7 +265,7 @@ func TestAccWAFRegionalRateBasedRule_noPredicates(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRateBasedRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleName),
-					resource.TestCheckResourceAttr(resourceName, "predicate.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "predicate.#", acctest.Ct0),
 				),
 			},
 			{

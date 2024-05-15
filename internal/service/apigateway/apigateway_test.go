@@ -25,12 +25,12 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 func TestAccAPIGateway_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Account": {
-			"basic": testAccAccount_basic,
+			acctest.CtBasic: testAccAccount_basic,
 		},
 		// Some aws_api_gateway_method_settings tests require the account-level CloudWatch Logs role ARN to be set.
 		// Serialize all this resource's acceptance tests.
 		"MethodSettings": {
-			"basic":                                  testAccMethodSettings_basic,
+			acctest.CtBasic:                          testAccMethodSettings_basic,
 			"disappears":                             testAccMethodSettings_disappears,
 			"CacheDataEncrypted":                     testAccMethodSettings_Settings_cacheDataEncrypted,
 			"CacheTTLInSeconds":                      testAccMethodSettings_Settings_cacheTTLInSeconds,
@@ -49,7 +49,7 @@ func TestAccAPIGateway_serial(t *testing.T) {
 		// Some aws_api_gateway_stage tests require the account-level CloudWatch Logs role ARN to be set.
 		// Serialize all this resource's acceptance tests.
 		"Stage": {
-			"basic":                     testAccStage_basic,
+			acctest.CtBasic:             testAccStage_basic,
 			names.AttrTags:              testAccStage_tags,
 			"disappears":                testAccStage_disappears,
 			"disappears_restAPI":        testAccStage_Disappears_restAPI,

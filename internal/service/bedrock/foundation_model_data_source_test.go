@@ -30,7 +30,7 @@ func TestAccBedrockFoundationModelDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(datasourceName, "model_arn"),
 					resource.TestCheckResourceAttrSet(datasourceName, "model_name"),
 					resource.TestCheckResourceAttrSet(datasourceName, "output_modalities.#"),
-					resource.TestCheckResourceAttrSet(datasourceName, "provider_name"),
+					resource.TestCheckResourceAttrSet(datasourceName, names.AttrProviderName),
 					resource.TestCheckResourceAttrSet(datasourceName, "response_streaming_supported"),
 				),
 			},

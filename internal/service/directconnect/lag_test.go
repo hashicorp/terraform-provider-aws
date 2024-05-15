@@ -46,8 +46,8 @@ func TestAccDirectConnectLag_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "location"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
-					resource.TestCheckResourceAttr(resourceName, "provider_name", ""),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProviderName, ""),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -63,8 +63,8 @@ func TestAccDirectConnectLag_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "location"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
-					resource.TestCheckResourceAttr(resourceName, "provider_name", ""),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProviderName, ""),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -127,8 +127,8 @@ func TestAccDirectConnectLag_connectionID(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "location"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
-					resource.TestCheckResourceAttr(resourceName, "provider_name", ""),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProviderName, ""),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -166,8 +166,8 @@ func TestAccDirectConnectLag_providerName(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "location"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "provider_name"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrProviderName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -197,7 +197,7 @@ func TestAccDirectConnectLag_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLagExists(ctx, resourceName, &lag),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -212,7 +212,7 @@ func TestAccDirectConnectLag_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLagExists(ctx, resourceName, &lag),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -222,7 +222,7 @@ func TestAccDirectConnectLag_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLagExists(ctx, resourceName, &lag),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},

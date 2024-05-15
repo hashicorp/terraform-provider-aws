@@ -196,7 +196,7 @@ func ResourceEntityRecognizer() *schema.Resource {
 					},
 				},
 			},
-			"language_code": {
+			names.AttrLanguageCode: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateDiagFunc: enum.Validate[types.SyntaxLanguageCode](),
@@ -346,7 +346,7 @@ func resourceEntityRecognizerRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.Set(names.AttrARN, out.EntityRecognizerArn)
 	d.Set("data_access_role_arn", out.DataAccessRoleArn)
-	d.Set("language_code", out.LanguageCode)
+	d.Set(names.AttrLanguageCode, out.LanguageCode)
 	d.Set("model_kms_key_id", out.ModelKmsKeyId)
 	d.Set("version_name", out.VersionName)
 	d.Set("version_name_prefix", create.NamePrefixFromName(aws.ToString(out.VersionName)))
@@ -500,7 +500,7 @@ func entityRecognizerPublishVersion(ctx context.Context, conn *comprehend.Client
 	in := &comprehend.CreateEntityRecognizerInput{
 		DataAccessRoleArn:  aws.String(d.Get("data_access_role_arn").(string)),
 		InputDataConfig:    expandEntityRecognizerInputDataConfig(getEntityRecognizerInputDataConfig(d)),
-		LanguageCode:       types.LanguageCode(d.Get("language_code").(string)),
+		LanguageCode:       types.LanguageCode(d.Get(names.AttrLanguageCode).(string)),
 		RecognizerName:     aws.String(d.Get(names.AttrName).(string)),
 		VersionName:        versionName,
 		VpcConfig:          expandVPCConfig(d.Get(names.AttrVPCConfig).([]interface{})),

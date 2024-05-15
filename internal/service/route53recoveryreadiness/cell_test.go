@@ -36,9 +36,9 @@ func TestAccRoute53RecoveryReadinessCell_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCellExists(ctx, resourceName),
 					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "route53-recovery-readiness", regexache.MustCompile(`cell/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "cells.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "parent_readiness_scopes.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "cells.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "parent_readiness_scopes.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -98,17 +98,17 @@ func TestAccRoute53RecoveryReadinessCell_nestedCell(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCellExists(ctx, resourceNameParent),
 					acctest.MatchResourceAttrGlobalARN(resourceNameParent, names.AttrARN, "route53-recovery-readiness", regexache.MustCompile(`cell/.+`)),
-					resource.TestCheckResourceAttr(resourceNameParent, "cells.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceNameParent, "parent_readiness_scopes.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceNameParent, "cells.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceNameParent, "parent_readiness_scopes.#", acctest.Ct0),
 					testAccCheckCellExists(ctx, resourceNameChild),
 					acctest.MatchResourceAttrGlobalARN(resourceNameChild, names.AttrARN, "route53-recovery-readiness", regexache.MustCompile(`cell/.+`)),
-					resource.TestCheckResourceAttr(resourceNameChild, "cells.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceNameChild, "cells.#", acctest.Ct0),
 				),
 			},
 			{
 				Config: testAccCellConfig_parent(rNameChild, rNameParent),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceNameChild, "parent_readiness_scopes.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceNameChild, "parent_readiness_scopes.#", acctest.Ct1),
 				),
 			},
 			{
@@ -140,7 +140,7 @@ func TestAccRoute53RecoveryReadinessCell_tags(t *testing.T) {
 				Config: testAccCellConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCellExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -153,7 +153,7 @@ func TestAccRoute53RecoveryReadinessCell_tags(t *testing.T) {
 				Config: testAccCellConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCellExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -162,7 +162,7 @@ func TestAccRoute53RecoveryReadinessCell_tags(t *testing.T) {
 				Config: testAccCellConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCellExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -186,9 +186,9 @@ func TestAccRoute53RecoveryReadinessCell_timeout(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCellExists(ctx, resourceName),
 					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "route53-recovery-readiness", regexache.MustCompile(`cell/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "cells.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "parent_readiness_scopes.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "cells.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "parent_readiness_scopes.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{

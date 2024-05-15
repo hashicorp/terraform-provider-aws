@@ -6,8 +6,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"arn"'
+    pattern: '"arn"'
     severity: ERROR
     fix: "names.AttrARN"
   - id: literal-arns-string-constant
@@ -16,8 +15,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"arns"'
+    pattern: '"arns"'
     severity: ERROR
     fix: "names.AttrARNs"
   - id: literal-access_key-string-constant
@@ -26,8 +24,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"access_key"'
+    pattern: '"access_key"'
     severity: ERROR
     fix: "names.AttrAccessKey"
   - id: literal-account_id-string-constant
@@ -36,8 +33,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"account_id"'
+    pattern: '"account_id"'
     severity: ERROR
     fix: "names.AttrAccountID"
   - id: literal-action-string-constant
@@ -46,8 +42,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"action"'
+    pattern: '"action"'
     severity: ERROR
     fix: "names.AttrAction"
   - id: literal-address-string-constant
@@ -56,8 +51,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"address"'
+    pattern: '"address"'
     severity: ERROR
     fix: "names.AttrAddress"
   - id: literal-alias-string-constant
@@ -66,8 +60,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"alias"'
+    pattern: '"alias"'
     severity: ERROR
     fix: "names.AttrAlias"
   - id: literal-apply_immediately-string-constant
@@ -76,8 +69,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"apply_immediately"'
+    pattern: '"apply_immediately"'
     severity: ERROR
     fix: "names.AttrApplyImmediately"
   - id: literal-attributes-string-constant
@@ -86,8 +78,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"attributes"'
+    pattern: '"attributes"'
     severity: ERROR
     fix: "names.AttrAttributes"
   - id: literal-auto_minor_version_upgrade-string-constant
@@ -96,8 +87,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"auto_minor_version_upgrade"'
+    pattern: '"auto_minor_version_upgrade"'
     severity: ERROR
     fix: "names.AttrAutoMinorVersionUpgrade"
   - id: literal-availability_zone-string-constant
@@ -106,8 +96,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"availability_zone"'
+    pattern: '"availability_zone"'
     severity: ERROR
     fix: "names.AttrAvailabilityZone"
   - id: literal-availability_zones-string-constant
@@ -116,8 +105,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"availability_zones"'
+    pattern: '"availability_zones"'
     severity: ERROR
     fix: "names.AttrAvailabilityZones"
   - id: literal-bucket-string-constant
@@ -126,8 +114,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"bucket"'
+    pattern: '"bucket"'
     severity: ERROR
     fix: "names.AttrBucket"
   - id: literal-bucket_name-string-constant
@@ -136,8 +123,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"bucket_name"'
+    pattern: '"bucket_name"'
     severity: ERROR
     fix: "names.AttrBucketName"
   - id: literal-bucket_prefix-string-constant
@@ -146,8 +132,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"bucket_prefix"'
+    pattern: '"bucket_prefix"'
     severity: ERROR
     fix: "names.AttrBucketPrefix"
   - id: literal-catalog_id-string-constant
@@ -156,8 +141,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"catalog_id"'
+    pattern: '"catalog_id"'
     severity: ERROR
     fix: "names.AttrCatalogID"
   - id: literal-certificate-string-constant
@@ -166,8 +150,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"certificate"'
+    pattern: '"certificate"'
     severity: ERROR
     fix: "names.AttrCertificate"
   - id: literal-certificate_arn-string-constant
@@ -176,8 +159,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"certificate_arn"'
+    pattern: '"certificate_arn"'
     severity: ERROR
     fix: "names.AttrCertificateARN"
   - id: literal-certificate_chain-string-constant
@@ -186,8 +168,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"certificate_chain"'
+    pattern: '"certificate_chain"'
     severity: ERROR
     fix: "names.AttrCertificateChain"
   - id: literal-client_id-string-constant
@@ -196,8 +177,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"client_id"'
+    pattern: '"client_id"'
     severity: ERROR
     fix: "names.AttrClientID"
   - id: literal-client_secret-string-constant
@@ -206,8 +186,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"client_secret"'
+    pattern: '"client_secret"'
     severity: ERROR
     fix: "names.AttrClientSecret"
   - id: literal-cluster_identifier-string-constant
@@ -216,8 +195,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"cluster_identifier"'
+    pattern: '"cluster_identifier"'
     severity: ERROR
     fix: "names.AttrClusterIdentifier"
   - id: literal-cluster_name-string-constant
@@ -226,8 +204,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"cluster_name"'
+    pattern: '"cluster_name"'
     severity: ERROR
     fix: "names.AttrClusterName"
   - id: literal-comment-string-constant
@@ -236,8 +213,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"comment"'
+    pattern: '"comment"'
     severity: ERROR
     fix: "names.AttrComment"
   - id: literal-condition-string-constant
@@ -246,8 +222,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"condition"'
+    pattern: '"condition"'
     severity: ERROR
     fix: "names.AttrCondition"
   - id: literal-configuration-string-constant
@@ -256,8 +231,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"configuration"'
+    pattern: '"configuration"'
     severity: ERROR
     fix: "names.AttrConfiguration"
   - id: literal-content-string-constant
@@ -266,8 +240,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"content"'
+    pattern: '"content"'
     severity: ERROR
     fix: "names.AttrContent"
   - id: literal-content_type-string-constant
@@ -276,8 +249,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"content_type"'
+    pattern: '"content_type"'
     severity: ERROR
     fix: "names.AttrContentType"
   - id: literal-create_time-string-constant
@@ -286,8 +258,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"create_time"'
+    pattern: '"create_time"'
     severity: ERROR
     fix: "names.AttrCreateTime"
   - id: literal-created_at-string-constant
@@ -296,8 +267,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"created_at"'
+    pattern: '"created_at"'
     severity: ERROR
     fix: "names.AttrCreatedAt"
   - id: literal-created_date-string-constant
@@ -306,8 +276,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"created_date"'
+    pattern: '"created_date"'
     severity: ERROR
     fix: "names.AttrCreatedDate"
   - id: literal-created_time-string-constant
@@ -316,8 +285,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"created_time"'
+    pattern: '"created_time"'
     severity: ERROR
     fix: "names.AttrCreatedTime"
   - id: literal-creation_date-string-constant
@@ -326,8 +294,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"creation_date"'
+    pattern: '"creation_date"'
     severity: ERROR
     fix: "names.AttrCreationDate"
   - id: literal-creation_time-string-constant
@@ -336,8 +303,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"creation_time"'
+    pattern: '"creation_time"'
     severity: ERROR
     fix: "names.AttrCreationTime"
   - id: literal-dns_name-string-constant
@@ -346,8 +312,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"dns_name"'
+    pattern: '"dns_name"'
     severity: ERROR
     fix: "names.AttrDNSName"
   - id: literal-database-string-constant
@@ -356,8 +321,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"database"'
+    pattern: '"database"'
     severity: ERROR
     fix: "names.AttrDatabase"
   - id: literal-database_name-string-constant
@@ -366,18 +330,25 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"database_name"'
+    pattern: '"database_name"'
     severity: ERROR
     fix: "names.AttrDatabaseName"
+  - id: literal-default_action-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrDefaultAction` for the string literal "default_action"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    pattern: '"default_action"'
+    severity: ERROR
+    fix: "names.AttrDefaultAction"
   - id: literal-default_value-string-constant
     languages: [go]
     message: Use the constant `names.AttrDefaultValue` for the string literal "default_value"
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"default_value"'
+    pattern: '"default_value"'
     severity: ERROR
     fix: "names.AttrDefaultValue"
   - id: literal-delete_on_termination-string-constant
@@ -386,8 +357,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"delete_on_termination"'
+    pattern: '"delete_on_termination"'
     severity: ERROR
     fix: "names.AttrDeleteOnTermination"
   - id: literal-description-string-constant
@@ -396,8 +366,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"description"'
+    pattern: '"description"'
     severity: ERROR
     fix: "names.AttrDescription"
   - id: literal-destination-string-constant
@@ -406,8 +375,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"destination"'
+    pattern: '"destination"'
     severity: ERROR
     fix: "names.AttrDestination"
   - id: literal-destination_arn-string-constant
@@ -416,8 +384,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"destination_arn"'
+    pattern: '"destination_arn"'
     severity: ERROR
     fix: "names.AttrDestinationARN"
   - id: literal-device_name-string-constant
@@ -426,8 +393,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"device_name"'
+    pattern: '"device_name"'
     severity: ERROR
     fix: "names.AttrDeviceName"
   - id: literal-display_name-string-constant
@@ -436,8 +402,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"display_name"'
+    pattern: '"display_name"'
     severity: ERROR
     fix: "names.AttrDisplayName"
   - id: literal-domain-string-constant
@@ -446,8 +411,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"domain"'
+    pattern: '"domain"'
     severity: ERROR
     fix: "names.AttrDomain"
   - id: literal-domain_name-string-constant
@@ -456,8 +420,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"domain_name"'
+    pattern: '"domain_name"'
     severity: ERROR
     fix: "names.AttrDomainName"
   - id: literal-duration-string-constant
@@ -466,8 +429,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"duration"'
+    pattern: '"duration"'
     severity: ERROR
     fix: "names.AttrDuration"
   - id: literal-email-string-constant
@@ -476,8 +438,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"email"'
+    pattern: '"email"'
     severity: ERROR
     fix: "names.AttrEmail"
   - id: literal-enabled-string-constant
@@ -486,8 +447,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"enabled"'
+    pattern: '"enabled"'
     severity: ERROR
     fix: "names.AttrEnabled"
   - id: literal-encrypted-string-constant
@@ -496,8 +456,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"encrypted"'
+    pattern: '"encrypted"'
     severity: ERROR
     fix: "names.AttrEncrypted"
   - id: literal-encryption_configuration-string-constant
@@ -506,8 +465,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"encryption_configuration"'
+    pattern: '"encryption_configuration"'
     severity: ERROR
     fix: "names.AttrEncryptionConfiguration"
   - id: literal-endpoint-string-constant
@@ -516,8 +474,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"endpoint"'
+    pattern: '"endpoint"'
     severity: ERROR
     fix: "names.AttrEndpoint"
   - id: literal-endpoint_type-string-constant
@@ -526,8 +483,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"endpoint_type"'
+    pattern: '"endpoint_type"'
     severity: ERROR
     fix: "names.AttrEndpointType"
   - id: literal-endpoints-string-constant
@@ -536,8 +492,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"endpoints"'
+    pattern: '"endpoints"'
     severity: ERROR
     fix: "names.AttrEndpoints"
   - id: literal-engine_version-string-constant
@@ -546,8 +501,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"engine_version"'
+    pattern: '"engine_version"'
     severity: ERROR
     fix: "names.AttrEngineVersion"
   - id: literal-environment-string-constant
@@ -556,8 +510,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"environment"'
+    pattern: '"environment"'
     severity: ERROR
     fix: "names.AttrEnvironment"
   - id: literal-execution_role_arn-string-constant
@@ -566,8 +519,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"execution_role_arn"'
+    pattern: '"execution_role_arn"'
     severity: ERROR
     fix: "names.AttrExecutionRoleARN"
   - id: literal-expression-string-constant
@@ -576,18 +528,25 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"expression"'
+    pattern: '"expression"'
     severity: ERROR
     fix: "names.AttrExpression"
+  - id: literal-external_id-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrExternalID` for the string literal "external_id"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    pattern: '"external_id"'
+    severity: ERROR
+    fix: "names.AttrExternalID"
   - id: literal-family-string-constant
     languages: [go]
     message: Use the constant `names.AttrFamily` for the string literal "family"
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"family"'
+    pattern: '"family"'
     severity: ERROR
     fix: "names.AttrFamily"
   - id: literal-field-string-constant
@@ -596,8 +555,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"field"'
+    pattern: '"field"'
     severity: ERROR
     fix: "names.AttrField"
   - id: literal-file_system_id-string-constant
@@ -606,8 +564,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"file_system_id"'
+    pattern: '"file_system_id"'
     severity: ERROR
     fix: "names.AttrFileSystemID"
   - id: literal-filter-string-constant
@@ -616,18 +573,25 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"filter"'
+    pattern: '"filter"'
     severity: ERROR
     fix: "names.AttrFilter"
+  - id: literal-force_delete-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrForceDelete` for the string literal "force_delete"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    pattern: '"force_delete"'
+    severity: ERROR
+    fix: "names.AttrForceDelete"
   - id: literal-force_destroy-string-constant
     languages: [go]
     message: Use the constant `names.AttrForceDestroy` for the string literal "force_destroy"
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"force_destroy"'
+    pattern: '"force_destroy"'
     severity: ERROR
     fix: "names.AttrForceDestroy"
   - id: literal-format-string-constant
@@ -636,8 +600,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"format"'
+    pattern: '"format"'
     severity: ERROR
     fix: "names.AttrFormat"
   - id: literal-function_arn-string-constant
@@ -646,8 +609,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"function_arn"'
+    pattern: '"function_arn"'
     severity: ERROR
     fix: "names.AttrFunctionARN"
   - id: literal-group_name-string-constant
@@ -656,8 +618,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"group_name"'
+    pattern: '"group_name"'
     severity: ERROR
     fix: "names.AttrGroupName"
   - id: literal-header-string-constant
@@ -666,8 +627,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"header"'
+    pattern: '"header"'
     severity: ERROR
     fix: "names.AttrHeader"
   - id: literal-health_check-string-constant
@@ -676,8 +636,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"health_check"'
+    pattern: '"health_check"'
     severity: ERROR
     fix: "names.AttrHealthCheck"
   - id: literal-hosted_zone_id-string-constant
@@ -686,8 +645,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"hosted_zone_id"'
+    pattern: '"hosted_zone_id"'
     severity: ERROR
     fix: "names.AttrHostedZoneID"
   - id: literal-iam_role_arn-string-constant
@@ -696,8 +654,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"iam_role_arn"'
+    pattern: '"iam_role_arn"'
     severity: ERROR
     fix: "names.AttrIAMRoleARN"
   - id: literal-id-string-constant
@@ -706,8 +663,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"id"'
+    pattern: '"id"'
     severity: ERROR
     fix: "names.AttrID"
   - id: literal-ids-string-constant
@@ -716,8 +672,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"ids"'
+    pattern: '"ids"'
     severity: ERROR
     fix: "names.AttrIDs"
   - id: literal-iops-string-constant
@@ -726,8 +681,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"iops"'
+    pattern: '"iops"'
     severity: ERROR
     fix: "names.AttrIOPS"
   - id: literal-ip_address-string-constant
@@ -736,8 +690,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"ip_address"'
+    pattern: '"ip_address"'
     severity: ERROR
     fix: "names.AttrIPAddress"
   - id: literal-ip_address_type-string-constant
@@ -746,8 +699,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"ip_address_type"'
+    pattern: '"ip_address_type"'
     severity: ERROR
     fix: "names.AttrIPAddressType"
   - id: literal-identifier-string-constant
@@ -756,8 +708,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"identifier"'
+    pattern: '"identifier"'
     severity: ERROR
     fix: "names.AttrIdentifier"
   - id: literal-instance_count-string-constant
@@ -766,8 +717,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"instance_count"'
+    pattern: '"instance_count"'
     severity: ERROR
     fix: "names.AttrInstanceCount"
   - id: literal-instance_id-string-constant
@@ -776,8 +726,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"instance_id"'
+    pattern: '"instance_id"'
     severity: ERROR
     fix: "names.AttrInstanceID"
   - id: literal-instance_type-string-constant
@@ -786,8 +735,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"instance_type"'
+    pattern: '"instance_type"'
     severity: ERROR
     fix: "names.AttrInstanceType"
   - id: literal-interval-string-constant
@@ -796,8 +744,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"interval"'
+    pattern: '"interval"'
     severity: ERROR
     fix: "names.AttrInterval"
   - id: literal-issuer-string-constant
@@ -806,8 +753,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"issuer"'
+    pattern: '"issuer"'
     severity: ERROR
     fix: "names.AttrIssuer"
   - id: literal-json-string-constant
@@ -816,8 +762,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"json"'
+    pattern: '"json"'
     severity: ERROR
     fix: "names.AttrJSON"
   - id: literal-kms_key-string-constant
@@ -826,8 +771,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"kms_key"'
+    pattern: '"kms_key"'
     severity: ERROR
     fix: "names.AttrKMSKey"
   - id: literal-kms_key_arn-string-constant
@@ -836,8 +780,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"kms_key_arn"'
+    pattern: '"kms_key_arn"'
     severity: ERROR
     fix: "names.AttrKMSKeyARN"
   - id: literal-kms_key_id-string-constant
@@ -846,8 +789,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"kms_key_id"'
+    pattern: '"kms_key_id"'
     severity: ERROR
     fix: "names.AttrKMSKeyID"
   - id: literal-key-string-constant
@@ -856,8 +798,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"key"'
+    pattern: '"key"'
     severity: ERROR
     fix: "names.AttrKey"
   - id: literal-key_id-string-constant
@@ -866,18 +807,25 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"key_id"'
+    pattern: '"key_id"'
     severity: ERROR
     fix: "names.AttrKeyID"
+  - id: literal-language_code-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrLanguageCode` for the string literal "language_code"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    pattern: '"language_code"'
+    severity: ERROR
+    fix: "names.AttrLanguageCode"
   - id: literal-last_updated_date-string-constant
     languages: [go]
     message: Use the constant `names.AttrLastUpdatedDate` for the string literal "last_updated_date"
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"last_updated_date"'
+    pattern: '"last_updated_date"'
     severity: ERROR
     fix: "names.AttrLastUpdatedDate"
   - id: literal-launch_template-string-constant
@@ -886,8 +834,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"launch_template"'
+    pattern: '"launch_template"'
     severity: ERROR
     fix: "names.AttrLaunchTemplate"
   - id: literal-log_group_name-string-constant
@@ -896,8 +843,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"log_group_name"'
+    pattern: '"log_group_name"'
     severity: ERROR
     fix: "names.AttrLogGroupName"
   - id: literal-logging_configuration-string-constant
@@ -906,8 +852,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"logging_configuration"'
+    pattern: '"logging_configuration"'
     severity: ERROR
     fix: "names.AttrLoggingConfiguration"
   - id: literal-max-string-constant
@@ -916,18 +861,25 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"max"'
+    pattern: '"max"'
     severity: ERROR
     fix: "names.AttrMax"
+  - id: literal-max_capacity-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrMaxCapacity` for the string literal "max_capacity"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    pattern: '"max_capacity"'
+    severity: ERROR
+    fix: "names.AttrMaxCapacity"
   - id: literal-message-string-constant
     languages: [go]
     message: Use the constant `names.AttrMessage` for the string literal "message"
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"message"'
+    pattern: '"message"'
     severity: ERROR
     fix: "names.AttrMessage"
   - id: literal-metric_name-string-constant
@@ -936,8 +888,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"metric_name"'
+    pattern: '"metric_name"'
     severity: ERROR
     fix: "names.AttrMetricName"
   - id: literal-min-string-constant
@@ -946,8 +897,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"min"'
+    pattern: '"min"'
     severity: ERROR
     fix: "names.AttrMin"
   - id: literal-mode-string-constant
@@ -956,8 +906,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"mode"'
+    pattern: '"mode"'
     severity: ERROR
     fix: "names.AttrMode"
   - id: literal-most_recent-string-constant
@@ -966,8 +915,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"most_recent"'
+    pattern: '"most_recent"'
     severity: ERROR
     fix: "names.AttrMostRecent"
   - id: literal-name-string-constant
@@ -976,8 +924,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"name"'
+    pattern: '"name"'
     severity: ERROR
     fix: "names.AttrName"
   - id: literal-name_prefix-string-constant
@@ -986,8 +933,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"name_prefix"'
+    pattern: '"name_prefix"'
     severity: ERROR
     fix: "names.AttrNamePrefix"
   - id: literal-names-string-constant
@@ -996,8 +942,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"names"'
+    pattern: '"names"'
     severity: ERROR
     fix: "names.AttrNames"
   - id: literal-namespace-string-constant
@@ -1006,8 +951,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"namespace"'
+    pattern: '"namespace"'
     severity: ERROR
     fix: "names.AttrNamespace"
   - id: literal-network_configuration-string-constant
@@ -1016,8 +960,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"network_configuration"'
+    pattern: '"network_configuration"'
     severity: ERROR
     fix: "names.AttrNetworkConfiguration"
   - id: literal-network_interface_id-string-constant
@@ -1026,8 +969,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"network_interface_id"'
+    pattern: '"network_interface_id"'
     severity: ERROR
     fix: "names.AttrNetworkInterfaceID"
   - id: literal-owner-string-constant
@@ -1036,8 +978,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"owner"'
+    pattern: '"owner"'
     severity: ERROR
     fix: "names.AttrOwner"
   - id: literal-owner_id-string-constant
@@ -1046,8 +987,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"owner_id"'
+    pattern: '"owner_id"'
     severity: ERROR
     fix: "names.AttrOwnerID"
   - id: literal-parameter-string-constant
@@ -1056,8 +996,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"parameter"'
+    pattern: '"parameter"'
     severity: ERROR
     fix: "names.AttrParameter"
   - id: literal-parameters-string-constant
@@ -1066,8 +1005,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"parameters"'
+    pattern: '"parameters"'
     severity: ERROR
     fix: "names.AttrParameters"
   - id: literal-password-string-constant
@@ -1076,8 +1014,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"password"'
+    pattern: '"password"'
     severity: ERROR
     fix: "names.AttrPassword"
   - id: literal-path-string-constant
@@ -1086,8 +1023,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"path"'
+    pattern: '"path"'
     severity: ERROR
     fix: "names.AttrPath"
   - id: literal-permissions-string-constant
@@ -1096,8 +1032,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"permissions"'
+    pattern: '"permissions"'
     severity: ERROR
     fix: "names.AttrPermissions"
   - id: literal-policy-string-constant
@@ -1106,8 +1041,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"policy"'
+    pattern: '"policy"'
     severity: ERROR
     fix: "names.AttrPolicy"
   - id: literal-port-string-constant
@@ -1116,8 +1050,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"port"'
+    pattern: '"port"'
     severity: ERROR
     fix: "names.AttrPort"
   - id: literal-preferred_maintenance_window-string-constant
@@ -1126,8 +1059,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"preferred_maintenance_window"'
+    pattern: '"preferred_maintenance_window"'
     severity: ERROR
     fix: "names.AttrPreferredMaintenanceWindow"
   - id: literal-prefix-string-constant
@@ -1136,8 +1068,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"prefix"'
+    pattern: '"prefix"'
     severity: ERROR
     fix: "names.AttrPrefix"
   - id: literal-principal-string-constant
@@ -1146,8 +1077,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"principal"'
+    pattern: '"principal"'
     severity: ERROR
     fix: "names.AttrPrincipal"
   - id: literal-priority-string-constant
@@ -1156,8 +1086,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"priority"'
+    pattern: '"priority"'
     severity: ERROR
     fix: "names.AttrPriority"
   - id: literal-private_key-string-constant
@@ -1166,8 +1095,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"private_key"'
+    pattern: '"private_key"'
     severity: ERROR
     fix: "names.AttrPrivateKey"
   - id: literal-profile-string-constant
@@ -1176,18 +1104,25 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"profile"'
+    pattern: '"profile"'
     severity: ERROR
     fix: "names.AttrProfile"
+  - id: literal-propagate_tags-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrPropagateTags` for the string literal "propagate_tags"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    pattern: '"propagate_tags"'
+    severity: ERROR
+    fix: "names.AttrPropagateTags"
   - id: literal-properties-string-constant
     languages: [go]
     message: Use the constant `names.AttrProperties` for the string literal "properties"
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"properties"'
+    pattern: '"properties"'
     severity: ERROR
     fix: "names.AttrProperties"
   - id: literal-protocol-string-constant
@@ -1196,18 +1131,25 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"protocol"'
+    pattern: '"protocol"'
     severity: ERROR
     fix: "names.AttrProtocol"
+  - id: literal-provider_name-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrProviderName` for the string literal "provider_name"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    pattern: '"provider_name"'
+    severity: ERROR
+    fix: "names.AttrProviderName"
   - id: literal-public_key-string-constant
     languages: [go]
     message: Use the constant `names.AttrPublicKey` for the string literal "public_key"
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"public_key"'
+    pattern: '"public_key"'
     severity: ERROR
     fix: "names.AttrPublicKey"
   - id: literal-publicly_accessible-string-constant
@@ -1216,8 +1158,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"publicly_accessible"'
+    pattern: '"publicly_accessible"'
     severity: ERROR
     fix: "names.AttrPubliclyAccessible"
   - id: literal-region-string-constant
@@ -1226,8 +1167,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"region"'
+    pattern: '"region"'
     severity: ERROR
     fix: "names.AttrRegion"
   - id: literal-repository_name-string-constant
@@ -1236,8 +1176,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"repository_name"'
+    pattern: '"repository_name"'
     severity: ERROR
     fix: "names.AttrRepositoryName"
   - id: literal-resource_arn-string-constant
@@ -1246,8 +1185,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"resource_arn"'
+    pattern: '"resource_arn"'
     severity: ERROR
     fix: "names.AttrResourceARN"
   - id: literal-resource_id-string-constant
@@ -1256,8 +1194,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"resource_id"'
+    pattern: '"resource_id"'
     severity: ERROR
     fix: "names.AttrResourceID"
   - id: literal-resource_tags-string-constant
@@ -1266,8 +1203,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"resource_tags"'
+    pattern: '"resource_tags"'
     severity: ERROR
     fix: "names.AttrResourceTags"
   - id: literal-resource_type-string-constant
@@ -1276,8 +1212,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"resource_type"'
+    pattern: '"resource_type"'
     severity: ERROR
     fix: "names.AttrResourceType"
   - id: literal-resources-string-constant
@@ -1286,8 +1221,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"resources"'
+    pattern: '"resources"'
     severity: ERROR
     fix: "names.AttrResources"
   - id: literal-retention_period-string-constant
@@ -1296,8 +1230,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"retention_period"'
+    pattern: '"retention_period"'
     severity: ERROR
     fix: "names.AttrRetentionPeriod"
   - id: literal-role-string-constant
@@ -1306,8 +1239,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"role"'
+    pattern: '"role"'
     severity: ERROR
     fix: "names.AttrRole"
   - id: literal-role_arn-string-constant
@@ -1316,8 +1248,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"role_arn"'
+    pattern: '"role_arn"'
     severity: ERROR
     fix: "names.AttrRoleARN"
   - id: literal-rule-string-constant
@@ -1326,8 +1257,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"rule"'
+    pattern: '"rule"'
     severity: ERROR
     fix: "names.AttrRule"
   - id: literal-s3_bucket-string-constant
@@ -1336,8 +1266,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"s3_bucket"'
+    pattern: '"s3_bucket"'
     severity: ERROR
     fix: "names.AttrS3Bucket"
   - id: literal-s3_bucket_name-string-constant
@@ -1346,8 +1275,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"s3_bucket_name"'
+    pattern: '"s3_bucket_name"'
     severity: ERROR
     fix: "names.AttrS3BucketName"
   - id: literal-s3_key_prefix-string-constant
@@ -1356,8 +1284,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"s3_key_prefix"'
+    pattern: '"s3_key_prefix"'
     severity: ERROR
     fix: "names.AttrS3KeyPrefix"
   - id: literal-sns_topic_arn-string-constant
@@ -1366,8 +1293,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"sns_topic_arn"'
+    pattern: '"sns_topic_arn"'
     severity: ERROR
     fix: "names.AttrSNSTopicARN"
   - id: literal-schedule-string-constant
@@ -1376,8 +1302,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"schedule"'
+    pattern: '"schedule"'
     severity: ERROR
     fix: "names.AttrSchedule"
   - id: literal-schedule_expression-string-constant
@@ -1386,8 +1311,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"schedule_expression"'
+    pattern: '"schedule_expression"'
     severity: ERROR
     fix: "names.AttrScheduleExpression"
   - id: literal-schema-string-constant
@@ -1396,8 +1320,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"schema"'
+    pattern: '"schema"'
     severity: ERROR
     fix: "names.AttrSchema"
   - id: literal-scope-string-constant
@@ -1406,8 +1329,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"scope"'
+    pattern: '"scope"'
     severity: ERROR
     fix: "names.AttrScope"
   - id: literal-secret_key-string-constant
@@ -1416,8 +1338,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"secret_key"'
+    pattern: '"secret_key"'
     severity: ERROR
     fix: "names.AttrSecretKey"
   - id: literal-security_group_ids-string-constant
@@ -1426,8 +1347,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"security_group_ids"'
+    pattern: '"security_group_ids"'
     severity: ERROR
     fix: "names.AttrSecurityGroupIDs"
   - id: literal-security_groups-string-constant
@@ -1436,8 +1356,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"security_groups"'
+    pattern: '"security_groups"'
     severity: ERROR
     fix: "names.AttrSecurityGroups"
   - id: literal-service_name-string-constant
@@ -1446,18 +1365,25 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"service_name"'
+    pattern: '"service_name"'
     severity: ERROR
     fix: "names.AttrServiceName"
+  - id: literal-service_role-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrServiceRole` for the string literal "service_role"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    pattern: '"service_role"'
+    severity: ERROR
+    fix: "names.AttrServiceRole"
   - id: literal-service_role_arn-string-constant
     languages: [go]
     message: Use the constant `names.AttrServiceRoleARN` for the string literal "service_role_arn"
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"service_role_arn"'
+    pattern: '"service_role_arn"'
     severity: ERROR
     fix: "names.AttrServiceRoleARN"
   - id: literal-session-string-constant
@@ -1466,8 +1392,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"session"'
+    pattern: '"session"'
     severity: ERROR
     fix: "names.AttrSession"
   - id: literal-shared_config_files-string-constant
@@ -1476,8 +1401,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"shared_config_files"'
+    pattern: '"shared_config_files"'
     severity: ERROR
     fix: "names.AttrSharedConfigFiles"
   - id: literal-size-string-constant
@@ -1486,8 +1410,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"size"'
+    pattern: '"size"'
     severity: ERROR
     fix: "names.AttrSize"
   - id: literal-skip_credentials_validation-string-constant
@@ -1496,8 +1419,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"skip_credentials_validation"'
+    pattern: '"skip_credentials_validation"'
     severity: ERROR
     fix: "names.AttrSkipCredentialsValidation"
   - id: literal-skip_destroy-string-constant
@@ -1506,8 +1428,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"skip_destroy"'
+    pattern: '"skip_destroy"'
     severity: ERROR
     fix: "names.AttrSkipDestroy"
   - id: literal-skip_requesting_account_id-string-constant
@@ -1516,18 +1437,25 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"skip_requesting_account_id"'
+    pattern: '"skip_requesting_account_id"'
     severity: ERROR
     fix: "names.AttrSkipRequestingAccountID"
+  - id: literal-snapshot_id-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrSnapshotID` for the string literal "snapshot_id"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    pattern: '"snapshot_id"'
+    severity: ERROR
+    fix: "names.AttrSnapshotID"
   - id: literal-source-string-constant
     languages: [go]
     message: Use the constant `names.AttrSource` for the string literal "source"
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"source"'
+    pattern: '"source"'
     severity: ERROR
     fix: "names.AttrSource"
   - id: literal-source_type-string-constant
@@ -1536,8 +1464,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"source_type"'
+    pattern: '"source_type"'
     severity: ERROR
     fix: "names.AttrSourceType"
   - id: literal-stage-string-constant
@@ -1546,8 +1473,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"stage"'
+    pattern: '"stage"'
     severity: ERROR
     fix: "names.AttrStage"
   - id: literal-start_time-string-constant
@@ -1556,8 +1482,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"start_time"'
+    pattern: '"start_time"'
     severity: ERROR
     fix: "names.AttrStartTime"
   - id: literal-state-string-constant
@@ -1566,8 +1491,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"state"'
+    pattern: '"state"'
     severity: ERROR
     fix: "names.AttrState"
   - id: literal-status-string-constant
@@ -1576,28 +1500,43 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"status"'
+    pattern: '"status"'
     severity: ERROR
     fix: "names.AttrStatus"
+  - id: literal-status_code-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrStatusCode` for the string literal "status_code"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    pattern: '"status_code"'
+    severity: ERROR
+    fix: "names.AttrStatusCode"
   - id: literal-status_message-string-constant
     languages: [go]
     message: Use the constant `names.AttrStatusMessage` for the string literal "status_message"
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"status_message"'
+    pattern: '"status_message"'
     severity: ERROR
     fix: "names.AttrStatusMessage"
+  - id: literal-status_reason-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrStatusReason` for the string literal "status_reason"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    pattern: '"status_reason"'
+    severity: ERROR
+    fix: "names.AttrStatusReason"
   - id: literal-storage_type-string-constant
     languages: [go]
     message: Use the constant `names.AttrStorageType` for the string literal "storage_type"
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"storage_type"'
+    pattern: '"storage_type"'
     severity: ERROR
     fix: "names.AttrStorageType"
   - id: literal-stream_arn-string-constant
@@ -1606,8 +1545,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"stream_arn"'
+    pattern: '"stream_arn"'
     severity: ERROR
     fix: "names.AttrStreamARN"
   - id: literal-subnet_id-string-constant
@@ -1616,8 +1554,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"subnet_id"'
+    pattern: '"subnet_id"'
     severity: ERROR
     fix: "names.AttrSubnetID"
   - id: literal-subnet_ids-string-constant
@@ -1626,8 +1563,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"subnet_ids"'
+    pattern: '"subnet_ids"'
     severity: ERROR
     fix: "names.AttrSubnetIDs"
   - id: literal-subnets-string-constant
@@ -1636,8 +1572,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"subnets"'
+    pattern: '"subnets"'
     severity: ERROR
     fix: "names.AttrSubnets"
   - id: literal-table_name-string-constant
@@ -1646,8 +1581,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"table_name"'
+    pattern: '"table_name"'
     severity: ERROR
     fix: "names.AttrTableName"
   - id: literal-tags-string-constant
@@ -1656,8 +1590,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"tags"'
+    pattern: '"tags"'
     severity: ERROR
     fix: "names.AttrTags"
   - id: literal-tags_all-string-constant
@@ -1666,8 +1599,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"tags_all"'
+    pattern: '"tags_all"'
     severity: ERROR
     fix: "names.AttrTagsAll"
   - id: literal-target-string-constant
@@ -1676,8 +1608,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"target"'
+    pattern: '"target"'
     severity: ERROR
     fix: "names.AttrTarget"
   - id: literal-target_arn-string-constant
@@ -1686,8 +1617,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"target_arn"'
+    pattern: '"target_arn"'
     severity: ERROR
     fix: "names.AttrTargetARN"
   - id: literal-timeout-string-constant
@@ -1696,8 +1626,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"timeout"'
+    pattern: '"timeout"'
     severity: ERROR
     fix: "names.AttrTimeout"
   - id: literal-timeouts-string-constant
@@ -1706,8 +1635,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"timeouts"'
+    pattern: '"timeouts"'
     severity: ERROR
     fix: "names.AttrTimeouts"
   - id: literal-topic_arn-string-constant
@@ -1716,8 +1644,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"topic_arn"'
+    pattern: '"topic_arn"'
     severity: ERROR
     fix: "names.AttrTopicARN"
   - id: literal-transit_gateway_attachment_id-string-constant
@@ -1726,8 +1653,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"transit_gateway_attachment_id"'
+    pattern: '"transit_gateway_attachment_id"'
     severity: ERROR
     fix: "names.AttrTransitGatewayAttachmentID"
   - id: literal-transit_gateway_id-string-constant
@@ -1736,8 +1662,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"transit_gateway_id"'
+    pattern: '"transit_gateway_id"'
     severity: ERROR
     fix: "names.AttrTransitGatewayID"
   - id: literal-triggers-string-constant
@@ -1746,8 +1671,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"triggers"'
+    pattern: '"triggers"'
     severity: ERROR
     fix: "names.AttrTriggers"
   - id: literal-type-string-constant
@@ -1756,8 +1680,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"type"'
+    pattern: '"type"'
     severity: ERROR
     fix: "names.AttrType"
   - id: literal-uri-string-constant
@@ -1766,8 +1689,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"uri"'
+    pattern: '"uri"'
     severity: ERROR
     fix: "names.AttrURI"
   - id: literal-url-string-constant
@@ -1776,8 +1698,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"url"'
+    pattern: '"url"'
     severity: ERROR
     fix: "names.AttrURL"
   - id: literal-unit-string-constant
@@ -1786,8 +1707,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"unit"'
+    pattern: '"unit"'
     severity: ERROR
     fix: "names.AttrUnit"
   - id: literal-user_name-string-constant
@@ -1796,8 +1716,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"user_name"'
+    pattern: '"user_name"'
     severity: ERROR
     fix: "names.AttrUserName"
   - id: literal-username-string-constant
@@ -1806,8 +1725,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"username"'
+    pattern: '"username"'
     severity: ERROR
     fix: "names.AttrUsername"
   - id: literal-vpc_config-string-constant
@@ -1816,8 +1734,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"vpc_config"'
+    pattern: '"vpc_config"'
     severity: ERROR
     fix: "names.AttrVPCConfig"
   - id: literal-vpc_configuration-string-constant
@@ -1826,8 +1743,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"vpc_configuration"'
+    pattern: '"vpc_configuration"'
     severity: ERROR
     fix: "names.AttrVPCConfiguration"
   - id: literal-vpc_endpoint_id-string-constant
@@ -1836,8 +1752,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"vpc_endpoint_id"'
+    pattern: '"vpc_endpoint_id"'
     severity: ERROR
     fix: "names.AttrVPCEndpointID"
   - id: literal-vpc_id-string-constant
@@ -1846,8 +1761,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"vpc_id"'
+    pattern: '"vpc_id"'
     severity: ERROR
     fix: "names.AttrVPCID"
   - id: literal-vpc_security_group_ids-string-constant
@@ -1856,8 +1770,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"vpc_security_group_ids"'
+    pattern: '"vpc_security_group_ids"'
     severity: ERROR
     fix: "names.AttrVPCSecurityGroupIDs"
   - id: literal-value-string-constant
@@ -1866,8 +1779,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"value"'
+    pattern: '"value"'
     severity: ERROR
     fix: "names.AttrValue"
   - id: literal-values-string-constant
@@ -1876,8 +1788,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"values"'
+    pattern: '"values"'
     severity: ERROR
     fix: "names.AttrValues"
   - id: literal-version-string-constant
@@ -1886,8 +1797,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"version"'
+    pattern: '"version"'
     severity: ERROR
     fix: "names.AttrVersion"
   - id: literal-volume_size-string-constant
@@ -1896,8 +1806,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"volume_size"'
+    pattern: '"volume_size"'
     severity: ERROR
     fix: "names.AttrVolumeSize"
   - id: literal-volume_type-string-constant
@@ -1906,8 +1815,7 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"volume_type"'
+    pattern: '"volume_type"'
     severity: ERROR
     fix: "names.AttrVolumeType"
   - id: literal-weight-string-constant
@@ -1916,7 +1824,6 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"weight"'
+    pattern: '"weight"'
     severity: ERROR
     fix: "names.AttrWeight"

@@ -43,7 +43,7 @@ func TestAccKendraFaqDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "file_format", resourceName, "file_format"),
 					resource.TestCheckResourceAttrPair(datasourceName, "index_id", resourceName, "index_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrID, resourceName, names.AttrID),
-					resource.TestCheckResourceAttrPair(datasourceName, "language_code", resourceName, "language_code"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrLanguageCode, resourceName, names.AttrLanguageCode),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrRoleARN, resourceName, names.AttrRoleARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "s3_path.#", resourceName, "s3_path.#"),

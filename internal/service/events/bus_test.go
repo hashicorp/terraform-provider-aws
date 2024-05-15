@@ -42,7 +42,7 @@ func TestAccEventsBus_basic(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "events", fmt.Sprintf("event-bus/%s", busName)),
 					resource.TestCheckNoResourceAttr(resourceName, "event_source_name"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, busName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -58,7 +58,7 @@ func TestAccEventsBus_basic(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "events", fmt.Sprintf("event-bus/%s", busNameModified)),
 					resource.TestCheckNoResourceAttr(resourceName, "event_source_name"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, busNameModified),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -66,7 +66,7 @@ func TestAccEventsBus_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBusExists(ctx, resourceName, &v3),
 					testAccCheckBusNotRecreated(&v2, &v3),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags.key", names.AttrValue),
 				),
 			},
@@ -90,7 +90,7 @@ func TestAccEventsBus_tags(t *testing.T) {
 				Config: testAccBusConfig_tags1(busName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBusExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -104,7 +104,7 @@ func TestAccEventsBus_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBusExists(ctx, resourceName, &v2),
 					testAccCheckBusNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -114,7 +114,7 @@ func TestAccEventsBus_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBusExists(ctx, resourceName, &v3),
 					testAccCheckBusNotRecreated(&v2, &v3),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -187,7 +187,7 @@ func TestAccEventsBus_partnerEventSource(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "events", fmt.Sprintf("event-bus/%s", busName)),
 					resource.TestCheckResourceAttr(resourceName, "event_source_name", busName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, busName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 		},

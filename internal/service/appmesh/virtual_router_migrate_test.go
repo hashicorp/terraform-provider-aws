@@ -25,24 +25,24 @@ func TestVirtualRouterMigrateState(t *testing.T) {
 			StateVersion: 0,
 			Attributes: map[string]string{
 				names.AttrName: "svcb",
-				"spec.#":       acctest.CtOne,
+				"spec.#":       acctest.Ct1,
 			},
 			Expected: map[string]string{
 				names.AttrName: "svcb",
-				"spec.#":       acctest.CtOne,
+				"spec.#":       acctest.Ct1,
 			},
 		},
 		"v0_1-nonEmptySpec": {
 			StateVersion: 0,
 			Attributes: map[string]string{
 				names.AttrName:                   "svcb",
-				"spec.#":                         acctest.CtOne,
-				"spec.0.service_names.#":         acctest.CtOne,
+				"spec.#":                         acctest.Ct1,
+				"spec.0.service_names.#":         acctest.Ct1,
 				"spec.0.service_names.423761483": "serviceb.simpleapp.local",
 			},
 			Expected: map[string]string{
 				names.AttrName: "svcb",
-				"spec.#":       acctest.CtOne,
+				"spec.#":       acctest.Ct1,
 			},
 		},
 	}
