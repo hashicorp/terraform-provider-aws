@@ -55,7 +55,7 @@ func testAccReportDefinition_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccReportDefinitionConfig_basic(reportName, bucketName, acctest.CtTest),
+				Config: testAccReportDefinitionConfig_basic(reportName, bucketName, "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReportDefinitionExists(ctx, resourceName),
 					//workaround for region being based on s3 bucket region
@@ -65,7 +65,7 @@ func testAccReportDefinition_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "compression", "GZIP"),
 					resource.TestCheckResourceAttr(resourceName, "additional_schema_elements.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrS3Bucket, bucketName),
-					resource.TestCheckResourceAttr(resourceName, "s3_prefix", acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, "s3_prefix", "test"),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_region", s3BucketResourceName, names.AttrRegion),
 					resource.TestCheckResourceAttr(resourceName, "additional_artifacts.#", acctest.Ct2),
 				),
