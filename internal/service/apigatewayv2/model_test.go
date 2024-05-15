@@ -150,7 +150,7 @@ func TestAccAPIGatewayV2Model_allAttributes(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(ctx, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrContentType, "text/x-json"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, names.AttrSchema, schema1),
 				),
@@ -170,7 +170,7 @@ func TestAccAPIGatewayV2Model_allAttributes(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(ctx, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrContentType, "text/x-json"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, names.AttrSchema, schema1),
 				),
