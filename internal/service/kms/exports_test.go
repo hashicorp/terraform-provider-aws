@@ -22,7 +22,7 @@ var (
 	FindKeyPolicyByTwoPartKey = findKeyPolicyByTwoPartKey
 	GrantParseResourceID      = grantParseResourceID
 	KeyARNOrIDEqual           = keyARNOrIDEqual
-	PropagationTimeout        = propagationTimeout // nosemgrep:ci.kms-in-var-name
+	PropagationTimeout        = propagationTimeout
 	PolicyNameDefault         = policyNameDefault
 	SecretRemovedMessage      = secretRemovedMessage
 )
