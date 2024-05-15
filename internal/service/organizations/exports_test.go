@@ -5,7 +5,8 @@ package organizations
 
 // Exports for use in tests only.
 var (
-	ResourceAccount = resourceAccount
+	ResourceAccount                = resourceAccount
+	ResourceDelegatedAdministrator = resourceDelegatedAdministrator
 
 	FindAccountByID                        = findAccountByID
 	FindDelegatedAdministratorByTwoPartKey = findDelegatedAdministratorByTwoPartKey

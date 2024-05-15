@@ -83,8 +83,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceDelegatedAdministrator,
+			Factory:  resourceDelegatedAdministrator,
 			TypeName: "aws_organizations_delegated_administrator",
+			Name:     "Delegated Administrator",
 		},
 		{
 			Factory:  ResourceOrganization,
