@@ -377,7 +377,7 @@ func waitRouteTableAssociationUpdatedV2(ctx context.Context, conn *ec2.Client, i
 	return nil, err
 }
 
-func waitVPCEndpointServiceAvailableV2(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.ServiceConfiguration, error) {
+func waitVPCEndpointServiceAvailableV2(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.ServiceConfiguration, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.ServiceStatePending),
 		Target:     enum.Slice(types.ServiceStateAvailable),

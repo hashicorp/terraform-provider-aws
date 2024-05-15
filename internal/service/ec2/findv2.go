@@ -789,3 +789,32 @@ func findVPCEndpointServicePermissionsByServiceIDV2(ctx context.Context, conn *e
 
 	return findVPCEndpointServicePermissionsV2(ctx, conn, input)
 }
+
+func findVPCEndpointServicesV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointServicesInput) ([]awstypes.ServiceDetail, []string, error) {
+	var serviceDetails []awstypes.ServiceDetail
+	var serviceNames []string
+
+	err := describeVPCEndpointServicesPagesV2(ctx, conn, input, func(page *ec2.DescribeVpcEndpointServicesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		serviceDetails = append(serviceDetails, page.ServiceDetails...)
+		serviceNames = append(serviceNames, page.ServiceNames...)
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidServiceName) {
+		return nil, nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return serviceDetails, serviceNames, nil
+}
