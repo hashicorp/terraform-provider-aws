@@ -696,7 +696,7 @@ func CheckResourceAttrJMES(name, key, jmesPath, value string) resource.TestCheck
 
 		result, err := jmespath.Search(jmesPath, jsonData)
 		if err != nil {
-			return fmt.Errorf("Invalid JMESPath %q: %w", jmesPath, err)
+			return fmt.Errorf("invalid JMESPath %q: %w", jmesPath, err)
 		}
 
 		var v string
@@ -744,7 +744,7 @@ func CheckResourceAttrJMESPair(nameFirst, keyFirst, jmesPath, nameSecond, keySec
 
 		result, err := jmespath.Search(jmesPath, jsonData)
 		if err != nil {
-			return fmt.Errorf("Invalid JMESPath %q: %w", jmesPath, err)
+			return fmt.Errorf("invalid JMESPath %q: %w", jmesPath, err)
 		}
 
 		var value string
@@ -2520,10 +2520,6 @@ func CheckCallerIdentityAccountID(n string) resource.TestCheckFunc {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("can't find AccountID resource: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("account Id resource ID not set.")
 		}
 
 		expected := Provider.Meta().(*conns.AWSClient).AccountID

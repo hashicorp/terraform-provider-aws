@@ -134,7 +134,7 @@ func resourcePolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData,
 		TargetId: aws.String(targetID),
 	})
 
-	if errs.IsA[*awstypes.PolicyNotFoundException](err) || errs.IsA[*awstypes.TargetNotFoundException](err) {
+	if errs.IsA[*awstypes.PolicyNotAttachedException](err) || errs.IsA[*awstypes.PolicyNotFoundException](err) || errs.IsA[*awstypes.TargetNotFoundException](err) {
 		return diags
 	}
 
