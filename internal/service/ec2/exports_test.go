@@ -42,6 +42,7 @@ var (
 	FindNetworkInterfaceByIDV2                = findNetworkInterfaceByIDV2
 	FindVolumeAttachmentInstanceByID          = findVolumeAttachmentInstanceByID
 	FlattenNetworkInterfacePrivateIPAddresses = flattenNetworkInterfacePrivateIPAddresses
+	IPAMServicePrincipal                      = ipamServicePrincipal
 	NewAttributeFilterList                    = newAttributeFilterList
 	NewAttributeFilterListV2                  = newAttributeFilterListV2
 	NewCustomFilterList                       = newCustomFilterList

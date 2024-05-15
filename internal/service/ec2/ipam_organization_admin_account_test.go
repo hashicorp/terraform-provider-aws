@@ -9,19 +9,20 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/organizations"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccIPAMOrganizationAdminAccount_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var organization organizations.DelegatedAdministrator
+	var organization awstypes.DelegatedAdministrator
 	resourceName := "aws_vpc_ipam_organization_admin_account.test"
 	dataSourceIdentity := "data.aws_caller_identity.delegated"
 
@@ -60,67 +61,47 @@ func testAccCheckIPAMOrganizationAdminAccountDestroy(ctx context.Context) resour
 			if rs.Type != "aws_vpc_ipam_organization_admin_account" {
 				continue
 			}
-			id := rs.Primary.ID
 
-			input := &organizations.ListDelegatedAdministratorsInput{
-				ServicePrincipal: aws.String(tfec2.IPAMServicePrincipal),
+			_, err := tforganizations.FindDelegatedAdministratorByTwoPartKey(ctx, conn, rs.Primary.Attributes["delegated_admin_account_id"], rs.Primary.Attributes["service_principal"])
+
+			if tfresource.NotFound(err) {
+				continue
 			}
-
-			output, err := conn.ListDelegatedAdministratorsWithContext(ctx, input)
 
 			if err != nil {
-				return fmt.Errorf("error finding IPAM organization delegated account: (%s): %w", id, err)
+				return err
 			}
 
-			if output == nil || len(output.DelegatedAdministrators) == 0 || output.DelegatedAdministrators[0] == nil {
-				return nil
-			}
-			return fmt.Errorf("organization DelegatedAdministrator still exists: %q", id)
+			return fmt.Errorf("IPAM Organization Delegated Admin Account %s still exists", rs.Primary.ID)
 		}
+
 		return nil
 	}
 }
 
-func testAccCheckIPAMOrganizationAdminAccountExists(ctx context.Context, n string, org *organizations.DelegatedAdministrator) resource.TestCheckFunc {
+func testAccCheckIPAMOrganizationAdminAccountExists(ctx context.Context, n string, v *awstypes.DelegatedAdministrator) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("Organization ID not set")
-		}
-
-		accountID := rs.Primary.ID
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsClient(ctx)
-		input := &organizations.ListDelegatedAdministratorsInput{
-			ServicePrincipal: aws.String(tfec2.IPAMServicePrincipal),
-		}
 
-		output, err := conn.ListDelegatedAdministratorsWithContext(ctx, input)
+		output, err := tforganizations.FindDelegatedAdministratorByTwoPartKey(ctx, conn, rs.Primary.Attributes["delegated_admin_account_id"], rs.Primary.Attributes["service_principal"])
 
 		if err != nil {
-			return fmt.Errorf("error finding IPAM organization delegated account: (%s): %w", accountID, err)
+			return err
 		}
 
-		if output == nil || len(output.DelegatedAdministrators) == 0 || output.DelegatedAdministrators[0] == nil {
-			return fmt.Errorf("organization DelegatedAdministrator %q does not exist", rs.Primary.ID)
-		}
+		*v = *output
 
-		output_account := output.DelegatedAdministrators[0]
-
-		if aws.StringValue(output_account.Id) != accountID {
-			return fmt.Errorf("organization DelegatedAdministrator %q does not match expected %s", accountID, aws.StringValue(output_account.Id))
-		}
-		*org = *output_account
 		return nil
 	}
 }
 
 func testAccIPAMOrganizationAdminAccountConfig_basic() string {
-	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider() + `
+	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), `
 data "aws_caller_identity" "delegated" {
   provider = "awsalternate"
 }

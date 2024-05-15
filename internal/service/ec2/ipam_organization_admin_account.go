@@ -6,15 +6,14 @@ package ec2
 // ec2 has no action for Describe() to see if IPAM delegated admin has already been assigned
 import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"context"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -58,7 +57,7 @@ func ResourceIPAMOrganizationAdminAccount() *schema.Resource {
 }
 
 const (
-	IPAMServicePrincipal = "ipam.amazonaws.com"
+	ipamServicePrincipal = "ipam.amazonaws.com"
 )
 
 func resourceIPAMOrganizationAdminAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -87,31 +86,19 @@ func resourceIPAMOrganizationAdminAccountCreate(ctx context.Context, d *schema.R
 
 func resourceIPAMOrganizationAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	org_conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
+	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
-	input := &organizations.ListDelegatedAdministratorsInput{
-		ServicePrincipal: aws.String(IPAMServicePrincipal),
-	}
-
-	output, err := org_conn.ListDelegatedAdministratorsWithContext(ctx, input)
+	account, err := tforganizations.FindDelegatedAdministratorByTwoPartKey(ctx, conn, d.Id(), ipamServicePrincipal)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "finding IPAM organization delegated account: (%s): %s", d.Id(), err)
 	}
 
-	if output == nil || len(output.DelegatedAdministrators) == 0 || output.DelegatedAdministrators[0] == nil {
-		log.Printf("[WARN] VPC Ipam Organization Admin Account (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
-
-	admin_account := output.DelegatedAdministrators[0]
-
-	d.Set(names.AttrARN, admin_account.Arn)
-	d.Set("delegated_admin_account_id", admin_account.Id)
-	d.Set(names.AttrEmail, admin_account.Email)
-	d.Set(names.AttrName, admin_account.Name)
-	d.Set("service_principal", IPAMServicePrincipal)
+	d.Set(names.AttrARN, account.Arn)
+	d.Set("delegated_admin_account_id", account.Id)
+	d.Set(names.AttrEmail, account.Email)
+	d.Set(names.AttrName, account.Name)
+	d.Set("service_principal", ipamServicePrincipal)
 
 	return diags
 }

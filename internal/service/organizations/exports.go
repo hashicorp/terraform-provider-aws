@@ -5,7 +5,8 @@ package organizations
 
 // Exports for use in other modules.
 var (
-	DisableServicePrincipal          = disableServicePrincipal
-	FindEnabledServicePrincipalNames = findEnabledServicePrincipalNames
-	FindOrganization                 = findOrganization
+	DisableServicePrincipal                = disableServicePrincipal
+	FindDelegatedAdministratorByTwoPartKey = findDelegatedAdministratorByTwoPartKey
+	FindEnabledServicePrincipalNames       = findEnabledServicePrincipalNames
+	FindOrganization                       = findOrganization
 )

@@ -13,10 +13,9 @@ var (
 	ResourcePolicyAttachment       = resourcePolicyAttachment
 	ResourceResourcePolicy         = resourceResourcePolicy
 
-	FindAccountByID                        = findAccountByID
-	FindDelegatedAdministratorByTwoPartKey = findDelegatedAdministratorByTwoPartKey
-	FindOrganizationalUnitByID             = findOrganizationalUnitByID
-	FindPolicyAttachmentByTwoPartKey       = findPolicyAttachmentByTwoPartKey
-	FindPolicyByID                         = findPolicyByID
-	FindResourcePolicy                     = findResourcePolicy
+	FindAccountByID                  = findAccountByID
+	FindOrganizationalUnitByID       = findOrganizationalUnitByID
+	FindPolicyAttachmentByTwoPartKey = findPolicyAttachmentByTwoPartKey
+	FindPolicyByID                   = findPolicyByID
+	FindResourcePolicy               = findResourcePolicy
 )
