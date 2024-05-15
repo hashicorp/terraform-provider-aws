@@ -84,11 +84,11 @@ func resourceSharingWithOrganizationDelete(ctx context.Context, d *schema.Resour
 	// See https://docs.aws.amazon.com/ram/latest/userguide/security-disable-sharing-with-orgs.html.
 
 	if err := tforganizations.DisableServicePrincipal(ctx, meta.(*conns.AWSClient).OrganizationsClient(ctx), servicePrincipalName); err != nil {
-		return sdkdiag.AppendErrorf(diags, "disabling Organization service principal (%s): %s", servicePrincipalName, err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if err := tfiam.DeleteServiceLinkedRole(ctx, meta.(*conns.AWSClient).IAMClient(ctx), sharingWithOrganizationRoleName); err != nil {
-		return sdkdiag.AppendWarningf(diags, "deleting IAM service-linked Role (%s): %s", sharingWithOrganizationRoleName, err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	return diags

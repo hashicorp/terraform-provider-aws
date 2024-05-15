@@ -7,6 +7,7 @@ package organizations
 var (
 	ResourceAccount                = resourceAccount
 	ResourceDelegatedAdministrator = resourceDelegatedAdministrator
+	ResourceOrganization           = resourceOrganization
 
 	FindAccountByID                        = findAccountByID
 	FindDelegatedAdministratorByTwoPartKey = findDelegatedAdministratorByTwoPartKey
