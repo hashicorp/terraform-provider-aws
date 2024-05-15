@@ -47,10 +47,10 @@ func TestAccDSRadiusSettings_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRadiusSettingsExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "authentication_protocol", "PAP"),
-					resource.TestCheckResourceAttr(resourceName, "display_label", "test"),
+					resource.TestCheckResourceAttr(resourceName, "display_label", acctest.CtTest),
 					resource.TestCheckResourceAttr(resourceName, "radius_port", "1812"),
-					resource.TestCheckResourceAttr(resourceName, "radius_retries", acctest.CtThree),
-					resource.TestCheckResourceAttr(resourceName, "radius_servers.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "radius_retries", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "radius_servers.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "radius_servers.*", radiusServer),
 					resource.TestCheckResourceAttr(resourceName, "radius_timeout", "30"),
 					resource.TestCheckResourceAttrSet(resourceName, "shared_secret"),

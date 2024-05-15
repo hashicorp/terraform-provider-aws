@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package ds
+package ds_test
 
 import (
 	"context"
@@ -12,6 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfds "github.com/hashicorp/terraform-provider-aws/internal/service/ds"
 )
 
 func TestDirectoryIDValidator(t *testing.T) {
@@ -35,7 +37,7 @@ func TestDirectoryIDValidator(t *testing.T) {
 			val: types.StringValue("a3b15b67b8"),
 			expectedDiagnostics: diag.Diagnostics{
 				diag.NewAttributeErrorDiagnostic(
-					path.Root("test"),
+					path.Root(acctest.CtTest),
 					"Invalid Attribute Value Match",
 					`Attribute test must be a valid Directory Service Directory ID, got: a3b15b67b8`,
 				),
@@ -45,7 +47,7 @@ func TestDirectoryIDValidator(t *testing.T) {
 			val: types.StringValue("d-abcdefghij"),
 			expectedDiagnostics: diag.Diagnostics{
 				diag.NewAttributeErrorDiagnostic(
-					path.Root("test"),
+					path.Root(acctest.CtTest),
 					"Invalid Attribute Value Match",
 					`Attribute test must be a valid Directory Service Directory ID, got: d-abcdefghij`,
 				),
@@ -61,12 +63,12 @@ func TestDirectoryIDValidator(t *testing.T) {
 			ctx := context.Background()
 
 			request := validator.StringRequest{
-				Path:           path.Root("test"),
-				PathExpression: path.MatchRoot("test"),
+				Path:           path.Root(acctest.CtTest),
+				PathExpression: path.MatchRoot(acctest.CtTest),
 				ConfigValue:    test.val,
 			}
 			response := validator.StringResponse{}
-			directoryIDValidator.ValidateString(ctx, request, &response)
+			tfds.DirectoryIDValidator.ValidateString(ctx, request, &response)
 
 			if diff := cmp.Diff(response.Diagnostics, test.expectedDiagnostics); diff != "" {
 				t.Errorf("unexpected diagnostics difference: %s", diff)
@@ -96,10 +98,10 @@ func TestDomainWithTrailingDotValidatorValidator(t *testing.T) {
 			val: types.StringValue("directory.test."),
 		},
 		"invalid 1": {
-			val: types.StringValue("test"),
+			val: types.StringValue(acctest.CtTest),
 			expectedDiagnostics: diag.Diagnostics{
 				diag.NewAttributeErrorDiagnostic(
-					path.Root("test"),
+					path.Root(acctest.CtTest),
 					"Invalid Attribute Value Match",
 					`Attribute test must be a fully qualified domain name and may end with a trailing period, got: test`,
 				),
@@ -115,12 +117,12 @@ func TestDomainWithTrailingDotValidatorValidator(t *testing.T) {
 			ctx := context.Background()
 
 			request := validator.StringRequest{
-				Path:           path.Root("test"),
-				PathExpression: path.MatchRoot("test"),
+				Path:           path.Root(acctest.CtTest),
+				PathExpression: path.MatchRoot(acctest.CtTest),
 				ConfigValue:    test.val,
 			}
 			response := validator.StringResponse{}
-			domainWithTrailingDotValidator.ValidateString(ctx, request, &response)
+			tfds.DomainWithTrailingDotValidator.ValidateString(ctx, request, &response)
 
 			if diff := cmp.Diff(response.Diagnostics, test.expectedDiagnostics); diff != "" {
 				t.Errorf("unexpected diagnostics difference: %s", diff)
@@ -150,7 +152,7 @@ func TestTrustPasswordValidator(t *testing.T) {
 			val: types.StringValue("pass\nword"),
 			expectedDiagnostics: diag.Diagnostics{
 				diag.NewAttributeErrorDiagnostic(
-					path.Root("test"),
+					path.Root(acctest.CtTest),
 					"Invalid Attribute Value Match",
 					"Attribute test can contain upper- and lower-case letters, numbers, and punctuation characters, got: pass\nword",
 				),
@@ -166,12 +168,12 @@ func TestTrustPasswordValidator(t *testing.T) {
 			ctx := context.Background()
 
 			request := validator.StringRequest{
-				Path:           path.Root("test"),
-				PathExpression: path.MatchRoot("test"),
+				Path:           path.Root(acctest.CtTest),
+				PathExpression: path.MatchRoot(acctest.CtTest),
 				ConfigValue:    test.val,
 			}
 			response := validator.StringResponse{}
-			trustPasswordValidator.ValidateString(ctx, request, &response)
+			tfds.TrustPasswordValidator.ValidateString(ctx, request, &response)
 
 			if diff := cmp.Diff(response.Diagnostics, test.expectedDiagnostics); diff != "" {
 				t.Errorf("unexpected diagnostics difference: %s", diff)
