@@ -1407,8 +1407,9 @@ resource "aws_appsync_graphql_api" "test" {
 func testAccGraphQLAPIConfig_apiType(rName, apiType string) string {
 	return fmt.Sprintf(`
 resource "aws_appsync_graphql_api" "test" {
-  api_type = %[1]q
-  name     = %[2]q
+  authentication_type = "API_KEY"
+  api_type            = %[1]q
+  name                = %[2]q
 }
 `, apiType, rName)
 }
