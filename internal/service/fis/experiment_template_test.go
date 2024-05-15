@@ -35,7 +35,7 @@ func TestAccFISExperimentTemplate_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckExperimentTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExperimentTemplateConfig_basic(rName, "An experiment template for testing", "test-action-1", "", "aws:ec2:terminate-instances", "Instances", "to-terminate-1", "aws:ec2:instance", "COUNT(1)", "env", acctest.CtTest),
+				Config: testAccExperimentTemplateConfig_basic(rName, "An experiment template for testing", "test-action-1", "", "aws:ec2:terminate-instances", "Instances", "to-terminate-1", "aws:ec2:instance", "COUNT(1)", "env", "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccExperimentTemplateExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "An experiment template for testing"),
@@ -58,7 +58,7 @@ func TestAccFISExperimentTemplate_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target.0.filter.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "target.0.resource_arns.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "target.0.resource_tag.0.key", "env"),
-					resource.TestCheckResourceAttr(resourceName, "target.0.resource_tag.0.value", acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, "target.0.resource_tag.0.value", "test"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.resource_tag.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "target.#", acctest.Ct1),
 				),
@@ -85,7 +85,7 @@ func TestAccFISExperimentTemplate_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckExperimentTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExperimentTemplateConfig_basic(rName, "An experiment template for testing", "test-action-1", "", "aws:ec2:terminate-instances", "Instances", "to-terminate-1", "aws:ec2:instance", "COUNT(1)", "env", acctest.CtTest),
+				Config: testAccExperimentTemplateConfig_basic(rName, "An experiment template for testing", "test-action-1", "", "aws:ec2:terminate-instances", "Instances", "to-terminate-1", "aws:ec2:instance", "COUNT(1)", "env", "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccExperimentTemplateExists(ctx, resourceName, &conf),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffis.ResourceExperimentTemplate(), resourceName),
@@ -109,7 +109,7 @@ func TestAccFISExperimentTemplate_update(t *testing.T) {
 		CheckDestroy:             testAccCheckExperimentTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExperimentTemplateConfig_basic(rName, "An experiment template for testing", "test-action-1", "", "aws:ec2:terminate-instances", "Instances", "to-terminate-1", "aws:ec2:instance", "COUNT(1)", "env", acctest.CtTest),
+				Config: testAccExperimentTemplateConfig_basic(rName, "An experiment template for testing", "test-action-1", "", "aws:ec2:terminate-instances", "Instances", "to-terminate-1", "aws:ec2:instance", "COUNT(1)", "env", "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccExperimentTemplateExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "An experiment template for testing"),
@@ -132,7 +132,7 @@ func TestAccFISExperimentTemplate_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target.0.filter.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "target.0.resource_arns.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "target.0.resource_tag.0.key", "env"),
-					resource.TestCheckResourceAttr(resourceName, "target.0.resource_tag.0.value", acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, "target.0.resource_tag.0.value", "test"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.resource_tag.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "target.#", acctest.Ct1),
 				),
@@ -179,7 +179,7 @@ func TestAccFISExperimentTemplate_spot(t *testing.T) {
 		CheckDestroy:             testAccCheckExperimentTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExperimentTemplateConfig_actionParameter(rName, "Send Spot Instance Interruptions", "Send-Spot-Instance-Interruptions", "Send Spot Instance Interruptions", "aws:ec2:send-spot-instance-interruptions", "SpotInstances", "send-spot-instance-interruptions-target", "durationBeforeInterruption", "PT2M", "aws:ec2:spot-instance", "PERCENT(25)", "env", acctest.CtTest),
+				Config: testAccExperimentTemplateConfig_actionParameter(rName, "Send Spot Instance Interruptions", "Send-Spot-Instance-Interruptions", "Send Spot Instance Interruptions", "aws:ec2:send-spot-instance-interruptions", "SpotInstances", "send-spot-instance-interruptions-target", "durationBeforeInterruption", "PT2M", "aws:ec2:spot-instance", "PERCENT(25)", "env", "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccExperimentTemplateExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Send Spot Instance Interruptions"),
@@ -204,7 +204,7 @@ func TestAccFISExperimentTemplate_spot(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target.0.filter.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "target.0.resource_arns.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "target.0.resource_tag.0.key", "env"),
-					resource.TestCheckResourceAttr(resourceName, "target.0.resource_tag.0.value", acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, "target.0.resource_tag.0.value", "test"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.resource_tag.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "target.#", acctest.Ct1),
 				),
@@ -229,7 +229,7 @@ func TestAccFISExperimentTemplate_eks(t *testing.T) {
 		CheckDestroy:             testAccCheckExperimentTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExperimentTemplateConfig_eks(rName, "kubernetes custom resource creation", "k8s-pod-delete", "k8s pod delete", "aws:eks:inject-kubernetes-custom-resource", "Cluster", "kubernetes-custom-resource-creation-target", "kubernetesApiVersion", "litmuschaos.io/v1alpha1", "kubernetesKind", "ChaosEngine", "kubernetesNamespace", "observability", "kubernetesSpec", "{\"engineState\":\"active\",\"appinfo\":{\"appns\":\"observability\",\"applabel\":\"app=nginx\",\"appkind\":\"deployment\"},\"chaosServiceAccount\":\"pod-delete-sa\",\"experiments\":[{\"name\":\"pod-delete\",\"spec\":{\"components\":{\"env\":[{\"name\":\"TOTAL_CHAOS_DURATION\",\"value\":\"60\"},{\"name\":\"CHAOS_INTERVAL\",\"value\":\"60\"},{\"name\":\"PODS_AFFECTED_PERC\",\"value\":\"30\"}]},\"probe\":[]}}],\"annotationCheck\":\"false\"}", "maxDuration", "PT2M", "aws:eks:cluster", "ALL", "env", acctest.CtTest),
+				Config: testAccExperimentTemplateConfig_eks(rName, "kubernetes custom resource creation", "k8s-pod-delete", "k8s pod delete", "aws:eks:inject-kubernetes-custom-resource", "Cluster", "kubernetes-custom-resource-creation-target", "kubernetesApiVersion", "litmuschaos.io/v1alpha1", "kubernetesKind", "ChaosEngine", "kubernetesNamespace", "observability", "kubernetesSpec", "{\"engineState\":\"active\",\"appinfo\":{\"appns\":\"observability\",\"applabel\":\"app=nginx\",\"appkind\":\"deployment\"},\"chaosServiceAccount\":\"pod-delete-sa\",\"experiments\":[{\"name\":\"pod-delete\",\"spec\":{\"components\":{\"env\":[{\"name\":\"TOTAL_CHAOS_DURATION\",\"value\":\"60\"},{\"name\":\"CHAOS_INTERVAL\",\"value\":\"60\"},{\"name\":\"PODS_AFFECTED_PERC\",\"value\":\"30\"}]},\"probe\":[]}}],\"annotationCheck\":\"false\"}", "maxDuration", "PT2M", "aws:eks:cluster", "ALL", "env", "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccExperimentTemplateExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "kubernetes custom resource creation"),
@@ -285,7 +285,7 @@ func TestAccFISExperimentTemplate_ebs(t *testing.T) {
 		CheckDestroy:             testAccCheckExperimentTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExperimentTemplateConfig_ebsVolume(rName, "EBS Volume Pause I/O Experiment", "ebs-paused-io-action", "EBS Volume Pause I/O", "aws:ebs:pause-volume-io", "Volumes", "ebs-volume-to-pause-io", names.AttrDuration, "PT6M", "aws:ec2:ebs-volume", "ALL", "env", acctest.CtTest),
+				Config: testAccExperimentTemplateConfig_ebsVolume(rName, "EBS Volume Pause I/O Experiment", "ebs-paused-io-action", "EBS Volume Pause I/O", "aws:ebs:pause-volume-io", "Volumes", "ebs-volume-to-pause-io", names.AttrDuration, "PT6M", "aws:ec2:ebs-volume", "ALL", "env", "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccExperimentTemplateExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "EBS Volume Pause I/O Experiment"),
@@ -333,7 +333,7 @@ func TestAccFISExperimentTemplate_ebsParameters(t *testing.T) {
 		CheckDestroy:             testAccCheckExperimentTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExperimentTemplateConfig_ebsVolumeParameters(rName, "EBS Volume Pause I/O Experiment", "ebs-paused-io-action", "EBS Volume Pause I/O", "aws:ebs:pause-volume-io", "Volumes", "ebs-volume-to-pause-io", names.AttrDuration, "PT6M", "aws:ec2:ebs-volume", "ALL", "env", acctest.CtTest),
+				Config: testAccExperimentTemplateConfig_ebsVolumeParameters(rName, "EBS Volume Pause I/O Experiment", "ebs-paused-io-action", "EBS Volume Pause I/O", "aws:ebs:pause-volume-io", "Volumes", "ebs-volume-to-pause-io", names.AttrDuration, "PT6M", "aws:ec2:ebs-volume", "ALL", "env", "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccExperimentTemplateExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "EBS Volume Pause I/O Experiment"),
@@ -382,7 +382,7 @@ func TestAccFISExperimentTemplate_loggingConfiguration(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Cloudwatch Logging
 			{
-				Config: testAccExperimentTemplateConfig_logConfigCloudWatch(rName, "An experiment template for testing", "test-action-1", "", "aws:ec2:terminate-instances", "Instances", "to-terminate-1", "aws:ec2:instance", "COUNT(1)", "env", acctest.CtTest),
+				Config: testAccExperimentTemplateConfig_logConfigCloudWatch(rName, "An experiment template for testing", "test-action-1", "", "aws:ec2:terminate-instances", "Instances", "to-terminate-1", "aws:ec2:instance", "COUNT(1)", "env", "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccExperimentTemplateExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.log_schema_version", acctest.Ct2),
@@ -391,14 +391,14 @@ func TestAccFISExperimentTemplate_loggingConfiguration(t *testing.T) {
 			},
 			// Delete Logging
 			{
-				Config: testAccExperimentTemplateConfig_basic(rName, "An experiment template for testing", "test-action-1", "", "aws:ec2:terminate-instances", "Instances", "to-terminate-1", "aws:ec2:instance", "COUNT(1)", "env", acctest.CtTest),
+				Config: testAccExperimentTemplateConfig_basic(rName, "An experiment template for testing", "test-action-1", "", "aws:ec2:terminate-instances", "Instances", "to-terminate-1", "aws:ec2:instance", "COUNT(1)", "env", "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccExperimentTemplateExists(ctx, resourceName, &conf),
 				),
 			},
 			// S3 Logging
 			{
-				Config: testAccExperimentTemplateConfig_logConfigS3(rName, "An experiment template for testing", "test-action-1", "", "aws:ec2:terminate-instances", "Instances", "to-terminate-1", "aws:ec2:instance", "COUNT(1)", "env", acctest.CtTest),
+				Config: testAccExperimentTemplateConfig_logConfigS3(rName, "An experiment template for testing", "test-action-1", "", "aws:ec2:terminate-instances", "Instances", "to-terminate-1", "aws:ec2:instance", "COUNT(1)", "env", "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccExperimentTemplateExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.log_schema_version", acctest.Ct2),
@@ -407,12 +407,12 @@ func TestAccFISExperimentTemplate_loggingConfiguration(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccExperimentTemplateConfig_logConfigS3Prefix(rName, "An experiment template for testing", "test-action-1", "", "aws:ec2:terminate-instances", "Instances", "to-terminate-1", "aws:ec2:instance", "COUNT(1)", "env", acctest.CtTest),
+				Config: testAccExperimentTemplateConfig_logConfigS3Prefix(rName, "An experiment template for testing", "test-action-1", "", "aws:ec2:terminate-instances", "Instances", "to-terminate-1", "aws:ec2:instance", "COUNT(1)", "env", "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccExperimentTemplateExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.log_schema_version", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.s3_configuration.0.bucket_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.s3_configuration.0.prefix", acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.s3_configuration.0.prefix", "test"),
 				),
 			},
 		},
