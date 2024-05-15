@@ -804,7 +804,7 @@ func resourceServerDelete(ctx context.Context, d *schema.ResourceData, meta inte
 
 			if err != nil {
 				errs = append(errs, fmt.Errorf("listing Transfer Server (%s) Users: %w", d.Id(), err))
-				return nil
+				continue
 			}
 
 			for _, user := range page.Users {
