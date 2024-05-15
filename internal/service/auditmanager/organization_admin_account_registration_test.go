@@ -25,8 +25,8 @@ func TestAccAuditManagerOrganizationAdminAccountRegistration_serial(t *testing.T
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		"basic":      testAccOrganizationAdminAccountRegistration_basic,
-		"disappears": testAccOrganizationAdminAccountRegistration_disappears,
+		acctest.CtBasic: testAccOrganizationAdminAccountRegistration_basic,
+		"disappears":    testAccOrganizationAdminAccountRegistration_disappears,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
