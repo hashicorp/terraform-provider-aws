@@ -50,7 +50,7 @@ func TestAccSESV2EmailIdentityMailFromAttributes_basic(t *testing.T) {
 func TestAccSESV2EmailIdentityMailFromAttributes_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	domain := acctest.RandomDomain()
-	mailFromDomain := domain.Subdomain(acctest.CtTest)
+	mailFromDomain := domain.Subdomain("test")
 
 	rName := domain.String()
 	resourceName := "aws_sesv2_email_identity_mail_from_attributes.test"
@@ -100,7 +100,7 @@ func TestAccSESV2EmailIdentityMailFromAttributes_disappearsEmailIdentity(t *test
 func TestAccSESV2EmailIdentityMailFromAttributes_behaviorOnMXFailure(t *testing.T) {
 	ctx := acctest.Context(t)
 	domain := acctest.RandomDomain()
-	mailFromDomain := domain.Subdomain(acctest.CtTest)
+	mailFromDomain := domain.Subdomain("test")
 
 	rName := domain.String()
 	resourceName := "aws_sesv2_email_identity_mail_from_attributes.test"
