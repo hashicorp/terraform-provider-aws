@@ -79,7 +79,7 @@ func TestRuleParseResourceID(t *testing.T) {
 			TestName:      "partner event bus 2",
 			InputID:       "aws.partner/example.net/id/18554d09-58ff-aa42-ba9c-c4c33899006f/test",
 			ExpectedPart0: "aws.partner/example.net/id/18554d09-58ff-aa42-ba9c-c4c33899006f",
-			ExpectedPart1: acctest.CtTest,
+			ExpectedPart1: "test",
 		},
 		{
 			TestName: "ARN event bus",
