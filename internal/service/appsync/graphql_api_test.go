@@ -1398,7 +1398,7 @@ func testAccCheckGraphQLAPITypeExists(ctx context.Context, n, typeName string) r
 func testAccGraphQLAPIConfig_authenticationType(rName, authenticationType string) string {
 	return fmt.Sprintf(`
 resource "aws_appsync_graphql_api" "test" {
-  api_type            = %[1]q
+  authentication_type = %[1]q
   name                = %[2]q
 }
 `, authenticationType, rName)
@@ -1407,8 +1407,8 @@ resource "aws_appsync_graphql_api" "test" {
 func testAccGraphQLAPIConfig_apiType(rName, apiType string) string {
 	return fmt.Sprintf(`
 resource "aws_appsync_graphql_api" "test" {
-  authentication_type = %[1]q
-  name                = %[2]q
+  api_type = %[1]q
+  name     = %[2]q
 }
 `, apiType, rName)
 }
