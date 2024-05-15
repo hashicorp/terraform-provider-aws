@@ -35,7 +35,7 @@ func TestStandardsControlARNToStandardsSubscriptionARN(t *testing.T) {
 		},
 		{
 			TestName:      "unparsable ARN",
-			InputARN:      acctest.CtTest,
+			InputARN:      "test",
 			ExpectedError: regexache.MustCompile(`parsing ARN`),
 		},
 		{
