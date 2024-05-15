@@ -76,10 +76,10 @@ func TestAccSageMakerDevice_description(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDeviceConfig_description(rName, acctest.CtTest),
+				Config: testAccDeviceConfig_description(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceExists(ctx, resourceName, &device),
-					resource.TestCheckResourceAttr(resourceName, "device.0.description", acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, "device.0.description", "test"),
 				),
 			},
 		},

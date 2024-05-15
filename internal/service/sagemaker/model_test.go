@@ -171,7 +171,7 @@ func TestAccSageMakerModel_primaryContainerHostname(t *testing.T) {
 				Config: testAccModelConfig_primaryContainerHostname(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "primary_container.0.container_hostname", acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.container_hostname", "test"),
 				),
 			},
 			{

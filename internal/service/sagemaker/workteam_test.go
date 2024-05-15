@@ -123,7 +123,7 @@ func testAccWorkteam_oidcConfig(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"workforce_name"},
 			},
 			{
-				Config: testAccWorkteamConfig_oidc2(rName, acctest.CtTest),
+				Config: testAccWorkteamConfig_oidc2(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkteamExists(ctx, resourceName, &workteam),
 					resource.TestCheckResourceAttr(resourceName, "workteam_name", rName),
@@ -132,7 +132,7 @@ func testAccWorkteam_oidcConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "member_definition.0.oidc_member_definition.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "member_definition.0.oidc_member_definition.0.groups.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemAttr(resourceName, "member_definition.0.oidc_member_definition.0.groups.*", rName),
-					resource.TestCheckTypeSetElemAttr(resourceName, "member_definition.0.oidc_member_definition.0.groups.*", acctest.CtTest),
+					resource.TestCheckTypeSetElemAttr(resourceName, "member_definition.0.oidc_member_definition.0.groups.*", "test"),
 				),
 			},
 			{

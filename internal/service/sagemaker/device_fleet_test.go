@@ -80,10 +80,10 @@ func TestAccSageMakerDeviceFleet_description(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDeviceFleetConfig_description(rName, acctest.CtTest),
+				Config: testAccDeviceFleetConfig_description(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceFleetExists(ctx, resourceName, &deviceFleet),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
 				),
 			},
 		},
