@@ -170,28 +170,28 @@ func TestAccNetworkManagerConnectPeer_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckConnectPeerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectPeerConfig_tags1(rName, "Name", acctest.CtTest, insideCidrBlocksv4, peerAddress, asn, protocol),
+				Config: testAccConnectPeerConfig_tags1(rName, "Name", "test", insideCidrBlocksv4, peerAddress, asn, protocol),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectPeerExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "test"),
 				),
 			},
 			{
-				Config: testAccConnectPeerConfig_tags2(rName, "Name", acctest.CtTest, "env", acctest.CtTest, insideCidrBlocksv4, peerAddress, asn, protocol),
+				Config: testAccConnectPeerConfig_tags2(rName, "Name", "test", "env", "test", insideCidrBlocksv4, peerAddress, asn, protocol),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectPeerExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "tags.env", acctest.CtTest),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, "tags.env", "test"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "test"),
 				),
 			},
 			{
-				Config: testAccConnectPeerConfig_tags1(rName, "Name", acctest.CtTest, insideCidrBlocksv4, peerAddress, asn, protocol),
+				Config: testAccConnectPeerConfig_tags1(rName, "Name", "test", insideCidrBlocksv4, peerAddress, asn, protocol),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectPeerExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "test"),
 				),
 			},
 			{

@@ -121,12 +121,12 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccSiteToSiteVPNAttachmentConfig_tags2(rName, vpnIP, "segment", "shared", "Name", acctest.CtTest, bgpASN),
+				Config: testAccSiteToSiteVPNAttachmentConfig_tags2(rName, vpnIP, "segment", "shared", "Name", "test", bgpASN),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "tags.segment", "shared"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "test"),
 				),
 			},
 			{

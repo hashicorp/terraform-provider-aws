@@ -173,12 +173,12 @@ func TestAccNetworkManagerConnectAttachment_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccConnectAttachmentConfig_tags2(rName, "segment", "shared", "Name", acctest.CtTest),
+				Config: testAccConnectAttachmentConfig_tags2(rName, "segment", "shared", "Name", "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "tags.segment", "shared"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "test"),
 				),
 			},
 			{
