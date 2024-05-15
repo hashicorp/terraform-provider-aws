@@ -72,9 +72,6 @@ func (r *resourceAppBundle) Create(ctx context.Context, req resource.CreateReque
 		Tags: getTagsIn(ctx),
 	}
 
-	/*if !plan.CustomerManagedKeyArn.IsNull() {
-		in.CustomerManagedKeyIdentifier = aws.String(plan.CustomerManagedKeyArn.ValueString())
-	}*/
 	out, err := conn.CreateAppBundle(ctx, in)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -129,7 +126,6 @@ func (r *resourceAppBundle) Read(ctx context.Context, req resource.ReadRequest, 
 }
 
 func (r *resourceAppBundle) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	//No update
 }
 
 func (r *resourceAppBundle) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -160,7 +156,6 @@ func (r *resourceAppBundle) Delete(ctx context.Context, req resource.DeleteReque
 	}
 }
 
-// change id to arn
 func (r *resourceAppBundle) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("arn"), req, resp)
 }

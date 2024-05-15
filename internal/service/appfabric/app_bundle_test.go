@@ -3,36 +3,7 @@
 
 package appfabric_test
 
-// **PLEASE DELETE THIS AND ALL TIP COMMENTS BEFORE SUBMITTING A PR FOR REVIEW!**
-//
-// TIP: ==== INTRODUCTION ====
-// Thank you for trying the skaff tool!
-//
-// You have opted to include these helpful comments. They all include "TIP:"
-// to help you find and remove them when you're done with them.
-//
-// While some aspects of this file are customized to your input, the
-// scaffold tool does *not* look at the AWS API and ensure it has correct
-// function, structure, and variable names. It makes guesses based on
-// commonalities. You will need to make significant adjustments.
-//
-// In other words, as generated, this is a rough outline of the work you will
-// need to do. If something doesn't make sense for your situation, get rid of
-// it.
-
 import (
-	// TIP: ==== IMPORTS ====
-	// This is a common set of imports but not customized to your code since
-	// your code hasn't been written yet. Make sure you, your IDE, or
-	// goimports -w <file> fixes these imports.
-	//
-	// The provider linter wants your imports to be in two groups: first,
-	// standard library (i.e., "fmt" or "strings"), second, everything else.
-	//
-	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the services/appfabric/types package. If so, you'll
-	// need to import types and reference the nested types, e.g., as
-	// types.<Type Name>.
 	"context"
 	"errors"
 	"fmt"
@@ -50,23 +21,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/names"
 
-	// TIP: You will often need to import the package that this test file lives
-	// in. Since it is in the "test" context, it must import the package to use
-	// any normal context constants, variables, or functions.
 	tfappfabric "github.com/hashicorp/terraform-provider-aws/internal/service/appfabric"
 )
 
-// TIP: ==== ACCEPTANCE TESTS ====
-// This is an example of a basic acceptance test. This should test as much of
-// standard functionality of the resource as possible, and test importing, if
-// applicable. We prefix its name with "TestAcc", the service, and the
-// resource name.
-//
-// Acceptance test access AWS and cost money to run.
 func TestAccAppFabricAppBundle_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -88,8 +47,6 @@ func TestAccAppFabricAppBundle_basic(t *testing.T) {
 				Config: testAccAppBundleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppBundleExists(ctx, resourceName, &appbundle),
-					//resource.TestCheckResourceAttrSet(resourceName, "customer_managed_key_identifier"),
-					// Do we add client token here?
 				),
 			},
 			{
@@ -125,12 +82,6 @@ func TestAccAppFabricAppBundle_disappears(t *testing.T) {
 				Config: testAccAppBundleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppBundleExists(ctx, resourceName, &appbundle),
-					// TIP: The Plugin-Framework disappears helper is similar to the Plugin-SDK version,
-					// but expects a new resource factory function as the third argument. To expose this
-					// private function to the testing package, you may need to add a line like the following
-					// to exports_test.go:
-					//
-					//   var ResourceAppBundle = newResourceAppBundle
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfappfabric.ResourceAppBundle, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -186,7 +137,6 @@ func testAccCheckAppBundleExists(ctx context.Context, name string, appbundle *ap
 	}
 }
 
-// leave default
 func testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AppFabricClient(ctx)
 	input := &appfabric.ListAppBundlesInput{}
@@ -233,9 +183,6 @@ func testAccAppBundleImportStateIDFunc(ctx context.Context, resourceName string)
 	}
 }
 
-// might need to change arn to app bundle identifier... not too sure here
-// need to change to an actual arn
-// not sure if needing customer managed key arn...
 func testAccAppBundleConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_appfabric_app_bundle" "test" {

@@ -3,7 +3,6 @@
 
 package appfabric
 
-// Exports for use in tests only.
 var (
 	ResourceAppBundle = newResourceAppBundle
 )
