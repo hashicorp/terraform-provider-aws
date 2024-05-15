@@ -4002,7 +4002,7 @@ resource "aws_elasticache_replication_group" "test" {
 func testAccReplicationGroupConfig_validationGlobalIdAndNodeType(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
-		testAccVPCBaseWithProvider(rName, acctest.CtTest, acctest.ProviderName, 1),
+		testAccVPCBaseWithProvider(rName, "test", acctest.ProviderName, 1),
 		testAccVPCBaseWithProvider(rName, "primary", acctest.ProviderNameAlternate, 1),
 		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
@@ -4041,7 +4041,7 @@ resource "aws_elasticache_replication_group" "primary" {
 func testAccReplicationGroupConfig_globalIDBasic(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
-		testAccVPCBaseWithProvider(rName, acctest.CtTest, acctest.ProviderName, 1),
+		testAccVPCBaseWithProvider(rName, "test", acctest.ProviderName, 1),
 		testAccVPCBaseWithProvider(rName, "primary", acctest.ProviderNameAlternate, 1),
 		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
@@ -4076,7 +4076,7 @@ resource "aws_elasticache_replication_group" "primary" {
 func testAccReplicationGroupConfig_globalIDFull(rName string, numCacheClusters int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
-		testAccVPCBaseWithProvider(rName, acctest.CtTest, acctest.ProviderName, 2),
+		testAccVPCBaseWithProvider(rName, "test", acctest.ProviderName, 2),
 		testAccVPCBaseWithProvider(rName, "primary", acctest.ProviderNameAlternate, 2),
 		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
@@ -4122,7 +4122,7 @@ resource "aws_elasticache_replication_group" "primary" {
 func testAccReplicationGroupConfig_globalIDClusterMode(rName string, primaryReplicaCount, secondaryReplicaCount int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
-		testAccVPCBaseWithProvider(rName, acctest.CtTest, acctest.ProviderName, 2),
+		testAccVPCBaseWithProvider(rName, "test", acctest.ProviderName, 2),
 		testAccVPCBaseWithProvider(rName, "primary", acctest.ProviderNameAlternate, 2),
 		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
@@ -4162,7 +4162,7 @@ resource "aws_elasticache_replication_group" "primary" {
 func testAccReplicationGroupConfig_globalIDClusterModeNumNodeOnSecondary(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
-		testAccVPCBaseWithProvider(rName, acctest.CtTest, acctest.ProviderName, 2),
+		testAccVPCBaseWithProvider(rName, "test", acctest.ProviderName, 2),
 		testAccVPCBaseWithProvider(rName, "primary", acctest.ProviderNameAlternate, 2),
 		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
