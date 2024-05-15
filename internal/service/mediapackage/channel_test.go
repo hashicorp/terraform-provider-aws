@@ -113,12 +113,12 @@ func TestAccMediaPackageChannel_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckChannelDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccChannelConfig_tags(rName, "Environment", acctest.CtTest),
+				Config: testAccChannelConfig_tags(rName, "Environment", "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckChannelExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.Environment", acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "test"),
 				),
 			},
 			{
