@@ -167,11 +167,11 @@ docscheck: ## Check provider documentation
 		-require-resource-subcategory
 	@misspell -error -source text CHANGELOG.md .changelog
 
-fixconstants: semconstants fiximports fmt
+fixconstants: fiximports fmt semconstants fiximports fmt
 
 fiximports:
 	@echo "make: fixing source code imports with goimports..."
-	@goimports -w internal/**/*.go
+	@find internal -name "*.go" -type f -exec goimports -w {} \;
 
 fmt: ## Fix Go source formatting
 	@echo "make: fixing source code with gofmt..."
@@ -386,7 +386,7 @@ semconstants: semgrep-validate
 	@echo "make: applying constants fixes locally with Semgrep --autofix"
 	@SEMGREP_TIMEOUT=300 semgrep --error --metrics=off --autofix \
 		--config .ci/.semgrep-constants.yml \
-		--config .ci/.semgrep-test-constants.yml	
+		--config .ci/.semgrep-test-constants.yml
 
 semgrep-validate: ## Validate semgrep configuration files
 	@echo "make: validating Semgrep configuration files..."

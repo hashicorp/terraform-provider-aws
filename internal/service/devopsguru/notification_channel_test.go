@@ -43,7 +43,7 @@ func testAccNotificationChannel_basic(t *testing.T) {
 				Config: testAccNotificationChannelConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotificationChannelExists(ctx, resourceName, &channel),
-					resource.TestCheckResourceAttr(resourceName, "sns.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "sns.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "sns.0.topic_arn", snsTopicResourceName, names.AttrARN),
 				),
 			},
@@ -106,12 +106,12 @@ func testAccNotificationChannel_filters(t *testing.T) {
 				Config: testAccNotificationChannelConfig_filters(rName, messageType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotificationChannelExists(ctx, resourceName, &channel),
-					resource.TestCheckResourceAttr(resourceName, "sns.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "sns.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "sns.0.topic_arn", snsTopicResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "filters.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "filters.0.message_types.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "filters.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "filters.0.message_types.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "filters.0.message_types.0", messageType),
-					resource.TestCheckResourceAttr(resourceName, "filters.0.severities.#", acctest.CtThree),
+					resource.TestCheckResourceAttr(resourceName, "filters.0.severities.#", acctest.Ct3),
 				),
 			},
 			{

@@ -17,7 +17,7 @@ func TestAccSSMContacts_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Contact Resource Tests": {
-			"basic":             testContact_basic,
+			acctest.CtBasic:     testContact_basic,
 			"disappears":        testContact_disappears,
 			"updateAlias":       testContact_updateAlias,
 			"updateDisplayName": testContact_updateDisplayName,
@@ -25,10 +25,10 @@ func TestAccSSMContacts_serial(t *testing.T) {
 			"updateType":        testContact_updateType,
 		},
 		"Contact Data Source Tests": {
-			"basic": testContactDataSource_basic,
+			acctest.CtBasic: testContactDataSource_basic,
 		},
 		"Contact Channel Resource Tests": {
-			"basic":           testContactChannel_basic,
+			acctest.CtBasic:   testContactChannel_basic,
 			"contactId":       testContactChannel_contactID,
 			"deliveryAddress": testContactChannel_deliveryAddress,
 			"disappears":      testContactChannel_disappears,
@@ -36,10 +36,10 @@ func TestAccSSMContacts_serial(t *testing.T) {
 			names.AttrType:    testContactChannel_type,
 		},
 		"Contact Channel Data Source Tests": {
-			"basic": testContactChannelDataSource_basic,
+			acctest.CtBasic: testContactChannelDataSource_basic,
 		},
 		"Plan Resource Tests": {
-			"basic":                   testPlan_basic,
+			acctest.CtBasic:           testPlan_basic,
 			"disappears":              testPlan_disappears,
 			"updateChannelTargetInfo": testPlan_updateChannelTargetInfo,
 			"updateContactId":         testPlan_updateContactId,
@@ -49,20 +49,20 @@ func TestAccSSMContacts_serial(t *testing.T) {
 			"updateTargets":           testPlan_updateTargets,
 		},
 		"Plan Data Source Tests": {
-			"basic":             testPlanDataSource_basic,
+			acctest.CtBasic:     testPlanDataSource_basic,
 			"channelTargetInfo": testPlanDataSource_channelTargetInfo,
 		},
 		"RotationResource": {
-			"basic":        testRotation_basic,
-			"disappears":   testRotation_disappears,
-			"update":       testRotation_updateRequiredFields,
-			"startTime":    testRotation_startTime,
-			"contactIds":   testRotation_contactIds,
-			"recurrence":   testRotation_recurrence,
-			names.AttrTags: testRotation_tags,
+			acctest.CtBasic: testRotation_basic,
+			"disappears":    testRotation_disappears,
+			"update":        testRotation_updateRequiredFields,
+			"startTime":     testRotation_startTime,
+			"contactIds":    testRotation_contactIds,
+			"recurrence":    testRotation_recurrence,
+			names.AttrTags:  testRotation_tags,
 		},
 		"RotationDataSource": {
-			"basic":           testRotationDataSource_basic,
+			acctest.CtBasic:   testRotationDataSource_basic,
 			"dailySettings":   testRotationDataSource_dailySettings,
 			"monthlySettings": testRotationDataSource_monthlySettings,
 		},

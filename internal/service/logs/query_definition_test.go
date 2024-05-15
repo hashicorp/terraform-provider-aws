@@ -46,7 +46,7 @@ func TestAccLogsQueryDefinition_basic(t *testing.T) {
 					testAccCheckQueryDefinitionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, queryName),
 					resource.TestCheckResourceAttr(resourceName, "query_string", expectedQueryString),
-					resource.TestCheckResourceAttr(resourceName, "log_group_names.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "log_group_names.#", acctest.Ct0),
 					resource.TestMatchResourceAttr(resourceName, "query_definition_id", regexache.MustCompile(verify.UUIDRegexPattern)),
 				),
 			},
@@ -152,7 +152,7 @@ func TestAccLogsQueryDefinition_logGroups(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueryDefinitionExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, queryName),
-					resource.TestCheckResourceAttr(resourceName, "log_group_names.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "log_group_names.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "log_group_names.0", "aws_cloudwatch_log_group.test.0", names.AttrName),
 				),
 			},

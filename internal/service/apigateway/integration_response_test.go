@@ -36,9 +36,9 @@ func TestAccAPIGatewayIntegrationResponse_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIntegrationResponseExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "content_handling", ""),
-					resource.TestCheckResourceAttr(resourceName, "response_parameters.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "response_parameters.%", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "response_parameters.method.response.header.Content-Type", "integration.response.body.type"),
-					resource.TestCheckResourceAttr(resourceName, "response_templates.%", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "response_templates.%", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "response_templates.application/json", ""),
 					resource.TestCheckResourceAttr(resourceName, "response_templates.application/xml", "#set($inputRoot = $input.path('$'))\n{ }"),
 					resource.TestCheckResourceAttr(resourceName, "selection_pattern", ".*"),
@@ -56,8 +56,8 @@ func TestAccAPIGatewayIntegrationResponse_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIntegrationResponseExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "content_handling", "CONVERT_TO_BINARY"),
-					resource.TestCheckResourceAttr(resourceName, "response_parameters.%", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "response_templates.%", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "response_parameters.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "response_templates.%", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "response_templates.application/json", "$input.path('$')"),
 					resource.TestCheckResourceAttr(resourceName, "response_templates.application/xml", ""),
 					resource.TestCheckResourceAttr(resourceName, "selection_pattern", ""),
