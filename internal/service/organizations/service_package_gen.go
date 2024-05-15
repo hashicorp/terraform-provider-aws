@@ -35,8 +35,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Delegated Services",
 		},
 		{
-			Factory:  DataSourceOrganization,
+			Factory:  dataSourceOrganization,
 			TypeName: "aws_organizations_organization",
+			Name:     "Organization",
 		},
 		{
 			Factory:  DataSourceOrganizationalUnit,
