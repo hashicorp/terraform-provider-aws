@@ -167,7 +167,7 @@ func TestAccIoTTopicRule_cloudWatchAlarm(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cloudwatch_alarm.*", map[string]string{
 						"alarm_name":   "myalarm",
-						"state_reason": acctest.CtTest,
+						"state_reason": "test",
 						"state_value":  "OK",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", acctest.Ct0),
@@ -204,7 +204,7 @@ func TestAccIoTTopicRule_cloudWatchAlarm(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cloudwatch_alarm.*", map[string]string{
 						"alarm_name":   "differentName",
-						"state_reason": acctest.CtTest,
+						"state_reason": "test",
 						"state_value":  "OK",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", acctest.Ct0),
@@ -505,7 +505,7 @@ func TestAccIoTTopicRule_dynamoDBv2(t *testing.T) {
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTopicRuleConfig_dynamoDBv2(rName, acctest.CtTest),
+				Config: testAccTopicRuleConfig_dynamoDBv2(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", acctest.Ct0),
@@ -515,7 +515,7 @@ func TestAccIoTTopicRule_dynamoDBv2(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "dynamodbv2.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "dynamodbv2.*", map[string]string{
 						"put_item.#":            acctest.Ct1,
-						"put_item.0.table_name": acctest.CtTest,
+						"put_item.0.table_name": "test",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "error_action.#", acctest.Ct0),
