@@ -8,14 +8,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appstream"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/service/appstream"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/appstream/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -34,7 +34,7 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 
 func TestAccAppStreamFleet_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleetOutput appstream.Fleet
+	var fleetOutput awstypes.Fleet
 	resourceName := "aws_appstream_fleet.test"
 	instanceType := "stream.standard.small"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -54,8 +54,8 @@ func TestAccAppStreamFleet_basic(t *testing.T) {
 					testAccCheckFleetExists(ctx, resourceName, &fleetOutput),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
-					resource.TestCheckResourceAttr(resourceName, names.AttrState, appstream.FleetStateRunning),
-					resource.TestCheckResourceAttr(resourceName, "stream_view", appstream.StreamViewApp),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.FleetStateRunning)),
+					resource.TestCheckResourceAttr(resourceName, "stream_view", string(awstypes.StreamViewApp)),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 				),
 			},
@@ -70,7 +70,7 @@ func TestAccAppStreamFleet_basic(t *testing.T) {
 
 func TestAccAppStreamFleet_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleetOutput appstream.Fleet
+	var fleetOutput awstypes.Fleet
 	resourceName := "aws_appstream_fleet.test"
 	instanceType := "stream.standard.small"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -98,7 +98,7 @@ func TestAccAppStreamFleet_disappears(t *testing.T) {
 
 func TestAccAppStreamFleet_completeWithStop(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleetOutput appstream.Fleet
+	var fleetOutput awstypes.Fleet
 	resourceName := "aws_appstream_fleet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	description := "Description of a test"
@@ -121,11 +121,11 @@ func TestAccAppStreamFleet_completeWithStop(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleetOutput),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrState, appstream.FleetStateRunning),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.FleetStateRunning)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
-					resource.TestCheckResourceAttr(resourceName, "stream_view", appstream.StreamViewDesktop),
+					resource.TestCheckResourceAttr(resourceName, "stream_view", string(awstypes.StreamViewDesktop)),
 				),
 			},
 			{
@@ -133,11 +133,11 @@ func TestAccAppStreamFleet_completeWithStop(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleetOutput),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrState, appstream.FleetStateRunning),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.FleetStateRunning)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceTypeUpdate),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionUpdated),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
-					resource.TestCheckResourceAttr(resourceName, "stream_view", appstream.StreamViewDesktop),
+					resource.TestCheckResourceAttr(resourceName, "stream_view", string(awstypes.StreamViewDesktop)),
 				),
 			},
 			{
@@ -151,7 +151,7 @@ func TestAccAppStreamFleet_completeWithStop(t *testing.T) {
 
 func TestAccAppStreamFleet_completeWithoutStop(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleetOutput appstream.Fleet
+	var fleetOutput awstypes.Fleet
 	resourceName := "aws_appstream_fleet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	description := "Description of a test"
@@ -174,7 +174,7 @@ func TestAccAppStreamFleet_completeWithoutStop(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleetOutput),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrState, appstream.FleetStateRunning),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.FleetStateRunning)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
@@ -186,7 +186,7 @@ func TestAccAppStreamFleet_completeWithoutStop(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleetOutput),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrState, appstream.FleetStateRunning),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.FleetStateRunning)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
@@ -205,7 +205,7 @@ func TestAccAppStreamFleet_completeWithoutStop(t *testing.T) {
 
 func TestAccAppStreamFleet_withTags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleetOutput appstream.Fleet
+	var fleetOutput awstypes.Fleet
 	resourceName := "aws_appstream_fleet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	description := "Description of a test"
@@ -228,7 +228,7 @@ func TestAccAppStreamFleet_withTags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleetOutput),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrState, appstream.FleetStateRunning),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.FleetStateRunning)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
@@ -243,7 +243,7 @@ func TestAccAppStreamFleet_withTags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleetOutput),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrState, appstream.FleetStateRunning),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.FleetStateRunning)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
@@ -264,7 +264,7 @@ func TestAccAppStreamFleet_withTags(t *testing.T) {
 
 func TestAccAppStreamFleet_emptyDomainJoin(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleetOutput appstream.Fleet
+	var fleetOutput awstypes.Fleet
 	resourceName := "aws_appstream_fleet.test"
 	instanceType := "stream.standard.small"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -284,8 +284,8 @@ func TestAccAppStreamFleet_emptyDomainJoin(t *testing.T) {
 					testAccCheckFleetExists(ctx, resourceName, &fleetOutput),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
-					resource.TestCheckResourceAttr(resourceName, names.AttrState, appstream.FleetStateRunning),
-					resource.TestCheckResourceAttr(resourceName, "stream_view", appstream.StreamViewApp),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.FleetStateRunning)),
+					resource.TestCheckResourceAttr(resourceName, "stream_view", string(awstypes.StreamViewApp)),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 				),
 			},
@@ -295,8 +295,8 @@ func TestAccAppStreamFleet_emptyDomainJoin(t *testing.T) {
 					testAccCheckFleetExists(ctx, resourceName, &fleetOutput),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
-					resource.TestCheckResourceAttr(resourceName, names.AttrState, appstream.FleetStateRunning),
-					resource.TestCheckResourceAttr(resourceName, "stream_view", appstream.StreamViewApp),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.FleetStateRunning)),
+					resource.TestCheckResourceAttr(resourceName, "stream_view", string(awstypes.StreamViewApp)),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 				),
 			},
@@ -311,7 +311,7 @@ func TestAccAppStreamFleet_emptyDomainJoin(t *testing.T) {
 
 func TestAccAppStreamFleet_multiSession(t *testing.T) {
 	ctx := acctest.Context(t)
-	var fleetOutput appstream.Fleet
+	var fleetOutput awstypes.Fleet
 	resourceName := "aws_appstream_fleet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	instanceType := "stream.standard.small"
@@ -333,7 +333,7 @@ func TestAccAppStreamFleet_multiSession(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
 					resource.TestCheckResourceAttr(resourceName, "max_sessions_per_instance", "5"),
 					resource.TestCheckResourceAttr(resourceName, "compute_capacity.0.desired_sessions", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrState, appstream.FleetStateRunning),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.FleetStateRunning)),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 				),
 			},
@@ -350,7 +350,7 @@ func TestAccAppStreamFleet_multiSession(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
 					resource.TestCheckResourceAttr(resourceName, "max_sessions_per_instance", acctest.Ct10),
 					resource.TestCheckResourceAttr(resourceName, "compute_capacity.0.desired_sessions", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, names.AttrState, appstream.FleetStateRunning),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.FleetStateRunning)),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 				),
 			},
@@ -358,15 +358,15 @@ func TestAccAppStreamFleet_multiSession(t *testing.T) {
 	})
 }
 
-func testAccCheckFleetExists(ctx context.Context, resourceName string, appStreamFleet *appstream.Fleet) resource.TestCheckFunc {
+func testAccCheckFleetExists(ctx context.Context, resourceName string, appStreamFleet *awstypes.Fleet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn(ctx)
-		resp, err := conn.DescribeFleetsWithContext(ctx, &appstream.DescribeFleetsInput{Names: []*string{aws.String(rs.Primary.ID)}})
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamClient(ctx)
+		resp, err := conn.DescribeFleets(ctx, &appstream.DescribeFleetsInput{Names: []string{rs.Primary.ID}})
 
 		if err != nil {
 			return err
@@ -376,7 +376,7 @@ func testAccCheckFleetExists(ctx context.Context, resourceName string, appStream
 			return fmt.Errorf("appstream fleet %q does not exist", rs.Primary.ID)
 		}
 
-		*appStreamFleet = *resp.Fleets[0]
+		*appStreamFleet = resp.Fleets[0]
 
 		return nil
 	}
@@ -384,16 +384,16 @@ func testAccCheckFleetExists(ctx context.Context, resourceName string, appStream
 
 func testAccCheckFleetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appstream_fleet" {
 				continue
 			}
 
-			resp, err := conn.DescribeFleetsWithContext(ctx, &appstream.DescribeFleetsInput{Names: []*string{aws.String(rs.Primary.ID)}})
+			resp, err := conn.DescribeFleets(ctx, &appstream.DescribeFleetsInput{Names: []string{rs.Primary.ID}})
 
-			if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				continue
 			}
 
