@@ -164,7 +164,7 @@ func TestAccECSTaskDefinition_DockerVolume_basic(t *testing.T) {
 						"docker_volume_configuration.0.driver_opts.device": "tmpfs",
 						"docker_volume_configuration.0.driver_opts.uid":    "1000",
 						"docker_volume_configuration.0.labels.%":           acctest.Ct2,
-						"docker_volume_configuration.0.labels.environment": acctest.CtTest,
+						"docker_volume_configuration.0.labels.environment": "test",
 						"docker_volume_configuration.0.labels.stack":       "april",
 					}),
 				),
