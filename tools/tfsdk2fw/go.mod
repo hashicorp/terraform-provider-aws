@@ -18,13 +18,13 @@ require (
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
-	github.com/aws/aws-sdk-go v1.53.1 // indirect
+	github.com/aws/aws-sdk-go v1.53.2 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.26.1 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.2 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.27.13 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.13 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.1 // indirect
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.16.17 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.16.18 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.5 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.5 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.0 // indirect
@@ -43,6 +43,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/appintegrations v1.25.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.27.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.28.5 // indirect
+	github.com/aws/aws-sdk-go-v2/service/appstream v1.34.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/athena v1.40.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.32.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.40.6 // indirect
@@ -145,7 +146,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mwaa v1.26.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.8.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/oam v1.11.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.11.7 // indirect
+	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.11.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/osis v1.8.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.10.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.5.5 // indirect
@@ -167,7 +168,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.11.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.23.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/route53profiles v1.0.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.53.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.54.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.44.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.8.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.28.7 // indirect
