@@ -107,7 +107,7 @@ func TestAccQuickSightDataSet_columnGroups(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "column_groups.0.geo_spatial_column_group.0.columns.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "column_groups.0.geo_spatial_column_group.0.columns.0", "Column1"),
 					resource.TestCheckResourceAttr(resourceName, "column_groups.0.geo_spatial_column_group.0.country_code", "US"),
-					resource.TestCheckResourceAttr(resourceName, "column_groups.0.geo_spatial_column_group.0.name", acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, "column_groups.0.geo_spatial_column_group.0.name", "test"),
 				),
 			},
 			{
@@ -198,7 +198,7 @@ func TestAccQuickSightDataSet_fieldFolders(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "field_folders.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "field_folders.0.columns.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "field_folders.0.columns.0", "Column1"),
-					resource.TestCheckResourceAttr(resourceName, "field_folders.0.description", acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, "field_folders.0.description", "test"),
 				),
 			},
 			{
