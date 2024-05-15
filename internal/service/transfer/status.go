@@ -6,15 +6,14 @@ package transfer
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/transfer"
+	"github.com/aws/aws-sdk-go-v2/service/transfer"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusServerState(ctx context.Context, conn *transfer.Transfer, id string) retry.StateRefreshFunc {
+func statusServerState(ctx context.Context, conn *transfer.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindServerByID(ctx, conn, id)
+		output, err := findServerByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -24,6 +23,6 @@ func statusServerState(ctx context.Context, conn *transfer.Transfer, id string) 
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.State), nil
+		return output, string(output.State), nil
 	}
 }

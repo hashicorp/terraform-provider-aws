@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/transfer"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -20,7 +20,7 @@ import (
 
 func TestAccTransferCertificate_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedCertificate
+	var conf awstypes.DescribedCertificate
 	resourceName := "aws_transfer_certificate.test"
 	domain := acctest.RandomDomainName()
 	domainWildcard := fmt.Sprintf("*.%s", domain)
@@ -32,7 +32,7 @@ func TestAccTransferCertificate_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, transfer.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
@@ -62,7 +62,7 @@ func TestAccTransferCertificate_basic(t *testing.T) {
 
 func TestAccTransferCertificate_certificate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedCertificate
+	var conf awstypes.DescribedCertificate
 	resourceName := "aws_transfer_certificate.test"
 	caKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	caCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, caKey)
@@ -70,7 +70,7 @@ func TestAccTransferCertificate_certificate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, transfer.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
@@ -99,7 +99,7 @@ func TestAccTransferCertificate_certificate(t *testing.T) {
 
 func TestAccTransferCertificate_certificateChain(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedCertificate
+	var conf awstypes.DescribedCertificate
 	resourceName := "aws_transfer_certificate.test"
 	domain := acctest.RandomDomainName()
 	domainWildcard := fmt.Sprintf("*.%s", domain)
@@ -111,7 +111,7 @@ func TestAccTransferCertificate_certificateChain(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, transfer.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
@@ -140,7 +140,7 @@ func TestAccTransferCertificate_certificateChain(t *testing.T) {
 
 func TestAccTransferCertificate_certificateKey(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedCertificate
+	var conf awstypes.DescribedCertificate
 	resourceName := "aws_transfer_certificate.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, acctest.RandomSubdomain())
@@ -148,7 +148,7 @@ func TestAccTransferCertificate_certificateKey(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, transfer.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
@@ -177,7 +177,7 @@ func TestAccTransferCertificate_certificateKey(t *testing.T) {
 
 func TestAccTransferCertificate_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedCertificate
+	var conf awstypes.DescribedCertificate
 	resourceName := "aws_transfer_certificate.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, acctest.RandomSubdomain())
@@ -185,7 +185,7 @@ func TestAccTransferCertificate_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, transfer.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
@@ -206,7 +206,7 @@ func TestAccTransferCertificate_disappears(t *testing.T) {
 
 func TestAccTransferCertificate_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedCertificate
+	var conf awstypes.DescribedCertificate
 	resourceName := "aws_transfer_certificate.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, acctest.RandomSubdomain())
@@ -214,7 +214,7 @@ func TestAccTransferCertificate_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, transfer.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
@@ -258,7 +258,7 @@ func TestAccTransferCertificate_tags(t *testing.T) {
 
 func TestAccTransferCertificate_description(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedCertificate
+	var conf awstypes.DescribedCertificate
 	resourceName := "aws_transfer_certificate.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, acctest.RandomSubdomain())
@@ -266,7 +266,7 @@ func TestAccTransferCertificate_description(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, transfer.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.TransferEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
@@ -297,7 +297,7 @@ func TestAccTransferCertificate_description(t *testing.T) {
 	})
 }
 
-func testAccCheckCertificateExists(ctx context.Context, n string, v *transfer.DescribedCertificate) resource.TestCheckFunc {
+func testAccCheckCertificateExists(ctx context.Context, n string, v *awstypes.DescribedCertificate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -308,7 +308,7 @@ func testAccCheckCertificateExists(ctx context.Context, n string, v *transfer.De
 			return fmt.Errorf("No Transfer Certificate ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferClient(ctx)
 
 		output, err := tftransfer.FindCertificateByID(ctx, conn, rs.Primary.ID)
 
@@ -324,7 +324,7 @@ func testAccCheckCertificateExists(ctx context.Context, n string, v *transfer.De
 
 func testAccCheckCertificateDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_transfer_certificate" {

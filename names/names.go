@@ -94,6 +94,7 @@ const (
 	SSOAdminEndpointID                   = "sso"
 	STSEndpointID                        = "sts"
 	TranscribeEndpointID                 = "transcribe"
+	TransferEndpointID                   = "transfer"
 	VerifiedPermissionsEndpointID        = "verifiedpermissions"
 	VPCLatticeEndpointID                 = "vpc-lattice"
 	WAFEndpointID                        = "waf"

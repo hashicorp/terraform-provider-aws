@@ -7,14 +7,17 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/transfer"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/transfer"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -67,10 +70,10 @@ func ResourceAccess() *schema.Resource {
 			},
 
 			"home_directory_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      transfer.HomeDirectoryTypePath,
-				ValidateFunc: validation.StringInSlice(transfer.HomeDirectoryType_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.HomeDirectoryTypePath,
+				ValidateDiagFunc: enum.Validate[awstypes.HomeDirectoryType](),
 			},
 
 			names.AttrPolicy: {
@@ -128,7 +131,7 @@ func ResourceAccess() *schema.Resource {
 
 func resourceAccessCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn(ctx)
+	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
 	externalID := d.Get("external_id").(string)
 	serverID := d.Get("server_id").(string)
@@ -147,7 +150,7 @@ func resourceAccessCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("home_directory_type"); ok {
-		input.HomeDirectoryType = aws.String(v.(string))
+		input.HomeDirectoryType = awstypes.HomeDirectoryType(v.(string))
 	}
 
 	if v, ok := d.GetOk(names.AttrPolicy); ok {
@@ -167,8 +170,8 @@ func resourceAccessCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.Role = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating Transfer Access: %s", input)
-	_, err := conn.CreateAccessWithContext(ctx, input)
+	log.Printf("[DEBUG] Creating Transfer Access: %s", d.Id())
+	_, err := conn.CreateAccess(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Transfer Access (%s): %s", id, err)
@@ -181,7 +184,7 @@ func resourceAccessCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceAccessRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn(ctx)
+	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
 	serverID, externalID, err := AccessParseResourceID(d.Id())
 
@@ -189,7 +192,7 @@ func resourceAccessRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "parsing Transfer Access ID: %s", err)
 	}
 
-	access, err := FindAccessByTwoPartKey(ctx, conn, serverID, externalID)
+	access, err := findAccessByTwoPartKey(ctx, conn, serverID, externalID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Transfer Access (%s) not found, removing from state", d.Id())
@@ -214,7 +217,7 @@ func resourceAccessRead(ctx context.Context, d *schema.ResourceData, meta interf
 	// Role is currently not returned via the API.
 	// d.Set("role", access.Role)
 
-	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), aws.StringValue(access.Policy))
+	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), aws.ToString(access.Policy))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Transfer Access (%s): %s", d.Id(), err)
 	}
@@ -228,7 +231,7 @@ func resourceAccessRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceAccessUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn(ctx)
+	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
 	serverID, externalID, err := AccessParseResourceID(d.Id())
 
@@ -250,7 +253,7 @@ func resourceAccessUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if d.HasChange("home_directory_type") {
-		input.HomeDirectoryType = aws.String(d.Get("home_directory_type").(string))
+		input.HomeDirectoryType = awstypes.HomeDirectoryType(d.Get("home_directory_type").(string))
 	}
 
 	if d.HasChange(names.AttrPolicy) {
@@ -270,8 +273,8 @@ func resourceAccessUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.Role = aws.String(d.Get(names.AttrRole).(string))
 	}
 
-	log.Printf("[DEBUG] Updating Transfer Access: %s", input)
-	_, err = conn.UpdateAccessWithContext(ctx, input)
+	log.Printf("[DEBUG] Updating Transfer Access: %s", d.Id())
+	_, err = conn.UpdateAccess(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Transfer Access (%s): %s", d.Id(), err)
@@ -282,7 +285,7 @@ func resourceAccessUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceAccessDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn(ctx)
+	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
 	serverID, externalID, err := AccessParseResourceID(d.Id())
 
@@ -291,12 +294,12 @@ func resourceAccessDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	log.Printf("[DEBUG] Deleting Transfer Access: %s", d.Id())
-	_, err = conn.DeleteAccessWithContext(ctx, &transfer.DeleteAccessInput{
+	_, err = conn.DeleteAccess(ctx, &transfer.DeleteAccessInput{
 		ExternalId: aws.String(externalID),
 		ServerId:   aws.String(serverID),
 	})
 
-	if tfawserr.ErrCodeEquals(err, transfer.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -305,4 +308,30 @@ func resourceAccessDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	return diags
+}
+
+func findAccessByTwoPartKey(ctx context.Context, conn *transfer.Client, serverID, externalID string) (*awstypes.DescribedAccess, error) {
+	input := &transfer.DescribeAccessInput{
+		ExternalId: aws.String(externalID),
+		ServerId:   aws.String(serverID),
+	}
+
+	output, err := conn.DescribeAccess(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Access == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Access, nil
 }

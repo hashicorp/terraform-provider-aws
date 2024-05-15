@@ -9,12 +9,13 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/transfer"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/transfer"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -59,7 +60,7 @@ func ResourceSSHKey() *schema.Resource {
 
 func resourceSSHKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn(ctx)
+	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 	userName := d.Get(names.AttrUserName).(string)
 	serverID := d.Get("server_id").(string)
 
@@ -71,19 +72,19 @@ func resourceSSHKeyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	log.Printf("[DEBUG] Create Transfer SSH Public Key Option: %#v", createOpts)
 
-	resp, err := conn.ImportSshPublicKeyWithContext(ctx, createOpts)
+	resp, err := conn.ImportSshPublicKey(ctx, createOpts)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "importing ssh public key: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s/%s/%s", serverID, userName, aws.StringValue(resp.SshPublicKeyId)))
+	d.SetId(fmt.Sprintf("%s/%s/%s", serverID, userName, aws.ToString(resp.SshPublicKeyId)))
 
 	return diags
 }
 
 func resourceSSHKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn(ctx)
+	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 	serverID, userName, sshKeyID, err := DecodeSSHKeyID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "parsing Transfer SSH Public Key ID: %s", err)
@@ -94,9 +95,9 @@ func resourceSSHKeyRead(ctx context.Context, d *schema.ResourceData, meta interf
 		ServerId: aws.String(serverID),
 	}
 
-	resp, err := conn.DescribeUserWithContext(ctx, descOpts)
+	resp, err := conn.DescribeUser(ctx, descOpts)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, transfer.ErrCodeResourceNotFoundException) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			log.Printf("[WARN] Transfer User (%s) for Server (%s) not found, removing ssh public key (%s) from state", userName, serverID, sshKeyID)
 			d.SetId("")
 			return diags
@@ -106,8 +107,8 @@ func resourceSSHKeyRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	var body string
 	for _, s := range resp.User.SshPublicKeys {
-		if sshKeyID == aws.StringValue(s.SshPublicKeyId) {
-			body = aws.StringValue(s.SshPublicKeyBody)
+		if sshKeyID == aws.ToString(s.SshPublicKeyId) {
+			body = aws.ToString(s.SshPublicKeyBody)
 		}
 	}
 
@@ -125,7 +126,7 @@ func resourceSSHKeyRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceSSHKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn(ctx)
+	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 	serverID, userName, sshKeyID, err := DecodeSSHKeyID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "parsing Transfer SSH Public Key ID: %s", err)
@@ -137,9 +138,9 @@ func resourceSSHKeyDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		SshPublicKeyId: aws.String(sshKeyID),
 	}
 
-	_, err = conn.DeleteSshPublicKeyWithContext(ctx, delOpts)
+	_, err = conn.DeleteSshPublicKey(ctx, delOpts)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, transfer.ErrCodeResourceNotFoundException) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "deleting Transfer User SSH Key (%s): %s", d.Id(), err)

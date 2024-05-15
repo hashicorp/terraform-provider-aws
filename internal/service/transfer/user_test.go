@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/transfer"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func testAccUser_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedUser
+	var conf awstypes.DescribedUser
 	resourceName := "aws_transfer_user.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -54,7 +54,7 @@ func testAccUser_basic(t *testing.T) {
 
 func testAccUser_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var userConf transfer.DescribedUser
+	var userConf awstypes.DescribedUser
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_transfer_user.test"
 
@@ -78,7 +78,7 @@ func testAccUser_disappears(t *testing.T) {
 
 func testAccUser_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedUser
+	var conf awstypes.DescribedUser
 	resourceName := "aws_transfer_user.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -124,7 +124,7 @@ func testAccUser_tags(t *testing.T) {
 
 func testAccUser_posix(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedUser
+	var conf awstypes.DescribedUser
 	resourceName := "aws_transfer_user.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -164,7 +164,7 @@ func testAccUser_posix(t *testing.T) {
 
 func testAccUser_modifyWithOptions(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedUser
+	var conf awstypes.DescribedUser
 	resourceName := "aws_transfer_user.test"
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -245,7 +245,7 @@ func testAccUser_UserName_Validation(t *testing.T) {
 
 func testAccUser_homeDirectoryMappings(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedUser
+	var conf awstypes.DescribedUser
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_transfer_user.test"
 	entry1 := "/your-personal-report.pdf"
@@ -298,7 +298,7 @@ func testAccUser_homeDirectoryMappings(t *testing.T) {
 	})
 }
 
-func testAccCheckUserExists(ctx context.Context, n string, v *transfer.DescribedUser) resource.TestCheckFunc {
+func testAccCheckUserExists(ctx context.Context, n string, v *awstypes.DescribedUser) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -309,7 +309,7 @@ func testAccCheckUserExists(ctx context.Context, n string, v *transfer.Described
 			return fmt.Errorf("No Transfer User ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferClient(ctx)
 
 		serverID, userName, err := tftransfer.UserParseResourceID(rs.Primary.ID)
 
@@ -331,7 +331,7 @@ func testAccCheckUserExists(ctx context.Context, n string, v *transfer.Described
 
 func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_transfer_user" {

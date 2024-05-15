@@ -9,15 +9,17 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/transfer"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/transfer"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -72,10 +74,10 @@ func ResourceUser() *schema.Resource {
 				},
 			},
 			"home_directory_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      transfer.HomeDirectoryTypePath,
-				ValidateFunc: validation.StringInSlice(transfer.HomeDirectoryType_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.HomeDirectoryTypePath,
+				ValidateDiagFunc: enum.Validate[awstypes.HomeDirectoryType](),
 			},
 			names.AttrPolicy: {
 				Type:                  schema.TypeString,
@@ -137,7 +139,7 @@ func ResourceUser() *schema.Resource {
 
 func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn(ctx)
+	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
 	serverID := d.Get("server_id").(string)
 	userName := d.Get(names.AttrUserName).(string)
@@ -158,7 +160,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if v, ok := d.GetOk("home_directory_type"); ok {
-		input.HomeDirectoryType = aws.String(v.(string))
+		input.HomeDirectoryType = awstypes.HomeDirectoryType(v.(string))
 	}
 
 	if v, ok := d.GetOk(names.AttrPolicy); ok {
@@ -174,7 +176,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		input.PosixProfile = expandUserPOSIXUser(v.([]interface{}))
 	}
 
-	_, err := conn.CreateUserWithContext(ctx, input)
+	_, err := conn.CreateUser(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Transfer User (%s): %s", id, err)
@@ -187,7 +189,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn(ctx)
+	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
 	serverID, userName, err := UserParseResourceID(d.Id())
 
@@ -214,7 +216,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 	d.Set("home_directory_type", user.HomeDirectoryType)
 
-	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), aws.StringValue(user.Policy))
+	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), aws.ToString(user.Policy))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Transfer User (%s): %s", d.Id(), err)
 	}
@@ -234,7 +236,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn(ctx)
+	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		serverID, userName, err := UserParseResourceID(d.Id())
@@ -257,7 +259,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 
 		if d.HasChange("home_directory_type") {
-			input.HomeDirectoryType = aws.String(d.Get("home_directory_type").(string))
+			input.HomeDirectoryType = awstypes.HomeDirectoryType(d.Get("home_directory_type").(string))
 		}
 
 		if d.HasChange(names.AttrPolicy) {
@@ -277,7 +279,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			input.Role = aws.String(d.Get(names.AttrRole).(string))
 		}
 
-		_, err = conn.UpdateUserWithContext(ctx, input)
+		_, err = conn.UpdateUser(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Transfer User (%s): %s", d.Id(), err)
@@ -289,7 +291,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn(ctx)
+	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
 	serverID, userName, err := UserParseResourceID(d.Id())
 
@@ -304,15 +306,15 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func FindUserByTwoPartKey(ctx context.Context, conn *transfer.Transfer, serverID, userName string) (*transfer.DescribedUser, error) {
+func FindUserByTwoPartKey(ctx context.Context, conn *transfer.Client, serverID, userName string) (*awstypes.DescribedUser, error) {
 	input := &transfer.DescribeUserInput{
 		ServerId: aws.String(serverID),
 		UserName: aws.String(userName),
 	}
 
-	output, err := conn.DescribeUserWithContext(ctx, input)
+	output, err := conn.DescribeUser(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, transfer.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -330,7 +332,7 @@ func FindUserByTwoPartKey(ctx context.Context, conn *transfer.Transfer, serverID
 	return output.User, nil
 }
 
-func userDelete(ctx context.Context, conn *transfer.Transfer, serverID, userName string, timeout time.Duration) error {
+func userDelete(ctx context.Context, conn *transfer.Client, serverID, userName string, timeout time.Duration) error {
 	id := UserCreateResourceID(serverID, userName)
 	input := &transfer.DeleteUserInput{
 		ServerId: aws.String(serverID),
@@ -338,9 +340,9 @@ func userDelete(ctx context.Context, conn *transfer.Transfer, serverID, userName
 	}
 
 	log.Printf("[INFO] Deleting Transfer User: %s", id)
-	_, err := conn.DeleteUserWithContext(ctx, input)
+	_, err := conn.DeleteUser(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, transfer.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil
 	}
 
@@ -359,17 +361,17 @@ func userDelete(ctx context.Context, conn *transfer.Transfer, serverID, userName
 	return nil
 }
 
-func expandHomeDirectoryMappings(in []interface{}) []*transfer.HomeDirectoryMapEntry {
+func expandHomeDirectoryMappings(in []interface{}) []awstypes.HomeDirectoryMapEntry {
 	if len(in) == 0 {
 		return nil
 	}
 
-	mappings := make([]*transfer.HomeDirectoryMapEntry, 0)
+	mappings := make([]awstypes.HomeDirectoryMapEntry, 0)
 
 	for _, tConfig := range in {
 		config := tConfig.(map[string]interface{})
 
-		m := &transfer.HomeDirectoryMapEntry{
+		m := awstypes.HomeDirectoryMapEntry{
 			Entry:  aws.String(config["entry"].(string)),
 			Target: aws.String(config[names.AttrTarget].(string)),
 		}
@@ -380,45 +382,45 @@ func expandHomeDirectoryMappings(in []interface{}) []*transfer.HomeDirectoryMapE
 	return mappings
 }
 
-func flattenHomeDirectoryMappings(mappings []*transfer.HomeDirectoryMapEntry) []interface{} {
+func flattenHomeDirectoryMappings(mappings []awstypes.HomeDirectoryMapEntry) []interface{} {
 	l := make([]interface{}, len(mappings))
 	for i, m := range mappings {
 		l[i] = map[string]interface{}{
-			"entry":          aws.StringValue(m.Entry),
-			names.AttrTarget: aws.StringValue(m.Target),
+			"entry":          aws.ToString(m.Entry),
+			names.AttrTarget: aws.ToString(m.Target),
 		}
 	}
 	return l
 }
 
-func expandUserPOSIXUser(pUser []interface{}) *transfer.PosixProfile {
+func expandUserPOSIXUser(pUser []interface{}) *awstypes.PosixProfile {
 	if len(pUser) < 1 || pUser[0] == nil {
 		return nil
 	}
 
 	m := pUser[0].(map[string]interface{})
 
-	posixUser := &transfer.PosixProfile{
+	posixUser := &awstypes.PosixProfile{
 		Gid: aws.Int64(int64(m["gid"].(int))),
 		Uid: aws.Int64(int64(m["uid"].(int))),
 	}
 
 	if v, ok := m["secondary_gids"].(*schema.Set); ok && len(v.List()) > 0 {
-		posixUser.SecondaryGids = flex.ExpandInt64Set(v)
+		posixUser.SecondaryGids = flex.ExpandInt64ValueSet(v)
 	}
 
 	return posixUser
 }
 
-func flattenUserPOSIXUser(posixUser *transfer.PosixProfile) []interface{} {
+func flattenUserPOSIXUser(posixUser *awstypes.PosixProfile) []interface{} {
 	if posixUser == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"gid":            aws.Int64Value(posixUser.Gid),
-		"uid":            aws.Int64Value(posixUser.Uid),
-		"secondary_gids": aws.Int64ValueSlice(posixUser.SecondaryGids),
+		"gid":            aws.ToInt64(posixUser.Gid),
+		"uid":            aws.ToInt64(posixUser.Uid),
+		"secondary_gids": posixUser.SecondaryGids,
 	}
 
 	return []interface{}{m}

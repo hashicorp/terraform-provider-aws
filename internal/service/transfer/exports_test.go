@@ -7,4 +7,12 @@ package transfer
 var (
 	ResourceServer = resourceServer
 	ResourceTag    = resourceTag
+
+	FindAccessByTwoPartKey    = findAccessByTwoPartKey
+	FindAgreementByTwoPartKey = findAgreementByTwoPartKey
+	FindCertificateByID       = findCertificateByID
+	FindConnectorByID         = findConnectorByID
+	FindProfileByID           = findProfileByID
+	FindServerByID            = findServerByID
+	FindWorkflowByID          = findWorkflowByID
 )

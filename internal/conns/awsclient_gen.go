@@ -247,7 +247,6 @@ import (
 	sfn_sdkv1 "github.com/aws/aws-sdk-go/service/sfn"
 	simpledb_sdkv1 "github.com/aws/aws-sdk-go/service/simpledb"
 	storagegateway_sdkv1 "github.com/aws/aws-sdk-go/service/storagegateway"
-	transfer_sdkv1 "github.com/aws/aws-sdk-go/service/transfer"
 	worklink_sdkv1 "github.com/aws/aws-sdk-go/service/worklink"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -1183,10 +1182,6 @@ func (c *AWSClient) TimestreamWriteClient(ctx context.Context) *timestreamwrite_
 
 func (c *AWSClient) TranscribeClient(ctx context.Context) *transcribe_sdkv2.Client {
 	return errs.Must(client[*transcribe_sdkv2.Client](ctx, c, names.Transcribe, make(map[string]any)))
-}
-
-func (c *AWSClient) TransferConn(ctx context.Context) *transfer_sdkv1.Transfer {
-	return errs.Must(conn[*transfer_sdkv1.Transfer](ctx, c, names.Transfer, make(map[string]any)))
 }
 
 func (c *AWSClient) TransferClient(ctx context.Context) *transfer_sdkv2.Client {

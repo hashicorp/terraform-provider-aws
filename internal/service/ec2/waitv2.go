@@ -6,6 +6,7 @@ package ec2
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -167,6 +168,29 @@ func waitNetworkInterfaceDetachedV2(ctx context.Context, conn *ec2.Client, id st
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.NetworkInterfaceAttachment); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitVPCEndpointAvailableV2(ctx context.Context, conn *ec2.Client, vpcEndpointID string, timeout time.Duration) (*types.VpcEndpoint, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{vpcEndpointStatePending},
+		Target:     []string{vpcEndpointStateAvailable, vpcEndpointStatePendingAcceptance},
+		Timeout:    timeout,
+		Refresh:    statusVPCEndpointState(ctx, conn, vpcEndpointID),
+		Delay:      5 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.VpcEndpoint); ok {
+		if state, lastError := output.State, output.LastError; state == vpcEndpointStateFailed && lastError != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(lastError.Code), aws.ToString(lastError.Message)))
+		}
+
 		return output, err
 	}
 

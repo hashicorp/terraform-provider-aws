@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/transfer"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func TestAccTransferWorkflow_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedWorkflow
+	var conf awstypes.DescribedWorkflow
 	resourceName := "aws_transfer_workflow.test"
 	rName := sdkacctest.RandString(25)
 
@@ -62,7 +62,7 @@ func TestAccTransferWorkflow_basic(t *testing.T) {
 
 func TestAccTransferWorkflow_onExceptionSteps(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedWorkflow
+	var conf awstypes.DescribedWorkflow
 	resourceName := "aws_transfer_workflow.test"
 	rName := sdkacctest.RandString(25)
 
@@ -109,7 +109,7 @@ func TestAccTransferWorkflow_onExceptionSteps(t *testing.T) {
 
 func TestAccTransferWorkflow_description(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedWorkflow
+	var conf awstypes.DescribedWorkflow
 	resourceName := "aws_transfer_workflow.test"
 	rName := sdkacctest.RandString(25)
 
@@ -137,7 +137,7 @@ func TestAccTransferWorkflow_description(t *testing.T) {
 
 func TestAccTransferWorkflow_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedWorkflow
+	var conf awstypes.DescribedWorkflow
 	resourceName := "aws_transfer_workflow.test"
 	rName := sdkacctest.RandString(25)
 
@@ -183,7 +183,7 @@ func TestAccTransferWorkflow_tags(t *testing.T) {
 
 func TestAccTransferWorkflow_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedWorkflow
+	var conf awstypes.DescribedWorkflow
 	resourceName := "aws_transfer_workflow.test"
 	rName := sdkacctest.RandString(25)
 
@@ -207,7 +207,7 @@ func TestAccTransferWorkflow_disappears(t *testing.T) {
 
 func TestAccTransferWorkflow_allSteps(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf transfer.DescribedWorkflow
+	var conf awstypes.DescribedWorkflow
 	resourceName := "aws_transfer_workflow.test"
 	rName := sdkacctest.RandString(25)
 
@@ -296,7 +296,7 @@ func TestAccTransferWorkflow_allSteps(t *testing.T) {
 	})
 }
 
-func testAccCheckWorkflowExists(ctx context.Context, n string, v *transfer.DescribedWorkflow) resource.TestCheckFunc {
+func testAccCheckWorkflowExists(ctx context.Context, n string, v *awstypes.DescribedWorkflow) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -307,7 +307,7 @@ func testAccCheckWorkflowExists(ctx context.Context, n string, v *transfer.Descr
 			return fmt.Errorf("No Transfer Workflow ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferClient(ctx)
 
 		output, err := tftransfer.FindWorkflowByID(ctx, conn, rs.Primary.ID)
 
@@ -323,7 +323,7 @@ func testAccCheckWorkflowExists(ctx context.Context, n string, v *transfer.Descr
 
 func testAccCheckWorkflowDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_transfer_workflow" {

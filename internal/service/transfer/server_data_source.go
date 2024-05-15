@@ -7,7 +7,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -85,17 +85,17 @@ func DataSourceServer() *schema.Resource {
 
 func dataSourceServerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn(ctx)
+	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
 	serverID := d.Get("server_id").(string)
 
-	output, err := FindServerByID(ctx, conn, serverID)
+	output, err := findServerByID(ctx, conn, serverID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Transfer Server (%s): %s", serverID, err)
 	}
 
-	d.SetId(aws.StringValue(output.ServerId))
+	d.SetId(aws.ToString(output.ServerId))
 	d.Set(names.AttrARN, output.Arn)
 	d.Set(names.AttrCertificate, output.Certificate)
 	d.Set(names.AttrDomain, output.Domain)
@@ -108,9 +108,9 @@ func dataSourceServerRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("invocation_role", "")
 	}
 	d.Set("logging_role", output.LoggingRole)
-	d.Set("protocols", aws.StringValueSlice(output.Protocols))
+	d.Set("protocols", output.Protocols)
 	d.Set("security_policy_name", output.SecurityPolicyName)
-	d.Set("structured_log_destinations", aws.StringValueSlice(output.StructuredLogDestinations))
+	d.Set("structured_log_destinations", output.StructuredLogDestinations)
 	if output.IdentityProviderDetails != nil {
 		d.Set(names.AttrURL, output.IdentityProviderDetails.Url)
 	} else {
