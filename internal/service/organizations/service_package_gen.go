@@ -45,8 +45,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Organizational Unit",
 		},
 		{
-			Factory:  DataSourceOrganizationalUnitChildAccounts,
+			Factory:  dataSourceOrganizationalUnitChildAccounts,
 			TypeName: "aws_organizations_organizational_unit_child_accounts",
+			Name:     "Organizational Unit Child Accounts",
 		},
 		{
 			Factory:  DataSourceOrganizationalUnitDescendantAccounts,
