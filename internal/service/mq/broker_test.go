@@ -134,7 +134,7 @@ func TestDiffUsers(t *testing.T) {
 			},
 			Creations: []*mq.CreateUserInput{
 				{
-					BrokerId:        aws.String(acctest.CtTest),
+					BrokerId:        aws.String("test"),
 					ConsoleAccess:   aws.Bool(false),
 					Username:        aws.String("second"),
 					Password:        aws.String("TestTest2222"),
@@ -164,7 +164,7 @@ func TestDiffUsers(t *testing.T) {
 			},
 			Creations: []*mq.CreateUserInput{
 				{
-					BrokerId:        aws.String(acctest.CtTest),
+					BrokerId:        aws.String("test"),
 					ConsoleAccess:   aws.Bool(false),
 					Username:        aws.String("second"),
 					Password:        aws.String("TestTest2222"),
@@ -172,7 +172,7 @@ func TestDiffUsers(t *testing.T) {
 				},
 			},
 			Deletions: []*mq.DeleteUserInput{
-				{BrokerId: aws.String(acctest.CtTest), Username: aws.String("first")},
+				{BrokerId: aws.String("test"), Username: aws.String("first")},
 			},
 			Updates: nil,
 		},
@@ -202,11 +202,11 @@ func TestDiffUsers(t *testing.T) {
 			},
 			Creations: nil,
 			Deletions: []*mq.DeleteUserInput{
-				{BrokerId: aws.String(acctest.CtTest), Username: aws.String("first")},
+				{BrokerId: aws.String("test"), Username: aws.String("first")},
 			},
 			Updates: []*mq.UpdateUserInput{
 				{
-					BrokerId:        aws.String(acctest.CtTest),
+					BrokerId:        aws.String("test"),
 					ConsoleAccess:   aws.Bool(false),
 					Username:        aws.String("second"),
 					Password:        aws.String("TestTest2222"),
@@ -218,7 +218,7 @@ func TestDiffUsers(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		creations, deletions, updates, err := tfmq.DiffBrokerUsers(acctest.CtTest, tc.OldUsers, tc.NewUsers)
+		creations, deletions, updates, err := tfmq.DiffBrokerUsers("test", tc.OldUsers, tc.NewUsers)
 		if err != nil {
 			t.Fatal(err)
 		}
