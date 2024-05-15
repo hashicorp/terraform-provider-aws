@@ -99,10 +99,10 @@ func TestAccServiceDiscoveryHTTPNamespace_description(t *testing.T) {
 		CheckDestroy:             testAccCheckHTTPNamespaceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHTTPNamespaceConfig_description(rName, acctest.CtTest),
+				Config: testAccHTTPNamespaceConfig_description(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHTTPNamespaceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
 				),
 			},
 			{

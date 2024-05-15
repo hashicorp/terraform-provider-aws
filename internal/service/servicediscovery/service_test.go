@@ -65,7 +65,7 @@ func TestAccServiceDiscoveryService_private(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "servicediscovery", regexache.MustCompile(`service/.+`)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
 					resource.TestCheckResourceAttr(resourceName, "dns_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.0.type", "A"),
@@ -104,7 +104,7 @@ func TestAccServiceDiscoveryService_public(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "servicediscovery", regexache.MustCompile(`service/.+`)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
 					resource.TestCheckResourceAttr(resourceName, "dns_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "dns_config.0.routing_policy", "WEIGHTED"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_config.#", acctest.Ct1),
@@ -126,7 +126,7 @@ func TestAccServiceDiscoveryService_public(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "servicediscovery", regexache.MustCompile(`service/.+`)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
 					resource.TestCheckResourceAttr(resourceName, "dns_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "health_check_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "health_check_config.0.type", "HTTP"),
