@@ -200,7 +200,7 @@ func resourcePolicyImport(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if policy.PolicySummary.AwsManaged {
-		return nil, fmt.Errorf("AWS-managed Organizations policy (%s) cannot be imported. Use the policy ID directly in your configuration.", d.Id())
+		return nil, fmt.Errorf("AWS-managed Organizations policy (%s) cannot be imported. Use the policy ID directly in your configuration", d.Id())
 	}
 
 	return []*schema.ResourceData{d}, nil

@@ -161,7 +161,7 @@ func policyAttachmentParseResourceID(id string) (string, string, error) {
 		return parts[0], parts[1], nil
 	}
 
-	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected TARGETID%[2]POLICYID", id, policyAttachmentResourceIDSeparator)
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected TARGETID%[2]sPOLICYID", id, policyAttachmentResourceIDSeparator)
 }
 
 func findPolicyAttachmentByTwoPartKey(ctx context.Context, conn *organizations.Client, targetID, policyID string) (*awstypes.PolicyTargetSummary, error) {
