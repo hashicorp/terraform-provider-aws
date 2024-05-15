@@ -120,7 +120,7 @@ func TestAccCodeGuruReviewerRepositoryAssociation_S3Repository(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "repository.0.github_enterprise_server.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "repository.0.s3_bucket.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "repository.0.s3_bucket.0.bucket_name", "codeguru-reviewer-"+rName),
-					resource.TestCheckResourceAttr(resourceName, "repository.0.s3_bucket.0.name", acctest.CtTest),
+					resource.TestCheckResourceAttr(resourceName, "repository.0.s3_bucket.0.name", "test"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_details.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_details.0.encryption_option", "AWS_OWNED_CMK"),
 				),
