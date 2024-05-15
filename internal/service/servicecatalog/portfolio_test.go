@@ -41,7 +41,7 @@ func TestAccServiceCatalogPortfolio_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test-2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProviderName, "test-3"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
