@@ -197,7 +197,7 @@ func waitVPCEndpointAcceptedV2(ctx context.Context, conn *ec2.Client, vpcEndpoin
 	return nil, err
 }
 
-func waitVPCEndpointAvailableV2(ctx context.Context, conn *ec2.Client, vpcEndpointID string, timeout time.Duration) (*types.VpcEndpoint, error) {
+func waitVPCEndpointAvailableV2(ctx context.Context, conn *ec2.Client, vpcEndpointID string, timeout time.Duration) (*types.VpcEndpoint, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(vpcEndpointStatePending),
 		Target:     enum.Slice(vpcEndpointStateAvailable, vpcEndpointStatePendingAcceptance),
@@ -239,7 +239,7 @@ func waitVPCEndpointDeletedV2(ctx context.Context, conn *ec2.Client, vpcEndpoint
 	return nil, err
 }
 
-func waitRouteDeletedV2(ctx context.Context, conn *ec2.Client, routeFinder routeFinderV2, routeTableID, destination string, timeout time.Duration) (*types.Route, error) {
+func waitRouteDeletedV2(ctx context.Context, conn *ec2.Client, routeFinder routeFinderV2, routeTableID, destination string, timeout time.Duration) (*types.Route, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{RouteStatusReady},
 		Target:                    []string{},
@@ -257,7 +257,7 @@ func waitRouteDeletedV2(ctx context.Context, conn *ec2.Client, routeFinder route
 	return nil, err
 }
 
-func waitRouteReadyV2(ctx context.Context, conn *ec2.Client, routeFinder routeFinderV2, routeTableID, destination string, timeout time.Duration) (*types.Route, error) {
+func waitRouteReadyV2(ctx context.Context, conn *ec2.Client, routeFinder routeFinderV2, routeTableID, destination string, timeout time.Duration) (*types.Route, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{RouteStatusReady},
@@ -371,6 +371,44 @@ func waitRouteTableAssociationUpdatedV2(ctx context.Context, conn *ec2.Client, i
 			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 		}
 
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitVPCEndpointServiceAvailableV2(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.ServiceConfiguration, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(types.ServiceStatePending),
+		Target:     enum.Slice(types.ServiceStateAvailable),
+		Refresh:    statusVPCEndpointServiceStateAvailableV2(ctx, conn, id),
+		Timeout:    timeout,
+		Delay:      5 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.ServiceConfiguration); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitVPCEndpointServiceDeletedV2(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.ServiceConfiguration, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(types.ServiceStateAvailable, types.ServiceStateDeleting),
+		Target:     []string{},
+		Timeout:    timeout,
+		Refresh:    statusVPCEndpointServiceStateDeletedV2(ctx, conn, id),
+		Delay:      5 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.ServiceConfiguration); ok {
 		return output, err
 	}
 

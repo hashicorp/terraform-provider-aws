@@ -48,6 +48,7 @@ var (
 	FindRouteTableByIDV2                      = findRouteTableByIDV2
 	FindVolumeAttachmentInstanceByID          = findVolumeAttachmentInstanceByID
 	FindVPCEndpointByIDV2                     = findVPCEndpointByIDV2
+	FindVPCEndpointServiceConfigurationByIDV2 = findVPCEndpointServiceConfigurationByIDV2
 	FindVPNGatewayRoutePropagationExistsV2    = findVPNGatewayRoutePropagationExistsV2
 	FlattenNetworkInterfacePrivateIPAddresses = flattenNetworkInterfacePrivateIPAddresses
 	IPAMServicePrincipal                      = ipamServicePrincipal

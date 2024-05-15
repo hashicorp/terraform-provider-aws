@@ -595,28 +595,6 @@ func flattenSecurityGroupIdentifiers(apiObjects []awstypes.SecurityGroupIdentifi
 	return tfList
 }
 
-func flattenAddAndRemoveStringLists(d *schema.ResourceData, key string) ([]*string, []*string) {
-	if !d.HasChange(key) {
-		return nil, nil
-	}
-
-	var add, del []*string
-
-	o, n := d.GetChange(key)
-	os := o.(*schema.Set)
-	ns := n.(*schema.Set)
-
-	if v := flex.ExpandStringSet(ns.Difference(os)); len(v) > 0 {
-		add = v
-	}
-
-	if v := flex.ExpandStringSet(os.Difference(ns)); len(v) > 0 {
-		del = v
-	}
-
-	return add, del
-}
-
 func flattenAddAndRemoveStringValueLists(d *schema.ResourceData, key string) ([]string, []string) {
 	if !d.HasChange(key) {
 		return nil, nil
