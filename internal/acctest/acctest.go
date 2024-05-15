@@ -824,51 +824,35 @@ func AccountID() string {
 }
 
 func Region() string {
-	return envvar.GetWithDefault(envvar.DefaultRegion, endpoints.UsWest2RegionID)
+	return envvar.GetWithDefault(envvar.DefaultRegion, names.USWest2RegionID)
 }
 
 func AlternateRegion() string {
-	return envvar.GetWithDefault(envvar.AlternateRegion, endpoints.UsEast1RegionID)
+	return envvar.GetWithDefault(envvar.AlternateRegion, names.USEast1RegionID)
 }
 
 func ThirdRegion() string {
-	return envvar.GetWithDefault(envvar.ThirdRegion, endpoints.UsEast2RegionID)
+	return envvar.GetWithDefault(envvar.ThirdRegion, names.USEast2RegionID)
 }
 
 func Partition() string {
-	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), Region()); ok {
-		return partition.ID()
-	}
-	return endpoints.AwsPartitionID
+	return names.PartitionForRegion(Region())
 }
 
 func PartitionDNSSuffix() string {
-	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), Region()); ok {
-		return partition.DNSSuffix()
-	}
-	return "amazonaws.com"
+	return names.DNSSuffixForPartition(Partition())
 }
 
 func PartitionReverseDNSPrefix() string {
-	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), Region()); ok {
-		return names.ReverseDNS(partition.DNSSuffix())
-	}
-
-	return "com.amazonaws"
+	return names.ReverseDNS(PartitionDNSSuffix())
 }
 
 func alternateRegionPartition() string {
-	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), AlternateRegion()); ok {
-		return partition.ID()
-	}
-	return endpoints.AwsPartitionID
+	return names.PartitionForRegion(AlternateRegion())
 }
 
 func thirdRegionPartition() string {
-	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), ThirdRegion()); ok {
-		return partition.ID()
-	}
-	return endpoints.AwsPartitionID
+	return names.PartitionForRegion(ThirdRegion())
 }
 
 func PreCheckAlternateAccount(t *testing.T) {
@@ -913,7 +897,7 @@ func PreCheckMultipleRegion(t *testing.T, regions int) {
 	}
 
 	if regions >= 3 {
-		if thirdRegionPartition() == endpoints.AwsUsGovPartitionID || Partition() == endpoints.AwsUsGovPartitionID {
+		if thirdRegionPartition() == names.USGovCloudPartitionID || Partition() == names.USGovCloudPartitionID {
 			t.Skipf("wanted %d regions, partition (%s) only has 2 regions", regions, Partition())
 		}
 
@@ -1257,10 +1241,10 @@ func PreCheckWAFV2CloudFrontScope(ctx context.Context, t *testing.T) {
 	t.Helper()
 
 	switch Partition() {
-	case endpoints.AwsPartitionID:
-		PreCheckRegion(t, endpoints.UsEast1RegionID)
-	case endpoints.AwsCnPartitionID:
-		PreCheckRegion(t, endpoints.CnNorthwest1RegionID)
+	case names.StandardPartitionID:
+		PreCheckRegion(t, names.USEast1RegionID)
+	case names.ChinaPartitionID:
+		PreCheckRegion(t, names.CNNorthwest1RegionID)
 	}
 
 	conn := Provider.Meta().(*conns.AWSClient).WAFV2Client(ctx)
@@ -2119,7 +2103,7 @@ func CheckACMPCACertificateAuthorityExists(ctx context.Context, n string, certif
 func PreCheckAPIGatewayTypeEDGE(t *testing.T) {
 	t.Helper()
 
-	if Partition() != endpoints.AwsPartitionID {
+	if Partition() != names.StandardPartitionID {
 		t.Skipf("skipping test; Endpoint Configuration type EDGE is not supported in this partition (%s)", Partition())
 	}
 }
