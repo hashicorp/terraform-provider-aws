@@ -14,7 +14,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/rekognition/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/float64validator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -308,10 +307,12 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 								Optional:    true,
 								//TODO: validation for label values
 							},
-							"min_confidence": schema.Int64Attribute{
+							"min_confidence": schema.Float64Attribute{
 								Description: "The minimum confidence required to label an object in the video.",
-								Validators:  []validator.Int64{int64validator.Between(0, 100)},
-								Optional:    true,
+								Validators: []validator.Float64{
+									float64validator.Between(0.0, 100.0),
+								},
+								Optional: true,
 							},
 						},
 					},
@@ -327,10 +328,12 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 								},
 								Optional: true,
 							},
-							"face_match_threshold": schema.Int64Attribute{
+							"face_match_threshold": schema.Float64Attribute{
 								Description: "Minimum face match confidence score that must be met to return a result for a recognized face.",
-								Validators:  []validator.Int64{int64validator.Between(0, 100)},
-								Optional:    true,
+								Validators: []validator.Float64{
+									float64validator.Between(0.0, 100.0),
+								},
+								Optional: true,
 							},
 						},
 					},
@@ -433,33 +436,50 @@ func (r *resourceStreamProcessor) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
-	// the update api uses slightly different property names, so we can't just flex the state into the request :(
+	// the update api uses different property names(<prop>ForUpdate) and request shape, so we can't just flex into the request :(
 	if !plan.DataSharingPreference.Equal(state.DataSharingPreference) ||
 		!plan.Settings.Equal(state.Settings) ||
 		!plan.RegionsOfInterest.Equal(state.RegionsOfInterest) {
 
 		in := &rekognition.UpdateStreamProcessorInput{
-			Name: aws.String(plan.Name.ValueString()),
+			Name:               aws.String(plan.Name.ValueString()),
+			ParametersToDelete: []awstypes.StreamProcessorParameterToDelete{},
 		}
 
 		if !plan.DataSharingPreference.Equal(state.DataSharingPreference) {
-			dsp, diags := plan.DataSharingPreference.ToPtr(ctx)
-			resp.Diagnostics.Append(diags...)
+			optIn := plan.DataSharingPreference.ObjectValue.Attributes()["opt_in"].(types.Bool)
 			in.DataSharingPreferenceForUpdate = &awstypes.StreamProcessorDataSharingPreference{
-				OptIn: dsp.OptIn.ValueBool(),
+				OptIn: optIn.ValueBool(),
 			}
 		}
 
 		if !plan.Settings.Equal(state.Settings) {
-			p, diags := plan.Settings.ToPtr(ctx)
-			resp.Diagnostics.Append(diags...)
+			in.SettingsForUpdate = &awstypes.StreamProcessorSettingsForUpdate{
+				ConnectedHomeForUpdate: &awstypes.ConnectedHomeSettingsForUpdate{},
+			}
 
-			ch, diags := p.ConnectedHome.ToPtr(ctx)
-			resp.Diagnostics.Append(diags...)
+			planConnectedHome := plan.Settings.Attributes()["connected_home"].(fwtypes.ObjectValueOf[connectedHomeModel])
+			stateConnectedHome := state.Settings.Attributes()["connected_home"].(fwtypes.ObjectValueOf[connectedHomeModel])
 
-			// s := &awstypes.StreamProcessorSettingsForUpdate{}
+			planMinConfidence := planConnectedHome.Attributes()["min_confidence"].(types.Float64)
+			stateMinConfidence := stateConnectedHome.Attributes()["min_confidence"].(types.Float64)
 
-			in.SettingsForUpdate = &awstypes.StreamProcessorSettingsForUpdate{}
+			if !planMinConfidence.Equal(stateMinConfidence) {
+				if !stateMinConfidence.IsNull() && planMinConfidence.IsNull() {
+					in.ParametersToDelete = append(in.ParametersToDelete, awstypes.StreamProcessorParameterToDeleteConnectedHomeMinConfidence)
+				}
+
+				if !planMinConfidence.IsNull() {
+					in.SettingsForUpdate.ConnectedHomeForUpdate.MinConfidence = aws.Float32(float32(planMinConfidence.ValueFloat64()))
+				}
+			}
+
+			planLabels := planConnectedHome.Attributes()["labels"].(fwtypes.ListValueOf[types.String])
+			stateLabels := stateConnectedHome.Attributes()["labels"].(fwtypes.ListValueOf[types.String])
+
+			if !planLabels.Equal(stateLabels) {
+				in.SettingsForUpdate.ConnectedHomeForUpdate.Labels = fwflex.ExpandFrameworkStringValueList(ctx, planLabels)
+			}
 		}
 
 		// TIP: -- 4. Call the AWS modify/update function
@@ -704,12 +724,12 @@ type settingsModel struct {
 
 type connectedHomeModel struct {
 	Labels        fwtypes.ListValueOf[types.String] `tfsdk:"labels"`
-	MinConfidence types.Int64                       `tfsdk:"min_confidence"`
+	MinConfidence types.Float64                     `tfsdk:"min_confidence"`
 }
 
 type faceSearchModel struct {
-	CollectionId       types.String `tfsdk:"collection_id"`
-	FaceMatchThreshold types.Int64  `tfsdk:"face_match_threshold"`
+	CollectionId       types.String  `tfsdk:"collection_id"`
+	FaceMatchThreshold types.Float64 `tfsdk:"face_match_threshold"`
 }
 
 /*
