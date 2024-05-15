@@ -38,7 +38,7 @@ func TestAccSageMakerDevice_basic(t *testing.T) {
 					testAccCheckDeviceExists(ctx, resourceName, &device),
 					resource.TestCheckResourceAttr(resourceName, "device_fleet_name", rName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("device-fleet/%[1]s/device/%[1]s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "device.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "device.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "device.0.device_name", rName),
 				),
 			},
@@ -76,10 +76,10 @@ func TestAccSageMakerDevice_description(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDeviceConfig_description(rName, "test"),
+				Config: testAccDeviceConfig_description(rName, acctest.CtTest),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceExists(ctx, resourceName, &device),
-					resource.TestCheckResourceAttr(resourceName, "device.0.description", "test"),
+					resource.TestCheckResourceAttr(resourceName, "device.0.description", acctest.CtTest),
 				),
 			},
 		},
