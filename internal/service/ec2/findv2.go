@@ -447,3 +447,67 @@ func FindEBSVolumeV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeV
 
 	return tfresource.AssertSingleValueResult(output)
 }
+
+func FindImages(ctx context.Context, conn *ec2.Client, input *ec2.DescribeImagesInput) ([]awstypes.Image, error) {
+	var output []awstypes.Image
+
+	pages := ec2.NewDescribeImagesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidAMIIDNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Images {
+			output = append(output, v)
+		}
+	}
+
+	return output, nil
+}
+
+func FindImage(ctx context.Context, conn *ec2.Client, input *ec2.DescribeImagesInput) (*awstypes.Image, error) {
+	output, err := FindImages(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func FindImageByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Image, error) {
+	input := &ec2.DescribeImagesInput{
+		ImageIds: []string{id},
+	}
+
+	output, err := FindImage(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State; state == awstypes.ImageStateDeregistered {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.ImageId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}

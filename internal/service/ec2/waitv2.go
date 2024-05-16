@@ -172,3 +172,49 @@ func waitNetworkInterfaceDetachedV2(ctx context.Context, conn *ec2.Client, id st
 
 	return nil, err
 }
+
+func WaitImageAvailable(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.Image, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(types.ImageStatePending),
+		Target:     enum.Slice(types.ImageStateAvailable),
+		Refresh:    StatusImageState(ctx, conn, id),
+		Timeout:    timeout,
+		Delay:      amiRetryDelay,
+		MinTimeout: amiRetryMinTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.Image); ok {
+		if stateReason := output.StateReason; stateReason != nil {
+			tfresource.SetLastError(err, errors.New(aws.ToString(stateReason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitImageDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.Image, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(types.ImageStateAvailable, types.ImageStateFailed, types.ImageStatePending),
+		Target:     []string{},
+		Refresh:    StatusImageState(ctx, conn, id),
+		Timeout:    timeout,
+		Delay:      amiRetryDelay,
+		MinTimeout: amiRetryMinTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.Image); ok {
+		if stateReason := output.StateReason; stateReason != nil {
+			tfresource.SetLastError(err, errors.New(aws.ToString(stateReason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}

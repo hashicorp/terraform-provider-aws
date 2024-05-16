@@ -196,22 +196,6 @@ func StatusFleetState(ctx context.Context, conn *ec2.EC2, id string) retry.State
 	}
 }
 
-func StatusImageState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindImageByID(ctx, conn, id)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.State), nil
-	}
-}
-
 // StatusInstanceIAMInstanceProfile fetches the Instance and its IamInstanceProfile
 //
 // The EC2 API accepts a name and always returns an ARN, so it is converted

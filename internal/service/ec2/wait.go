@@ -397,52 +397,6 @@ func WaitFleet(ctx context.Context, conn *ec2.EC2, id string, pending, target []
 	return nil, err
 }
 
-func WaitImageAvailable(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Image, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:    []string{ec2.ImageStatePending},
-		Target:     []string{ec2.ImageStateAvailable},
-		Refresh:    StatusImageState(ctx, conn, id),
-		Timeout:    timeout,
-		Delay:      amiRetryDelay,
-		MinTimeout: amiRetryMinTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*ec2.Image); ok {
-		if stateReason := output.StateReason; stateReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(stateReason.Message)))
-		}
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func WaitImageDeleted(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Image, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:    []string{ec2.ImageStateAvailable, ec2.ImageStateFailed, ec2.ImageStatePending},
-		Target:     []string{},
-		Refresh:    StatusImageState(ctx, conn, id),
-		Timeout:    timeout,
-		Delay:      amiRetryDelay,
-		MinTimeout: amiRetryMinTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*ec2.Image); ok {
-		if stateReason := output.StateReason; stateReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(stateReason.Message)))
-		}
-
-		return output, err
-	}
-
-	return nil, err
-}
-
 func WaitInstanceIAMInstanceProfileUpdated(ctx context.Context, conn *ec2.EC2, instanceID string, expectedValue string) (*ec2.Instance, error) {
 	stateConf := &retry.StateChangeConf{
 		Target:     []string{expectedValue},

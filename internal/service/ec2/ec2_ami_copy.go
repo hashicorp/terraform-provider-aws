@@ -9,8 +9,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -271,7 +271,7 @@ func ResourceAMICopy() *schema.Resource {
 
 func resourceAMICopyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	sourceImageID := d.Get("source_ami_id").(string)
@@ -292,16 +292,16 @@ func resourceAMICopyCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
-	output, err := conn.CopyImageWithContext(ctx, input)
+	output, err := conn.CopyImage(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 AMI (%s) from source EC2 AMI (%s): %s", name, sourceImageID, err)
 	}
 
-	d.SetId(aws.StringValue(output.ImageId))
+	d.SetId(aws.ToString(output.ImageId))
 	d.Set("manage_ebs_snapshots", true)
 
-	if err := createTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
+	if err := createTagsV2(ctx, conn, d.Id(), getTagsInV2(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting EC2 AMI (%s) tags: %s", d.Id(), err)
 	}
 

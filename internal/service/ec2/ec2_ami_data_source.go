@@ -12,9 +12,10 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -233,7 +234,7 @@ func DataSourceAMI() *schema.Resource {
 
 func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeImagesInput{
@@ -241,15 +242,15 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if v, ok := d.GetOk("executable_users"); ok {
-		input.ExecutableUsers = flex.ExpandStringList(v.([]interface{}))
+		input.ExecutableUsers = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk(names.AttrFilter); ok {
-		input.Filters = newCustomFilterList(v.(*schema.Set))
+		input.Filters = newCustomFilterListV2(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("owners"); ok && len(v.([]interface{})) > 0 {
-		input.Owners = flex.ExpandStringList(v.([]interface{}))
+		input.Owners = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
 	images, err := FindImages(ctx, conn, input)
@@ -258,11 +259,11 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading EC2 AMIs: %s", err)
 	}
 
-	var filteredImages []*ec2.Image
+	var filteredImages []awstypes.Image
 	if v, ok := d.GetOk("name_regex"); ok {
 		r := regexache.MustCompile(v.(string))
 		for _, image := range images {
-			name := aws.StringValue(image.Name)
+			name := aws.ToString(image.Name)
 
 			// Check for a very rare case where the response would include no
 			// image name. No name means nothing to attempt a match against,
@@ -289,20 +290,20 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interfa
 				"specific search criteria, or set `most_recent` attribute to true.")
 		}
 		sort.Slice(filteredImages, func(i, j int) bool {
-			itime, _ := time.Parse(time.RFC3339, aws.StringValue(filteredImages[i].CreationDate))
-			jtime, _ := time.Parse(time.RFC3339, aws.StringValue(filteredImages[j].CreationDate))
+			itime, _ := time.Parse(time.RFC3339, aws.ToString(filteredImages[i].CreationDate))
+			jtime, _ := time.Parse(time.RFC3339, aws.ToString(filteredImages[j].CreationDate))
 			return itime.Unix() > jtime.Unix()
 		})
 	}
 
 	image := filteredImages[0]
 
-	d.SetId(aws.StringValue(image.ImageId))
+	d.SetId(aws.ToString(image.ImageId))
 	d.Set("architecture", image.Architecture)
 	imageArn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Region:    meta.(*conns.AWSClient).Region,
-		Service:   ec2.ServiceName,
+		Service:   names.EC2,
 		Resource:  fmt.Sprintf("image/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, imageArn)
@@ -349,25 +350,25 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func flattenAMIBlockDeviceMappings(m []*ec2.BlockDeviceMapping) *schema.Set {
+func flattenAMIBlockDeviceMappings(m []awstypes.BlockDeviceMapping) *schema.Set {
 	s := &schema.Set{
 		F: amiBlockDeviceMappingHash,
 	}
 	for _, v := range m {
 		mapping := map[string]interface{}{
-			names.AttrDeviceName: aws.StringValue(v.DeviceName),
-			"virtual_name":       aws.StringValue(v.VirtualName),
+			names.AttrDeviceName: aws.ToString(v.DeviceName),
+			"virtual_name":       aws.ToString(v.VirtualName),
 		}
 
 		if v.Ebs != nil {
 			ebs := map[string]interface{}{
-				names.AttrDeleteOnTermination: fmt.Sprintf("%t", aws.BoolValue(v.Ebs.DeleteOnTermination)),
-				names.AttrEncrypted:           fmt.Sprintf("%t", aws.BoolValue(v.Ebs.Encrypted)),
-				names.AttrIOPS:                fmt.Sprintf("%d", aws.Int64Value(v.Ebs.Iops)),
-				"throughput":                  fmt.Sprintf("%d", aws.Int64Value(v.Ebs.Throughput)),
-				names.AttrVolumeSize:          fmt.Sprintf("%d", aws.Int64Value(v.Ebs.VolumeSize)),
-				names.AttrSnapshotID:          aws.StringValue(v.Ebs.SnapshotId),
-				names.AttrVolumeType:          aws.StringValue(v.Ebs.VolumeType),
+				names.AttrDeleteOnTermination: fmt.Sprintf("%t", aws.ToBool(v.Ebs.DeleteOnTermination)),
+				names.AttrEncrypted:           fmt.Sprintf("%t", aws.ToBool(v.Ebs.Encrypted)),
+				names.AttrIOPS:                fmt.Sprintf("%d", aws.ToInt32(v.Ebs.Iops)),
+				"throughput":                  fmt.Sprintf("%d", aws.ToInt32(v.Ebs.Throughput)),
+				names.AttrVolumeSize:          fmt.Sprintf("%d", aws.ToInt32(v.Ebs.VolumeSize)),
+				names.AttrSnapshotID:          aws.ToString(v.Ebs.SnapshotId),
+				names.AttrVolumeType:          v.Ebs.VolumeType,
 			}
 
 			mapping["ebs"] = ebs
@@ -379,41 +380,41 @@ func flattenAMIBlockDeviceMappings(m []*ec2.BlockDeviceMapping) *schema.Set {
 	return s
 }
 
-func flattenAMIProductCodes(m []*ec2.ProductCode) *schema.Set {
+func flattenAMIProductCodes(m []awstypes.ProductCode) *schema.Set {
 	s := &schema.Set{
 		F: amiProductCodesHash,
 	}
 	for _, v := range m {
 		code := map[string]interface{}{
-			"product_code_id":   aws.StringValue(v.ProductCodeId),
-			"product_code_type": aws.StringValue(v.ProductCodeType),
+			"product_code_id":   aws.ToString(v.ProductCodeId),
+			"product_code_type": v.ProductCodeType,
 		}
 		s.Add(code)
 	}
 	return s
 }
 
-func amiRootSnapshotId(image *ec2.Image) string {
+func amiRootSnapshotId(image awstypes.Image) string {
 	if image.RootDeviceName == nil {
 		return ""
 	}
 	for _, bdm := range image.BlockDeviceMappings {
 		if bdm.DeviceName == nil ||
-			aws.StringValue(bdm.DeviceName) != aws.StringValue(image.RootDeviceName) {
+			aws.ToString(bdm.DeviceName) != aws.ToString(image.RootDeviceName) {
 			continue
 		}
 		if bdm.Ebs != nil && bdm.Ebs.SnapshotId != nil {
-			return aws.StringValue(bdm.Ebs.SnapshotId)
+			return aws.ToString(bdm.Ebs.SnapshotId)
 		}
 	}
 	return ""
 }
 
-func flattenAMIStateReason(m *ec2.StateReason) map[string]interface{} {
+func flattenAMIStateReason(m *awstypes.StateReason) map[string]interface{} {
 	s := make(map[string]interface{})
 	if m != nil {
-		s["code"] = aws.StringValue(m.Code)
-		s[names.AttrMessage] = aws.StringValue(m.Message)
+		s["code"] = aws.ToString(m.Code)
+		s[names.AttrMessage] = aws.ToString(m.Message)
 	} else {
 		s["code"] = "UNSET"
 		s[names.AttrMessage] = "UNSET"
