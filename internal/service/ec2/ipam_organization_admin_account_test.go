@@ -107,7 +107,7 @@ func testAccIPAMOrganizationAdminAccount_disappears(t *testing.T) {
 				Config: testAccIPAMOrganizationAdminAccountConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMOrganizationAdminAccountExists(ctx, resourceName, &organization),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceIPAMPoolCIDRAllocation(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceIPAMOrganizationAdminAccount(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
