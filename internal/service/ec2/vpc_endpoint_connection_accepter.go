@@ -9,9 +9,9 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -52,18 +52,18 @@ func ResourceVPCEndpointConnectionAccepter() *schema.Resource {
 
 func resourceVPCEndpointConnectionAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	serviceID := d.Get("vpc_endpoint_service_id").(string)
 	vpcEndpointID := d.Get(names.AttrVPCEndpointID).(string)
 	id := VPCEndpointConnectionAccepterCreateResourceID(serviceID, vpcEndpointID)
 	input := &ec2.AcceptVpcEndpointConnectionsInput{
 		ServiceId:      aws.String(serviceID),
-		VpcEndpointIds: aws.StringSlice([]string{vpcEndpointID}),
+		VpcEndpointIds: []string{vpcEndpointID},
 	}
 
-	log.Printf("[DEBUG] Accepting VPC Endpoint Connection: %s", input)
-	_, err := conn.AcceptVpcEndpointConnectionsWithContext(ctx, input)
+	log.Printf("[DEBUG] Accepting VPC Endpoint Connection: %v", input)
+	_, err := conn.AcceptVpcEndpointConnections(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "accepting VPC Endpoint Connection (%s): %s", id, err)
@@ -71,7 +71,7 @@ func resourceVPCEndpointConnectionAccepterCreate(ctx context.Context, d *schema.
 
 	d.SetId(id)
 
-	_, err = waitVPCEndpointConnectionAccepted(ctx, conn, serviceID, vpcEndpointID, d.Timeout(schema.TimeoutCreate))
+	_, err = waitVPCEndpointConnectionAcceptedV2(ctx, conn, serviceID, vpcEndpointID, d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for VPC Endpoint Connection (%s) to be accepted: %s", d.Id(), err)
@@ -82,14 +82,14 @@ func resourceVPCEndpointConnectionAccepterCreate(ctx context.Context, d *schema.
 
 func resourceVPCEndpointConnectionAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	serviceID, vpcEndpointID, err := VPCEndpointConnectionAccepterParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	vpcEndpointConnection, err := FindVPCEndpointConnectionByServiceIDAndVPCEndpointID(ctx, conn, serviceID, vpcEndpointID)
+	vpcEndpointConnection, err := findVPCEndpointConnectionByServiceIDAndVPCEndpointIDV2(ctx, conn, serviceID, vpcEndpointID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] VPC Endpoint Connection %s not found, removing from state", d.Id())
@@ -110,7 +110,7 @@ func resourceVPCEndpointConnectionAccepterRead(ctx context.Context, d *schema.Re
 
 func resourceVPCEndpointConnectionAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	serviceID, vpcEndpointID, err := VPCEndpointConnectionAccepterParseResourceID(d.Id())
 	if err != nil {
@@ -118,9 +118,9 @@ func resourceVPCEndpointConnectionAccepterDelete(ctx context.Context, d *schema.
 	}
 
 	log.Printf("[DEBUG] Rejecting VPC Endpoint Connection: %s", d.Id())
-	_, err = conn.RejectVpcEndpointConnectionsWithContext(ctx, &ec2.RejectVpcEndpointConnectionsInput{
+	_, err = conn.RejectVpcEndpointConnections(ctx, &ec2.RejectVpcEndpointConnectionsInput{
 		ServiceId:      aws.String(serviceID),
-		VpcEndpointIds: aws.StringSlice([]string{vpcEndpointID}),
+		VpcEndpointIds: []string{vpcEndpointID},
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointServiceIdNotFound) {

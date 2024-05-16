@@ -875,3 +875,43 @@ func findVPCEndpointSubnetAssociationExistsV2(ctx context.Context, conn *ec2.Cli
 		LastError: fmt.Errorf("VPC Endpoint (%s) Subnet (%s) Association not found", vpcEndpointID, subnetID),
 	}
 }
+
+func findVPCEndpointConnectionByServiceIDAndVPCEndpointIDV2(ctx context.Context, conn *ec2.Client, serviceID, vpcEndpointID string) (*awstypes.VpcEndpointConnection, error) {
+	input := &ec2.DescribeVpcEndpointConnectionsInput{
+		Filters: newAttributeFilterListV2(map[string]string{
+			"service-id": serviceID,
+			// "InvalidFilter: The filter vpc-endpoint-id  is invalid"
+			// "vpc-endpoint-id ": vpcEndpointID,
+		}),
+	}
+
+	var output *awstypes.VpcEndpointConnection
+
+	paginator := ec2.NewDescribeVpcEndpointConnectionsPaginator(conn, input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.VpcEndpointConnections {
+			if aws.ToString(v.VpcEndpointId) == vpcEndpointID {
+				output = &v
+				break
+			}
+		}
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if vpcEndpointState := string(output.VpcEndpointState); vpcEndpointState == vpcEndpointStateDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     vpcEndpointState,
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}

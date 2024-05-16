@@ -442,3 +442,22 @@ func waitVPCEndpointRouteTableAssociationDeletedV2(ctx context.Context, conn *ec
 
 	return err
 }
+
+func waitVPCEndpointConnectionAcceptedV2(ctx context.Context, conn *ec2.Client, serviceID, vpcEndpointID string, timeout time.Duration) (*types.VpcEndpointConnection, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{vpcEndpointStatePendingAcceptance, vpcEndpointStatePending},
+		Target:     []string{vpcEndpointStateAvailable},
+		Refresh:    statusVPCEndpointConnectionVPCEndpointStateV2(ctx, conn, serviceID, vpcEndpointID),
+		Timeout:    timeout,
+		Delay:      5 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.VpcEndpointConnection); ok {
+		return output, err
+	}
+
+	return nil, err
+}
