@@ -8,8 +8,9 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -61,7 +62,7 @@ func ResourceVPCEndpointPolicy() *schema.Resource {
 
 func resourceVPCEndpointPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	endpointID := d.Get(names.AttrVPCEndpointID).(string)
 	req := &ec2.ModifyVpcEndpointInput{
@@ -80,12 +81,12 @@ func resourceVPCEndpointPolicyPut(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	log.Printf("[DEBUG] Updating VPC Endpoint Policy: %#v", req)
-	if _, err := conn.ModifyVpcEndpointWithContext(ctx, req); err != nil {
+	if _, err := conn.ModifyVpcEndpoint(ctx, req); err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating VPC Endpoint Policy: %s", err)
 	}
 	d.SetId(endpointID)
 
-	_, err = WaitVPCEndpointAvailable(ctx, conn, endpointID, d.Timeout(schema.TimeoutCreate))
+	_, err = waitVPCEndpointAvailableV2(ctx, conn, endpointID, d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for VPC Endpoint (%s) to policy to set: %s", endpointID, err)
@@ -96,9 +97,9 @@ func resourceVPCEndpointPolicyPut(ctx context.Context, d *schema.ResourceData, m
 
 func resourceVPCEndpointPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	vpce, err := FindVPCEndpointByID(ctx, conn, d.Id())
+	vpce, err := findVPCEndpointByIDV2(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] VPC Endpoint Policy (%s) not found, removing from state", d.Id())
@@ -112,7 +113,7 @@ func resourceVPCEndpointPolicyRead(ctx context.Context, d *schema.ResourceData, 
 
 	d.Set(names.AttrVPCEndpointID, d.Id())
 
-	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get(names.AttrPolicy).(string), aws.StringValue(vpce.PolicyDocument))
+	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get(names.AttrPolicy).(string), aws.ToString(vpce.PolicyDocument))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "while setting policy (%s), encountered: %s", policyToSet, err)
@@ -130,7 +131,7 @@ func resourceVPCEndpointPolicyRead(ctx context.Context, d *schema.ResourceData, 
 
 func resourceVPCEndpointPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	req := &ec2.ModifyVpcEndpointInput{
 		VpcEndpointId: aws.String(d.Id()),
@@ -138,11 +139,14 @@ func resourceVPCEndpointPolicyDelete(ctx context.Context, d *schema.ResourceData
 	}
 
 	log.Printf("[DEBUG] Resetting VPC Endpoint Policy: %#v", req)
-	if _, err := conn.ModifyVpcEndpointWithContext(ctx, req); err != nil {
+	if _, err := conn.ModifyVpcEndpoint(ctx, req); err != nil {
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointIdNotFound) {
+			return diags
+		}
 		return sdkdiag.AppendErrorf(diags, "Resetting VPC Endpoint Policy: %s", err)
 	}
 
-	_, err := WaitVPCEndpointAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete))
+	_, err := waitVPCEndpointAvailableV2(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for VPC Endpoint (%s) to be reset: %s", d.Id(), err)

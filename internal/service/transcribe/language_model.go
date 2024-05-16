@@ -83,7 +83,7 @@ func ResourceLanguageModel() *schema.Resource {
 					},
 				},
 			},
-			"language_code": {
+			names.AttrLanguageCode: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
@@ -113,7 +113,7 @@ func resourceLanguageModelCreate(ctx context.Context, d *schema.ResourceData, me
 
 	in := &transcribe.CreateLanguageModelInput{
 		BaseModelName: types.BaseModelName(d.Get("base_model_name").(string)),
-		LanguageCode:  types.CLMLanguageCode(d.Get("language_code").(string)),
+		LanguageCode:  types.CLMLanguageCode(d.Get(names.AttrLanguageCode).(string)),
 		ModelName:     aws.String(d.Get("model_name").(string)),
 		Tags:          getTagsIn(ctx),
 	}
@@ -173,7 +173,7 @@ func resourceLanguageModelRead(ctx context.Context, d *schema.ResourceData, meta
 
 	d.Set(names.AttrARN, arn)
 	d.Set("base_model_name", out.BaseModelName)
-	d.Set("language_code", out.LanguageCode)
+	d.Set(names.AttrLanguageCode, out.LanguageCode)
 	d.Set("model_name", out.ModelName)
 
 	if err := d.Set("input_data_config", flattenInputDataConfig(out.InputDataConfig)); err != nil {

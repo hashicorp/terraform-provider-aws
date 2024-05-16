@@ -38,12 +38,12 @@ func TestAccWAFRegionalWebACL_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "waf-regional", regexache.MustCompile(`webacl/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafAclName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, wafAclName),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct0),
 				),
 			},
 			{
@@ -71,8 +71,8 @@ func TestAccWAFRegionalWebACL_tags(t *testing.T) {
 				Config: testAccWebACLConfig_tags1(wafAclName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -81,20 +81,20 @@ func TestAccWAFRegionalWebACL_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccWebACLConfig_tags2(wafAclName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
+				Config: testAccWebACLConfig_tags2(wafAclName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
 				Config: testAccWebACLConfig_tags1(wafAclName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -117,10 +117,10 @@ func TestAccWAFRegionalWebACL_createRateBased(t *testing.T) {
 				Config: testAccWebACLConfig_rateBased(wafAclName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafAclName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, wafAclName),
 				),
 			},
@@ -149,10 +149,10 @@ func TestAccWAFRegionalWebACL_createGroup(t *testing.T) {
 				Config: testAccWebACLConfig_group(wafAclName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafAclName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, wafAclName),
 				),
 			},
@@ -182,10 +182,10 @@ func TestAccWAFRegionalWebACL_changeNameForceNew(t *testing.T) {
 				Config: testAccWebACLConfig_basic(wafAclName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &before),
-					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafAclName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, wafAclName),
 				),
 			},
@@ -193,10 +193,10 @@ func TestAccWAFRegionalWebACL_changeNameForceNew(t *testing.T) {
 				Config: testAccWebACLConfig_changeName(wafAclNewName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &after),
-					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafAclNewName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, wafAclNewName),
 				),
 			},
@@ -226,10 +226,10 @@ func TestAccWAFRegionalWebACL_changeDefaultAction(t *testing.T) {
 				Config: testAccWebACLConfig_basic(wafAclName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &before),
-					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafAclName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, wafAclName),
 				),
 			},
@@ -237,10 +237,10 @@ func TestAccWAFRegionalWebACL_changeDefaultAction(t *testing.T) {
 				Config: testAccWebACLConfig_changeDefaultAction(wafAclNewName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &after),
-					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "BLOCK"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafAclNewName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, wafAclNewName),
 				),
 			},
@@ -293,10 +293,10 @@ func TestAccWAFRegionalWebACL_noRules(t *testing.T) {
 				Config: testAccRuleConfig_webACLNos(wafAclName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafAclName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct0),
 				),
 			},
 			{
@@ -327,13 +327,13 @@ func TestAccWAFRegionalWebACL_changeRules(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(ctx, "aws_wafregional_rule.test", &r),
 					testAccCheckWebACLExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafAclName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					computeWebACLRuleIndex(&r.RuleId, 1, "REGULAR", "BLOCK", &idx),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						names.AttrPriority: acctest.CtOne,
+						names.AttrPriority: acctest.Ct1,
 					}),
 				),
 			},
@@ -341,10 +341,10 @@ func TestAccWAFRegionalWebACL_changeRules(t *testing.T) {
 				Config: testAccWebACLConfig_changeRules(wafAclName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafAclName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct2),
 				),
 			},
 			{
@@ -372,9 +372,9 @@ func TestAccWAFRegionalWebACL_logging(t *testing.T) {
 				Config: testAccWebACLConfig_loggingConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &webACL1),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.redacted_fields.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.redacted_fields.0.field_to_match.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.redacted_fields.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.redacted_fields.0.field_to_match.#", acctest.Ct2),
 				),
 			},
 			// Test logging configuration update
@@ -382,8 +382,8 @@ func TestAccWAFRegionalWebACL_logging(t *testing.T) {
 				Config: testAccWebACLConfig_loggingConfigurationUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &webACL2),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.redacted_fields.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.redacted_fields.#", acctest.Ct0),
 				),
 			},
 			// Test logging configuration removal
@@ -391,7 +391,7 @@ func TestAccWAFRegionalWebACL_logging(t *testing.T) {
 				Config: testAccRuleConfig_webACLNos(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &webACL3),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.Ct0),
 				),
 			},
 			{

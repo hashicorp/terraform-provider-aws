@@ -27,9 +27,9 @@ func TestAccS3ObjectsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccObjectsDataSourceConfig_basic(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(dataSourceName, "keys.#", "3"),
-					resource.TestCheckResourceAttr(dataSourceName, "owners.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "keys.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(dataSourceName, "owners.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(dataSourceName, "request_charged", ""),
 				),
 			},
@@ -51,9 +51,9 @@ func TestAccS3ObjectsDataSource_basicViaAccessPoint(t *testing.T) {
 			{
 				Config: testAccObjectsDataSourceConfig_basicViaAccessPoint(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(dataSourceName, "keys.#", "3"),
-					resource.TestCheckResourceAttr(dataSourceName, "owners.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "keys.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(dataSourceName, "owners.#", acctest.Ct0),
 				),
 			},
 		},
@@ -74,9 +74,9 @@ func TestAccS3ObjectsDataSource_prefixes(t *testing.T) {
 			{
 				Config: testAccObjectsDataSourceConfig_prefixes(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", acctest.CtTwo),
-					resource.TestCheckResourceAttr(dataSourceName, "keys.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(dataSourceName, "owners.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(dataSourceName, "keys.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "owners.#", acctest.Ct0),
 				),
 			},
 		},
@@ -97,10 +97,10 @@ func TestAccS3ObjectsDataSource_encoded(t *testing.T) {
 			{
 				Config: testAccObjectsDataSourceConfig_encoded(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(dataSourceName, "keys.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "keys.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(dataSourceName, "keys.0", "prefix/a+b"),
-					resource.TestCheckResourceAttr(dataSourceName, "owners.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(dataSourceName, "owners.#", acctest.Ct0),
 				),
 			},
 		},
@@ -121,17 +121,17 @@ func TestAccS3ObjectsDataSource_maxKeysSmall(t *testing.T) {
 			{
 				Config: testAccObjectsDataSourceConfig_maxKeysSmall(rName, 1, 5),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(dataSourceName, "keys.#", "3"),
-					resource.TestCheckResourceAttr(dataSourceName, "owners.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "keys.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(dataSourceName, "owners.#", acctest.Ct0),
 				),
 			},
 			{
 				Config: testAccObjectsDataSourceConfig_maxKeysSmall(rName, 2, 5),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(dataSourceName, "keys.#", "5"),
-					resource.TestCheckResourceAttr(dataSourceName, "owners.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(dataSourceName, "owners.#", acctest.Ct0),
 				),
 			},
 		},
@@ -156,18 +156,18 @@ func TestAccS3ObjectsDataSource_maxKeysLarge(t *testing.T) {
 			{
 				Config: testAccObjectsDataSourceConfig_maxKeysLarge(rName, 1002),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(dataSourceName, "keys.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(dataSourceName, "owners.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "keys.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "owners.#", acctest.Ct0),
 					testAccCheckBucketAddObjects(ctx, "aws_s3_bucket.test", keys...),
 				),
 			},
 			{
 				Config: testAccObjectsDataSourceConfig_maxKeysLarge(rName, 1002),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(dataSourceName, "keys.#", "1002"),
-					resource.TestCheckResourceAttr(dataSourceName, "owners.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(dataSourceName, "owners.#", acctest.Ct0),
 				),
 			},
 		},
@@ -188,9 +188,9 @@ func TestAccS3ObjectsDataSource_startAfter(t *testing.T) {
 			{
 				Config: testAccObjectsDataSourceConfig_startAfter(rName, 1, "prefix1/sub2/0"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(dataSourceName, "keys.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(dataSourceName, "owners.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "keys.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "owners.#", acctest.Ct0),
 				),
 			},
 		},
@@ -211,9 +211,9 @@ func TestAccS3ObjectsDataSource_fetchOwner(t *testing.T) {
 			{
 				Config: testAccObjectsDataSourceConfig_owners(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(dataSourceName, "keys.#", "3"),
-					resource.TestCheckResourceAttr(dataSourceName, "owners.#", "3"),
+					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "keys.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(dataSourceName, "owners.#", acctest.Ct3),
 				),
 			},
 		},
@@ -234,9 +234,9 @@ func TestAccS3ObjectsDataSource_directoryBucket(t *testing.T) {
 			{
 				Config: testAccObjectsDataSourceConfig_directoryBucket(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(dataSourceName, "keys.#", "3"),
-					resource.TestCheckResourceAttr(dataSourceName, "owners.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "keys.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(dataSourceName, "owners.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(dataSourceName, "request_charged", ""),
 				),
 			},

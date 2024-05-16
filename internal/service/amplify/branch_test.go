@@ -38,11 +38,11 @@ func testAccBranch_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBranchExists(ctx, resourceName, &branch),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "amplify", regexache.MustCompile(`apps/.+/branches/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "associated_resources.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "associated_resources.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "backend_environment_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "basic_auth_credentials", ""),
 					resource.TestCheckResourceAttr(resourceName, "branch_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "custom_domains.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "custom_domains.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_branch", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, rName),
@@ -51,13 +51,13 @@ func testAccBranch_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enable_notification", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_performance_mode", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_pull_request_preview", "false"),
-					resource.TestCheckResourceAttr(resourceName, "environment_variables.%", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "environment_variables.%", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "framework", ""),
 					resource.TestCheckResourceAttr(resourceName, "pull_request_environment_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "source_branch", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStage, "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "ttl", "5"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -109,8 +109,8 @@ func testAccBranch_tags(t *testing.T) {
 				Config: testAccBranchConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBranchExists(ctx, resourceName, &branch),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -119,20 +119,20 @@ func testAccBranch_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBranchConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
+				Config: testAccBranchConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBranchExists(ctx, resourceName, &branch),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
 				Config: testAccBranchConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBranchExists(ctx, resourceName, &branch),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -204,8 +204,8 @@ func testAccBranch_EnvironmentVariables(t *testing.T) {
 				Config: testAccBranchConfig_environmentVariables(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBranchExists(ctx, resourceName, &branch),
-					resource.TestCheckResourceAttr(resourceName, "environment_variables.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "environment_variables.ENVVAR1", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "environment_variables.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "environment_variables.ENVVAR1", acctest.Ct1),
 				),
 			},
 			{
@@ -217,16 +217,16 @@ func testAccBranch_EnvironmentVariables(t *testing.T) {
 				Config: testAccBranchConfig_environmentVariablesUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBranchExists(ctx, resourceName, &branch),
-					resource.TestCheckResourceAttr(resourceName, "environment_variables.%", acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "environment_variables.ENVVAR1", acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "environment_variables.ENVVAR2", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "environment_variables.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "environment_variables.ENVVAR1", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "environment_variables.ENVVAR2", acctest.Ct2),
 				),
 			},
 			{
 				Config: testAccBranchConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBranchExists(ctx, resourceName, &branch),
-					resource.TestCheckResourceAttr(resourceName, "environment_variables.%", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "environment_variables.%", acctest.Ct0),
 				),
 			},
 		},
@@ -262,7 +262,7 @@ func testAccBranch_OptionalArguments(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "framework", "React"),
 					resource.TestCheckResourceAttr(resourceName, "pull_request_environment_name", "testpr1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStage, "DEVELOPMENT"),
-					resource.TestCheckResourceAttr(resourceName, "ttl", "10"),
+					resource.TestCheckResourceAttr(resourceName, "ttl", acctest.Ct10),
 				),
 			},
 			{

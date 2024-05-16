@@ -27,7 +27,7 @@ func TestAccRedshiftClusterDataSource_basic(t *testing.T) {
 			{
 				Config: testAccClusterDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "cluster_nodes.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "cluster_nodes.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_nodes.0.public_ip_address"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "allow_version_upgrade"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "automated_snapshot_retention_period"),
@@ -75,7 +75,7 @@ func TestAccRedshiftClusterDataSource_vpc(t *testing.T) {
 				Config: testAccClusterDataSourceConfig_vpc(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrVPCID),
-					resource.TestCheckResourceAttr(dataSourceName, "vpc_security_group_ids.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(dataSourceName, "vpc_security_group_ids.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(dataSourceName, "cluster_type", "multi-node"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "cluster_subnet_group_name", subnetGroupResourceName, names.AttrName),
 				),

@@ -57,7 +57,7 @@ func dataSourceUserPoolClient() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"external_id": {
+						names.AttrExternalID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -237,7 +237,7 @@ func flattenUserPoolClientAnalyticsConfig(analyticsConfig *cognitoidentityprovid
 	}
 
 	if analyticsConfig.ExternalId != nil {
-		m["external_id"] = aws.StringValue(analyticsConfig.ExternalId)
+		m[names.AttrExternalID] = aws.StringValue(analyticsConfig.ExternalId)
 	}
 
 	if analyticsConfig.RoleArn != nil {

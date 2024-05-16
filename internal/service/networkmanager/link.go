@@ -97,7 +97,7 @@ func ResourceLink() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"provider_name": {
+			names.AttrProviderName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 128),
@@ -138,7 +138,7 @@ func resourceLinkCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("provider_name"); ok {
+	if v, ok := d.GetOk(names.AttrProviderName); ok {
 		input.Provider = aws.String(v.(string))
 	}
 
@@ -190,7 +190,7 @@ func resourceLinkRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 	d.Set(names.AttrDescription, link.Description)
 	d.Set("global_network_id", link.GlobalNetworkId)
-	d.Set("provider_name", link.Provider)
+	d.Set(names.AttrProviderName, link.Provider)
 	d.Set("site_id", link.SiteId)
 	d.Set(names.AttrType, link.Type)
 
@@ -210,7 +210,7 @@ func resourceLinkUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			Description:     aws.String(d.Get(names.AttrDescription).(string)),
 			GlobalNetworkId: aws.String(globalNetworkID),
 			LinkId:          aws.String(d.Id()),
-			Provider:        aws.String(d.Get("provider_name").(string)),
+			Provider:        aws.String(d.Get(names.AttrProviderName).(string)),
 			Type:            aws.String(d.Get(names.AttrType).(string)),
 		}
 

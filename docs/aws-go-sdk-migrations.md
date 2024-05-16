@@ -43,8 +43,16 @@ PKG=ec2 make awssdkpatch-apply
 You may also optionally generate the patch and use [`gopatch`](https://github.com/uber-go/gopatch) to preview differences before modfiying any files.
 
 ```console
-PKG=ec2 make awssdkpatch-gen
+make awssdkpatch-gen PKG=ec2
 gopatch -d -p awssdk.patch ./internal/service/ec2/...
+```
+
+#### Custom options
+
+To set additional `awssdkpatch` flags during patch generation, use the `AWSSDKPATCH_OPTS` environment variable.
+
+```console
+make awssdkpatch-gen PKG=ec2 AWSSDKPATCH_OPTS="-multiclient"
 ```
 
 ## Imports

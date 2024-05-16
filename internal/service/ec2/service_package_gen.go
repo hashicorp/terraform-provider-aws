@@ -1101,8 +1101,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceIPAMOrganizationAdminAccount,
+			Factory:  resourceIPAMOrganizationAdminAccount,
 			TypeName: "aws_vpc_ipam_organization_admin_account",
+			Name:     "IPAM Organization Admin Account",
 		},
 		{
 			Factory:  ResourceIPAMPool,

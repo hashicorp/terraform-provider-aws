@@ -130,7 +130,7 @@ func testAccSecretsDataSourceDecrypt(ctx context.Context, t *testing.T, plaintex
 				{
 					Config: testAccSecretsDataSourceConfig_secret(*encryptedPayload),
 					Check: resource.ComposeTestCheckFunc(
-						resource.TestCheckResourceAttr(dataSourceName, "plaintext.%", acctest.CtOne),
+						resource.TestCheckResourceAttr(dataSourceName, "plaintext.%", acctest.Ct1),
 						resource.TestCheckResourceAttr(dataSourceName, "plaintext.secret1", plaintext),
 					),
 				},
@@ -154,7 +154,7 @@ func testAccSecretsDataSourceDecryptAsymmetric(ctx context.Context, t *testing.T
 				{
 					Config: testAccSecretsDataSourceConfig_asymmetricSecret(*encryptedPayload, *keyid),
 					Check: resource.ComposeTestCheckFunc(
-						resource.TestCheckResourceAttr(dataSourceName, "plaintext.%", acctest.CtOne),
+						resource.TestCheckResourceAttr(dataSourceName, "plaintext.%", acctest.Ct1),
 						resource.TestCheckResourceAttr(dataSourceName, "plaintext.secret1", plaintext),
 					),
 				},
