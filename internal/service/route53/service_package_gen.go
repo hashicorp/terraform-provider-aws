@@ -47,8 +47,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceDelegationSet,
+			Factory:  resourceDelegationSet,
 			TypeName: "aws_route53_delegation_set",
+			Name:     "Reusable Delegation Set",
 		},
 		{
 			Factory:  resourceHealthCheck,

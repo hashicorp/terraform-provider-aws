@@ -215,7 +215,7 @@ func resourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	var nameServers []string
 
 	if output.DelegationSet != nil {
-		d.Set("delegation_set_id", CleanDelegationSetID(aws.StringValue(output.DelegationSet.Id)))
+		d.Set("delegation_set_id", cleanDelegationSetID(aws.StringValue(output.DelegationSet.Id)))
 
 		nameServers = aws.StringValueSlice(output.DelegationSet.NameServers)
 	}
