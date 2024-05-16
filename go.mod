@@ -125,7 +125,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.8.3
 	github.com/aws/aws-sdk-go-v2/service/oam v1.11.2
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.11.9
-	github.com/aws/aws-sdk-go-v2/service/osis v1.8.5
+	github.com/aws/aws-sdk-go-v2/service/osis v1.8.6
 	github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.10.1
 	github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.5.5
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.11.5
