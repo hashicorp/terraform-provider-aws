@@ -362,6 +362,7 @@ support,support,support,support,,support,,,Support,Support,,1,,,aws_support_,,su
 swf,swf,swf,swf,,swf,,,SWF,SWF,,,2,,aws_swf_,,swf_,SWF (Simple Workflow),Amazon,,,,,,,SWF,ListDomains,"RegistrationStatus: ""REGISTERED""",
 ,,,,,,,,,,,,,,,,,Tag Editor,AWS,x,,,,,,,,,Part of Resource Groups Tagging
 textract,textract,textract,textract,,textract,,,Textract,Textract,,1,,,aws_textract_,,textract_,Textract,Amazon,,x,,,,,Textract,,,
+timestream-influxdb,timestreaminfluxdb,timestreaminfluxdb,timestreaminfluxdb,,timestreaminfluxdb,,,TimestreamInfluxDB,TimestreamInfluxDB,,,2,,aws_timestreaminfluxdb_,,timestreaminfluxdb_,Timestream for InfluxDB,Amazon,,x,,,,,Timestream InfluxDB,,,
 timestream-query,timestreamquery,timestreamquery,timestreamquery,,timestreamquery,,,TimestreamQuery,TimestreamQuery,,1,,,aws_timestreamquery_,,timestreamquery_,Timestream Query,Amazon,,x,,,,,Timestream Query,,,
 timestream-write,timestreamwrite,timestreamwrite,timestreamwrite,,timestreamwrite,,,TimestreamWrite,TimestreamWrite,,,2,,aws_timestreamwrite_,,timestreamwrite_,Timestream Write,Amazon,,,,,,,Timestream Write,ListDatabases,,
 ,,,,,,,,,,,,,,,,,Tools for PowerShell,AWS,x,,,,,,,,,No SDK support

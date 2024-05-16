@@ -222,6 +222,7 @@ val services = mapOf(
     "sts" to ServiceSpec("STS (Security Token)"),
     "swf" to ServiceSpec("SWF (Simple Workflow)"),
     "synthetics" to ServiceSpec("CloudWatch Synthetics", parallelismOverride = 10),
+    "timestreaminfluxdb" to ServiceSpec("Timestream for InfluxDB"),
     "timestreamwrite" to ServiceSpec("Timestream Write"),
     "transcribe" to ServiceSpec("Transcribe"),
     "transfer" to ServiceSpec("Transfer Family", vpcLock = true),
