@@ -86,8 +86,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Traffic Policy",
 		},
 		{
-			Factory:  ResourceTrafficPolicyInstance,
+			Factory:  resourceTrafficPolicyInstance,
 			TypeName: "aws_route53_traffic_policy_instance",
+			Name:     "Traffic Policy Instance",
 		},
 		{
 			Factory:  ResourceVPCAssociationAuthorization,
