@@ -167,11 +167,7 @@ func TestAccIoTProvisioningTemplate_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "For testing"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-<<<<<<< HEAD
-					resource.TestCheckResourceAttr(resourceName, "pre_provisioning_hook.#", acctest.CtOne),
-=======
-					resource.TestCheckResourceAttr(resourceName, "pre_provisioning_hook.#", acctest.Ct0),
->>>>>>> main
+					resource.TestCheckResourceAttr(resourceName, "pre_provisioning_hook.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "provisioning_role_arn"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, "template_body"),
