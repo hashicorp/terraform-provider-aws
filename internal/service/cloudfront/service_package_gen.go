@@ -28,6 +28,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory: newKeyValueStoreResource,
 			Name:    "Key Value Store",
 		},
+		{
+			Factory: newResourceInvalidation,
+			Name:    "Invalidation",
+		},
 	}
 }
 
