@@ -895,6 +895,7 @@ func findVPCEndpointConnectionByServiceIDAndVPCEndpointIDV2(ctx context.Context,
 		}
 
 		for _, v := range page.VpcEndpointConnections {
+			v := v
 			if aws.ToString(v.VpcEndpointId) == vpcEndpointID {
 				output = &v
 				break
@@ -909,6 +910,60 @@ func findVPCEndpointConnectionByServiceIDAndVPCEndpointIDV2(ctx context.Context,
 	if vpcEndpointState := string(output.VpcEndpointState); vpcEndpointState == vpcEndpointStateDeleted {
 		return nil, &retry.NotFoundError{
 			Message:     vpcEndpointState,
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findVPCEndpointConnectionNotificationV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointConnectionNotificationsInput) (*awstypes.ConnectionNotification, error) {
+	output, err := findVPCEndpointConnectionNotificationsV2(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findVPCEndpointConnectionNotificationsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointConnectionNotificationsInput) ([]awstypes.ConnectionNotification, error) {
+	var output []awstypes.ConnectionNotification
+
+	paginator := ec2.NewDescribeVpcEndpointConnectionNotificationsPaginator(conn, input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+
+		if err != nil {
+			if tfawserr.ErrCodeEquals(err, errCodeInvalidConnectionNotification) {
+				return nil, &retry.NotFoundError{
+					LastError:   err,
+					LastRequest: input,
+				}
+			}
+			return nil, err
+		}
+
+		output = append(output, page.ConnectionNotificationSet...)
+	}
+
+	return output, nil
+}
+
+func findVPCEndpointConnectionNotificationByIDV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.ConnectionNotification, error) {
+	input := &ec2.DescribeVpcEndpointConnectionNotificationsInput{
+		ConnectionNotificationId: aws.String(id),
+	}
+
+	output, err := findVPCEndpointConnectionNotificationV2(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.ConnectionNotificationId) != id {
+		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}
