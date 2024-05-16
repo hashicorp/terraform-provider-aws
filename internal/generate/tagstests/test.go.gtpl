@@ -30,6 +30,9 @@
 {{ if gt (len .ImportStateID) 0 -}}
 	ImportStateId: {{ .ImportStateID }},
 {{ end -}}
+{{ if gt (len .ImportStateIDFunc) 0 -}}
+	ImportStateIdFunc: {{ .ImportStateIDFunc }}(resourceName),
+{{ end -}}
 	ImportStateVerify: true,
 {{ if gt (len .ImportIgnore) 0 -}}
 	ImportStateVerifyIgnore: []string{
