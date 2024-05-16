@@ -254,6 +254,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		FileName:         v.fileName,
 		AdditionalTfVars: make(map[string]string),
 	}
+	dataSource := false
 	tagged := false
 	skip := false
 	generatorSeen := false
@@ -286,6 +287,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				if attr, ok := args.Keyword["name"]; ok {
 					d.Name = strings.ReplaceAll(attr, " ", "")
 				}
+
+			case "SDKDataSource":
+				dataSource = true
+				break
 
 			case "Tags":
 				tagged = true
@@ -393,21 +398,24 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		}
 	}
 
-	if !generatorSeen {
-		d.Generator = "sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)"
-		d.GoImports = append(d.GoImports,
-			goImport{
-				Path:  "github.com/hashicorp/terraform-plugin-testing/helper/acctest",
-				Alias: "sdkacctest",
-			},
-			goImport{
-				Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
-			},
-		)
-	}
-
-	if tagged && !skip {
-		v.taggedResources = append(v.taggedResources, d)
+	if tagged {
+		if dataSource {
+			v.g.Infof("Skipping tags test for %s.%s: Data Source", v.packageName, v.functionName)
+		} else if !skip {
+			if !generatorSeen {
+				d.Generator = "sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)"
+				d.GoImports = append(d.GoImports,
+					goImport{
+						Path:  "github.com/hashicorp/terraform-plugin-testing/helper/acctest",
+						Alias: "sdkacctest",
+					},
+					goImport{
+						Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
+					},
+				)
+			}
+			v.taggedResources = append(v.taggedResources, d)
+		}
 	}
 
 	v.functionName = ""
