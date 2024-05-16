@@ -253,7 +253,7 @@ func TestAccProtectionDataSource_elb(t *testing.T) {
 			{
 				Config: testAccProtectionDataSource_elbById(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "protection_id", protectionResourceName, names.AttrId),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, "protection_id", protectionResourceName, names.AttrID),
 				),
 			},
 		},
