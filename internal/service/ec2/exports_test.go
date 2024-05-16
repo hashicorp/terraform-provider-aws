@@ -52,8 +52,9 @@ var (
 	FindVPCEndpointConnectionNotificationByIDV2            = findVPCEndpointConnectionNotificationByIDV2
 	FindVPCEndpointRouteTableAssociationExistsV2           = findVPCEndpointRouteTableAssociationExistsV2
 	FindVPCEndpointSecurityGroupAssociationExistsV2        = findVPCEndpointSecurityGroupAssociationExistsV2
-	FindVPCEndpointSubnetAssociationExistsV2               = findVPCEndpointSubnetAssociationExistsV2
 	FindVPCEndpointServiceConfigurationByIDV2              = findVPCEndpointServiceConfigurationByIDV2
+	FindVPCEndpointServicePermissionV2                     = findVPCEndpointServicePermissionV2
+	FindVPCEndpointSubnetAssociationExistsV2               = findVPCEndpointSubnetAssociationExistsV2
 	FindVPNGatewayRoutePropagationExistsV2                 = findVPNGatewayRoutePropagationExistsV2
 	FlattenNetworkInterfacePrivateIPAddresses              = flattenNetworkInterfacePrivateIPAddresses
 	IPAMServicePrincipal                                   = ipamServicePrincipal
