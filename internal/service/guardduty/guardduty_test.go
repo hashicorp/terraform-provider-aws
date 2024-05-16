@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccGuardDuty_serial(t *testing.T) {
@@ -25,7 +24,7 @@ func TestAccGuardDuty_serial(t *testing.T) {
 			"datasources_kubernetes_audit_logs": testAccDetector_datasources_kubernetes_audit_logs,
 			"datasources_malware_protection":    testAccDetector_datasources_malware_protection,
 			"datasources_all":                   testAccDetector_datasources_all,
-			names.AttrTags:                      testAccDetector_tags,
+			"tags":                              testAccDetector_tags,
 			"datasource_basic":                  testAccDetectorDataSource_basic,
 			"datasource_id":                     testAccDetectorDataSource_ID,
 		},
@@ -37,7 +36,7 @@ func TestAccGuardDuty_serial(t *testing.T) {
 		"Filter": {
 			acctest.CtBasic: testAccFilter_basic,
 			"update":        testAccFilter_update,
-			names.AttrTags:  testAccFilter_tags,
+			"tags":          testAccFilter_tags,
 			"disappears":    testAccFilter_disappears,
 		},
 		"FindingIDs": {
@@ -48,7 +47,7 @@ func TestAccGuardDuty_serial(t *testing.T) {
 		},
 		"IPSet": {
 			acctest.CtBasic: testAccIPSet_basic,
-			names.AttrTags:  testAccIPSet_tags,
+			"tags":          testAccIPSet_tags,
 		},
 		"OrganizationAdminAccount": {
 			acctest.CtBasic: testAccOrganizationAdminAccount_basic,
@@ -67,7 +66,7 @@ func TestAccGuardDuty_serial(t *testing.T) {
 		},
 		"ThreatIntelSet": {
 			acctest.CtBasic: testAccThreatIntelSet_basic,
-			names.AttrTags:  testAccThreatIntelSet_tags,
+			"tags":          testAccThreatIntelSet_tags,
 		},
 		"Member": {
 			acctest.CtBasic:      testAccMember_basic,

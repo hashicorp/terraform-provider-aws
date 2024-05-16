@@ -18,7 +18,7 @@ func TestAccRoute53Domains_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"RegisteredDomain": {
-			names.AttrTags:   testAccRegisteredDomain_tags,
+			"tags":           testAccRegisteredDomain_tags,
 			"autoRenew":      testAccRegisteredDomain_autoRenew,
 			"contacts":       testAccRegisteredDomain_contacts,
 			"contactPrivacy": testAccRegisteredDomain_contactPrivacy,

@@ -27,12 +27,12 @@ func TestAccIPAMResourceDiscovery_serial(t *testing.T) {
 			acctest.CtBasic: testAccIPAMResourceDiscovery_basic,
 			"modify":        testAccIPAMResourceDiscovery_modify,
 			"disappears":    testAccIPAMResourceDiscovery_disappears,
-			names.AttrTags:  testAccIPAMResourceDiscovery_tags,
+			"tags":          testAccIPAMResourceDiscovery_tags,
 		},
 		"ResourceDiscoveryAssociation": {
 			acctest.CtBasic: testAccIPAMResourceDiscoveryAssociation_basic,
 			"disappears":    testAccIPAMResourceDiscoveryAssociation_disappears,
-			names.AttrTags:  testAccIPAMResourceDiscoveryAssociation_tags,
+			"tags":          testAccIPAMResourceDiscoveryAssociation_tags,
 		},
 	}
 

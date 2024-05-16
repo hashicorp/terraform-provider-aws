@@ -18,7 +18,7 @@ func TestAccVPCDefaultVPCDHCPOptions_serial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:      testAccDefaultVPCDHCPOptions_basic,
-		names.AttrOwner:      testAccDefaultVPCDHCPOptions_owner,
+		"owner":              testAccDefaultVPCDHCPOptions_owner,
 		"v4.20.0_regression": testAccDefaultVPCDHCPOptions_v420Regression,
 	}
 

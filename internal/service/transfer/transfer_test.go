@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccTransfer_serial(t *testing.T) {
@@ -23,12 +22,12 @@ func TestAccTransfer_serial(t *testing.T) {
 		"Agreement": {
 			acctest.CtBasic: testAccAgreement_basic,
 			"disappears":    testAccAgreement_disappears,
-			names.AttrTags:  testAccAgreement_tags,
+			"tags":          testAccAgreement_tags,
 		},
 		"Server": {
 			acctest.CtBasic:                   testAccServer_basic,
 			"disappears":                      testAccServer_disappears,
-			names.AttrTags:                    testAccServer_tags,
+			"tags":                            testAccServer_tags,
 			"APIGateway":                      testAccServer_apiGateway,
 			"APIGatewayForceDestroy":          testAccServer_apiGateway_forceDestroy,
 			"AuthenticationLoginBanners":      testAccServer_authenticationLoginBanners,
@@ -73,7 +72,7 @@ func TestAccTransfer_serial(t *testing.T) {
 		"User": {
 			acctest.CtBasic:         testAccUser_basic,
 			"disappears":            testAccUser_disappears,
-			names.AttrTags:          testAccUser_tags,
+			"tags":                  testAccUser_tags,
 			"HomeDirectoryMappings": testAccUser_homeDirectoryMappings,
 			"ModifyWithOptions":     testAccUser_modifyWithOptions,
 			"Posix":                 testAccUser_posix,

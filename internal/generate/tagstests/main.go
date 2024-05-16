@@ -16,12 +16,14 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 	"text/template"
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
+	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
@@ -116,12 +118,14 @@ func main() {
 		}
 
 		if resource.GenerateConfig {
+			additionalTfVars := tfmaps.Keys(resource.AdditionalTfVars)
+			slices.Sort(additionalTfVars)
 			testDirPath := path.Join("testdata", resource.Name)
 
-			generateTestConfig(g, testDirPath, "tags", false, configTmplFile, configTmpl)
-			generateTestConfig(g, testDirPath, "tags", true, configTmplFile, configTmpl)
-			generateTestConfig(g, testDirPath, "tagsComputed1", false, configTmplFile, configTmpl)
-			generateTestConfig(g, testDirPath, "tagsComputed2", false, configTmplFile, configTmpl)
+			generateTestConfig(g, testDirPath, "tags", false, configTmplFile, configTmpl, additionalTfVars)
+			generateTestConfig(g, testDirPath, "tags", true, configTmplFile, configTmpl, additionalTfVars)
+			generateTestConfig(g, testDirPath, "tagsComputed1", false, configTmplFile, configTmpl, additionalTfVars)
+			generateTestConfig(g, testDirPath, "tagsComputed2", false, configTmplFile, configTmpl, additionalTfVars)
 		}
 	}
 
@@ -145,6 +149,7 @@ type ResourceDatum struct {
 	ExistsTypeName    string
 	FileName          string
 	Generator         string
+	ImportStateID     string
 	ImportIgnore      []string
 	Implementation    implementation
 	Serialize         bool
@@ -153,6 +158,8 @@ type ResourceDatum struct {
 	NoRemoveTags      bool
 	GoImports         []goImport
 	GenerateConfig    bool
+	InitCodeBlocks    []codeBlock
+	AdditionalTfVars  map[string]string
 }
 
 type goImport struct {
@@ -160,10 +167,15 @@ type goImport struct {
 	Alias string
 }
 
+type codeBlock struct {
+	Code string
+}
+
 type ConfigDatum struct {
-	Tags            string
-	WithDefaultTags bool
-	ComputedTag     bool
+	Tags             string
+	WithDefaultTags  bool
+	ComputedTag      bool
+	AdditionalTfVars []string
 }
 
 //go:embed test.go.gtpl
@@ -229,7 +241,8 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 	// Look first for tagging annotations.
 	d := ResourceDatum{
-		FileName: v.fileName,
+		FileName:         v.fileName,
+		AdditionalTfVars: make(map[string]string),
 	}
 	tagged := false
 	skip := false
@@ -297,6 +310,9 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						d.ImportIgnore[i] = names.ConstOrQuote(val)
 					}
 				}
+				if attr, ok := args.Keyword["importStateId"]; ok {
+					d.ImportStateID = attr
+				}
 				if attr, ok := args.Keyword["name"]; ok {
 					d.Name = strings.ReplaceAll(attr, " ", "")
 				}
@@ -346,6 +362,19 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						d.NoRemoveTags = b
 					}
 				}
+				if attr, ok := args.Keyword["tlsKey"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid skipEmptyTags value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else if b {
+						d.InitCodeBlocks = append(d.InitCodeBlocks, codeBlock{
+							Code: `privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+							certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, "example.com")`,
+						})
+						d.AdditionalTfVars["certificate_pem"] = "certificatePEM"
+						d.AdditionalTfVars["private_key_pem"] = "privateKeyPEM"
+					}
+				}
 			}
 		}
 	}
@@ -367,7 +396,7 @@ func (v *visitor) Visit(node ast.Node) ast.Visitor {
 	return v
 }
 
-func generateTestConfig(g *common.Generator, dirPath, test string, withDefaults bool, configTmplFile, configTmpl string) {
+func generateTestConfig(g *common.Generator, dirPath, test string, withDefaults bool, configTmplFile, configTmpl string, additionalTfVars []string) {
 	testName := test
 	if withDefaults {
 		testName += "_defaults"
@@ -391,9 +420,10 @@ func generateTestConfig(g *common.Generator, dirPath, test string, withDefaults 
 	}
 
 	configData := ConfigDatum{
-		Tags:            test,
-		WithDefaultTags: withDefaults,
-		ComputedTag:     (test == "tagsComputed"),
+		Tags:             test,
+		WithDefaultTags:  withDefaults,
+		ComputedTag:      (test == "tagsComputed"),
+		AdditionalTfVars: additionalTfVars,
 	}
 	if err := tf.WriteTemplateSet(tfTemplates, configData); err != nil {
 		g.Fatalf("error generating Terraform file %q: %s", mainPath, err)
