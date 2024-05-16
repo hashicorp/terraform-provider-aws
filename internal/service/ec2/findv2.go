@@ -1056,3 +1056,62 @@ func FindImageByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.
 
 	return output, nil
 }
+
+func FindImageAttribute(ctx context.Context, conn *ec2.Client, input *ec2.DescribeImageAttributeInput) (*ec2.DescribeImageAttributeOutput, error) {
+	output, err := conn.DescribeImageAttribute(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidAMIIDNotFound, errCodeInvalidAMIIDUnavailable) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func FindImageLaunchPermissionsByID(ctx context.Context, conn *ec2.Client, id string) ([]awstypes.LaunchPermission, error) {
+	input := &ec2.DescribeImageAttributeInput{
+		Attribute: awstypes.ImageAttributeNameLaunchPermission,
+		ImageId:   aws.String(id),
+	}
+
+	output, err := FindImageAttribute(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output.LaunchPermissions) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.LaunchPermissions, nil
+}
+
+func FindImageLaunchPermission(ctx context.Context, conn *ec2.Client, imageID, accountID, group, organizationARN, organizationalUnitARN string) (*awstypes.LaunchPermission, error) {
+	output, err := FindImageLaunchPermissionsByID(ctx, conn, imageID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range output {
+		if (accountID != "" && aws.ToString(v.UserId) == accountID) ||
+			(group != "" && string(v.Group) == group) ||
+			(organizationARN != "" && aws.ToString(v.OrganizationArn) == organizationARN) ||
+			(organizationalUnitARN != "" && aws.ToString(v.OrganizationalUnitArn) == organizationalUnitARN) {
+			return &v, nil
+		}
+	}
+
+	return nil, &retry.NotFoundError{}
+}
