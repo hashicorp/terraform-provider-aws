@@ -15,13 +15,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEC2SerialConsoleAccessDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -52,7 +53,7 @@ func testAccCheckSerialConsoleAccessDataSource(ctx context.Context, n string) re
 			return fmt.Errorf("Error reading serial console access toggle: %q", err)
 		}
 
-		attr, _ := strconv.ParseBool(rs.Primary.Attributes["enabled"])
+		attr, _ := strconv.ParseBool(rs.Primary.Attributes[names.AttrEnabled])
 
 		if attr != aws.BoolValue(actual.SerialConsoleAccessEnabled) {
 			return fmt.Errorf("Serial console access is not in expected state (%t)", aws.BoolValue(actual.SerialConsoleAccessEnabled))

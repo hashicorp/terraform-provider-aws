@@ -14,11 +14,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_emr_block_public_access_configuration")
-func ResourceBlockPublicAccessConfiguration() *schema.Resource {
+// @SDKResource("aws_emr_block_public_access_configuration", name="Block Public Access Configuration")
+func resourceBlockPublicAccessConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBlockPublicAccessConfigurationCreate,
 		ReadWithoutTimeout:   resourceBlockPublicAccessConfigurationRead,
@@ -94,7 +95,7 @@ func resourceBlockPublicAccessConfigurationRead(ctx context.Context, d *schema.R
 
 	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
-	out, err := FindBlockPublicAccessConfiguration(ctx, conn)
+	out, err := findBlockPublicAccessConfiguration(ctx, conn)
 
 	if err != nil {
 		return create.AppendDiagError(diags, names.EMR, create.ErrActionReading, ResNameBlockPublicAccessConfiguration, d.Id(), err)
@@ -126,6 +127,20 @@ func resourceBlockPublicAccessConfigurationDelete(ctx context.Context, d *schema
 	}
 
 	return diags
+}
+
+func findBlockPublicAccessConfiguration(ctx context.Context, conn *emr.EMR) (*emr.GetBlockPublicAccessConfigurationOutput, error) {
+	input := &emr.GetBlockPublicAccessConfigurationInput{}
+	output, err := conn.GetBlockPublicAccessConfigurationWithContext(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.BlockPublicAccessConfiguration == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
 func findDefaultBlockPublicAccessConfiguration() *emr.BlockPublicAccessConfiguration {

@@ -7,7 +7,8 @@ import (
 	"fmt"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/cognitoidentity"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentity/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func validIdentityPoolName(v interface{}, k string) (ws []string, errors []error) {
@@ -67,8 +68,8 @@ func validProviderDeveloperName(v interface{}, k string) (ws []string, errors []
 }
 
 func validRoleMappingsAmbiguousRoleResolutionAgainstType(v map[string]interface{}) (errors []error) {
-	t := v["type"].(string)
-	isRequired := t == cognitoidentity.RoleMappingTypeToken || t == cognitoidentity.RoleMappingTypeRules
+	t := v[names.AttrType].(string)
+	isRequired := t == string(awstypes.RoleMappingTypeToken) || t == string(awstypes.RoleMappingTypeRules)
 
 	if value, ok := v["ambiguous_role_resolution"]; (!ok || value == "") && isRequired {
 		errors = append(errors, fmt.Errorf(`Ambiguous Role Resolution must be defined when "type" equals "Token" or "Rules"`))
@@ -88,17 +89,17 @@ func validRoleMappingsRulesClaim(v interface{}, k string) (ws []string, errors [
 }
 
 func validRoleMappingsRulesConfiguration(v map[string]interface{}) (errors []error) {
-	t := v["type"].(string)
+	t := v[names.AttrType].(string)
 	valLength := 0
 	if value, ok := v["mapping_rule"]; ok {
 		valLength = len(value.([]interface{}))
 	}
 
-	if (valLength == 0) && t == cognitoidentity.RoleMappingTypeRules {
+	if (valLength == 0) && t == string(awstypes.RoleMappingTypeRules) {
 		errors = append(errors, fmt.Errorf("mapping_rule is required for Rules"))
 	}
 
-	if (valLength > 0) && t == cognitoidentity.RoleMappingTypeToken {
+	if (valLength > 0) && t == string(awstypes.RoleMappingTypeToken) {
 		errors = append(errors, fmt.Errorf("mapping_rule must not be set for Token based role mapping"))
 	}
 

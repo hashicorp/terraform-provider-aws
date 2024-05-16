@@ -145,40 +145,26 @@ class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
     new BatchJobDefinition(this, "test", {
-      eks_properties: [
-        {
-          pod_properties: [
-            {
-              containers: [
-                {
-                  command: ["sleep", "60"],
-                  image: "public.ecr.aws/amazonlinux/amazonlinux:1",
-                  resources: [
-                    {
-                      limits: [
-                        {
-                          cpu: "1",
-                          memory: "1024Mi",
-                        },
-                      ],
-                    },
-                  ],
-                },
-              ],
-              host_network: true,
-              metadata: [
-                {
-                  labels: [
-                    {
-                      environment: "test",
-                    },
-                  ],
-                },
-              ],
+      eksProperties: {
+        podProperties: {
+          containers: {
+            command: ["sleep", "60"],
+            image: "public.ecr.aws/amazonlinux/amazonlinux:1",
+            resources: {
+              limits: {
+                cpu: "1",
+                memory: "1024Mi",
+              },
             },
-          ],
+          },
+          hostNetwork: true,
+          metadata: {
+            labels: {
+              environment: "test",
+            },
+          },
         },
-      ],
+      },
       name: " tf_test_batch_job_definition_eks",
       type: "container",
     });
@@ -270,31 +256,29 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `containerProperties` - (Optional) A valid [container properties](http://docs.aws.amazon.com/batch/latest/APIReference/API_RegisterJobDefinition.html)
-    provided as a single valid JSON document. This parameter is only valid if the `type` parameter is `container`.
-* `nodeProperties` - (Optional) A valid [node properties](http://docs.aws.amazon.com/batch/latest/APIReference/API_RegisterJobDefinition.html)
-    provided as a single valid JSON document. This parameter is required if the `type` parameter is `multinode`.
-* `eks_properties` - (Optional) A valid [eks properties](#eks_properties). This parameter is only valid if the `type` parameter is `container`.
+* `containerProperties` - (Optional) A valid [container properties](http://docs.aws.amazon.com/batch/latest/APIReference/API_RegisterJobDefinition.html) provided as a single valid JSON document. This parameter is only valid if the `type` parameter is `container`.
+* `deregisterOnNewRevision` - (Optional) When updating a job definition a new revision is created. This parameter determines if the previous version is `deregistered` (`INACTIVE`) or left  `ACTIVE`. Defaults to `true`.
+* `nodeProperties` - (Optional) A valid [node properties](http://docs.aws.amazon.com/batch/latest/APIReference/API_RegisterJobDefinition.html) provided as a single valid JSON document. This parameter is required if the `type` parameter is `multinode`.
+* `eksProperties` - (Optional) A valid [eks properties](#eks_properties). This parameter is only valid if the `type` parameter is `container`.
 * `parameters` - (Optional) Specifies the parameter substitution placeholders to set in the job definition.
 * `platformCapabilities` - (Optional) The platform capabilities required by the job definition. If no value is specified, it defaults to `EC2`. To run the job on Fargate resources, specify `FARGATE`.
 * `propagateTags` - (Optional) Specifies whether to propagate the tags from the job definition to the corresponding Amazon ECS task. Default is `false`.
-* `retryStrategy` - (Optional) Specifies the retry strategy to use for failed jobs that are submitted with this job definition.
-    Maximum number of `retryStrategy` is `1`.  Defined below.
-* `scheduling_priority` - (Optional) The scheduling priority of the job definition. This only affects jobs in job queues with a fair share policy. Jobs with a higher scheduling priority are scheduled before jobs with a lower scheduling priority. Allowed values `0` through `9999`.
+* `retryStrategy` - (Optional) Specifies the retry strategy to use for failed jobs that are submitted with this job definition. Maximum number of `retryStrategy` is `1`.  Defined below.
+* `schedulingPriority` - (Optional) The scheduling priority of the job definition. This only affects jobs in job queues with a fair share policy. Jobs with a higher scheduling priority are scheduled before jobs with a lower scheduling priority. Allowed values `0` through `9999`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `timeout` - (Optional) Specifies the timeout for jobs so that if a job runs longer, AWS Batch terminates the job. Maximum number of `timeout` is `1`. Defined below.
 
-### `eks_properties`
+### `eksProperties`
 
-* `pod_properties` - The properties for the Kubernetes pod resources of a job. See [`pod_properties`](#pod_properties) below.
+* `podProperties` - The properties for the Kubernetes pod resources of a job. See [`podProperties`](#pod_properties) below.
 
-### `pod_properties`
+### `podProperties`
 
 * `containers` - The properties of the container that's used on the Amazon EKS pod. See [containers](#containers) below.
-* `dns_policy` - (Optional) The DNS policy for the pod. The default value is `ClusterFirst`. If the `host_network` argument is not specified, the default is `ClusterFirstWithHostNet`. `ClusterFirst` indicates that any DNS query that does not match the configured cluster domain suffix is forwarded to the upstream nameserver inherited from the node. For more information, see Pod's DNS policy in the Kubernetes documentation.
-* `host_network` - (Optional) Indicates if the pod uses the hosts' network IP address. The default value is `true`. Setting this to `false` enables the Kubernetes pod networking model. Most AWS Batch workloads are egress-only and don't require the overhead of IP allocation for each pod for incoming connections.
+* `dnsPolicy` - (Optional) The DNS policy for the pod. The default value is `ClusterFirst`. If the `hostNetwork` argument is not specified, the default is `ClusterFirstWithHostNet`. `ClusterFirst` indicates that any DNS query that does not match the configured cluster domain suffix is forwarded to the upstream nameserver inherited from the node. For more information, see Pod's DNS policy in the Kubernetes documentation.
+* `hostNetwork` - (Optional) Indicates if the pod uses the hosts' network IP address. The default value is `true`. Setting this to `false` enables the Kubernetes pod networking model. Most AWS Batch workloads are egress-only and don't require the overhead of IP allocation for each pod for incoming connections.
 * `metadata` - (Optional) Metadata about the Kubernetes pod.
-* `service_account_name` - (Optional) The name of the service account that's used to run the pod.
+* `serviceAccountName` - (Optional) The name of the service account that's used to run the pod.
 * `volumes` - (Optional) Specifies the volumes for a job definition that uses Amazon EKS resources. AWS Batch supports [emptyDir](#eks_empty_dir), [hostPath](#eks_host_path), and [secret](#eks_secret) volume types.
 
 ### `containers`
@@ -303,11 +287,11 @@ The following arguments are optional:
 * `args` - An array of arguments to the entrypoint. If this isn't specified, the CMD of the container image is used. This corresponds to the args member in the Entrypoint portion of the Pod in Kubernetes. Environment variable references are expanded using the container's environment.
 * `command` - The entrypoint for the container. This isn't run within a shell. If this isn't specified, the ENTRYPOINT of the container image is used. Environment variable references are expanded using the container's environment.
 * `env` - The environment variables to pass to a container. See [EKS Environment](#eks_environment) below.
-* `image_pull_policy` - The image pull policy for the container. Supported values are `Always`, `IfNotPresent`, and `Never`.
+* `imagePullPolicy` - The image pull policy for the container. Supported values are `Always`, `IfNotPresent`, and `Never`.
 * `name` - The name of the container. If the name isn't specified, the default name "Default" is used. Each container in a pod must have a unique name.
 * `resources` - The type and amount of resources to assign to a container. The supported resources include `memory`, `cpu`, and `nvidia.com/gpu`.
-* `security_context` - The security context for a job.
-* `volume_mounts` - The volume mounts for the container.
+* `securityContext` - The security context for a job.
+* `volumeMounts` - The volume mounts for the container.
 
 ### `eks_environment`
 
@@ -317,7 +301,7 @@ The following arguments are optional:
 ### `eks_empty_dir`
 
 * `medium` - (Optional) The medium to store the volume. The default value is an empty string, which uses the storage of the node.
-* `size_limit` - The maximum size of the volume. By default, there's no maximum size defined.
+* `sizeLimit` - The maximum size of the volume. By default, there's no maximum size defined.
 
 ### `eks_host_path`
 
@@ -335,7 +319,7 @@ The following arguments are optional:
 
 #### `evaluateOnExit`
 
-* `action` - (Required) Specifies the action to take if all of the specified conditions are met. The values are not case sensitive. Valid values: `RETRY`, `EXIT`.
+* `action` - (Required) Specifies the action to take if all of the specified conditions are met. The values are not case sensitive. Valid values: `retry`, `exit`.
 * `onExitCode` - (Optional) A glob pattern to match against the decimal representation of the exit code returned for a job.
 * `onReason` - (Optional) A glob pattern to match against the reason returned for a job.
 * `onStatusReason` - (Optional) A glob pattern to match against the status reason returned for a job.
@@ -349,7 +333,7 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name of the job definition, includes revision (`:#`).
-* `arn_prefix` - The ARN without the revision number.
+* `arnPrefix` - The ARN without the revision number.
 * `revision` - The revision of the job definition.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
@@ -361,9 +345,19 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { BatchJobDefinition } from "./.gen/providers/aws/batch-job-definition";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    BatchJobDefinition.generateConfigForImport(
+      this,
+      "test",
+      "arn:aws:batch:us-east-1:123456789012:job-definition/sample"
+    );
   }
 }
 
@@ -375,4 +369,4 @@ Using `terraform import`, import Batch Job Definition using the `arn`. For examp
 % terraform import aws_batch_job_definition.test arn:aws:batch:us-east-1:123456789012:job-definition/sample
 ```
 
-<!-- cache-key: cdktf-0.20.0 input-d04d679249d07878059f9a3f9cce22a396419b2a09d3b75a5ac88f8fd3961fb1 -->
+<!-- cache-key: cdktf-0.20.1 input-a601dba3c095da075f0b1e61565a10ccc796a5a15ab0385930fcb09cf34abb8c -->

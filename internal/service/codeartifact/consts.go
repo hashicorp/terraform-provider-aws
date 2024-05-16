@@ -3,9 +3,10 @@
 
 package codeartifact
 
+import (
+	"time"
+)
+
 const (
-	ResNameDomain                      = "Domain"
-	ResNameDomainPermissionsPolicy     = "Domain Permissions Policy"
-	ResNameRepository                  = "Repository"
-	ResNameRepositoryPermissionsPolicy = "Repository Permissions Policy"
+	propagationTimeout = 2 * time.Minute
 )

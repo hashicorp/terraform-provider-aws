@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfgamelift "github.com/hashicorp/terraform-provider-aws/internal/service/gamelift"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestDiffPortSettings(t *testing.T) {
@@ -32,18 +33,18 @@ func TestDiffPortSettings(t *testing.T) {
 		{ // No change
 			Old: []interface{}{
 				map[string]interface{}{
-					"from_port": 8443,
-					"ip_range":  "192.168.0.0/24",
-					"protocol":  "TCP",
-					"to_port":   8443,
+					"from_port":        8443,
+					"ip_range":         "192.168.0.0/24",
+					names.AttrProtocol: "TCP",
+					"to_port":          8443,
 				},
 			},
 			New: []interface{}{
 				map[string]interface{}{
-					"from_port": 8443,
-					"ip_range":  "192.168.0.0/24",
-					"protocol":  "TCP",
-					"to_port":   8443,
+					"from_port":        8443,
+					"ip_range":         "192.168.0.0/24",
+					names.AttrProtocol: "TCP",
+					"to_port":          8443,
 				},
 			},
 			ExpectedAuths: []*gamelift.IpPermission{},
@@ -52,24 +53,24 @@ func TestDiffPortSettings(t *testing.T) {
 		{ // Addition
 			Old: []interface{}{
 				map[string]interface{}{
-					"from_port": 8443,
-					"ip_range":  "192.168.0.0/24",
-					"protocol":  "TCP",
-					"to_port":   8443,
+					"from_port":        8443,
+					"ip_range":         "192.168.0.0/24",
+					names.AttrProtocol: "TCP",
+					"to_port":          8443,
 				},
 			},
 			New: []interface{}{
 				map[string]interface{}{
-					"from_port": 8443,
-					"ip_range":  "192.168.0.0/24",
-					"protocol":  "TCP",
-					"to_port":   8443,
+					"from_port":        8443,
+					"ip_range":         "192.168.0.0/24",
+					names.AttrProtocol: "TCP",
+					"to_port":          8443,
 				},
 				map[string]interface{}{
-					"from_port": 8888,
-					"ip_range":  "192.168.0.0/24",
-					"protocol":  "TCP",
-					"to_port":   8888,
+					"from_port":        8888,
+					"ip_range":         "192.168.0.0/24",
+					names.AttrProtocol: "TCP",
+					"to_port":          8888,
 				},
 			},
 			ExpectedAuths: []*gamelift.IpPermission{
@@ -85,10 +86,10 @@ func TestDiffPortSettings(t *testing.T) {
 		{ // Removal
 			Old: []interface{}{
 				map[string]interface{}{
-					"from_port": 8443,
-					"ip_range":  "192.168.0.0/24",
-					"protocol":  "TCP",
-					"to_port":   8443,
+					"from_port":        8443,
+					"ip_range":         "192.168.0.0/24",
+					names.AttrProtocol: "TCP",
+					"to_port":          8443,
 				},
 			},
 			New:           []interface{}{},
@@ -105,18 +106,18 @@ func TestDiffPortSettings(t *testing.T) {
 		{ // Removal + Addition
 			Old: []interface{}{
 				map[string]interface{}{
-					"from_port": 8443,
-					"ip_range":  "192.168.0.0/24",
-					"protocol":  "TCP",
-					"to_port":   8443,
+					"from_port":        8443,
+					"ip_range":         "192.168.0.0/24",
+					names.AttrProtocol: "TCP",
+					"to_port":          8443,
 				},
 			},
 			New: []interface{}{
 				map[string]interface{}{
-					"from_port": 8443,
-					"ip_range":  "192.168.0.0/24",
-					"protocol":  "UDP",
-					"to_port":   8443,
+					"from_port":        8443,
+					"ip_range":         "192.168.0.0/24",
+					names.AttrProtocol: "UDP",
+					"to_port":          8443,
 				},
 			},
 			ExpectedAuths: []*gamelift.IpPermission{
@@ -192,7 +193,7 @@ func TestAccGameLiftFleet_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -200,13 +201,13 @@ func TestAccGameLiftFleet_basic(t *testing.T) {
 				Config: testAccFleetConfig_basic(rName, launchPath, params, bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrPair(resourceName, "build_id", "aws_gamelift_build.test", "id"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexache.MustCompile(`fleet/fleet-.+`)),
+					resource.TestCheckResourceAttrPair(resourceName, "build_id", "aws_gamelift_build.test", names.AttrID),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`fleet/fleet-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "certificate_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_configuration.0.certificate_type", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "ec2_instance_type", "c4.large"),
 					resource.TestCheckResourceAttr(resourceName, "log_paths.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "metric_groups.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "metric_groups.0", "default"),
 					resource.TestCheckResourceAttr(resourceName, "new_game_session_protection_policy", "NoProtection"),
@@ -228,11 +229,11 @@ func TestAccGameLiftFleet_basic(t *testing.T) {
 				Config: testAccFleetConfig_basicUpdated(rNameUpdated, launchPath, params, bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrPair(resourceName, "build_id", "aws_gamelift_build.test", "id"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexache.MustCompile(`fleet/fleet-.+`)), resource.TestCheckResourceAttr(resourceName, "ec2_instance_type", "c4.large"),
+					resource.TestCheckResourceAttrPair(resourceName, "build_id", "aws_gamelift_build.test", names.AttrID),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`fleet/fleet-.+`)), resource.TestCheckResourceAttr(resourceName, "ec2_instance_type", "c4.large"),
 					resource.TestCheckResourceAttr(resourceName, "log_paths.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
-					resource.TestCheckResourceAttr(resourceName, "description", rNameUpdated),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "metric_groups.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "metric_groups.0", "UpdatedGroup"),
 					resource.TestCheckResourceAttr(resourceName, "new_game_session_protection_policy", "FullProtection"),
@@ -286,7 +287,7 @@ func TestAccGameLiftFleet_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -367,7 +368,7 @@ func TestAccGameLiftFleet_allFields(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -375,30 +376,30 @@ func TestAccGameLiftFleet_allFields(t *testing.T) {
 				Config: testAccFleetConfig_allFields(rName, desc, launchPath, params[0], bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrPair(resourceName, "build_id", "aws_gamelift_build.test", "id"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexache.MustCompile(`fleet/fleet-.+`)),
+					resource.TestCheckResourceAttrPair(resourceName, "build_id", "aws_gamelift_build.test", names.AttrID),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`fleet/fleet-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "ec2_instance_type", "c4.large"),
 					resource.TestCheckResourceAttr(resourceName, "fleet_type", "ON_DEMAND"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", desc),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, desc),
 					resource.TestCheckResourceAttr(resourceName, "ec2_inbound_permission.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ec2_inbound_permission.*", map[string]string{
-						"from_port": "8080",
-						"ip_range":  "8.8.8.8/32",
-						"protocol":  "TCP",
-						"to_port":   "8080",
+						"from_port":        "8080",
+						"ip_range":         "8.8.8.8/32",
+						names.AttrProtocol: "TCP",
+						"to_port":          "8080",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ec2_inbound_permission.*", map[string]string{
-						"from_port": "8443",
-						"ip_range":  "8.8.0.0/16",
-						"protocol":  "TCP",
-						"to_port":   "8443",
+						"from_port":        "8443",
+						"ip_range":         "8.8.0.0/16",
+						names.AttrProtocol: "TCP",
+						"to_port":          "8443",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ec2_inbound_permission.*", map[string]string{
-						"from_port": "60000",
-						"ip_range":  "8.8.8.8/32",
-						"protocol":  "UDP",
-						"to_port":   "60000",
+						"from_port":        "60000",
+						"ip_range":         "8.8.8.8/32",
+						names.AttrProtocol: "UDP",
+						"to_port":          "60000",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "log_paths.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "metric_groups.#", "1"),
@@ -427,29 +428,29 @@ func TestAccGameLiftFleet_allFields(t *testing.T) {
 				Config: testAccFleetConfig_allFieldsUpdated(rNameUpdated, desc, launchPath, params[1], bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrPair(resourceName, "build_id", "aws_gamelift_build.test", "id"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexache.MustCompile(`fleet/fleet-.+`)), resource.TestCheckResourceAttr(resourceName, "ec2_instance_type", "c4.large"),
+					resource.TestCheckResourceAttrPair(resourceName, "build_id", "aws_gamelift_build.test", names.AttrID),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`fleet/fleet-.+`)), resource.TestCheckResourceAttr(resourceName, "ec2_instance_type", "c4.large"),
 					resource.TestCheckResourceAttr(resourceName, "fleet_type", "ON_DEMAND"),
-					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
-					resource.TestCheckResourceAttr(resourceName, "description", desc),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, desc),
 					resource.TestCheckResourceAttr(resourceName, "ec2_inbound_permission.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ec2_inbound_permission.*", map[string]string{
-						"from_port": "8888",
-						"ip_range":  "8.8.8.8/32",
-						"protocol":  "TCP",
-						"to_port":   "8888",
+						"from_port":        "8888",
+						"ip_range":         "8.8.8.8/32",
+						names.AttrProtocol: "TCP",
+						"to_port":          "8888",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ec2_inbound_permission.*", map[string]string{
-						"from_port": "8443",
-						"ip_range":  "8.4.0.0/16",
-						"protocol":  "TCP",
-						"to_port":   "8443",
+						"from_port":        "8443",
+						"ip_range":         "8.4.0.0/16",
+						names.AttrProtocol: "TCP",
+						"to_port":          "8443",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ec2_inbound_permission.*", map[string]string{
-						"from_port": "60000",
-						"ip_range":  "8.8.8.8/32",
-						"protocol":  "UDP",
-						"to_port":   "60000",
+						"from_port":        "60000",
+						"ip_range":         "8.8.8.8/32",
+						names.AttrProtocol: "UDP",
+						"to_port":          "60000",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "log_paths.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "metric_groups.#", "1"),
@@ -508,7 +509,7 @@ func TestAccGameLiftFleet_cert(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -548,7 +549,7 @@ func TestAccGameLiftFleet_script(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -556,13 +557,13 @@ func TestAccGameLiftFleet_script(t *testing.T) {
 				Config: testAccFleetConfig_script(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrPair(resourceName, "script_id", "aws_gamelift_script.test", "id"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexache.MustCompile(`fleet/fleet-.+`)),
+					resource.TestCheckResourceAttrPair(resourceName, "script_id", "aws_gamelift_script.test", names.AttrID),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`fleet/fleet-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "certificate_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_configuration.0.certificate_type", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "ec2_instance_type", "t2.micro"),
 					resource.TestCheckResourceAttr(resourceName, "log_paths.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "metric_groups.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "metric_groups.0", "default"),
 					resource.TestCheckResourceAttr(resourceName, "new_game_session_protection_policy", "NoProtection"),
@@ -620,7 +621,7 @@ func TestAccGameLiftFleet_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{

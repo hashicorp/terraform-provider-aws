@@ -15,7 +15,7 @@ import (
 func Float64ToFramework(ctx context.Context, v *float64) types.Float64 {
 	var output types.Float64
 
-	panicOnError(Flatten(ctx, v, &output))
+	must(Flatten(ctx, v, &output))
 
 	return output
 }
@@ -31,7 +31,7 @@ func Float64ToFrameworkLegacy(_ context.Context, v *float64) types.Float64 {
 func Float32ToFramework(ctx context.Context, v *float32) types.Float64 {
 	var output types.Float64
 
-	panicOnError(Flatten(ctx, v, &output))
+	must(Flatten(ctx, v, &output))
 
 	return output
 }

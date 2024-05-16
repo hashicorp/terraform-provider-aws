@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ec2_transit_gateway_route_table_routes")
@@ -21,7 +22,7 @@ func DataSourceTransitGatewayRouteTableRoutes() *schema.Resource {
 		ReadWithoutTimeout: dataSourceTransitGatewayRouteTableRoutesRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter": CustomRequiredFiltersSchema(),
+			names.AttrFilter: customRequiredFiltersSchema(),
 			"routes": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -35,7 +36,7 @@ func DataSourceTransitGatewayRouteTableRoutes() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"state": {
+						names.AttrState: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -43,7 +44,7 @@ func DataSourceTransitGatewayRouteTableRoutes() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -65,7 +66,7 @@ func dataSourceTransitGatewayRouteTableRoutesRead(ctx context.Context, d *schema
 
 	tgwRouteTableID := d.Get("transit_gateway_route_table_id").(string)
 	input := &ec2.SearchTransitGatewayRoutesInput{
-		Filters:                    BuildCustomFilterList(d.Get("filter").(*schema.Set)),
+		Filters:                    newCustomFilterList(d.Get(names.AttrFilter).(*schema.Set)),
 		TransitGatewayRouteTableId: aws.String(tgwRouteTableID),
 	}
 
@@ -82,9 +83,9 @@ func dataSourceTransitGatewayRouteTableRoutesRead(ctx context.Context, d *schema
 		routes = append(routes, map[string]interface{}{
 			"destination_cidr_block": aws.StringValue(route.DestinationCidrBlock),
 			"prefix_list_id":         aws.StringValue(route.PrefixListId),
-			"state":                  aws.StringValue(route.State),
+			names.AttrState:          aws.StringValue(route.State),
 			"transit_gateway_route_table_announcement_id": aws.StringValue(route.TransitGatewayRouteTableAnnouncementId),
-			"type": aws.StringValue(route.Type),
+			names.AttrType: aws.StringValue(route.Type),
 		})
 	}
 

@@ -9,8 +9,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/mwaa"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/mwaa/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -18,17 +18,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfmwaa "github.com/hashicorp/terraform-provider-aws/internal/service/mwaa"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccMWAAEnvironment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var environment mwaa.Environment
+	var environment awstypes.Environment
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mwaa_environment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, mwaa.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MWAAServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -37,11 +38,13 @@ func TestAccMWAAEnvironment_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
 					resource.TestCheckResourceAttrSet(resourceName, "airflow_version"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "airflow", "environment/"+rName),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "airflow", "environment/"+rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
+					resource.TestCheckResourceAttrSet(resourceName, "database_vpc_endpoint_service"),
+					resource.TestCheckResourceAttrSet(resourceName, "webserver_vpc_endpoint_service"),
 					resource.TestCheckResourceAttr(resourceName, "dag_s3_path", "dags/"),
 					resource.TestCheckResourceAttr(resourceName, "environment_class", "mw1.small"),
-					acctest.CheckResourceAttrGlobalARN(resourceName, "execution_role_arn", "iam", "role/service-role/"+rName),
+					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrExecutionRoleARN, "iam", "role/service-role/"+rName),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.dag_processing_logs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.dag_processing_logs.0.enabled", "false"),
@@ -61,15 +64,15 @@ func TestAccMWAAEnvironment_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.worker_logs.0.log_level", "INFO"),
 					resource.TestCheckResourceAttr(resourceName, "max_workers", "10"),
 					resource.TestCheckResourceAttr(resourceName, "min_workers", "1"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "schedulers", "2"),
 					resource.TestCheckResourceAttrSet(resourceName, "service_role_arn"),
 					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "source_bucket_arn", "s3", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "status"),
-					resource.TestCheckResourceAttr(resourceName, "webserver_access_mode", mwaa.WebserverAccessModePrivateOnly),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
+					resource.TestCheckResourceAttr(resourceName, "webserver_access_mode", string(awstypes.WebserverAccessModePrivateOnly)),
 					resource.TestCheckResourceAttrSet(resourceName, "webserver_url"),
 					resource.TestCheckResourceAttrSet(resourceName, "weekly_maintenance_window_start"),
 				),
@@ -85,13 +88,13 @@ func TestAccMWAAEnvironment_basic(t *testing.T) {
 
 func TestAccMWAAEnvironment_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var environment mwaa.Environment
+	var environment awstypes.Environment
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mwaa_environment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, mwaa.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MWAAServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -109,13 +112,13 @@ func TestAccMWAAEnvironment_disappears(t *testing.T) {
 
 func TestAccMWAAEnvironment_airflowOptions(t *testing.T) {
 	ctx := acctest.Context(t)
-	var environment mwaa.Environment
+	var environment awstypes.Environment
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mwaa_environment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, mwaa.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MWAAServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -155,18 +158,18 @@ func TestAccMWAAEnvironment_airflowOptions(t *testing.T) {
 
 func TestAccMWAAEnvironment_log(t *testing.T) {
 	ctx := acctest.Context(t)
-	var environment1, environment2 mwaa.Environment
+	var environment1, environment2 awstypes.Environment
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mwaa_environment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, mwaa.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MWAAServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentConfig_logging(rName, "true", mwaa.LoggingLevelCritical),
+				Config: testAccEnvironmentConfig_logging(rName, "true", string(awstypes.LoggingLevelCritical)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment1),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
@@ -174,27 +177,27 @@ func TestAccMWAAEnvironment_log(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.dag_processing_logs.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "logging_configuration.0.dag_processing_logs.0.cloud_watch_log_group_arn"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.dag_processing_logs.0.enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.dag_processing_logs.0.log_level", mwaa.LoggingLevelCritical),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.dag_processing_logs.0.log_level", string(awstypes.LoggingLevelCritical)),
 
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.scheduler_logs.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "logging_configuration.0.scheduler_logs.0.cloud_watch_log_group_arn"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.scheduler_logs.0.enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.scheduler_logs.0.log_level", mwaa.LoggingLevelCritical),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.scheduler_logs.0.log_level", string(awstypes.LoggingLevelCritical)),
 
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.task_logs.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "logging_configuration.0.task_logs.0.cloud_watch_log_group_arn"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.task_logs.0.enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.task_logs.0.log_level", mwaa.LoggingLevelCritical),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.task_logs.0.log_level", string(awstypes.LoggingLevelCritical)),
 
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.webserver_logs.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "logging_configuration.0.webserver_logs.0.cloud_watch_log_group_arn"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.webserver_logs.0.enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.webserver_logs.0.log_level", mwaa.LoggingLevelCritical),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.webserver_logs.0.log_level", string(awstypes.LoggingLevelCritical)),
 
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.worker_logs.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "logging_configuration.0.worker_logs.0.cloud_watch_log_group_arn"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.worker_logs.0.enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.worker_logs.0.log_level", mwaa.LoggingLevelCritical),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.worker_logs.0.log_level", string(awstypes.LoggingLevelCritical)),
 				),
 			},
 			{
@@ -203,7 +206,7 @@ func TestAccMWAAEnvironment_log(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEnvironmentConfig_logging(rName, "false", mwaa.LoggingLevelInfo),
+				Config: testAccEnvironmentConfig_logging(rName, "false", string(awstypes.LoggingLevelInfo)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment2),
 					testAccCheckEnvironmentNotRecreated(&environment2, &environment1),
@@ -212,27 +215,27 @@ func TestAccMWAAEnvironment_log(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.dag_processing_logs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.dag_processing_logs.0.cloud_watch_log_group_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.dag_processing_logs.0.enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.dag_processing_logs.0.log_level", mwaa.LoggingLevelInfo),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.dag_processing_logs.0.log_level", string(awstypes.LoggingLevelInfo)),
 
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.scheduler_logs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.scheduler_logs.0.cloud_watch_log_group_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.scheduler_logs.0.enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.scheduler_logs.0.log_level", mwaa.LoggingLevelInfo),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.scheduler_logs.0.log_level", string(awstypes.LoggingLevelInfo)),
 
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.task_logs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.task_logs.0.cloud_watch_log_group_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.task_logs.0.enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.task_logs.0.log_level", mwaa.LoggingLevelInfo),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.task_logs.0.log_level", string(awstypes.LoggingLevelInfo)),
 
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.webserver_logs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.webserver_logs.0.cloud_watch_log_group_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.webserver_logs.0.enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.webserver_logs.0.log_level", mwaa.LoggingLevelInfo),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.webserver_logs.0.log_level", string(awstypes.LoggingLevelInfo)),
 
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.worker_logs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.worker_logs.0.cloud_watch_log_group_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.worker_logs.0.enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.worker_logs.0.log_level", mwaa.LoggingLevelInfo),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.worker_logs.0.log_level", string(awstypes.LoggingLevelInfo)),
 				),
 			},
 		},
@@ -241,13 +244,13 @@ func TestAccMWAAEnvironment_log(t *testing.T) {
 
 func TestAccMWAAEnvironment_full(t *testing.T) {
 	ctx := acctest.Context(t)
-	var environment mwaa.Environment
+	var environment awstypes.Environment
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mwaa_environment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, mwaa.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MWAAServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -259,11 +262,11 @@ func TestAccMWAAEnvironment_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "airflow_configuration_options.core.default_task_retries", "1"),
 					resource.TestCheckResourceAttr(resourceName, "airflow_configuration_options.core.parallelism", "16"),
 					resource.TestCheckResourceAttr(resourceName, "airflow_version", "2.4.3"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "airflow", "environment/"+rName),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "airflow", "environment/"+rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttr(resourceName, "dag_s3_path", "dags/"),
 					resource.TestCheckResourceAttr(resourceName, "environment_class", "mw1.medium"),
-					acctest.CheckResourceAttrGlobalARN(resourceName, "execution_role_arn", "iam", "role/service-role/"+rName),
+					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrExecutionRoleARN, "iam", "role/service-role/"+rName),
 					resource.TestCheckResourceAttrSet(resourceName, "kms_key"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.dag_processing_logs.#", "1"),
@@ -288,7 +291,7 @@ func TestAccMWAAEnvironment_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.worker_logs.0.log_level", "WARNING"),
 					resource.TestCheckResourceAttr(resourceName, "max_workers", "20"),
 					resource.TestCheckResourceAttr(resourceName, "min_workers", "15"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.subnet_ids.#", "2"),
@@ -298,8 +301,8 @@ func TestAccMWAAEnvironment_full(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "service_role_arn"),
 					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "source_bucket_arn", "s3", rName),
 					resource.TestCheckResourceAttr(resourceName, "startup_script_s3_path", "startup.sh"),
-					resource.TestCheckResourceAttrSet(resourceName, "status"),
-					resource.TestCheckResourceAttr(resourceName, "webserver_access_mode", mwaa.WebserverAccessModePublicOnly),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
+					resource.TestCheckResourceAttr(resourceName, "webserver_access_mode", string(awstypes.WebserverAccessModePublicOnly)),
 					resource.TestCheckResourceAttrSet(resourceName, "webserver_url"),
 					resource.TestCheckResourceAttr(resourceName, "weekly_maintenance_window_start", "SAT:03:00"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
@@ -317,14 +320,14 @@ func TestAccMWAAEnvironment_full(t *testing.T) {
 
 func TestAccMWAAEnvironment_pluginsS3ObjectVersion(t *testing.T) {
 	ctx := acctest.Context(t)
-	var environment1, environment2 mwaa.Environment
+	var environment1, environment2 awstypes.Environment
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mwaa_environment.test"
 	s3ObjectResourceName := "aws_s3_object.plugins"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, mwaa.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MWAAServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -358,14 +361,18 @@ func TestAccMWAAEnvironment_pluginsS3ObjectVersion(t *testing.T) {
 }
 
 func TestAccMWAAEnvironment_updateAirflowVersionMinor(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	ctx := acctest.Context(t)
-	var environment1, environment2 mwaa.Environment
+	var environment1, environment2 awstypes.Environment
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mwaa_environment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, mwaa.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MWAAServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -393,7 +400,7 @@ func TestAccMWAAEnvironment_updateAirflowVersionMinor(t *testing.T) {
 	})
 }
 
-func testAccCheckEnvironmentExists(ctx context.Context, n string, v *mwaa.Environment) resource.TestCheckFunc {
+func testAccCheckEnvironmentExists(ctx context.Context, n string, v *awstypes.Environment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -404,7 +411,7 @@ func testAccCheckEnvironmentExists(ctx context.Context, n string, v *mwaa.Enviro
 			return fmt.Errorf("No MWAA Environment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MWAAConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MWAAClient(ctx)
 
 		output, err := tfmwaa.FindEnvironmentByName(ctx, conn, rs.Primary.ID)
 
@@ -420,7 +427,7 @@ func testAccCheckEnvironmentExists(ctx context.Context, n string, v *mwaa.Enviro
 
 func testAccCheckEnvironmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MWAAConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MWAAClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_mwaa_environment" {
@@ -444,9 +451,9 @@ func testAccCheckEnvironmentDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckEnvironmentNotRecreated(i, j *mwaa.Environment) resource.TestCheckFunc {
+func testAccCheckEnvironmentNotRecreated(i, j *awstypes.Environment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if !i.CreatedAt.Equal(aws.TimeValue(j.CreatedAt)) {
+		if !i.CreatedAt.Equal(aws.ToTime(j.CreatedAt)) {
 			return errors.New("MWAA Environment was recreated")
 		}
 
@@ -585,7 +592,8 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
+  bucket        = %[1]q
+  force_destroy = true
 }
 
 resource "aws_s3_bucket_versioning" "test" {

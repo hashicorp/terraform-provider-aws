@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -36,15 +37,15 @@ func ResourceNetworkInsightsPath() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"destination_arn": {
+			names.AttrDestinationARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"destination": {
+			names.AttrDestination: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
@@ -60,13 +61,13 @@ func ResourceNetworkInsightsPath() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"protocol": {
+			names.AttrProtocol: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(ec2.Protocol_Values(), false),
 			},
-			"source": {
+			names.AttrSource: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
@@ -95,9 +96,10 @@ func resourceNetworkInsightsPathCreate(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateNetworkInsightsPathInput{
-		Destination:       aws.String(d.Get("destination").(string)),
-		Protocol:          aws.String(d.Get("protocol").(string)),
-		Source:            aws.String(d.Get("source").(string)),
+		ClientToken:       aws.String(id.UniqueId()),
+		Destination:       aws.String(d.Get(names.AttrDestination).(string)),
+		Protocol:          aws.String(d.Get(names.AttrProtocol).(string)),
+		Source:            aws.String(d.Get(names.AttrSource).(string)),
 		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeNetworkInsightsPath),
 	}
 
@@ -141,13 +143,13 @@ func resourceNetworkInsightsPathRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Network Insights Path (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", nip.NetworkInsightsPathArn)
-	d.Set("destination", nip.Destination)
-	d.Set("destination_arn", nip.DestinationArn)
+	d.Set(names.AttrARN, nip.NetworkInsightsPathArn)
+	d.Set(names.AttrDestination, nip.Destination)
+	d.Set(names.AttrDestinationARN, nip.DestinationArn)
 	d.Set("destination_ip", nip.DestinationIp)
 	d.Set("destination_port", nip.DestinationPort)
-	d.Set("protocol", nip.Protocol)
-	d.Set("source", nip.Source)
+	d.Set(names.AttrProtocol, nip.Protocol)
+	d.Set(names.AttrSource, nip.Source)
 	d.Set("source_arn", nip.SourceArn)
 	d.Set("source_ip", nip.SourceIp)
 

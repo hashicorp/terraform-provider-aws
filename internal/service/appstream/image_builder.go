@@ -45,7 +45,7 @@ func ResourceImageBuilder() *schema.Resource {
 				MaxItems: 4,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"endpoint_type": {
+						names.AttrEndpointType: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(appstream.AccessEndpointType_Values(), false),
@@ -65,7 +65,7 @@ func ResourceImageBuilder() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -73,14 +73,14 @@ func ResourceImageBuilder() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
 			},
-			"display_name": {
+			names.AttrDisplayName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -134,23 +134,23 @@ func ResourceImageBuilder() *schema.Resource {
 				ForceNew:     true,
 				ExactlyOneOf: []string{"image_name", "image_arn"},
 			},
-			"instance_type": {
+			names.AttrInstanceType: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_config": {
+			names.AttrVPCConfig: {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
@@ -158,13 +158,13 @@ func ResourceImageBuilder() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"security_group_ids": {
+						names.AttrSecurityGroupIDs: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"subnet_ids": {
+						names.AttrSubnetIDs: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Computed: true,
@@ -184,9 +184,9 @@ func resourceImageBuilderCreate(ctx context.Context, d *schema.ResourceData, met
 
 	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &appstream.CreateImageBuilderInput{
-		InstanceType: aws.String(d.Get("instance_type").(string)),
+		InstanceType: aws.String(d.Get(names.AttrInstanceType).(string)),
 		Name:         aws.String(name),
 		Tags:         getTagsIn(ctx),
 	}
@@ -199,11 +199,11 @@ func resourceImageBuilderCreate(ctx context.Context, d *schema.ResourceData, met
 		input.AppstreamAgentVersion = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("display_name"); ok {
+	if v, ok := d.GetOk(names.AttrDisplayName); ok {
 		input.DisplayName = aws.String(v.(string))
 	}
 
@@ -227,7 +227,7 @@ func resourceImageBuilderCreate(ctx context.Context, d *schema.ResourceData, met
 		input.ImageName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("vpc_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrVPCConfig); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.VpcConfig = expandImageBuilderVPCConfig(v.([]interface{}))
 	}
 
@@ -270,10 +270,10 @@ func resourceImageBuilderRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	d.Set("appstream_agent_version", imageBuilder.AppstreamAgentVersion)
 	arn := aws.StringValue(imageBuilder.Arn)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("created_time", aws.TimeValue(imageBuilder.CreatedTime).Format(time.RFC3339))
-	d.Set("description", imageBuilder.Description)
-	d.Set("display_name", imageBuilder.DisplayName)
+	d.Set(names.AttrDescription, imageBuilder.Description)
+	d.Set(names.AttrDisplayName, imageBuilder.DisplayName)
 	if imageBuilder.DomainJoinInfo != nil {
 		if err = d.Set("domain_join_info", []interface{}{flattenDomainInfo(imageBuilder.DomainJoinInfo)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting domain_join_info: %s", err)
@@ -284,15 +284,15 @@ func resourceImageBuilderRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("enable_default_internet_access", imageBuilder.EnableDefaultInternetAccess)
 	d.Set("iam_role_arn", imageBuilder.IamRoleArn)
 	d.Set("image_arn", imageBuilder.ImageArn)
-	d.Set("instance_type", imageBuilder.InstanceType)
-	d.Set("name", imageBuilder.Name)
-	d.Set("state", imageBuilder.State)
+	d.Set(names.AttrInstanceType, imageBuilder.InstanceType)
+	d.Set(names.AttrName, imageBuilder.Name)
+	d.Set(names.AttrState, imageBuilder.State)
 	if imageBuilder.VpcConfig != nil {
-		if err = d.Set("vpc_config", []interface{}{flattenVPCConfig(imageBuilder.VpcConfig)}); err != nil {
+		if err = d.Set(names.AttrVPCConfig, []interface{}{flattenVPCConfig(imageBuilder.VpcConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
 		}
 	} else {
-		d.Set("vpc_config", nil)
+		d.Set(names.AttrVPCConfig, nil)
 	}
 
 	return diags
@@ -341,10 +341,10 @@ func expandImageBuilderVPCConfig(tfList []interface{}) *appstream.VpcConfig {
 
 	apiObject := &appstream.VpcConfig{}
 
-	if v, ok := tfMap["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrSecurityGroupIDs].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SecurityGroupIds = flex.ExpandStringSet(v)
 	}
-	if v, ok := tfMap["subnet_ids"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SubnetIds = flex.ExpandStringSet(v)
 	}
 

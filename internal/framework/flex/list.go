@@ -10,12 +10,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
 func ExpandFrameworkStringList(ctx context.Context, v basetypes.ListValuable) []*string {
 	var output []*string
 
-	panicOnError(Expand(ctx, v, &output))
+	must(Expand(ctx, v, &output))
 
 	return output
 }
@@ -23,7 +24,7 @@ func ExpandFrameworkStringList(ctx context.Context, v basetypes.ListValuable) []
 func ExpandFrameworkStringValueList(ctx context.Context, v basetypes.ListValuable) []string {
 	var output []string
 
-	panicOnError(Expand(ctx, v, &output))
+	must(Expand(ctx, v, &output))
 
 	return output
 }
@@ -39,7 +40,7 @@ func FlattenFrameworkStringList(ctx context.Context, v []*string) types.List {
 
 	var output types.List
 
-	panicOnError(Flatten(ctx, v, &output))
+	must(Flatten(ctx, v, &output))
 
 	return output
 }
@@ -67,9 +68,13 @@ func FlattenFrameworkStringValueList[T ~string](ctx context.Context, v []T) type
 
 	var output types.List
 
-	panicOnError(Flatten(ctx, v, &output))
+	must(Flatten(ctx, v, &output))
 
 	return output
+}
+
+func FlattenFrameworkStringValueListOfString(ctx context.Context, vs []string) fwtypes.ListValueOf[basetypes.StringValue] {
+	return fwtypes.ListValueOf[basetypes.StringValue]{ListValue: FlattenFrameworkStringValueList(ctx, vs)}
 }
 
 // FlattenFrameworkStringValueListLegacy is the Plugin Framework variant of FlattenStringValueList.

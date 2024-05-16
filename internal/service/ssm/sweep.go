@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -84,7 +85,7 @@ func sweepDefaultPatchBaselines(region string) error {
 			return b.DefaultBaseline
 		}) {
 			baselineID := aws.ToString(identity.BaselineId)
-			pb, err := findPatchBaselineByID(ctx, conn, baselineID)
+			pb, err := findPatchBaselineByIDV2(ctx, conn, baselineID)
 			if err != nil {
 				errs = multierror.Append(errs, fmt.Errorf("reading Patch Baseline (%s): %w", baselineID, err))
 				continue
@@ -202,7 +203,7 @@ func sweepPatchBaselines(region string) error {
 
 		for _, identity := range page.BaselineIdentities {
 			baselineID := aws.ToString(identity.BaselineId)
-			r := ResourcePatchBaseline()
+			r := resourcePatchBaseline()
 			d := r.Data(nil)
 			d.SetId(baselineID)
 			d.Set("operating_system", identity.OperatingSystem)
@@ -287,7 +288,7 @@ func sweepResourceDataSyncs(region string) error {
 			d := r.Data(nil)
 
 			d.SetId(aws.ToString(resourceDataSync.SyncName))
-			d.Set("name", resourceDataSync.SyncName)
+			d.Set(names.AttrName, resourceDataSync.SyncName)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

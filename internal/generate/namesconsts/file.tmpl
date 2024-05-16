@@ -6,3 +6,11 @@ const (
 	{{ .ProviderNameUpper }} = "{{ .ProviderPackage }}"
 {{- end }}
 )
+
+// Copied from AWS SDK v2
+// Equivalent to <service>.ServiceID
+const (
+{{- range .Services }}
+	{{ .ProviderNameUpper }}ServiceID = "{{ .SDKID }}"
+{{- end }}
+)

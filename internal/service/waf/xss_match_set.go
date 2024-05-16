@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_waf_xss_match_set")
@@ -31,12 +32,12 @@ func ResourceXSSMatchSet() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -55,7 +56,7 @@ func ResourceXSSMatchSet() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"type": {
+									names.AttrType: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringInSlice(waf.MatchFieldType_Values(), false),
@@ -79,13 +80,13 @@ func resourceXSSMatchSetCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFConn(ctx)
 
-	log.Printf("[INFO] Creating XssMatchSet: %s", d.Get("name").(string))
+	log.Printf("[INFO] Creating XssMatchSet: %s", d.Get(names.AttrName).(string))
 
 	wr := NewRetryer(conn)
 	out, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		params := &waf.CreateXssMatchSetInput{
 			ChangeToken: token,
-			Name:        aws.String(d.Get("name").(string)),
+			Name:        aws.String(d.Get(names.AttrName).(string)),
 		}
 
 		return conn.CreateXssMatchSetWithContext(ctx, params)
@@ -109,7 +110,7 @@ func resourceXSSMatchSetCreate(ctx context.Context, d *schema.ResourceData, meta
 func resourceXSSMatchSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFConn(ctx)
-	log.Printf("[INFO] Reading WAF XSS Match Set: %s", d.Get("name").(string))
+	log.Printf("[INFO] Reading WAF XSS Match Set: %s", d.Get(names.AttrName).(string))
 	params := &waf.GetXssMatchSetInput{
 		XssMatchSetId: aws.String(d.Id()),
 	}
@@ -122,10 +123,10 @@ func resourceXSSMatchSetRead(ctx context.Context, d *schema.ResourceData, meta i
 			return diags
 		}
 
-		return sdkdiag.AppendErrorf(diags, "reading WAF XSS Match Set (%s): %s", d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "reading WAF XSS Match Set (%s): %s", d.Get(names.AttrName).(string), err)
 	}
 
-	d.Set("name", resp.XssMatchSet.Name)
+	d.Set(names.AttrName, resp.XssMatchSet.Name)
 	if err := d.Set("xss_match_tuples", flattenXSSMatchTuples(resp.XssMatchSet.XssMatchTuples)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting xss_match_tuples: %s", err)
 	}
@@ -136,7 +137,7 @@ func resourceXSSMatchSetRead(ctx context.Context, d *schema.ResourceData, meta i
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("xssmatchset/%s", d.Id()),
 	}
-	d.Set("arn", arn.String())
+	d.Set(names.AttrARN, arn.String())
 
 	return diags
 }

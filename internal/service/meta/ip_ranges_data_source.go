@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -20,13 +21,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
-	"golang.org/x/exp/slices"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource
 func newDataSourceIPRanges(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceIPRanges{}
-	d.SetMigratedFromPluginSDK(true)
 
 	return d, nil
 }
@@ -52,7 +52,7 @@ func (d *dataSourceIPRanges) Schema(ctx context.Context, req datasource.SchemaRe
 			"create_date": schema.StringAttribute{
 				Computed: true,
 			},
-			"id": schema.StringAttribute{
+			names.AttrID: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
@@ -71,7 +71,7 @@ func (d *dataSourceIPRanges) Schema(ctx context.Context, req datasource.SchemaRe
 			"sync_token": schema.Int64Attribute{
 				Computed: true,
 			},
-			"url": schema.StringAttribute{
+			names.AttrURL: schema.StringAttribute{
 				Optional: true,
 			},
 		},

@@ -21,10 +21,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_network_acl_rule")
-func ResourceNetworkACLRule() *schema.Resource {
+// @SDKResource("aws_network_acl_rule", name="Network ACL Rule")
+func resourceNetworkACLRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNetworkACLRuleCreate,
 		ReadWithoutTimeout:   resourceNetworkACLRuleRead,
@@ -73,7 +74,7 @@ func ResourceNetworkACLRule() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"protocol": {
+			names.AttrProtocol: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -124,16 +125,25 @@ func resourceNetworkACLRuleCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	protocol := d.Get("protocol").(string)
+	protocol := d.Get(names.AttrProtocol).(string)
 	protocolNumber, err := networkACLProtocolNumber(protocol)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Network ACL Rule: %s", err)
 	}
 
-	egress := d.Get("egress").(bool)
-	naclID := d.Get("network_acl_id").(string)
-	ruleNumber := d.Get("rule_number").(int)
+	naclID, egress, ruleNumber := d.Get("network_acl_id").(string), d.Get("egress").(bool), d.Get("rule_number").(int)
+
+	// CreateNetworkAclEntry succeeds if there is an existing rule with identical attributes.
+	_, err = FindNetworkACLEntryByThreePartKey(ctx, conn, naclID, egress, ruleNumber)
+
+	switch {
+	case err == nil:
+		return sdkdiag.AppendFromErr(diags, networkACLEntryAlreadyExistsError(naclID, egress, ruleNumber))
+	case tfresource.NotFound(err):
+		break
+	default:
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Network ACL Rule: %s", err)
+	}
 
 	input := &ec2.CreateNetworkAclEntryInput{
 		Egress:       aws.Bool(egress),
@@ -223,9 +233,9 @@ func resourceNetworkACLRuleRead(ctx context.Context, d *schema.ResourceData, met
 			return sdkdiag.AppendErrorf(diags, "reading EC2 Network ACL Rule (%s): %s", d.Id(), err)
 		}
 
-		d.Set("protocol", strconv.Itoa(protocolNumber))
+		d.Set(names.AttrProtocol, strconv.Itoa(protocolNumber))
 	} else {
-		d.Set("protocol", nil)
+		d.Set(names.AttrProtocol, nil)
 	}
 
 	return diags
@@ -242,7 +252,7 @@ func resourceNetworkACLRuleDelete(ctx context.Context, d *schema.ResourceData, m
 		RuleNumber:   aws.Int64(int64(d.Get("rule_number").(int))),
 	})
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidNetworkACLEntryNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidNetworkACLIDNotFound, errCodeInvalidNetworkACLEntryNotFound) {
 		return diags
 	}
 

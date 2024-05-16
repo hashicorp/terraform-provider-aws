@@ -9,20 +9,21 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_api_gateway_integration_response")
-func ResourceIntegrationResponse() *schema.Resource {
+// @SDKResource("aws_api_gateway_integration_response", name="Integration Response")
+func resourceIntegrationResponse() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIntegrationResponsePut,
 		ReadWithoutTimeout:   resourceIntegrationResponseRead,
@@ -50,9 +51,9 @@ func ResourceIntegrationResponse() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"content_handling": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validIntegrationContentHandling(),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: validIntegrationContentHandling(),
 			},
 			"http_method": {
 				Type:         schema.TypeString,
@@ -94,7 +95,7 @@ func ResourceIntegrationResponse() *schema.Resource {
 
 func resourceIntegrationResponsePut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	input := &apigateway.PutIntegrationResponseInput{
 		HttpMethod: aws.String(d.Get("http_method").(string)),
@@ -104,22 +105,22 @@ func resourceIntegrationResponsePut(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if v, ok := d.GetOk("content_handling"); ok {
-		input.ContentHandling = aws.String(v.(string))
+		input.ContentHandling = types.ContentHandlingStrategy(v.(string))
 	}
 
 	if v, ok := d.GetOk("response_parameters"); ok && len(v.(map[string]interface{})) > 0 {
-		input.ResponseParameters = flex.ExpandStringMap(v.(map[string]interface{}))
+		input.ResponseParameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("response_templates"); ok && len(v.(map[string]interface{})) > 0 {
-		input.ResponseTemplates = flex.ExpandStringMap(v.(map[string]interface{}))
+		input.ResponseTemplates = flex.ExpandStringValueMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("selection_pattern"); ok {
 		input.SelectionPattern = aws.String(v.(string))
 	}
 
-	_, err := conn.PutIntegrationResponseWithContext(ctx, input)
+	_, err := conn.PutIntegrationResponse(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "putting API Gateway Integration Response: %s", err)
@@ -134,9 +135,9 @@ func resourceIntegrationResponsePut(ctx context.Context, d *schema.ResourceData,
 
 func resourceIntegrationResponseRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	integrationResponse, err := FindIntegrationResponseByFourPartKey(ctx, conn, d.Get("http_method").(string), d.Get("resource_id").(string), d.Get("rest_api_id").(string), d.Get("status_code").(string))
+	integrationResponse, err := findIntegrationResponseByFourPartKey(ctx, conn, d.Get("http_method").(string), d.Get("resource_id").(string), d.Get("rest_api_id").(string), d.Get("status_code").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] API Gateway Integration Response (%s) not found, removing from state", d.Id())
@@ -149,11 +150,11 @@ func resourceIntegrationResponseRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	d.Set("content_handling", integrationResponse.ContentHandling)
-	d.Set("response_parameters", aws.StringValueMap(integrationResponse.ResponseParameters))
+	d.Set("response_parameters", integrationResponse.ResponseParameters)
 	// We need to explicitly convert key = nil values into key = "", which aws.StringValueMap() removes.
 	responseTemplates := make(map[string]string)
 	for k, v := range integrationResponse.ResponseTemplates {
-		responseTemplates[k] = aws.StringValue(v)
+		responseTemplates[k] = v
 	}
 	d.Set("response_templates", responseTemplates)
 	d.Set("selection_pattern", integrationResponse.SelectionPattern)
@@ -163,17 +164,17 @@ func resourceIntegrationResponseRead(ctx context.Context, d *schema.ResourceData
 
 func resourceIntegrationResponseDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway Integration Response: %s", d.Id())
-	_, err := conn.DeleteIntegrationResponseWithContext(ctx, &apigateway.DeleteIntegrationResponseInput{
+	_, err := conn.DeleteIntegrationResponse(ctx, &apigateway.DeleteIntegrationResponseInput{
 		HttpMethod: aws.String(d.Get("http_method").(string)),
 		ResourceId: aws.String(d.Get("resource_id").(string)),
 		RestApiId:  aws.String(d.Get("rest_api_id").(string)),
 		StatusCode: aws.String(d.Get("status_code").(string)),
 	})
 
-	if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
+	if errs.IsA[*types.NotFoundException](err) {
 		return diags
 	}
 
@@ -184,7 +185,7 @@ func resourceIntegrationResponseDelete(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func FindIntegrationResponseByFourPartKey(ctx context.Context, conn *apigateway.APIGateway, httpMethod, resourceID, apiID, statusCode string) (*apigateway.IntegrationResponse, error) {
+func findIntegrationResponseByFourPartKey(ctx context.Context, conn *apigateway.Client, httpMethod, resourceID, apiID, statusCode string) (*apigateway.GetIntegrationResponseOutput, error) {
 	input := &apigateway.GetIntegrationResponseInput{
 		HttpMethod: aws.String(httpMethod),
 		ResourceId: aws.String(resourceID),
@@ -192,9 +193,9 @@ func FindIntegrationResponseByFourPartKey(ctx context.Context, conn *apigateway.
 		StatusCode: aws.String(statusCode),
 	}
 
-	output, err := conn.GetIntegrationResponseWithContext(ctx, input)
+	output, err := conn.GetIntegrationResponse(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
+	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

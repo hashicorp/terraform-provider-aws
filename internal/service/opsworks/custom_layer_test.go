@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccOpsWorksCustomLayer_basic(t *testing.T) {
@@ -24,7 +25,7 @@ func TestAccOpsWorksCustomLayer_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCustomLayerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -32,7 +33,7 @@ func TestAccOpsWorksCustomLayer_basic(t *testing.T) {
 				Config: testAccCustomLayerConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLayerExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "opsworks", regexache.MustCompile(`layer/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "opsworks", regexache.MustCompile(`layer/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_assign_elastic_ips", "false"),
 					resource.TestCheckResourceAttr(resourceName, "auto_assign_public_ips", "false"),
 					resource.TestCheckResourceAttr(resourceName, "auto_healing", "true"),
@@ -48,18 +49,18 @@ func TestAccOpsWorksCustomLayer_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "drain_elb_on_shutdown", "true"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_volume.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_volume.*", map[string]string{
-						"type":            "gp2",
-						"number_of_disks": "2",
-						"mount_point":     "/home",
-						"size":            "100",
-						"encrypted":       "false",
+						names.AttrType:      "gp2",
+						"number_of_disks":   "2",
+						"mount_point":       "/home",
+						"size":              "100",
+						names.AttrEncrypted: "false",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "elastic_load_balancer", ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_shutdown_timeout", "300"),
 					resource.TestCheckResourceAttr(resourceName, "install_updates_on_boot", "true"),
 					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.0.enable", "false"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "short_name", "tf-ops-acc-custom-layer"),
 					resource.TestCheckResourceAttr(resourceName, "system_packages.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "system_packages.*", "git"),
@@ -87,7 +88,7 @@ func TestAccOpsWorksCustomLayer_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCustomLayerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -105,7 +106,7 @@ func TestAccOpsWorksCustomLayer_update(t *testing.T) {
 			{
 				Config: testAccCustomLayerConfig_update(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "opsworks", regexache.MustCompile(`layer/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "opsworks", regexache.MustCompile(`layer/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_assign_elastic_ips", "false"),
 					resource.TestCheckResourceAttr(resourceName, "auto_assign_public_ips", "true"),
 					resource.TestCheckResourceAttr(resourceName, "auto_healing", "true"),
@@ -121,24 +122,24 @@ func TestAccOpsWorksCustomLayer_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "drain_elb_on_shutdown", "false"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_volume.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_volume.*", map[string]string{
-						"type":            "gp2",
+						names.AttrType:    "gp2",
 						"number_of_disks": "2",
 						"mount_point":     "/home",
 						"size":            "100",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_volume.*", map[string]string{
-						"type":            "io1",
-						"number_of_disks": "4",
-						"mount_point":     "/var",
-						"size":            "100",
-						"raid_level":      "1",
-						"iops":            "3000",
-						"encrypted":       "true",
+						names.AttrType:      "io1",
+						"number_of_disks":   "4",
+						"mount_point":       "/var",
+						"size":              "100",
+						"raid_level":        "1",
+						"iops":              "3000",
+						names.AttrEncrypted: "true",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "elastic_load_balancer", ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_shutdown_timeout", "120"),
 					resource.TestCheckResourceAttr(resourceName, "install_updates_on_boot", "true"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "short_name", "tf-ops-acc-custom-layer"),
 					resource.TestCheckResourceAttr(resourceName, "system_packages.#", "3"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "system_packages.*", "git"),
@@ -161,7 +162,7 @@ func TestAccOpsWorksCustomLayer_cloudWatch(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCustomLayerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -169,7 +170,7 @@ func TestAccOpsWorksCustomLayer_cloudWatch(t *testing.T) {
 				Config: testAccCustomLayerConfig_cloudWatch(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLayerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_configuration.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_configuration.0.log_streams.#", "1"),
@@ -181,7 +182,7 @@ func TestAccOpsWorksCustomLayer_cloudWatch(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_configuration.0.log_streams.0.file", "/var/log/system.log*"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_configuration.0.log_streams.0.file_fingerprint_lines", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_configuration.0.log_streams.0.initial_position", "start_of_file"),
-					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_configuration.0.log_streams.0.log_group_name", logGroupResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_configuration.0.log_streams.0.log_group_name", logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_configuration.0.log_streams.0.multiline_start_pattern", ""),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_configuration.0.log_streams.0.time_zone", ""),
 				),
@@ -206,7 +207,7 @@ func TestAccOpsWorksCustomLayer_cloudWatch(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_configuration.0.log_streams.0.file", "/var/log/system.log*"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_configuration.0.log_streams.0.file_fingerprint_lines", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_configuration.0.log_streams.0.initial_position", "start_of_file"),
-					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_configuration.0.log_streams.0.log_group_name", logGroupResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_configuration.0.log_streams.0.log_group_name", logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_configuration.0.log_streams.0.multiline_start_pattern", ""),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_configuration.0.log_streams.0.time_zone", ""),
 				),
@@ -215,7 +216,7 @@ func TestAccOpsWorksCustomLayer_cloudWatch(t *testing.T) {
 				Config: testAccCustomLayerConfig_cloudWatchFull(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLayerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_configuration.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_configuration.0.log_streams.#", "1"),
@@ -226,7 +227,7 @@ func TestAccOpsWorksCustomLayer_cloudWatch(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_configuration.0.log_streams.0.file", "/var/log/system.lo*"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_configuration.0.log_streams.0.file_fingerprint_lines", "2"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_configuration.0.log_streams.0.initial_position", "end_of_file"),
-					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_configuration.0.log_streams.0.log_group_name", logGroupResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_configuration.0.log_streams.0.log_group_name", logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_configuration.0.log_streams.0.multiline_start_pattern", "test*"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_configuration.0.log_streams.0.time_zone", "LOCAL"),
 				),
@@ -243,7 +244,7 @@ func TestAccOpsWorksCustomLayer_loadBasedAutoScaling(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCustomLayerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -251,7 +252,7 @@ func TestAccOpsWorksCustomLayer_loadBasedAutoScaling(t *testing.T) {
 				Config: testAccCustomLayerConfig_loadBasedAutoScaling(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLayerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.0.downscaling.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.0.downscaling.0.alarms.#", "0"),
@@ -281,7 +282,7 @@ func TestAccOpsWorksCustomLayer_loadBasedAutoScaling(t *testing.T) {
 				Config: testAccCustomLayerConfig_loadBasedAutoScaling(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLayerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.0.downscaling.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.0.downscaling.0.alarms.#", "0"),

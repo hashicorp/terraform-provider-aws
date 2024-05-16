@@ -5,6 +5,8 @@ package elb
 
 import (
 	"testing"
+
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestValidName(t *testing.T) {
@@ -15,7 +17,7 @@ func TestValidName(t *testing.T) {
 	}
 
 	for _, s := range validNames {
-		_, errors := ValidName(s, "name")
+		_, errors := ValidName(s, names.AttrName)
 		if len(errors) > 0 {
 			t.Fatalf("%q should be a valid ELB name: %v", s, errors)
 		}
@@ -29,7 +31,7 @@ func TestValidName(t *testing.T) {
 	}
 
 	for _, s := range invalidNames {
-		_, errors := ValidName(s, "name")
+		_, errors := ValidName(s, names.AttrName)
 		if len(errors) == 0 {
 			t.Fatalf("%q should not be a valid ELB name: %v", s, errors)
 		}
@@ -44,7 +46,7 @@ func TestValidNamePrefix(t *testing.T) {
 	}
 
 	for _, s := range validNamePrefixes {
-		_, errors := validNamePrefix(s, "name_prefix")
+		_, errors := validNamePrefix(s, names.AttrNamePrefix)
 		if len(errors) > 0 {
 			t.Fatalf("%q should be a valid ELB name prefix: %v", s, errors)
 		}
@@ -57,7 +59,7 @@ func TestValidNamePrefix(t *testing.T) {
 	}
 
 	for _, s := range invalidNamePrefixes {
-		_, errors := validNamePrefix(s, "name_prefix")
+		_, errors := validNamePrefix(s, names.AttrNamePrefix)
 		if len(errors) == 0 {
 			t.Fatalf("%q should not be a valid ELB name prefix: %v", s, errors)
 		}

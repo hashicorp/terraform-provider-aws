@@ -34,7 +34,7 @@ func ResourceModelPackageGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -106,7 +106,7 @@ func resourceModelPackageGroupRead(ctx context.Context, d *schema.ResourceData, 
 
 	arn := aws.StringValue(mpg.ModelPackageGroupArn)
 	d.Set("model_package_group_name", mpg.ModelPackageGroupName)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("model_package_group_description", mpg.ModelPackageGroupDescription)
 
 	return diags

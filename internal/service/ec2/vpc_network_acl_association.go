@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_network_acl_association")
@@ -34,7 +35,7 @@ func ResourceNetworkACLAssociation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"subnet_id": {
+			names.AttrSubnetID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -47,7 +48,7 @@ func resourceNetworkACLAssociationCreate(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	associationID, err := networkACLAssociationCreate(ctx, conn, d.Get("network_acl_id").(string), d.Get("subnet_id").(string))
+	associationID, err := networkACLAssociationCreate(ctx, conn, d.Get("network_acl_id").(string), d.Get(names.AttrSubnetID).(string))
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -79,7 +80,7 @@ func resourceNetworkACLAssociationRead(ctx context.Context, d *schema.ResourceDa
 	association := outputRaw.(*ec2.NetworkAclAssociation)
 
 	d.Set("network_acl_id", association.NetworkAclId)
-	d.Set("subnet_id", association.SubnetId)
+	d.Set(names.AttrSubnetID, association.SubnetId)
 
 	return diags
 }
@@ -89,7 +90,7 @@ func resourceNetworkACLAssociationDelete(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.DescribeNetworkAclsInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"association.association-id": d.Id(),
 		}),
 	}

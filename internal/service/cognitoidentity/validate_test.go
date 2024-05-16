@@ -7,7 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/cognitoidentity"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentity/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestValidIdentityPoolName(t *testing.T) {
@@ -57,7 +58,7 @@ func TestValidIdentityProvidersClientID(t *testing.T) {
 	}
 
 	for _, s := range validValues {
-		_, errors := validIdentityProvidersClientID(s, "client_id")
+		_, errors := validIdentityProvidersClientID(s, names.AttrClientID)
 		if len(errors) > 0 {
 			t.Fatalf("%q should be a valid Cognito Identity Provider Client ID: %v", s, errors)
 		}
@@ -72,7 +73,7 @@ func TestValidIdentityProvidersClientID(t *testing.T) {
 	}
 
 	for _, s := range invalidValues {
-		_, errors := validIdentityProvidersClientID(s, "client_id")
+		_, errors := validIdentityProvidersClientID(s, names.AttrClientID)
 		if len(errors) == 0 {
 			t.Fatalf("%q should not be a valid Cognito Identity Provider Client ID: %v", s, errors)
 		}
@@ -159,22 +160,22 @@ func TestValidRoleMappingsAmbiguousRoleResolutionAgainstType(t *testing.T) {
 	}{
 		{
 			AmbiguousRoleResolution: nil,
-			Type:                    cognitoidentity.RoleMappingTypeToken,
+			Type:                    string(awstypes.RoleMappingTypeToken),
 			ErrCount:                1,
 		},
 		{
 			AmbiguousRoleResolution: "foo",
-			Type:                    cognitoidentity.RoleMappingTypeToken,
+			Type:                    string(awstypes.RoleMappingTypeToken),
 			ErrCount:                0, // 0 as it should be defined, the value isn't validated here
 		},
 		{
-			AmbiguousRoleResolution: cognitoidentity.AmbiguousRoleResolutionTypeAuthenticatedRole,
-			Type:                    cognitoidentity.RoleMappingTypeToken,
+			AmbiguousRoleResolution: awstypes.AmbiguousRoleResolutionTypeAuthenticatedRole,
+			Type:                    string(awstypes.RoleMappingTypeToken),
 			ErrCount:                0,
 		},
 		{
-			AmbiguousRoleResolution: cognitoidentity.AmbiguousRoleResolutionTypeDeny,
-			Type:                    cognitoidentity.RoleMappingTypeToken,
+			AmbiguousRoleResolution: awstypes.AmbiguousRoleResolutionTypeDeny,
+			Type:                    string(awstypes.RoleMappingTypeToken),
 			ErrCount:                0,
 		},
 	}
@@ -185,7 +186,7 @@ func TestValidRoleMappingsAmbiguousRoleResolutionAgainstType(t *testing.T) {
 		if tc.AmbiguousRoleResolution != nil {
 			m["ambiguous_role_resolution"] = tc.AmbiguousRoleResolution
 		}
-		m["type"] = tc.Type
+		m[names.AttrType] = tc.Type
 
 		errors := validRoleMappingsAmbiguousRoleResolutionAgainstType(m)
 		if len(errors) != tc.ErrCount {
@@ -204,7 +205,7 @@ func TestValidRoleMappingsRulesConfiguration(t *testing.T) {
 	}{
 		{
 			MappingRule: nil,
-			Type:        cognitoidentity.RoleMappingTypeRules,
+			Type:        string(awstypes.RoleMappingTypeRules),
 			ErrCount:    1,
 		},
 		{
@@ -216,7 +217,7 @@ func TestValidRoleMappingsRulesConfiguration(t *testing.T) {
 					"Value":     "paid",
 				},
 			},
-			Type:     cognitoidentity.RoleMappingTypeRules,
+			Type:     string(awstypes.RoleMappingTypeRules),
 			ErrCount: 0,
 		},
 		{
@@ -228,12 +229,12 @@ func TestValidRoleMappingsRulesConfiguration(t *testing.T) {
 					"Value":     "paid",
 				},
 			},
-			Type:     cognitoidentity.RoleMappingTypeToken,
+			Type:     string(awstypes.RoleMappingTypeToken),
 			ErrCount: 1,
 		},
 		{
 			MappingRule: nil,
-			Type:        cognitoidentity.RoleMappingTypeToken,
+			Type:        string(awstypes.RoleMappingTypeToken),
 			ErrCount:    0,
 		},
 	}
@@ -244,7 +245,7 @@ func TestValidRoleMappingsRulesConfiguration(t *testing.T) {
 		if tc.MappingRule != nil {
 			m["mapping_rule"] = tc.MappingRule
 		}
-		m["type"] = tc.Type
+		m[names.AttrType] = tc.Type
 
 		errors := validRoleMappingsRulesConfiguration(m)
 		if len(errors) != tc.ErrCount {

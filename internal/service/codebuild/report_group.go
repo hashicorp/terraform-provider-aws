@@ -5,26 +5,28 @@ package codebuild
 
 import (
 	"context"
-	"errors"
+	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/codebuild"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/codebuild"
+	"github.com/aws/aws-sdk-go-v2/service/codebuild/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_codebuild_report_group", name="Report Group")
 // @Tags
-func ResourceReportGroup() *schema.Resource {
+func resourceReportGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReportGroupCreate,
 		ReadWithoutTimeout:   resourceReportGroupRead,
@@ -36,21 +38,18 @@ func ResourceReportGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(2, 128),
+			"created": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
-			"type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(codebuild.ReportType_Values(), false),
+			"delete_reports": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"export_config": {
 				Type:     schema.TypeList,
@@ -58,18 +57,13 @@ func ResourceReportGroup() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(codebuild.ReportExportConfigType_Values(), false),
-						},
 						"s3_destination": {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"bucket": {
+									names.AttrBucket: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -83,32 +77,40 @@ func ResourceReportGroup() *schema.Resource {
 										ValidateFunc: verify.ValidARN,
 									},
 									"packaging": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Default:      codebuild.ReportPackagingTypeNone,
-										ValidateFunc: validation.StringInSlice(codebuild.ReportPackagingType_Values(), false),
+										Type:             schema.TypeString,
+										Optional:         true,
+										Default:          types.ReportPackagingTypeNone,
+										ValidateDiagFunc: enum.Validate[types.ReportPackagingType](),
 									},
-									"path": {
+									names.AttrPath: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
 								},
 							},
 						},
+						names.AttrType: {
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[types.ReportExportConfigType](),
+						},
 					},
 				},
 			},
-			"created": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"delete_reports": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
+			names.AttrName: {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(2, 128),
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			names.AttrType: {
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[types.ReportType](),
+			},
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -117,61 +119,50 @@ func ResourceReportGroup() *schema.Resource {
 
 func resourceReportGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeBuildConn(ctx)
+	conn := meta.(*conns.AWSClient).CodeBuildClient(ctx)
 
+	name := d.Get(names.AttrName).(string)
 	input := &codebuild.CreateReportGroupInput{
-		Name:         aws.String(d.Get("name").(string)),
-		Type:         aws.String(d.Get("type").(string)),
 		ExportConfig: expandReportGroupExportConfig(d.Get("export_config").([]interface{})),
+		Name:         aws.String(name),
 		Tags:         getTagsIn(ctx),
+		Type:         types.ReportType(d.Get(names.AttrType).(string)),
 	}
 
-	resp, err := conn.CreateReportGroupWithContext(ctx, input)
+	output, err := conn.CreateReportGroup(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating CodeBuild Report Group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating CodeBuild Report Group (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(resp.ReportGroup.Arn))
+	d.SetId(aws.ToString(output.ReportGroup.Arn))
 
 	return append(diags, resourceReportGroupRead(ctx, d, meta)...)
 }
 
 func resourceReportGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeBuildConn(ctx)
+	conn := meta.(*conns.AWSClient).CodeBuildClient(ctx)
 
-	reportGroup, err := FindReportGroupByARN(ctx, conn, d.Id())
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codebuild.ErrCodeResourceNotFoundException) {
-		create.LogNotFoundRemoveState(names.CodeBuild, create.ErrActionReading, ResNameReportGroup, d.Id())
+	reportGroup, err := findReportGroupByARN(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] CodeBuild Report Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionReading, ResNameReportGroup, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CodeBuild Report Group (%s): %s", d.Id(), err)
 	}
 
-	if !d.IsNewResource() && reportGroup == nil {
-		create.LogNotFoundRemoveState(names.CodeBuild, create.ErrActionReading, ResNameReportGroup, d.Id())
-		d.SetId("")
-		return diags
-	}
-
-	if reportGroup == nil {
-		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionReading, ResNameReportGroup, d.Id(), errors.New("not found after creation"))
-	}
-
-	d.Set("arn", reportGroup.Arn)
-	d.Set("type", reportGroup.Type)
-	d.Set("name", reportGroup.Name)
-
-	if err := d.Set("created", reportGroup.Created.Format(time.RFC3339)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting created: %s", err)
-	}
-
+	d.Set(names.AttrARN, reportGroup.Arn)
+	d.Set("created", reportGroup.Created.Format(time.RFC3339))
 	if err := d.Set("export_config", flattenReportGroupExportConfig(reportGroup.ExportConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting export config: %s", err)
 	}
+	d.Set(names.AttrName, reportGroup.Name)
+	d.Set(names.AttrType, reportGroup.Type)
 
 	setTagsOut(ctx, reportGroup.Tags)
 
@@ -180,7 +171,7 @@ func resourceReportGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceReportGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeBuildConn(ctx)
+	conn := meta.(*conns.AWSClient).CodeBuildClient(ctx)
 
 	input := &codebuild.UpdateReportGroupInput{
 		Arn: aws.String(d.Id()),
@@ -190,13 +181,14 @@ func resourceReportGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 		input.ExportConfig = expandReportGroupExportConfig(d.Get("export_config").([]interface{}))
 	}
 
-	if d.HasChange("tags_all") {
+	if d.HasChange(names.AttrTagsAll) {
 		input.Tags = getTagsIn(ctx)
 	}
 
-	_, err := conn.UpdateReportGroupWithContext(ctx, input)
+	_, err := conn.UpdateReportGroup(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating CodeBuild Report Group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "updating CodeBuild Report Group (%s): %s", d.Id(), err)
 	}
 
 	return append(diags, resourceReportGroupRead(ctx, d, meta)...)
@@ -204,14 +196,15 @@ func resourceReportGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceReportGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeBuildConn(ctx)
+	conn := meta.(*conns.AWSClient).CodeBuildClient(ctx)
 
-	deleteOpts := &codebuild.DeleteReportGroupInput{
+	log.Printf("[INFO] Deleting CodeBuild Report Group: %s", d.Id())
+	_, err := conn.DeleteReportGroup(ctx, &codebuild.DeleteReportGroupInput{
 		Arn:           aws.String(d.Id()),
-		DeleteReports: aws.Bool(d.Get("delete_reports").(bool)),
-	}
+		DeleteReports: d.Get("delete_reports").(bool),
+	})
 
-	if _, err := conn.DeleteReportGroupWithContext(ctx, deleteOpts); err != nil {
+	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting CodeBuild Report Group (%s): %s", d.Id(), err)
 	}
 
@@ -222,83 +215,161 @@ func resourceReportGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func expandReportGroupExportConfig(config []interface{}) *codebuild.ReportExportConfig {
-	if len(config) == 0 {
-		return nil
+func findReportGroupByARN(ctx context.Context, conn *codebuild.Client, arn string) (*types.ReportGroup, error) {
+	input := &codebuild.BatchGetReportGroupsInput{
+		ReportGroupArns: []string{arn},
 	}
 
-	s := config[0].(map[string]interface{})
-	exportConfig := &codebuild.ReportExportConfig{}
-
-	if v, ok := s["type"]; ok {
-		exportConfig.ExportConfigType = aws.String(v.(string))
-	}
-
-	if v, ok := s["s3_destination"]; ok {
-		exportConfig.S3Destination = expandReportGroupS3ReportExportConfig(v.([]interface{}))
-	}
-
-	return exportConfig
+	return findReportGroup(ctx, conn, input)
 }
 
-func flattenReportGroupExportConfig(config *codebuild.ReportExportConfig) []map[string]interface{} {
-	settings := make(map[string]interface{})
+func findReportGroup(ctx context.Context, conn *codebuild.Client, input *codebuild.BatchGetReportGroupsInput) (*types.ReportGroup, error) {
+	output, err := findReportGroups(ctx, conn, input)
 
-	if config == nil {
-		return nil
+	if err != nil {
+		return nil, err
 	}
 
-	settings["s3_destination"] = flattenReportGroupS3ReportExportConfig(config.S3Destination)
-	settings["type"] = aws.StringValue(config.ExportConfigType)
-
-	return []map[string]interface{}{settings}
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func expandReportGroupS3ReportExportConfig(config []interface{}) *codebuild.S3ReportExportConfig {
-	if len(config) == 0 {
-		return nil
+func findReportGroups(ctx context.Context, conn *codebuild.Client, input *codebuild.BatchGetReportGroupsInput) ([]types.ReportGroup, error) {
+	output, err := conn.BatchGetReportGroups(ctx, input)
+
+	if err != nil {
+		return nil, err
 	}
 
-	s := config[0].(map[string]interface{})
-	s3ReportExportConfig := &codebuild.S3ReportExportConfig{}
-
-	if v, ok := s["bucket"]; ok {
-		s3ReportExportConfig.Bucket = aws.String(v.(string))
-	}
-	if v, ok := s["encryption_disabled"]; ok {
-		s3ReportExportConfig.EncryptionDisabled = aws.Bool(v.(bool))
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	if v, ok := s["encryption_key"]; ok {
-		s3ReportExportConfig.EncryptionKey = aws.String(v.(string))
-	}
-
-	if v, ok := s["packaging"]; ok {
-		s3ReportExportConfig.Packaging = aws.String(v.(string))
-	}
-
-	if v, ok := s["path"]; ok {
-		s3ReportExportConfig.Path = aws.String(v.(string))
-	}
-
-	return s3ReportExportConfig
+	return output.ReportGroups, nil
 }
 
-func flattenReportGroupS3ReportExportConfig(config *codebuild.S3ReportExportConfig) []map[string]interface{} {
-	settings := make(map[string]interface{})
+func statusReportGroup(ctx context.Context, conn *codebuild.Client, arn string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findReportGroupByARN(ctx, conn, arn)
 
-	if config == nil {
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
+}
+
+func waitReportGroupDeleted(ctx context.Context, conn *codebuild.Client, arn string) (*types.ReportGroup, error) {
+	const (
+		timeout = 2 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.ReportGroupStatusTypeDeleting),
+		Target:  []string{},
+		Refresh: statusReportGroup(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.ReportGroup); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func expandReportGroupExportConfig(tfList []interface{}) *types.ReportExportConfig {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	settings["path"] = aws.StringValue(config.Path)
-	settings["bucket"] = aws.StringValue(config.Bucket)
-	settings["packaging"] = aws.StringValue(config.Packaging)
-	settings["encryption_disabled"] = aws.BoolValue(config.EncryptionDisabled)
+	tfMap := tfList[0].(map[string]interface{})
+	apiObject := &types.ReportExportConfig{}
 
-	if config.EncryptionKey != nil {
-		settings["encryption_key"] = aws.StringValue(config.EncryptionKey)
+	if v, ok := tfMap["s3_destination"]; ok {
+		apiObject.S3Destination = expandReportGroupS3ReportExportConfig(v.([]interface{}))
 	}
 
-	return []map[string]interface{}{settings}
+	if v, ok := tfMap[names.AttrType]; ok {
+		apiObject.ExportConfigType = types.ReportExportConfigType(v.(string))
+	}
+
+	return apiObject
+}
+
+func flattenReportGroupExportConfig(apiObject *types.ReportExportConfig) []map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"s3_destination": flattenReportGroupS3ReportExportConfig(apiObject.S3Destination),
+		names.AttrType:   apiObject.ExportConfigType,
+	}
+
+	return []map[string]interface{}{tfMap}
+}
+
+func expandReportGroupS3ReportExportConfig(tfList []interface{}) *types.S3ReportExportConfig {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]interface{})
+	apiObject := &types.S3ReportExportConfig{}
+
+	if v, ok := tfMap[names.AttrBucket]; ok {
+		apiObject.Bucket = aws.String(v.(string))
+	}
+
+	if v, ok := tfMap["encryption_disabled"]; ok {
+		apiObject.EncryptionDisabled = aws.Bool(v.(bool))
+	}
+
+	if v, ok := tfMap["encryption_key"]; ok {
+		apiObject.EncryptionKey = aws.String(v.(string))
+	}
+
+	if v, ok := tfMap["packaging"]; ok {
+		apiObject.Packaging = types.ReportPackagingType(v.(string))
+	}
+
+	if v, ok := tfMap[names.AttrPath]; ok {
+		apiObject.Path = aws.String(v.(string))
+	}
+
+	return apiObject
+}
+
+func flattenReportGroupS3ReportExportConfig(apiObject *types.S3ReportExportConfig) []map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"packaging": apiObject.Packaging,
+	}
+
+	if v := apiObject.Bucket; v != nil {
+		tfMap[names.AttrBucket] = aws.ToString(v)
+	}
+
+	if v := apiObject.EncryptionDisabled; v != nil {
+		tfMap["encryption_disabled"] = aws.ToBool(v)
+	}
+
+	if v := apiObject.EncryptionKey; v != nil {
+		tfMap["encryption_key"] = aws.ToString(v)
+	}
+
+	if v := apiObject.Path; v != nil {
+		tfMap[names.AttrPath] = aws.ToString(v)
+	}
+
+	return []map[string]interface{}{tfMap}
 }

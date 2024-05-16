@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccLicenseManagerReceivedLicenseDataSource_basic(t *testing.T) {
@@ -21,7 +21,7 @@ func TestAccLicenseManagerReceivedLicenseDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -39,9 +39,9 @@ func TestAccLicenseManagerReceivedLicenseDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(datasourceName, "product_name"),
 					resource.TestCheckResourceAttrSet(datasourceName, "product_sku"),
 					resource.TestCheckResourceAttr(datasourceName, "received_metadata.#", "1"),
-					resource.TestCheckResourceAttrSet(datasourceName, "status"),
+					resource.TestCheckResourceAttrSet(datasourceName, names.AttrStatus),
 					resource.TestCheckResourceAttr(datasourceName, "validity.#", "1"),
-					resource.TestCheckResourceAttrSet(datasourceName, "version"),
+					resource.TestCheckResourceAttrSet(datasourceName, names.AttrVersion),
 				),
 			},
 		},

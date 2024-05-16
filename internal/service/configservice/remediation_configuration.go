@@ -5,33 +5,28 @@ package configservice
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"log"
+	"slices"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/configservice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/configservice"
+	"github.com/aws/aws-sdk-go-v2/service/configservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"golang.org/x/exp/slices"
 )
 
-const (
-	// Maximum amount of time to wait for Config service eventual consistency on deletion
-	remediationConfigurationDeletionTimeout = 2 * time.Minute
-)
-
-// @SDKResource("aws_config_remediation_configuration")
-func ResourceRemediationConfiguration() *schema.Resource {
+// @SDKResource("aws_config_remediation_configuration", name="Remediation Configuration")
+func resourceRemediationConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRemediationConfigurationPut,
 		ReadWithoutTimeout:   resourceRemediationConfigurationRead,
@@ -43,7 +38,7 @@ func ResourceRemediationConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -90,13 +85,13 @@ func ResourceRemediationConfiguration() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(1, 25),
 			},
-			"parameter": {
+			names.AttrParameter: {
 				Type:     schema.TypeList,
 				MaxItems: 25,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -118,7 +113,7 @@ func ResourceRemediationConfiguration() *schema.Resource {
 					},
 				},
 			},
-			"resource_type": {
+			names.AttrResourceType: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -133,9 +128,9 @@ func ResourceRemediationConfiguration() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 256),
 			},
 			"target_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(configservice.RemediationTargetType_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[types.RemediationTargetType](),
 			},
 			"target_version": {
 				Type:     schema.TypeString,
@@ -147,185 +142,199 @@ func ResourceRemediationConfiguration() *schema.Resource {
 
 func resourceRemediationConfigurationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
+	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
 	name := d.Get("config_rule_name").(string)
-	input := configservice.RemediationConfiguration{
+	remediationConfiguration := types.RemediationConfiguration{
 		ConfigRuleName: aws.String(name),
 	}
 
-	if v, ok := d.GetOk("parameter"); ok && len(v.([]interface{})) > 0 {
-		input.Parameters = expandRemediationParameterValues(v.([]interface{}))
-	}
-	if v, ok := d.GetOk("resource_type"); ok {
-		input.ResourceType = aws.String(v.(string))
-	}
-	if v, ok := d.GetOk("target_id"); ok {
-		input.TargetId = aws.String(v.(string))
-	}
-	if v, ok := d.GetOk("target_type"); ok {
-		input.TargetType = aws.String(v.(string))
-	}
-	if v, ok := d.GetOk("target_version"); ok {
-		input.TargetVersion = aws.String(v.(string))
-	}
 	if v, ok := d.GetOk("automatic"); ok {
-		input.Automatic = aws.Bool(v.(bool))
+		remediationConfiguration.Automatic = v.(bool)
 	}
-	if v, ok := d.GetOk("maximum_automatic_attempts"); ok {
-		input.MaximumAutomaticAttempts = aws.Int64(int64(v.(int)))
-	}
-	if v, ok := d.GetOk("retry_attempt_seconds"); ok {
-		input.RetryAttemptSeconds = aws.Int64(int64(v.(int)))
-	}
+
 	if v, ok := d.GetOk("execution_controls"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.ExecutionControls = expandExecutionControls(v.([]interface{})[0].(map[string]interface{}))
+		remediationConfiguration.ExecutionControls = expandExecutionControls(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	inputs := configservice.PutRemediationConfigurationsInput{
-		RemediationConfigurations: []*configservice.RemediationConfiguration{&input},
+	if v, ok := d.GetOk("maximum_automatic_attempts"); ok {
+		remediationConfiguration.MaximumAutomaticAttempts = aws.Int32(int32(v.(int)))
 	}
 
-	log.Printf("[DEBUG] Creating AWSConfig remediation configuration: %s", inputs)
-	_, err := conn.PutRemediationConfigurationsWithContext(ctx, &inputs)
+	if v, ok := d.GetOk(names.AttrParameter); ok && len(v.([]interface{})) > 0 {
+		remediationConfiguration.Parameters = expandRemediationParameterValues(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk(names.AttrResourceType); ok {
+		remediationConfiguration.ResourceType = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("retry_attempt_seconds"); ok {
+		remediationConfiguration.RetryAttemptSeconds = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("target_id"); ok {
+		remediationConfiguration.TargetId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("target_type"); ok {
+		remediationConfiguration.TargetType = types.RemediationTargetType(v.(string))
+	}
+
+	if v, ok := d.GetOk("target_version"); ok {
+		remediationConfiguration.TargetVersion = aws.String(v.(string))
+	}
+
+	_, err := conn.PutRemediationConfigurations(ctx, &configservice.PutRemediationConfigurationsInput{
+		RemediationConfigurations: []types.RemediationConfiguration{remediationConfiguration},
+	})
+
 	if err != nil {
-		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionCreating, ResNameRemediationConfiguration, fmt.Sprintf("%+v", inputs), err)
+		return sdkdiag.AppendErrorf(diags, "putting ConfigService Remediation Configuration (%s): %s", name, err)
 	}
 
-	d.SetId(name)
-
-	log.Printf("[DEBUG] AWSConfig config remediation configuration for rule %q created", name)
+	if d.IsNewResource() {
+		d.SetId(name)
+	}
 
 	return append(diags, resourceRemediationConfigurationRead(ctx, d, meta)...)
 }
 
 func resourceRemediationConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
-	out, err := conn.DescribeRemediationConfigurationsWithContext(ctx, &configservice.DescribeRemediationConfigurationsInput{
-		ConfigRuleNames: []*string{aws.String(d.Id())},
-	})
+	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchConfigRuleException) {
-		log.Printf("[WARN] Config Rule %q is gone (NoSuchConfigRuleException)", d.Id())
+	remediationConfiguration, err := findRemediationConfigurationByConfigRuleName(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] ConfigService Remediation Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionReading, ResNameRemediationConfiguration, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading ConfigService Remediation Configuration (%s): %s", d.Id(), err)
 	}
 
-	numberOfRemediationConfigurations := len(out.RemediationConfigurations)
-	if !d.IsNewResource() && numberOfRemediationConfigurations < 1 {
-		log.Printf("[WARN] No Remediation Configuration for Config Rule %q (no remediation configuration found)", d.Id())
-		d.SetId("")
-		return diags
-	}
-
-	if d.IsNewResource() && numberOfRemediationConfigurations < 1 {
-		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionReading, ResNameRemediationConfiguration, d.Id(), errors.New("none found after creation"))
-	}
-
-	log.Printf("[DEBUG] AWS Config remediation configurations received: %s", out)
-
-	remediationConfiguration := out.RemediationConfigurations[0]
-	d.Set("arn", remediationConfiguration.Arn)
+	d.Set(names.AttrARN, remediationConfiguration.Arn)
+	d.Set("automatic", remediationConfiguration.Automatic)
 	d.Set("config_rule_name", remediationConfiguration.ConfigRuleName)
-	d.Set("resource_type", remediationConfiguration.ResourceType)
+	if err := d.Set("execution_controls", flattenExecutionControls(remediationConfiguration.ExecutionControls)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting execution_controls: %s", err)
+	}
+	d.Set("maximum_automatic_attempts", remediationConfiguration.MaximumAutomaticAttempts)
+	if err := d.Set(names.AttrParameter, flattenRemediationParameterValues(remediationConfiguration.Parameters)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting parameter: %s", err)
+	}
+	d.Set(names.AttrResourceType, remediationConfiguration.ResourceType)
+	d.Set("retry_attempt_seconds", remediationConfiguration.RetryAttemptSeconds)
 	d.Set("target_id", remediationConfiguration.TargetId)
 	d.Set("target_type", remediationConfiguration.TargetType)
 	d.Set("target_version", remediationConfiguration.TargetVersion)
-	d.Set("automatic", remediationConfiguration.Automatic)
-	d.Set("maximum_automatic_attempts", remediationConfiguration.MaximumAutomaticAttempts)
-	d.Set("retry_attempt_seconds", remediationConfiguration.RetryAttemptSeconds)
-	d.Set("maximum_automatic_attempts", remediationConfiguration.MaximumAutomaticAttempts)
-
-	if err := d.Set("execution_controls", flattenExecutionControls(remediationConfiguration.ExecutionControls)); err != nil {
-		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionReading, ResNameRemediationConfiguration, d.Id(), err)
-	}
-
-	if err := d.Set("parameter", flattenRemediationParameterValues(remediationConfiguration.Parameters)); err != nil {
-		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionReading, ResNameRemediationConfiguration, d.Id(), err)
-	}
 
 	return diags
 }
 
 func resourceRemediationConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
-
-	name := d.Get("config_rule_name").(string)
+	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
 	input := &configservice.DeleteRemediationConfigurationInput{
-		ConfigRuleName: aws.String(name),
+		ConfigRuleName: aws.String(d.Id()),
 	}
 
-	if v, ok := d.GetOk("resource_type"); ok {
+	if v, ok := d.GetOk(names.AttrResourceType); ok {
 		input.ResourceType = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Deleting AWS Config remediation configurations for rule %q", name)
-	err := retry.RetryContext(ctx, remediationConfigurationDeletionTimeout, func() *retry.RetryError {
-		_, err := conn.DeleteRemediationConfigurationWithContext(ctx, input)
-
-		if tfawserr.ErrCodeEquals(err, configservice.ErrCodeResourceInUseException) {
-			return retry.RetryableError(err)
-		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
+	const (
+		timeout = 2 * time.Minute
+	)
+	log.Printf("[DEBUG] Deleting ConfigService Remediation Configuration: %s", d.Id())
+	_, err := tfresource.RetryWhenIsA[*types.ResourceInUseException](ctx, timeout, func() (interface{}, error) {
+		return conn.DeleteRemediationConfiguration(ctx, input)
 	})
 
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteRemediationConfigurationWithContext(ctx, input)
+	if errs.IsA[*types.NoSuchRemediationConfigurationException](err) {
+		return diags
 	}
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionDeleting, ResNameRemediationConfiguration, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting ConfigService Remediation Configuration (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func expandRemediationParameterValue(tfMap map[string]interface{}) *configservice.RemediationParameterValue {
-	if tfMap == nil {
-		return nil
+func findRemediationConfigurationByConfigRuleName(ctx context.Context, conn *configservice.Client, name string) (*types.RemediationConfiguration, error) {
+	input := &configservice.DescribeRemediationConfigurationsInput{
+		ConfigRuleNames: []string{name},
 	}
 
-	apiObject := &configservice.RemediationParameterValue{}
+	return findRemediationConfiguration(ctx, conn, input)
+}
+
+func findRemediationConfiguration(ctx context.Context, conn *configservice.Client, input *configservice.DescribeRemediationConfigurationsInput) (*types.RemediationConfiguration, error) {
+	output, err := findRemediationConfigurations(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findRemediationConfigurations(ctx context.Context, conn *configservice.Client, input *configservice.DescribeRemediationConfigurationsInput) ([]types.RemediationConfiguration, error) {
+	output, err := conn.DescribeRemediationConfigurations(ctx, input)
+
+	if errs.IsA[*types.NoSuchConfigRuleException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.RemediationConfigurations, nil
+}
+
+func expandRemediationParameterValue(tfMap map[string]interface{}) types.RemediationParameterValue {
+	apiObject := types.RemediationParameterValue{}
 
 	if v, ok := tfMap["resource_value"].(string); ok && v != "" {
-		apiObject.ResourceValue = &configservice.ResourceValue{
-			Value: aws.String(v),
+		apiObject.ResourceValue = &types.ResourceValue{
+			Value: types.ResourceValueType(v),
 		}
 	}
 
 	if v, ok := tfMap["static_value"].(string); ok && v != "" {
-		apiObject.StaticValue = &configservice.StaticValue{
-			Values: aws.StringSlice([]string{v}),
+		apiObject.StaticValue = &types.StaticValue{
+			Values: []string{v},
 		}
 	}
 
 	if v, ok := tfMap["static_values"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.StaticValue = &configservice.StaticValue{
-			Values: flex.ExpandStringList(v),
+		apiObject.StaticValue = &types.StaticValue{
+			Values: flex.ExpandStringValueList(v),
 		}
 	}
 
 	return apiObject
 }
 
-func expandRemediationParameterValues(tfList []interface{}) map[string]*configservice.RemediationParameterValue {
+func expandRemediationParameterValues(tfList []interface{}) map[string]types.RemediationParameterValue {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	apiObjects := make(map[string]*configservice.RemediationParameterValue)
+	apiObjects := make(map[string]types.RemediationParameterValue)
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -334,40 +343,40 @@ func expandRemediationParameterValues(tfList []interface{}) map[string]*configse
 			continue
 		}
 
-		if v, ok := tfMap["name"].(string); !ok || v == "" {
+		if v, ok := tfMap[names.AttrName].(string); !ok || v == "" {
 			continue
 		}
 
-		apiObjects[tfMap["name"].(string)] = expandRemediationParameterValue(tfMap)
+		apiObjects[tfMap[names.AttrName].(string)] = expandRemediationParameterValue(tfMap)
 	}
 
 	return apiObjects
 }
 
-func expandSSMControls(tfMap map[string]interface{}) *configservice.SsmControls {
+func expandSSMControls(tfMap map[string]interface{}) *types.SsmControls {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &configservice.SsmControls{}
+	apiObject := &types.SsmControls{}
 
 	if v, ok := tfMap["concurrent_execution_rate_percentage"].(int); ok && v != 0 {
-		apiObject.ConcurrentExecutionRatePercentage = aws.Int64(int64(v))
+		apiObject.ConcurrentExecutionRatePercentage = aws.Int32(int32(v))
 	}
 
 	if v, ok := tfMap["error_percentage"].(int); ok && v != 0 {
-		apiObject.ErrorPercentage = aws.Int64(int64(v))
+		apiObject.ErrorPercentage = aws.Int32(int32(v))
 	}
 
 	return apiObject
 }
 
-func expandExecutionControls(tfMap map[string]interface{}) *configservice.ExecutionControls {
+func expandExecutionControls(tfMap map[string]interface{}) *types.ExecutionControls {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &configservice.ExecutionControls{}
+	apiObject := &types.ExecutionControls{}
 
 	if v, ok := tfMap["ssm_controls"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.SsmControls = expandSSMControls(v[0].(map[string]interface{}))
@@ -376,62 +385,69 @@ func expandExecutionControls(tfMap map[string]interface{}) *configservice.Execut
 	return apiObject
 }
 
-func flattenRemediationParameterValues(parameters map[string]*configservice.RemediationParameterValue) []interface{} {
-	var items []interface{}
+func flattenRemediationParameterValues(apiObjects map[string]types.RemediationParameterValue) []interface{} {
+	var tfList []interface{}
 
-	for key, value := range parameters {
-		item := make(map[string]interface{})
-		item["name"] = key
-		if v := value.ResourceValue; v != nil {
-			item["resource_value"] = aws.StringValue(v.Value)
+	for key, value := range apiObjects {
+		tfMap := map[string]interface{}{
+			names.AttrName: key,
 		}
+
+		if v := value.ResourceValue; v != nil {
+			tfMap["resource_value"] = v.Value
+		}
+
 		if v := value.StaticValue; v != nil {
 			if len(v.Values) == 1 {
-				item["static_value"] = aws.StringValue(v.Values[0])
+				tfMap["static_value"] = v.Values[0]
 			} else if len(v.Values) > 1 {
-				item["static_values"] = aws.StringValueSlice(v.Values)
+				tfMap["static_values"] = v.Values
 			}
 		} else {
-			item["static_values"] = make([]interface{}, 0)
+			tfMap["static_values"] = make([]interface{}, 0)
 		}
 
-		items = append(items, item)
+		tfList = append(tfList, tfMap)
 	}
 
-	slices.SortFunc(items, func(a, b interface{}) int {
-		if a.(map[string]interface{})["name"].(string) < b.(map[string]interface{})["name"].(string) {
+	slices.SortFunc(tfList, func(a, b interface{}) int {
+		if a.(map[string]interface{})[names.AttrName].(string) < b.(map[string]interface{})[names.AttrName].(string) {
 			return -1
 		}
 
-		if a.(map[string]interface{})["name"].(string) > b.(map[string]interface{})["name"].(string) {
+		if a.(map[string]interface{})[names.AttrName].(string) > b.(map[string]interface{})[names.AttrName].(string) {
 			return 1
 		}
 
 		return 0
 	})
 
-	return items
+	return tfList
 }
 
-func flattenExecutionControls(controls *configservice.ExecutionControls) []interface{} {
-	if controls == nil {
+func flattenExecutionControls(apiObject *types.ExecutionControls) []interface{} {
+	if apiObject == nil {
 		return nil
 	}
+
 	return []interface{}{map[string]interface{}{
-		"ssm_controls": flattenSSMControls(controls.SsmControls),
+		"ssm_controls": flattenSSMControls(apiObject.SsmControls),
 	}}
 }
 
-func flattenSSMControls(controls *configservice.SsmControls) []interface{} {
-	if controls == nil {
+func flattenSSMControls(apiObject *types.SsmControls) []interface{} {
+	if apiObject == nil {
 		return nil
 	}
-	m := make(map[string]interface{})
-	if controls.ConcurrentExecutionRatePercentage != nil {
-		m["concurrent_execution_rate_percentage"] = controls.ConcurrentExecutionRatePercentage
+
+	tfMap := map[string]interface{}{}
+
+	if apiObject.ConcurrentExecutionRatePercentage != nil {
+		tfMap["concurrent_execution_rate_percentage"] = apiObject.ConcurrentExecutionRatePercentage
 	}
-	if controls.ErrorPercentage != nil {
-		m["error_percentage"] = controls.ErrorPercentage
+
+	if apiObject.ErrorPercentage != nil {
+		tfMap["error_percentage"] = apiObject.ErrorPercentage
 	}
-	return []interface{}{m}
+	return []interface{}{tfMap}
 }

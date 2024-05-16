@@ -145,7 +145,7 @@ class MyConvertedCode extends TerraformStack {
     you should consider using a for loop. If you are looping over something only known to Terraform, e.g. a result of a data source
     you need to keep this like it is.*/
     const exampleForEachIterator = TerraformIterator.fromList(
-      Token.asAny("${{ for k, v in ${" + example.fqn + "} : v.id => v}}")
+      Token.asAny("${{ for k, v in ${" + example.fqn + "} : k => v}}")
     );
     const awsLbTargetGroupAttachmentExample = new LbTargetGroupAttachment(
       this,
@@ -188,4 +188,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 You cannot import Target Group Attachments.
 
-<!-- cache-key: cdktf-0.20.0 input-6a9d27eafb93acb313975b710f7a1fcae6eb952e788b12cf102506b713f35b5d -->
+<!-- cache-key: cdktf-0.20.1 input-ab9658101e55ff2b7e9dcb8c1729d7e87f2de8dff7d0559549746cf241510328 -->

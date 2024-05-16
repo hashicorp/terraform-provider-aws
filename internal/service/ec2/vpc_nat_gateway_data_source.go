@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_nat_gateway")
@@ -39,13 +40,13 @@ func DataSourceNATGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": CustomFiltersSchema(),
-			"id": {
+			names.AttrFilter: customFiltersSchema(),
+			names.AttrID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"network_interface_id": {
+			names.AttrNetworkInterfaceID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -71,18 +72,18 @@ func DataSourceNATGateway() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"subnet_id": {
+			names.AttrSubnetID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
-			"vpc_id": {
+			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -98,27 +99,27 @@ func dataSourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeNatGatewaysInput{
-		Filter: BuildAttributeFilterList(
+		Filter: newAttributeFilterList(
 			map[string]string{
-				"state":     d.Get("state").(string),
-				"subnet-id": d.Get("subnet_id").(string),
-				"vpc-id":    d.Get("vpc_id").(string),
+				names.AttrState: d.Get(names.AttrState).(string),
+				"subnet-id":     d.Get(names.AttrSubnetID).(string),
+				"vpc-id":        d.Get(names.AttrVPCID).(string),
 			},
 		),
 	}
 
-	if v, ok := d.GetOk("id"); ok {
+	if v, ok := d.GetOk(names.AttrID); ok {
 		input.NatGatewayIds = aws.StringSlice([]string{v.(string)})
 	}
 
-	if tags, ok := d.GetOk("tags"); ok {
-		input.Filter = append(input.Filter, BuildTagFilterList(
+	if tags, ok := d.GetOk(names.AttrTags); ok {
+		input.Filter = append(input.Filter, newTagFilterList(
 			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
 	}
 
-	input.Filter = append(input.Filter, BuildCustomFilterList(
-		d.Get("filter").(*schema.Set),
+	input.Filter = append(input.Filter, newCustomFilterList(
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 	if len(input.Filter) == 0 {
 		// Don't send an empty filters list; the EC2 API won't accept it.
@@ -133,9 +134,9 @@ func dataSourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	d.SetId(aws.StringValue(ngw.NatGatewayId))
 	d.Set("connectivity_type", ngw.ConnectivityType)
-	d.Set("state", ngw.State)
-	d.Set("subnet_id", ngw.SubnetId)
-	d.Set("vpc_id", ngw.VpcId)
+	d.Set(names.AttrState, ngw.State)
+	d.Set(names.AttrSubnetID, ngw.SubnetId)
+	d.Set(names.AttrVPCID, ngw.VpcId)
 
 	var secondaryAllocationIDs, secondaryPrivateIPAddresses []string
 
@@ -144,7 +145,7 @@ func dataSourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 		if isPrimary := aws.BoolValue(address.IsPrimary); isPrimary || len(ngw.NatGatewayAddresses) == 1 {
 			d.Set("allocation_id", address.AllocationId)
 			d.Set("association_id", address.AssociationId)
-			d.Set("network_interface_id", address.NetworkInterfaceId)
+			d.Set(names.AttrNetworkInterfaceID, address.NetworkInterfaceId)
 			d.Set("private_ip", address.PrivateIp)
 			d.Set("public_ip", address.PublicIp)
 		} else if !isPrimary {
@@ -161,7 +162,7 @@ func dataSourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("secondary_private_ip_address_count", len(secondaryPrivateIPAddresses))
 	d.Set("secondary_private_ip_addresses", secondaryPrivateIPAddresses)
 
-	if err := d.Set("tags", KeyValueTags(ctx, ngw.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, KeyValueTags(ctx, ngw.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

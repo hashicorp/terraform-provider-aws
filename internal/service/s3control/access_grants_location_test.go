@@ -25,7 +25,7 @@ func testAccAccessGrantsLocation_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccessGrantsLocationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -35,7 +35,7 @@ func testAccAccessGrantsLocation_basic(t *testing.T) {
 					testAccCheckAccessGrantsLocationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "access_grants_location_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "access_grants_location_id"),
-					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "location_scope", "s3://"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -56,7 +56,7 @@ func testAccAccessGrantsLocation_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccessGrantsLocationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -79,7 +79,7 @@ func testAccAccessGrantsLocation_tags(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccessGrantsLocationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -124,7 +124,7 @@ func testAccAccessGrantsLocation_update(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccessGrantsLocationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -132,7 +132,7 @@ func testAccAccessGrantsLocation_update(t *testing.T) {
 				Config: testAccAccessGrantsLocationConfig_customLocation(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessGrantsLocationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "location_scope", fmt.Sprintf("s3://%s/prefixA*", rName)),
 				),
 			},
@@ -145,7 +145,7 @@ func testAccAccessGrantsLocation_update(t *testing.T) {
 				Config: testAccAccessGrantsLocationConfig_customLocationUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessGrantsLocationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", "aws_iam_role.test2", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", "aws_iam_role.test2", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "location_scope", fmt.Sprintf("s3://%s/prefixA*", rName)),
 				),
 			},
@@ -162,7 +162,7 @@ func testAccCheckAccessGrantsLocationDestroy(ctx context.Context) resource.TestC
 				continue
 			}
 
-			_, err := tfs3control.FindAccessGrantsLocationByTwoPartKey(ctx, conn, rs.Primary.Attributes["account_id"], rs.Primary.Attributes["access_grants_location_id"])
+			_, err := tfs3control.FindAccessGrantsLocationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAccountID], rs.Primary.Attributes["access_grants_location_id"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -188,7 +188,7 @@ func testAccCheckAccessGrantsLocationExists(ctx context.Context, n string) resou
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlClient(ctx)
 
-		_, err := tfs3control.FindAccessGrantsLocationByTwoPartKey(ctx, conn, rs.Primary.Attributes["account_id"], rs.Primary.Attributes["access_grants_location_id"])
+		_, err := tfs3control.FindAccessGrantsLocationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAccountID], rs.Primary.Attributes["access_grants_location_id"])
 
 		return err
 	}

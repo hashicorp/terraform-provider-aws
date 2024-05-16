@@ -1,3 +1,5 @@
 ```release-note:new-resource
 aws_qbusiness_application
+aws_qbusiness_index
+aws_qbusiness_retriever
 ```

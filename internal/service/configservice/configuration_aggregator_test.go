@@ -9,26 +9,27 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/configservice"
+	"github.com/aws/aws-sdk-go-v2/service/configservice/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfconfig "github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccConfigServiceConfigurationAggregator_account(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ca configservice.ConfigurationAggregator
+	var ca types.ConfigurationAggregator
 	//Name is upper case on purpose to test https://github.com/hashicorp/terraform-provider-aws/issues/8432
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_configuration_aggregator.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigurationAggregatorDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -36,14 +37,13 @@ func TestAccConfigServiceConfigurationAggregator_account(t *testing.T) {
 				Config: testAccConfigurationAggregatorConfig_account(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &ca),
-					testAccCheckConfigurationAggregatorName(resourceName, rName, &ca),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "config", regexache.MustCompile(`config-aggregator/config-aggregator-.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "config", regexache.MustCompile(`config-aggregator/config-aggregator-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.0.account_ids.#", "1"),
 					acctest.CheckResourceAttrAccountID(resourceName, "account_aggregation_source.0.account_ids.0"),
 					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.0.regions.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "account_aggregation_source.0.regions.0", "data.aws_region.current", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "account_aggregation_source.0.regions.0", "data.aws_region.current", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -58,13 +58,13 @@ func TestAccConfigServiceConfigurationAggregator_account(t *testing.T) {
 
 func TestAccConfigServiceConfigurationAggregator_organization(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ca configservice.ConfigurationAggregator
+	var ca types.ConfigurationAggregator
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_configuration_aggregator.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigurationAggregatorDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -72,10 +72,9 @@ func TestAccConfigServiceConfigurationAggregator_organization(t *testing.T) {
 				Config: testAccConfigurationAggregatorConfig_organization(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &ca),
-					testAccCheckConfigurationAggregatorName(resourceName, rName, &ca),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "organization_aggregation_source.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "organization_aggregation_source.0.role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "organization_aggregation_source.0.role_arn", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "organization_aggregation_source.0.all_regions", "true"),
 				),
 			},
@@ -95,7 +94,7 @@ func TestAccConfigServiceConfigurationAggregator_switch(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigurationAggregatorDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -119,13 +118,13 @@ func TestAccConfigServiceConfigurationAggregator_switch(t *testing.T) {
 
 func TestAccConfigServiceConfigurationAggregator_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ca configservice.ConfigurationAggregator
+	var ca types.ConfigurationAggregator
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_configuration_aggregator.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigurationAggregatorDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -133,7 +132,6 @@ func TestAccConfigServiceConfigurationAggregator_tags(t *testing.T) {
 				Config: testAccConfigurationAggregatorConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &ca),
-					testAccCheckConfigurationAggregatorName(resourceName, rName, &ca),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -142,7 +140,6 @@ func TestAccConfigServiceConfigurationAggregator_tags(t *testing.T) {
 				Config: testAccConfigurationAggregatorConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &ca),
-					testAccCheckConfigurationAggregatorName(resourceName, rName, &ca),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -157,7 +154,6 @@ func TestAccConfigServiceConfigurationAggregator_tags(t *testing.T) {
 				Config: testAccConfigurationAggregatorConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &ca),
-					testAccCheckConfigurationAggregatorName(resourceName, rName, &ca),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -168,13 +164,13 @@ func TestAccConfigServiceConfigurationAggregator_tags(t *testing.T) {
 
 func TestAccConfigServiceConfigurationAggregator_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ca configservice.ConfigurationAggregator
+	var ca types.ConfigurationAggregator
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_configuration_aggregator.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigurationAggregatorDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -190,43 +186,22 @@ func TestAccConfigServiceConfigurationAggregator_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckConfigurationAggregatorName(n, desired string, obj *configservice.ConfigurationAggregator) resource.TestCheckFunc {
+func testAccCheckConfigurationAggregatorExists(ctx context.Context, n string, v *types.ConfigurationAggregator) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
-		if rs.Primary.Attributes["name"] != aws.StringValue(obj.ConfigurationAggregatorName) {
-			return fmt.Errorf("expected name: %q, given: %q", desired, aws.StringValue(obj.ConfigurationAggregatorName))
-		}
-		return nil
-	}
-}
 
-func testAccCheckConfigurationAggregatorExists(ctx context.Context, n string, obj *configservice.ConfigurationAggregator) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not Found: %s", n)
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceClient(ctx)
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No config configuration aggregator ID is set")
-		}
+		output, err := tfconfig.FindConfigurationAggregatorByName(ctx, conn, rs.Primary.ID)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn(ctx)
-		out, err := conn.DescribeConfigurationAggregatorsWithContext(ctx, &configservice.DescribeConfigurationAggregatorsInput{
-			ConfigurationAggregatorNames: []*string{aws.String(rs.Primary.Attributes["name"])},
-		})
 		if err != nil {
-			return fmt.Errorf("Failed to describe config configuration aggregator: %s", err)
-		}
-		if len(out.ConfigurationAggregators) < 1 {
-			return fmt.Errorf("No config configuration aggregator found when describing %q", rs.Primary.Attributes["name"])
+			return err
 		}
 
-		ca := out.ConfigurationAggregators[0]
-		*obj = *ca
+		*v = *output
 
 		return nil
 	}
@@ -234,23 +209,24 @@ func testAccCheckConfigurationAggregatorExists(ctx context.Context, n string, ob
 
 func testAccCheckConfigurationAggregatorDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_config_configuration_aggregator" {
 				continue
 			}
 
-			resp, err := conn.DescribeConfigurationAggregatorsWithContext(ctx, &configservice.DescribeConfigurationAggregatorsInput{
-				ConfigurationAggregatorNames: []*string{aws.String(rs.Primary.Attributes["name"])},
-			})
+			_, err := tfconfig.FindConfigurationAggregatorByName(ctx, conn, rs.Primary.ID)
 
-			if err == nil {
-				if len(resp.ConfigurationAggregators) != 0 &&
-					aws.StringValue(resp.ConfigurationAggregators[0].ConfigurationAggregatorName) == rs.Primary.Attributes["name"] {
-					return fmt.Errorf("config configuration aggregator still exists: %s", rs.Primary.Attributes["name"])
-				}
+			if tfresource.NotFound(err) {
+				continue
 			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("ConfigService Configuration Aggregator %s still exists", rs.Primary.ID)
 		}
 
 		return nil

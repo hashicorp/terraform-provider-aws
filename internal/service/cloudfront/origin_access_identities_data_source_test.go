@@ -11,6 +11,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCloudFrontOriginAccessIdentitiesDataSource_comments(t *testing.T) {
@@ -21,7 +22,7 @@ func TestAccCloudFrontOriginAccessIdentitiesDataSource_comments(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOriginAccessIdentityDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -32,7 +33,7 @@ func TestAccCloudFrontOriginAccessIdentitiesDataSource_comments(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "s3_canonical_user_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "iam_arns.*", resourceName, "iam_arn"),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "ids.*", resourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "ids.*", resourceName, names.AttrID),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "s3_canonical_user_ids.*", resourceName, "s3_canonical_user_id"),
 				),
 			},
@@ -47,7 +48,7 @@ func TestAccCloudFrontOriginAccessIdentitiesDataSource_all(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOriginAccessIdentityDestroy(ctx),
 		Steps: []resource.TestStep{

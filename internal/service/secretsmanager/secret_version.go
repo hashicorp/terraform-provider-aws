@@ -5,7 +5,6 @@ package secretsmanager
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
 	"log"
 	"strings"
@@ -22,11 +21,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
-	secretVersionStageCurrent = "AWSCURRENT"
+	secretVersionStageCurrent  = "AWSCURRENT"
+	secretVersionStagePrevious = "AWSPREVIOUS"
 )
 
 // @SDKResource("aws_secretsmanager_secret_version", name="Secret Version")
@@ -42,7 +44,7 @@ func resourceSecretVersion() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -92,8 +94,7 @@ func resourceSecretVersionCreate(ctx context.Context, d *schema.ResourceData, me
 
 	if v, ok := d.GetOk("secret_binary"); ok {
 		var err error
-		input.SecretBinary, err = base64.StdEncoding.DecodeString(v.(string))
-
+		input.SecretBinary, err = itypes.Base64Decode(v.(string))
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -146,8 +147,8 @@ func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret Version (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.ARN)
-	d.Set("secret_binary", verify.Base64Encode(output.SecretBinary))
+	d.Set(names.AttrARN, output.ARN)
+	d.Set("secret_binary", itypes.Base64EncodeOnce(output.SecretBinary))
 	d.Set("secret_id", secretID)
 	d.Set("secret_string", output.SecretString)
 	d.Set("version_id", output.VersionId)
@@ -169,14 +170,46 @@ func resourceSecretVersionUpdate(ctx context.Context, d *schema.ResourceData, me
 	os, ns := o.(*schema.Set), n.(*schema.Set)
 	add, del := flex.ExpandStringValueSet(ns.Difference(os)), flex.ExpandStringValueSet(os.Difference(ns))
 
+	var listedVersionIDs bool
 	for _, stage := range add {
-		input := &secretsmanager.UpdateSecretVersionStageInput{
+		inputU := &secretsmanager.UpdateSecretVersionStageInput{
 			MoveToVersionId: aws.String(versionID),
 			SecretId:        aws.String(secretID),
 			VersionStage:    aws.String(stage),
 		}
 
-		_, err := conn.UpdateSecretVersionStage(ctx, input)
+		if !listedVersionIDs {
+			if stage == secretVersionStageCurrent {
+				inputL := &secretsmanager.ListSecretVersionIdsInput{
+					SecretId: aws.String(secretID),
+				}
+				var versionStageCurrentVersionID string
+
+				paginator := secretsmanager.NewListSecretVersionIdsPaginator(conn, inputL)
+			listVersionIDs:
+				for paginator.HasMorePages() {
+					page, err := paginator.NextPage(ctx)
+
+					if err != nil {
+						return sdkdiag.AppendErrorf(diags, "listing Secrets Manager Secret (%s) version IDs: %s", secretID, err)
+					}
+
+					for _, version := range page.Versions {
+						for _, versionStage := range version.VersionStages {
+							if versionStage == secretVersionStageCurrent {
+								versionStageCurrentVersionID = aws.ToString(version.VersionId)
+								break listVersionIDs
+							}
+						}
+					}
+				}
+
+				inputU.RemoveFromVersionId = aws.String(versionStageCurrentVersionID)
+				listedVersionIDs = true
+			}
+		}
+
+		_, err := conn.UpdateSecretVersionStage(ctx, inputU)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "adding Secrets Manager Secret Version (%s) stage (%s): %s", d.Id(), stage, err)
@@ -187,6 +220,11 @@ func resourceSecretVersionUpdate(ctx context.Context, d *schema.ResourceData, me
 		// InvalidParameterException: You can only move staging label AWSCURRENT to a different secret version. It can’t be completely removed.
 		if stage == secretVersionStageCurrent {
 			log.Printf("[INFO] Skipping removal of AWSCURRENT staging label for secret %q version %q", secretID, versionID)
+			continue
+		}
+
+		// If we added AWSCURRENT to this version then any AWSPREVIOUS label will have been moved to another version.
+		if listedVersionIDs && stage == secretVersionStagePrevious {
 			continue
 		}
 
@@ -233,8 +271,8 @@ func resourceSecretVersionDelete(ctx context.Context, d *schema.ResourceData, me
 			_, err := conn.UpdateSecretVersionStage(ctx, input)
 
 			if errs.IsA[*types.ResourceNotFoundException](err) ||
-				errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "You can’t perform this operation on the secret because it was deleted") ||
-				errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "You can't perform this operation on the secret because it was marked for deletion") {
+				errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "because it was deleted") ||
+				errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "because it was marked for deletion") {
 				return diags
 			}
 
@@ -251,7 +289,7 @@ func resourceSecretVersionDelete(ctx context.Context, d *schema.ResourceData, me
 			return nil, err
 		}
 
-		if len(output.VersionStages) == 0 || (len(output.VersionStages) == 1 && output.VersionStages[0] == secretVersionStageCurrent) {
+		if len(output.VersionStages) == 0 || (len(output.VersionStages) == 1 && (output.VersionStages[0] == secretVersionStageCurrent || output.VersionStages[0] == secretVersionStagePrevious)) {
 			return nil, &retry.NotFoundError{}
 		}
 
@@ -288,8 +326,8 @@ func findSecretVersion(ctx context.Context, conn *secretsmanager.Client, input *
 	output, err := conn.GetSecretValue(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) ||
-		errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "You can’t perform this operation on the secret because it was deleted") ||
-		errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "You can't perform this operation on the secret because it was marked for deletion") {
+		errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "because it was deleted") ||
+		errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "because it was marked for deletion") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

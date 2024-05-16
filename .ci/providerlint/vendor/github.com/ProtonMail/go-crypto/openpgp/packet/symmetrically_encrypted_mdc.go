@@ -237,7 +237,10 @@ func serializeSymmetricallyEncryptedMdc(ciphertext io.WriteCloser, c CipherFunct
 	block := c.new(key)
 	blockSize := block.BlockSize()
 	iv := make([]byte, blockSize)
-	_, err = config.Random().Read(iv)
+	_, err = io.ReadFull(config.Random(), iv)
+	if err != nil {
+		return nil, err
+	}
 	if err != nil {
 		return
 	}

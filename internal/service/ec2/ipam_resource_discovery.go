@@ -44,11 +44,11 @@ func ResourceIPAMResourceDiscovery() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -73,7 +73,7 @@ func ResourceIPAMResourceDiscovery() *schema.Resource {
 					},
 				},
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -111,7 +111,7 @@ func resourceIPAMResourceDiscoveryCreate(ctx context.Context, d *schema.Resource
 		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeIpamResourceDiscovery),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -146,14 +146,14 @@ func resourceIPAMResourceDiscoveryRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "reading IPAM Resource Discovery (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", rd.IpamResourceDiscoveryArn)
-	d.Set("description", rd.Description)
+	d.Set(names.AttrARN, rd.IpamResourceDiscoveryArn)
+	d.Set(names.AttrDescription, rd.Description)
 	d.Set("ipam_resource_discovery_region", rd.IpamResourceDiscoveryRegion)
 	d.Set("is_default", rd.IsDefault)
 	if err := d.Set("operating_regions", flattenIPAMResourceDiscoveryOperatingRegions(rd.OperatingRegions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting operating_regions: %s", err)
 	}
-	d.Set("owner_id", rd.OwnerId)
+	d.Set(names.AttrOwnerID, rd.OwnerId)
 
 	setTagsOut(ctx, rd.Tags)
 
@@ -164,13 +164,13 @@ func resourceIPAMResourceDiscoveryUpdate(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &ec2.ModifyIpamResourceDiscoveryInput{
 			IpamResourceDiscoveryId: aws.String(d.Id()),
 		}
 
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
 		if d.HasChange("operating_regions") {

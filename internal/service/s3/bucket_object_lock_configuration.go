@@ -20,10 +20,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_s3_bucket_object_lock_configuration")
-func ResourceBucketObjectLockConfiguration() *schema.Resource {
+// @SDKResource("aws_s3_bucket_object_lock_configuration", name="Bucket Object Lock Configuration")
+func resourceBucketObjectLockConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketObjectLockConfigurationCreate,
 		ReadWithoutTimeout:   resourceBucketObjectLockConfigurationRead,
@@ -35,7 +36,7 @@ func ResourceBucketObjectLockConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"bucket": {
+			names.AttrBucket: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -71,7 +72,7 @@ func ResourceBucketObjectLockConfiguration() *schema.Resource {
 										Optional:      true,
 										ConflictsWith: []string{"rule.0.default_retention.0.years"},
 									},
-									"mode": {
+									names.AttrMode: {
 										Type:             schema.TypeString,
 										Optional:         true,
 										ValidateDiagFunc: enum.Validate[types.ObjectLockRetentionMode](),
@@ -99,7 +100,7 @@ func ResourceBucketObjectLockConfiguration() *schema.Resource {
 func resourceBucketObjectLockConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket := d.Get("bucket").(string)
+	bucket := d.Get(names.AttrBucket).(string)
 	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
 	input := &s3.PutObjectLockConfigurationInput{
 		Bucket: aws.String(bucket),
@@ -167,7 +168,7 @@ func resourceBucketObjectLockConfigurationRead(ctx context.Context, d *schema.Re
 		return diag.Errorf("reading S3 Bucket Object Lock Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set("bucket", bucket)
+	d.Set(names.AttrBucket, bucket)
 	d.Set("expected_bucket_owner", expectedBucketOwner)
 	d.Set("object_lock_enabled", objLockConfig.ObjectLockEnabled)
 	if err := d.Set("rule", flattenObjectLockRule(objLockConfig.Rule)); err != nil {
@@ -317,7 +318,7 @@ func expandDefaultRetention(l []interface{}) *types.DefaultRetention {
 		dr.Days = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["mode"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrMode].(string); ok && v != "" {
 		dr.Mode = types.ObjectLockRetentionMode(v)
 	}
 
@@ -348,9 +349,9 @@ func flattenDefaultRetention(dr *types.DefaultRetention) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"days":  dr.Days,
-		"mode":  dr.Mode,
-		"years": dr.Years,
+		"days":         dr.Days,
+		names.AttrMode: dr.Mode,
+		"years":        dr.Years,
 	}
 
 	return []interface{}{m}

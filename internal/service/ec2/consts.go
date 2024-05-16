@@ -4,6 +4,7 @@
 package ec2
 
 import (
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
@@ -94,6 +95,11 @@ const (
 	CustomerGatewayStateDeleted   = "deleted"
 	CustomerGatewayStateDeleting  = "deleting"
 	CustomerGatewayStatePending   = "pending"
+)
+
+// See https://docs.aws.amazon.com/cli/latest/reference/ec2/modify-address-attribute.html#examples.
+const (
+	PTRUpdateStatusPending = "PENDING"
 )
 
 const (
@@ -261,7 +267,7 @@ const (
 )
 
 const (
-	TargetStorageTierStandard = "standard"
+	TargetStorageTierStandard awstypes.TargetStorageTier = "standard"
 )
 
 const (
@@ -276,13 +282,15 @@ func outsideIPAddressType_Values() []string {
 	}
 }
 
+type securityGroupRuleType string
+
 const (
-	securityGroupRuleTypeEgress  = "egress"
-	securityGroupRuleTypeIngress = "ingress"
+	securityGroupRuleTypeEgress  securityGroupRuleType = "egress"
+	securityGroupRuleTypeIngress securityGroupRuleType = "ingress"
 )
 
-func securityGroupRuleType_Values() []string {
-	return []string{
+func (securityGroupRuleType) Values() []securityGroupRuleType {
+	return []securityGroupRuleType{
 		securityGroupRuleTypeEgress,
 		securityGroupRuleTypeIngress,
 	}

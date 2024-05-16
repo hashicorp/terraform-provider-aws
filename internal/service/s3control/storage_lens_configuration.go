@@ -41,14 +41,14 @@ func resourceStorageLensConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -75,7 +75,7 @@ func resourceStorageLensConfiguration() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"enabled": {
+												names.AttrEnabled: {
 													Type:     schema.TypeBool,
 													Optional: true,
 												},
@@ -88,7 +88,7 @@ func resourceStorageLensConfiguration() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"enabled": {
+												names.AttrEnabled: {
 													Type:     schema.TypeBool,
 													Optional: true,
 												},
@@ -101,7 +101,7 @@ func resourceStorageLensConfiguration() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"enabled": {
+												names.AttrEnabled: {
 													Type:     schema.TypeBool,
 													Optional: true,
 												},
@@ -120,7 +120,7 @@ func resourceStorageLensConfiguration() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"enabled": {
+															names.AttrEnabled: {
 																Type:     schema.TypeBool,
 																Optional: true,
 															},
@@ -133,7 +133,7 @@ func resourceStorageLensConfiguration() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"enabled": {
+															names.AttrEnabled: {
 																Type:     schema.TypeBool,
 																Optional: true,
 															},
@@ -146,7 +146,7 @@ func resourceStorageLensConfiguration() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"enabled": {
+															names.AttrEnabled: {
 																Type:     schema.TypeBool,
 																Optional: true,
 															},
@@ -159,7 +159,7 @@ func resourceStorageLensConfiguration() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"enabled": {
+															names.AttrEnabled: {
 																Type:     schema.TypeBool,
 																Optional: true,
 															},
@@ -178,7 +178,7 @@ func resourceStorageLensConfiguration() *schema.Resource {
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
-																		"enabled": {
+																		names.AttrEnabled: {
 																			Type:     schema.TypeBool,
 																			Optional: true,
 																		},
@@ -219,7 +219,7 @@ func resourceStorageLensConfiguration() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"enabled": {
+												names.AttrEnabled: {
 													Type:     schema.TypeBool,
 													Optional: true,
 												},
@@ -235,7 +235,7 @@ func resourceStorageLensConfiguration() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"arn": {
+									names.AttrARN: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
@@ -255,7 +255,7 @@ func resourceStorageLensConfiguration() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"enabled": {
+												names.AttrEnabled: {
 													Type:     schema.TypeBool,
 													Required: true,
 												},
@@ -268,12 +268,12 @@ func resourceStorageLensConfiguration() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"account_id": {
+												names.AttrAccountID: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: verify.ValidAccountID,
 												},
-												"arn": {
+												names.AttrARN: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: verify.ValidARN,
@@ -308,7 +308,7 @@ func resourceStorageLensConfiguration() *schema.Resource {
 														},
 													},
 												},
-												"format": {
+												names.AttrFormat: {
 													Type:             schema.TypeString,
 													Required:         true,
 													ValidateDiagFunc: enum.Validate[types.Format](),
@@ -318,7 +318,7 @@ func resourceStorageLensConfiguration() *schema.Resource {
 													Required:         true,
 													ValidateDiagFunc: enum.Validate[types.OutputSchemaVersion](),
 												},
-												"prefix": {
+												names.AttrPrefix: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
@@ -328,7 +328,7 @@ func resourceStorageLensConfiguration() *schema.Resource {
 								},
 							},
 						},
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
@@ -397,7 +397,7 @@ func resourceStorageLensConfigurationCreate(ctx context.Context, d *schema.Resou
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	accountID := meta.(*conns.AWSClient).AccountID
-	if v, ok := d.GetOk("account_id"); ok {
+	if v, ok := d.GetOk(names.AttrAccountID); ok {
 		accountID = v.(string)
 	}
 	configID := d.Get("config_id").(string)
@@ -444,8 +444,8 @@ func resourceStorageLensConfigurationRead(ctx context.Context, d *schema.Resourc
 		return diag.Errorf("reading S3 Storage Lens Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set("account_id", accountID)
-	d.Set("arn", output.StorageLensArn)
+	d.Set(names.AttrAccountID, accountID)
+	d.Set(names.AttrARN, output.StorageLensArn)
 	d.Set("config_id", configID)
 	if err := d.Set("storage_lens_configuration", []interface{}{flattenStorageLensConfiguration(output)}); err != nil {
 		return diag.Errorf("setting storage_lens_configuration: %s", err)
@@ -470,7 +470,7 @@ func resourceStorageLensConfigurationUpdate(ctx context.Context, d *schema.Resou
 		return diag.FromErr(err)
 	}
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &s3control.PutStorageLensConfigurationInput{
 			AccountId: aws.String(accountID),
 			ConfigId:  aws.String(configID),
@@ -488,8 +488,8 @@ func resourceStorageLensConfigurationUpdate(ctx context.Context, d *schema.Resou
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
+	if d.HasChange(names.AttrTagsAll) {
+		o, n := d.GetChange(names.AttrTagsAll)
 
 		if err := storageLensConfigurationUpdateTags(ctx, conn, accountID, configID, o, n); err != nil {
 			return diag.Errorf("updating S3 Storage Lens Configuration (%s) tags: %s", d.Id(), err)
@@ -669,7 +669,7 @@ func expandStorageLensConfiguration(tfMap map[string]interface{}) *types.Storage
 		apiObject.DataExport = expandStorageLensDataExport(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["enabled"].(bool); ok {
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		apiObject.IsEnabled = v
 	}
 
@@ -723,7 +723,7 @@ func expandActivityMetrics(tfMap map[string]interface{}) *types.ActivityMetrics 
 
 	apiObject := &types.ActivityMetrics{}
 
-	if v, ok := tfMap["enabled"].(bool); ok {
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		apiObject.IsEnabled = v
 	}
 
@@ -767,7 +767,7 @@ func expandAdvancedCostOptimizationMetrics(tfMap map[string]interface{}) *types.
 
 	apiObject := &types.AdvancedCostOptimizationMetrics{}
 
-	if v, ok := tfMap["enabled"].(bool); ok {
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		apiObject.IsEnabled = v
 	}
 
@@ -781,7 +781,7 @@ func expandAdvancedDataProtectionMetrics(tfMap map[string]interface{}) *types.Ad
 
 	apiObject := &types.AdvancedDataProtectionMetrics{}
 
-	if v, ok := tfMap["enabled"].(bool); ok {
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		apiObject.IsEnabled = v
 	}
 
@@ -795,7 +795,7 @@ func expandDetailedStatusCodesMetrics(tfMap map[string]interface{}) *types.Detai
 
 	apiObject := &types.DetailedStatusCodesMetrics{}
 
-	if v, ok := tfMap["enabled"].(bool); ok {
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		apiObject.IsEnabled = v
 	}
 
@@ -823,7 +823,7 @@ func expandPrefixLevelStorageMetrics(tfMap map[string]interface{}) *types.Prefix
 
 	apiObject := &types.PrefixLevelStorageMetrics{}
 
-	if v, ok := tfMap["enabled"].(bool); ok {
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		apiObject.IsEnabled = v
 	}
 
@@ -863,7 +863,7 @@ func expandStorageLensAwsOrg(tfMap map[string]interface{}) *types.StorageLensAws
 
 	apiObject := &types.StorageLensAwsOrg{}
 
-	if v, ok := tfMap["arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrARN].(string); ok && v != "" {
 		apiObject.Arn = aws.String(v)
 	}
 
@@ -895,7 +895,7 @@ func expandCloudWatchMetrics(tfMap map[string]interface{}) *types.CloudWatchMetr
 
 	apiObject := &types.CloudWatchMetrics{}
 
-	if v, ok := tfMap["enabled"].(bool); ok {
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		apiObject.IsEnabled = v
 	}
 
@@ -909,11 +909,11 @@ func expandS3BucketDestination(tfMap map[string]interface{}) *types.S3BucketDest
 
 	apiObject := &types.S3BucketDestination{}
 
-	if v, ok := tfMap["account_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrAccountID].(string); ok && v != "" {
 		apiObject.AccountId = aws.String(v)
 	}
 
-	if v, ok := tfMap["arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrARN].(string); ok && v != "" {
 		apiObject.Arn = aws.String(v)
 	}
 
@@ -921,7 +921,7 @@ func expandS3BucketDestination(tfMap map[string]interface{}) *types.S3BucketDest
 		apiObject.Encryption = expandStorageLensDataExportEncryption(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["format"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrFormat].(string); ok && v != "" {
 		apiObject.Format = types.Format(v)
 	}
 
@@ -929,7 +929,7 @@ func expandS3BucketDestination(tfMap map[string]interface{}) *types.S3BucketDest
 		apiObject.OutputSchemaVersion = types.OutputSchemaVersion(v)
 	}
 
-	if v, ok := tfMap["prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPrefix].(string); ok && v != "" {
 		apiObject.Prefix = aws.String(v)
 	}
 
@@ -1023,7 +1023,7 @@ func flattenStorageLensConfiguration(apiObject *types.StorageLensConfiguration) 
 		tfMap["data_export"] = []interface{}{flattenStorageLensDataExport(v)}
 	}
 
-	tfMap["enabled"] = apiObject.IsEnabled
+	tfMap[names.AttrEnabled] = apiObject.IsEnabled
 
 	if v := apiObject.Exclude; v != nil {
 		tfMap["exclude"] = []interface{}{flattenExclude(v)}
@@ -1073,7 +1073,7 @@ func flattenActivityMetrics(apiObject *types.ActivityMetrics) map[string]interfa
 
 	tfMap := map[string]interface{}{}
 
-	tfMap["enabled"] = apiObject.IsEnabled
+	tfMap[names.AttrEnabled] = apiObject.IsEnabled
 
 	return tfMap
 }
@@ -1115,7 +1115,7 @@ func flattenAdvancedCostOptimizationMetrics(apiObject *types.AdvancedCostOptimiz
 
 	tfMap := map[string]interface{}{}
 
-	tfMap["enabled"] = apiObject.IsEnabled
+	tfMap[names.AttrEnabled] = apiObject.IsEnabled
 
 	return tfMap
 }
@@ -1127,7 +1127,7 @@ func flattenAdvancedDataProtectionMetrics(apiObject *types.AdvancedDataProtectio
 
 	tfMap := map[string]interface{}{}
 
-	tfMap["enabled"] = apiObject.IsEnabled
+	tfMap[names.AttrEnabled] = apiObject.IsEnabled
 
 	return tfMap
 }
@@ -1139,7 +1139,7 @@ func flattenDetailedStatusCodesMetrics(apiObject *types.DetailedStatusCodesMetri
 
 	tfMap := map[string]interface{}{}
 
-	tfMap["enabled"] = apiObject.IsEnabled
+	tfMap[names.AttrEnabled] = apiObject.IsEnabled
 
 	return tfMap
 }
@@ -1165,7 +1165,7 @@ func flattenPrefixLevelStorageMetrics(apiObject *types.PrefixLevelStorageMetrics
 
 	tfMap := map[string]interface{}{}
 
-	tfMap["enabled"] = apiObject.IsEnabled
+	tfMap[names.AttrEnabled] = apiObject.IsEnabled
 
 	if v := apiObject.SelectionCriteria; v != nil {
 		tfMap["selection_criteria"] = []interface{}{flattenSelectionCriteria(v)}
@@ -1199,7 +1199,7 @@ func flattenStorageLensAwsOrg(apiObject *types.StorageLensAwsOrg) map[string]int
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Arn; v != nil {
-		tfMap["arn"] = aws.ToString(v)
+		tfMap[names.AttrARN] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -1230,7 +1230,7 @@ func flattenCloudWatchMetrics(apiObject *types.CloudWatchMetrics) map[string]int
 
 	tfMap := map[string]interface{}{}
 
-	tfMap["enabled"] = apiObject.IsEnabled
+	tfMap[names.AttrEnabled] = apiObject.IsEnabled
 
 	return tfMap
 }
@@ -1243,22 +1243,22 @@ func flattenS3BucketDestination(apiObject *types.S3BucketDestination) map[string
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.AccountId; v != nil {
-		tfMap["account_id"] = aws.ToString(v)
+		tfMap[names.AttrAccountID] = aws.ToString(v)
 	}
 
 	if v := apiObject.Arn; v != nil {
-		tfMap["arn"] = aws.ToString(v)
+		tfMap[names.AttrARN] = aws.ToString(v)
 	}
 
 	if v := apiObject.Encryption; v != nil {
 		tfMap["encryption"] = []interface{}{flattenStorageLensDataExportEncryption(v)}
 	}
 
-	tfMap["format"] = apiObject.Format
+	tfMap[names.AttrFormat] = apiObject.Format
 	tfMap["output_schema_version"] = apiObject.OutputSchemaVersion
 
 	if v := apiObject.Prefix; v != nil {
-		tfMap["prefix"] = aws.ToString(v)
+		tfMap[names.AttrPrefix] = aws.ToString(v)
 	}
 
 	return tfMap

@@ -17,7 +17,7 @@ func validClusterName(v interface{}, k string) (ws []string, errors []error) {
 	}
 
 	// https://docs.aws.amazon.com/eks/latest/APIReference/API_CreateCluster.html#API_CreateCluster_RequestSyntax
-	pattern := `^[0-9A-Za-z][0-9A-Za-z_-]+$`
+	pattern := `^[0-9A-Za-z][0-9A-Za-z_-]*$`
 	if !regexache.MustCompile(pattern).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q doesn't comply with restrictions (%q): %q",

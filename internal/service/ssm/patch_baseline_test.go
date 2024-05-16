@@ -13,35 +13,52 @@ import (
 	"github.com/aws/aws-sdk-go/service/ssm"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSSMPatchBaseline_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var before, after ssm.PatchBaselineIdentity
+	var before, after ssm.GetPatchBaselineOutput
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_patch_baseline.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPatchBaselineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPatchBaselineConfig_basic(name),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("json")),
+					},
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(ctx, resourceName, &before),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ssm", regexache.MustCompile(`patchbaseline/pb-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ssm", regexache.MustCompile(`patchbaseline/pb-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "approved_patches.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "approved_patches.*", "KB123456"),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("patch-baseline-%s", name)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("patch-baseline-%s", name)),
 					resource.TestCheckResourceAttr(resourceName, "approved_patches_compliance_level", ssm.PatchComplianceLevelCritical),
-					resource.TestCheckResourceAttr(resourceName, "description", "Baseline containing all updates approved for production systems"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Baseline containing all updates approved for production systems"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "approved_patches_enable_non_security", "false"),
+					acctest.CheckResourceAttrJMES(resourceName, "json", "ApprovedPatchesEnableNonSecurity", "false"),
+					acctest.CheckResourceAttrJMES(resourceName, "json", "ApprovedPatches|length(@)", "1"),
+					acctest.CheckResourceAttrJMESPair(resourceName, "json", "ApprovedPatches[0]", resourceName, "approved_patches.0"),
+					acctest.CheckResourceAttrJMESPair(resourceName, "json", "Name", resourceName, names.AttrName),
+					acctest.CheckResourceAttrJMESPair(resourceName, "json", "Description", resourceName, names.AttrDescription),
+					acctest.CheckResourceAttrJMESPair(resourceName, "json", "ApprovedPatchesEnableNonSecurity", resourceName, "approved_patches_enable_non_security"),
+					acctest.CheckResourceAttrJMESPair(resourceName, "json", "OperatingSystem", resourceName, "operating_system"),
 				),
 			},
 			{
@@ -51,16 +68,24 @@ func TestAccSSMPatchBaseline_basic(t *testing.T) {
 			},
 			{
 				Config: testAccPatchBaselineConfig_basicUpdated(name),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("json")),
+					},
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(ctx, resourceName, &after),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ssm", regexache.MustCompile(`patchbaseline/pb-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ssm", regexache.MustCompile(`patchbaseline/pb-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "approved_patches.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "approved_patches.*", "KB123456"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "approved_patches.*", "KB456789"),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("updated-patch-baseline-%s", name)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("updated-patch-baseline-%s", name)),
 					resource.TestCheckResourceAttr(resourceName, "approved_patches_compliance_level", ssm.PatchComplianceLevelHigh),
-					resource.TestCheckResourceAttr(resourceName, "description", "Baseline containing all updates approved for production systems - August 2017"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Baseline containing all updates approved for production systems - August 2017"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					acctest.CheckResourceAttrJMESPair(resourceName, "json", "ApprovedPatches[0]", resourceName, "approved_patches.1"),
+					acctest.CheckResourceAttrJMESPair(resourceName, "json", "ApprovedPatches[1]", resourceName, "approved_patches.0"),
+					acctest.CheckResourceAttrJMES(resourceName, "json", "ApprovedPatches|length(@)", "2"),
 					func(*terraform.State) error {
 						if aws.StringValue(before.BaselineId) != aws.StringValue(after.BaselineId) {
 							t.Fatal("Baseline IDs changed unexpectedly")
@@ -75,12 +100,12 @@ func TestAccSSMPatchBaseline_basic(t *testing.T) {
 
 func TestAccSSMPatchBaseline_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var patch ssm.PatchBaselineIdentity
+	var patch ssm.GetPatchBaselineOutput
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_patch_baseline.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPatchBaselineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -120,13 +145,13 @@ func TestAccSSMPatchBaseline_tags(t *testing.T) {
 
 func TestAccSSMPatchBaseline_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var identity ssm.PatchBaselineIdentity
+	var identity ssm.GetPatchBaselineOutput
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_patch_baseline.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPatchBaselineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -144,12 +169,12 @@ func TestAccSSMPatchBaseline_disappears(t *testing.T) {
 
 func TestAccSSMPatchBaseline_operatingSystem(t *testing.T) {
 	ctx := acctest.Context(t)
-	var before, after ssm.PatchBaselineIdentity
+	var before, after ssm.GetPatchBaselineOutput
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_patch_baseline.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPatchBaselineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -188,13 +213,13 @@ func TestAccSSMPatchBaseline_operatingSystem(t *testing.T) {
 
 func TestAccSSMPatchBaseline_approveUntilDateParam(t *testing.T) {
 	ctx := acctest.Context(t)
-	var before, after ssm.PatchBaselineIdentity
+	var before, after ssm.GetPatchBaselineOutput
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_patch_baseline.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPatchBaselineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -238,13 +263,13 @@ func TestAccSSMPatchBaseline_approveUntilDateParam(t *testing.T) {
 
 func TestAccSSMPatchBaseline_sources(t *testing.T) {
 	ctx := acctest.Context(t)
-	var before, after ssm.PatchBaselineIdentity
+	var before, after ssm.GetPatchBaselineOutput
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_patch_baseline.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPatchBaselineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -277,6 +302,7 @@ func TestAccSSMPatchBaseline_sources(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source.1.configuration", "[amzn-main] \nname=amzn-main-Base\nmirrorlist=http://repo./$awsregion./$awsdomain//$releasever/main/mirror.list //nmirrorlist_expire=300//nmetadata_expire=300 \npriority=10 \nfailovermethod=priority \nfastestmirror_enabled=0 \ngpgcheck=1 \ngpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-amazon-ga \nenabled=1 \nretries=3 \ntimeout=5\nreport_instanceid=yes"),
 					resource.TestCheckResourceAttr(resourceName, "source.1.products.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source.1.products.0", "AmazonLinux2018.03"),
+
 					func(*terraform.State) error {
 						if aws.StringValue(before.BaselineId) != aws.StringValue(after.BaselineId) {
 							t.Fatal("Baseline IDs changed unexpectedly")
@@ -291,13 +317,13 @@ func TestAccSSMPatchBaseline_sources(t *testing.T) {
 
 func TestAccSSMPatchBaseline_approvedPatchesNonSec(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ssmPatch ssm.PatchBaselineIdentity
+	var ssmPatch ssm.GetPatchBaselineOutput
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_patch_baseline.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPatchBaselineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -319,13 +345,13 @@ func TestAccSSMPatchBaseline_approvedPatchesNonSec(t *testing.T) {
 
 func TestAccSSMPatchBaseline_rejectPatchesAction(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ssmPatch ssm.PatchBaselineIdentity
+	var ssmPatch ssm.GetPatchBaselineOutput
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_patch_baseline.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPatchBaselineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -349,13 +375,13 @@ func TestAccSSMPatchBaseline_rejectPatchesAction(t *testing.T) {
 // Default Patch Baseline acceptance tests because it sets the default patch baseline
 func testAccSSMPatchBaseline_deleteDefault(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ssmPatch ssm.PatchBaselineIdentity
+	var ssmPatch ssm.GetPatchBaselineOutput
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_patch_baseline.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPatchBaselineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -383,7 +409,7 @@ func testAccSSMPatchBaseline_deleteDefault(t *testing.T) {
 }
 
 func testAccCheckPatchBaselineRecreated(t *testing.T,
-	before, after *ssm.PatchBaselineIdentity) resource.TestCheckFunc {
+	before, after *ssm.GetPatchBaselineOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *before.BaselineId == *after.BaselineId {
 			t.Fatalf("Expected change of SSM Patch Baseline IDs, but both were %v", *before.BaselineId)
@@ -392,39 +418,24 @@ func testAccCheckPatchBaselineRecreated(t *testing.T,
 	}
 }
 
-func testAccCheckPatchBaselineExists(ctx context.Context, n string, patch *ssm.PatchBaselineIdentity) resource.TestCheckFunc {
+func testAccCheckPatchBaselineExists(ctx context.Context, n string, v *ssm.GetPatchBaselineOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No SSM Patch Baseline ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn(ctx)
 
-		resp, err := conn.DescribePatchBaselinesWithContext(ctx, &ssm.DescribePatchBaselinesInput{
-			Filters: []*ssm.PatchOrchestratorFilter{
-				{
-					Key:    aws.String("NAME_PREFIX"),
-					Values: []*string{aws.String(rs.Primary.Attributes["name"])},
-				},
-			},
-		})
+		output, err := tfssm.FindPatchBaselineByID(ctx, conn, rs.Primary.ID)
 
-		for _, i := range resp.BaselineIdentities {
-			if *i.BaselineId == rs.Primary.ID {
-				*patch = *i
-				return nil
-			}
-		}
 		if err != nil {
 			return err
 		}
 
-		return fmt.Errorf("No AWS SSM Patch Baseline found")
+		*v = *output
+
+		return nil
 	}
 }
 
@@ -437,24 +448,17 @@ func testAccCheckPatchBaselineDestroy(ctx context.Context) resource.TestCheckFun
 				continue
 			}
 
-			out, err := conn.DescribePatchBaselinesWithContext(ctx, &ssm.DescribePatchBaselinesInput{
-				Filters: []*ssm.PatchOrchestratorFilter{
-					{
-						Key:    aws.String("NAME_PREFIX"),
-						Values: []*string{aws.String(rs.Primary.Attributes["name"])},
-					},
-				},
-			})
+			_, err := tfssm.FindPatchBaselineByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
 
 			if err != nil {
 				return err
 			}
 
-			if len(out.BaselineIdentities) > 0 {
-				return fmt.Errorf("Expected AWS SSM Patch Baseline to be gone, but was still found")
-			}
-
-			return nil
+			return fmt.Errorf("SSM Patch Baseline %s still exists", rs.Primary.ID)
 		}
 
 		return nil

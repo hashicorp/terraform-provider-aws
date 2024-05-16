@@ -56,7 +56,7 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 		{{- else if .UntagInCustomVal }}
 		input.{{ .UntagInTagsElem }} = {{ .UntagInCustomVal }}
 		{{- else }}
-		input.{{ .UntagInTagsElem }} = aws.StringSlice(removedTags.Keys())
+		input.{{ .UntagInTagsElem }} = removedTags.Keys()
 		{{- end }}
 	}
 

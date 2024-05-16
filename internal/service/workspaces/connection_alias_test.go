@@ -45,7 +45,7 @@ func TestAccWorkSpacesConnectionAlias_basic(t *testing.T) {
 					testAccCheckConnectionAliasExists(ctx, resourceName, &connectionalias),
 					resource.TestCheckResourceAttr(resourceName, "connection_string", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "owner_account_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "state"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
 				),
 			},
 			{

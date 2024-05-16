@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ec2_transit_gateway_route_table_association")
@@ -42,11 +43,11 @@ func ResourceTransitGatewayRouteTableAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"resource_type": {
+			names.AttrResourceType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"transit_gateway_attachment_id": {
+			names.AttrTransitGatewayAttachmentID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -66,7 +67,7 @@ func resourceTransitGatewayRouteTableAssociationCreate(ctx context.Context, d *s
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	transitGatewayAttachmentID := d.Get("transit_gateway_attachment_id").(string)
+	transitGatewayAttachmentID := d.Get(names.AttrTransitGatewayAttachmentID).(string)
 	transitGatewayRouteTableID := d.Get("transit_gateway_route_table_id").(string)
 	id := TransitGatewayRouteTableAssociationCreateResourceID(transitGatewayRouteTableID, transitGatewayAttachmentID)
 
@@ -134,8 +135,8 @@ func resourceTransitGatewayRouteTableAssociationRead(ctx context.Context, d *sch
 	}
 
 	d.Set("resource_id", transitGatewayRouteTableAssociation.ResourceId)
-	d.Set("resource_type", transitGatewayRouteTableAssociation.ResourceType)
-	d.Set("transit_gateway_attachment_id", transitGatewayRouteTableAssociation.TransitGatewayAttachmentId)
+	d.Set(names.AttrResourceType, transitGatewayRouteTableAssociation.ResourceType)
+	d.Set(names.AttrTransitGatewayAttachmentID, transitGatewayRouteTableAssociation.TransitGatewayAttachmentId)
 	d.Set("transit_gateway_route_table_id", transitGatewayRouteTableID)
 
 	return diags

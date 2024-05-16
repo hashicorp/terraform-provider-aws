@@ -39,7 +39,7 @@ func ResourceTransitGatewayRouteTable() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -53,7 +53,7 @@ func ResourceTransitGatewayRouteTable() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"transit_gateway_id": {
+			names.AttrTransitGatewayID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -68,7 +68,7 @@ func resourceTransitGatewayRouteTableCreate(ctx context.Context, d *schema.Resou
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateTransitGatewayRouteTableInput{
-		TransitGatewayId:  aws.String(d.Get("transit_gateway_id").(string)),
+		TransitGatewayId:  aws.String(d.Get(names.AttrTransitGatewayID).(string)),
 		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeTransitGatewayRouteTable),
 	}
 
@@ -111,10 +111,10 @@ func resourceTransitGatewayRouteTableRead(ctx context.Context, d *schema.Resourc
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("transit-gateway-route-table/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("default_association_route_table", transitGatewayRouteTable.DefaultAssociationRouteTable)
 	d.Set("default_propagation_route_table", transitGatewayRouteTable.DefaultPropagationRouteTable)
-	d.Set("transit_gateway_id", transitGatewayRouteTable.TransitGatewayId)
+	d.Set(names.AttrTransitGatewayID, transitGatewayRouteTable.TransitGatewayId)
 
 	setTagsOut(ctx, transitGatewayRouteTable.Tags)
 

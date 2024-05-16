@@ -5,301 +5,397 @@ package qbusiness
 
 import (
 	"context"
-	"log"
+	"errors"
+	"fmt"
 	"strings"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/qbusiness"
-	"github.com/aws/aws-sdk-go-v2/service/qbusiness/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/qbusiness/types"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_qbusiness_index", name="Index")
+// @FrameworkResource("aws_qbusiness_index", name="Index")
 // @Tags(identifierAttribute="arn")
-func ResourceIndex() *schema.Resource {
-	return &schema.Resource{
+func newResourceIndex(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &resourceIndex{}
 
-		CreateWithoutTimeout: resourceIndexCreate,
-		ReadWithoutTimeout:   resourceIndexRead,
-		UpdateWithoutTimeout: resourceIndexUpdate,
-		DeleteWithoutTimeout: resourceIndexDelete,
+	r.SetDefaultCreateTimeout(30 * time.Minute)
+	r.SetDefaultDeleteTimeout(30 * time.Minute)
+	r.SetDefaultUpdateTimeout(30 * time.Minute)
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
+	return r, nil
+}
 
-		Schema: map[string]*schema.Schema{
-			"application_id": {
-				Type:        schema.TypeString,
+const (
+	ResNameIndex = "Index"
+)
+
+type resourceIndex struct {
+	framework.ResourceWithConfigure
+	framework.WithImportByID
+	framework.WithTimeouts
+}
+
+func (r *resourceIndex) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			names.AttrID:      framework.IDAttribute(),
+			names.AttrARN:     framework.ARNAttributeComputedOnly(),
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+			"application_id": schema.StringAttribute{
+				Description: "Identifier of the Amazon Q application associated with the index",
 				Required:    true,
-				Description: "The identifier of the Amazon Q application associated with the index.",
-				ValidateFunc: validation.All(
-					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9-]{35}$`), "must be a valid application ID"),
-				),
-			},
-			"arn": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "The Amazon Resource Name (ARN) of the Amazon Q index.",
-			},
-			"capacity_configuration": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"units": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							Description:  "The number of additional storage units for the Amazon Q index.",
-							ValidateFunc: validation.IntAtLeast(1),
-						},
-					},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9-]{35}$`), "must be a valid application ID"),
 				},
 			},
-			"description": {
-				Type:        schema.TypeString,
+			"index_id": schema.StringAttribute{
+				Computed: true,
+			},
+			names.AttrDescription: schema.StringAttribute{
+				Description: "A description of the Amazon Q application.",
 				Optional:    true,
-				Description: "The description for the Amazon Q index.",
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(0, 1000),
-					validation.StringMatch(regexache.MustCompile(`^\P{C}*$`), "must not contain control characters"),
-				),
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(0, 1000),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^\P{C}*$`), "must not contain control characters"),
+				},
 			},
-			"display_name": {
-				Type:        schema.TypeString,
+			names.AttrDisplayName: schema.StringAttribute{
+				Description: "The display name of the Amazon Q application.",
 				Required:    true,
-				Description: "The name of the Amazon Q index.",
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 100),
-					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9_-]*$`), "must begin with a letter or number and contain only alphanumeric, underscore, or hyphen characters"),
-				),
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 1000),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^\P{C}*$`), "must not contain control characters"),
+				},
 			},
-			"document_attribute_configurations": {
-				Type:             schema.TypeList,
-				MaxItems:         1,
-				Optional:         true,
-				ForceNew:         true,
-				Description:      "Configuration information for document metadata or fields",
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"attribute": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 50,
-							MinItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"name": {
-										Type:        schema.TypeString,
-										Required:    true,
-										Description: "The name of the document attribute.",
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(0, 2048),
-											validation.StringMatch(regexache.MustCompile(`^\P{C}*$`), "must not contain control characters"),
-										),
-									},
-									"search": {
-										Type:             schema.TypeString,
-										Required:         true,
-										Description:      "Information about whether the document attribute can be used by an end user to search for information on their web experience.",
-										ValidateDiagFunc: enum.Validate[types.Status](),
-									},
-									"type": {
-										Type:             schema.TypeString,
-										Required:         true,
-										Description:      "The type of document attribute.",
-										ValidateDiagFunc: enum.Validate[types.AttributeType](),
-									},
-								},
+		},
+		Blocks: map[string]schema.Block{
+			"capacity_configuration": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[capacityConfigurationData](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+					listvalidator.IsRequired(),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"units": schema.Int64Attribute{
+							Required:    true,
+							Description: "The number of additional storage units for the Amazon Q index.",
+							Validators: []validator.Int64{
+								int64validator.AtLeast(1),
 							},
 						},
 					},
 				},
 			},
-			"index_id": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "The identifier of the Amazon Q index.",
+			"document_attribute_configuration": schema.SetNestedBlock{
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[documentAttributeConfigurationData](ctx),
+				Validators: []validator.Set{
+					setvalidator.SizeAtMost(500),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						names.AttrName: schema.StringAttribute{
+							Required:    true,
+							Description: "The name of the document attribute.",
+							Validators: []validator.String{
+								stringvalidator.LengthBetween(1, 2048),
+							},
+						},
+						"search": schema.StringAttribute{
+							Required:    true,
+							Description: "Information about whether the document attribute can be used by an end user to search for information on their web experience.",
+							Validators: []validator.String{
+								enum.FrameworkValidate[awstypes.Status](),
+							},
+						},
+						names.AttrType: schema.StringAttribute{
+							Required:    true,
+							Description: "The type of document attribute.",
+							Validators: []validator.String{
+								enum.FrameworkValidate[awstypes.AttributeType](),
+							},
+						},
+					},
+				},
 			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Delete: true,
+				Update: true,
+			}),
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).QBusinessClient(ctx)
-
-	application_id := d.Get("application_id").(string)
-	display_name := d.Get("display_name").(string)
-
-	input := &qbusiness.CreateIndexInput{
-		ApplicationId: aws.String(application_id),
-		DisplayName:   aws.String(display_name),
-		Tags:          getTagsIn(ctx),
+func (r *resourceIndex) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var data resourceIndexData
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	if v, ok := d.GetOk("description"); ok {
-		input.Description = aws.String(v.(string))
-	}
+	conn := r.Meta().QBusinessClient(ctx)
 
-	if v, ok := d.GetOk("capacity_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.CapacityConfiguration = &types.IndexCapacityConfiguration{
-			Units: aws.Int32(int32(v.([]interface{})[0].(map[string]interface{})["units"].(int))),
-		}
-	}
+	input := &qbusiness.CreateIndexInput{}
+	resp.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
 
-	output, err := conn.CreateIndex(ctx, input)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	input.Tags = getTagsIn(ctx)
+	input.ClientToken = aws.String(id.UniqueId())
+
+	out, err := conn.CreateIndex(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating qbusiness index: %s", err)
+		resp.Diagnostics.AddError("failed to create Amazon Q index", err.Error())
+		return
 	}
 
-	d.SetId(application_id + "/" + aws.ToString(output.IndexId))
+	data.IndexId = fwflex.StringToFramework(ctx, out.IndexId)
+	data.IndexArn = fwflex.StringToFramework(ctx, out.IndexArn)
 
-	if _, err := waitIndexCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for qbusiness index (%s) to be created: %s", d.Id(), err)
+	data.setID()
+
+	if _, err := waitIndexCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		resp.Diagnostics.AddError("failed to wait for Amazon Q index creation", err.Error())
+		return
 	}
 
-	if v, ok := d.GetOk("document_attribute_configurations"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		updateInput := &qbusiness.UpdateIndexInput{
-			ApplicationId: aws.String(application_id),
-			IndexId:       output.IndexId,
+	update := &qbusiness.UpdateIndexInput{}
+
+	resp.Diagnostics.Append(fwflex.Expand(ctx, data, update)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if len(update.DocumentAttributeConfigurations) > 0 {
+		_, err = conn.UpdateIndex(ctx, update)
+		if err != nil {
+			resp.Diagnostics.AddError("failed to update Amazon Q index", err.Error())
+			return
 		}
 
-		updateInput.DocumentAttributeConfigurations = expandDocumentAttributeConfigurations(d.Get("document_attribute_configurations").([]interface{}))
+		if _, err := waitIndexUpdated(ctx, conn, data.ID.ValueString(), r.UpdateTimeout(ctx, data.Timeouts)); err != nil {
+			resp.Diagnostics.AddError("failed to wait for Amazon Q index update", err.Error())
+			return
+		}
+	}
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
 
-		_, err = conn.UpdateIndex(ctx, updateInput)
+func (r *resourceIndex) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var data resourceIndexData
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().QBusinessClient(ctx)
+
+	if err := data.initFromID(); err != nil {
+		resp.Diagnostics.AddError("parsing resource ID", err.Error())
+		return
+	}
+
+	indexId := data.IndexId.ValueString()
+	appId := data.ApplicationId.ValueString()
+
+	input := &qbusiness.DeleteIndexInput{
+		IndexId:       aws.String(indexId),
+		ApplicationId: aws.String(appId),
+	}
+
+	_, err := conn.DeleteIndex(ctx, input)
+
+	if err != nil {
+		var nfe *awstypes.ResourceNotFoundException
+		if errors.As(err, &nfe) {
+			return
+		}
+		resp.Diagnostics.AddError(fmt.Sprintf("failed to delete Q Business index (%s)", data.IndexId.ValueString()), err.Error())
+		return
+	}
+
+	if _, err := waitIndexDeleted(ctx, conn, data.ID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		resp.Diagnostics.AddError("failed to wait for Q Business application deletion", err.Error())
+		return
+	}
+}
+
+func (r *resourceIndex) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = "aws_qbusiness_index"
+}
+
+func (r *resourceIndex) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var data resourceIndexData
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().QBusinessClient(ctx)
+
+	out, err := FindIndexByID(ctx, conn, data.ID.ValueString())
+
+	if tfresource.NotFound(err) {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("failed to retrieve Q Business index (%s)", data.ID.ValueString()), err.Error())
+		return
+	}
+
+	out.DocumentAttributeConfigurations = filterDefaultDocumentAttributeConfigurations(out.DocumentAttributeConfigurations)
+
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+func (r *resourceIndex) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var old, new resourceIndexData
+
+	resp.Diagnostics.Append(req.State.Get(ctx, &old)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &new)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if err := new.initFromID(); err != nil {
+		resp.Diagnostics.AddError("parsing resource ID", err.Error())
+		return
+	}
+
+	if !old.CapacityConfiguration.Equal(new.CapacityConfiguration) ||
+		!old.DisplayName.Equal(new.DisplayName) ||
+		!old.Description.Equal(new.Description) ||
+		!old.DocumentAttributeConfigurations.Equal(new.DocumentAttributeConfigurations) {
+		conn := r.Meta().QBusinessClient(ctx)
+
+		input := &qbusiness.UpdateIndexInput{}
+
+		resp.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		_, err := conn.UpdateIndex(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating qbusiness index (%s): %s", d.Id(), err)
+			resp.Diagnostics.AddError("failed to update Amazon Q index", err.Error())
+			return
+		}
+
+		if _, err := waitIndexUpdated(ctx, conn, new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+			resp.Diagnostics.AddError("failed to wait for Amazon Q index update", err.Error())
+			return
 		}
 	}
-
-	return append(diags, resourceIndexRead(ctx, d, meta)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &new)...)
 }
 
-func resourceIndexRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).QBusinessClient(ctx)
-
-	output, err := FindIndexByID(ctx, conn, d.Id())
-
-	if !d.IsNewResource() && errs.IsA[*types.ResourceNotFoundException](err) {
-		log.Printf("[WARN] qbusiness index (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading qbusiness index (%s): %s", d.Id(), err)
-	}
-
-	d.Set("arn", output.IndexArn)
-	d.Set("description", output.Description)
-	d.Set("display_name", output.DisplayName)
-	d.Set("index_id", output.IndexId)
-	d.Set("application_id", output.ApplicationId)
-
-	if err := d.Set("capacity_configuration", flattenIndexCapacityConfiguration(output.CapacityConfiguration)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting qbusiness index capacity_configuration: %s", err)
-	}
-
-	omitDefaults := filterDefaultDocumentAttributeConfigurations(output.DocumentAttributeConfigurations)
-	if err := d.Set("document_attribute_configurations", flattenDocumentAttributeConfigurations(omitDefaults)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting qbusiness index document_attribute_configurations: %s", err)
-	}
-
-	return diags
+func (r *resourceIndex) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, request, response)
 }
 
-func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).QBusinessClient(ctx)
-
-	id := strings.Split(d.Id(), "/")
-	input := &qbusiness.UpdateIndexInput{
-		ApplicationId: aws.String(id[0]),
-		IndexId:       aws.String(id[1]),
-	}
-
-	if d.HasChange("description") {
-		input.Description = aws.String(d.Get("description").(string))
-	}
-
-	if d.HasChange("display_name") {
-		input.DisplayName = aws.String(d.Get("display_name").(string))
-	}
-
-	if d.HasChange("capacity_configuration") {
-		input.CapacityConfiguration = expandIndexCapacityConfiguration(d.Get("capacity_configuration").([]interface{}))
-	}
-
-	_, err := conn.UpdateIndex(ctx, input)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating qbusiness index (%s): %s", d.Id(), err)
-	}
-
-	return append(diags, resourceIndexRead(ctx, d, meta)...)
+type resourceIndexData struct {
+	ApplicationId                   types.String                                                       `tfsdk:"application_id"`
+	CapacityConfiguration           fwtypes.ListNestedObjectValueOf[capacityConfigurationData]         `tfsdk:"capacity_configuration"`
+	DisplayName                     types.String                                                       `tfsdk:"display_name"`
+	Description                     types.String                                                       `tfsdk:"description"`
+	ID                              types.String                                                       `tfsdk:"id"`
+	IndexId                         types.String                                                       `tfsdk:"index_id"`
+	IndexArn                        types.String                                                       `tfsdk:"arn"`
+	Tags                            types.Map                                                          `tfsdk:"tags"`
+	TagsAll                         types.Map                                                          `tfsdk:"tags_all"`
+	Timeouts                        timeouts.Value                                                     `tfsdk:"timeouts"`
+	DocumentAttributeConfigurations fwtypes.SetNestedObjectValueOf[documentAttributeConfigurationData] `tfsdk:"document_attribute_configuration"`
 }
 
-func resourceIndexDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
+type capacityConfigurationData struct {
+	Units types.Int64 `tfsdk:"units"`
+}
 
-	conn := meta.(*conns.AWSClient).QBusinessClient(ctx)
+type documentAttributeConfigurationData struct {
+	Name   types.String                               `tfsdk:"name"`
+	Search fwtypes.StringEnum[awstypes.Status]        `tfsdk:"search"`
+	Type   fwtypes.StringEnum[awstypes.AttributeType] `tfsdk:"type"`
+}
 
-	id := strings.Split(d.Id(), "/")
-	_, err := conn.DeleteIndex(ctx, &qbusiness.DeleteIndexInput{
-		ApplicationId: aws.String(id[0]),
-		IndexId:       aws.String(id[1]),
-	})
+const (
+	indexResourceIDPartCount = 2
+)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return diags
-	}
+func (data *resourceIndexData) setID() {
+	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{data.ApplicationId.ValueString(), data.IndexId.ValueString()}, indexResourceIDPartCount, false)))
+}
 
+func (data *resourceIndexData) initFromID() error {
+	parts, err := flex.ExpandResourceId(data.ID.ValueString(), indexResourceIDPartCount, false)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting qbusiness index (%s): %s", d.Id(), err)
+		return err
 	}
 
-	if _, err := waitIndexDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for qbusiness index (%s) to be deleted: %s", d.Id(), err)
-	}
-	return diags
+	data.ApplicationId = types.StringValue(parts[0])
+	data.IndexId = types.StringValue(parts[1])
+	return nil
 }
 
 func FindIndexByID(ctx context.Context, conn *qbusiness.Client, index_id string) (*qbusiness.GetIndexOutput, error) {
+	parts, err := flex.ExpandResourceId(index_id, indexResourceIDPartCount, false)
 
-	id := strings.Split(index_id, "/")
+	if err != nil {
+		return nil, err
+	}
+
 	input := &qbusiness.GetIndexInput{
-		ApplicationId: aws.String(id[0]),
-		IndexId:       aws.String(id[1]),
+		ApplicationId: aws.String(parts[0]),
+		IndexId:       aws.String(parts[1]),
 	}
 
 	output, err := conn.GetIndex(ctx, input)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -317,72 +413,14 @@ func FindIndexByID(ctx context.Context, conn *qbusiness.Client, index_id string)
 	return output, nil
 }
 
-func expandIndexCapacityConfiguration(v []interface{}) *types.IndexCapacityConfiguration {
-	if len(v) == 0 || v[0] == nil {
-		return nil
-	}
-
-	return &types.IndexCapacityConfiguration{
-		Units: aws.Int32(int32(v[0].(map[string]interface{})["units"].(int))),
-	}
-}
-
-func flattenIndexCapacityConfiguration(v *types.IndexCapacityConfiguration) []interface{} {
-	if v == nil {
-		return nil
-	}
-
-	return []interface{}{
-		map[string]interface{}{
-			"units": aws.ToInt32(v.Units),
-		},
-	}
-}
-
-func flattenDocumentAttributeConfigurations(v []types.DocumentAttributeConfiguration) []interface{} {
-	if v == nil {
-		return nil
-	}
-	var attributes []interface{}
-	for _, attribute := range v {
-		attributes = append(attributes, map[string]interface{}{
-			"name":   aws.ToString(attribute.Name),
-			"search": string(attribute.Search),
-			"type":   string(attribute.Type),
-		})
-	}
-	return []interface{}{
-		map[string]interface{}{
-			"attribute": attributes,
-		},
-	}
-}
-
-func expandDocumentAttributeConfigurations(v []interface{}) []types.DocumentAttributeConfiguration {
-	if len(v) == 0 || v[0] == nil {
-		return nil
-	}
-	m := v[0].(map[string]interface{})["attribute"].([]interface{})
-
-	var attributes []types.DocumentAttributeConfiguration
-	for _, attribute := range m {
-		attributes = append(attributes, types.DocumentAttributeConfiguration{
-			Name:   aws.String(attribute.(map[string]interface{})["name"].(string)),
-			Search: types.Status(attribute.(map[string]interface{})["search"].(string)),
-			Type:   types.AttributeType(attribute.(map[string]interface{})["type"].(string)),
-		})
-	}
-	return attributes
-}
-
-func filterDefaultDocumentAttributeConfigurations(conf []types.DocumentAttributeConfiguration) []types.DocumentAttributeConfiguration {
-	var attributes []types.DocumentAttributeConfiguration
+func filterDefaultDocumentAttributeConfigurations(conf []awstypes.DocumentAttributeConfiguration) []awstypes.DocumentAttributeConfiguration {
+	var attributes []awstypes.DocumentAttributeConfiguration
 	for _, attribute := range conf {
 		filter := false
 		if strings.HasPrefix(aws.ToString(attribute.Name), "_") {
 			filter = true
 		}
-		if aws.ToString(attribute.Name) == "_document_title" && attribute.Search == types.StatusDisabled {
+		if aws.ToString(attribute.Name) == "_document_title" && attribute.Search == awstypes.StatusDisabled {
 			filter = false
 		}
 		if filter {

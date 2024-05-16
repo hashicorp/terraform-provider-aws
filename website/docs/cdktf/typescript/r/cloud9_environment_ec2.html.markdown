@@ -51,6 +51,7 @@ import { TerraformOutput, TerraformStack } from "cdktf";
 import { Cloud9EnvironmentEc2 } from "./.gen/providers/aws/cloud9-environment-ec2";
 import { DataAwsInstance } from "./.gen/providers/aws/data-aws-instance";
 interface MyConfig {
+  imageId: any;
   name: any;
 }
 class MyConvertedCode extends TerraformStack {
@@ -58,6 +59,7 @@ class MyConvertedCode extends TerraformStack {
     super(scope, name);
     const example = new Cloud9EnvironmentEc2(this, "example", {
       instanceType: "t2.micro",
+      imageId: config.imageId,
       name: config.name,
     });
     new DataAwsInstance(this, "cloud9_instance", {
@@ -95,6 +97,7 @@ import { Cloud9EnvironmentEc2 } from "./.gen/providers/aws/cloud9-environment-ec
 import { DataAwsInstance } from "./.gen/providers/aws/data-aws-instance";
 import { Eip } from "./.gen/providers/aws/eip";
 interface MyConfig {
+  imageId: any;
   name: any;
 }
 class MyConvertedCode extends TerraformStack {
@@ -102,6 +105,7 @@ class MyConvertedCode extends TerraformStack {
     super(scope, name);
     const example = new Cloud9EnvironmentEc2(this, "example", {
       instanceType: "t2.micro",
+      imageId: config.imageId,
       name: config.name,
     });
     const cloud9Instance = new DataAwsInstance(this, "cloud9_instance", {
@@ -157,4 +161,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `type` - The type of the environment (e.g., `ssh` or `ec2`).
 
-<!-- cache-key: cdktf-0.20.0 input-0be6df5cef8a430f287883ab12bb10a284a2fdea28cb4d94bc8569901fcc42d6 -->
+<!-- cache-key: cdktf-0.20.1 input-0be6df5cef8a430f287883ab12bb10a284a2fdea28cb4d94bc8569901fcc42d6 -->

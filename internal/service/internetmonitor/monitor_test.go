@@ -26,7 +26,7 @@ func TestAccInternetMonitorMonitor_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.InternetMonitorEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.InternetMonitorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMonitorDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -34,13 +34,13 @@ func TestAccInternetMonitorMonitor_basic(t *testing.T) {
 				Config: testAccMonitorConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMonitorExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "internetmonitor", regexache.MustCompile(`monitor/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "internetmonitor", regexache.MustCompile(`monitor/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "health_events_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "internet_measurements_log_delivery.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "max_city_networks_to_monitor", "0"),
 					resource.TestCheckResourceAttr(resourceName, "monitor_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "resources.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "status", "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "traffic_percentage_to_monitor", "1"),
 				),
@@ -54,7 +54,7 @@ func TestAccInternetMonitorMonitor_basic(t *testing.T) {
 				Config: testAccMonitorConfig_status(rName, "INACTIVE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMonitorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "status", "INACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "INACTIVE"),
 				),
 			},
 		},
@@ -68,7 +68,7 @@ func TestAccInternetMonitorMonitor_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.InternetMonitorEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.InternetMonitorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMonitorDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -91,7 +91,7 @@ func TestAccInternetMonitorMonitor_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.InternetMonitorEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.InternetMonitorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMonitorDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -136,7 +136,7 @@ func TestAccInternetMonitorMonitor_healthEventsConfig(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.InternetMonitorEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.InternetMonitorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMonitorDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -174,7 +174,7 @@ func TestAccInternetMonitorMonitor_log(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.InternetMonitorEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.InternetMonitorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMonitorDestroy(ctx),
 		Steps: []resource.TestStep{

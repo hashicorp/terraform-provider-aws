@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -19,25 +20,33 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_wafregional_web_acl_association")
-func ResourceWebACLAssociation() *schema.Resource {
+// @SDKResource("aws_wafregional_web_acl_association", name="Web ACL Association")
+func resourceWebACLAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWebACLAssociationCreate,
 		ReadWithoutTimeout:   resourceWebACLAssociationRead,
 		DeleteWithoutTimeout: resourceWebACLAssociationDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
-			"web_acl_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+			names.AttrResourceARN: {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
 			},
-			"resource_arn": {
+			"web_acl_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -50,38 +59,23 @@ func resourceWebACLAssociationCreate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 
-	log.Printf(
-		"[INFO] Creating WAF Regional Web ACL association: %s => %s",
-		d.Get("web_acl_id").(string),
-		d.Get("resource_arn").(string))
-
-	params := &wafregional.AssociateWebACLInput{
-		WebACLId:    aws.String(d.Get("web_acl_id").(string)),
-		ResourceArn: aws.String(d.Get("resource_arn").(string)),
+	webACLID := d.Get("web_acl_id").(string)
+	resourceARN := d.Get(names.AttrResourceARN).(string)
+	id := webACLAssociationCreateResourceID(webACLID, resourceARN)
+	input := &wafregional.AssociateWebACLInput{
+		ResourceArn: aws.String(resourceARN),
+		WebACLId:    aws.String(webACLID),
 	}
 
-	// create association and wait on retryable error
-	// no response body
-	var err error
-	err = retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
-		_, err = conn.AssociateWebACLWithContext(ctx, params)
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFUnavailableEntityException) {
-				return retry.RetryableError(err)
-			}
-			return retry.NonRetryableError(err)
-		}
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.AssociateWebACLWithContext(ctx, params)
-	}
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+		return conn.AssociateWebACLWithContext(ctx, input)
+	}, wafregional.ErrCodeWAFUnavailableEntityException)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating WAF Regional Web ACL association: %s", err)
+		return diag.Errorf("creating WAF Regional WebACL Association (%s): %s", id, err)
 	}
 
-	// Store association id
-	d.SetId(fmt.Sprintf("%s:%s", *params.WebACLId, *params.ResourceArn))
+	d.SetId(id)
 
 	return diags
 }
@@ -90,32 +84,25 @@ func resourceWebACLAssociationRead(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 
-	resourceArn := WebACLAssociationParseID(d.Id())
-
-	input := &wafregional.GetWebACLForResourceInput{
-		ResourceArn: aws.String(resourceArn),
+	_, resourceARN, err := webACLAssociationParseResourceID(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
 	}
 
-	output, err := conn.GetWebACLForResourceWithContext(ctx, input)
+	webACL, err := findWebACLByResourceARN(ctx, conn, resourceARN)
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
-		log.Printf("[WARN] WAF Regional Web ACL for resource (%s) not found, removing from state", resourceArn)
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] WAF Regional WebACL Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return diags
+		return nil
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting WAF Regional Web ACL for resource (%s): %s", resourceArn, err)
+		return diag.Errorf("reading WAF Regional WebACL Association (%s): %s", d.Id(), err)
 	}
 
-	if !d.IsNewResource() && (output == nil || output.WebACLSummary == nil) {
-		log.Printf("[WARN] WAF Regional Web ACL for resource (%s) not found, removing from state", resourceArn)
-		d.SetId("")
-		return diags
-	}
-
-	d.Set("resource_arn", resourceArn)
-	d.Set("web_acl_id", output.WebACLSummary.WebACLId)
+	d.Set(names.AttrResourceARN, resourceARN)
+	d.Set("web_acl_id", webACL.WebACLId)
 
 	return diags
 }
@@ -124,23 +111,66 @@ func resourceWebACLAssociationDelete(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 
-	resourceArn := WebACLAssociationParseID(d.Id())
-
-	log.Printf("[INFO] Deleting WAF Regional Web ACL association: %s", resourceArn)
-
-	params := &wafregional.DisassociateWebACLInput{
-		ResourceArn: aws.String(resourceArn),
+	_, resourceARN, err := webACLAssociationParseResourceID(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
 	}
 
-	// If action successful HTTP 200 response with an empty body
-	if _, err := conn.DisassociateWebACLWithContext(ctx, params); err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting WAF Regional Web ACL Association (%s): %s", resourceArn, err)
+	_, err = conn.DisassociateWebACLWithContext(ctx, &wafregional.DisassociateWebACLInput{
+		ResourceArn: aws.String(resourceARN),
+	})
+
+	if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
+		return diags
 	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting WAF Regional Web ACL Association (%s): %s", d.Id(), err)
+	}
+
 	return diags
 }
 
-func WebACLAssociationParseID(id string) (resourceArn string) {
-	parts := strings.SplitN(id, ":", 2)
-	resourceArn = parts[1]
-	return
+func findWebACLByResourceARN(ctx context.Context, conn *wafregional.WAFRegional, arn string) (*waf.WebACLSummary, error) {
+	input := &wafregional.GetWebACLForResourceInput{
+		ResourceArn: aws.String(arn),
+	}
+
+	output, err := conn.GetWebACLForResourceWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.WebACLSummary == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.WebACLSummary, nil
+}
+
+const webACLAssociationIDSeparator = ":"
+
+func webACLAssociationCreateResourceID(webACLID, resourceARN string) string {
+	parts := []string{webACLID, resourceARN}
+	id := strings.Join(parts, webACLAssociationIDSeparator)
+
+	return id
+}
+
+func webACLAssociationParseResourceID(id string) (string, string, error) { //nolint:unparam
+	parts := strings.SplitN(id, webACLAssociationIDSeparator, 2)
+
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected WEB-ACL-ID[2]sRESOURCE-ARN", id, webACLAssociationIDSeparator)
+	}
+
+	return parts[0], parts[1], nil
 }

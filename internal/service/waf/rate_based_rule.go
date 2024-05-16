@@ -38,17 +38,17 @@ func ResourceRateBasedRule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"metric_name": {
+			names.AttrMetricName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validMetricName,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -67,7 +67,7 @@ func ResourceRateBasedRule() *schema.Resource {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(waf.PredicateType_Values(), false),
@@ -96,9 +96,9 @@ func resourceRateBasedRuleCreate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &waf.CreateRateBasedRuleInput{
-		MetricName: aws.String(d.Get("metric_name").(string)),
+		MetricName: aws.String(d.Get(names.AttrMetricName).(string)),
 		Name:       aws.String(name),
 		RateKey:    aws.String(d.Get("rate_key").(string)),
 		RateLimit:  aws.Int64(int64(d.Get("rate_limit").(int))),
@@ -154,9 +154,9 @@ func resourceRateBasedRuleRead(ctx context.Context, d *schema.ResourceData, meta
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("ratebasedrule/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
-	d.Set("name", rule.Name)
-	d.Set("metric_name", rule.MetricName)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrName, rule.Name)
+	d.Set(names.AttrMetricName, rule.MetricName)
 	d.Set("rate_key", rule.RateKey)
 	d.Set("rate_limit", rule.RateLimit)
 
@@ -164,9 +164,9 @@ func resourceRateBasedRuleRead(ctx context.Context, d *schema.ResourceData, meta
 
 	for _, predicateSet := range rule.MatchPredicates {
 		predicate := map[string]interface{}{
-			"negated": *predicateSet.Negated,
-			"type":    *predicateSet.Type,
-			"data_id": *predicateSet.DataId,
+			"negated":      *predicateSet.Negated,
+			names.AttrType: *predicateSet.Type,
+			"data_id":      *predicateSet.DataId,
 		}
 		predicates = append(predicates, predicate)
 	}

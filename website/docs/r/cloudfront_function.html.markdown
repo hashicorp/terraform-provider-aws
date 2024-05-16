@@ -40,6 +40,7 @@ The following arguments are optional:
 
 * `comment` - (Optional) Comment.
 * `publish` - (Optional) Whether to publish creation/change as Live CloudFront Function Version. Defaults to `true`.
+* `key_value_store_associations` - (Optional) List of `aws_cloudfront_key_value_store` ARNs to be associated to the function. AWS limits associations to on key value store per function.
 
 ## Attribute Reference
 
