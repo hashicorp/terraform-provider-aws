@@ -370,6 +370,40 @@ func TestAccAppFlowFlow_disappears(t *testing.T) {
 	})
 }
 
+func TestAccAppFlowFlow_metadata_catalog(t *testing.T) {
+	ctx := acctest.Context(t)
+	var flowOutput types.FlowDefinition
+	rSourceName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rDestinationName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rFlowName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_appflow_flow.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppFlowServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFlowDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFlowConfig_metadata_catalog(rSourceName, rDestinationName, rFlowName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFlowExists(ctx, resourceName, &flowOutput),
+					resource.TestCheckResourceAttr(resourceName, "metadata_catalog_config.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "prefix_config.*", map[string]string{
+						"prefix_heirarchy.#": acctest.Ct2,
+						"prefix_heirarchy.0": "SCHEMA_VERSION",
+						"prefix_heirarchy.1": "EXECUTION_ID",
+					}),
+				),
+			},
+			{
+				Config:   testAccFlowConfig_metadata_catalog(rSourceName, rDestinationName, rFlowName),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
 func testAccFlowConfig_base(rSourceName, rDestinationName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
@@ -713,7 +747,7 @@ resource "aws_appflow_flow" "test" {
 
         s3_output_format_config {
           prefix_config {
-            prefix_type = "PATH"
+            prefix_type = "PATH"		
           }
         }
       }
@@ -929,6 +963,86 @@ resource "aws_appflow_flow" "test" {
   }
 }
 `, rFlowName, tagKey1, tagValue1, tagKey2, tagValue2),
+	)
+}
+
+func testAccFlowConfig_metadata_catalog(rSourceName, rDestinationName, rFlowName string) string {
+	return acctest.ConfigCompose(
+		testAccFlowConfig_base(rSourceName, rDestinationName),
+		fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+	name = %[1]q
+	
+	assume_role_policy = <<POLICY
+	{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+		"Effect": "Allow",
+		"Principal": {
+			"Service": "glue.amazonaws.com"
+		},
+		"Action": "sts:AssumeRole"
+		}
+	]
+	}
+	POLICY
+}
+  
+resource "aws_appflow_flow" "test" {
+  name = %[1]q
+
+  source_flow_config {
+    connector_type = "S3"
+    source_connector_properties {
+      s3 {
+        bucket_name   = aws_s3_bucket_policy.test_source.bucket
+        bucket_prefix = "flow"
+      }
+    }
+  }
+
+  destination_flow_config {
+    connector_type = "S3"
+    destination_connector_properties {
+      s3 {
+        bucket_name = aws_s3_bucket_policy.test_destination.bucket
+
+        s3_output_format_config {
+          prefix_config {
+            prefix_type = "PATH"
+          }
+        }
+      }
+    }
+  }
+
+  task {
+    task_type = "Map_all"
+
+    connector_operator {
+      s3 = "NO_OP"
+    }
+
+    task_properties = {
+      "DESTINATION_DATA_TYPE" = "id"
+      "SOURCE_DATA_TYPE"      = "id"
+    }
+  }
+
+  metadata_catalog_config {
+    glue {
+      database_name = "testdb_name"
+      table_prefix  = "test_prefix"
+      role_arn      = aws_iam_role.test.arn
+    }
+  }
+
+  trigger_config {
+    trigger_type = "OnDemand"
+  }
+}
+`, rFlowName),
 	)
 }
 
