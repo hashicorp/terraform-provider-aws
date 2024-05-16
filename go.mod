@@ -164,7 +164,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.30.6
 	github.com/aws/aws-sdk-go-v2/service/ssmsap v1.13.1
 	github.com/aws/aws-sdk-go-v2/service/sso v1.20.7
-	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.25.6
+	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.25.7
 	github.com/aws/aws-sdk-go-v2/service/sts v1.28.8
 	github.com/aws/aws-sdk-go-v2/service/swf v1.22.5
 	github.com/aws/aws-sdk-go-v2/service/synthetics v1.24.5
