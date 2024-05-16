@@ -30,3 +30,5 @@ var (
 	ServeSignatureNotSigning      = serveSignatureNotSigning
 	ServeSignatureSigning         = serveSignatureSigning
 )
+
+type Route53TrafficPolicyDoc = route53TrafficPolicyDoc

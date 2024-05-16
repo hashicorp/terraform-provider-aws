@@ -3,58 +3,57 @@
 
 package route53
 
-import "github.com/hashicorp/terraform-provider-aws/names"
+type trafficPolicyDocEndpointType string
 
 const (
-	trafficPolicyDocEndpointValue      = names.AttrValue
-	trafficPolicyDocEndpointCloudFront = "cloudfront"
-	trafficPolicyDocEndpointElastic    = "elastic-load-balancer"
-	trafficPolicyDocEndpointS3         = "s3-website"
+	trafficPolicyDocEndpointCloudFront trafficPolicyDocEndpointType = "cloudfront"
+	trafficPolicyDocEndpointElastic    trafficPolicyDocEndpointType = "elastic-load-balancer"
+	trafficPolicyDocEndpointS3         trafficPolicyDocEndpointType = "s3-website"
+	trafficPolicyDocEndpointValue      trafficPolicyDocEndpointType = "value"
 )
 
-// TrafficPolicyDocEndpointType_values returns all elements of the endpoints types
-func TrafficPolicyDocEndpointType_values() []string {
-	return []string{
-		names.AttrValue,
+func (trafficPolicyDocEndpointType) Values() []trafficPolicyDocEndpointType {
+	return []trafficPolicyDocEndpointType{
 		trafficPolicyDocEndpointCloudFront,
 		trafficPolicyDocEndpointElastic,
 		trafficPolicyDocEndpointS3,
+		trafficPolicyDocEndpointValue,
 	}
 }
 
-type Route53TrafficPolicyDoc struct {
+type route53TrafficPolicyDoc struct {
 	AWSPolicyFormatVersion string                            `json:",omitempty"`
 	RecordType             string                            `json:",omitempty"`
 	StartEndpoint          string                            `json:",omitempty"`
 	StartRule              string                            `json:",omitempty"`
-	Endpoints              map[string]*TrafficPolicyEndpoint `json:",omitempty"`
-	Rules                  map[string]*TrafficPolicyRule     `json:",omitempty"`
+	Endpoints              map[string]*trafficPolicyEndpoint `json:",omitempty"`
+	Rules                  map[string]*trafficPolicyRule     `json:",omitempty"`
 }
 
-type TrafficPolicyEndpoint struct {
+type trafficPolicyEndpoint struct {
 	Type   string `json:",omitempty"`
 	Region string `json:",omitempty"`
 	Value  string `json:",omitempty"`
 }
 
-type TrafficPolicyRule struct {
+type trafficPolicyRule struct {
 	RuleType              string                               `json:",omitempty"`
-	Primary               *TrafficPolicyFailoverRule           `json:",omitempty"`
-	Secondary             *TrafficPolicyFailoverRule           `json:",omitempty"`
-	Locations             []*TrafficPolicyGeolocationRule      `json:",omitempty"`
-	GeoProximityLocations []*TrafficPolicyGeoproximityRule     `json:"GeoproximityLocations,omitempty"`
-	Regions               []*TrafficPolicyLatencyRule          `json:",omitempty"`
-	Items                 []*TrafficPolicyMultiValueAnswerRule `json:",omitempty"`
+	Primary               *trafficPolicyFailoverRule           `json:",omitempty"`
+	Secondary             *trafficPolicyFailoverRule           `json:",omitempty"`
+	Locations             []*trafficPolicyGeolocationRule      `json:",omitempty"`
+	GeoProximityLocations []*trafficPolicyGeoproximityRule     `json:"GeoproximityLocations,omitempty"`
+	Regions               []*trafficPolicyLatencyRule          `json:",omitempty"`
+	Items                 []*trafficPolicyMultiValueAnswerRule `json:",omitempty"`
 }
 
-type TrafficPolicyFailoverRule struct {
+type trafficPolicyFailoverRule struct {
 	EndpointReference    string `json:",omitempty"`
 	RuleReference        string `json:",omitempty"`
 	EvaluateTargetHealth *bool  `json:",omitempty"`
 	HealthCheck          string `json:",omitempty"`
 }
 
-type TrafficPolicyGeolocationRule struct {
+type trafficPolicyGeolocationRule struct {
 	EndpointReference    string `json:",omitempty"`
 	RuleReference        string `json:",omitempty"`
 	IsDefault            *bool  `json:",omitempty"`
@@ -65,7 +64,7 @@ type TrafficPolicyGeolocationRule struct {
 	HealthCheck          string `json:",omitempty"`
 }
 
-type TrafficPolicyGeoproximityRule struct {
+type trafficPolicyGeoproximityRule struct {
 	EndpointReference    string `json:",omitempty"`
 	RuleReference        string `json:",omitempty"`
 	Region               string `json:",omitempty"`
@@ -76,7 +75,7 @@ type TrafficPolicyGeoproximityRule struct {
 	HealthCheck          string `json:",omitempty"`
 }
 
-type TrafficPolicyLatencyRule struct {
+type trafficPolicyLatencyRule struct {
 	EndpointReference    string `json:",omitempty"`
 	RuleReference        string `json:",omitempty"`
 	Region               string `json:",omitempty"`
@@ -84,7 +83,7 @@ type TrafficPolicyLatencyRule struct {
 	HealthCheck          string `json:",omitempty"`
 }
 
-type TrafficPolicyMultiValueAnswerRule struct {
+type trafficPolicyMultiValueAnswerRule struct {
 	EndpointReference string `json:",omitempty"`
 	HealthCheck       string `json:",omitempty"`
 }
