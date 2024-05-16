@@ -7,12 +7,14 @@ package route53
 var (
 	ResourceCIDRCollection   = newResourceCIDRCollection
 	ResourceCIDRLocation     = newResourceCIDRLocation
+	ResourceHealthCheck      = resourceHealthCheck
 	ResourceHostedZoneDNSSEC = resourceHostedZoneDNSSEC
 	ResourceKeySigningKey    = resourceKeySigningKey
 
 	CIDRLocationParseResourceID   = cidrLocationParseResourceID
 	FindCIDRCollectionByID        = findCIDRCollectionByID
 	FindCIDRLocationByTwoPartKey  = findCIDRLocationByTwoPartKey
+	FindHealthCheckByID           = findHealthCheckByID
 	FindHostedZoneDNSSECByZoneID  = findHostedZoneDNSSECByZoneID
 	FindKeySigningKeyByTwoPartKey = findKeySigningKeyByTwoPartKey
 	KeySigningKeyStatusActive     = keySigningKeyStatusActive

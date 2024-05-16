@@ -51,7 +51,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_route53_delegation_set",
 		},
 		{
-			Factory:  ResourceHealthCheck,
+			Factory:  resourceHealthCheck,
 			TypeName: "aws_route53_health_check",
 			Name:     "Health Check",
 			Tags: &types.ServicePackageResourceTags{
@@ -60,8 +60,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceHostedZoneDNSSEC,
+			Factory:  resourceHostedZoneDNSSEC,
 			TypeName: "aws_route53_hosted_zone_dnssec",
+			Name:     "Hosted Zone DNSSEC",
 		},
 		{
 			Factory:  resourceKeySigningKey,
