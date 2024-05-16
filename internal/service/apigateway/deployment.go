@@ -180,13 +180,6 @@ func resourceDeploymentUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			Value: aws.String(d.Get(names.AttrDescription).(string)),
 		})
 	}
-	if d.HasChange("canary_settings") {
-		oldCanarySettingsRaw, newCanarySettingsRaw := d.GetChange("canary_settings")
-		operations = appendDeploymentCanarySettingsPatchOperations(operations,
-			oldCanarySettingsRaw.([]interface{}),
-			newCanarySettingsRaw.([]interface{}),
-		)
-	}
 
 	if len(operations) > 0 {
 		_, err := conn.UpdateDeployment(ctx, &apigateway.UpdateDeploymentInput{
@@ -334,51 +327,4 @@ func flattenDeployymentCanarySettings(deploymentCanarySettings *types.Deployment
 	settings["use_stage_cache"] = deploymentCanarySettings.UseStageCache
 
 	return []interface{}{settings}
-}
-
-func appendDeploymentCanarySettingsPatchOperations(operations []types.PatchOperation, oldCanarySettingsRaw, newCanarySettingsRaw []interface{}) []types.PatchOperation {
-	if len(newCanarySettingsRaw) == 0 { // Schema guarantees either 0 or 1
-		return append(operations, types.PatchOperation{
-			Op:   types.Op("remove"),
-			Path: aws.String("/canarySettings"),
-		})
-	}
-	newSettings := newCanarySettingsRaw[0].(map[string]interface{})
-
-	var oldSettings map[string]interface{}
-	if len(oldCanarySettingsRaw) == 1 { // Schema guarantees either 0 or 1
-		oldSettings = oldCanarySettingsRaw[0].(map[string]interface{})
-	} else {
-		oldSettings = map[string]interface{}{
-			"percent_traffic":          0.0,
-			"stage_variable_overrides": make(map[string]interface{}),
-			"use_stage_cache":          false,
-		}
-	}
-
-	oldOverrides := oldSettings["stage_variable_overrides"].(map[string]interface{})
-	newOverrides := newSettings["stage_variable_overrides"].(map[string]interface{})
-	operations = append(operations, diffVariablesOps(oldOverrides, newOverrides, "/canarySettings/stageVariableOverrides/")...)
-
-	oldPercentTraffic := oldSettings["percent_traffic"].(float64)
-	newPercentTraffic := newSettings["percent_traffic"].(float64)
-	if oldPercentTraffic != newPercentTraffic {
-		operations = append(operations, types.PatchOperation{
-			Op:    types.OpReplace,
-			Path:  aws.String("/canarySettings/percentTraffic"),
-			Value: aws.String(fmt.Sprintf("%f", newPercentTraffic)),
-		})
-	}
-
-	oldUseStageCache := oldSettings["use_stage_cache"].(bool)
-	newUseStageCache := newSettings["use_stage_cache"].(bool)
-	if oldUseStageCache != newUseStageCache {
-		operations = append(operations, types.PatchOperation{
-			Op:    types.OpReplace,
-			Path:  aws.String("/canarySettings/useStageCache"),
-			Value: aws.String(fmt.Sprintf("%t", newUseStageCache)),
-		})
-	}
-
-	return operations
 }
