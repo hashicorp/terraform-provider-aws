@@ -56,6 +56,45 @@ func waitAvailabilityZoneGroupNotOptedIn(ctx context.Context, conn *ec2.Client, 
 	return nil, err
 }
 
+const (
+	CapacityReservationActiveTimeout  = 2 * time.Minute
+	CapacityReservationDeletedTimeout = 2 * time.Minute
+)
+
+func waitCapacityReservationActive(ctx context.Context, conn *ec2.Client, id string) (*types.CapacityReservation, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.CapacityReservationStatePending),
+		Target:  enum.Slice(types.CapacityReservationStateActive),
+		Refresh: statusCapacityReservationState(ctx, conn, id),
+		Timeout: CapacityReservationActiveTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.CapacityReservation); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitCapacityReservationDeleted(ctx context.Context, conn *ec2.Client, id string) (*types.CapacityReservation, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.CapacityReservationStateActive),
+		Target:  []string{},
+		Refresh: statusCapacityReservationState(ctx, conn, id),
+		Timeout: CapacityReservationDeletedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.CapacityReservation); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitVPCCreatedV2(ctx context.Context, conn *ec2.Client, id string) (*types.Vpc, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.VpcStatePending),

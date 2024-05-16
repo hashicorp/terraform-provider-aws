@@ -15,7 +15,7 @@ import (
 
 func statusAvailabilityZoneGroupOptInStatus(ctx context.Context, conn *ec2.Client, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindAvailabilityZoneGroupByName(ctx, conn, name)
+		output, err := findAvailabilityZoneGroupByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -26,6 +26,22 @@ func statusAvailabilityZoneGroupOptInStatus(ctx context.Context, conn *ec2.Clien
 		}
 
 		return output, string(output.OptInStatus), nil
+	}
+}
+
+func statusCapacityReservationState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findCapacityReservationByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
 	}
 }
 

@@ -117,7 +117,7 @@ func dataSourceAvailabilityZoneRead(ctx context.Context, d *schema.ResourceData,
 		input.Filters = nil
 	}
 
-	az, err := FindAvailabilityZone(ctx, conn, input)
+	az, err := findAvailabilityZone(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Availability Zone", err))

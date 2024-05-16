@@ -53,7 +53,7 @@ func resourceAvailabilityZoneGroupCreate(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	groupName := d.Get(names.AttrGroupName).(string)
-	availabilityZone, err := FindAvailabilityZoneGroupByName(ctx, conn, groupName)
+	availabilityZone, err := findAvailabilityZoneGroupByName(ctx, conn, groupName)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Availability Zone Group (%s): %s", groupName, err)
@@ -74,7 +74,7 @@ func resourceAvailabilityZoneGroupRead(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	availabilityZone, err := FindAvailabilityZoneGroupByName(ctx, conn, d.Id())
+	availabilityZone, err := findAvailabilityZoneGroupByName(ctx, conn, d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Availability Zone Group (%s): %s", d.Id(), err)

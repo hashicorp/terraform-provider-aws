@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func FindAvailabilityZonesV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeAvailabilityZonesInput) ([]awstypes.AvailabilityZone, error) {
+func findAvailabilityZonesV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeAvailabilityZonesInput) ([]awstypes.AvailabilityZone, error) {
 	output, err := conn.DescribeAvailabilityZones(ctx, input)
 
 	if err != nil {
@@ -32,8 +32,8 @@ func FindAvailabilityZonesV2(ctx context.Context, conn *ec2.Client, input *ec2.D
 	return output.AvailabilityZones, nil
 }
 
-func FindAvailabilityZone(ctx context.Context, conn *ec2.Client, input *ec2.DescribeAvailabilityZonesInput) (*awstypes.AvailabilityZone, error) {
-	output, err := FindAvailabilityZones(ctx, conn, input)
+func findAvailabilityZone(ctx context.Context, conn *ec2.Client, input *ec2.DescribeAvailabilityZonesInput) (*awstypes.AvailabilityZone, error) {
+	output, err := findAvailabilityZonesV2(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -42,7 +42,7 @@ func FindAvailabilityZone(ctx context.Context, conn *ec2.Client, input *ec2.Desc
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func FindAvailabilityZoneGroupByName(ctx context.Context, conn *ec2.Client, name string) (*awstypes.AvailabilityZone, error) {
+func findAvailabilityZoneGroupByName(ctx context.Context, conn *ec2.Client, name string) (*awstypes.AvailabilityZone, error) {
 	input := &ec2.DescribeAvailabilityZonesInput{
 		AllAvailabilityZones: aws.Bool(true),
 		Filters: newAttributeFilterListV2(map[string]string{
@@ -50,7 +50,7 @@ func FindAvailabilityZoneGroupByName(ctx context.Context, conn *ec2.Client, name
 		}),
 	}
 
-	output, err := FindAvailabilityZones(ctx, conn, input)
+	output, err := findAvailabilityZonesV2(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -71,6 +71,71 @@ func FindAvailabilityZoneGroupByName(ctx context.Context, conn *ec2.Client, name
 	}
 
 	return &availabilityZone, nil
+}
+
+func findCapacityReservation(ctx context.Context, conn *ec2.Client, input *ec2.DescribeCapacityReservationsInput) (*awstypes.CapacityReservation, error) {
+	output, err := findCapacityReservations(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findCapacityReservations(ctx context.Context, conn *ec2.Client, input *ec2.DescribeCapacityReservationsInput) ([]awstypes.CapacityReservation, error) {
+	var output []awstypes.CapacityReservation
+
+	pages := ec2.NewDescribeCapacityReservationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidCapacityReservationIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.CapacityReservations {
+			output = append(output, v)
+		}
+	}
+
+	return output, nil
+}
+
+func findCapacityReservationByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.CapacityReservation, error) {
+	input := &ec2.DescribeCapacityReservationsInput{
+		CapacityReservationIds: []string{id},
+	}
+
+	output, err := findCapacityReservation(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/capacity-reservations-using.html#capacity-reservations-view.
+	if state := output.State; state == awstypes.CapacityReservationStateCancelled || state == awstypes.CapacityReservationStateExpired {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.CapacityReservationId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
 }
 
 func findVPCAttributeV2(ctx context.Context, conn *ec2.Client, vpcID string, attribute awstypes.VpcAttributeName) (bool, error) {

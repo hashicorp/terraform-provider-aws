@@ -44,45 +44,6 @@ const (
 )
 
 const (
-	CapacityReservationActiveTimeout  = 2 * time.Minute
-	CapacityReservationDeletedTimeout = 2 * time.Minute
-)
-
-func WaitCapacityReservationActive(ctx context.Context, conn *ec2.EC2, id string) (*ec2.CapacityReservation, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{ec2.CapacityReservationStatePending},
-		Target:  []string{ec2.CapacityReservationStateActive},
-		Refresh: StatusCapacityReservationState(ctx, conn, id),
-		Timeout: CapacityReservationActiveTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*ec2.CapacityReservation); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func WaitCapacityReservationDeleted(ctx context.Context, conn *ec2.EC2, id string) (*ec2.CapacityReservation, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{ec2.CapacityReservationStateActive},
-		Target:  []string{},
-		Refresh: StatusCapacityReservationState(ctx, conn, id),
-		Timeout: CapacityReservationDeletedTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*ec2.CapacityReservation); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-const (
 	CarrierGatewayAvailableTimeout = 5 * time.Minute
 
 	CarrierGatewayDeletedTimeout = 5 * time.Minute
