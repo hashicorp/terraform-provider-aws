@@ -132,6 +132,6 @@ func resourceIPAMOrganizationAdminAccountDelete(ctx context.Context, d *schema.R
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "disabling IPAM Organization Admin Account (%s): %s", d.Id(), err)
 	}
-	
+
 	return diags
 }
