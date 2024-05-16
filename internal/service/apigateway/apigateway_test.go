@@ -50,7 +50,7 @@ func TestAccAPIGateway_serial(t *testing.T) {
 		// Serialize all this resource's acceptance tests.
 		"Stage": {
 			acctest.CtBasic:             testAccStage_basic,
-			names.AttrTags:              testAccStage_tags,
+			"tags":                      testAccStage_tags,
 			"disappears":                testAccStage_disappears,
 			"disappears_restAPI":        testAccStage_Disappears_restAPI,
 			"Cache":                     testAccStage_cache,

@@ -118,6 +118,7 @@ const (
 	errCodeInvalidVPNConnectionIDNotFound                    = "InvalidVpnConnectionID.NotFound"
 	errCodeInvalidVPNGatewayAttachmentNotFound               = "InvalidVpnGatewayAttachment.NotFound"
 	errCodeInvalidVPNGatewayIDNotFound                       = "InvalidVpnGatewayID.NotFound"
+	errCodeIPAMOrganizationAccountNotRegistered              = "IpamOrganizationAccountNotRegistered"
 	errCodeNatGatewayNotFound                                = "NatGatewayNotFound"
 	errCodeNetworkACLEntryAlreadyExists                      = "NetworkAclEntryAlreadyExists"
 	errCodeOperationNotPermitted                             = "OperationNotPermitted"

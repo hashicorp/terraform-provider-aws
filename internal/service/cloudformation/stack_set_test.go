@@ -830,10 +830,10 @@ func TestAccCloudFormationStackSet_autoDeploymentDisabled(t *testing.T) {
 
 // https://github.com/hashicorp/terraform-provider-aws/issues/32536.
 // Prerequisites:
-// * Organizations root account
+// * Organizations management account
 // * Organization member account
 // * Delegated administrator not configured
-// Authenticate with member account as target account and root account as alternate.
+// Authenticate with member account as target account and management account as alternate.
 func TestAccCloudFormationStackSet_delegatedAdministrator(t *testing.T) {
 	ctx := acctest.Context(t)
 	providers := make(map[string]*schema.Provider)
@@ -853,7 +853,7 @@ func TestAccCloudFormationStackSet_delegatedAdministrator(t *testing.T) {
 		CheckDestroy:             testAccCheckStackSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				// Run a simple configuration to initialize the alternate providers
+				// Run a simple configuration to initialize the alternate providers.
 				Config: testAccStackSetConfig_delegatedAdministratorInit,
 			},
 			{
@@ -1484,7 +1484,7 @@ TEMPLATE
 `, rName, testAccStackSetTemplateBodyVPC(rName), enabled, retainStacksOnAccountRemoval)
 }
 
-// Initialize all the providers used by dlegated administrator acceptance tests.
+// Initialize all the providers used by delegated administrator acceptance tests.
 var testAccStackSetConfig_delegatedAdministratorInit = acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), `
 data "aws_caller_identity" "member" {}
 

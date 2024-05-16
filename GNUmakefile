@@ -85,7 +85,7 @@ awssdkpatch-gen: awssdkpatch ## Generate a patch file using awssdkpatch
 		echo "PKG=foo make awssdkpatch-gen" ; \
 		exit 1 ; \
 	fi
-	@awssdkpatch -service $(PKG)
+	@awssdkpatch $(AWSSDKPATCH_OPTS) -service $(PKG)
 
 awssdkpatch: prereq-go ## Install awssdkpatch
 	cd tools/awssdkpatch && $(GO_VER) install github.com/hashicorp/terraform-provider-aws/tools/awssdkpatch
