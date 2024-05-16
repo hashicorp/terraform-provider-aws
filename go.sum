@@ -164,8 +164,8 @@ github.com/aws/aws-sdk-go-v2/service/datasync v1.38.0 h1:ZAoZLLjyx8Qq0hEHeYsEQ0v
 github.com/aws/aws-sdk-go-v2/service/datasync v1.38.0/go.mod h1:mryH1q44k0SGpOX7uVDciN+iEvS4n/SVEu0H5IGaqm8=
 github.com/aws/aws-sdk-go-v2/service/datazone v1.8.2 h1:Vb1Syg/JB3fMJcWC9p68sbMqQ8UZoElCEdgDaeN0mpA=
 github.com/aws/aws-sdk-go-v2/service/datazone v1.8.2/go.mod h1:VZQwb1e/SQjhaVbTgU70chOdx7bVBeDARv2U9LK9WiY=
-github.com/aws/aws-sdk-go-v2/service/dax v1.19.5 h1:y4H5UYPlGViXqqczD+IN4xtb3+LIq/b392FEZZaKV+k=
-github.com/aws/aws-sdk-go-v2/service/dax v1.19.5/go.mod h1:ZfNHbSICNHSqX4l5pJ6APeyWdgXgQg3PbuSFS2e5mCo=
+github.com/aws/aws-sdk-go-v2/service/dax v1.19.6 h1:EABCeSTz+scz2Ugxd+tXXkB1Y6tLKQimIAKUcNPtHkA=
+github.com/aws/aws-sdk-go-v2/service/dax v1.19.6/go.mod h1:NSFrCO0wokGPLDRm2ApCpAB4ZwfgcEGZLt8HrtP+8UE=
 github.com/aws/aws-sdk-go-v2/service/devopsguru v1.30.5 h1:HgnbwzyeTUBSmTnwcyou6L5gEIUAmoftH6NW/p/6ipk=
 github.com/aws/aws-sdk-go-v2/service/devopsguru v1.30.5/go.mod h1:+ezG+QXnBXCWFp1rCQrxyebQMM5lBAxziL4iuswpxqo=
 github.com/aws/aws-sdk-go-v2/service/directoryservice v1.24.5 h1:VUPnv/w0IVfXZ8+0wl79d8XluL7psVxw5ddMIxwmPBc=
