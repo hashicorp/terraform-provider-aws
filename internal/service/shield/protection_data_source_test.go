@@ -35,13 +35,13 @@ func TestAccProtectionDataSource_route53HostedZone(t *testing.T) {
 			{
 				Config: testAccProtectionDataSource_route53HostedZoneByArn(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "id", protectionResourceName, "id"),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, "protection_id", protectionResourceName, names.AttrID),
 				),
 			},
 			{
 				Config: testAccProtectionDataSource_route53HostedZoneById(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "id", protectionResourceName, "id"),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, "protection_id", protectionResourceName, names.AttrID),
 				),
 			},
 		},
@@ -69,13 +69,13 @@ func TestAccProtectionDataSource_cloudfront(t *testing.T) {
 			{
 				Config: testAccProtectionDataSource_cloudfrontByArn(rName, testAccProtectionDataSourceCloudFrontRetainConfig()),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "id", protectionResourceName, "id"),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, "protection_id", protectionResourceName, names.AttrID),
 				),
 			},
 			{
 				Config: testAccProtectionDataSource_cloudfrontById(rName, testAccProtectionDataSourceCloudFrontRetainConfig()),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "id", protectionResourceName, "id"),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, "protection_id", protectionResourceName, names.AttrID),
 				),
 			},
 		},
@@ -102,13 +102,13 @@ func TestAccProtectionDataSource_alb(t *testing.T) {
 			{
 				Config: testAccProtectionDataSource_albByArn(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "id", protectionResourceName, "id"),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, "protection_id", protectionResourceName, names.AttrID),
 				),
 			},
 			{
 				Config: testAccProtectionDataSource_albById(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "id", protectionResourceName, "id"),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, "protection_id", protectionResourceName, names.AttrID),
 				),
 			},
 		},
@@ -135,13 +135,13 @@ func TestAccProtectionDataSource_elasticIPAddress(t *testing.T) {
 			{
 				Config: testAccProtectionDataSource_elasticIPAddressByArn(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "id", protectionResourceName, "id"),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, "protection_id", protectionResourceName, names.AttrID),
 				),
 			},
 			{
 				Config: testAccProtectionDataSource_elasticIPAddressById(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "id", protectionResourceName, "id"),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, "protection_id", protectionResourceName, names.AttrID),
 				),
 			},
 		},
@@ -168,13 +168,13 @@ func TestAccProtectionDataSource_globalAccelerator(t *testing.T) {
 			{
 				Config: testAccProtectionDataSource_globalAcceleratorByArn(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "id", protectionResourceName, "id"),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, "protection_id", protectionResourceName, names.AttrID),
 				),
 			},
 			{
 				Config: testAccProtectionDataSource_globalAcceleratorById(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "id", protectionResourceName, "id"),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, "protection_id", protectionResourceName, names.AttrID),
 				),
 			},
 		},
@@ -247,13 +247,13 @@ func TestAccProtectionDataSource_elb(t *testing.T) {
 			{
 				Config: testAccProtectionDataSource_elbByArn(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "protection_id", protectionResourceName, "id"),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, "protection_id", protectionResourceName, names.AttrID),
 				),
 			},
 			{
 				Config: testAccProtectionDataSource_elbById(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(ds1ResourceName, "protection_id", protectionResourceName, "id"),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, "protection_id", protectionResourceName, names.AttrId),
 				),
 			},
 		},
@@ -334,7 +334,7 @@ data "aws_shield_protection" "test" {
   resource_arn = aws_elb.test.arn
 
   depends_on = [
-	aws_shield_protection.test
+    aws_shield_protection.test
   ]
 }
 `))
@@ -443,7 +443,7 @@ data "aws_shield_protection" "test" {
   resource_arn = aws_lb.test.arn
 
   depends_on = [
-	aws_shield_protection.test
+    aws_shield_protection.test
   ]
 }
 `))
@@ -546,7 +546,7 @@ data "aws_shield_protection" "test" {
   resource_arn = aws_cloudfront_distribution.test.arn
 
   depends_on = [
-	aws_shield_protection.test
+    aws_shield_protection.test
   ]
 }
 `))
@@ -603,7 +603,7 @@ data "aws_shield_protection" "test" {
   resource_arn = "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:eip-allocation/${aws_eip.test.id}"
 
   depends_on = [
-	aws_shield_protection.test
+    aws_shield_protection.test
   ]
 }
 `))
@@ -642,7 +642,7 @@ data "aws_shield_protection" "test" {
   resource_arn = aws_globalaccelerator_accelerator.test.id
 
   depends_on = [
-	aws_shield_protection.test
+    aws_shield_protection.test
   ]
 }
 `))
