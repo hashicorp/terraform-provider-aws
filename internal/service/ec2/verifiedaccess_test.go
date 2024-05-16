@@ -8,7 +8,6 @@ import (
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccVerifiedAccess_serial(t *testing.T) {
@@ -17,28 +16,28 @@ func TestAccVerifiedAccess_serial(t *testing.T) {
 	semaphore := tfsync.GetSemaphore("VerifiedAccess", "AWS_EC2_VERIFIED_ACCESS_INSTANCE_LIMIT", 5)
 	testCases := map[string]map[string]func(*testing.T, tfsync.Semaphore){
 		"Endpoint": {
-			"basic":            testAccVerifiedAccessEndpoint_basic,
+			acctest.CtBasic:    testAccVerifiedAccessEndpoint_basic,
 			"networkInterface": testAccVerifiedAccessEndpoint_networkInterface,
-			names.AttrTags:     testAccVerifiedAccessEndpoint_tags,
+			"tags":             testAccVerifiedAccessEndpoint_tags,
 			"disappears":       testAccVerifiedAccessEndpoint_disappears,
 			"policyDocument":   testAccVerifiedAccessEndpoint_policyDocument,
 		},
 		"Group": {
-			"basic":          testAccVerifiedAccessGroup_basic,
-			"kms":            testAccVerifiedAccessGroup_kms,
-			"updateKMS":      testAccVerifiedAccessGroup_updateKMS,
-			"disappears":     testAccVerifiedAccessGroup_disappears,
-			names.AttrTags:   testAccVerifiedAccessGroup_tags,
-			names.AttrPolicy: testAccVerifiedAccessGroup_policy,
-			"updatePolicy":   testAccVerifiedAccessGroup_updatePolicy,
-			"setPolicy":      testAccVerifiedAccessGroup_setPolicy,
+			acctest.CtBasic: testAccVerifiedAccessGroup_basic,
+			"kms":           testAccVerifiedAccessGroup_kms,
+			"updateKMS":     testAccVerifiedAccessGroup_updateKMS,
+			"disappears":    testAccVerifiedAccessGroup_disappears,
+			"tags":          testAccVerifiedAccessGroup_tags,
+			"policy":        testAccVerifiedAccessGroup_policy,
+			"updatePolicy":  testAccVerifiedAccessGroup_updatePolicy,
+			"setPolicy":     testAccVerifiedAccessGroup_setPolicy,
 		},
 		"Instance": {
-			"basic":               testAccVerifiedAccessInstance_basic,
-			names.AttrDescription: testAccVerifiedAccessInstance_description,
-			"fipsEnabled":         testAccVerifiedAccessInstance_fipsEnabled,
-			"disappears":          testAccVerifiedAccessInstance_disappears,
-			names.AttrTags:        testAccVerifiedAccessInstance_tags,
+			acctest.CtBasic: testAccVerifiedAccessInstance_basic,
+			"description":   testAccVerifiedAccessInstance_description,
+			"fipsEnabled":   testAccVerifiedAccessInstance_fipsEnabled,
+			"disappears":    testAccVerifiedAccessInstance_disappears,
+			"tags":          testAccVerifiedAccessInstance_tags,
 		},
 		"InstanceLoggingConfiguration": {
 			"accessLogsIncludeTrustContext":                 testAccVerifiedAccessInstanceLoggingConfiguration_accessLogsIncludeTrustContext,
@@ -50,8 +49,8 @@ func TestAccVerifiedAccess_serial(t *testing.T) {
 			"disappears":                                    testAccVerifiedAccessInstanceLoggingConfiguration_disappears,
 		},
 		"InstanceTrustProviderAttachment": {
-			"basic":      testAccVerifiedAccessInstanceTrustProviderAttachment_basic,
-			"disappears": testAccVerifiedAccessInstanceTrustProviderAttachment_disappears,
+			acctest.CtBasic: testAccVerifiedAccessInstanceTrustProviderAttachment_basic,
+			"disappears":    testAccVerifiedAccessInstanceTrustProviderAttachment_disappears,
 		},
 	}
 

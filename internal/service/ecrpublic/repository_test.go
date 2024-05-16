@@ -67,8 +67,8 @@ func TestAccECRPublicRepository_tags(t *testing.T) {
 				Config: testAccRepositoryConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -77,20 +77,20 @@ func TestAccECRPublicRepository_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRepositoryConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
+				Config: testAccRepositoryConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
 				Config: testAccRepositoryConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -113,7 +113,7 @@ func TestAccECRPublicRepository_CatalogData_aboutText(t *testing.T) {
 				Config: testAccRepositoryConfig_catalogDataAboutText(rName, "about_text_1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "catalog_data.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "catalog_data.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.about_text", "about_text_1"),
 				),
 			},
@@ -126,7 +126,7 @@ func TestAccECRPublicRepository_CatalogData_aboutText(t *testing.T) {
 				Config: testAccRepositoryConfig_catalogDataAboutText(rName, "about_text_2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "catalog_data.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "catalog_data.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.about_text", "about_text_2"),
 				),
 			},
@@ -150,7 +150,7 @@ func TestAccECRPublicRepository_CatalogData_architectures(t *testing.T) {
 				Config: testAccRepositoryConfig_catalogDataArchitectures(rName, "Linux"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.architectures.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.architectures.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.architectures.0", "Linux"),
 				),
 			},
@@ -163,7 +163,7 @@ func TestAccECRPublicRepository_CatalogData_architectures(t *testing.T) {
 				Config: testAccRepositoryConfig_catalogDataArchitectures(rName, "Windows"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.architectures.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.architectures.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.architectures.0", "Windows"),
 				),
 			},
@@ -187,7 +187,7 @@ func TestAccECRPublicRepository_CatalogData_description(t *testing.T) {
 				Config: testAccRepositoryConfig_catalogDataDescription(rName, "description 1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "catalog_data.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "catalog_data.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.description", "description 1"),
 				),
 			},
@@ -200,7 +200,7 @@ func TestAccECRPublicRepository_CatalogData_description(t *testing.T) {
 				Config: testAccRepositoryConfig_catalogDataDescription(rName, "description 2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "catalog_data.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "catalog_data.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.description", "description 2"),
 				),
 			},
@@ -224,7 +224,7 @@ func TestAccECRPublicRepository_CatalogData_operatingSystems(t *testing.T) {
 				Config: testAccRepositoryConfig_catalogDataOperatingSystems(rName, "ARM"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.operating_systems.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.operating_systems.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.operating_systems.0", "ARM"),
 				),
 			},
@@ -237,7 +237,7 @@ func TestAccECRPublicRepository_CatalogData_operatingSystems(t *testing.T) {
 				Config: testAccRepositoryConfig_catalogDataOperatingSystems(rName, "x86"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.operating_systems.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.operating_systems.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.operating_systems.0", "x86"),
 				),
 			},
@@ -261,7 +261,7 @@ func TestAccECRPublicRepository_CatalogData_usageText(t *testing.T) {
 				Config: testAccRepositoryConfig_catalogDataUsageText(rName, "usage text 1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "catalog_data.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "catalog_data.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.usage_text", "usage text 1"),
 				),
 			},
@@ -274,7 +274,7 @@ func TestAccECRPublicRepository_CatalogData_usageText(t *testing.T) {
 				Config: testAccRepositoryConfig_catalogDataUsageText(rName, "usage text 2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "catalog_data.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "catalog_data.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.usage_text", "usage text 2"),
 				),
 			},
@@ -298,7 +298,7 @@ func TestAccECRPublicRepository_CatalogData_logoImageBlob(t *testing.T) {
 				Config: testAccRepositoryConfig_catalogDataLogoImageBlob(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "catalog_data.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "catalog_data.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "catalog_data.0.logo_image_blob"),
 				),
 			},

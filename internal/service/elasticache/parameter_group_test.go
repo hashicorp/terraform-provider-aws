@@ -42,7 +42,7 @@ func TestAccElastiCacheParameterGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "redis2.8"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -94,7 +94,7 @@ func TestAccElastiCacheParameterGroup_addParameter(t *testing.T) {
 				Config: testAccParameterGroupConfig_1(rName, "redis2.8", "appendonly", "yes"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "appendonly",
 						names.AttrValue: "yes",
@@ -110,7 +110,7 @@ func TestAccElastiCacheParameterGroup_addParameter(t *testing.T) {
 				Config: testAccParameterGroupConfig_2(rName, "redis2.8", "appendonly", "yes", "appendfsync", "always"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "appendonly",
 						names.AttrValue: "yes",
@@ -142,7 +142,7 @@ func TestAccElastiCacheParameterGroup_removeAllParameters(t *testing.T) {
 				Config: testAccParameterGroupConfig_2(rName, "redis2.8", "appendonly", "yes", "appendfsync", "always"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "appendonly",
 						names.AttrValue: "yes",
@@ -157,7 +157,7 @@ func TestAccElastiCacheParameterGroup_removeAllParameters(t *testing.T) {
 				Config: testAccParameterGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct0),
 				),
 			},
 		},
@@ -179,13 +179,13 @@ func TestAccElastiCacheParameterGroup_RemoveReservedMemoryParameter_allParameter
 		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccParameterGroupConfig_1(rName, "redis3.2", "reserved-memory", acctest.CtZero),
+				Config: testAccParameterGroupConfig_1(rName, "redis3.2", "reserved-memory", acctest.Ct0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &cacheParameterGroup1),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "reserved-memory",
-						names.AttrValue: acctest.CtZero,
+						names.AttrValue: acctest.Ct0,
 					}),
 				),
 			},
@@ -193,7 +193,7 @@ func TestAccElastiCacheParameterGroup_RemoveReservedMemoryParameter_allParameter
 				Config: testAccParameterGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &cacheParameterGroup1),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct0),
 				),
 			},
 			{
@@ -220,13 +220,13 @@ func TestAccElastiCacheParameterGroup_RemoveReservedMemoryParameter_remainingPar
 		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccParameterGroupConfig_2(rName, "redis3.2", "reserved-memory", acctest.CtZero, "tcp-keepalive", "360"),
+				Config: testAccParameterGroupConfig_2(rName, "redis3.2", "reserved-memory", acctest.Ct0, "tcp-keepalive", "360"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &cacheParameterGroup1),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "reserved-memory",
-						names.AttrValue: acctest.CtZero,
+						names.AttrValue: acctest.Ct0,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "tcp-keepalive",
@@ -238,7 +238,7 @@ func TestAccElastiCacheParameterGroup_RemoveReservedMemoryParameter_remainingPar
 				Config: testAccParameterGroupConfig_1(rName, "redis3.2", "tcp-keepalive", "360"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &cacheParameterGroup1),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "tcp-keepalive",
 						names.AttrValue: "360",
@@ -269,13 +269,13 @@ func TestAccElastiCacheParameterGroup_switchReservedMemoryParameter(t *testing.T
 		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccParameterGroupConfig_1(rName, "redis3.2", "reserved-memory", acctest.CtZero),
+				Config: testAccParameterGroupConfig_1(rName, "redis3.2", "reserved-memory", acctest.Ct0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &cacheParameterGroup1),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "reserved-memory",
-						names.AttrValue: acctest.CtZero,
+						names.AttrValue: acctest.Ct0,
 					}),
 				),
 			},
@@ -283,7 +283,7 @@ func TestAccElastiCacheParameterGroup_switchReservedMemoryParameter(t *testing.T
 				Config: testAccParameterGroupConfig_1(rName, "redis3.2", "reserved-memory-percent", "25"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &cacheParameterGroup1),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "reserved-memory-percent",
 						names.AttrValue: "25",
@@ -314,24 +314,24 @@ func TestAccElastiCacheParameterGroup_updateReservedMemoryParameter(t *testing.T
 		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccParameterGroupConfig_1(rName, "redis2.8", "reserved-memory", acctest.CtZero),
+				Config: testAccParameterGroupConfig_1(rName, "redis2.8", "reserved-memory", acctest.Ct0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &cacheParameterGroup1),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "reserved-memory",
-						names.AttrValue: acctest.CtZero,
+						names.AttrValue: acctest.Ct0,
 					}),
 				),
 			},
 			{
-				Config: testAccParameterGroupConfig_1(rName, "redis2.8", "reserved-memory", acctest.CtOne),
+				Config: testAccParameterGroupConfig_1(rName, "redis2.8", "reserved-memory", acctest.Ct1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &cacheParameterGroup1),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "reserved-memory",
-						names.AttrValue: acctest.CtOne,
+						names.AttrValue: acctest.Ct1,
 					}),
 				),
 			},
@@ -417,24 +417,24 @@ func TestAccElastiCacheParameterGroup_tags(t *testing.T) {
 				Config: testAccParameterGroupConfig_tags1(rName, "redis2.8", acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &cacheParameterGroup1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
 				Config: testAccParameterGroupConfig_tags2(rName, "redis2.8", acctest.CtKey1, "updatedvalue1", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &cacheParameterGroup1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "updatedvalue1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, "updatedvalue1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
 				Config: testAccParameterGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &cacheParameterGroup1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -612,14 +612,14 @@ func TestParameterChanges(t *testing.T) {
 			Old: schema.NewSet(tfelasticache.ParameterHash, []interface{}{
 				map[string]interface{}{
 					names.AttrName:  "reserved-memory",
-					names.AttrValue: acctest.CtZero,
+					names.AttrValue: acctest.Ct0,
 				},
 			}),
 			New: new(schema.Set),
 			ExpectedRemove: []*elasticache.ParameterNameValue{
 				{
 					ParameterName:  aws.String("reserved-memory"),
-					ParameterValue: aws.String(acctest.CtZero),
+					ParameterValue: aws.String(acctest.Ct0),
 				},
 			},
 			ExpectedAddOrUpdate: []*elasticache.ParameterNameValue{},
@@ -629,13 +629,13 @@ func TestParameterChanges(t *testing.T) {
 			Old: schema.NewSet(tfelasticache.ParameterHash, []interface{}{
 				map[string]interface{}{
 					names.AttrName:  "reserved-memory",
-					names.AttrValue: acctest.CtZero,
+					names.AttrValue: acctest.Ct0,
 				},
 			}),
 			New: schema.NewSet(tfelasticache.ParameterHash, []interface{}{
 				map[string]interface{}{
 					names.AttrName:  "reserved-memory",
-					names.AttrValue: acctest.CtZero,
+					names.AttrValue: acctest.Ct0,
 				},
 			}),
 			ExpectedRemove:      []*elasticache.ParameterNameValue{},
@@ -646,7 +646,7 @@ func TestParameterChanges(t *testing.T) {
 			Old: schema.NewSet(tfelasticache.ParameterHash, []interface{}{
 				map[string]interface{}{
 					names.AttrName:  "reserved-memory",
-					names.AttrValue: acctest.CtZero,
+					names.AttrValue: acctest.Ct0,
 				},
 				map[string]interface{}{
 					names.AttrName:  "appendonly",
@@ -662,7 +662,7 @@ func TestParameterChanges(t *testing.T) {
 			ExpectedRemove: []*elasticache.ParameterNameValue{
 				{
 					ParameterName:  aws.String("reserved-memory"),
-					ParameterValue: aws.String(acctest.CtZero),
+					ParameterValue: aws.String(acctest.Ct0),
 				},
 			},
 			ExpectedAddOrUpdate: []*elasticache.ParameterNameValue{},

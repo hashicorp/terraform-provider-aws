@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testRotationDataSource_basic(t *testing.T) {
+func testAccRotationDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	if testing.Short() {
@@ -57,15 +57,15 @@ func testRotationDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "contact_ids.#", dataSourceName, "contact_ids.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "contact_ids.0", dataSourceName, "contact_ids.0"),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.key1", dataSourceName, "tags.key1"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.key2", dataSourceName, "tags.key2"),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, dataSourceName, acctest.CtTagsKey1),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey2, dataSourceName, acctest.CtTagsKey2),
 				),
 			},
 		},
 	})
 }
 
-func testRotationDataSource_dailySettings(t *testing.T) {
+func testAccRotationDataSource_dailySettings(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	if testing.Short() {
@@ -97,7 +97,7 @@ func testRotationDataSource_dailySettings(t *testing.T) {
 	})
 }
 
-func testRotationDataSource_monthlySettings(t *testing.T) {
+func testAccRotationDataSource_monthlySettings(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	if testing.Short() {

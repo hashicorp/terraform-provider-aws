@@ -31,7 +31,7 @@ import (
 
 // @SDKResource("aws_iam_server_certificate", name="Server Certificate")
 // @Tags(identifierAttribute="name", resourceType="ServerCertificate")
-// @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.ServerCertificate", tlsKey=true, importStateId="rName", importIgnore="private_key")
 func resourceServerCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServerCertificateCreate,
@@ -303,4 +303,15 @@ func stripCR(b []byte) []byte {
 // This DiffSuppressFunc prevents the resource from triggering needless recreation.
 func suppressNormalizeCertRemoval(k, old, new string, d *schema.ResourceData) bool {
 	return normalizeCert(new) == old
+}
+
+func serverCertificateTags(ctx context.Context, conn *iam.Client, identifier string) ([]awstypes.Tag, error) {
+	output, err := conn.ListServerCertificateTags(ctx, &iam.ListServerCertificateTagsInput{
+		ServerCertificateName: aws.String(identifier),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return output.Tags, nil
 }

@@ -39,7 +39,7 @@ func TestAccWAFRegionalRule_basic(t *testing.T) {
 					testAccCheckRuleExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "waf-regional", regexache.MustCompile(`rule/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafRuleName),
-					resource.TestCheckResourceAttr(resourceName, "predicate.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "predicate.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, wafRuleName),
 				),
 			},
@@ -68,8 +68,8 @@ func TestAccWAFRegionalRule_tags(t *testing.T) {
 				Config: testAccRuleConfig_tags1(wafRuleName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -78,20 +78,20 @@ func TestAccWAFRegionalRule_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRuleConfig_tags2(wafRuleName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
+				Config: testAccRuleConfig_tags2(wafRuleName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
 				Config: testAccRuleConfig_tags1(wafRuleName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -116,7 +116,7 @@ func TestAccWAFRegionalRule_changeNameForceNew(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafRuleName),
-					resource.TestCheckResourceAttr(resourceName, "predicate.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "predicate.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, wafRuleName),
 				),
 			},
@@ -125,7 +125,7 @@ func TestAccWAFRegionalRule_changeNameForceNew(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafRuleNewName),
-					resource.TestCheckResourceAttr(resourceName, "predicate.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "predicate.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, wafRuleNewName),
 				),
 			},
@@ -179,7 +179,7 @@ func TestAccWAFRegionalRule_noPredicates(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafRuleName),
-					resource.TestCheckResourceAttr(resourceName, "predicate.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "predicate.#", acctest.Ct0),
 				),
 			},
 			{
@@ -213,7 +213,7 @@ func TestAccWAFRegionalRule_changePredicates(t *testing.T) {
 					testAccCheckIPSetExists(ctx, "aws_wafregional_ipset.ipset", &ipset),
 					testAccCheckRuleExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleName),
-					resource.TestCheckResourceAttr(resourceName, "predicate.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "predicate.#", acctest.Ct1),
 					computeRulePredicate(&ipset.IPSetId, false, "IPMatch", &idx),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicate.*", map[string]string{
 						"negated":      "false",
@@ -227,7 +227,7 @@ func TestAccWAFRegionalRule_changePredicates(t *testing.T) {
 					testAccCheckXSSMatchSetExists(ctx, "aws_wafregional_xss_match_set.xss_match_set", &xssMatchSet),
 					testAccCheckRuleExists(ctx, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleName),
-					resource.TestCheckResourceAttr(resourceName, "predicate.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "predicate.#", acctest.Ct2),
 					computeRulePredicate(&xssMatchSet.XssMatchSetId, true, "XssMatch", &idx),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicate.*", map[string]string{
 						"negated":      "true",

@@ -16,7 +16,7 @@ const (
 
 	// General timeout for KMS resource changes to propagate.
 	// See https://docs.aws.amazon.com/kms/latest/developerguide/programming-eventual-consistency.html
-	kmsPropagationTimeout = 3 * time.Minute // nosemgrep:ci.kms-in-const-name, ci.kms-in-var-name
+	propagationTimeout = 3 * time.Minute // nosemgrep:ci.kms-in-const-name, ci.kms-in-var-name
 
 	// General timeout for IAM resource change to propagate.
 	// See https://docs.aws.amazon.com/IAM/latest/UserGuide/troubleshoot_general.html#troubleshoot_general_eventual-consistency.

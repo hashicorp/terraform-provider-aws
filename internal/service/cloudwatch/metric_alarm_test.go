@@ -39,17 +39,17 @@ func TestAccCloudWatchMetricAlarm_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, "CPUUtilization"),
 					resource.TestCheckResourceAttr(resourceName, "statistic", "Average"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "cloudwatch", regexache.MustCompile(`alarm:.+`)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "alarm_description", "This metric monitors ec2 cpu utilization"),
 					resource.TestCheckResourceAttr(resourceName, "threshold", "80"),
 					resource.TestCheckResourceAttr(resourceName, "period", "120"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamespace, "AWS/EC2"),
 					resource.TestCheckResourceAttr(resourceName, "alarm_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "comparison_operator", "GreaterThanOrEqualToThreshold"),
-					resource.TestCheckResourceAttr(resourceName, "datapoints_to_alarm", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "evaluation_periods", acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "insufficient_data_actions.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "dimensions.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "datapoints_to_alarm", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "evaluation_periods", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "insufficient_data_actions.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "dimensions.%", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "dimensions.InstanceId", "i-abcd1234"),
 				),
 			},
@@ -78,7 +78,7 @@ func TestAccCloudWatchMetricAlarm_AlarmActions_ec2Automate(t *testing.T) {
 				Config: testAccMetricAlarmConfig_actionsEC2Automate(rName, "reboot"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
-					resource.TestCheckResourceAttr(resourceName, "alarm_actions.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "alarm_actions.#", acctest.Ct1),
 				),
 			},
 			{
@@ -90,21 +90,21 @@ func TestAccCloudWatchMetricAlarm_AlarmActions_ec2Automate(t *testing.T) {
 				Config: testAccMetricAlarmConfig_actionsEC2Automate(rName, "recover"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
-					resource.TestCheckResourceAttr(resourceName, "alarm_actions.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "alarm_actions.#", acctest.Ct1),
 				),
 			},
 			{
 				Config: testAccMetricAlarmConfig_actionsEC2Automate(rName, "stop"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
-					resource.TestCheckResourceAttr(resourceName, "alarm_actions.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "alarm_actions.#", acctest.Ct1),
 				),
 			},
 			{
 				Config: testAccMetricAlarmConfig_actionsEC2Automate(rName, "terminate"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
-					resource.TestCheckResourceAttr(resourceName, "alarm_actions.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "alarm_actions.#", acctest.Ct1),
 				),
 			},
 		},
@@ -127,7 +127,7 @@ func TestAccCloudWatchMetricAlarm_AlarmActions_snsTopic(t *testing.T) {
 				Config: testAccMetricAlarmConfig_actionsSNSTopic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
-					resource.TestCheckResourceAttr(resourceName, "alarm_actions.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "alarm_actions.#", acctest.Ct1),
 				),
 			},
 			{
@@ -155,7 +155,7 @@ func TestAccCloudWatchMetricAlarm_AlarmActions_swfAction(t *testing.T) {
 				Config: testAccMetricAlarmConfig_actionsSWFAction(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
-					resource.TestCheckResourceAttr(resourceName, "alarm_actions.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "alarm_actions.#", acctest.Ct1),
 				),
 			},
 			{
@@ -183,7 +183,7 @@ func TestAccCloudWatchMetricAlarm_dataPointsToAlarm(t *testing.T) {
 				Config: testAccMetricAlarmConfig_datapointsTo(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
-					resource.TestCheckResourceAttr(resourceName, "datapoints_to_alarm", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "datapoints_to_alarm", acctest.Ct2),
 				),
 			},
 		},
@@ -435,7 +435,7 @@ func TestAccCloudWatchMetricAlarm_metricQuery(t *testing.T) {
 				Config: testAccMetricAlarmConfig_metricQueryExpressionQuery(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
-					resource.TestCheckResourceAttr(resourceName, "metric_query.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "metric_query.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "metric_query.*", map[string]string{
 						names.AttrID:         "m1",
 						names.AttrExpression: "SELECT MAX(MillisBehindLatest) FROM SCHEMA(\"foo\", Operation, ShardId) WHERE Operation = 'ProcessTask'",
@@ -455,7 +455,7 @@ func TestAccCloudWatchMetricAlarm_metricQuery(t *testing.T) {
 				Config: testAccMetricAlarmConfig_metricQueryExpressionReference(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
-					resource.TestCheckResourceAttr(resourceName, "metric_query.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "metric_query.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "metric_query.*", map[string]string{
 						names.AttrID:         "e1",
 						names.AttrExpression: "m1",
@@ -465,13 +465,13 @@ func TestAccCloudWatchMetricAlarm_metricQuery(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "metric_query.*", map[string]string{
 						names.AttrID:                     "m1",
-						"metric.#":                       acctest.CtOne,
+						"metric.#":                       acctest.Ct1,
 						"metric.0.metric_name":           "CPUUtilization",
 						"metric.0.namespace":             "AWS/EC2",
 						"metric.0.period":                "120",
 						"metric.0.stat":                  "Average",
 						"metric.0.unit":                  "Count",
-						"metric.0.dimensions.%":          acctest.CtOne,
+						"metric.0.dimensions.%":          acctest.Ct1,
 						"metric.0.dimensions.InstanceId": "i-abcd1234",
 						"period":                         "",
 					}),
@@ -487,7 +487,7 @@ func TestAccCloudWatchMetricAlarm_metricQuery(t *testing.T) {
 				Config: testAccMetricAlarmConfig_metricQueryCrossAccount(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
-					resource.TestCheckResourceAttr(resourceName, "metric_query.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "metric_query.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "metric_query.0.id", "m1"),
 					resource.TestCheckResourceAttrPair(resourceName, "metric_query.0.account_id", "data.aws_caller_identity.current", names.AttrAccountID),
 					resource.TestCheckNoResourceAttr(resourceName, "metric_query.0.period"),
@@ -503,7 +503,7 @@ func TestAccCloudWatchMetricAlarm_metricQuery(t *testing.T) {
 				Config: testAccMetricAlarmConfig_metricQueryExpressionReferenceUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
-					resource.TestCheckResourceAttr(resourceName, "metric_query.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "metric_query.#", acctest.Ct3),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "metric_query.*", map[string]string{
 						names.AttrID:         "e1",
 						names.AttrExpression: "m1",
@@ -530,7 +530,7 @@ func TestAccCloudWatchMetricAlarm_metricQuery(t *testing.T) {
 				Config: testAccMetricAlarmConfig_metricQueryExpressionReference(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
-					resource.TestCheckResourceAttr(resourceName, "metric_query.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "metric_query.#", acctest.Ct2),
 				),
 			},
 			{
@@ -543,7 +543,7 @@ func TestAccCloudWatchMetricAlarm_metricQuery(t *testing.T) {
 				Config: testAccMetricAlarmConfig_anomalyDetectionExpression(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
-					resource.TestCheckResourceAttr(resourceName, "metric_query.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "metric_query.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "metric_query.*", map[string]string{
 						names.AttrID:         "e1",
 						names.AttrExpression: "ANOMALY_DETECTION_BAND(m1)",
@@ -596,8 +596,8 @@ func TestAccCloudWatchMetricAlarm_tags(t *testing.T) {
 				Config: testAccMetricAlarmConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -606,20 +606,20 @@ func TestAccCloudWatchMetricAlarm_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccMetricAlarmConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
+				Config: testAccMetricAlarmConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
 				Config: testAccMetricAlarmConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},

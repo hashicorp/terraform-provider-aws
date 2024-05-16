@@ -42,7 +42,7 @@ func TestAccM2Deployment_basic(t *testing.T) {
 				Config: testAccDeploymentConfig_basic(rName, "bluage", 1, 1, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
-					resource.TestCheckResourceAttr(resourceName, "application_version", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "application_version", acctest.Ct1),
 				),
 			},
 			{
@@ -108,7 +108,7 @@ func TestAccM2Deployment_nostart(t *testing.T) {
 				Config: testAccDeploymentConfig_basic(rName, "bluage", 1, 1, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
-					resource.TestCheckResourceAttr(resourceName, "application_version", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "application_version", acctest.Ct1),
 				),
 			},
 			{
@@ -143,14 +143,14 @@ func TestAccM2Deployment_update(t *testing.T) {
 				Config: testAccDeploymentConfig_basic(rName, "bluage", 1, 1, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
-					resource.TestCheckResourceAttr(resourceName, "application_version", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "application_version", acctest.Ct1),
 				),
 			},
 			{
 				Config: testAccDeploymentConfig_basic(rName, "bluage", 2, 2, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
-					resource.TestCheckResourceAttr(resourceName, "application_version", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "application_version", acctest.Ct2),
 				),
 			},
 			{

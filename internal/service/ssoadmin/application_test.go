@@ -153,8 +153,8 @@ func TestAccSSOAdminApplication_portalOptions(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "portal_options.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "portal_options.0.sign_in_options.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "portal_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "portal_options.0.sign_in_options.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "portal_options.0.sign_in_options.*", map[string]string{
 						"application_url": applicationURL1,
 						"origin":          string(types.SignInOriginApplication),
@@ -171,8 +171,8 @@ func TestAccSSOAdminApplication_portalOptions(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "portal_options.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "portal_options.0.sign_in_options.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "portal_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "portal_options.0.sign_in_options.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "portal_options.0.sign_in_options.*", map[string]string{
 						"application_url": applicationURL2,
 						"origin":          string(types.SignInOriginApplication),
@@ -253,8 +253,8 @@ func TestAccSSOAdminApplication_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -263,13 +263,13 @@ func TestAccSSOAdminApplication_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccApplicationConfig_tags2(rName, testAccApplicationProviderARN, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
+				Config: testAccApplicationConfig_tags2(rName, testAccApplicationProviderARN, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
@@ -277,8 +277,8 @@ func TestAccSSOAdminApplication_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},

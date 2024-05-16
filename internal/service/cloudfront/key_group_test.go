@@ -36,7 +36,7 @@ func TestAccCloudFrontKeyGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_cloudfront_key_group.test", names.AttrComment, "test key group"),
 					resource.TestCheckResourceAttrSet("aws_cloudfront_key_group.test", "etag"),
 					resource.TestCheckResourceAttrSet("aws_cloudfront_key_group.test", names.AttrID),
-					resource.TestCheckResourceAttr("aws_cloudfront_key_group.test", "items.#", acctest.CtOne),
+					resource.TestCheckResourceAttr("aws_cloudfront_key_group.test", "items.#", acctest.Ct1),
 					resource.TestCheckResourceAttr("aws_cloudfront_key_group.test", names.AttrName, rName),
 				),
 			},
@@ -124,7 +124,7 @@ func TestAccCloudFrontKeyGroup_items(t *testing.T) {
 				Config: testAccKeyGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr("aws_cloudfront_key_group.test", "items.#", acctest.CtOne),
+					resource.TestCheckResourceAttr("aws_cloudfront_key_group.test", "items.#", acctest.Ct1),
 				),
 			},
 			{
@@ -136,7 +136,7 @@ func TestAccCloudFrontKeyGroup_items(t *testing.T) {
 				Config: testAccKeyGroupConfig_items(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr("aws_cloudfront_key_group.test", "items.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr("aws_cloudfront_key_group.test", "items.#", acctest.Ct2),
 				),
 			},
 		},

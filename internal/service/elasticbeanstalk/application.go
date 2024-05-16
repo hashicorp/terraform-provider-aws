@@ -56,7 +56,7 @@ func ResourceApplication() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
-						"service_role": {
+						names.AttrServiceRole: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
@@ -256,7 +256,7 @@ func expandApplicationResourceLifecycleConfig(tfMap map[string]interface{}) *aws
 		},
 	}
 
-	if v, ok := tfMap["service_role"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrServiceRole].(string); ok && v != "" {
 		apiObject.ServiceRole = aws.String(v)
 	}
 
@@ -313,7 +313,7 @@ func flattenApplicationResourceLifecycleConfig(apiObject *awstypes.ApplicationRe
 	}
 
 	if v := apiObject.ServiceRole; v != nil {
-		tfMap["service_role"] = aws.ToString(v)
+		tfMap[names.AttrServiceRole] = aws.ToString(v)
 	}
 
 	return []interface{}{tfMap}

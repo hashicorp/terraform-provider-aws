@@ -44,7 +44,7 @@ func TestValidMemcachedVersionString(t *testing.T) {
 			valid:   false,
 		},
 		{
-			version: acctest.CtOne,
+			version: acctest.Ct1,
 			valid:   false,
 		},
 		{

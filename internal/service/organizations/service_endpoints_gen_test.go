@@ -15,7 +15,6 @@ import (
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	organizations_sdkv2 "github.com/aws/aws-sdk-go-v2/service/organizations"
-	organizations_sdkv1 "github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/aws/smithy-go/middleware"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/google/go-cmp/cmp"
@@ -242,7 +241,7 @@ func defaultEndpoint(region string) string {
 	return ep.URI.String()
 }
 
-func callServiceV2(ctx context.Context, t *testing.T, meta *conns.AWSClient) string {
+func callServiceV1(ctx context.Context, t *testing.T, meta *conns.AWSClient) string {
 	t.Helper()
 
 	var endpoint string
@@ -262,20 +261,6 @@ func callServiceV2(ctx context.Context, t *testing.T, meta *conns.AWSClient) str
 	} else if !errors.Is(err, errCancelOperation) {
 		t.Fatalf("Unexpected error: %s", err)
 	}
-
-	return endpoint
-}
-
-func callServiceV1(ctx context.Context, t *testing.T, meta *conns.AWSClient) string {
-	t.Helper()
-
-	client := meta.OrganizationsConn(ctx)
-
-	req, _ := client.ListAccountsRequest(&organizations_sdkv1.ListAccountsInput{})
-
-	req.HTTPRequest.URL.Path = "/"
-
-	endpoint := req.HTTPRequest.URL.String()
 
 	return endpoint
 }

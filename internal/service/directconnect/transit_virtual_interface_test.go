@@ -24,9 +24,9 @@ func TestAccDirectConnectTransitVirtualInterface_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		"basic":        testAccTransitVirtualInterface_basic,
-		names.AttrTags: testAccTransitVirtualInterface_tags,
-		"sitelink":     testAccTransitVirtualInterface_siteLink,
+		acctest.CtBasic: testAccTransitVirtualInterface_basic,
+		"tags":          testAccTransitVirtualInterface_tags,
+		"sitelink":      testAccTransitVirtualInterface_siteLink,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -71,7 +71,7 @@ func testAccTransitVirtualInterface_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "jumbo_frame_capable", "true"),
 					resource.TestCheckResourceAttr(resourceName, "mtu", "1500"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "vlan", strconv.Itoa(vlan)),
 				),
 			},
@@ -92,7 +92,7 @@ func testAccTransitVirtualInterface_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "jumbo_frame_capable", "true"),
 					resource.TestCheckResourceAttr(resourceName, "mtu", "8500"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "vlan", strconv.Itoa(vlan)),
 				),
 			},
@@ -145,7 +145,7 @@ func testAccTransitVirtualInterface_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "jumbo_frame_capable", "true"),
 					resource.TestCheckResourceAttr(resourceName, "mtu", "1500"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct3),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2a"),
@@ -169,7 +169,7 @@ func testAccTransitVirtualInterface_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "jumbo_frame_capable", "true"),
 					resource.TestCheckResourceAttr(resourceName, "mtu", "1500"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct3),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2b"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "Value3"),
@@ -226,7 +226,7 @@ func testAccTransitVirtualInterface_siteLink(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "mtu", "8500"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "sitelink_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "vlan", strconv.Itoa(vlan)),
 				),
 			},
@@ -248,7 +248,7 @@ func testAccTransitVirtualInterface_siteLink(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "mtu", "8500"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "sitelink_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "vlan", strconv.Itoa(vlan)),
 				),
 			},

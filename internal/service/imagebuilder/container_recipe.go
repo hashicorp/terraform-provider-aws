@@ -160,7 +160,7 @@ func ResourceContainerRecipe() *schema.Resource {
 													ForceNew:     true,
 													ValidateFunc: validation.StringLenBetween(1, 1024),
 												},
-												"snapshot_id": {
+												names.AttrSnapshotID: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ForceNew:     true,

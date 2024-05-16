@@ -41,8 +41,8 @@ func TestAccNeptuneClusterParameterGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "neptune1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -150,8 +150,8 @@ func TestAccNeptuneClusterParameterGroup_tags(t *testing.T) {
 				Config: testAccClusterParameterGroupConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -160,20 +160,20 @@ func TestAccNeptuneClusterParameterGroup_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterParameterGroupConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
+				Config: testAccClusterParameterGroupConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
 				Config: testAccClusterParameterGroupConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -221,14 +221,14 @@ func TestAccNeptuneClusterParameterGroup_parameter(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterParameterGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterParameterGroupConfig_one(rName, "neptune_enable_audit_log", acctest.CtOne),
+				Config: testAccClusterParameterGroupConfig_one(rName, "neptune_enable_audit_log", acctest.Ct1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"apply_method":  "pending-reboot",
 						names.AttrName:  "neptune_enable_audit_log",
-						names.AttrValue: acctest.CtOne,
+						names.AttrValue: acctest.Ct1,
 					}),
 				),
 			},
@@ -238,14 +238,14 @@ func TestAccNeptuneClusterParameterGroup_parameter(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterParameterGroupConfig_one(rName, "neptune_enable_audit_log", acctest.CtZero),
+				Config: testAccClusterParameterGroupConfig_one(rName, "neptune_enable_audit_log", acctest.Ct0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"apply_method":  "pending-reboot",
 						names.AttrName:  "neptune_enable_audit_log",
-						names.AttrValue: acctest.CtZero,
+						names.AttrValue: acctest.Ct0,
 					}),
 				),
 			},
@@ -268,14 +268,14 @@ func TestAccNeptuneClusterParameterGroup_parameterDefault(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterParameterGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterParameterGroupConfig_one(rName, "neptune_enable_audit_log", acctest.CtZero),
+				Config: testAccClusterParameterGroupConfig_one(rName, "neptune_enable_audit_log", acctest.Ct0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"apply_method":  "pending-reboot",
 						names.AttrName:  "neptune_enable_audit_log",
-						names.AttrValue: acctest.CtZero,
+						names.AttrValue: acctest.Ct0,
 					}),
 				),
 				ExpectNonEmptyPlan: false,

@@ -43,7 +43,7 @@ func TestAccSecretsManagerSecret_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "recovery_window_in_days", "30"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -162,7 +162,7 @@ func TestAccSecretsManagerSecret_basicReplica(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretExists(ctx, resourceName, &secret),
 					resource.TestCheckResourceAttr(resourceName, "force_overwrite_replica_secret", "false"),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.Ct1),
 				),
 			},
 		},
@@ -258,14 +258,14 @@ func TestAccSecretsManagerSecret_RecoveryWindowInDays_recreate(t *testing.T) {
 				Config: testAccSecretConfig_recoveryWindowInDays(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretExists(ctx, resourceName, &secret),
-					resource.TestCheckResourceAttr(resourceName, "recovery_window_in_days", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "recovery_window_in_days", acctest.Ct0),
 				),
 			},
 			{
 				Config: testAccSecretConfig_recoveryWindowInDays(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretExists(ctx, resourceName, &secret),
-					resource.TestCheckResourceAttr(resourceName, "recovery_window_in_days", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "recovery_window_in_days", acctest.Ct0),
 				),
 				Taint: []string{resourceName},
 			},
@@ -295,8 +295,8 @@ func TestAccSecretsManagerSecret_tags(t *testing.T) {
 				Config: testAccSecretConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretExists(ctx, resourceName, &secret),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -306,20 +306,20 @@ func TestAccSecretsManagerSecret_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"recovery_window_in_days", "force_overwrite_replica_secret"},
 			},
 			{
-				Config: testAccSecretConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
+				Config: testAccSecretConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretExists(ctx, resourceName, &secret),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
 				Config: testAccSecretConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretExists(ctx, resourceName, &secret),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},

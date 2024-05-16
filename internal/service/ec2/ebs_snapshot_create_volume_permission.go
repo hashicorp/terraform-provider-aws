@@ -42,7 +42,7 @@ func ResourceSnapshotCreateVolumePermission() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"snapshot_id": {
+			names.AttrSnapshotID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -55,7 +55,7 @@ func resourceSnapshotCreateVolumePermissionCreate(ctx context.Context, d *schema
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	snapshotID := d.Get("snapshot_id").(string)
+	snapshotID := d.Get(names.AttrSnapshotID).(string)
 	accountID := d.Get(names.AttrAccountID).(string)
 	id := EBSSnapshotCreateVolumePermissionCreateResourceID(snapshotID, accountID)
 	input := &ec2.ModifySnapshotAttributeInput{
@@ -154,7 +154,7 @@ func resourceSnapshotCreateVolumePermissionDelete(ctx context.Context, d *schema
 
 func resourceSnapshotCreateVolumePermissionCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 	if diff.Id() == "" {
-		if snapshotID := diff.Get("snapshot_id").(string); snapshotID != "" {
+		if snapshotID := diff.Get(names.AttrSnapshotID).(string); snapshotID != "" {
 			conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 			snapshot, err := FindSnapshotByID(ctx, conn, snapshotID)
