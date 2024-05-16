@@ -24,7 +24,7 @@ func expandScalingConfiguration(tfMap map[string]interface{}) *rds.ScalingConfig
 		apiObject.AutoPause = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["max_capacity"].(int); ok {
+	if v, ok := tfMap[names.AttrMaxCapacity].(int); ok {
 		apiObject.MaxCapacity = aws.Int64(int64(v))
 	}
 
@@ -74,11 +74,11 @@ func flattenScalingConfigurationInfo(apiObject *rds.ScalingConfigurationInfo) ma
 	}
 
 	if v := apiObject.MaxCapacity; v != nil {
-		tfMap["max_capacity"] = aws.Int64Value(v)
+		tfMap[names.AttrMaxCapacity] = aws.Int64Value(v)
 	}
 
 	if v := apiObject.MaxCapacity; v != nil {
-		tfMap["max_capacity"] = aws.Int64Value(v)
+		tfMap[names.AttrMaxCapacity] = aws.Int64Value(v)
 	}
 
 	if v := apiObject.MinCapacity; v != nil {
@@ -103,7 +103,7 @@ func expandServerlessV2ScalingConfiguration(tfMap map[string]interface{}) *rds.S
 
 	apiObject := &rds.ServerlessV2ScalingConfiguration{}
 
-	if v, ok := tfMap["max_capacity"].(float64); ok && v != 0.0 {
+	if v, ok := tfMap[names.AttrMaxCapacity].(float64); ok && v != 0.0 {
 		apiObject.MaxCapacity = aws.Float64(v)
 	}
 
@@ -122,7 +122,7 @@ func flattenServerlessV2ScalingConfigurationInfo(apiObject *rds.ServerlessV2Scal
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.MaxCapacity; v != nil {
-		tfMap["max_capacity"] = aws.Float64Value(v)
+		tfMap[names.AttrMaxCapacity] = aws.Float64Value(v)
 	}
 
 	if v := apiObject.MinCapacity; v != nil {

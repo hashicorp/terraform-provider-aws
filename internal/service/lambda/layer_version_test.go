@@ -35,12 +35,12 @@ func TestAccLambdaLayerVersion_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerVersionExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "lambda", fmt.Sprintf("layer:%s:1", rName)),
-					resource.TestCheckResourceAttr(resourceName, "compatible_runtimes.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "compatible_runtimes.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "layer_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "license_info", ""),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "layer_arn", "lambda", fmt.Sprintf("layer:%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "signing_profile_version_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "signing_job_arn", ""),
 				),
@@ -191,7 +191,7 @@ func TestAccLambdaLayerVersion_compatibleRuntimes(t *testing.T) {
 				Config: testAccLayerVersionConfig_compatibleRuntimes(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerVersionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "compatible_runtimes.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "compatible_runtimes.#", acctest.Ct2),
 				),
 			},
 
@@ -220,14 +220,14 @@ func TestAccLambdaLayerVersion_compatibleArchitectures(t *testing.T) {
 				Config: testAccLayerVersionConfig_compatibleArchitecturesNone(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerVersionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "compatible_architectures.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "compatible_architectures.#", acctest.Ct0),
 				),
 			},
 			{
 				Config: testAccLayerVersionConfig_compatibleArchitecturesX86(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerVersionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "compatible_architectures.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "compatible_architectures.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "compatible_architectures.*", string(awstypes.ArchitectureX8664)),
 				),
 			},
@@ -235,14 +235,14 @@ func TestAccLambdaLayerVersion_compatibleArchitectures(t *testing.T) {
 				Config: testAccLayerVersionConfig_compatibleArchitecturesArm(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerVersionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "compatible_architectures.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "compatible_architectures.#", acctest.Ct1),
 				),
 			},
 			{
 				Config: testAccLayerVersionConfig_compatibleArchitecturesX86Arm(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerVersionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "compatible_architectures.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "compatible_architectures.#", acctest.Ct2),
 				),
 			},
 
@@ -332,7 +332,7 @@ func TestAccLambdaLayerVersion_skipDestroy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerVersionExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "lambda", fmt.Sprintf("layer:%s:1", rName)),
-					resource.TestCheckResourceAttr(resourceName, "compatible_runtimes.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "compatible_runtimes.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, "true"),
 				),
 			},
@@ -341,7 +341,7 @@ func TestAccLambdaLayerVersion_skipDestroy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerVersionExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "lambda", fmt.Sprintf("layer:%s:2", rName)),
-					resource.TestCheckResourceAttr(resourceName, "compatible_runtimes.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "compatible_runtimes.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, "true"),
 				),
 			},

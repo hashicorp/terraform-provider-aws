@@ -7,8 +7,9 @@ import (
 	"context"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/organizations"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -18,7 +19,7 @@ import (
 )
 
 // @SDKDataSource("aws_organizations_organizational_unit", name="Organizational Unit")
-func DataSourceOrganizationalUnit() *schema.Resource {
+func dataSourceOrganizationalUnit() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOrganizationalUnitRead,
 
@@ -42,7 +43,7 @@ func DataSourceOrganizationalUnit() *schema.Resource {
 
 func dataSourceOrganizationalUnitRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
+	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	parentID := d.Get("parent_id").(string)
@@ -50,15 +51,15 @@ func dataSourceOrganizationalUnitRead(ctx context.Context, d *schema.ResourceDat
 		ParentId: aws.String(parentID),
 	}
 
-	ou, err := findOrganizationalUnitForParent(ctx, conn, input, func(v *organizations.OrganizationalUnit) bool {
-		return aws.StringValue(v.Name) == name
+	ou, err := findOrganizationalUnitForParent(ctx, conn, input, func(v *awstypes.OrganizationalUnit) bool {
+		return aws.ToString(v.Name) == name
 	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Organizations Organizational Unit (%s/%s): %s", parentID, name, err)
 	}
 
-	d.SetId(aws.StringValue(ou.Id))
+	d.SetId(aws.ToString(ou.Id))
 	d.Set(names.AttrARN, ou.Arn)
 
 	return diags

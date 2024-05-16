@@ -509,7 +509,7 @@ func TestAccFinSpaceKxCluster_commandLineArgs(t *testing.T) {
 				Config: testAccKxClusterConfig_commandLineArgs(rName, "arg1", acctest.CtValue1, codePath),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
-					resource.TestCheckResourceAttr(resourceName, "command_line_arguments.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "command_line_arguments.%", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "command_line_arguments.arg1", acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxClusterStatusRunning)),
 				),
@@ -518,7 +518,7 @@ func TestAccFinSpaceKxCluster_commandLineArgs(t *testing.T) {
 				Config: testAccKxClusterConfig_commandLineArgs(rName, "arg1", acctest.CtValue2, codePath),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
-					resource.TestCheckResourceAttr(resourceName, "command_line_arguments.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "command_line_arguments.%", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "command_line_arguments.arg1", acctest.CtValue2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxClusterStatusRunning)),
 				),
@@ -551,25 +551,25 @@ func TestAccFinSpaceKxCluster_tags(t *testing.T) {
 				Config: testAccKxClusterConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
-				Config: testAccKxClusterConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
+				Config: testAccKxClusterConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
 				Config: testAccKxClusterConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},

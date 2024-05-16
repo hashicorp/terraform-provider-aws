@@ -23,8 +23,8 @@ func TestAccECRRegistryPolicy_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		"basic":      testAccRegistryPolicy_basic,
-		"disappears": testAccRegistryPolicy_disappears,
+		acctest.CtBasic: testAccRegistryPolicy_basic,
+		"disappears":    testAccRegistryPolicy_disappears,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)

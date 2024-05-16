@@ -49,7 +49,7 @@ func TestAccRedshiftEndpointAuthorization_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_delete"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDelete},
 			},
 		},
 	})
@@ -74,7 +74,7 @@ func TestAccRedshiftEndpointAuthorization_vpcs(t *testing.T) {
 				Config: testAccEndpointAuthorizationConfig_vpcs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointAuthorizationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "vpc_ids.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "vpc_ids.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "allowed_all_vpcs", "false"),
 				),
 			},
@@ -82,13 +82,13 @@ func TestAccRedshiftEndpointAuthorization_vpcs(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_delete"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDelete},
 			},
 			{
 				Config: testAccEndpointAuthorizationConfig_vpcsUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointAuthorizationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "vpc_ids.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "vpc_ids.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "allowed_all_vpcs", "false"),
 				),
 			},
@@ -96,7 +96,7 @@ func TestAccRedshiftEndpointAuthorization_vpcs(t *testing.T) {
 				Config: testAccEndpointAuthorizationConfig_vpcs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointAuthorizationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "vpc_ids.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "vpc_ids.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "allowed_all_vpcs", "false"),
 				),
 			},

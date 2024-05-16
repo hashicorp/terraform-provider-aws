@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_iam_server_certificate: Now correctly reads tags after update and on read.
+```

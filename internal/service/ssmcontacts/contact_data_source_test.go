@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testContactDataSource_basic(t *testing.T) {
+func testAccContactDataSource_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -39,8 +39,8 @@ func testContactDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrType, dataSourceName, names.AttrType),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDisplayName, dataSourceName, names.AttrDisplayName),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.key1", dataSourceName, "tags.key1"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.key2", dataSourceName, "tags.key2"),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, dataSourceName, acctest.CtTagsKey1),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey2, dataSourceName, acctest.CtTagsKey2),
 				),
 			},
 		},

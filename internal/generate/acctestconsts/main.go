@@ -21,8 +21,9 @@ var tmpl string
 var semgrepTmpl string
 
 type ConstantDatum struct {
-	Constant      string
-	ConstantLower string
+	Constant   string
+	Literal    string
+	AltLiteral string
 }
 
 type TemplateData struct {
@@ -85,10 +86,27 @@ func readConstants(filename string) ([]ConstantDatum, error) {
 			continue
 		}
 
-		constantList = append(constantList, ConstantDatum{
-			ConstantLower: row[0],
-			Constant:      row[1],
-		})
+		cd := ConstantDatum{
+			Literal:  row[0],
+			Constant: row[1],
+		}
+
+		switch cd.Literal {
+		case "0":
+			cd.AltLiteral = "acctest.CtZero"
+		case "1":
+			cd.AltLiteral = "acctest.CtOne"
+		case "2":
+			cd.AltLiteral = "acctest.CtTwo"
+		case "3":
+			cd.AltLiteral = "acctest.CtThree"
+		case "4":
+			cd.AltLiteral = "acctest.CtFour"
+		case "10":
+			cd.AltLiteral = "acctest.CtTen"
+		}
+
+		constantList = append(constantList, cd)
 	}
 
 	sort.SliceStable(constantList, func(i, j int) bool {

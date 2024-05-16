@@ -30,17 +30,17 @@ func TestAccSageMaker_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"App": {
-			"basic":                 testAccApp_basic,
+			acctest.CtBasic:         testAccApp_basic,
 			"disappears":            testAccApp_disappears,
-			names.AttrTags:          testAccApp_tags,
+			"tags":                  testAccApp_tags,
 			"resourceSpec":          testAccApp_resourceSpec,
 			"resourceSpecLifecycle": testAccApp_resourceSpecLifecycle,
 			"space":                 testAccApp_space,
 		},
 		"Domain": {
-			"basic":                                    testAccDomain_basic,
+			acctest.CtBasic:                            testAccDomain_basic,
 			"disappears":                               testAccDomain_tags,
-			names.AttrTags:                             testAccDomain_disappears,
+			"tags":                                     testAccDomain_disappears,
 			"tensorboardAppSettings":                   testAccDomain_tensorboardAppSettings,
 			"tensorboardAppSettingsWithImage":          testAccDomain_tensorboardAppSettingsWithImage,
 			"kernelGatewayAppSettings":                 testAccDomain_kernelGatewayAppSettings,
@@ -70,16 +70,16 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"spaceStorageSettings":                                   testAccDomain_spaceStorageSettings,
 		},
 		"FlowDefinition": {
-			"basic":                          testAccFlowDefinition_basic,
+			acctest.CtBasic:                  testAccFlowDefinition_basic,
 			"disappears":                     testAccFlowDefinition_disappears,
-			names.AttrTags:                   testAccFlowDefinition_tags,
+			"tags":                           testAccFlowDefinition_tags,
 			"HumanLoopConfigPublicWorkforce": testAccFlowDefinition_humanLoopConfig_publicWorkforce,
 			"HumanLoopRequestSource":         testAccFlowDefinition_humanLoopRequestSource,
 		},
 		"Space": {
-			"basic":                    testAccSpace_basic,
+			acctest.CtBasic:            testAccSpace_basic,
 			"disappears":               testAccSpace_tags,
-			names.AttrTags:             testAccSpace_disappears,
+			"tags":                     testAccSpace_disappears,
 			"kernelGatewayAppSettings": testAccSpace_kernelGatewayAppSettings,
 			"kernelGatewayAppSettings_lifecycleConfig": testAccSpace_kernelGatewayAppSettings_lifecycleconfig,
 			"kernelGatewayAppSettings_imageConfig":     testAccSpace_kernelGatewayAppSettings_imageconfig,
@@ -90,12 +90,12 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"customFileSystem":                         testAccSpace_customFileSystem,
 		},
 		"UserProfile": {
-			"basic":                                    testAccUserProfile_basic,
-			"disappears":                               testAccUserProfile_tags,
-			names.AttrTags:                             testAccUserProfile_disappears,
-			"tensorboardAppSettings":                   testAccUserProfile_tensorboardAppSettings,
-			"tensorboardAppSettingsWithImage":          testAccUserProfile_tensorboardAppSettingsWithImage,
-			"kernelGatewayAppSettings":                 testAccUserProfile_kernelGatewayAppSettings,
+			acctest.CtBasic:                   testAccUserProfile_basic,
+			"disappears":                      testAccUserProfile_tags,
+			"tags":                            testAccUserProfile_disappears,
+			"tensorboardAppSettings":          testAccUserProfile_tensorboardAppSettings,
+			"tensorboardAppSettingsWithImage": testAccUserProfile_tensorboardAppSettingsWithImage,
+			"kernelGatewayAppSettings":        testAccUserProfile_kernelGatewayAppSettings,
 			"kernelGatewayAppSettings_lifecycleConfig": testAccUserProfile_kernelGatewayAppSettings_lifecycleconfig,
 			"kernelGatewayAppSettings_imageConfig":     testAccUserProfile_kernelGatewayAppSettings_imageconfig,
 			"jupyterServerAppSettings":                 testAccUserProfile_jupyterServerAppSettings,
@@ -109,13 +109,13 @@ func TestAccSageMaker_serial(t *testing.T) {
 		},
 		"Workteam": {
 			"disappears":         testAccWorkteam_disappears,
-			names.AttrTags:       testAccWorkteam_tags,
+			"tags":               testAccWorkteam_tags,
 			"CognitoConfig":      testAccWorkteam_cognitoConfig,
 			"NotificationConfig": testAccWorkteam_notificationConfig,
 			"OidcConfig":         testAccWorkteam_oidcConfig,
 		},
 		"Servicecatalog": {
-			"basic": testAccServicecatalogPortfolioStatus_basic,
+			acctest.CtBasic: testAccServicecatalogPortfolioStatus_basic,
 		},
 	}
 

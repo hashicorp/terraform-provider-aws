@@ -80,7 +80,7 @@ func TestAccVPCDataSource_CIDRBlockAssociations_multiple(t *testing.T) {
 			{
 				Config: testAccVPCDataSourceConfig_cidrBlockAssociationsMultiple(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "cidr_block_associations.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(dataSourceName, "cidr_block_associations.#", acctest.Ct2),
 				),
 			},
 		},

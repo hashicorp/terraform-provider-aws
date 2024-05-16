@@ -63,7 +63,7 @@ func TestAccVPCEndpointServiceAllowedPrincipal_multiple(t *testing.T) {
 					testAccCheckVPCEndpointServiceAllowedPrincipalExists(ctx, resourceName),
 					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`^vpce-svc-perm-\w{17}$`)),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_endpoint_service_id", "aws_vpc_endpoint_service.test", names.AttrID),
-					resource.TestCheckResourceAttr(serviceResourceName, "allowed_principals.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(serviceResourceName, "allowed_principals.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "principal_arn", "data.aws_iam_session_context.current", "issuer_arn"),
 				),
 			},
@@ -123,7 +123,10 @@ func TestAccVPCEndpointServiceAllowedPrincipal_migrateID(t *testing.T) {
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccVPCEndpointServiceAllowedPrincipalConfig_basic(rName),
-				PlanOnly:                 true,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEndpointServiceAllowedPrincipalExists(ctx, resourceName),
+					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`^vpce-svc-perm-\w{17}$`)),
+				),
 			},
 		},
 	})
@@ -171,14 +174,14 @@ func TestAccVPCEndpointServiceAllowedPrincipal_migrateAndTag(t *testing.T) {
 
 func testAccCheckVPCEndpointServiceAllowedPrincipalDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpc_endpoint_service_allowed_principal" {
 				continue
 			}
 
-			_, err := tfec2.FindVPCEndpointServicePermission(ctx, conn, rs.Primary.Attributes["vpc_endpoint_service_id"], rs.Primary.Attributes["principal_arn"])
+			_, err := tfec2.FindVPCEndpointServicePermissionV2(ctx, conn, rs.Primary.Attributes["vpc_endpoint_service_id"], rs.Primary.Attributes["principal_arn"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -206,9 +209,9 @@ func testAccCheckVPCEndpointServiceAllowedPrincipalExists(ctx context.Context, n
 			return fmt.Errorf("No EC2 VPC Endpoint Service Allowed Principal ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		_, err := tfec2.FindVPCEndpointServicePermission(ctx, conn, rs.Primary.Attributes["vpc_endpoint_service_id"], rs.Primary.Attributes["principal_arn"])
+		_, err := tfec2.FindVPCEndpointServicePermissionV2(ctx, conn, rs.Primary.Attributes["vpc_endpoint_service_id"], rs.Primary.Attributes["principal_arn"])
 
 		return err
 	}

@@ -228,7 +228,7 @@ func resourceTarget() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(0, 1600),
 						},
-						"propagate_tags": {
+						names.AttrPropagateTags: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ValidateDiagFunc: enum.Validate[types.PropagateTags](),
@@ -963,7 +963,7 @@ func expandTargetECSParameters(ctx context.Context, tfList []interface{}) *types
 			ecsParameters.PlacementStrategy = expandTargetPlacementStrategies(v.([]interface{}))
 		}
 
-		if v, ok := tfMap["propagate_tags"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrPropagateTags].(string); ok && v != "" {
 			ecsParameters.PropagateTags = types.PropagateTags(v)
 		}
 
@@ -1188,7 +1188,7 @@ func flattenTargetECSParameters(ctx context.Context, ecsParameters *types.EcsPar
 		config["platform_version"] = aws.ToString(ecsParameters.PlatformVersion)
 	}
 
-	config["propagate_tags"] = ecsParameters.PropagateTags
+	config[names.AttrPropagateTags] = ecsParameters.PropagateTags
 
 	if ecsParameters.PlacementConstraints != nil {
 		config["placement_constraint"] = flattenTargetPlacementConstraints(ecsParameters.PlacementConstraints)

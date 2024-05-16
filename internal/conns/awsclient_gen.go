@@ -18,6 +18,7 @@ import (
 	appintegrations_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appintegrations"
 	applicationautoscaling_sdkv2 "github.com/aws/aws-sdk-go-v2/service/applicationautoscaling"
 	apprunner_sdkv2 "github.com/aws/aws-sdk-go-v2/service/apprunner"
+	appstream_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appstream"
 	athena_sdkv2 "github.com/aws/aws-sdk-go-v2/service/athena"
 	auditmanager_sdkv2 "github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	autoscaling_sdkv2 "github.com/aws/aws-sdk-go-v2/service/autoscaling"
@@ -116,6 +117,7 @@ import (
 	neptunegraph_sdkv2 "github.com/aws/aws-sdk-go-v2/service/neptunegraph"
 	oam_sdkv2 "github.com/aws/aws-sdk-go-v2/service/oam"
 	opensearchserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
+	organizations_sdkv2 "github.com/aws/aws-sdk-go-v2/service/organizations"
 	osis_sdkv2 "github.com/aws/aws-sdk-go-v2/service/osis"
 	paymentcryptography_sdkv2 "github.com/aws/aws-sdk-go-v2/service/paymentcryptography"
 	pcaconnectorad_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pcaconnectorad"
@@ -173,7 +175,6 @@ import (
 	xray_sdkv2 "github.com/aws/aws-sdk-go-v2/service/xray"
 	applicationinsights_sdkv1 "github.com/aws/aws-sdk-go/service/applicationinsights"
 	appmesh_sdkv1 "github.com/aws/aws-sdk-go/service/appmesh"
-	appstream_sdkv1 "github.com/aws/aws-sdk-go/service/appstream"
 	appsync_sdkv1 "github.com/aws/aws-sdk-go/service/appsync"
 	backup_sdkv1 "github.com/aws/aws-sdk-go/service/backup"
 	batch_sdkv1 "github.com/aws/aws-sdk-go/service/batch"
@@ -226,7 +227,6 @@ import (
 	networkmanager_sdkv1 "github.com/aws/aws-sdk-go/service/networkmanager"
 	opensearchservice_sdkv1 "github.com/aws/aws-sdk-go/service/opensearchservice"
 	opsworks_sdkv1 "github.com/aws/aws-sdk-go/service/opsworks"
-	organizations_sdkv1 "github.com/aws/aws-sdk-go/service/organizations"
 	outposts_sdkv1 "github.com/aws/aws-sdk-go/service/outposts"
 	pinpoint_sdkv1 "github.com/aws/aws-sdk-go/service/pinpoint"
 	quicksight_sdkv1 "github.com/aws/aws-sdk-go/service/quicksight"
@@ -313,8 +313,8 @@ func (c *AWSClient) AppRunnerClient(ctx context.Context) *apprunner_sdkv2.Client
 	return errs.Must(client[*apprunner_sdkv2.Client](ctx, c, names.AppRunner, make(map[string]any)))
 }
 
-func (c *AWSClient) AppStreamConn(ctx context.Context) *appstream_sdkv1.AppStream {
-	return errs.Must(conn[*appstream_sdkv1.AppStream](ctx, c, names.AppStream, make(map[string]any)))
+func (c *AWSClient) AppStreamClient(ctx context.Context) *appstream_sdkv2.Client {
+	return errs.Must(client[*appstream_sdkv2.Client](ctx, c, names.AppStream, make(map[string]any)))
 }
 
 func (c *AWSClient) AppSyncConn(ctx context.Context) *appsync_sdkv1.AppSync {
@@ -921,8 +921,8 @@ func (c *AWSClient) OpsWorksConn(ctx context.Context) *opsworks_sdkv1.OpsWorks {
 	return errs.Must(conn[*opsworks_sdkv1.OpsWorks](ctx, c, names.OpsWorks, make(map[string]any)))
 }
 
-func (c *AWSClient) OrganizationsConn(ctx context.Context) *organizations_sdkv1.Organizations {
-	return errs.Must(conn[*organizations_sdkv1.Organizations](ctx, c, names.Organizations, make(map[string]any)))
+func (c *AWSClient) OrganizationsClient(ctx context.Context) *organizations_sdkv2.Client {
+	return errs.Must(client[*organizations_sdkv2.Client](ctx, c, names.Organizations, make(map[string]any)))
 }
 
 func (c *AWSClient) OutpostsConn(ctx context.Context) *outposts_sdkv1.Outposts {
