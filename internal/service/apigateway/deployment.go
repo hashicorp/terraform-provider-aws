@@ -309,22 +309,3 @@ func expandDeploymentCanarySettings(tfMap map[string]interface{}) *types.Deploym
 
 	return apiObject
 }
-
-func flattenDeployymentCanarySettings(deploymentCanarySettings *types.DeploymentCanarySettings) []interface{} {
-	settings := make(map[string]interface{})
-
-	if deploymentCanarySettings == nil {
-		return nil
-	}
-
-	overrides := deploymentCanarySettings.StageVariableOverrides
-
-	if len(overrides) > 0 {
-		settings["stage_variable_overrides"] = overrides
-	}
-
-	settings["percent_traffic"] = deploymentCanarySettings.PercentTraffic
-	settings["use_stage_cache"] = deploymentCanarySettings.UseStageCache
-
-	return []interface{}{settings}
-}
