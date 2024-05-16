@@ -925,10 +925,6 @@ func (c *AWSClient) OrganizationsClient(ctx context.Context) *organizations_sdkv
 	return errs.Must(client[*organizations_sdkv2.Client](ctx, c, names.Organizations, make(map[string]any)))
 }
 
-func (c *AWSClient) OrganizationsClient(ctx context.Context) *organizations_sdkv2.Client {
-	return errs.Must(client[*organizations_sdkv2.Client](ctx, c, names.Organizations, make(map[string]any)))
-}
-
 func (c *AWSClient) OutpostsConn(ctx context.Context) *outposts_sdkv1.Outposts {
 	return errs.Must(conn[*outposts_sdkv1.Outposts](ctx, c, names.Outposts, make(map[string]any)))
 }
