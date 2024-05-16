@@ -19,7 +19,7 @@ on:
 jobs:
   golangci-linta:
     name: 1 of 2
-    runs-on: [custom, linux, large]
+    runs-on: custom-linux-large
     steps:
       - uses: actions/checkout@44c2b7a8a4ea60a981eaca3cf939b5f4305c123b # v4.1.5
       - uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
@@ -42,7 +42,7 @@ jobs:
   golangci-lintb:
     name: 2 of 2
     needs: [golangci-linta]
-    runs-on: [custom, linux, xl]
+    runs-on: custom-linux-xl
     steps:
       - uses: actions/checkout@44c2b7a8a4ea60a981eaca3cf939b5f4305c123b # v4.1.5
       - uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1

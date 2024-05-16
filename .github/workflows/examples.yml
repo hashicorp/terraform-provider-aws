@@ -59,7 +59,7 @@ jobs:
           exit $exit_code
 
   validate-terraform:
-    runs-on: [custom, linux, large]
+    runs-on: custom-linux-large
     strategy:
       fail-fast: false
       matrix:
