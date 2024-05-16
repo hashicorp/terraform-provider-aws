@@ -1075,7 +1075,7 @@ func FindVPNConnectionRouteByVPNConnectionIDAndCIDR(ctx context.Context, conn *e
 
 // FindVPNGatewayRoutePropagationExists returns NotFoundError if no route propagation for the specified VPN gateway is found.
 func FindVPNGatewayRoutePropagationExists(ctx context.Context, conn *ec2.Client, routeTableID, gatewayID string) error {
-	routeTable, err := FindRouteTableByIDV2(ctx, conn, routeTableID)
+	routeTable, err := findRouteTableByID(ctx, conn, routeTableID)
 
 	if err != nil {
 		return err
@@ -1176,16 +1176,16 @@ func FindVPNGateways(ctx context.Context, conn *ec2.Client, input *ec2.DescribeV
 
 // FindRouteTableByID returns the route table corresponding to the specified identifier.
 // Returns NotFoundError if no route table is found.
-func FindRouteTableByIDV2(ctx context.Context, conn *ec2.Client, routeTableID string) (*awstypes.RouteTable, error) {
+func findRouteTableByID(ctx context.Context, conn *ec2.Client, routeTableID string) (*awstypes.RouteTable, error) {
 	input := &ec2.DescribeRouteTablesInput{
 		RouteTableIds: []string{routeTableID},
 	}
 
-	return FindRouteTableV2(ctx, conn, input)
+	return findRouteTable(ctx, conn, input)
 }
 
-func FindRouteTableV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRouteTablesInput) (*awstypes.RouteTable, error) {
-	output, err := FindRouteTablesV2(ctx, conn, input)
+func findRouteTable(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRouteTablesInput) (*awstypes.RouteTable, error) {
+	output, err := findRouteTables(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -1194,7 +1194,7 @@ func FindRouteTableV2(ctx context.Context, conn *ec2.Client, input *ec2.Describe
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func FindRouteTablesV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRouteTablesInput) ([]awstypes.RouteTable, error) {
+func findRouteTables(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRouteTablesInput) ([]awstypes.RouteTable, error) {
 	output, err := conn.DescribeRouteTables(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
