@@ -5,14 +5,13 @@ package shield_test
 
 import (
 	"fmt"
-	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"os"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/cloudfront"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -207,7 +206,7 @@ resource "aws_shield_protection" "test" {
 func testAccProtectionDataSource_route53HostedZoneByArn(hostedZoneName string) string {
 	return acctest.ConfigCompose(
 		testAccProtectionDataSourceConfig_route53HostedZone(hostedZoneName),
-		fmt.Sprintf(`
+		fmt.Sprint(`
 data "aws_shield_protection" "test" {
   resource_arn = "arn:${data.aws_partition.current.partition}:route53:::hostedzone/${aws_route53_zone.test.zone_id}"
 
@@ -221,7 +220,7 @@ data "aws_shield_protection" "test" {
 func testAccProtectionDataSource_route53HostedZoneById(hostedZoneName string) string {
 	return acctest.ConfigCompose(
 		testAccProtectionDataSourceConfig_route53HostedZone(hostedZoneName),
-		fmt.Sprintf(`
+		fmt.Sprint(`
 data "aws_shield_protection" "test" {
 	protection_id = aws_shield_protection.test.id
 }
@@ -330,7 +329,7 @@ resource "aws_shield_protection" "test" {
 func testAccProtectionDataSource_elbByArn(rName string) string {
 	return acctest.ConfigCompose(
 		testAccProtectionDataSourceConfig_elb(rName),
-		fmt.Sprintf(`
+		fmt.Sprint(`
 data "aws_shield_protection" "test" {
   resource_arn = aws_elb.test.arn
 
@@ -344,7 +343,7 @@ data "aws_shield_protection" "test" {
 func testAccProtectionDataSource_elbById(rName string) string {
 	return acctest.ConfigCompose(
 		testAccProtectionDataSourceConfig_elb(rName),
-		fmt.Sprintf(`
+		fmt.Sprint(`
 data "aws_shield_protection" "test" {
   protection_id = aws_shield_protection.test.id
 }
@@ -439,7 +438,7 @@ resource "aws_shield_protection" "test" {
 func testAccProtectionDataSource_albByArn(rName string) string {
 	return acctest.ConfigCompose(
 		testAccProtectionDataSourceConfig_alb(rName),
-		fmt.Sprintf(`
+		fmt.Sprint(`
 data "aws_shield_protection" "test" {
   resource_arn = aws_lb.test.arn
 
@@ -453,7 +452,7 @@ data "aws_shield_protection" "test" {
 func testAccProtectionDataSource_albById(rName string) string {
 	return acctest.ConfigCompose(
 		testAccProtectionDataSourceConfig_alb(rName),
-		fmt.Sprintf(`
+		fmt.Sprint(`
 data "aws_shield_protection" "test" {
   protection_id = aws_shield_protection.test.id
 }
@@ -542,7 +541,7 @@ resource "aws_shield_protection" "test" {
 func testAccProtectionDataSource_cloudfrontByArn(rName string, retainOnDelete string) string {
 	return acctest.ConfigCompose(
 		testAccProtectionDataSourceConfig_cloudfront(rName, retainOnDelete),
-		fmt.Sprintf(`
+		fmt.Sprint(`
 data "aws_shield_protection" "test" {
   resource_arn = aws_cloudfront_distribution.test.arn
 
@@ -556,7 +555,7 @@ data "aws_shield_protection" "test" {
 func testAccProtectionDataSource_cloudfrontById(rName string, retainOnDelete string) string {
 	return acctest.ConfigCompose(
 		testAccProtectionDataSourceConfig_cloudfront(rName, retainOnDelete),
-		fmt.Sprintf(`
+		fmt.Sprint(`
 data "aws_shield_protection" "test" {
   protection_id = aws_shield_protection.test.id
 }
@@ -638,7 +637,7 @@ resource "aws_globalaccelerator_accelerator" "test" {
 func testAccProtectionDataSource_globalAcceleratorByArn(rName string) string {
 	return acctest.ConfigCompose(
 		testAccProtectionDataSourceConfig_globalAccelerator(rName),
-		fmt.Sprintf(`
+		fmt.Sprint(`
 data "aws_shield_protection" "test" {
   resource_arn = aws_globalaccelerator_accelerator.test.id
 
@@ -652,7 +651,7 @@ data "aws_shield_protection" "test" {
 func testAccProtectionDataSource_globalAcceleratorById(rName string) string {
 	return acctest.ConfigCompose(
 		testAccProtectionDataSourceConfig_globalAccelerator(rName),
-		fmt.Sprintf(`
+		fmt.Sprint(`
 data "aws_shield_protection" "test" {
   protection_id = aws_shield_protection.test.id
 }
