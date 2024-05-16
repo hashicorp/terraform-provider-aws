@@ -259,6 +259,8 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 	tagged := false
 	skip := false
 	generatorSeen := false
+	tlsKey := false
+	var tlsKeyCN string
 
 	for _, line := range funcDecl.Doc.List {
 		line := line.Text
@@ -389,17 +391,28 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					if b, err := strconv.ParseBool(attr); err != nil {
 						v.errs = append(v.errs, fmt.Errorf("invalid skipEmptyTags value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 						continue
-					} else if b {
-						d.InitCodeBlocks = append(d.InitCodeBlocks, codeBlock{
-							Code: `privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-							certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, "example.com")`,
-						})
-						d.AdditionalTfVars["certificate_pem"] = "certificatePEM"
-						d.AdditionalTfVars["private_key_pem"] = "privateKeyPEM"
+					} else {
+						tlsKey = b
 					}
+				}
+				if attr, ok := args.Keyword["tlsKeyDomain"]; ok {
+					tlsKeyCN = attr
 				}
 			}
 		}
+	}
+
+	if tlsKey {
+		if len(tlsKeyCN) == 0 {
+			tlsKeyCN = `"example.com"`
+		}
+		d.InitCodeBlocks = append(d.InitCodeBlocks, codeBlock{
+			Code: fmt.Sprintf(`privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+			certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, %s)`, tlsKeyCN),
+		})
+		d.AdditionalTfVars["certificate_pem"] = "certificatePEM"
+		d.AdditionalTfVars["private_key_pem"] = "privateKeyPEM"
+
 	}
 
 	if tagged {
