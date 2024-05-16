@@ -74,7 +74,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/datazone v1.8.2
 	github.com/aws/aws-sdk-go-v2/service/dax v1.19.6
 	github.com/aws/aws-sdk-go-v2/service/devopsguru v1.30.6
-	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.24.5
+	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.24.6
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.9.4
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.32.1
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.161.1
