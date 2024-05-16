@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -94,9 +94,9 @@ func (r *cidrCollectionResource) Create(ctx context.Context, request resource.Cr
 	}
 
 	output := outputRaw.(*route53.CreateCidrCollectionOutput)
-	data.ARN = flex.StringToFramework(ctx, output.Collection.Arn)
-	data.ID = flex.StringToFramework(ctx, output.Collection.Id)
-	data.Version = flex.Int64ToFramework(ctx, output.Collection.Version)
+	data.ARN = fwflex.StringToFramework(ctx, output.Collection.Arn)
+	data.ID = fwflex.StringToFramework(ctx, output.Collection.Id)
+	data.Version = fwflex.Int64ToFramework(ctx, output.Collection.Version)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -125,9 +125,9 @@ func (r *cidrCollectionResource) Read(ctx context.Context, request resource.Read
 		return
 	}
 
-	data.ARN = flex.StringToFramework(ctx, output.Arn)
-	data.Name = flex.StringToFramework(ctx, output.Name)
-	data.Version = flex.Int64ToFramework(ctx, output.Version)
+	data.ARN = fwflex.StringToFramework(ctx, output.Arn)
+	data.Name = fwflex.StringToFramework(ctx, output.Name)
+	data.Version = fwflex.Int64ToFramework(ctx, output.Version)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -146,7 +146,7 @@ func (r *cidrCollectionResource) Delete(ctx context.Context, request resource.De
 	})
 
 	_, err := conn.DeleteCidrCollection(ctx, &route53.DeleteCidrCollectionInput{
-		Id: flex.StringFromFramework(ctx, data.ID),
+		Id: fwflex.StringFromFramework(ctx, data.ID),
 	})
 
 	if err != nil {

@@ -6,12 +6,11 @@ package route53
 // Exports for use in tests only.
 var (
 	ResourceCIDRCollection   = newCIDRCollectionResource
-	ResourceCIDRLocation     = newResourceCIDRLocation
+	ResourceCIDRLocation     = newCIDRLocationResource
 	ResourceHealthCheck      = resourceHealthCheck
 	ResourceHostedZoneDNSSEC = resourceHostedZoneDNSSEC
 	ResourceKeySigningKey    = resourceKeySigningKey
 
-	CIDRLocationParseResourceID   = cidrLocationParseResourceID
 	FindCIDRCollectionByID        = findCIDRCollectionByID
 	FindCIDRLocationByTwoPartKey  = findCIDRLocationByTwoPartKey
 	FindHealthCheckByID           = findHealthCheckByID

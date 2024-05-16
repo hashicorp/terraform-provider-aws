@@ -22,7 +22,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory: newCIDRCollectionResource,
 		},
 		{
-			Factory: newResourceCIDRLocation,
+			Factory: newCIDRLocationResource,
 		},
 	}
 }
