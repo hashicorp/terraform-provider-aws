@@ -95,7 +95,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/fms v1.33.3
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.22.6
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.23.3
-	github.com/aws/aws-sdk-go-v2/service/groundstation v1.27.1
+	github.com/aws/aws-sdk-go-v2/service/groundstation v1.27.2
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.24.1
 	github.com/aws/aws-sdk-go-v2/service/iam v1.32.1
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.23.6
