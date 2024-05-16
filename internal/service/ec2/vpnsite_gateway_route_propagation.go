@@ -8,7 +8,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -45,7 +45,7 @@ func resourceVPNGatewayRoutePropagation() *schema.Resource {
 
 func resourceVPNGatewayRoutePropagationEnable(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	gatewayID := d.Get("vpn_gateway_id").(string)
 	routeTableID := d.Get("route_table_id").(string)
@@ -62,7 +62,7 @@ func resourceVPNGatewayRoutePropagationEnable(ctx context.Context, d *schema.Res
 
 func resourceVPNGatewayRoutePropagationDisable(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	routeTableID, gatewayID, err := VPNGatewayRoutePropagationParseID(d.Id())
 
@@ -81,7 +81,7 @@ func resourceVPNGatewayRoutePropagationDisable(ctx context.Context, d *schema.Re
 
 func resourceVPNGatewayRoutePropagationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	routeTableID, gatewayID, err := VPNGatewayRoutePropagationParseID(d.Id())
 
@@ -89,7 +89,7 @@ func resourceVPNGatewayRoutePropagationRead(ctx context.Context, d *schema.Resou
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	err = FindVPNGatewayRoutePropagationExists(ctx, conn, routeTableID, gatewayID)
+	err = findVPNGatewayRoutePropagationExistsV2(ctx, conn, routeTableID, gatewayID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route Table (%s) VPN Gateway (%s) route propagation not found, removing from state", routeTableID, gatewayID)

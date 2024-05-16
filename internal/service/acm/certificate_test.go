@@ -15,8 +15,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/acm"
 	"github.com/aws/aws-sdk-go-v2/service/acm/types"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfacm "github.com/hashicorp/terraform-provider-aws/internal/service/acm"
@@ -1628,13 +1632,14 @@ func TestAccACMCertificate_Imported_ipAddress(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/15055
-func TestAccACMCertificate_PrivateKey_tags(t *testing.T) {
+func TestAccACMCertificate_PrivateKey_ReimportWithTags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
-	key1 := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificate1 := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key1, "1.2.3.4")
-	key2 := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificate2 := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key2, "5.6.7.8")
+	privateKeyPEM1 := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificatePEM1 := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM1, "1.2.3.4")
+
+	privateKeyPEM2 := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificatePEM2 := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM2, "5.6.7.8")
 	var v types.CertificateDetail
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1644,40 +1649,72 @@ func TestAccACMCertificate_PrivateKey_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCertificateConfig_tags1(certificate1, key1, acctest.CtKey1, acctest.CtValue1),
+				ConfigDirectory: config.StaticDirectory("testdata/Certificate/tags/"),
+				ConfigVariables: config.Variables{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
+					}),
+					"certificate_pem": config.StringVariable(certificatePEM1),
+					"private_key_pem": config.StringVariable(privateKeyPEM1),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrPrivateKey, "certificate_body"},
+				ConfigDirectory: config.StaticDirectory("testdata/Certificate/tags/"),
+				ConfigVariables: config.Variables{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
+					}),
+					"certificate_pem": config.StringVariable(certificatePEM1),
+					"private_key_pem": config.StringVariable(privateKeyPEM1),
+				},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"certificate_body", names.AttrPrivateKey,
+				},
 			},
 			{
-				Config: testAccCertificateConfig_tags2(certificate1, key1, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				ConfigDirectory: config.StaticDirectory("testdata/Certificate/tags/"),
+				ConfigVariables: config.Variables{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
+					}),
+					"certificate_pem": config.StringVariable(certificatePEM2),
+					"private_key_pem": config.StringVariable(privateKeyPEM2),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					testAccCheckCertificateExists(ctx, resourceName, &v),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+					})),
+				},
 			},
 			{
-				Config: testAccCertificateConfig_tags1(certificate1, key1, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccCertificateConfig_tags1(certificate2, key2, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
+				ConfigDirectory: config.StaticDirectory("testdata/Certificate/tags/"),
+				ConfigVariables: config.Variables{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
+					}),
+					"certificate_pem": config.StringVariable(certificatePEM2),
+					"private_key_pem": config.StringVariable(privateKeyPEM2),
+				},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"certificate_body", names.AttrPrivateKey,
+				},
 			},
 		},
 	})
@@ -1901,33 +1938,6 @@ resource "aws_acm_certificate" "test" {
   private_key      = "%[2]s"
 }
 `, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key))
-}
-
-func testAccCertificateConfig_tags1(certificate, key, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_acm_certificate" "test" {
-  certificate_body = "%[1]s"
-  private_key      = "%[2]s"
-
-  tags = {
-    %[3]q = %[4]q
-  }
-}
-`, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key), tagKey1, tagValue1)
-}
-
-func testAccCertificateConfig_tags2(certificate, key, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_acm_certificate" "test" {
-  certificate_body = "%[1]s"
-  private_key      = "%[2]s"
-
-  tags = {
-    %[3]q = %[4]q
-    %[5]q = %[6]q
-  }
-}
-`, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key), tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccCertificateConfig_privateKey(certificate, privateKey, chain string) string {
