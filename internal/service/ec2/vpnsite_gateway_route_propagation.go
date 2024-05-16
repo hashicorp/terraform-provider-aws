@@ -92,7 +92,7 @@ func resourceVPNGatewayRoutePropagationRead(ctx context.Context, d *schema.Resou
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	err = FindVPNGatewayRoutePropagationExists(ctx, conn, routeTableID, gatewayID)
+	err = findVPNGatewayRoutePropagationExistsV2(ctx, conn, routeTableID, gatewayID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route Table (%s) VPN Gateway (%s) route propagation not found, removing from state", routeTableID, gatewayID)

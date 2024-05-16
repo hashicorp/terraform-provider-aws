@@ -73,7 +73,7 @@ func TestAccAppConfigExtensionAssociation_Parameters(t *testing.T) {
 				Config: testAccExtensionAssociationConfig_parameters1(rName, pName1, pDescription1, pRequiredTrue, pValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("parameters.%s", pName1), pValue1),
 				),
 			},
@@ -86,7 +86,7 @@ func TestAccAppConfigExtensionAssociation_Parameters(t *testing.T) {
 				Config: testAccExtensionAssociationConfig_parameters2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "parameters.parameter1", pValue1),
 					resource.TestCheckResourceAttr(resourceName, "parameters.parameter2", pValue2),
 				),
@@ -95,7 +95,7 @@ func TestAccAppConfigExtensionAssociation_Parameters(t *testing.T) {
 				Config: testAccExtensionAssociationConfig_parameters1(rName, pName2, pDescription2, pRequiredFalse, pValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("parameters.%s", pName2), pValue2),
 				),
 			},
@@ -103,7 +103,7 @@ func TestAccAppConfigExtensionAssociation_Parameters(t *testing.T) {
 				Config: testAccExtensionAssociationConfig_parametersNotRequired(rName, pName2, pDescription2, pRequiredFalse, pValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct0),
 				),
 			},
 		},

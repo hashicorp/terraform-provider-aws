@@ -35,10 +35,10 @@ func TestAccSageMakerMonitoringSchedule_basic(t *testing.T) {
 					testAccCheckMonitoringScheduleExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("monitoring-schedule/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "monitoring_schedule_config.0.monitoring_job_definition_name", "aws_sagemaker_data_quality_job_definition.test", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.0.monitoring_type", "DataQuality"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -65,8 +65,8 @@ func TestAccSageMakerMonitoringSchedule_tags(t *testing.T) {
 				Config: testAccMonitoringScheduleConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -75,20 +75,20 @@ func TestAccSageMakerMonitoringSchedule_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccMonitoringScheduleConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
+				Config: testAccMonitoringScheduleConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
 				Config: testAccMonitoringScheduleConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -110,8 +110,8 @@ func TestAccSageMakerMonitoringSchedule_scheduleExpression(t *testing.T) {
 				Config: testAccMonitoringScheduleConfig_scheduleExpressionHourly(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.0.schedule_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.0.schedule_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.0.schedule_config.0.schedule_expression", "cron(0 * ? * * *)"),
 				),
 			},
@@ -124,8 +124,8 @@ func TestAccSageMakerMonitoringSchedule_scheduleExpression(t *testing.T) {
 				Config: testAccMonitoringScheduleConfig_scheduleExpressionDaily(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.0.schedule_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.0.schedule_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.0.schedule_config.0.schedule_expression", "cron(0 0 ? * * *)"),
 				),
 			},
@@ -133,8 +133,8 @@ func TestAccSageMakerMonitoringSchedule_scheduleExpression(t *testing.T) {
 				Config: testAccMonitoringScheduleConfig_scheduleExpressionHourly(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.0.schedule_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.0.schedule_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.0.schedule_config.0.schedule_expression", "cron(0 * ? * * *)"),
 				),
 			},

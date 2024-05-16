@@ -49,7 +49,7 @@ func ResourceVocabularyFilter() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"language_code": {
+			names.AttrLanguageCode: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -99,7 +99,7 @@ func resourceVocabularyFilterCreate(ctx context.Context, d *schema.ResourceData,
 
 	in := &transcribe.CreateVocabularyFilterInput{
 		VocabularyFilterName: aws.String(d.Get("vocabulary_filter_name").(string)),
-		LanguageCode:         types.LanguageCode(d.Get("language_code").(string)),
+		LanguageCode:         types.LanguageCode(d.Get(names.AttrLanguageCode).(string)),
 		Tags:                 getTagsIn(ctx),
 	}
 
@@ -150,7 +150,7 @@ func resourceVocabularyFilterRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.Set(names.AttrARN, arn)
 	d.Set("vocabulary_filter_name", out.VocabularyFilterName)
-	d.Set("language_code", out.LanguageCode)
+	d.Set(names.AttrLanguageCode, out.LanguageCode)
 
 	// GovCloud does not set a download URI
 	downloadUri := aws.ToString(out.DownloadUri)

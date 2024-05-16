@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAppMesh_serial(t *testing.T) {
@@ -15,7 +14,7 @@ func TestAccAppMesh_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"GatewayRoute": {
-			"basic":                        testAccGatewayRoute_basic,
+			acctest.CtBasic:                testAccGatewayRoute_basic,
 			"disappears":                   testAccGatewayRoute_disappears,
 			"grpcRoute":                    testAccGatewayRoute_grpcRoute,
 			"grpcRouteTargetPort":          testAccGatewayRoute_grpcRouteTargetPort,
@@ -28,15 +27,15 @@ func TestAccAppMesh_serial(t *testing.T) {
 			"http2RouteTargetPort":         testAccGatewayRoute_http2RouteTargetPort,
 			"http2RouteWithPort":           testAccGatewayRoute_http2RouteWithPort,
 			"http2RouteWithQueryParameter": testAccGatewayRoute_http2RouteWithQueryParameter,
-			names.AttrTags:                 testAccGatewayRoute_tags,
+			"tags":                         testAccGatewayRoute_tags,
 			"dataSourceBasic":              testAccGatewayRouteDataSource_basic,
 		},
 		"Mesh": {
-			"basic":                    testAccMesh_basic,
+			acctest.CtBasic:            testAccMesh_basic,
 			"disappears":               testAccMesh_disappears,
 			"egressFilter":             testAccMesh_egressFilter,
 			"serviceDiscovery":         testAccMesh_serviceDiscovery,
-			names.AttrTags:             testAccMesh_tags,
+			"tags":                     testAccMesh_tags,
 			"dataSourceBasic":          testAccMeshDataSource_basic,
 			"dataSourceMeshOwner":      testAccMeshDataSource_meshOwner,
 			"dataSourceSpecAndTagsSet": testAccMeshDataSource_specAndTagsSet,
@@ -62,14 +61,14 @@ func TestAccAppMesh_serial(t *testing.T) {
 			"tcpRoute":                         testAccRoute_tcpRoute,
 			"tcpRouteWithPortMatch":            testAccRoute_tcpRouteWithPortMatch,
 			"tcpRouteTimeout":                  testAccRoute_tcpRouteTimeout,
-			names.AttrTags:                     testAccRoute_tags,
+			"tags":                             testAccRoute_tags,
 			"dataSourceHTTP2Route":             testAccRouteDataSource_http2Route,
 			"dataSourceHTTPRoute":              testAccRouteDataSource_httpRoute,
 			"dataSourceGRPCRoute":              testAccRouteDataSource_grpcRoute,
 			"dataSourceTCPRoute":               testAccRouteDataSource_tcpRoute,
 		},
 		"VirtualGateway": {
-			"basic":                      testAccVirtualGateway_basic,
+			acctest.CtBasic:              testAccVirtualGateway_basic,
 			"disappears":                 testAccVirtualGateway_disappears,
 			"backendDefaults":            testAccVirtualGateway_BackendDefaults,
 			"backendDefaultsCertificate": testAccVirtualGateway_BackendDefaultsCertificate,
@@ -79,11 +78,11 @@ func TestAccAppMesh_serial(t *testing.T) {
 			"listenerValidation":         testAccVirtualGateway_ListenerValidation,
 			"multiListenerValidation":    testAccVirtualGateway_MultiListenerValidation,
 			"logging":                    testAccVirtualGateway_Logging,
-			names.AttrTags:               testAccVirtualGateway_Tags,
+			"tags":                       testAccVirtualGateway_Tags,
 			"dataSourceBasic":            testAccVirtualGatewayDataSource_basic,
 		},
 		"VirtualNode": {
-			"basic":                      testAccVirtualNode_basic,
+			acctest.CtBasic:              testAccVirtualNode_basic,
 			"disappears":                 testAccVirtualNode_disappears,
 			"backendClientPolicyAcm":     testAccVirtualNode_backendClientPolicyACM,
 			"backendClientPolicyFile":    testAccVirtualNode_backendClientPolicyFile,
@@ -98,21 +97,21 @@ func TestAccAppMesh_serial(t *testing.T) {
 			"listenerValidation":         testAccVirtualNode_listenerValidation,
 			"multiListenerValidation":    testAccVirtualNode_multiListenerValidation,
 			"logging":                    testAccVirtualNode_logging,
-			names.AttrTags:               testAccVirtualNode_tags,
+			"tags":                       testAccVirtualNode_tags,
 			"dataSourceBasic":            testAccVirtualNodeDataSource_basic,
 		},
 		"VirtualRouter": {
-			"basic":           testAccVirtualRouter_basic,
+			acctest.CtBasic:   testAccVirtualRouter_basic,
 			"disappears":      testAccVirtualRouter_disappears,
 			"multiListener":   testAccVirtualRouter_multiListener,
-			names.AttrTags:    testAccVirtualRouter_tags,
+			"tags":            testAccVirtualRouter_tags,
 			"dataSourceBasic": testAccVirtualRouterDataSource_basic,
 		},
 		"VirtualService": {
 			"disappears":              testAccVirtualService_disappears,
 			"virtualNode":             testAccVirtualService_virtualNode,
 			"virtualRouter":           testAccVirtualService_virtualRouter,
-			names.AttrTags:            testAccVirtualService_tags,
+			"tags":                    testAccVirtualService_tags,
 			"dataSourceVirtualNode":   testAccVirtualServiceDataSource_virtualNode,
 			"dataSourceVirtualRouter": testAccVirtualServiceDataSource_virtualRouter,
 		},

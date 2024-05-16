@@ -81,7 +81,7 @@ func testAccCheckVPNGatewayRoutePropagationExists(ctx context.Context, n string)
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		return tfec2.FindVPNGatewayRoutePropagationExists(ctx, conn, routeTableID, gatewayID)
+		return tfec2.FindVPNGatewayRoutePropagationExistsV2(ctx, conn, routeTableID, gatewayID)
 	}
 }
 
@@ -100,7 +100,7 @@ func testAccCheckVPNGatewayRoutePropagationDestroy(ctx context.Context) resource
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-			err = tfec2.FindVPNGatewayRoutePropagationExists(ctx, conn, routeTableID, gatewayID)
+			err = tfec2.FindVPNGatewayRoutePropagationExistsV2(ctx, conn, routeTableID, gatewayID)
 
 			if tfresource.NotFound(err) {
 				continue

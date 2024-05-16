@@ -246,7 +246,7 @@ func DataSourceTaskExecution() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"propagate_tags": {
+			names.AttrPropagateTags: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(ecs.PropagateTags_Values(), false),
@@ -340,7 +340,7 @@ func dataSourceTaskExecutionRead(ctx context.Context, d *schema.ResourceData, me
 	if v, ok := d.GetOk("platform_version"); ok {
 		input.PlatformVersion = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("propagate_tags"); ok {
+	if v, ok := d.GetOk(names.AttrPropagateTags); ok {
 		input.PropagateTags = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("reference_id"); ok {

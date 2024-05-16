@@ -8,7 +8,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -28,21 +30,24 @@ func TestAccIAMServiceLinkedRole_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ServiceLinkedRole/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ServiceLinkedRole/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -54,25 +59,28 @@ func TestAccIAMServiceLinkedRole_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ServiceLinkedRole/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable("value1updated"),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ServiceLinkedRole/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable("value1updated"),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 				},
@@ -83,21 +91,24 @@ func TestAccIAMServiceLinkedRole_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ServiceLinkedRole/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ServiceLinkedRole/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
@@ -109,18 +120,20 @@ func TestAccIAMServiceLinkedRole_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ServiceLinkedRole/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"resource_tags": nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ServiceLinkedRole/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"resource_tags": nil,
 				},
 				ResourceName:      resourceName,
@@ -145,20 +158,22 @@ func TestAccIAMServiceLinkedRole_tags_null(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ServiceLinkedRole/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ServiceLinkedRole/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
@@ -170,7 +185,7 @@ func TestAccIAMServiceLinkedRole_tags_null(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ServiceLinkedRole/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"resource_tags": nil,
 				},
 				PlanOnly:           true,
@@ -194,32 +209,37 @@ func TestAccIAMServiceLinkedRole_tags_AddOnUpdate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ServiceLinkedRole/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"resource_tags": nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ServiceLinkedRole/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ServiceLinkedRole/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -246,21 +266,24 @@ func TestAccIAMServiceLinkedRole_tags_EmptyTag_OnCreate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ServiceLinkedRole/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", ""),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(""),
+					})),
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ServiceLinkedRole/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
@@ -272,18 +295,20 @@ func TestAccIAMServiceLinkedRole_tags_EmptyTag_OnCreate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ServiceLinkedRole/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"resource_tags": nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ServiceLinkedRole/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"resource_tags": nil,
 				},
 				ResourceName:      resourceName,
@@ -308,21 +333,24 @@ func TestAccIAMServiceLinkedRole_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ServiceLinkedRole/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ServiceLinkedRole/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 						acctest.CtKey2: config.StringVariable(""),
@@ -330,15 +358,18 @@ func TestAccIAMServiceLinkedRole_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", ""),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						acctest.CtKey2: knownvalue.StringExact(""),
+					})),
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ServiceLinkedRole/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 						acctest.CtKey2: config.StringVariable(""),
@@ -351,21 +382,24 @@ func TestAccIAMServiceLinkedRole_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ServiceLinkedRole/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ServiceLinkedRole/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -392,35 +426,41 @@ func TestAccIAMServiceLinkedRole_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ServiceLinkedRole/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ServiceLinkedRole/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", ""),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(""),
+					})),
+				},
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ServiceLinkedRole/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
@@ -447,25 +487,28 @@ func TestAccIAMServiceLinkedRole_tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ServiceLinkedRole/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					"resource_tags": nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", acctest.CtValue1),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ServiceLinkedRole/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					"resource_tags": nil,
@@ -478,28 +521,31 @@ func TestAccIAMServiceLinkedRole_tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ServiceLinkedRole/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable("value1updated"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 					"resource_tags": nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key2", acctest.CtValue2),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ServiceLinkedRole/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable("value1updated"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 					"resource_tags": nil,
@@ -512,25 +558,28 @@ func TestAccIAMServiceLinkedRole_tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ServiceLinkedRole/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 					"resource_tags": nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key2", acctest.CtValue2),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ServiceLinkedRole/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 					"resource_tags": nil,
@@ -543,20 +592,22 @@ func TestAccIAMServiceLinkedRole_tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ServiceLinkedRole/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"resource_tags": nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtZero),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ServiceLinkedRole/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"resource_tags": nil,
 				},
 				ResourceName:      resourceName,
@@ -581,33 +632,37 @@ func TestAccIAMServiceLinkedRole_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ServiceLinkedRole/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"providerkey1": config.StringVariable("providervalue1"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						"providerkey1": config.StringVariable(acctest.CtProviderValue1),
 					}),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"resourcekey1": config.StringVariable("resourcevalue1"),
+						"resourcekey1": config.StringVariable(acctest.CtResourceValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.resourcekey1", "resourcevalue1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.resourcekey1", "resourcevalue1"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						"resourcekey1": knownvalue.StringExact(acctest.CtResourceValue1),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						"providerkey1": knownvalue.StringExact(acctest.CtProviderValue1),
+						"resourcekey1": knownvalue.StringExact(acctest.CtResourceValue1),
+					})),
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ServiceLinkedRole/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"providerkey1": config.StringVariable("providervalue1"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						"providerkey1": config.StringVariable(acctest.CtProviderValue1),
 					}),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"resourcekey1": config.StringVariable("resourcevalue1"),
+						"resourcekey1": config.StringVariable(acctest.CtResourceValue1),
 					}),
 				},
 				ResourceName:      resourceName,
@@ -618,37 +673,41 @@ func TestAccIAMServiceLinkedRole_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ServiceLinkedRole/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						"providerkey1": config.StringVariable("providervalue1updated"),
 					}),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"resourcekey1": config.StringVariable("resourcevalue1updated"),
-						"resourcekey2": config.StringVariable("resourcevalue2"),
+						"resourcekey2": config.StringVariable(acctest.CtResourceValue2),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.resourcekey1", "resourcevalue1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.resourcekey2", "resourcevalue2"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.resourcekey1", "resourcevalue1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.resourcekey2", "resourcevalue2"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						"resourcekey1": knownvalue.StringExact("resourcevalue1updated"),
+						"resourcekey2": knownvalue.StringExact(acctest.CtResourceValue2),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						"providerkey1": knownvalue.StringExact("providervalue1updated"),
+						"resourcekey1": knownvalue.StringExact("resourcevalue1updated"),
+						"resourcekey2": knownvalue.StringExact(acctest.CtResourceValue2),
+					})),
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ServiceLinkedRole/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						"providerkey1": config.StringVariable("providervalue1updated"),
 					}),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"resourcekey1": config.StringVariable("resourcevalue1updated"),
-						"resourcekey2": config.StringVariable("resourcevalue2"),
+						"resourcekey2": config.StringVariable(acctest.CtResourceValue2),
 					}),
 				},
 				ResourceName:      resourceName,
@@ -659,20 +718,22 @@ func TestAccIAMServiceLinkedRole_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ServiceLinkedRole/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"resource_tags": nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtZero),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ServiceLinkedRole/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"resource_tags": nil,
 				},
 				ResourceName:      resourceName,
@@ -697,32 +758,36 @@ func TestAccIAMServiceLinkedRole_tags_DefaultTags_overlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ServiceLinkedRole/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable("providervalue1"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						"overlapkey1": config.StringVariable(acctest.CtProviderValue1),
 					}),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable("resourcevalue1"),
+						"overlapkey1": config.StringVariable(acctest.CtResourceValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey1", "resourcevalue1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.overlapkey1", "resourcevalue1"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						"overlapkey1": knownvalue.StringExact(acctest.CtResourceValue1),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						"overlapkey1": knownvalue.StringExact(acctest.CtResourceValue1),
+					})),
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ServiceLinkedRole/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable("providervalue1"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						"overlapkey1": config.StringVariable(acctest.CtProviderValue1),
 					}),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable("resourcevalue1"),
+						"overlapkey1": config.StringVariable(acctest.CtResourceValue1),
 					}),
 				},
 				ResourceName:      resourceName,
@@ -733,38 +798,42 @@ func TestAccIAMServiceLinkedRole_tags_DefaultTags_overlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ServiceLinkedRole/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable("providervalue1"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						"overlapkey1": config.StringVariable(acctest.CtProviderValue1),
 						"overlapkey2": config.StringVariable("providervalue2"),
 					}),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable("resourcevalue1"),
-						"overlapkey2": config.StringVariable("resourcevalue2"),
+						"overlapkey1": config.StringVariable(acctest.CtResourceValue1),
+						"overlapkey2": config.StringVariable(acctest.CtResourceValue2),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey1", "resourcevalue1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey2", "resourcevalue2"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.overlapkey1", "resourcevalue1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.overlapkey2", "resourcevalue2"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						"overlapkey1": knownvalue.StringExact(acctest.CtResourceValue1),
+						"overlapkey2": knownvalue.StringExact(acctest.CtResourceValue2),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						"overlapkey1": knownvalue.StringExact(acctest.CtResourceValue1),
+						"overlapkey2": knownvalue.StringExact(acctest.CtResourceValue2),
+					})),
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ServiceLinkedRole/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable("providervalue1"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						"overlapkey1": config.StringVariable(acctest.CtProviderValue1),
 						"overlapkey2": config.StringVariable("providervalue2"),
 					}),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable("resourcevalue1"),
-						"overlapkey2": config.StringVariable("resourcevalue2"),
+						"overlapkey1": config.StringVariable(acctest.CtResourceValue1),
+						"overlapkey2": config.StringVariable(acctest.CtResourceValue2),
 					}),
 				},
 				ResourceName:      resourceName,
@@ -775,32 +844,36 @@ func TestAccIAMServiceLinkedRole_tags_DefaultTags_overlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ServiceLinkedRole/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable("providervalue1"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						"overlapkey1": config.StringVariable(acctest.CtProviderValue1),
 					}),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable("resourcevalue2"),
+						"overlapkey1": config.StringVariable(acctest.CtResourceValue2),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey1", "resourcevalue2"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.overlapkey1", "resourcevalue2"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						"overlapkey1": knownvalue.StringExact(acctest.CtResourceValue2),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						"overlapkey1": knownvalue.StringExact(acctest.CtResourceValue2),
+					})),
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ServiceLinkedRole/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable("providervalue1"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						"overlapkey1": config.StringVariable(acctest.CtProviderValue1),
 					}),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable("resourcevalue2"),
+						"overlapkey1": config.StringVariable(acctest.CtResourceValue2),
 					}),
 				},
 				ResourceName:      resourceName,
@@ -825,42 +898,49 @@ func TestAccIAMServiceLinkedRole_tags_DefaultTags_updateToProviderOnly(t *testin
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ServiceLinkedRole/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", acctest.CtValue1),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ServiceLinkedRole/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					"resource_tags": nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", acctest.CtValue1),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ServiceLinkedRole/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					"resource_tags": nil,
@@ -887,41 +967,48 @@ func TestAccIAMServiceLinkedRole_tags_DefaultTags_updateToResourceOnly(t *testin
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ServiceLinkedRole/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					"resource_tags": nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", acctest.CtValue1),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ServiceLinkedRole/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", acctest.CtValue1),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ServiceLinkedRole/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -948,8 +1035,8 @@ func TestAccIAMServiceLinkedRole_tags_DefaultTags_emptyResourceTag(t *testing.T)
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ServiceLinkedRole/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
@@ -958,18 +1045,22 @@ func TestAccIAMServiceLinkedRole_tags_DefaultTags_emptyResourceTag(t *testing.T)
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", ""),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", ""),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(""),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(""),
+					})),
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ServiceLinkedRole/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
@@ -998,9 +1089,9 @@ func TestAccIAMServiceLinkedRole_tags_DefaultTags_nullOverlappingResourceTag(t *
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ServiceLinkedRole/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable("providervalue1"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
@@ -1008,18 +1099,21 @@ func TestAccIAMServiceLinkedRole_tags_DefaultTags_nullOverlappingResourceTag(t *
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "providervalue1"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtProviderValue1),
+					})),
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ServiceLinkedRole/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable("providervalue1"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
@@ -1047,9 +1141,9 @@ func TestAccIAMServiceLinkedRole_tags_DefaultTags_nullNonOverlappingResourceTag(
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ServiceLinkedRole/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"providerkey1": config.StringVariable("providervalue1"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						"providerkey1": config.StringVariable(acctest.CtProviderValue1),
 					}),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"resourcekey1": nil,
@@ -1057,18 +1151,21 @@ func TestAccIAMServiceLinkedRole_tags_DefaultTags_nullNonOverlappingResourceTag(
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						"providerkey1": knownvalue.StringExact(acctest.CtProviderValue1),
+					})),
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ServiceLinkedRole/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"providerkey1": config.StringVariable("providervalue1"),
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						"providerkey1": config.StringVariable(acctest.CtProviderValue1),
 					}),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"resourcekey1": nil,
@@ -1096,14 +1193,16 @@ func TestAccIAMServiceLinkedRole_tags_ComputedTag_OnCreate(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ServiceLinkedRole/tagsComputed1/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapSizeExact(1)),
+				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
@@ -1121,7 +1220,7 @@ func TestAccIAMServiceLinkedRole_tags_ComputedTag_OnCreate(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ServiceLinkedRole/tagsComputed1/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				ResourceName:      resourceName,
@@ -1146,32 +1245,39 @@ func TestAccIAMServiceLinkedRole_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ServiceLinkedRole/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ServiceLinkedRole/tagsComputed2/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
 					"knownTagKey":   config.StringVariable(acctest.CtKey1),
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapSizeExact(2)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapPartial(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
@@ -1189,7 +1295,7 @@ func TestAccIAMServiceLinkedRole_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ServiceLinkedRole/tagsComputed2/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
 					"knownTagKey":   config.StringVariable(acctest.CtKey1),
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
@@ -1216,29 +1322,34 @@ func TestAccIAMServiceLinkedRole_tags_ComputedTag_OnUpdate_Replace(t *testing.T)
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ServiceLinkedRole/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+					})),
+				},
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ServiceLinkedRole/tagsComputed1/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.key1", "null_resource.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, "null_resource.test", names.AttrID),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapSizeExact(1)),
+				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
@@ -1256,7 +1367,7 @@ func TestAccIAMServiceLinkedRole_tags_ComputedTag_OnUpdate_Replace(t *testing.T)
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ServiceLinkedRole/tagsComputed1/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				ResourceName:      resourceName,

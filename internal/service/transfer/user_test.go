@@ -37,10 +37,10 @@ func testAccUser_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "transfer", regexache.MustCompile(`user/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "posix_profile.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "posix_profile.#", acctest.Ct0),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "server_id", "aws_transfer_server.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -92,8 +92,8 @@ func testAccUser_tags(t *testing.T) {
 				Config: testAccUserConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -102,20 +102,20 @@ func testAccUser_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccUserConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
+				Config: testAccUserConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
 				Config: testAccUserConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -138,7 +138,7 @@ func testAccUser_posix(t *testing.T) {
 				Config: testAccUserConfig_posix(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "posix_profile.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "posix_profile.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "posix_profile.0.gid", "1000"),
 					resource.TestCheckResourceAttr(resourceName, "posix_profile.0.uid", "1000"),
 				),
@@ -152,10 +152,10 @@ func testAccUser_posix(t *testing.T) {
 				Config: testAccUserConfig_posixUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "posix_profile.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "posix_profile.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "posix_profile.0.gid", "1001"),
 					resource.TestCheckResourceAttr(resourceName, "posix_profile.0.uid", "1001"),
-					resource.TestCheckResourceAttr(resourceName, "posix_profile.0.secondary_gids.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "posix_profile.0.secondary_gids.#", acctest.Ct2),
 				),
 			},
 		},
@@ -263,7 +263,7 @@ func testAccUser_homeDirectoryMappings(t *testing.T) {
 				Config: testAccUserConfig_homeDirectoryMappings(rName, entry1, target1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "home_directory_mappings.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "home_directory_mappings.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "home_directory_mappings.0.entry", entry1),
 					resource.TestCheckResourceAttr(resourceName, "home_directory_mappings.0.target", target1),
 					resource.TestCheckResourceAttr(resourceName, "home_directory_type", "LOGICAL"),
@@ -273,7 +273,7 @@ func testAccUser_homeDirectoryMappings(t *testing.T) {
 				Config: testAccUserConfig_homeDirectoryMappingsUpdate(rName, entry1, target1, entry2, target2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "home_directory_mappings.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "home_directory_mappings.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "home_directory_mappings.0.entry", entry1),
 					resource.TestCheckResourceAttr(resourceName, "home_directory_mappings.0.target", target1),
 					resource.TestCheckResourceAttr(resourceName, "home_directory_mappings.1.entry", entry2),
@@ -290,7 +290,7 @@ func testAccUser_homeDirectoryMappings(t *testing.T) {
 				Config: testAccUserConfig_homeDirectoryMappingsRemove(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "home_directory_mappings.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "home_directory_mappings.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "home_directory_type", "PATH"),
 				),
 			},

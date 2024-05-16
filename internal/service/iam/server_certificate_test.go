@@ -38,11 +38,11 @@ func TestAccIAMServerCertificate_basic(t *testing.T) {
 			{
 				Config: testAccServerCertificateConfig_basic(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCertExists(ctx, resourceName, &cert),
+					testAccCheckServerCertificateExists(ctx, resourceName, &cert),
 					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("server-certificate/%s", rName)),
 					acctest.CheckResourceAttrRFC3339(resourceName, "expiration"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "upload_date"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/"),
@@ -76,7 +76,7 @@ func TestAccIAMServerCertificate_nameGenerated(t *testing.T) {
 			{
 				Config: testAccServerCertificateConfig_nameGenerated(key, certificate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCertExists(ctx, resourceName, &cert),
+					testAccCheckServerCertificateExists(ctx, resourceName, &cert),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, id.UniqueIdPrefix),
 				),
@@ -101,7 +101,7 @@ func TestAccIAMServerCertificate_namePrefix(t *testing.T) {
 			{
 				Config: testAccServerCertificateConfig_namePrefix("tf-acc-test-prefix-", key, certificate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCertExists(ctx, resourceName, &cert),
+					testAccCheckServerCertificateExists(ctx, resourceName, &cert),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-acc-test-prefix-"),
 				),
@@ -127,60 +127,10 @@ func TestAccIAMServerCertificate_disappears(t *testing.T) {
 			{
 				Config: testAccServerCertificateConfig_basic(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCertExists(ctx, resourceName, &cert),
+					testAccCheckServerCertificateExists(ctx, resourceName, &cert),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceServerCertificate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func TestAccIAMServerCertificate_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var cert awstypes.ServerCertificate
-	resourceName := "aws_iam_server_certificate.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServerCertificateDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccServerCertificateConfig_tags1(rName, key, certificate, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCertExists(ctx, resourceName, &cert),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateId:           rName,
-				ImportStateVerifyIgnore: []string{names.AttrPrivateKey},
-			},
-			{
-				Config: testAccServerCertificateConfig_tags2(rName, key, certificate, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCertExists(ctx, resourceName, &cert),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccServerCertificateConfig_tags1(rName, key, certificate, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCertExists(ctx, resourceName, &cert),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
-				),
 			},
 		},
 	})
@@ -203,7 +153,7 @@ func TestAccIAMServerCertificate_file(t *testing.T) {
 			{
 				Config: testAccServerCertificateConfig_file(rName, unixFile),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCertExists(ctx, resourceName, &cert),
+					testAccCheckServerCertificateExists(ctx, resourceName, &cert),
 				),
 			},
 			{
@@ -216,7 +166,7 @@ func TestAccIAMServerCertificate_file(t *testing.T) {
 			{
 				Config: testAccServerCertificateConfig_file(rName, winFile),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCertExists(ctx, resourceName, &cert),
+					testAccCheckServerCertificateExists(ctx, resourceName, &cert),
 				),
 			},
 		},
@@ -240,7 +190,7 @@ func TestAccIAMServerCertificate_path(t *testing.T) {
 			{
 				Config: testAccServerCertificateConfig_path(rName, "/test/", key, certificate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCertExists(ctx, resourceName, &cert),
+					testAccCheckServerCertificateExists(ctx, resourceName, &cert),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/test/"),
 				),
 			},
@@ -255,7 +205,7 @@ func TestAccIAMServerCertificate_path(t *testing.T) {
 	})
 }
 
-func testAccCheckCertExists(ctx context.Context, n string, v *awstypes.ServerCertificate) resource.TestCheckFunc {
+func testAccCheckServerCertificateExists(ctx context.Context, n string, v *awstypes.ServerCertificate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -372,33 +322,4 @@ detWVr2WRvgNgQvcRnNPECwfq1RtMJJpavaI3kgeaSxg
 EOF
 }
 `, rName, fName)
-}
-
-func testAccServerCertificateConfig_tags1(rName, key, certificate, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_server_certificate" "test" {
-  name             = %[1]q
-  certificate_body = "%[2]s"
-  private_key      = "%[3]s"
-
-  tags = {
-    %[4]q = %[5]q
-  }
-}
-`, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key), tagKey1, tagValue1)
-}
-
-func testAccServerCertificateConfig_tags2(rName, key, certificate, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_server_certificate" "test" {
-  name             = %[1]q
-  certificate_body = "%[2]s"
-  private_key      = "%[3]s"
-
-  tags = {
-    %[4]q = %[5]q
-    %[6]q = %[7]q
-  }
-}
-`, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key), tagKey1, tagValue1, tagKey2, tagValue2)
 }

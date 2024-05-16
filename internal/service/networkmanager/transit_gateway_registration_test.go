@@ -23,7 +23,7 @@ func TestAccNetworkManagerTransitGatewayRegistration_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		"basic":                     testAccTransitGatewayRegistration_basic,
+		acctest.CtBasic:             testAccTransitGatewayRegistration_basic,
 		"disappears":                testAccTransitGatewayRegistration_disappears,
 		"disappears_TransitGateway": testAccTransitGatewayRegistration_Disappears_transitGateway,
 		"crossRegion":               testAccTransitGatewayRegistration_crossRegion,

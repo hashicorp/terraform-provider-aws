@@ -260,7 +260,7 @@ func ResourceInstance() *schema.Resource {
 							Computed: true,
 							ForceNew: true,
 						},
-						"snapshot_id": {
+						names.AttrSnapshotID: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -298,7 +298,7 @@ func ResourceInstance() *schema.Resource {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
 					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m["snapshot_id"].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrSnapshotID].(string)))
 					return create.StringHashcode(buf.String())
 				},
 			},
@@ -2257,8 +2257,8 @@ func readBlockDevices(ctx context.Context, d *schema.ResourceData, meta interfac
 						m[k] = v
 					}
 
-					if snapshotID, ok := ibds["snapshot_id"].(string); ok {
-						m["snapshot_id"] = snapshotID
+					if snapshotID, ok := ibds[names.AttrSnapshotID].(string); ok {
+						m[names.AttrSnapshotID] = snapshotID
 					}
 
 					ibds["ebs"] = []interface{}{m}
@@ -2367,7 +2367,7 @@ func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, m
 			blockDevices["root"] = bd
 		} else {
 			if vol.SnapshotId != nil {
-				bd["snapshot_id"] = aws.StringValue(vol.SnapshotId)
+				bd[names.AttrSnapshotID] = aws.StringValue(vol.SnapshotId)
 			}
 
 			blockDevices["ebs"] = append(blockDevices["ebs"].([]map[string]interface{}), bd)
@@ -2378,7 +2378,7 @@ func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, m
 	// we'll need to set the ebs_block_device as a clone of the root device
 	// with the snapshot_id populated; thus, we store the ID for safe-keeping
 	if blockDevices["root"] != nil && len(blockDevices["ebs"].([]map[string]interface{})) == 0 {
-		blockDevices["snapshot_id"] = volResp.Volumes[0].SnapshotId
+		blockDevices[names.AttrSnapshotID] = volResp.Volumes[0].SnapshotId
 	}
 
 	return blockDevices, nil
@@ -2555,7 +2555,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 				DeleteOnTermination: aws.Bool(bd[names.AttrDeleteOnTermination].(bool)),
 			}
 
-			if v, ok := bd["snapshot_id"].(string); ok && v != "" {
+			if v, ok := bd[names.AttrSnapshotID].(string); ok && v != "" {
 				ebs.SnapshotId = aws.String(v)
 			}
 

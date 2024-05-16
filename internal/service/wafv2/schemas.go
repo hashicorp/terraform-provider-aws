@@ -1542,7 +1542,7 @@ func managedRuleGroupConfigATPResponseInspectionSchema() *schema.Schema {
 						},
 					},
 				},
-				"status_code": {
+				names.AttrStatusCode: {
 					Type:     schema.TypeList,
 					Optional: true,
 					MaxItems: 1,

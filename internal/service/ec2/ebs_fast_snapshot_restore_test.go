@@ -37,7 +37,7 @@ func TestAccEC2EBSFastSnapshotRestore_basic(t *testing.T) {
 				Config: testAccEBSFastSnapshotRestoreConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEBSFastSnapshotRestoreExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "snapshot_id", snapshotResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSnapshotID, snapshotResourceName, names.AttrID),
 				),
 			},
 			{
@@ -111,7 +111,7 @@ func testAccCheckEBSFastSnapshotRestoreDestroy(ctx context.Context) resource.Tes
 				continue
 			}
 
-			_, err := tfec2.FindFastSnapshotRestoreByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAvailabilityZone], rs.Primary.Attributes["snapshot_id"])
+			_, err := tfec2.FindFastSnapshotRestoreByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAvailabilityZone], rs.Primary.Attributes[names.AttrSnapshotID])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -137,7 +137,7 @@ func testAccCheckEBSFastSnapshotRestoreExists(ctx context.Context, n string) res
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		_, err := tfec2.FindFastSnapshotRestoreByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAvailabilityZone], rs.Primary.Attributes["snapshot_id"])
+		_, err := tfec2.FindFastSnapshotRestoreByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAvailabilityZone], rs.Primary.Attributes[names.AttrSnapshotID])
 
 		return err
 	}

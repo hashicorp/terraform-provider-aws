@@ -593,14 +593,14 @@ func TestAccEC2InstanceDataSource_autoRecovery(t *testing.T) {
 			{
 				Config: testAccInstanceDataSourceConfig_autoRecovery(rName, "default"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "maintenance_options.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(datasourceName, "maintenance_options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(datasourceName, "maintenance_options.0.auto_recovery", "default"),
 				),
 			},
 			{
 				Config: testAccInstanceDataSourceConfig_autoRecovery(rName, "disabled"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "maintenance_options.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(datasourceName, "maintenance_options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(datasourceName, "maintenance_options.0.auto_recovery", "disabled"),
 				),
 			},

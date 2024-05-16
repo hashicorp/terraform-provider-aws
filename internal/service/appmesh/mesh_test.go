@@ -42,7 +42,7 @@ func testAccMesh_basic(t *testing.T) {
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					resource.TestCheckResourceAttr(resourceName, "spec.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", acctest.Ct1),
 				),
 			},
 			{
@@ -94,10 +94,10 @@ func testAccMesh_egressFilter(t *testing.T) {
 				Config: testAccMeshConfig_egressFilter(rName, "ALLOW_ALL"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMeshExists(ctx, resourceName, &mesh),
-					resource.TestCheckResourceAttr(resourceName, "spec.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.egress_filter.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.egress_filter.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.egress_filter.0.type", "ALLOW_ALL"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.#", acctest.Ct0),
 				),
 			},
 			{
@@ -137,8 +137,8 @@ func testAccMesh_serviceDiscovery(t *testing.T) {
 				Config: testAccMeshConfig_serviceDiscovery(rName, "IPv6_PREFERRED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMeshExists(ctx, resourceName, &mesh),
-					resource.TestCheckResourceAttr(resourceName, "spec.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.ip_preference", "IPv6_PREFERRED"),
 				),
 			},
@@ -186,8 +186,8 @@ func testAccMesh_tags(t *testing.T) {
 				Config: testAccMeshConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMeshExists(ctx, resourceName, &mesh),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -196,20 +196,20 @@ func testAccMesh_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccMeshConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
+				Config: testAccMeshConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMeshExists(ctx, resourceName, &mesh),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
 				Config: testAccMeshConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMeshExists(ctx, resourceName, &mesh),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},

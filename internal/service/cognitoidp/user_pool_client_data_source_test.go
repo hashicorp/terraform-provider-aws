@@ -30,10 +30,10 @@ func TestAccCognitoIDPUserPoolClientDataSource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "explicit_auth_flows.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "explicit_auth_flows.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "explicit_auth_flows.*", "ADMIN_NO_SRP_AUTH"),
-					resource.TestCheckResourceAttr(resourceName, "token_validity_units.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "token_validity_units.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.#", acctest.Ct0),
 				),
 			},
 		},

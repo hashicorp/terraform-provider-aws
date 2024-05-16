@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccFMS_serial(t *testing.T) {
@@ -15,19 +14,19 @@ func TestAccFMS_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"AdminAccount": {
-			"basic":      testAccAdminAccount_basic,
-			"disappears": testAccAdminAccount_disappears,
+			acctest.CtBasic: testAccAdminAccount_basic,
+			"disappears":    testAccAdminAccount_disappears,
 		},
 		"Policy": {
 			"alb":                    testAccPolicy_alb,
-			"basic":                  testAccPolicy_basic,
+			acctest.CtBasic:          testAccPolicy_basic,
 			"cloudfrontDistribution": testAccPolicy_cloudFrontDistribution,
 			"disappears":             testAccPolicy_disappears,
 			"includeMap":             testAccPolicy_includeMap,
 			"policyOption":           testAccPolicy_policyOption,
 			"resourceTags":           testAccPolicy_resourceTags,
 			"securityGroup":          testAccPolicy_securityGroup,
-			names.AttrTags:           testAccPolicy_tags,
+			"tags":                   testAccPolicy_tags,
 			"update":                 testAccPolicy_update,
 		},
 	}
