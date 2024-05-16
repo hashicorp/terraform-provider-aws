@@ -1326,22 +1326,6 @@ func StatusEBSSnapshotImport(ctx context.Context, conn *ec2_sdkv2.Client, id str
 	}
 }
 
-func statusVPCEndpointConnectionVPCEndpointState(ctx context.Context, conn *ec2.EC2, serviceID, vpcEndpointID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindVPCEndpointConnectionByServiceIDAndVPCEndpointID(ctx, conn, serviceID, vpcEndpointID)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.VpcEndpointState), nil
-	}
-}
-
 func StatusSnapshotStorageTier(ctx context.Context, conn *ec2_sdkv2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindSnapshotTierStatusBySnapshotID(ctx, conn, id)

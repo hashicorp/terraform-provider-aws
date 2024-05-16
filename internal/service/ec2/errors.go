@@ -112,6 +112,7 @@ const (
 	errCodeInvalidVPCCIDRBlockAssociationIDNotFound          = "InvalidVpcCidrBlockAssociationID.NotFound"
 	errCodeInvalidVPCEndpointIdNotFound                      = "InvalidVpcEndpointId.NotFound"
 	errCodeInvalidVPCEndpointNotFound                        = "InvalidVpcEndpoint.NotFound"
+	errCodeInvalidVPCEndpointServiceNotFound                 = "InvalidVpcEndpointService.NotFound"
 	errCodeInvalidVPCEndpointServiceIdNotFound               = "InvalidVpcEndpointServiceId.NotFound"
 	errCodeInvalidVPCIDNotFound                              = "InvalidVpcID.NotFound"
 	errCodeInvalidVPCPeeringConnectionIDNotFound             = "InvalidVpcPeeringConnectionID.NotFound"

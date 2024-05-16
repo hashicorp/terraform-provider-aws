@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -54,7 +54,7 @@ func ResourceVPCEndpointSubnetAssociation() *schema.Resource {
 
 func resourceVPCEndpointSubnetAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	endpointID := d.Get(names.AttrVPCEndpointID).(string)
 	subnetID := d.Get(names.AttrSubnetID).(string)
@@ -63,10 +63,10 @@ func resourceVPCEndpointSubnetAssociationCreate(ctx context.Context, d *schema.R
 
 	input := &ec2.ModifyVpcEndpointInput{
 		VpcEndpointId: aws.String(endpointID),
-		AddSubnetIds:  aws.StringSlice([]string{subnetID}),
+		AddSubnetIds:  []string{subnetID},
 	}
 
-	log.Printf("[DEBUG] Creating VPC Endpoint Subnet Association: %s", input)
+	log.Printf("[DEBUG] Creating VPC Endpoint Subnet Association: %v", input)
 
 	// See https://github.com/hashicorp/terraform-provider-aws/issues/3382.
 	// Prevent concurrent subnet association requests and delay between requests.
@@ -79,7 +79,7 @@ func resourceVPCEndpointSubnetAssociationCreate(ctx context.Context, d *schema.R
 		Timeout: 3 * time.Minute,
 		Target:  []string{"ok"},
 		Refresh: func() (interface{}, string, error) {
-			output, err := conn.ModifyVpcEndpointWithContext(ctx, input)
+			output, err := conn.ModifyVpcEndpoint(ctx, input)
 
 			return output, "ok", err
 		},
@@ -92,7 +92,7 @@ func resourceVPCEndpointSubnetAssociationCreate(ctx context.Context, d *schema.R
 
 	d.SetId(VPCEndpointSubnetAssociationCreateID(endpointID, subnetID))
 
-	_, err = WaitVPCEndpointAvailable(ctx, conn, endpointID, d.Timeout(schema.TimeoutCreate))
+	_, err = waitVPCEndpointAvailableV2(ctx, conn, endpointID, d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for VPC Endpoint (%s) to become available: %s", endpointID, err)
@@ -103,14 +103,14 @@ func resourceVPCEndpointSubnetAssociationCreate(ctx context.Context, d *schema.R
 
 func resourceVPCEndpointSubnetAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	endpointID := d.Get(names.AttrVPCEndpointID).(string)
 	subnetID := d.Get(names.AttrSubnetID).(string)
 	// Human friendly ID for error messages since d.Id() is non-descriptive
 	id := fmt.Sprintf("%s/%s", endpointID, subnetID)
 
-	err := FindVPCEndpointSubnetAssociationExists(ctx, conn, endpointID, subnetID)
+	err := findVPCEndpointSubnetAssociationExistsV2(ctx, conn, endpointID, subnetID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] VPC Endpoint Subnet Association (%s) not found, removing from state", id)
@@ -127,7 +127,7 @@ func resourceVPCEndpointSubnetAssociationRead(ctx context.Context, d *schema.Res
 
 func resourceVPCEndpointSubnetAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	endpointID := d.Get(names.AttrVPCEndpointID).(string)
 	subnetID := d.Get(names.AttrSubnetID).(string)
@@ -136,11 +136,11 @@ func resourceVPCEndpointSubnetAssociationDelete(ctx context.Context, d *schema.R
 
 	input := &ec2.ModifyVpcEndpointInput{
 		VpcEndpointId:   aws.String(endpointID),
-		RemoveSubnetIds: aws.StringSlice([]string{subnetID}),
+		RemoveSubnetIds: []string{subnetID},
 	}
 
 	log.Printf("[DEBUG] Deleting VPC Endpoint Subnet Association: %s", id)
-	_, err := conn.ModifyVpcEndpointWithContext(ctx, input)
+	_, err := conn.ModifyVpcEndpoint(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointIdNotFound) || tfawserr.ErrCodeEquals(err, errCodeInvalidSubnetIdNotFound) || tfawserr.ErrCodeEquals(err, errCodeInvalidParameter) {
 		return diags
@@ -150,7 +150,7 @@ func resourceVPCEndpointSubnetAssociationDelete(ctx context.Context, d *schema.R
 		return sdkdiag.AppendErrorf(diags, "deleting VPC Endpoint Subnet Association (%s): %s", id, err)
 	}
 
-	_, err = WaitVPCEndpointAvailable(ctx, conn, endpointID, d.Timeout(schema.TimeoutDelete))
+	_, err = waitVPCEndpointAvailableV2(ctx, conn, endpointID, d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for VPC Endpoint (%s) to become available: %s", endpointID, err)
