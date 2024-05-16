@@ -389,11 +389,9 @@ func TestAccAppFlowFlow_metadata_catalog(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowExists(ctx, resourceName, &flowOutput),
 					resource.TestCheckResourceAttr(resourceName, "metadata_catalog_config.#", acctest.Ct1),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "prefix_config.*", map[string]string{
-						"prefix_heirarchy.#": acctest.Ct2,
-						"prefix_heirarchy.0": "SCHEMA_VERSION",
-						"prefix_heirarchy.1": "EXECUTION_ID",
-					}),
+					resource.TestCheckResourceAttr(resourceName, "destination_flow_config.0.destination_connector_properties.0.s3.0.s3_output_format_config.0.prefix_config.0.prefix_hierarchy.0", "SCHEMA_VERSION"),
+					resource.TestCheckResourceAttr(resourceName, "destination_flow_config.0.destination_connector_properties.0.s3.0.s3_output_format_config.0.prefix_config.0.prefix_hierarchy.1", "EXECUTION_ID"),
+					resource.TestCheckResourceAttr(resourceName, "destination_flow_config.0.destination_connector_properties.0.s3.0.s3_output_format_config.0.prefix_config.0.prefix_hierarchy.#", acctest.Ct2),
 				),
 			},
 			{
@@ -747,7 +745,7 @@ resource "aws_appflow_flow" "test" {
 
         s3_output_format_config {
           prefix_config {
-            prefix_type = "PATH"		
+            prefix_type = "PATH"
           }
         }
       }
@@ -1011,6 +1009,10 @@ resource "aws_appflow_flow" "test" {
         s3_output_format_config {
           prefix_config {
             prefix_type = "PATH"
+            prefix_hierarchy = [
+              "SCHEMA_VERSION",
+              "EXECUTION_ID",
+            ]
           }
         }
       }
