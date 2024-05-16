@@ -67,7 +67,7 @@ This resource supports the following arguments:
 * `repository_name` - (Required) The name for the repository. This needs to be less than 100 characters.
 * `description` - (Optional) The description of the repository. This needs to be less than 1000 characters
 * `default_branch` - (Optional) The default branch of the repository. The branch specified here needs to exist.
-* `kms_key_id` - (Optional) The ARN of the encryption key. If no key is specified, the default `aws/codecommit` Amazon Web Services managed key is used.
+* `kms_key_id` - (Optional) The ARN of the encryption key. If no key is specified, the default `aws/codecommit`` Amazon Web Services managed key is used.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -105,4 +105,4 @@ Using `terraform import`, import CodeCommit repository using repository name. Fo
 % terraform import aws_codecommit_repository.imported ExistingRepo
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-217390eb5f7a27d321e450c06bfbdb2e96d532106ed9c9f29d34b7603dfc713b -->
+<!-- cache-key: cdktf-0.20.1 input-cf394053d141a450823f610cd957beaed233004d2a9c6f79e08c10707d5e8870 -->

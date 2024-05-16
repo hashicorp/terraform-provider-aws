@@ -35,7 +35,7 @@ func testAccOrganizationsAccess_basic(t *testing.T) {
 				Config: testAccOrganizationsAccessConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationsAccessExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 				),
 			},
 		},
@@ -88,11 +88,11 @@ func testAccCheckOrganizationsAccessExists(ctx context.Context, resourceName str
 			return fmt.Errorf("error getting Service Catalog AWS Organizations Access (%s): empty response", rs.Primary.ID)
 		}
 
-		if output != servicecatalog.AccessStatusEnabled && rs.Primary.Attributes[names.AttrEnabled] == "true" {
+		if output != servicecatalog.AccessStatusEnabled && rs.Primary.Attributes["enabled"] == "true" {
 			return fmt.Errorf("error getting Service Catalog AWS Organizations Access (%s): wrong setting", rs.Primary.ID)
 		}
 
-		if output == servicecatalog.AccessStatusEnabled && rs.Primary.Attributes[names.AttrEnabled] == "false" {
+		if output == servicecatalog.AccessStatusEnabled && rs.Primary.Attributes["enabled"] == "false" {
 			return fmt.Errorf("error getting Service Catalog AWS Organizations Access (%s): wrong setting", rs.Primary.ID)
 		}
 

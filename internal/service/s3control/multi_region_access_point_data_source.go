@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_s3control_multi_region_access_point")
@@ -23,29 +22,29 @@ func dataSourceMultiRegionAccessPoint() *schema.Resource {
 		ReadWithoutTimeout: dataSourceMultiRegionAccessPointBlockRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrAccountID: {
+			"account_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			names.AttrAlias: {
+			"alias": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrCreatedAt: {
+			"created_at": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDomainName: {
+			"domain_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -78,7 +77,7 @@ func dataSourceMultiRegionAccessPoint() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrBucket: {
+						"bucket": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -86,14 +85,14 @@ func dataSourceMultiRegionAccessPoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrRegion: {
+						"region": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -105,10 +104,10 @@ func dataSourceMultiRegionAccessPointBlockRead(ctx context.Context, d *schema.Re
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	accountID := meta.(*conns.AWSClient).AccountID
-	if v, ok := d.GetOk(names.AttrAccountID); ok {
+	if v, ok := d.GetOk("account_id"); ok {
 		accountID = v.(string)
 	}
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 
 	accessPoint, err := findMultiRegionAccessPointByTwoPartKey(ctx, conn, accountID, name)
 
@@ -125,16 +124,16 @@ func dataSourceMultiRegionAccessPointBlockRead(ctx context.Context, d *schema.Re
 		AccountID: accountID,
 		Resource:  fmt.Sprintf("accesspoint/%s", alias),
 	}.String()
-	d.Set(names.AttrAccountID, accountID)
-	d.Set(names.AttrAlias, alias)
-	d.Set(names.AttrARN, arn)
-	d.Set(names.AttrCreatedAt, aws.ToTime(accessPoint.CreatedAt).Format(time.RFC3339))
+	d.Set("account_id", accountID)
+	d.Set("alias", alias)
+	d.Set("arn", arn)
+	d.Set("created_at", aws.ToTime(accessPoint.CreatedAt).Format(time.RFC3339))
 	// https://docs.aws.amazon.com/AmazonS3/latest/userguide//MultiRegionAccessPointRequests.html#MultiRegionAccessPointHostnames.
-	d.Set(names.AttrDomainName, meta.(*conns.AWSClient).PartitionHostname(ctx, alias+".accesspoint.s3-global"))
-	d.Set(names.AttrName, accessPoint.Name)
+	d.Set("domain_name", meta.(*conns.AWSClient).PartitionHostname(ctx, alias+".accesspoint.s3-global"))
+	d.Set("name", accessPoint.Name)
 	d.Set("public_access_block", []interface{}{flattenPublicAccessBlockConfiguration(accessPoint.PublicAccessBlock)})
 	d.Set("regions", flattenRegionReports(accessPoint.Regions))
-	d.Set(names.AttrStatus, accessPoint.Status)
+	d.Set("status", accessPoint.Status)
 
 	return nil
 }

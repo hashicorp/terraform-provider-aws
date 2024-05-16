@@ -85,7 +85,7 @@ func resourceRegisteredDomain() *schema.Resource {
 								Computed:         true,
 								ValidateDiagFunc: enum.Validate[types.CountryCode](),
 							},
-							names.AttrEmail: {
+							"email": {
 								Type:         schema.TypeString,
 								Optional:     true,
 								Computed:     true,
@@ -127,7 +127,7 @@ func resourceRegisteredDomain() *schema.Resource {
 								Computed:     true,
 								ValidateFunc: validation.StringLenBetween(0, 30),
 							},
-							names.AttrState: {
+							"state": {
 								Type:         schema.TypeString,
 								Optional:     true,
 								Computed:     true,
@@ -170,11 +170,11 @@ func resourceRegisteredDomain() *schema.Resource {
 					Optional: true,
 					Default:  true,
 				},
-				names.AttrCreationDate: {
+				"creation_date": {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrDomainName: {
+				"domain_name": {
 					Type:     schema.TypeString,
 					Required: true,
 				},
@@ -198,7 +198,7 @@ func resourceRegisteredDomain() *schema.Resource {
 									ValidateFunc: validation.IsIPAddress,
 								},
 							},
-							names.AttrName: {
+							"name": {
 								Type:     schema.TypeString,
 								Required: true,
 								ValidateFunc: validation.All(
@@ -264,7 +264,7 @@ func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53DomainsClient(ctx)
 
-	domainName := d.Get(names.AttrDomainName).(string)
+	domainName := d.Get("domain_name").(string)
 	domainDetail, err := findDomainDetailByName(ctx, conn, domainName)
 
 	if err != nil {
@@ -380,9 +380,9 @@ func resourceRegisteredDomainRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("admin_privacy", domainDetail.AdminPrivacy)
 	d.Set("auto_renew", domainDetail.AutoRenew)
 	if domainDetail.CreationDate != nil {
-		d.Set(names.AttrCreationDate, aws.ToTime(domainDetail.CreationDate).Format(time.RFC3339))
+		d.Set("creation_date", aws.ToTime(domainDetail.CreationDate).Format(time.RFC3339))
 	} else {
-		d.Set(names.AttrCreationDate, nil)
+		d.Set("creation_date", nil)
 	}
 	if domainDetail.BillingContact != nil {
 		if err := d.Set("billing_contact", []interface{}{flattenContactDetail(domainDetail.BillingContact)}); err != nil {
@@ -392,7 +392,7 @@ func resourceRegisteredDomainRead(ctx context.Context, d *schema.ResourceData, m
 		d.Set("billing_contact", nil)
 	}
 	d.Set("billing_privacy", domainDetail.BillingPrivacy)
-	d.Set(names.AttrDomainName, domainDetail.DomainName)
+	d.Set("domain_name", domainDetail.DomainName)
 	if domainDetail.ExpirationDate != nil {
 		d.Set("expiration_date", aws.ToTime(domainDetail.ExpirationDate).Format(time.RFC3339))
 	} else {
@@ -651,7 +651,7 @@ func flattenContactDetail(apiObject *types.ContactDetail) map[string]interface{}
 	tfMap["country_code"] = apiObject.CountryCode
 
 	if v := apiObject.Email; v != nil {
-		tfMap[names.AttrEmail] = aws.ToString(v)
+		tfMap["email"] = aws.ToString(v)
 	}
 
 	if v := apiObject.ExtraParams; v != nil {
@@ -679,7 +679,7 @@ func flattenContactDetail(apiObject *types.ContactDetail) map[string]interface{}
 	}
 
 	if v := apiObject.State; v != nil {
-		tfMap[names.AttrState] = aws.ToString(v)
+		tfMap["state"] = aws.ToString(v)
 	}
 
 	if v := apiObject.ZipCode; v != nil {
@@ -730,7 +730,7 @@ func expandContactDetail(tfMap map[string]interface{}) *types.ContactDetail {
 		apiObject.CountryCode = types.CountryCode(v)
 	}
 
-	if v, ok := tfMap[names.AttrEmail].(string); ok {
+	if v, ok := tfMap["email"].(string); ok {
 		apiObject.Email = aws.String(v)
 	}
 
@@ -758,7 +758,7 @@ func expandContactDetail(tfMap map[string]interface{}) *types.ContactDetail {
 		apiObject.PhoneNumber = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrState].(string); ok {
+	if v, ok := tfMap["state"].(string); ok {
 		apiObject.State = aws.String(v)
 	}
 
@@ -804,7 +804,7 @@ func flattenNameserver(apiObject *types.Nameserver) map[string]interface{} {
 	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap[names.AttrName] = aws.ToString(v)
+		tfMap["name"] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -821,7 +821,7 @@ func expandNameserver(tfMap map[string]interface{}) *types.Nameserver {
 		apiObject.GlueIps = aws.ToStringSlice(flex.ExpandStringSet(v))
 	}
 
-	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
+	if v, ok := tfMap["name"].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 

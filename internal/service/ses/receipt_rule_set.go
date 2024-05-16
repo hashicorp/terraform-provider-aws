@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ses_receipt_rule_set")
@@ -31,7 +30,7 @@ func ResourceReceiptRuleSet() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -100,7 +99,7 @@ func resourceReceiptRuleSetRead(ctx context.Context, d *schema.ResourceData, met
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("receipt-rule-set/%s", name),
 	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set("arn", arn)
 
 	return diags
 }

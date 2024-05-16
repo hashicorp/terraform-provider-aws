@@ -37,8 +37,8 @@ func TestAccRoute53ResolverConfig_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConfigExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "autodefined_reverse_flag", "DISABLE"),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceID, vpcResourceName, names.AttrID),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_id", vpcResourceName, "id"),
 				),
 			},
 			{
@@ -51,8 +51,8 @@ func TestAccRoute53ResolverConfig_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConfigExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "autodefined_reverse_flag", "ENABLE"),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceID, vpcResourceName, names.AttrID),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_id", vpcResourceName, "id"),
 				),
 			},
 		},

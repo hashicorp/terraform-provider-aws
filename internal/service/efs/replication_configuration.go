@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_efs_replication_configuration", name="Replication Configuration")
@@ -39,11 +38,11 @@ func ResourceReplicationConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrCreationTime: {
+			"creation_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDestination: {
+			"destination": {
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
@@ -56,18 +55,18 @@ func ResourceReplicationConfiguration() *schema.Resource {
 							ForceNew:     true,
 							AtLeastOneOf: []string{"destination.0.availability_zone_name", "destination.0.region"},
 						},
-						names.AttrFileSystemID: {
+						"file_system_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
-						names.AttrKMSKeyID: {
+						"kms_key_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						names.AttrRegion: {
+						"region": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -75,7 +74,7 @@ func ResourceReplicationConfiguration() *schema.Resource {
 							ValidateFunc: verify.ValidRegionName,
 							AtLeastOneOf: []string{"destination.0.availability_zone_name", "destination.0.region"},
 						},
-						names.AttrStatus: {
+						"status": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -112,7 +111,7 @@ func resourceReplicationConfigurationCreate(ctx context.Context, d *schema.Resou
 		SourceFileSystemId: aws.String(fsID),
 	}
 
-	if v, ok := d.GetOk(names.AttrDestination); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk("destination"); ok && len(v.([]interface{})) > 0 {
 		input.Destinations = expandDestinationsToCreate(v.([]interface{}))
 	}
 
@@ -150,17 +149,17 @@ func resourceReplicationConfigurationRead(ctx context.Context, d *schema.Resourc
 	destinations := flattenDestinations(replication.Destinations)
 
 	// availability_zone_name and kms_key_id aren't returned from the AWS Read API.
-	if v, ok := d.GetOk(names.AttrDestination); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk("destination"); ok && len(v.([]interface{})) > 0 {
 		copy := func(i int, k string) {
 			destinations[i].(map[string]interface{})[k] = v.([]interface{})[i].(map[string]interface{})[k]
 		}
 		// Assume 1 destination.
 		copy(0, "availability_zone_name")
-		copy(0, names.AttrKMSKeyID)
+		copy(0, "kms_key_id")
 	}
 
-	d.Set(names.AttrCreationTime, aws.TimeValue(replication.CreationTime).String())
-	if err := d.Set(names.AttrDestination, destinations); err != nil {
+	d.Set("creation_time", aws.TimeValue(replication.CreationTime).String())
+	if err := d.Set("destination", destinations); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting destination: %s", err)
 	}
 	d.Set("original_source_file_system_arn", replication.OriginalSourceFileSystemArn)
@@ -176,7 +175,7 @@ func resourceReplicationConfigurationDelete(ctx context.Context, d *schema.Resou
 	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
 	// Deletion of the replication configuration must be done from the Region in which the destination file system is located.
-	destination := expandDestinationsToCreate(d.Get(names.AttrDestination).([]interface{}))[0]
+	destination := expandDestinationsToCreate(d.Get("destination").([]interface{}))[0]
 	regionConn := meta.(*conns.AWSClient).EFSConnForRegion(ctx, aws.StringValue(destination.Region))
 
 	log.Printf("[DEBUG] Deleting EFS Replication Configuration: %s", d.Id())
@@ -333,15 +332,15 @@ func expandDestinationToCreate(tfMap map[string]interface{}) *efs.DestinationToC
 		apiObject.AvailabilityZoneName = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrKMSKeyID].(string); ok && v != "" {
+	if v, ok := tfMap["kms_key_id"].(string); ok && v != "" {
 		apiObject.KmsKeyId = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrRegion].(string); ok && v != "" {
+	if v, ok := tfMap["region"].(string); ok && v != "" {
 		apiObject.Region = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrFileSystemID].(string); ok && v != "" {
+	if v, ok := tfMap["file_system_id"].(string); ok && v != "" {
 		apiObject.FileSystemId = aws.String(v)
 	}
 
@@ -382,15 +381,15 @@ func flattenDestination(apiObject *efs.Destination) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.FileSystemId; v != nil {
-		tfMap[names.AttrFileSystemID] = aws.StringValue(v)
+		tfMap["file_system_id"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Region; v != nil {
-		tfMap[names.AttrRegion] = aws.StringValue(v)
+		tfMap["region"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Status; v != nil {
-		tfMap[names.AttrStatus] = aws.StringValue(v)
+		tfMap["status"] = aws.StringValue(v)
 	}
 
 	return tfMap

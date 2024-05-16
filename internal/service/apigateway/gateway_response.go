@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_api_gateway_gateway_response", name="Gateway Response")
@@ -67,7 +66,7 @@ func resourceGatewayResponse() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrStatusCode: {
+			"status_code": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -92,7 +91,7 @@ func resourceGatewayResponsePut(ctx context.Context, d *schema.ResourceData, met
 		input.ResponseTemplates = flex.ExpandStringValueMap(v.(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk(names.AttrStatusCode); ok {
+	if v, ok := d.GetOk("status_code"); ok {
 		input.StatusCode = aws.String(v.(string))
 	}
 
@@ -128,7 +127,7 @@ func resourceGatewayResponseRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("response_parameters", gatewayResponse.ResponseParameters)
 	d.Set("response_templates", gatewayResponse.ResponseTemplates)
 	d.Set("response_type", gatewayResponse.ResponseType)
-	d.Set(names.AttrStatusCode, gatewayResponse.StatusCode)
+	d.Set("status_code", gatewayResponse.StatusCode)
 
 	return diags
 }

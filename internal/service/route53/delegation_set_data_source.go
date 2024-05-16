@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_route53_delegation_set")
@@ -24,11 +23,11 @@ func DataSourceDelegationSet() *schema.Resource {
 		ReadWithoutTimeout: dataSourceDelegationSetRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrID: {
+			"id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -49,7 +48,7 @@ func dataSourceDelegationSetRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
-	dSetID := d.Get(names.AttrID).(string)
+	dSetID := d.Get("id").(string)
 
 	input := &route53.GetReusableDelegationSetInput{
 		Id: aws.String(dSetID),
@@ -74,7 +73,7 @@ func dataSourceDelegationSetRead(ctx context.Context, d *schema.ResourceData, me
 		Service:   "route53",
 		Resource:  fmt.Sprintf("delegationset/%s", d.Id()),
 	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set("arn", arn)
 
 	return diags
 }

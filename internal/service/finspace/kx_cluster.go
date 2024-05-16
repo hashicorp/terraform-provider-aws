@@ -48,7 +48,7 @@ func ResourceKxCluster() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -116,12 +116,12 @@ func ResourceKxCluster() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrSize: {
+						"size": {
 							Type:     schema.TypeInt,
 							Required: true,
 							ForceNew: true,
 						},
-						names.AttrType: {
+						"type": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -158,7 +158,7 @@ func ResourceKxCluster() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrS3Bucket: {
+						"s3_bucket": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(3, 255),
@@ -189,7 +189,7 @@ func ResourceKxCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDatabase: {
+			"database": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -219,7 +219,7 @@ func ResourceKxCluster() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(1, 26),
 						},
-						names.AttrDatabaseName: {
+						"database_name": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -234,7 +234,7 @@ func ResourceKxCluster() *schema.Resource {
 					},
 				},
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -261,7 +261,7 @@ func ResourceKxCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -273,7 +273,7 @@ func ResourceKxCluster() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 16),
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -284,14 +284,14 @@ func ResourceKxCluster() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrType: {
+						"type": {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 							ValidateFunc: validation.StringInSlice(
 								enum.Slice(types.KxSavedownStorageTypeSds01), true),
 						},
-						names.AttrSize: {
+						"size": {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							ForceNew:     true,
@@ -306,32 +306,32 @@ func ResourceKxCluster() *schema.Resource {
 					},
 				},
 			},
-			names.AttrStatusReason: {
+			"status_reason": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrType: {
+			"type": {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[types.KxClusterType](),
 			},
-			names.AttrVPCConfiguration: {
+			"vpc_configuration": {
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrIPAddressType: {
+						"ip_address_type": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
 							ValidateFunc: validation.StringInSlice(enum.Slice(types.IPAddressTypeIpV4), true),
 						},
-						names.AttrSecurityGroupIDs: {
+						"security_group_ids": {
 							Type:     schema.TypeSet,
 							Required: true,
 							ForceNew: true,
@@ -340,7 +340,7 @@ func ResourceKxCluster() *schema.Resource {
 								ValidateFunc: validation.StringLenBetween(1, 1024),
 							},
 						},
-						names.AttrSubnetIDs: {
+						"subnet_ids": {
 							Type:     schema.TypeSet,
 							Required: true,
 							ForceNew: true,
@@ -349,7 +349,7 @@ func ResourceKxCluster() *schema.Resource {
 								ValidateFunc: validation.StringLenBetween(1, 1024),
 							},
 						},
-						names.AttrVPCID: {
+						"vpc_id": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -433,28 +433,28 @@ func resourceKxClusterCreate(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
 	environmentId := d.Get("environment_id").(string)
-	clusterName := d.Get(names.AttrName).(string)
+	clusterName := d.Get("name").(string)
 	idParts := []string{
 		environmentId,
 		clusterName,
 	}
 	rID, err := flex.FlattenResourceId(idParts, kxClusterIDPartCount, false)
 	if err != nil {
-		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionFlatteningResourceId, ResNameKxCluster, d.Get(names.AttrName).(string), err)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionFlatteningResourceId, ResNameKxCluster, d.Get("name").(string), err)
 	}
 	d.SetId(rID)
 
 	in := &finspace.CreateKxClusterInput{
 		EnvironmentId: aws.String(environmentId),
 		ClusterName:   aws.String(clusterName),
-		ClusterType:   types.KxClusterType(d.Get(names.AttrType).(string)),
+		ClusterType:   types.KxClusterType(d.Get("type").(string)),
 		ReleaseLabel:  aws.String(d.Get("release_label").(string)),
 		AzMode:        types.KxAzMode(d.Get("az_mode").(string)),
 		ClientToken:   aws.String(id.UniqueId()),
 		Tags:          getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		in.ClusterDescription = aws.String(v.(string))
 	}
 
@@ -478,7 +478,7 @@ func resourceKxClusterCreate(ctx context.Context, d *schema.ResourceData, meta i
 		in.CommandLineArguments = expandCommandLineArguments(v.(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk(names.AttrVPCConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk("vpc_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		in.VpcConfiguration = expandVPCConfiguration(v.([]interface{}))
 	}
 
@@ -486,7 +486,7 @@ func resourceKxClusterCreate(ctx context.Context, d *schema.ResourceData, meta i
 		in.AutoScalingConfiguration = expandAutoScalingConfiguration(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk(names.AttrDatabase); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk("database"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		in.Databases = expandDatabases(v.([]interface{}))
 	}
 
@@ -512,11 +512,11 @@ func resourceKxClusterCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	out, err := conn.CreateKxCluster(ctx, in)
 	if err != nil {
-		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxCluster, d.Get(names.AttrName).(string), err)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxCluster, d.Get("name").(string), err)
 	}
 
 	if out == nil {
-		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxCluster, d.Get(names.AttrName).(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxCluster, d.Get("name").(string), errors.New("empty output"))
 	}
 
 	if _, err := waitKxClusterCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
@@ -541,14 +541,14 @@ func resourceKxClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionReading, ResNameKxCluster, d.Id(), err)
 	}
 
-	d.Set(names.AttrStatus, out.Status)
-	d.Set(names.AttrStatusReason, out.StatusReason)
+	d.Set("status", out.Status)
+	d.Set("status_reason", out.StatusReason)
 	d.Set("created_timestamp", out.CreatedTimestamp.String())
 	d.Set("last_modified_timestamp", out.LastModifiedTimestamp.String())
-	d.Set(names.AttrName, out.ClusterName)
-	d.Set(names.AttrType, out.ClusterType)
+	d.Set("name", out.ClusterName)
+	d.Set("type", out.ClusterType)
 	d.Set("release_label", out.ReleaseLabel)
-	d.Set(names.AttrDescription, out.ClusterDescription)
+	d.Set("description", out.ClusterDescription)
 	d.Set("az_mode", out.AzMode)
 	d.Set("availability_zone_id", out.AvailabilityZoneId)
 	d.Set("execution_role", out.ExecutionRole)
@@ -558,7 +558,7 @@ func resourceKxClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)
 	}
 
-	if err := d.Set(names.AttrVPCConfiguration, flattenVPCConfiguration(out.VpcConfiguration)); err != nil {
+	if err := d.Set("vpc_configuration", flattenVPCConfiguration(out.VpcConfiguration)); err != nil {
 		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)
 	}
 
@@ -580,7 +580,7 @@ func resourceKxClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)
 	}
 
-	if err := d.Set(names.AttrDatabase, flattenDatabases(out.Databases)); err != nil {
+	if err := d.Set("database", flattenDatabases(out.Databases)); err != nil {
 		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)
 	}
 
@@ -606,7 +606,7 @@ func resourceKxClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)
 	}
 	arn := fmt.Sprintf("%s/kxCluster/%s", aws.ToString(env.EnvironmentArn), aws.ToString(out.ClusterName))
-	d.Set(names.AttrARN, arn)
+	d.Set("arn", arn)
 	d.Set("environment_id", parts[0])
 
 	return diags
@@ -621,16 +621,16 @@ func resourceKxClusterUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 	CodeConfigIn := &finspace.UpdateKxClusterCodeConfigurationInput{
 		EnvironmentId: aws.String(d.Get("environment_id").(string)),
-		ClusterName:   aws.String(d.Get(names.AttrName).(string)),
+		ClusterName:   aws.String(d.Get("name").(string)),
 	}
 
 	DatabaseConfigIn := &finspace.UpdateKxClusterDatabasesInput{
 		EnvironmentId: aws.String(d.Get("environment_id").(string)),
-		ClusterName:   aws.String(d.Get(names.AttrName).(string)),
+		ClusterName:   aws.String(d.Get("name").(string)),
 	}
 
-	if v, ok := d.GetOk(names.AttrDatabase); ok && len(v.([]interface{})) > 0 && d.HasChanges(names.AttrDatabase) {
-		DatabaseConfigIn.Databases = expandDatabases(d.Get(names.AttrDatabase).([]interface{}))
+	if v, ok := d.GetOk("database"); ok && len(v.([]interface{})) > 0 && d.HasChanges("database") {
+		DatabaseConfigIn.Databases = expandDatabases(d.Get("database").([]interface{}))
 		updateDb = true
 	}
 
@@ -692,7 +692,7 @@ func resourceKxClusterDelete(ctx context.Context, d *schema.ResourceData, meta i
 
 	log.Printf("[INFO] Deleting FinSpace KxCluster %s", d.Id())
 	_, err := conn.DeleteKxCluster(ctx, &finspace.DeleteKxClusterInput{
-		ClusterName:   aws.String(d.Get(names.AttrName).(string)),
+		ClusterName:   aws.String(d.Get("name").(string)),
 		EnvironmentId: aws.String(d.Get("environment_id").(string)),
 	})
 	if err != nil {
@@ -906,11 +906,11 @@ func expandSavedownStorageConfiguration(tfList []interface{}) *types.KxSavedownS
 
 	a := &types.KxSavedownStorageConfiguration{}
 
-	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
+	if v, ok := tfMap["type"].(string); ok && v != "" {
 		a.Type = types.KxSavedownStorageType(v)
 	}
 
-	if v, ok := tfMap[names.AttrSize].(int); ok && v != 0 {
+	if v, ok := tfMap["size"].(int); ok && v != 0 {
 		a.Size = aws.Int32(int32(v))
 	}
 
@@ -930,19 +930,19 @@ func expandVPCConfiguration(tfList []interface{}) *types.VpcConfiguration {
 
 	a := &types.VpcConfiguration{}
 
-	if v, ok := tfMap[names.AttrVPCID].(string); ok && v != "" {
+	if v, ok := tfMap["vpc_id"].(string); ok && v != "" {
 		a.VpcId = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrSecurityGroupIDs].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
 		a.SecurityGroupIds = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := tfMap[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap["subnet_ids"].(*schema.Set); ok && v.Len() > 0 {
 		a.SubnetIds = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := tfMap[names.AttrIPAddressType].(string); ok && v != "" {
+	if v, ok := tfMap["ip_address_type"].(string); ok && v != "" {
 		a.IpAddressType = types.IPAddressType(v)
 	}
 
@@ -972,11 +972,11 @@ func expandCacheStorageConfiguration(tfMap map[string]interface{}) *types.KxCach
 
 	a := &types.KxCacheStorageConfiguration{}
 
-	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
+	if v, ok := tfMap["type"].(string); ok && v != "" {
 		a.Type = &v
 	}
 
-	if v, ok := tfMap[names.AttrSize].(int); ok {
+	if v, ok := tfMap["size"].(int); ok {
 		a.Size = aws.Int32(int32(v))
 	}
 
@@ -1042,7 +1042,7 @@ func expandDatabase(tfMap map[string]interface{}) *types.KxDatabaseConfiguration
 
 	a := &types.KxDatabaseConfiguration{}
 
-	if v, ok := tfMap[names.AttrDatabaseName].(string); ok && v != "" {
+	if v, ok := tfMap["database_name"].(string); ok && v != "" {
 		a.DatabaseName = aws.String(v)
 	}
 
@@ -1114,7 +1114,7 @@ func expandCode(tfList []interface{}) *types.CodeConfiguration {
 
 	a := &types.CodeConfiguration{}
 
-	if v, ok := tfMap[names.AttrS3Bucket].(string); ok && v != "" {
+	if v, ok := tfMap["s3_bucket"].(string); ok && v != "" {
 		a.S3Bucket = aws.String(v)
 	}
 
@@ -1265,11 +1265,11 @@ func flattenSavedownStorageConfiguration(apiObject *types.KxSavedownStorageConfi
 	m := map[string]interface{}{}
 
 	if v := apiObject.Type; v != "" {
-		m[names.AttrType] = v
+		m["type"] = v
 	}
 
 	if v := aws.ToInt32(apiObject.Size); v >= 10 && v <= 16000 {
-		m[names.AttrSize] = v
+		m["size"] = v
 	}
 
 	if v := apiObject.VolumeName; v != nil {
@@ -1287,19 +1287,19 @@ func flattenVPCConfiguration(apiObject *types.VpcConfiguration) []interface{} {
 	m := map[string]interface{}{}
 
 	if v := apiObject.VpcId; v != nil {
-		m[names.AttrVPCID] = aws.ToString(v)
+		m["vpc_id"] = aws.ToString(v)
 	}
 
 	if v := apiObject.SecurityGroupIds; v != nil {
-		m[names.AttrSecurityGroupIDs] = v
+		m["security_group_ids"] = v
 	}
 
 	if v := apiObject.SubnetIds; v != nil {
-		m[names.AttrSubnetIDs] = v
+		m["subnet_ids"] = v
 	}
 
 	if v := apiObject.IpAddressType; v != "" {
-		m[names.AttrIPAddressType] = string(v)
+		m["ip_address_type"] = string(v)
 	}
 
 	return []interface{}{m}
@@ -1313,7 +1313,7 @@ func flattenCode(apiObject *types.CodeConfiguration) []interface{} {
 	m := map[string]interface{}{}
 
 	if v := apiObject.S3Bucket; v != nil {
-		m[names.AttrS3Bucket] = aws.ToString(v)
+		m["s3_bucket"] = aws.ToString(v)
 	}
 
 	if v := apiObject.S3Key; v != nil {
@@ -1335,11 +1335,11 @@ func flattenCacheStorageConfiguration(apiObject *types.KxCacheStorageConfigurati
 	m := map[string]interface{}{}
 
 	if v := apiObject.Type; aws.ToString(v) != "" {
-		m[names.AttrType] = aws.ToString(v)
+		m["type"] = aws.ToString(v)
 	}
 
 	if v := apiObject.Size; v != nil {
-		m[names.AttrSize] = aws.ToInt32(v)
+		m["size"] = aws.ToInt32(v)
 	}
 
 	return m
@@ -1399,7 +1399,7 @@ func flattenDatabase(apiObject *types.KxDatabaseConfiguration) map[string]interf
 	m := map[string]interface{}{}
 
 	if v := apiObject.DatabaseName; v != nil {
-		m[names.AttrDatabaseName] = aws.ToString(v)
+		m["database_name"] = aws.ToString(v)
 	}
 
 	if v := apiObject.DataviewName; v != nil {

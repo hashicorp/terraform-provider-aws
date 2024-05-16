@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_route53recoverycontrolconfig_cluster")
@@ -29,7 +28,7 @@ func ResourceCluster() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -38,23 +37,23 @@ func ResourceCluster() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrEndpoint: {
+						"endpoint": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrRegion: {
+						"region": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -68,7 +67,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	input := &r53rcc.CreateClusterInput{
 		ClientToken: aws.String(id.UniqueId()),
-		ClusterName: aws.String(d.Get(names.AttrName).(string)),
+		ClusterName: aws.String(d.Get("name").(string)),
 	}
 
 	output, err := conn.CreateClusterWithContext(ctx, input)
@@ -116,9 +115,9 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	result := output.Cluster
-	d.Set(names.AttrARN, result.ClusterArn)
-	d.Set(names.AttrName, result.Name)
-	d.Set(names.AttrStatus, result.Status)
+	d.Set("arn", result.ClusterArn)
+	d.Set("name", result.Name)
+	d.Set("status", result.Status)
 
 	if err := d.Set("cluster_endpoints", flattenClusterEndpoints(result.ClusterEndpoints)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting cluster_endpoints: %s", err)
@@ -183,11 +182,11 @@ func flattenClusterEndpoint(ce *r53rcc.ClusterEndpoint) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := ce.Endpoint; v != nil {
-		tfMap[names.AttrEndpoint] = aws.StringValue(v)
+		tfMap["endpoint"] = aws.StringValue(v)
 	}
 
 	if v := ce.Region; v != nil {
-		tfMap[names.AttrRegion] = aws.StringValue(v)
+		tfMap["region"] = aws.StringValue(v)
 	}
 
 	return tfMap

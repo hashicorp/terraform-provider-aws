@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_dms_replication_instance")
@@ -27,19 +26,19 @@ func DataSourceReplicationInstance() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			names.AttrAutoMinorVersionUpgrade: {
+			"auto_minor_version_upgrade": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			names.AttrAvailabilityZone: {
+			"availability_zone": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrEngineVersion: {
+			"engine_version": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrKMSKeyARN: {
+			"kms_key_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -51,11 +50,11 @@ func DataSourceReplicationInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrPreferredMaintenanceWindow: {
+			"preferred_maintenance_window": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrPubliclyAccessible: {
+			"publicly_accessible": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -85,8 +84,8 @@ func DataSourceReplicationInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			names.AttrVPCSecurityGroupIDs: {
+			"tags": tftags.TagsSchemaComputed(),
+			"vpc_security_group_ids": {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
@@ -111,14 +110,14 @@ func dataSourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceDa
 
 	d.SetId(aws.StringValue(instance.ReplicationInstanceIdentifier))
 	d.Set("allocated_storage", instance.AllocatedStorage)
-	d.Set(names.AttrAutoMinorVersionUpgrade, instance.AutoMinorVersionUpgrade)
-	d.Set(names.AttrAvailabilityZone, instance.AvailabilityZone)
-	d.Set(names.AttrEngineVersion, instance.EngineVersion)
-	d.Set(names.AttrKMSKeyARN, instance.KmsKeyId)
+	d.Set("auto_minor_version_upgrade", instance.AutoMinorVersionUpgrade)
+	d.Set("availability_zone", instance.AvailabilityZone)
+	d.Set("engine_version", instance.EngineVersion)
+	d.Set("kms_key_arn", instance.KmsKeyId)
 	d.Set("multi_az", instance.MultiAZ)
 	d.Set("network_type", instance.NetworkType)
-	d.Set(names.AttrPreferredMaintenanceWindow, instance.PreferredMaintenanceWindow)
-	d.Set(names.AttrPubliclyAccessible, instance.PubliclyAccessible)
+	d.Set("preferred_maintenance_window", instance.PreferredMaintenanceWindow)
+	d.Set("publicly_accessible", instance.PubliclyAccessible)
 	arn := aws.StringValue(instance.ReplicationInstanceArn)
 	d.Set("replication_instance_arn", arn)
 	d.Set("replication_instance_class", instance.ReplicationInstanceClass)
@@ -129,7 +128,7 @@ func dataSourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceDa
 	vpcSecurityGroupIDs := tfslices.ApplyToAll(instance.VpcSecurityGroups, func(sg *dms.VpcSecurityGroupMembership) string {
 		return aws.StringValue(sg.VpcSecurityGroupId)
 	})
-	d.Set(names.AttrVPCSecurityGroupIDs, vpcSecurityGroupIDs)
+	d.Set("vpc_security_group_ids", vpcSecurityGroupIDs)
 
 	tags, err := listTags(ctx, conn, arn)
 
@@ -140,7 +139,7 @@ func dataSourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceDa
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
-	if err := d.Set(names.AttrTags, tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

@@ -37,20 +37,20 @@ func TestAccFSxOpenZFSVolume_basic(t *testing.T) {
 				Config: testAccOpenZFSVolumeConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "fsx", regexache.MustCompile(`volume/fs-.+/fsvol-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexache.MustCompile(`volume/fs-.+/fsvol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshots", "false"),
 					resource.TestCheckResourceAttr(resourceName, "data_compression_type", "NONE"),
-					resource.TestCheckResourceAttr(resourceName, "delete_volume_options.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "nfs_exports.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "nfs_exports.0.client_configurations.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "delete_volume_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "nfs_exports.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "nfs_exports.0.client_configurations.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "nfs_exports.0.client_configurations.0.clients", "*"),
 					acctest.CheckResourceAttrGreaterThanValue(resourceName, "nfs_exports.0.client_configurations.0.options.#", 0),
 					resource.TestCheckResourceAttrSet(resourceName, "parent_volume_id"),
 					resource.TestCheckResourceAttr(resourceName, "read_only", "false"),
 					resource.TestCheckResourceAttr(resourceName, "record_size_kib", "128"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "user_and_group_quotas.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "user_and_group_quotas.#", "2"),
 				),
 			},
 			{
@@ -105,9 +105,9 @@ func TestAccFSxOpenZFSVolume_parentVolume(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume),
 					testAccCheckOpenZFSVolumeExists(ctx, resourceName2, &volume2),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "fsx", regexache.MustCompile(`volume/fs-.+/fsvol-.+`)),
-					acctest.MatchResourceAttrRegionalARN(resourceName2, names.AttrARN, "fsx", regexache.MustCompile(`volume/fs-.+/fsvol-.+`)),
-					resource.TestCheckResourceAttrPair(resourceName2, "parent_volume_id", resourceName, names.AttrID),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexache.MustCompile(`volume/fs-.+/fsvol-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName2, "arn", "fsx", regexache.MustCompile(`volume/fs-.+/fsvol-.+`)),
+					resource.TestCheckResourceAttrPair(resourceName2, "parent_volume_id", resourceName, "id"),
 				),
 			},
 			{
@@ -132,11 +132,11 @@ func TestAccFSxOpenZFSVolume_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckOpenZFSVolumeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOpenZFSVolumeConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccOpenZFSVolumeConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -145,22 +145,22 @@ func TestAccFSxOpenZFSVolume_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccOpenZFSVolumeConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccOpenZFSVolumeConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume2),
 					testAccCheckOpenZFSVolumeNotRecreated(&volume1, &volume2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccOpenZFSVolumeConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccOpenZFSVolumeConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume3),
 					testAccCheckOpenZFSVolumeNotRecreated(&volume2, &volume3),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -180,14 +180,14 @@ func TestAccFSxOpenZFSVolume_copyTags(t *testing.T) {
 		CheckDestroy:             testAccCheckOpenZFSVolumeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOpenZFSVolumeConfig_copyTags(rName, acctest.CtKey1, acctest.CtValue1, "true"),
+				Config: testAccOpenZFSVolumeConfig_copyTags(rName, "key1", "value1", "true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume1),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshots", "true"),
-					resource.TestCheckResourceAttr(resourceName, "delete_volume_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "delete_volume_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "delete_volume_options.0", "DELETE_CHILD_VOLUMES_AND_SNAPSHOTS"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -199,15 +199,15 @@ func TestAccFSxOpenZFSVolume_copyTags(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccOpenZFSVolumeConfig_copyTags(rName, acctest.CtKey1, acctest.CtValue1, "false"),
+				Config: testAccOpenZFSVolumeConfig_copyTags(rName, "key1", "value1", "false"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume2),
 					testAccCheckOpenZFSVolumeRecreated(&volume1, &volume2),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshots", "false"),
-					resource.TestCheckResourceAttr(resourceName, "delete_volume_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "delete_volume_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "delete_volume_options.0", "DELETE_CHILD_VOLUMES_AND_SNAPSHOTS"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 		},
@@ -231,7 +231,7 @@ func TestAccFSxOpenZFSVolume_name(t *testing.T) {
 				Config: testAccOpenZFSVolumeConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
 			{
@@ -244,7 +244,7 @@ func TestAccFSxOpenZFSVolume_name(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume2),
 					testAccCheckOpenZFSVolumeNotRecreated(&volume1, &volume2),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
+					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 				),
 			},
 		},
@@ -413,10 +413,10 @@ func TestAccFSxOpenZFSVolume_nfsExports(t *testing.T) {
 				Config: testAccOpenZFSVolumeConfig_nfsExports1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume1),
-					resource.TestCheckResourceAttr(resourceName, "nfs_exports.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "nfs_exports.0.client_configurations.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "nfs_exports.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "nfs_exports.0.client_configurations.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "nfs_exports.0.client_configurations.0.clients", "10.0.1.0/24"),
-					resource.TestCheckResourceAttr(resourceName, "nfs_exports.0.client_configurations.0.options.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "nfs_exports.0.client_configurations.0.options.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "nfs_exports.0.client_configurations.0.options.0", "async"),
 					resource.TestCheckResourceAttr(resourceName, "nfs_exports.0.client_configurations.0.options.1", "rw"),
 				),
@@ -431,8 +431,8 @@ func TestAccFSxOpenZFSVolume_nfsExports(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume2),
 					testAccCheckOpenZFSVolumeNotRecreated(&volume1, &volume2),
-					resource.TestCheckResourceAttr(resourceName, "nfs_exports.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "nfs_exports.0.client_configurations.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "nfs_exports.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "nfs_exports.0.client_configurations.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "nfs_exports.0.client_configurations.*", map[string]string{
 						"clients":   "10.0.1.0/24",
 						"options.0": "async",
@@ -465,11 +465,11 @@ func TestAccFSxOpenZFSVolume_userAndGroupQuotas(t *testing.T) {
 				Config: testAccOpenZFSVolumeConfig_userAndGroupQuotas1(rName, 256),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume1),
-					resource.TestCheckResourceAttr(resourceName, "user_and_group_quotas.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "user_and_group_quotas.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user_and_group_quotas.*", map[string]string{
-						names.AttrID:                 acctest.Ct10,
+						"id":                         "10",
 						"storage_capacity_quota_gib": "256",
-						names.AttrType:               "USER",
+						"type":                       "USER",
 					}),
 				),
 			},
@@ -483,26 +483,26 @@ func TestAccFSxOpenZFSVolume_userAndGroupQuotas(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume2),
 					testAccCheckOpenZFSVolumeNotRecreated(&volume1, &volume2),
-					resource.TestCheckResourceAttr(resourceName, "user_and_group_quotas.#", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "user_and_group_quotas.#", "4"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user_and_group_quotas.*", map[string]string{
-						names.AttrID:                 acctest.Ct10,
+						"id":                         "10",
 						"storage_capacity_quota_gib": "128",
-						names.AttrType:               "USER",
+						"type":                       "USER",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user_and_group_quotas.*", map[string]string{
-						names.AttrID:                 "20",
+						"id":                         "20",
 						"storage_capacity_quota_gib": "1024",
-						names.AttrType:               "GROUP",
+						"type":                       "GROUP",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user_and_group_quotas.*", map[string]string{
-						names.AttrID:                 "5",
+						"id":                         "5",
 						"storage_capacity_quota_gib": "1024",
-						names.AttrType:               "GROUP",
+						"type":                       "GROUP",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user_and_group_quotas.*", map[string]string{
-						names.AttrID:                 "100",
+						"id":                         "100",
 						"storage_capacity_quota_gib": "128",
-						names.AttrType:               "USER",
+						"type":                       "USER",
 					}),
 				),
 			},

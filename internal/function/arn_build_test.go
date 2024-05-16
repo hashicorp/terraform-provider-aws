@@ -18,7 +18,7 @@ func TestARNBuildFunction_known(t *testing.T) {
 	resource.UnitTest(t, resource.TestCase{
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(version.Must(version.NewVersion("1.8.0"))),
+			tfversion.SkipBelow(version.Must(version.NewVersion("1.8.0-beta1"))),
 		},
 		Steps: []resource.TestStep{
 			{

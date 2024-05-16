@@ -7,6 +7,9 @@ import (
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	ssm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssm"
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	ssm_sdkv1 "github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -25,34 +28,28 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceDocument,
+			Factory:  DataSourceDocument,
 			TypeName: "aws_ssm_document",
-			Name:     "Document",
 		},
 		{
-			Factory:  dataSourceInstances,
+			Factory:  DataSourceInstances,
 			TypeName: "aws_ssm_instances",
-			Name:     "Instances",
 		},
 		{
-			Factory:  dataSourceMaintenanceWindows,
+			Factory:  DataSourceMaintenanceWindows,
 			TypeName: "aws_ssm_maintenance_windows",
-			Name:     "Maintenance Windows",
 		},
 		{
-			Factory:  dataSourceParameter,
+			Factory:  DataSourceParameter,
 			TypeName: "aws_ssm_parameter",
-			Name:     "Parameter",
 		},
 		{
-			Factory:  dataSourceParametersByPath,
+			Factory:  DataSourceParametersByPath,
 			TypeName: "aws_ssm_parameters_by_path",
-			Name:     "Parameters By Path",
 		},
 		{
-			Factory:  dataSourcePatchBaseline,
+			Factory:  DataSourcePatchBaseline,
 			TypeName: "aws_ssm_patch_baseline",
-			Name:     "Patch Baseline",
 		},
 	}
 }
@@ -60,15 +57,14 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  resourceActivation,
+			Factory:  ResourceActivation,
 			TypeName: "aws_ssm_activation",
 			Name:     "Activation",
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  resourceAssociation,
+			Factory:  ResourceAssociation,
 			TypeName: "aws_ssm_association",
-			Name:     "Association",
 		},
 		{
 			Factory:  resourceDefaultPatchBaseline,
@@ -76,39 +72,37 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Default Patch Baseline",
 		},
 		{
-			Factory:  resourceDocument,
+			Factory:  ResourceDocument,
 			TypeName: "aws_ssm_document",
 			Name:     "Document",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
+				IdentifierAttribute: "id",
 				ResourceType:        "Document",
 			},
 		},
 		{
-			Factory:  resourceMaintenanceWindow,
+			Factory:  ResourceMaintenanceWindow,
 			TypeName: "aws_ssm_maintenance_window",
 			Name:     "Maintenance Window",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
+				IdentifierAttribute: "id",
 				ResourceType:        "MaintenanceWindow",
 			},
 		},
 		{
-			Factory:  resourceMaintenanceWindowTarget,
+			Factory:  ResourceMaintenanceWindowTarget,
 			TypeName: "aws_ssm_maintenance_window_target",
-			Name:     "Maintenance Window Target",
 		},
 		{
-			Factory:  resourceMaintenanceWindowTask,
+			Factory:  ResourceMaintenanceWindowTask,
 			TypeName: "aws_ssm_maintenance_window_task",
-			Name:     "Maintenance Window Task",
 		},
 		{
-			Factory:  resourceParameter,
+			Factory:  ResourceParameter,
 			TypeName: "aws_ssm_parameter",
 			Name:     "Parameter",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
+				IdentifierAttribute: "id",
 				ResourceType:        "Parameter",
 			},
 		},
@@ -117,24 +111,21 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_ssm_patch_baseline",
 			Name:     "Patch Baseline",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
+				IdentifierAttribute: "id",
 				ResourceType:        "PatchBaseline",
 			},
 		},
 		{
-			Factory:  resourcePatchGroup,
+			Factory:  ResourcePatchGroup,
 			TypeName: "aws_ssm_patch_group",
-			Name:     "Patch Group",
 		},
 		{
-			Factory:  resourceResourceDataSync,
+			Factory:  ResourceResourceDataSync,
 			TypeName: "aws_ssm_resource_data_sync",
-			Name:     "Resource Data Sync",
 		},
 		{
-			Factory:  resourceServiceSetting,
+			Factory:  ResourceServiceSetting,
 			TypeName: "aws_ssm_service_setting",
-			Name:     "Service Setting",
 		},
 	}
 }
@@ -143,12 +134,19 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.SSM
 }
 
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
+func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*ssm_sdkv1.SSM, error) {
+	sess := config["session"].(*session_sdkv1.Session)
+
+	return ssm_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+}
+
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*ssm_sdkv2.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
 	return ssm_sdkv2.NewFromConfig(cfg, func(o *ssm_sdkv2.Options) {
-		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
+		if endpoint := config["endpoint"].(string); endpoint != "" {
 			o.BaseEndpoint = aws_sdkv2.String(endpoint)
 		}
 	}), nil

@@ -36,16 +36,16 @@ func resourceProtection() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrResourceARN: {
+			"resource_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -63,10 +63,10 @@ func resourceProtectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ShieldClient(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &shield.CreateProtectionInput{
 		Name:        aws.String(name),
-		ResourceArn: aws.String(d.Get(names.AttrResourceARN).(string)),
+		ResourceArn: aws.String(d.Get("resource_arn").(string)),
 		Tags:        getTagsIn(ctx),
 	}
 
@@ -97,9 +97,9 @@ func resourceProtectionRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading Shield Protection (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, protection.ProtectionArn)
-	d.Set(names.AttrName, protection.Name)
-	d.Set(names.AttrResourceARN, protection.ResourceArn)
+	d.Set("arn", protection.ProtectionArn)
+	d.Set("name", protection.Name)
+	d.Set("resource_arn", protection.ResourceArn)
 
 	return diags
 }

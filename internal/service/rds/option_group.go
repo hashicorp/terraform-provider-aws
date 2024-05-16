@@ -43,7 +43,7 @@ func ResourceOptionGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -57,20 +57,20 @@ func ResourceOptionGroup() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
+				ConflictsWith: []string{"name_prefix"},
 				ValidateFunc:  validOptionGroupName,
 			},
-			names.AttrNamePrefix: {
+			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
+				ConflictsWith: []string{"name"},
 				ValidateFunc:  validOptionGroupNamePrefix,
 			},
 			"option": {
@@ -92,22 +92,22 @@ func ResourceOptionGroup() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrName: {
+									"name": {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									names.AttrValue: {
+									"value": {
 										Type:     schema.TypeString,
 										Required: true,
 									},
 								},
 							},
 						},
-						names.AttrPort: {
+						"port": {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
-						names.AttrVersion: {
+						"version": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -137,7 +137,7 @@ func resourceOptionGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &rds.CreateOptionGroupInput{
 		EngineName:             aws.String(d.Get("engine_name").(string)),
 		MajorEngineVersion:     aws.String(d.Get("major_engine_version").(string)),
@@ -173,11 +173,11 @@ func resourceOptionGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading RDS DB Option Group (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, option.OptionGroupArn)
+	d.Set("arn", option.OptionGroupArn)
 	d.Set("engine_name", option.EngineName)
 	d.Set("major_engine_version", option.MajorEngineVersion)
-	d.Set(names.AttrName, option.OptionGroupName)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(option.OptionGroupName)))
+	d.Set("name", option.OptionGroupName)
+	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(option.OptionGroupName)))
 	if err := d.Set("option", flattenOptions(option.Options, expandOptionConfiguration(d.Get("option").(*schema.Set).List()))); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting option: %s", err)
 	}

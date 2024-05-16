@@ -35,11 +35,11 @@ func ResourceHTTPNamespace() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -48,7 +48,7 @@ func ResourceHTTPNamespace() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -65,14 +65,14 @@ func ResourceHTTPNamespace() *schema.Resource {
 func resourceHTTPNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &servicediscovery.CreateHttpNamespaceInput{
 		CreatorRequestId: aws.String(id.UniqueId()),
 		Name:             aws.String(name),
 		Tags:             getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -116,14 +116,14 @@ func resourceHTTPNamespaceRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	arn := aws.StringValue(ns.Arn)
-	d.Set(names.AttrARN, arn)
-	d.Set(names.AttrDescription, ns.Description)
+	d.Set("arn", arn)
+	d.Set("description", ns.Description)
 	if ns.Properties != nil && ns.Properties.HttpProperties != nil {
 		d.Set("http_name", ns.Properties.HttpProperties.HttpName)
 	} else {
 		d.Set("http_name", nil)
 	}
-	d.Set(names.AttrName, ns.Name)
+	d.Set("name", ns.Name)
 
 	return nil
 }

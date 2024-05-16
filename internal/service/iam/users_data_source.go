@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_iam_users", name="Users")
@@ -20,7 +19,7 @@ func dataSourceUsers() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceUsersRead,
 		Schema: map[string]*schema.Schema{
-			names.AttrARNs: {
+			"arns": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -30,7 +29,7 @@ func dataSourceUsers() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringIsValidRegExp,
 			},
-			names.AttrNames: {
+			"names": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -58,18 +57,18 @@ func dataSourceUsersRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 
-	var arns, nms []string
+	var arns, names []string
 
 	for _, r := range results {
-		nms = append(nms, aws.ToString(r.UserName))
+		names = append(names, aws.ToString(r.UserName))
 		arns = append(arns, aws.ToString(r.Arn))
 	}
 
-	if err := d.Set(names.AttrNames, nms); err != nil {
+	if err := d.Set("names", names); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting names: %s", err)
 	}
 
-	if err := d.Set(names.AttrARNs, arns); err != nil {
+	if err := d.Set("arns", arns); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting arns: %s", err)
 	}
 

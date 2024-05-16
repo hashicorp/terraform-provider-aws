@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package dynamodb_test
+package dynamodb
 
 import (
 	"bytes"
@@ -11,11 +11,9 @@ import (
 	"slices"
 	"testing"
 
-	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
-	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfdynamodb "github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestExpandTableItemAttributes(t *testing.T) {
@@ -23,24 +21,24 @@ func TestExpandTableItemAttributes(t *testing.T) {
 
 	cases := map[string]struct {
 		input    string
-		expected map[string]awstypes.AttributeValue
+		expected map[string]*dynamodb.AttributeValue
 	}{
 		"B": {
 			input: fmt.Sprintf(`{"attr":{"B":"%s"}}`, base64.StdEncoding.EncodeToString([]byte("blob"))),
-			expected: map[string]awstypes.AttributeValue{
-				"attr": &awstypes.AttributeValueMemberB{
-					Value: []byte("blob"),
+			expected: map[string]*dynamodb.AttributeValue{
+				"attr": {
+					B: []byte("blob"),
 				},
 			},
 		},
 		"BOOL": {
 			input: `{"true":{"BOOL":true},"false":{"BOOL":false}}`,
-			expected: map[string]awstypes.AttributeValue{
-				"true": &awstypes.AttributeValueMemberBOOL{
-					Value: true,
+			expected: map[string]*dynamodb.AttributeValue{
+				"true": {
+					BOOL: aws.Bool(true),
 				},
-				"false": &awstypes.AttributeValueMemberBOOL{
-					Value: false,
+				"false": {
+					BOOL: aws.Bool(false),
 				},
 			},
 		},
@@ -49,9 +47,9 @@ func TestExpandTableItemAttributes(t *testing.T) {
 				base64.StdEncoding.EncodeToString([]byte("blob1")),
 				base64.StdEncoding.EncodeToString([]byte("blob2")),
 			),
-			expected: map[string]awstypes.AttributeValue{
-				"attr": &awstypes.AttributeValueMemberBS{
-					Value: [][]byte{
+			expected: map[string]*dynamodb.AttributeValue{
+				"attr": {
+					BS: [][]byte{
 						[]byte("blob1"),
 						[]byte("blob2"),
 					},
@@ -60,63 +58,63 @@ func TestExpandTableItemAttributes(t *testing.T) {
 		},
 		"L": {
 			input: `{"attr":{"L":[{"S":"one"},{"N":"2"}]}}`,
-			expected: map[string]awstypes.AttributeValue{
-				"attr": &awstypes.AttributeValueMemberL{
-					Value: []awstypes.AttributeValue{
-						&awstypes.AttributeValueMemberS{Value: "one"},
-						&awstypes.AttributeValueMemberN{Value: acctest.Ct2},
+			expected: map[string]*dynamodb.AttributeValue{
+				"attr": {
+					L: []*dynamodb.AttributeValue{
+						{S: aws.String("one")},
+						{N: aws.String("2")},
 					},
 				},
 			},
 		},
 		"M": {
 			input: `{"attr":{"M":{"one":{"S":"one"},"two":{"N":"2"}}}}`,
-			expected: map[string]awstypes.AttributeValue{
-				"attr": &awstypes.AttributeValueMemberM{
-					Value: map[string]awstypes.AttributeValue{
-						"one": &awstypes.AttributeValueMemberS{Value: "one"},
-						"two": &awstypes.AttributeValueMemberN{Value: acctest.Ct2},
+			expected: map[string]*dynamodb.AttributeValue{
+				"attr": {
+					M: map[string]*dynamodb.AttributeValue{
+						"one": {S: aws.String("one")},
+						"two": {N: aws.String("2")},
 					},
 				},
 			},
 		},
 		"N": {
 			input: `{"attr":{"N":"123"}}`,
-			expected: map[string]awstypes.AttributeValue{
-				"attr": &awstypes.AttributeValueMemberN{
-					Value: "123",
+			expected: map[string]*dynamodb.AttributeValue{
+				"attr": {
+					N: aws.String("123"),
 				},
 			},
 		},
 		"NS": {
 			input: `{"attr":{"NS":["42.2","-19"]}}`,
-			expected: map[string]awstypes.AttributeValue{
-				"attr": &awstypes.AttributeValueMemberNS{
-					Value: []string{"42.2", "-19"},
+			expected: map[string]*dynamodb.AttributeValue{
+				"attr": {
+					NS: aws.StringSlice([]string{"42.2", "-19"}),
 				},
 			},
 		},
 		"NULL": {
 			input: `{"attr":{"NULL":true}}`,
-			expected: map[string]awstypes.AttributeValue{
-				"attr": &awstypes.AttributeValueMemberNULL{
-					Value: true,
+			expected: map[string]*dynamodb.AttributeValue{
+				"attr": {
+					NULL: aws.Bool(true),
 				},
 			},
 		},
 		"S": {
 			input: `{"attr":{"S":"value"}}`,
-			expected: map[string]awstypes.AttributeValue{
-				"attr": &awstypes.AttributeValueMemberS{
-					Value: names.AttrValue,
+			expected: map[string]*dynamodb.AttributeValue{
+				"attr": {
+					S: aws.String("value"),
 				},
 			},
 		},
 		"SS": {
 			input: `{"attr":{"SS":["one","two"]}}`,
-			expected: map[string]awstypes.AttributeValue{
-				"attr": &awstypes.AttributeValueMemberSS{
-					Value: []string{"one", "two"},
+			expected: map[string]*dynamodb.AttributeValue{
+				"attr": {
+					SS: aws.StringSlice([]string{"one", "two"}),
 				},
 			},
 		},
@@ -127,7 +125,7 @@ func TestExpandTableItemAttributes(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			actual, err := tfdynamodb.ExpandTableItemAttributes(tc.input)
+			actual, err := ExpandTableItemAttributes(tc.input)
 			if err != nil {
 				t.Fatalf("unexpected error: %s", err)
 			}
@@ -139,36 +137,43 @@ func TestExpandTableItemAttributes(t *testing.T) {
 	}
 }
 
-func attributeValuesEqual(a, b awstypes.AttributeValue) bool {
-	switch a := a.(type) {
-	case *awstypes.AttributeValueMemberB:
-		return bytes.Equal(a.Value, b.(*awstypes.AttributeValueMemberB).Value)
-	case *awstypes.AttributeValueMemberBOOL:
-		return a.Value == b.(*awstypes.AttributeValueMemberBOOL).Value
-	case *awstypes.AttributeValueMemberBS:
-		return slices.EqualFunc(a.Value, b.(*awstypes.AttributeValueMemberBS).Value, func(x, y []byte) bool {
+func attributeValuesEqual(a, b *dynamodb.AttributeValue) bool {
+	if a.B != nil {
+		return bytes.Equal(a.B, b.B)
+	}
+	if a.BOOL != nil {
+		return b.BOOL != nil && aws.BoolValue(a.BOOL) == aws.BoolValue(b.BOOL)
+	}
+	if a.BS != nil {
+		return slices.EqualFunc(a.BS, b.BS, func(x, y []byte) bool {
 			return bytes.Equal(x, y)
 		})
-	case *awstypes.AttributeValueMemberL:
-		return slices.EqualFunc(a.Value, b.(*awstypes.AttributeValueMemberL).Value, attributeValuesEqual)
-	case *awstypes.AttributeValueMemberM:
-		return maps.EqualFunc(a.Value, b.(*awstypes.AttributeValueMemberM).Value, attributeValuesEqual)
-	case *awstypes.AttributeValueMemberN:
-		return a.Value == b.(*awstypes.AttributeValueMemberN).Value
-	case *awstypes.AttributeValueMemberNS:
-		return slices.EqualFunc(a.Value, b.(*awstypes.AttributeValueMemberNS).Value, func(x, y string) bool {
-			return x == y
-		})
-	case *awstypes.AttributeValueMemberNULL:
-		return a.Value == b.(*awstypes.AttributeValueMemberNULL).Value
-	case *awstypes.AttributeValueMemberS:
-		return a.Value == b.(*awstypes.AttributeValueMemberS).Value
-	case *awstypes.AttributeValueMemberSS:
-		return slices.EqualFunc(a.Value, b.(*awstypes.AttributeValueMemberSS).Value, func(x, y string) bool {
-			return x == y
+	}
+	if a.L != nil {
+		return slices.EqualFunc(a.L, b.L, attributeValuesEqual)
+	}
+	if a.M != nil {
+		return maps.EqualFunc(a.M, b.M, attributeValuesEqual)
+	}
+	if a.N != nil {
+		return b.N != nil && aws.StringValue(a.N) == aws.StringValue(b.N)
+	}
+	if a.NS != nil {
+		return slices.EqualFunc(a.NS, b.NS, func(x, y *string) bool {
+			return aws.StringValue(x) == aws.StringValue(y)
 		})
 	}
-
+	if a.NULL != nil {
+		return b.NULL != nil && aws.BoolValue(a.NULL) == aws.BoolValue(b.NULL)
+	}
+	if a.S != nil {
+		return b.S != nil && aws.StringValue(a.S) == aws.StringValue(b.S)
+	}
+	if a.SS != nil {
+		return slices.EqualFunc(a.SS, b.SS, func(x, y *string) bool {
+			return aws.StringValue(x) == aws.StringValue(y)
+		})
+	}
 	return false
 }
 
@@ -176,32 +181,32 @@ func TestFlattenTableItemAttributes(t *testing.T) {
 	t.Parallel()
 
 	cases := map[string]struct {
-		attrs    map[string]awstypes.AttributeValue
+		attrs    map[string]*dynamodb.AttributeValue
 		expected string
 	}{
 		"B": {
-			attrs: map[string]awstypes.AttributeValue{
-				"attr": &awstypes.AttributeValueMemberB{
-					Value: []byte("blob"),
+			attrs: map[string]*dynamodb.AttributeValue{
+				"attr": {
+					B: []byte("blob"),
 				},
 			},
 			expected: fmt.Sprintf(`{"attr":{"B":"%s"}}`, base64.StdEncoding.EncodeToString([]byte("blob"))),
 		},
 		"BOOL": {
-			attrs: map[string]awstypes.AttributeValue{
-				"true": &awstypes.AttributeValueMemberBOOL{
-					Value: true,
+			attrs: map[string]*dynamodb.AttributeValue{
+				"true": {
+					BOOL: aws.Bool(true),
 				},
-				"false": &awstypes.AttributeValueMemberBOOL{
-					Value: false,
+				"false": {
+					BOOL: aws.Bool(false),
 				},
 			},
 			expected: `{"true":{"BOOL":true},"false":{"BOOL":false}}`,
 		},
 		"BS": {
-			attrs: map[string]awstypes.AttributeValue{
-				"attr": &awstypes.AttributeValueMemberBS{
-					Value: [][]byte{
+			attrs: map[string]*dynamodb.AttributeValue{
+				"attr": {
+					BS: [][]byte{
 						[]byte("blob1"),
 						[]byte("blob2"),
 					},
@@ -213,63 +218,63 @@ func TestFlattenTableItemAttributes(t *testing.T) {
 			),
 		},
 		"L": {
-			attrs: map[string]awstypes.AttributeValue{
-				"attr": &awstypes.AttributeValueMemberL{
-					Value: []awstypes.AttributeValue{
-						&awstypes.AttributeValueMemberS{Value: "one"},
-						&awstypes.AttributeValueMemberN{Value: acctest.Ct2},
+			attrs: map[string]*dynamodb.AttributeValue{
+				"attr": {
+					L: []*dynamodb.AttributeValue{
+						{S: aws.String("one")},
+						{N: aws.String("2")},
 					},
 				},
 			},
 			expected: `{"attr":{"L":[{"S":"one"},{"N":"2"}]}}`,
 		},
 		"M": {
-			attrs: map[string]awstypes.AttributeValue{
-				"attr": &awstypes.AttributeValueMemberM{
-					Value: map[string]awstypes.AttributeValue{
-						"one": &awstypes.AttributeValueMemberS{Value: "one"},
-						"two": &awstypes.AttributeValueMemberN{Value: acctest.Ct2},
+			attrs: map[string]*dynamodb.AttributeValue{
+				"attr": {
+					M: map[string]*dynamodb.AttributeValue{
+						"one": {S: aws.String("one")},
+						"two": {N: aws.String("2")},
 					},
 				},
 			},
 			expected: `{"attr":{"M":{"one":{"S":"one"},"two":{"N":"2"}}}}`,
 		},
 		"N": {
-			attrs: map[string]awstypes.AttributeValue{
-				"attr": &awstypes.AttributeValueMemberN{
-					Value: "123",
+			attrs: map[string]*dynamodb.AttributeValue{
+				"attr": {
+					N: aws.String("123"),
 				},
 			},
 			expected: `{"attr":{"N":"123"}}`,
 		},
 		"NS": {
-			attrs: map[string]awstypes.AttributeValue{
-				"attr": &awstypes.AttributeValueMemberNS{
-					Value: []string{"42.2", "-19"},
+			attrs: map[string]*dynamodb.AttributeValue{
+				"attr": {
+					NS: aws.StringSlice([]string{"42.2", "-19"}),
 				},
 			},
 			expected: `{"attr":{"NS":["42.2","-19"]}}`,
 		},
 		"NULL": {
-			attrs: map[string]awstypes.AttributeValue{
-				"attr": &awstypes.AttributeValueMemberNULL{
-					Value: true,
+			attrs: map[string]*dynamodb.AttributeValue{
+				"attr": {
+					NULL: aws.Bool(true),
 				},
 			},
 			expected: `{"attr":{"NULL":true}}`,
 		},
 		"S": {
-			attrs: map[string]awstypes.AttributeValue{
-				"attr": &awstypes.AttributeValueMemberS{
-					Value: names.AttrValue,
+			attrs: map[string]*dynamodb.AttributeValue{
+				"attr": {
+					S: aws.String("value"),
 				},
 			},
 			expected: `{"attr":{"S":"value"}}`,
 		},
 		"SS": {
-			attrs: map[string]awstypes.AttributeValue{
-				"attr": &awstypes.AttributeValueMemberSS{
-					Value: []string{"one", "two"},
+			attrs: map[string]*dynamodb.AttributeValue{
+				"attr": {
+					SS: aws.StringSlice([]string{"one", "two"}),
 				},
 			},
 			expected: `{"attr":{"SS":["one","two"]}}`,
@@ -281,7 +286,7 @@ func TestFlattenTableItemAttributes(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			actual, err := tfdynamodb.FlattenTableItemAttributes(tc.attrs)
+			actual, err := flattenTableItemAttributes(tc.attrs)
 			if err != nil {
 				t.Fatalf("unexpected error: %s", err)
 			}

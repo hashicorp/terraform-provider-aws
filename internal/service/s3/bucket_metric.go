@@ -22,7 +22,6 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_s3_bucket_metric", name="Bucket Metric")
@@ -38,12 +37,12 @@ func resourceBucketMetric() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrBucket: {
+			"bucket": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrFilter: {
+			"filter": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -55,12 +54,12 @@ func resourceBucketMetric() *schema.Resource {
 							ValidateFunc: verify.ValidARN,
 							AtLeastOneOf: []string{"filter.0.access_point", "filter.0.prefix", "filter.0.tags"},
 						},
-						names.AttrPrefix: {
+						"prefix": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							AtLeastOneOf: []string{"filter.0.access_point", "filter.0.prefix", "filter.0.tags"},
 						},
-						names.AttrTags: {
+						"tags": {
 							Type:         schema.TypeMap,
 							Optional:     true,
 							Elem:         &schema.Schema{Type: schema.TypeString},
@@ -69,7 +68,7 @@ func resourceBucketMetric() *schema.Resource {
 					},
 				},
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -83,18 +82,18 @@ func resourceBucketMetricPut(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	metricsConfiguration := &types.MetricsConfiguration{
 		Id: aws.String(name),
 	}
 
-	if v, ok := d.GetOk(names.AttrFilter); ok {
+	if v, ok := d.GetOk("filter"); ok {
 		if tfMap, ok := v.([]interface{})[0].(map[string]interface{}); ok {
 			metricsConfiguration.Filter = expandMetricsFilter(ctx, tfMap)
 		}
 	}
 
-	bucket := d.Get(names.AttrBucket).(string)
+	bucket := d.Get("bucket").(string)
 	input := &s3.PutBucketMetricsConfigurationInput{
 		Bucket:               aws.String(bucket),
 		Id:                   aws.String(name),
@@ -149,13 +148,13 @@ func resourceBucketMetricRead(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.Errorf("reading S3 Bucket Metric (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrBucket, bucket)
+	d.Set("bucket", bucket)
 	if mc.Filter != nil {
-		if err := d.Set(names.AttrFilter, []interface{}{flattenMetricsFilter(ctx, mc.Filter)}); err != nil {
+		if err := d.Set("filter", []interface{}{flattenMetricsFilter(ctx, mc.Filter)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting filter")
 		}
 	}
-	d.Set(names.AttrName, name)
+	d.Set("name", name)
 
 	return diags
 }
@@ -201,12 +200,12 @@ func expandMetricsFilter(ctx context.Context, m map[string]interface{}) types.Me
 	}
 
 	var prefix string
-	if v, ok := m[names.AttrPrefix]; ok {
+	if v, ok := m["prefix"]; ok {
 		prefix = v.(string)
 	}
 
 	var tags []types.Tag
-	if v, ok := m[names.AttrTags]; ok {
+	if v, ok := m["tags"]; ok {
 		tags = Tags(tftags.New(ctx, v).IgnoreAWS())
 	}
 
@@ -272,20 +271,20 @@ func flattenMetricsFilter(ctx context.Context, metricsFilter types.MetricsFilter
 			m["access_point"] = aws.ToString(v)
 		}
 		if v := v.Value.Prefix; v != nil {
-			m[names.AttrPrefix] = aws.ToString(v)
+			m["prefix"] = aws.ToString(v)
 		}
 		if v := v.Value.Tags; v != nil {
-			m[names.AttrTags] = keyValueTags(ctx, v).IgnoreAWS().Map()
+			m["tags"] = keyValueTags(ctx, v).IgnoreAWS().Map()
 		}
 	case *types.MetricsFilterMemberAccessPointArn:
 		m["access_point"] = v.Value
 	case *types.MetricsFilterMemberPrefix:
-		m[names.AttrPrefix] = v.Value
+		m["prefix"] = v.Value
 	case *types.MetricsFilterMemberTag:
 		tags := []types.Tag{
 			v.Value,
 		}
-		m[names.AttrTags] = keyValueTags(ctx, tags).IgnoreAWS().Map()
+		m["tags"] = keyValueTags(ctx, tags).IgnoreAWS().Map()
 	default:
 		return nil
 	}

@@ -34,10 +34,10 @@ func TestAccRedshiftHSMClientCertificate_basic(t *testing.T) {
 				Config: testAccHSMClientCertificateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHSMClientCertificateExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "redshift", regexache.MustCompile(`hsmclientcertificate:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "redshift", regexache.MustCompile(`hsmclientcertificate:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "hsm_client_certificate_identifier", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "hsm_client_certificate_public_key"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -61,11 +61,11 @@ func TestAccRedshiftHSMClientCertificate_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckHSMClientCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHSMClientCertificateConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccHSMClientCertificateConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHSMClientCertificateExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -74,19 +74,19 @@ func TestAccRedshiftHSMClientCertificate_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccHSMClientCertificateConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccHSMClientCertificateConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHSMClientCertificateExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			}, {
-				Config: testAccHSMClientCertificateConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccHSMClientCertificateConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHSMClientCertificateExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},

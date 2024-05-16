@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_codecommit_approval_rule_template_association", name="Approval Rule Template Association")
@@ -43,7 +42,7 @@ func resourceApprovalRuleTemplateAssociation() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
-			names.AttrRepositoryName: {
+			"repository_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -61,7 +60,7 @@ func resourceApprovalRuleTemplateAssociationCreate(ctx context.Context, d *schem
 	conn := meta.(*conns.AWSClient).CodeCommitClient(ctx)
 
 	approvalRuleTemplateName := d.Get("approval_rule_template_name").(string)
-	repositoryName := d.Get(names.AttrRepositoryName).(string)
+	repositoryName := d.Get("repository_name").(string)
 	id := approvalRuleTemplateAssociationCreateResourceID(approvalRuleTemplateName, repositoryName)
 	input := &codecommit.AssociateApprovalRuleTemplateWithRepositoryInput{
 		ApprovalRuleTemplateName: aws.String(approvalRuleTemplateName),
@@ -101,7 +100,7 @@ func resourceApprovalRuleTemplateAssociationRead(ctx context.Context, d *schema.
 	}
 
 	d.Set("approval_rule_template_name", approvalRuleTemplateName)
-	d.Set(names.AttrRepositoryName, repositoryName)
+	d.Set("repository_name", repositoryName)
 
 	return diags
 }

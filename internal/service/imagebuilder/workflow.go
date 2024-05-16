@@ -35,7 +35,7 @@ func ResourceWorkflow() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -50,50 +50,50 @@ func ResourceWorkflow() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"data", names.AttrURI},
+				ExactlyOneOf: []string{"data", "uri"},
 				ValidateFunc: validation.StringLenBetween(1, 16000),
 			},
 			"date_created": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
-			names.AttrKMSKeyID: {
+			"kms_key_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
-			names.AttrOwner: {
+			"owner": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrType: {
+			"type": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(imagebuilder.WorkflowType_Values(), false),
 			},
-			names.AttrURI: {
+			"uri": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"data", names.AttrURI},
+				ExactlyOneOf: []string{"data", "uri"},
 			},
-			names.AttrVersion: {
+			"version": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -111,9 +111,9 @@ func resourceWorkflowCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	input := &imagebuilder.CreateWorkflowInput{
 		ClientToken:     aws.String(id.UniqueId()),
-		Name:            aws.String(d.Get(names.AttrName).(string)),
-		SemanticVersion: aws.String(d.Get(names.AttrVersion).(string)),
-		Type:            aws.String(d.Get(names.AttrType).(string)),
+		Name:            aws.String(d.Get("name").(string)),
+		SemanticVersion: aws.String(d.Get("version").(string)),
+		Type:            aws.String(d.Get("type").(string)),
 		Tags:            getTagsIn(ctx),
 	}
 
@@ -125,15 +125,15 @@ func resourceWorkflowCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.Data = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
+	if v, ok := d.GetOk("kms_key_id"); ok {
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrURI); ok {
+	if v, ok := d.GetOk("uri"); ok {
 		input.Uri = aws.String(v.(string))
 	}
 
@@ -174,19 +174,19 @@ func resourceWorkflowRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	workflow := output.Workflow
 
-	d.Set(names.AttrARN, workflow.Arn)
+	d.Set("arn", workflow.Arn)
 	d.Set("change_description", workflow.ChangeDescription)
 	d.Set("data", workflow.Data)
 	d.Set("date_created", workflow.DateCreated)
-	d.Set(names.AttrDescription, workflow.Description)
-	d.Set(names.AttrName, workflow.Name)
-	d.Set(names.AttrKMSKeyID, workflow.KmsKeyId)
-	d.Set(names.AttrOwner, workflow.Owner)
+	d.Set("description", workflow.Description)
+	d.Set("name", workflow.Name)
+	d.Set("kms_key_id", workflow.KmsKeyId)
+	d.Set("owner", workflow.Owner)
 
 	setTagsOut(ctx, workflow.Tags)
 
-	d.Set(names.AttrType, workflow.Type)
-	d.Set(names.AttrVersion, workflow.Version)
+	d.Set("type", workflow.Type)
+	d.Set("version", workflow.Version)
 
 	return diags
 }

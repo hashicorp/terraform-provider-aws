@@ -28,9 +28,6 @@ const (
 	AccessAnalyzerEndpointID             = "access-analyzer"
 	ACMPCAEndpointID                     = "acm-pca"
 	AMPEndpointID                        = "aps"
-	AppStreamEndpointID                  = "appstream2"
-	ApplicationAutoscalingEndpointID     = "application-autoscaling"
-	AppIntegrationsEndpointID            = "app-integrations"
 	AppConfigEndpointID                  = "appconfig"
 	AmplifyEndpointID                    = "amplify"
 	APIGatewayID                         = "apigateway"
@@ -39,14 +36,10 @@ const (
 	AuditManagerEndpointID               = "auditmanager"
 	AutoScalingPlansEndpointID           = "autoscaling-plans"
 	BatchEndpointID                      = "batch"
-	BedrockAgentEndpointID               = "bedrockagent"
 	BedrockEndpointID                    = "bedrock"
-	BCMDataExportsEndpointID             = "bcm-data-exports"
 	BudgetsEndpointID                    = "budgets"
 	ChimeSDKMediaPipelinesEndpointID     = "media-pipelines-chime"
 	ChimeSDKVoiceEndpointID              = "voice-chime"
-	CloudFormationEndpointID             = "cloudformation"
-	CloudFrontEndpointID                 = "cloudfront"
 	CloudSearchEndpointID                = "cloudsearch"
 	CloudWatchEndpointID                 = "monitoring"
 	Cloud9EndpointID                     = "cloud9"
@@ -60,15 +53,12 @@ const (
 	ECREndpointID                        = "api.ecr"
 	EKSEndpointID                        = "eks"
 	EMREndpointID                        = "elasticmapreduce"
-	EventsEndpointID                     = "events"
 	EvidentlyEndpointID                  = "evidently"
 	FMSEndpointID                        = "fms"
 	IdentityStoreEndpointID              = "identitystore"
 	Inspector2EndpointID                 = "inspector2"
 	IVSChatEndpointID                    = "ivschat"
 	KendraEndpointID                     = "kendra"
-	KMSEndpointID                        = "kms"
-	LambdaEndpointID                     = "lambda"
 	LexV2ModelsEndpointID                = "models-v2-lex"
 	M2EndpointID                         = "m2"
 	MediaConvertEndpointID               = "mediaconvert"
@@ -97,8 +87,6 @@ const (
 	TranscribeEndpointID                 = "transcribe"
 	VerifiedPermissionsEndpointID        = "verifiedpermissions"
 	VPCLatticeEndpointID                 = "vpc-lattice"
-	WAFEndpointID                        = "waf"
-	WAFRegionalEndpointID                = "waf-regional"
 )
 
 // These should move to aws-sdk-go-base.
@@ -231,7 +219,7 @@ func ReverseDNS(hostname string) string {
 // described in detail in README.md.
 type ServiceDatum struct {
 	Aliases            []string
-	AWSServiceEnvVar   string
+	AwsServiceEnvVar   string
 	Brand              string
 	ClientSDKV1        bool
 	DeprecatedEnvVar   string
@@ -241,8 +229,8 @@ type ServiceDatum struct {
 	GoV2Package        string
 	HumanFriendly      string
 	ProviderNameUpper  string
-	SDKID              string
-	TFAWSEnvVar        string
+	SdkId              string
+	TfAwsEnvVar        string
 }
 
 // serviceData key is the AWS provider service package
@@ -278,7 +266,7 @@ func readCSVIntoServiceData() error {
 		p := l.ProviderPackage()
 
 		serviceData[p] = &ServiceDatum{
-			AWSServiceEnvVar:   l.AWSServiceEnvVar(),
+			AwsServiceEnvVar:   l.AwsServiceEnvVar(),
 			Brand:              l.Brand(),
 			ClientSDKV1:        l.ClientSDKV1(),
 			DeprecatedEnvVar:   l.DeprecatedEnvVar(),
@@ -288,8 +276,8 @@ func readCSVIntoServiceData() error {
 			GoV2Package:        l.GoV2Package(),
 			HumanFriendly:      l.HumanFriendly(),
 			ProviderNameUpper:  l.ProviderNameUpper(),
-			SDKID:              l.SDKID(),
-			TFAWSEnvVar:        l.TFAWSEnvVar(),
+			SdkId:              l.SdkId(),
+			TfAwsEnvVar:        l.TfAwsEnvVar(),
 		}
 
 		a := []string{p}
@@ -362,7 +350,7 @@ func Endpoints() []Endpoint {
 type ServiceNameUpper struct {
 	ProviderPackage   string
 	ProviderNameUpper string
-	SDKID             string
+	SdkID             string
 }
 
 func ServiceNamesUpper() []ServiceNameUpper {
@@ -372,7 +360,7 @@ func ServiceNamesUpper() []ServiceNameUpper {
 		sn := ServiceNameUpper{
 			ProviderPackage:   k,
 			ProviderNameUpper: v.ProviderNameUpper,
-			SDKID:             v.SDKID,
+			SdkID:             v.SdkId,
 		}
 		serviceNames = append(serviceNames, sn)
 	}
@@ -398,27 +386,27 @@ func DeprecatedEnvVar(service string) string {
 }
 
 // Deprecated `TF_AWS_<service>_ENDPOINT` envvar defined for some services
-func TFAWSEnvVar(service string) string {
+func TfAwsEnvVar(service string) string {
 	if v, ok := serviceData[service]; ok {
-		return v.TFAWSEnvVar
+		return v.TfAwsEnvVar
 	}
 
 	return ""
 }
 
 // Standard service endpoint envvar defined by AWS
-func AWSServiceEnvVar(service string) string {
+func AwsServiceEnvVar(service string) string {
 	if v, ok := serviceData[service]; ok {
-		return v.AWSServiceEnvVar
+		return v.AwsServiceEnvVar
 	}
 
 	return ""
 }
 
 // Service SDK ID from AWS SDK for Go v2
-func SDKID(service string) string {
+func SdkId(service string) string {
 	if v, ok := serviceData[service]; ok {
-		return v.SDKID
+		return v.SdkId
 	}
 
 	return ""

@@ -5,8 +5,6 @@ package rds
 
 import (
 	"time"
-
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -272,13 +270,13 @@ func TimeoutAction_Values() []string {
 
 const (
 	backupTargetOutposts = "outposts"
-	backupTargetRegion   = names.AttrRegion
+	backupTargetRegion   = "region"
 )
 
 func backupTarget_Values() []string {
 	return []string{
 		backupTargetOutposts,
-		names.AttrRegion,
+		backupTargetRegion,
 	}
 }
 

@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_outposts_outpost_instance_type")
@@ -22,12 +21,12 @@ func DataSourceOutpostInstanceType() *schema.Resource {
 		ReadWithoutTimeout: dataSourceOutpostInstanceTypeRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			names.AttrInstanceType: {
+			"instance_type": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -36,7 +35,7 @@ func DataSourceOutpostInstanceType() *schema.Resource {
 			"preferred_instance_types": {
 				Type:          schema.TypeList,
 				Optional:      true,
-				ConflictsWith: []string{names.AttrInstanceType},
+				ConflictsWith: []string{"instance_type"},
 				Elem:          &schema.Schema{Type: schema.TypeString},
 			},
 		},
@@ -48,7 +47,7 @@ func dataSourceOutpostInstanceTypeRead(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).OutpostsConn(ctx)
 
 	input := &outposts.GetOutpostInstanceTypesInput{
-		OutpostId: aws.String(d.Get(names.AttrARN).(string)), // Accepts both ARN and ID; prefer ARN which is more common
+		OutpostId: aws.String(d.Get("arn").(string)), // Accepts both ARN and ID; prefer ARN which is more common
 	}
 
 	var outpostID string
@@ -85,7 +84,7 @@ func dataSourceOutpostInstanceTypeRead(ctx context.Context, d *schema.ResourceDa
 	var resultInstanceType string
 
 	// Check requested instance type
-	if v, ok := d.GetOk(names.AttrInstanceType); ok {
+	if v, ok := d.GetOk("instance_type"); ok {
 		for _, foundInstanceType := range foundInstanceTypes {
 			if foundInstanceType == v.(string) {
 				resultInstanceType = v.(string)
@@ -129,7 +128,7 @@ func dataSourceOutpostInstanceTypeRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "no Outpost Instance Types found matching criteria; try different search")
 	}
 
-	d.Set(names.AttrInstanceType, resultInstanceType)
+	d.Set("instance_type", resultInstanceType)
 
 	d.SetId(outpostID)
 

@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const emptyBasePathMappingValue = "(none)"
@@ -46,7 +45,7 @@ func resourceBasePathMapping() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			names.AttrDomainName: {
+			"domain_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -63,7 +62,7 @@ func resourceBasePathMappingCreate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	domainName, basePath := d.Get(names.AttrDomainName).(string), d.Get("base_path").(string)
+	domainName, basePath := d.Get("domain_name").(string), d.Get("base_path").(string)
 	id := basePathMappingCreateResourceID(domainName, basePath)
 	input := &apigateway.CreateBasePathMappingInput{
 		RestApiId:  aws.String(d.Get("api_id").(string)),
@@ -116,7 +115,7 @@ func resourceBasePathMappingRead(ctx context.Context, d *schema.ResourceData, me
 
 	d.Set("api_id", mapping.RestApiId)
 	d.Set("base_path", mappingBasePath)
-	d.Set(names.AttrDomainName, domainName)
+	d.Set("domain_name", domainName)
 	d.Set("stage_name", mapping.Stage)
 
 	return diags
@@ -170,7 +169,7 @@ func resourceBasePathMappingUpdate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if d.HasChange("base_path") {
-		id := basePathMappingCreateResourceID(d.Get(names.AttrDomainName).(string), d.Get("base_path").(string))
+		id := basePathMappingCreateResourceID(d.Get("domain_name").(string), d.Get("base_path").(string))
 		d.SetId(id)
 	}
 

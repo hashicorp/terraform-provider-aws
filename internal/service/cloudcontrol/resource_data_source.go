@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_cloudcontrolapi_resource", name="Resource")
@@ -22,15 +21,15 @@ func dataSourceResource() *schema.Resource {
 		ReadWithoutTimeout: dataSourceResourceRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrIdentifier: {
+			"identifier": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrProperties: {
+			"properties": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrRoleARN: {
+			"role_arn": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -52,13 +51,13 @@ func dataSourceResourceRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	conn := meta.(*conns.AWSClient).CloudControlClient(ctx)
 
-	identifier := d.Get(names.AttrIdentifier).(string)
+	identifier := d.Get("identifier").(string)
 	typeName := d.Get("type_name").(string)
 	resourceDescription, err := findResource(ctx, conn,
 		identifier,
 		typeName,
 		d.Get("type_version_id").(string),
-		d.Get(names.AttrRoleARN).(string),
+		d.Get("role_arn").(string),
 	)
 
 	if err != nil {
@@ -67,7 +66,7 @@ func dataSourceResourceRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.SetId(aws.ToString(resourceDescription.Identifier))
 
-	d.Set(names.AttrProperties, resourceDescription.Properties)
+	d.Set("properties", resourceDescription.Properties)
 
 	return diags
 }

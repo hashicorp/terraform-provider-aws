@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ami_ids")
@@ -37,8 +36,8 @@ func DataSourceAMIIDs() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrFilter: customFiltersSchema(),
-			names.AttrIDs: {
+			"filter": customFiltersSchema(),
+			"ids": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -84,7 +83,7 @@ func dataSourceAMIIDsRead(ctx context.Context, d *schema.ResourceData, meta inte
 		input.ExecutableUsers = flex.ExpandStringList(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk(names.AttrFilter); ok {
+	if v, ok := d.GetOk("filter"); ok {
 		input.Filters = newCustomFilterList(v.(*schema.Set))
 	}
 
@@ -130,7 +129,7 @@ func dataSourceAMIIDsRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.SetId(fmt.Sprintf("%d", create.StringHashcode(input.String())))
-	d.Set(names.AttrIDs, imageIDs)
+	d.Set("ids", imageIDs)
 
 	return diags
 }

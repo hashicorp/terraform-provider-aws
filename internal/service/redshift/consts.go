@@ -5,8 +5,6 @@ package redshift
 
 import (
 	"time"
-
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -37,7 +35,7 @@ const (
 )
 
 const (
-	clusterAvailabilityZoneRelocationStatusEnabled          = names.AttrEnabled
+	clusterAvailabilityZoneRelocationStatusEnabled          = "enabled"
 	clusterAvailabilityZoneRelocationStatusDisabled         = "disabled"
 	clusterAvailabilityZoneRelocationStatusPendingEnabling  = "pending_enabling"
 	clusterAvailabilityZoneRelocationStatusPendingDisabling = "pending_disabling"
@@ -45,7 +43,7 @@ const (
 
 func clusterAvailabilityZoneRelocationStatus_TerminalValues() []string {
 	return []string{
-		names.AttrEnabled,
+		clusterAvailabilityZoneRelocationStatusEnabled,
 		clusterAvailabilityZoneRelocationStatusDisabled,
 	}
 }

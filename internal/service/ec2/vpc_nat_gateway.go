@@ -63,7 +63,7 @@ func ResourceNATGateway() *schema.Resource {
 				Default:      ec2.ConnectivityTypePublic,
 				ValidateFunc: validation.StringInSlice(ec2.ConnectivityType_Values(), false),
 			},
-			names.AttrNetworkInterfaceID: {
+			"network_interface_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -97,7 +97,7 @@ func ResourceNATGateway() *schema.Resource {
 				Elem:          &schema.Schema{Type: schema.TypeString},
 				ConflictsWith: []string{"secondary_private_ip_address_count"},
 			},
-			names.AttrSubnetID: {
+			"subnet_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -147,7 +147,7 @@ func resourceNATGatewayCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.SecondaryPrivateIpAddresses = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk(names.AttrSubnetID); ok {
+	if v, ok := d.GetOk("subnet_id"); ok {
 		input.SubnetId = aws.String(v.(string))
 	}
 
@@ -190,7 +190,7 @@ func resourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta in
 		if isPrimary := aws.BoolValue(address.IsPrimary); isPrimary || len(ng.NatGatewayAddresses) == 1 {
 			d.Set("allocation_id", address.AllocationId)
 			d.Set("association_id", address.AssociationId)
-			d.Set(names.AttrNetworkInterfaceID, address.NetworkInterfaceId)
+			d.Set("network_interface_id", address.NetworkInterfaceId)
 			d.Set("private_ip", address.PrivateIp)
 			d.Set("public_ip", address.PublicIp)
 		} else if !isPrimary {
@@ -207,7 +207,7 @@ func resourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("secondary_allocation_ids", secondaryAllocationIDs)
 	d.Set("secondary_private_ip_address_count", len(secondaryPrivateIPAddresses))
 	d.Set("secondary_private_ip_addresses", secondaryPrivateIPAddresses)
-	d.Set(names.AttrSubnetID, ng.SubnetId)
+	d.Set("subnet_id", ng.SubnetId)
 
 	setTagsOut(ctx, ng.Tags)
 

@@ -38,11 +38,11 @@ func resourceVPCIngressConnection() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDomainName: {
+			"domain_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -52,18 +52,18 @@ func resourceVPCIngressConnection() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrVPCEndpointID: {
+						"vpc_endpoint_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						names.AttrVPCID: {
+						"vpc_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
 					},
 				},
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -72,7 +72,7 @@ func resourceVPCIngressConnection() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -89,7 +89,7 @@ func resourceVPCIngressConnectionCreate(ctx context.Context, d *schema.ResourceD
 
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &apprunner.CreateVpcIngressConnectionInput{
 		ServiceArn:               aws.String(d.Get("service_arn").(string)),
 		Tags:                     getTagsIn(ctx),
@@ -132,14 +132,14 @@ func resourceVPCIngressConnectionRead(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "reading App Runner VPC Ingress Connection (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, connection.VpcIngressConnectionArn)
-	d.Set(names.AttrDomainName, connection.DomainName)
+	d.Set("arn", connection.VpcIngressConnectionArn)
+	d.Set("domain_name", connection.DomainName)
 	if err := d.Set("ingress_vpc_configuration", flattenIngressVPCConfiguration(connection.IngressVpcConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ingress_vpc_configuration: %s", err)
 	}
-	d.Set(names.AttrName, connection.VpcIngressConnectionName)
+	d.Set("name", connection.VpcIngressConnectionName)
 	d.Set("service_arn", connection.ServiceArn)
-	d.Set(names.AttrStatus, connection.Status)
+	d.Set("status", connection.Status)
 
 	return diags
 }
@@ -270,11 +270,11 @@ func expandIngressVPCConfiguration(l []interface{}) *types.IngressVpcConfigurati
 
 	configuration := &types.IngressVpcConfiguration{}
 
-	if v, ok := m[names.AttrVPCID].(string); ok && v != "" {
+	if v, ok := m["vpc_id"].(string); ok && v != "" {
 		configuration.VpcId = aws.String(v)
 	}
 
-	if v, ok := m[names.AttrVPCEndpointID].(string); ok && v != "" {
+	if v, ok := m["vpc_endpoint_id"].(string); ok && v != "" {
 		configuration.VpcEndpointId = aws.String(v)
 	}
 
@@ -287,8 +287,8 @@ func flattenIngressVPCConfiguration(ingressVpcConfiguration *types.IngressVpcCon
 	}
 
 	m := map[string]interface{}{
-		names.AttrVPCID:         aws.ToString(ingressVpcConfiguration.VpcId),
-		names.AttrVPCEndpointID: aws.ToString(ingressVpcConfiguration.VpcEndpointId),
+		"vpc_id":          aws.ToString(ingressVpcConfiguration.VpcId),
+		"vpc_endpoint_id": aws.ToString(ingressVpcConfiguration.VpcEndpointId),
 	}
 
 	return []interface{}{m}

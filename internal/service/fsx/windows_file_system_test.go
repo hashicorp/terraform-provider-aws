@@ -38,31 +38,31 @@ func TestAccFSxWindowsFileSystem_basic(t *testing.T) {
 				Config: testAccWindowsFileSystemConfig_basic(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(ctx, resourceName, &filesystem),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "fsx", regexache.MustCompile(`file-system/fs-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "aliases.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.#", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexache.MustCompile(`file-system/fs-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "aliases.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.0.file_access_audit_log_level", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.0.file_share_access_audit_log_level", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "7"),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", "false"),
 					resource.TestMatchResourceAttr(resourceName, "daily_automatic_backup_start_time", regexache.MustCompile(`^\d\d:\d\d$`)),
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", "SINGLE_AZ_1"),
-					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.iops", "96"),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.mode", "AUTOMATIC"),
-					resource.TestMatchResourceAttr(resourceName, names.AttrDNSName, regexache.MustCompile(`fs-.+\..+`)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrKMSKeyID, "kms", regexache.MustCompile(`key/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", acctest.Ct1),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "self_managed_active_directory.#", acctest.Ct0),
+					resource.TestMatchResourceAttr(resourceName, "dns_name", regexache.MustCompile(`fs-.+\..+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "kms_key_id", "kms", regexache.MustCompile(`key/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "1"),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "self_managed_active_directory.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "skip_final_backup", "true"),
 					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "32"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "SSD"),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", "SSD"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "8"),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
 					resource.TestMatchResourceAttr(resourceName, "weekly_maintenance_start_time", regexache.MustCompile(`^\d:\d\d:\d\d$`)),
 				),
 			},
@@ -71,7 +71,7 @@ func TestAccFSxWindowsFileSystem_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrSecurityGroupIDs,
+					"security_group_ids",
 					"skip_final_backup",
 				},
 			},
@@ -121,24 +121,24 @@ func TestAccFSxWindowsFileSystem_singleAz2(t *testing.T) {
 				Config: testAccWindowsFileSystemConfig_subnetIDs1SingleType(rName, domainName, "SINGLE_AZ_2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(ctx, resourceName, &filesystem),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "fsx", regexache.MustCompile(`file-system/fs-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "aliases.#", acctest.Ct0),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexache.MustCompile(`file-system/fs-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "aliases.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "7"),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", "false"),
 					resource.TestMatchResourceAttr(resourceName, "daily_automatic_backup_start_time", regexache.MustCompile(`^\d\d:\d\d$`)),
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", "SINGLE_AZ_2"),
-					resource.TestMatchResourceAttr(resourceName, names.AttrDNSName, regexache.MustCompile(`^amznfsx\w{8}\.\w{8}\.test$`)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrKMSKeyID, "kms", regexache.MustCompile(`key/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", acctest.Ct1),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "self_managed_active_directory.#", acctest.Ct0),
+					resource.TestMatchResourceAttr(resourceName, "dns_name", regexache.MustCompile(`^amznfsx\w{8}\.\w{8}\.test$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "kms_key_id", "kms", regexache.MustCompile(`key/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "1"),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "self_managed_active_directory.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "skip_final_backup", "true"),
 					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "32"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "SSD"),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", "SSD"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "8"),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
 					resource.TestMatchResourceAttr(resourceName, "weekly_maintenance_start_time", regexache.MustCompile(`^\d:\d\d:\d\d$`)),
 				),
 			},
@@ -147,7 +147,7 @@ func TestAccFSxWindowsFileSystem_singleAz2(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrSecurityGroupIDs,
+					"security_group_ids",
 					"skip_final_backup",
 				},
 			},
@@ -173,7 +173,7 @@ func TestAccFSxWindowsFileSystem_storageTypeHdd(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(ctx, resourceName, &filesystem),
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", "SINGLE_AZ_2"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "HDD"),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", "HDD"),
 				),
 			},
 			{
@@ -181,7 +181,7 @@ func TestAccFSxWindowsFileSystem_storageTypeHdd(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrSecurityGroupIDs,
+					"security_group_ids",
 					"skip_final_backup",
 				},
 			},
@@ -206,23 +206,23 @@ func TestAccFSxWindowsFileSystem_multiAz(t *testing.T) {
 				Config: testAccWindowsFileSystemConfig_subnetIDs2(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(ctx, resourceName, &filesystem),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "fsx", regexache.MustCompile(`file-system/fs-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "aliases.#", acctest.Ct0),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexache.MustCompile(`file-system/fs-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "aliases.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "7"),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", "false"),
 					resource.TestMatchResourceAttr(resourceName, "daily_automatic_backup_start_time", regexache.MustCompile(`^\d\d:\d\d$`)),
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", "MULTI_AZ_1"),
-					resource.TestMatchResourceAttr(resourceName, names.AttrDNSName, regexache.MustCompile(`^amznfsx\w{8}\.\w{8}\.test$`)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrKMSKeyID, "kms", regexache.MustCompile(`key/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", acctest.Ct2),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "self_managed_active_directory.#", acctest.Ct0),
+					resource.TestMatchResourceAttr(resourceName, "dns_name", regexache.MustCompile(`^amznfsx\w{8}\.\w{8}\.test$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "kms_key_id", "kms", regexache.MustCompile(`key/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "2"),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "self_managed_active_directory.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "skip_final_backup", "true"),
 					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "32"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "SSD"),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", "SSD"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "8"),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
 					resource.TestMatchResourceAttr(resourceName, "weekly_maintenance_start_time", regexache.MustCompile(`^\d:\d\d:\d\d$`)),
 				),
 			},
@@ -231,7 +231,7 @@ func TestAccFSxWindowsFileSystem_multiAz(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrSecurityGroupIDs,
+					"security_group_ids",
 					"skip_final_backup",
 				},
 			},
@@ -256,7 +256,7 @@ func TestAccFSxWindowsFileSystem_aliases(t *testing.T) {
 				Config: testAccWindowsFileSystemConfig_aliases1(rName, domainName, "filesystem1.example.com"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(ctx, resourceName, &filesystem1),
-					resource.TestCheckResourceAttr(resourceName, "aliases.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "aliases.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "aliases.0", "filesystem1.example.com"),
 				),
 			},
@@ -265,7 +265,7 @@ func TestAccFSxWindowsFileSystem_aliases(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrSecurityGroupIDs,
+					"security_group_ids",
 					"skip_final_backup",
 				},
 			},
@@ -274,7 +274,7 @@ func TestAccFSxWindowsFileSystem_aliases(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckWindowsFileSystemNotRecreated(&filesystem1, &filesystem2),
-					resource.TestCheckResourceAttr(resourceName, "aliases.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "aliases.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "aliases.0", "filesystem2.example.com"),
 					resource.TestCheckResourceAttr(resourceName, "aliases.1", "filesystem3.example.com"),
 				),
@@ -284,7 +284,7 @@ func TestAccFSxWindowsFileSystem_aliases(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(ctx, resourceName, &filesystem3),
 					testAccCheckWindowsFileSystemNotRecreated(&filesystem2, &filesystem3),
-					resource.TestCheckResourceAttr(resourceName, "aliases.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "aliases.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "aliases.0", "filesystem3.example.com"),
 				),
 			},
@@ -317,7 +317,7 @@ func TestAccFSxWindowsFileSystem_automaticBackupRetentionDays(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrSecurityGroupIDs,
+					"security_group_ids",
 					"skip_final_backup",
 				},
 			},
@@ -326,7 +326,7 @@ func TestAccFSxWindowsFileSystem_automaticBackupRetentionDays(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckWindowsFileSystemNotRecreated(&filesystem1, &filesystem2),
-					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "0"),
 				),
 			},
 			{
@@ -366,7 +366,7 @@ func TestAccFSxWindowsFileSystem_copyTagsToBackups(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrSecurityGroupIDs,
+					"security_group_ids",
 					"skip_final_backup",
 				},
 			},
@@ -407,7 +407,7 @@ func TestAccFSxWindowsFileSystem_dailyAutomaticBackupStartTime(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrSecurityGroupIDs,
+					"security_group_ids",
 					"skip_final_backup",
 				},
 			},
@@ -442,7 +442,7 @@ func TestAccFSxWindowsFileSystem_kmsKeyID(t *testing.T) {
 				Config: testAccWindowsFileSystemConfig_kmsKeyID1(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(ctx, resourceName, &filesystem1),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, kmsKeyResourceName1, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName1, "arn"),
 				),
 			},
 			{
@@ -450,7 +450,7 @@ func TestAccFSxWindowsFileSystem_kmsKeyID(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrSecurityGroupIDs,
+					"security_group_ids",
 					"skip_final_backup",
 				},
 			},
@@ -459,7 +459,7 @@ func TestAccFSxWindowsFileSystem_kmsKeyID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckWindowsFileSystemRecreated(&filesystem1, &filesystem2),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, kmsKeyResourceName2, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName2, "arn"),
 				),
 			},
 		},
@@ -483,7 +483,7 @@ func TestAccFSxWindowsFileSystem_securityGroupIDs(t *testing.T) {
 				Config: testAccWindowsFileSystemConfig_securityGroupIDs1(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(ctx, resourceName, &filesystem1),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
 				),
 			},
 			{
@@ -491,7 +491,7 @@ func TestAccFSxWindowsFileSystem_securityGroupIDs(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrSecurityGroupIDs,
+					"security_group_ids",
 					"skip_final_backup",
 				},
 			},
@@ -500,7 +500,7 @@ func TestAccFSxWindowsFileSystem_securityGroupIDs(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckWindowsFileSystemRecreated(&filesystem1, &filesystem2),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "2"),
 				),
 			},
 		},
@@ -524,7 +524,7 @@ func TestAccFSxWindowsFileSystem_selfManagedActiveDirectory(t *testing.T) {
 				Config: testAccWindowsFileSystemConfig_selfManagedActiveDirectory(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(ctx, resourceName, &filesystem),
-					resource.TestCheckResourceAttr(resourceName, "self_managed_active_directory.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "self_managed_active_directory.#", "1"),
 				),
 			},
 			{
@@ -532,7 +532,7 @@ func TestAccFSxWindowsFileSystem_selfManagedActiveDirectory(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrSecurityGroupIDs,
+					"security_group_ids",
 					"self_managed_active_directory",
 					"skip_final_backup",
 				},
@@ -567,7 +567,7 @@ func TestAccFSxWindowsFileSystem_storageCapacity(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrSecurityGroupIDs,
+					"security_group_ids",
 					"skip_final_backup",
 				},
 			},
@@ -601,7 +601,7 @@ func TestAccFSxWindowsFileSystem_fromBackup(t *testing.T) {
 				Config: testAccWindowsFileSystemConfig_fromBackup(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(ctx, resourceName, &filesystem),
-					resource.TestCheckResourceAttrPair(resourceName, "backup_id", "aws_fsx_backup.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "backup_id", "aws_fsx_backup.test", "id"),
 				),
 			},
 			{
@@ -609,7 +609,7 @@ func TestAccFSxWindowsFileSystem_fromBackup(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrSecurityGroupIDs,
+					"security_group_ids",
 					"skip_final_backup",
 					"backup_id",
 				},
@@ -632,11 +632,11 @@ func TestAccFSxWindowsFileSystem_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckWindowsFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWindowsFileSystemConfig_tags1(rName, domainName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccWindowsFileSystemConfig_tags1(rName, domainName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(ctx, resourceName, &filesystem1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -644,27 +644,27 @@ func TestAccFSxWindowsFileSystem_tags(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrSecurityGroupIDs,
+					"security_group_ids",
 					"skip_final_backup",
 				},
 			},
 			{
-				Config: testAccWindowsFileSystemConfig_tags2(rName, domainName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccWindowsFileSystemConfig_tags2(rName, domainName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckWindowsFileSystemNotRecreated(&filesystem1, &filesystem2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccWindowsFileSystemConfig_tags1(rName, domainName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccWindowsFileSystemConfig_tags1(rName, domainName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(ctx, resourceName, &filesystem3),
 					testAccCheckWindowsFileSystemNotRecreated(&filesystem2, &filesystem3),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -696,7 +696,7 @@ func TestAccFSxWindowsFileSystem_throughputCapacity(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrSecurityGroupIDs,
+					"security_group_ids",
 					"skip_final_backup",
 				},
 			},
@@ -737,7 +737,7 @@ func TestAccFSxWindowsFileSystem_weeklyMaintenanceStartTime(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrSecurityGroupIDs,
+					"security_group_ids",
 					"skip_final_backup",
 				},
 			},
@@ -767,12 +767,12 @@ func TestAccFSxWindowsFileSystem_audit(t *testing.T) {
 		CheckDestroy:             testAccCheckWindowsFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWindowsFileSystemConfig_audit(rName, domainName, fsx.WindowsAccessAuditLogLevelSuccessOnly),
+				Config: testAccWindowsFileSystemConfig_audit(rName, domainName, "SUCCESS_ONLY"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(ctx, resourceName, &filesystem),
-					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.0.file_access_audit_log_level", fsx.WindowsAccessAuditLogLevelSuccessOnly),
-					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.0.file_share_access_audit_log_level", fsx.WindowsAccessAuditLogLevelSuccessOnly),
+					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.0.file_access_audit_log_level", "SUCCESS_ONLY"),
+					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.0.file_share_access_audit_log_level", "SUCCESS_ONLY"),
 					resource.TestCheckResourceAttrSet(resourceName, "audit_log_configuration.0.audit_log_destination"),
 				),
 			},
@@ -781,27 +781,18 @@ func TestAccFSxWindowsFileSystem_audit(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrSecurityGroupIDs,
+					"security_group_ids",
 					"skip_final_backup",
 				},
 			},
 			{
-				Config: testAccWindowsFileSystemConfig_audit(rName, domainName, fsx.WindowsAccessAuditLogLevelSuccessAndFailure),
+				Config: testAccWindowsFileSystemConfig_audit(rName, domainName, "SUCCESS_AND_FAILURE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(ctx, resourceName, &filesystem),
-					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.0.file_access_audit_log_level", fsx.WindowsAccessAuditLogLevelSuccessAndFailure),
-					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.0.file_share_access_audit_log_level", fsx.WindowsAccessAuditLogLevelSuccessAndFailure),
+					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.0.file_access_audit_log_level", "SUCCESS_AND_FAILURE"),
+					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.0.file_share_access_audit_log_level", "SUCCESS_AND_FAILURE"),
 					resource.TestCheckResourceAttrSet(resourceName, "audit_log_configuration.0.audit_log_destination"),
-				),
-			},
-			{
-				Config: testAccWindowsFileSystemConfig_auditNoDestination(rName, domainName, fsx.WindowsAccessAuditLogLevelDisabled),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWindowsFileSystemExists(ctx, resourceName, &filesystem),
-					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.0.file_access_audit_log_level", fsx.WindowsAccessAuditLogLevelDisabled),
-					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.0.file_share_access_audit_log_level", fsx.WindowsAccessAuditLogLevelDisabled),
 				),
 			},
 		},
@@ -825,7 +816,7 @@ func TestAccFSxWindowsFileSystem_diskIops(t *testing.T) {
 				Config: testAccWindowsFileSystemConfig_diskIOPSConfiguration(rName, domainName, 192),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(ctx, resourceName, &filesystem1),
-					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.mode", "USER_PROVISIONED"),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.iops", "192"),
 				),
@@ -835,7 +826,7 @@ func TestAccFSxWindowsFileSystem_diskIops(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrSecurityGroupIDs,
+					"security_group_ids",
 					"skip_final_backup",
 				},
 			},
@@ -844,7 +835,7 @@ func TestAccFSxWindowsFileSystem_diskIops(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckWindowsFileSystemNotRecreated(&filesystem1, &filesystem2),
-					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.mode", "USER_PROVISIONED"),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.iops", "256"),
 				),
@@ -1390,31 +1381,6 @@ resource "aws_fsx_windows_file_system" "test" {
 
   audit_log_configuration {
     audit_log_destination             = aws_cloudwatch_log_group.test.arn
-    file_access_audit_log_level       = %[2]q
-    file_share_access_audit_log_level = %[2]q
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName, status))
-}
-
-func testAccWindowsFileSystemConfig_auditNoDestination(rName, domain, status string) string {
-	return acctest.ConfigCompose(testAccWindowsFileSystemConfig_base(rName, domain), fmt.Sprintf(`
-resource aws_cloudwatch_log_group "test" {
-  name = "/aws/fsx/%[1]s"
-}
-
-resource "aws_fsx_windows_file_system" "test" {
-  active_directory_id = aws_directory_service_directory.test.id
-  skip_final_backup   = true
-  storage_capacity    = 32
-  subnet_ids          = [aws_subnet.test[0].id]
-  throughput_capacity = 32
-
-  audit_log_configuration {
     file_access_audit_log_level       = %[2]q
     file_share_access_audit_log_level = %[2]q
   }

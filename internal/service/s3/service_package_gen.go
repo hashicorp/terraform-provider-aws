@@ -77,7 +77,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_s3_bucket",
 			Name:     "Bucket",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrBucket,
+				IdentifierAttribute: "bucket",
 				ResourceType:        "Bucket",
 			},
 		},
@@ -136,7 +136,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_s3_bucket_object",
 			Name:     "Bucket Object",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "arn",
 				ResourceType:        "BucketObject",
 			},
 		},
@@ -190,7 +190,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_s3_object",
 			Name:     "Object",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "arn",
 				ResourceType:        "Object",
 			},
 		},
@@ -199,7 +199,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_s3_object_copy",
 			Name:     "Object Copy",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "arn",
 				ResourceType:        "ObjectCopy",
 			},
 		},

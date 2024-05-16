@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -54,7 +55,7 @@ func (r *keyValueStoreResource) Schema(ctx context.Context, request resource.Sch
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrComment: schema.StringAttribute{
+			"comment": schema.StringAttribute{
 				Optional: true,
 			},
 			"etag": schema.StringAttribute{
@@ -300,8 +301,8 @@ func statusKeyValueStore(ctx context.Context, conn *cloudfront.Client, name stri
 
 func waitKeyValueStoreCreated(ctx context.Context, conn *cloudfront.Client, name string, timeout time.Duration) (*cloudfront.DescribeKeyValueStoreOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{keyValueStoreStatusProvisioning},
-		Target:  []string{keyValueStoreStatusReady},
+		Pending: enum.Slice("PROVISIONING"),
+		Target:  enum.Slice("READY"),
 		Refresh: statusKeyValueStore(ctx, conn, name),
 		Timeout: timeout,
 	}

@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_appsync_domain_name")
@@ -38,22 +37,22 @@ func ResourceDomainName() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrCertificateARN: {
+			"certificate_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			names.AttrDomainName: {
+			"domain_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrHostedZoneID: {
+			"hosted_zone_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -66,9 +65,9 @@ func resourceDomainNameCreate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
 	params := &appsync.CreateDomainNameInput{
-		CertificateArn: aws.String(d.Get(names.AttrCertificateARN).(string)),
-		Description:    aws.String(d.Get(names.AttrDescription).(string)),
-		DomainName:     aws.String(d.Get(names.AttrDomainName).(string)),
+		CertificateArn: aws.String(d.Get("certificate_arn").(string)),
+		Description:    aws.String(d.Get("description").(string)),
+		DomainName:     aws.String(d.Get("domain_name").(string)),
 	}
 
 	resp, err := conn.CreateDomainNameWithContext(ctx, params)
@@ -96,10 +95,10 @@ func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "getting Appsync Domain Name %q: %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrDomainName, domainName.DomainName)
-	d.Set(names.AttrDescription, domainName.Description)
-	d.Set(names.AttrCertificateARN, domainName.CertificateArn)
-	d.Set(names.AttrHostedZoneID, domainName.HostedZoneId)
+	d.Set("domain_name", domainName.DomainName)
+	d.Set("description", domainName.Description)
+	d.Set("certificate_arn", domainName.CertificateArn)
+	d.Set("hosted_zone_id", domainName.HostedZoneId)
 	d.Set("appsync_domain_name", domainName.AppsyncDomainName)
 
 	return diags
@@ -113,8 +112,8 @@ func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		DomainName: aws.String(d.Id()),
 	}
 
-	if d.HasChange(names.AttrDescription) {
-		params.Description = aws.String(d.Get(names.AttrDescription).(string))
+	if d.HasChange("description") {
+		params.Description = aws.String(d.Get("description").(string))
 	}
 
 	_, err := conn.UpdateDomainNameWithContext(ctx, params)

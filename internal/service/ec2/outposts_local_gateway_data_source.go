@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ec2_local_gateway")
@@ -28,7 +27,7 @@ func DataSourceLocalGateway() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrID: {
+			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -39,17 +38,17 @@ func DataSourceLocalGateway() *schema.Resource {
 				Computed: true,
 			},
 
-			names.AttrFilter: customFiltersSchema(),
+			"filter": customFiltersSchema(),
 
-			names.AttrState: {
+			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
 
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 
-			names.AttrOwnerID: {
+			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -64,24 +63,24 @@ func dataSourceLocalGatewayRead(ctx context.Context, d *schema.ResourceData, met
 
 	req := &ec2.DescribeLocalGatewaysInput{}
 
-	if v, ok := d.GetOk(names.AttrID); ok {
+	if v, ok := d.GetOk("id"); ok {
 		req.LocalGatewayIds = []*string{aws.String(v.(string))}
 	}
 
 	req.Filters = newAttributeFilterList(
 		map[string]string{
-			names.AttrState: d.Get(names.AttrState).(string),
+			"state": d.Get("state").(string),
 		},
 	)
 
-	if tags, tagsOk := d.GetOk(names.AttrTags); tagsOk {
+	if tags, tagsOk := d.GetOk("tags"); tagsOk {
 		req.Filters = append(req.Filters, newTagFilterList(
 			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
 	}
 
 	req.Filters = append(req.Filters, newCustomFilterList(
-		d.Get(names.AttrFilter).(*schema.Set),
+		d.Get("filter").(*schema.Set),
 	)...)
 	if len(req.Filters) == 0 {
 		// Don't send an empty filters list; the EC2 API won't accept it.
@@ -104,10 +103,10 @@ func dataSourceLocalGatewayRead(ctx context.Context, d *schema.ResourceData, met
 
 	d.SetId(aws.StringValue(localGateway.LocalGatewayId))
 	d.Set("outpost_arn", localGateway.OutpostArn)
-	d.Set(names.AttrOwnerID, localGateway.OwnerId)
-	d.Set(names.AttrState, localGateway.State)
+	d.Set("owner_id", localGateway.OwnerId)
+	d.Set("state", localGateway.State)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, localGateway.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, localGateway.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

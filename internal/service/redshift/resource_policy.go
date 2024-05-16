@@ -18,11 +18,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_redshift_resource_policy", name="Resource Policy")
-func resourceResourcePolicy() *schema.Resource {
+// @SDKResource("aws_redshift_resource_policy")
+func ResourceResourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourcePolicyPut,
 		ReadWithoutTimeout:   resourceResourcePolicyRead,
@@ -34,7 +33,7 @@ func resourceResourcePolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrPolicy: {
+			"policy": {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateFunc:     validation.StringIsJSON,
@@ -44,7 +43,7 @@ func resourceResourcePolicy() *schema.Resource {
 					return json
 				},
 			},
-			names.AttrResourceARN: {
+			"resource_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -58,9 +57,9 @@ func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	arn := d.Get(names.AttrResourceARN).(string)
+	arn := d.Get("resource_arn").(string)
 
-	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
+	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
 	}
@@ -85,8 +84,7 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	out, err := findResourcePolicyByARN(ctx, conn, d.Id())
-
+	out, err := FindResourcePolicyByARN(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Resource Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -97,9 +95,9 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading Redshift Resource Policy (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrResourceARN, out.ResourceArn)
+	d.Set("resource_arn", out.ResourceArn)
 
-	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get(names.AttrPolicy).(string), aws.StringValue(out.Policy))
+	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), aws.StringValue(out.Policy))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "while setting policy (%s), encountered: %s", policyToSet, err)
@@ -111,7 +109,7 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policyToSet, err)
 	}
 
-	d.Set(names.AttrPolicy, policyToSet)
+	d.Set("policy", policyToSet)
 
 	return diags
 }

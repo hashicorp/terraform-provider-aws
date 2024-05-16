@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_cognito_user_pool_client", name="User Pool Client")
@@ -57,11 +56,11 @@ func dataSourceUserPoolClient() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrExternalID: {
+						"external_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrRoleARN: {
+						"role_arn": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -79,11 +78,11 @@ func dataSourceUserPoolClient() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			names.AttrClientID: {
+			"client_id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrClientSecret: {
+			"client_secret": {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
@@ -122,7 +121,7 @@ func dataSourceUserPoolClient() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -187,7 +186,7 @@ func dataSourceUserPoolClientRead(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
-	clientId := d.Get(names.AttrClientID).(string)
+	clientId := d.Get("client_id").(string)
 	d.SetId(clientId)
 
 	userPoolClient, err := FindCognitoUserPoolClientByID(ctx, conn, d.Get("user_pool_id").(string), d.Id())
@@ -197,14 +196,14 @@ func dataSourceUserPoolClientRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	d.Set("user_pool_id", userPoolClient.UserPoolId)
-	d.Set(names.AttrName, userPoolClient.ClientName)
+	d.Set("name", userPoolClient.ClientName)
 	d.Set("explicit_auth_flows", flex.FlattenStringSet(userPoolClient.ExplicitAuthFlows))
 	d.Set("read_attributes", flex.FlattenStringSet(userPoolClient.ReadAttributes))
 	d.Set("write_attributes", flex.FlattenStringSet(userPoolClient.WriteAttributes))
 	d.Set("refresh_token_validity", userPoolClient.RefreshTokenValidity)
 	d.Set("access_token_validity", userPoolClient.AccessTokenValidity)
 	d.Set("id_token_validity", userPoolClient.IdTokenValidity)
-	d.Set(names.AttrClientSecret, userPoolClient.ClientSecret)
+	d.Set("client_secret", userPoolClient.ClientSecret)
 	d.Set("allowed_oauth_flows", flex.FlattenStringSet(userPoolClient.AllowedOAuthFlows))
 	d.Set("allowed_oauth_flows_user_pool_client", userPoolClient.AllowedOAuthFlowsUserPoolClient)
 	d.Set("allowed_oauth_scopes", flex.FlattenStringSet(userPoolClient.AllowedOAuthScopes))
@@ -237,11 +236,11 @@ func flattenUserPoolClientAnalyticsConfig(analyticsConfig *cognitoidentityprovid
 	}
 
 	if analyticsConfig.ExternalId != nil {
-		m[names.AttrExternalID] = aws.StringValue(analyticsConfig.ExternalId)
+		m["external_id"] = aws.StringValue(analyticsConfig.ExternalId)
 	}
 
 	if analyticsConfig.RoleArn != nil {
-		m[names.AttrRoleARN] = aws.StringValue(analyticsConfig.RoleArn)
+		m["role_arn"] = aws.StringValue(analyticsConfig.RoleArn)
 	}
 
 	if analyticsConfig.ApplicationId != nil {

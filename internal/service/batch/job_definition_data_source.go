@@ -95,14 +95,14 @@ func (d *jobDefinitionDataSource) Schema(ctx context.Context, request datasource
 			"scheduling_priority": schema.Int64Attribute{
 				Computed: true,
 			},
-			names.AttrStatus: schema.StringAttribute{
+			"status": schema.StringAttribute{
 				Optional: true,
 				Validators: []validator.String{
 					stringvalidator.OneOf(jobDefinitionStatus_Values()...),
 				},
 			},
 			names.AttrTags: tftags.TagsAttributeComputedOnly(),
-			names.AttrTimeout: schema.ListAttribute{
+			"timeout": schema.ListAttribute{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[jobDefinitionJobTimeoutModel](ctx),
 				Computed:   true,
 				ElementType: types.ObjectType{
@@ -111,7 +111,7 @@ func (d *jobDefinitionDataSource) Schema(ctx context.Context, request datasource
 					},
 				},
 			},
-			names.AttrType: schema.StringAttribute{
+			"type": schema.StringAttribute{
 				Computed: true,
 			},
 		},

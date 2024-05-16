@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_vpc_endpoint_route_table_association")
@@ -36,7 +35,7 @@ func ResourceVPCEndpointRouteTableAssociation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrVPCEndpointID: {
+			"vpc_endpoint_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -49,7 +48,7 @@ func resourceVPCEndpointRouteTableAssociationCreate(ctx context.Context, d *sche
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	endpointID := d.Get(names.AttrVPCEndpointID).(string)
+	endpointID := d.Get("vpc_endpoint_id").(string)
 	routeTableID := d.Get("route_table_id").(string)
 	// Human friendly ID for error messages since d.Id() is non-descriptive
 	id := fmt.Sprintf("%s/%s", endpointID, routeTableID)
@@ -80,7 +79,7 @@ func resourceVPCEndpointRouteTableAssociationRead(ctx context.Context, d *schema
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	endpointID := d.Get(names.AttrVPCEndpointID).(string)
+	endpointID := d.Get("vpc_endpoint_id").(string)
 	routeTableID := d.Get("route_table_id").(string)
 	// Human friendly ID for error messages since d.Id() is non-descriptive
 	id := fmt.Sprintf("%s/%s", endpointID, routeTableID)
@@ -106,7 +105,7 @@ func resourceVPCEndpointRouteTableAssociationDelete(ctx context.Context, d *sche
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	endpointID := d.Get(names.AttrVPCEndpointID).(string)
+	endpointID := d.Get("vpc_endpoint_id").(string)
 	routeTableID := d.Get("route_table_id").(string)
 	// Human friendly ID for error messages since d.Id() is non-descriptive
 	id := fmt.Sprintf("%s/%s", endpointID, routeTableID)
@@ -147,7 +146,7 @@ func resourceVPCEndpointRouteTableAssociationImport(ctx context.Context, d *sche
 	log.Printf("[DEBUG] Importing VPC Endpoint (%s) Route Table (%s) Association", endpointID, routeTableID)
 
 	d.SetId(VPCEndpointRouteTableAssociationCreateID(endpointID, routeTableID))
-	d.Set(names.AttrVPCEndpointID, endpointID)
+	d.Set("vpc_endpoint_id", endpointID)
 	d.Set("route_table_id", routeTableID)
 
 	return []*schema.ResourceData{d}, nil

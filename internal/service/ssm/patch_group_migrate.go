@@ -8,7 +8,6 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func resourcePatchGroupV0() *schema.Resource {
@@ -28,12 +27,12 @@ func resourcePatchGroupV0() *schema.Resource {
 	}
 }
 
-func patchGroupStateUpgradeV0(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func PatchGroupStateUpgradeV0(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
 	if rawState == nil {
 		rawState = map[string]interface{}{}
 	}
 
-	rawState[names.AttrID] = fmt.Sprintf("%s,%s", rawState["patch_group"], rawState["baseline_id"])
+	rawState["id"] = fmt.Sprintf("%s,%s", rawState["patch_group"], rawState["baseline_id"])
 
 	return rawState, nil
 }

@@ -49,13 +49,13 @@ func (r *resourceDRTAccessRoleARNAssociation) Schema(ctx context.Context, reques
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
-			names.AttrRoleARN: schema.StringAttribute{
+			"role_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 			},
 		},
 		Blocks: map[string]schema.Block{
-			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+			"timeouts": timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,

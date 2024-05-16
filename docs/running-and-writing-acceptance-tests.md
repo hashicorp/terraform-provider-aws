@@ -13,17 +13,16 @@ which are very expensive to run and it's important to be prepared for those cost
 
 Some services which can be cost-prohibitive include (among others):
 
-- ACM (Amazon Certificate Manager)
-- Bedrock
-- EC2
-- ElastiCache
-- FSx
+- WorkSpaces
 - Glue
-- Kinesis Analytics
 - OpenSearch
 - RDS
+- ACM (Amazon Certificate Manager)
+- FSx
+- Kinesis Analytics
+- EC2
+- ElastiCache
 - Storage Gateway
-- WorkSpaces
 
 We don't want financial limitations to be a barrier to contribution, so if you are unable to
 pay to run acceptance tests for your contribution, mention this in your

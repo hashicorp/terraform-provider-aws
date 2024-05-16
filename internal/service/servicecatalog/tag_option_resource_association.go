@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_servicecatalog_tag_option_resource_association")
@@ -37,7 +36,7 @@ func ResourceTagOptionResourceAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrResourceARN: {
+			"resource_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -49,7 +48,7 @@ func ResourceTagOptionResourceAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrResourceID: {
+			"resource_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -72,7 +71,7 @@ func resourceTagOptionResourceAssociationCreate(ctx context.Context, d *schema.R
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	input := &servicecatalog.AssociateTagOptionWithResourceInput{
-		ResourceId:  aws.String(d.Get(names.AttrResourceID).(string)),
+		ResourceId:  aws.String(d.Get("resource_id").(string)),
 		TagOptionId: aws.String(d.Get("tag_option_id").(string)),
 	}
 
@@ -105,7 +104,7 @@ func resourceTagOptionResourceAssociationCreate(ctx context.Context, d *schema.R
 		return sdkdiag.AppendErrorf(diags, "creating Service Catalog Tag Option Resource Association: empty response")
 	}
 
-	d.SetId(TagOptionResourceAssociationID(d.Get("tag_option_id").(string), d.Get(names.AttrResourceID).(string)))
+	d.SetId(TagOptionResourceAssociationID(d.Get("tag_option_id").(string), d.Get("resource_id").(string)))
 
 	return append(diags, resourceTagOptionResourceAssociationRead(ctx, d, meta)...)
 }
@@ -140,9 +139,9 @@ func resourceTagOptionResourceAssociationRead(ctx context.Context, d *schema.Res
 		d.Set("resource_created_time", output.CreatedTime.Format(time.RFC3339))
 	}
 
-	d.Set(names.AttrResourceARN, output.ARN)
+	d.Set("resource_arn", output.ARN)
 	d.Set("resource_description", output.Description)
-	d.Set(names.AttrResourceID, output.Id)
+	d.Set("resource_id", output.Id)
 	d.Set("resource_name", output.Name)
 	d.Set("tag_option_id", tagOptionID)
 

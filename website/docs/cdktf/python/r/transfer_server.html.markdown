@@ -216,7 +216,6 @@ This resource supports the following arguments:
 * `identity_provider_type` - (Optional) The mode of authentication enabled for this service. The default value is `SERVICE_MANAGED`, which allows you to store and access SFTP user credentials within the service. `API_GATEWAY` indicates that user authentication requires a call to an API Gateway endpoint URL provided by you to integrate an identity provider of your choice. Using `AWS_DIRECTORY_SERVICE` will allow for authentication against AWS Managed Active Directory or Microsoft Active Directory in your on-premises environment, or in AWS using AD Connectors. Use the `AWS_LAMBDA` value to directly use a Lambda function as your identity provider. If you choose this value, you must specify the ARN for the lambda function in the `function` argument.
 * `directory_id` - (Optional) The directory service ID of the directory service you want to connect to with an `identity_provider_type` of `AWS_DIRECTORY_SERVICE`.
 * `function` - (Optional) The ARN for a lambda function to use for the Identity provider.
-* `sftp_authentication_methods` - (Optional) For SFTP-enabled servers, and for custom identity providers only. Valid values are `PASSWORD`, `PUBLIC_KEY`, `PUBLIC_KEY_OR_PASSWORD` and `PUBLIC_KEY_AND_PASSWORD`. Default value is: `PUBLIC_KEY_OR_PASSWORD`.
 * `logging_role` - (Optional) Amazon Resource Name (ARN) of an IAM role that allows the service to write your SFTP users’ activity to your Amazon CloudWatch logs for monitoring and auditing purposes.
 * `force_destroy` - (Optional) A boolean that indicates all users associated with the server should be deleted so that the Server can be destroyed without error. The default value is `false`. This option only applies to servers configured with a `SERVICE_MANAGED` `identity_provider_type`.
 * `post_authentication_login_banner`- (Optional) Specify a string to display when users connect to a server. This string is displayed after the user authenticates. The SFTP protocol does not support post-authentication display banners.
@@ -323,4 +322,4 @@ Using `terraform import`, import Transfer Servers using the server `id`. For exa
 
 Certain resource arguments, such as `host_key`, cannot be read via the API and imported into Terraform. Terraform will display a difference for these arguments the first run after import if declared in the Terraform configuration for an imported resource.
 
-<!-- cache-key: cdktf-0.20.1 input-6a19f4caa1bdbd07a2508af0e91937b4d64b4655fb39dc9e34e199cc6408e15a -->
+<!-- cache-key: cdktf-0.20.1 input-d2aefccf8eda4d8c71c540e2cbcf7146d7d3cc7f73e30fa95081c0e66fef3c2c -->

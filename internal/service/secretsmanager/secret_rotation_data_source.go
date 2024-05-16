@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_secretsmanager_secret_rotation", name="Secret Rotation")
@@ -37,11 +36,11 @@ func dataSourceSecretRotation() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						names.AttrDuration: {
+						"duration": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrScheduleExpression: {
+						"schedule_expression": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

@@ -46,7 +46,7 @@ func ResourceAMICopy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -61,7 +61,7 @@ func ResourceAMICopy() *schema.Resource {
 				DiffSuppressFunc:      verify.SuppressEquivalentRoundedTime(time.RFC3339, time.Minute),
 				DiffSuppressOnRefresh: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -82,19 +82,19 @@ func ResourceAMICopy() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrDeleteOnTermination: {
+						"delete_on_termination": {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						names.AttrDeviceName: {
+						"device_name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrEncrypted: {
+						"encrypted": {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						names.AttrIOPS: {
+						"iops": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -102,7 +102,7 @@ func ResourceAMICopy() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrSnapshotID: {
+						"snapshot_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -110,11 +110,11 @@ func ResourceAMICopy() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						names.AttrVolumeSize: {
+						"volume_size": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						names.AttrVolumeType: {
+						"volume_type": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -123,8 +123,8 @@ func ResourceAMICopy() *schema.Resource {
 				Set: func(v interface{}) int {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrSnapshotID].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m["device_name"].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m["snapshot_id"].(string)))
 					return create.StringHashcode(buf.String())
 				},
 			},
@@ -132,7 +132,7 @@ func ResourceAMICopy() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			names.AttrEncrypted: {
+			"encrypted": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -145,7 +145,7 @@ func ResourceAMICopy() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrDeviceName: {
+						"device_name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -158,7 +158,7 @@ func ResourceAMICopy() *schema.Resource {
 				Set: func(v interface{}) int {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m["device_name"].(string)))
 					buf.WriteString(fmt.Sprintf("%s-", m["virtual_name"].(string)))
 					return create.StringHashcode(buf.String())
 				},
@@ -187,7 +187,7 @@ func ResourceAMICopy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrKMSKeyID: {
+			"kms_key_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -202,12 +202,12 @@ func ResourceAMICopy() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrOwnerID: {
+			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -273,12 +273,12 @@ func resourceAMICopyCreate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	sourceImageID := d.Get("source_ami_id").(string)
 	input := &ec2.CopyImageInput{
 		ClientToken:   aws.String(id.UniqueId()),
-		Description:   aws.String(d.Get(names.AttrDescription).(string)),
-		Encrypted:     aws.Bool(d.Get(names.AttrEncrypted).(bool)),
+		Description:   aws.String(d.Get("description").(string)),
+		Encrypted:     aws.Bool(d.Get("encrypted").(bool)),
 		Name:          aws.String(name),
 		SourceImageId: aws.String(sourceImageID),
 		SourceRegion:  aws.String(d.Get("source_ami_region").(string)),
@@ -288,7 +288,7 @@ func resourceAMICopyCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.DestinationOutpostArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
+	if v, ok := d.GetOk("kms_key_id"); ok {
 		input.KmsKeyId = aws.String(v.(string))
 	}
 

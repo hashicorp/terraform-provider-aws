@@ -61,7 +61,7 @@ func (r *directoryBucketResource) Schema(ctx context.Context, request resource.S
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrBucket: schema.StringAttribute{
+			"bucket": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -79,13 +79,13 @@ func (r *directoryBucketResource) Schema(ctx context.Context, request resource.S
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrForceDestroy: schema.BoolAttribute{
+			"force_destroy": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
 				Default:  booldefault.StaticBool(false),
 			},
 			names.AttrID: framework.IDAttribute(),
-			names.AttrType: schema.StringAttribute{
+			"type": schema.StringAttribute{
 				CustomType: bucketTypeType,
 				Optional:   true,
 				Computed:   true,
@@ -100,13 +100,13 @@ func (r *directoryBucketResource) Schema(ctx context.Context, request resource.S
 				CustomType: fwtypes.NewListNestedObjectTypeOf[locationInfoModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						names.AttrName: schema.StringAttribute{
+						"name": schema.StringAttribute{
 							Required: true,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
 							},
 						},
-						names.AttrType: schema.StringAttribute{
+						"type": schema.StringAttribute{
 							CustomType: locationTypeType,
 							Optional:   true,
 							Computed:   true,

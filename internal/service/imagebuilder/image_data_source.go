@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_imagebuilder_image")
@@ -23,7 +22,7 @@ func DataSourceImage() *schema.Resource {
 		ReadWithoutTimeout: dataSourceImageRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -69,7 +68,7 @@ func DataSourceImage() *schema.Resource {
 											Type: schema.TypeString,
 										},
 									},
-									names.AttrRepositoryName: {
+									"repository_name": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -103,7 +102,7 @@ func DataSourceImage() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -121,11 +120,11 @@ func DataSourceImage() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrAccountID: {
+									"account_id": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									names.AttrDescription: {
+									"description": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -133,11 +132,11 @@ func DataSourceImage() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									names.AttrName: {
+									"name": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									names.AttrRegion: {
+									"region": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -154,7 +153,7 @@ func DataSourceImage() *schema.Resource {
 										Computed: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
-									names.AttrRegion: {
+									"region": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -168,8 +167,8 @@ func DataSourceImage() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			names.AttrVersion: {
+			"tags": tftags.TagsSchemaComputed(),
+			"version": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -183,7 +182,7 @@ func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	input := &imagebuilder.GetImageInput{}
 
-	if v, ok := d.GetOk(names.AttrARN); ok {
+	if v, ok := d.GetOk("arn"); ok {
 		input.ImageBuildVersionArn = aws.String(v.(string))
 	}
 
@@ -204,8 +203,8 @@ func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta inter
 	// To prevent Terraform errors, only reset arn if not configured.
 	// The configured ARN may contain x.x.x wildcards while the API returns
 	// the full build version #.#.#/# suffix.
-	if _, ok := d.GetOk(names.AttrARN); !ok {
-		d.Set(names.AttrARN, image.Arn)
+	if _, ok := d.GetOk("arn"); !ok {
+		d.Set("arn", image.Arn)
 	}
 
 	d.Set("build_version_arn", image.Arn)
@@ -241,7 +240,7 @@ func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta inter
 		d.Set("infrastructure_configuration_arn", image.InfrastructureConfiguration.Arn)
 	}
 
-	d.Set(names.AttrName, image.Name)
+	d.Set("name", image.Name)
 	d.Set("platform", image.Platform)
 	d.Set("os_version", image.OsVersion)
 
@@ -251,8 +250,8 @@ func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta inter
 		d.Set("output_resources", nil)
 	}
 
-	d.Set(names.AttrTags, KeyValueTags(ctx, image.Tags).IgnoreAWS().IgnoreConfig(meta.(*conns.AWSClient).IgnoreTagsConfig).Map())
-	d.Set(names.AttrVersion, image.Version)
+	d.Set("tags", KeyValueTags(ctx, image.Tags).IgnoreAWS().IgnoreConfig(meta.(*conns.AWSClient).IgnoreTagsConfig).Map())
+	d.Set("version", image.Version)
 
 	return diags
 }

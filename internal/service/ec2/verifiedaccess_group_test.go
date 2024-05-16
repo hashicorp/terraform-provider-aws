@@ -40,13 +40,13 @@ func testAccVerifiedAccessGroup_basic(t *testing.T, semaphore tfsync.Semaphore) 
 				Config: testAccVerifiedAccessGroupConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
+					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
 					resource.TestCheckResourceAttr(resourceName, "deletion_time", ""),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_time"),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwner),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner"),
 					resource.TestCheckResourceAttr(resourceName, "policy_document", ""),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "verifiedaccess_group_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "verifiedaccess_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "verifiedaccess_instance_id"),
@@ -84,8 +84,8 @@ func testAccVerifiedAccessGroup_kms(t *testing.T, semaphore tfsync.Semaphore) {
 				Config: testAccVerifiedAccessGroupConfig_kms(rName, policyDoc),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
-					resource.TestCheckResourceAttr(resourceName, "sse_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
+					resource.TestCheckResourceAttr(resourceName, "sse_configuration.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "sse_configuration.0.customer_managed_key_enabled"),
 					resource.TestCheckResourceAttrSet(resourceName, "sse_configuration.0.kms_key_arn"),
 				),
@@ -121,13 +121,13 @@ func testAccVerifiedAccessGroup_updateKMS(t *testing.T, semaphore tfsync.Semapho
 				Config: testAccVerifiedAccessGroupConfig_policy(rName, description, policyDoc),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
+					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
 					resource.TestCheckResourceAttr(resourceName, "deletion_time", ""),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_time"),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwner),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner"),
 					resource.TestCheckResourceAttr(resourceName, "policy_document", policyDoc),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "verifiedaccess_group_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "verifiedaccess_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "verifiedaccess_instance_id"),
@@ -143,8 +143,8 @@ func testAccVerifiedAccessGroup_updateKMS(t *testing.T, semaphore tfsync.Semapho
 				Config: testAccVerifiedAccessGroupConfig_kms(rName, policyDoc),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
-					resource.TestCheckResourceAttr(resourceName, "sse_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
+					resource.TestCheckResourceAttr(resourceName, "sse_configuration.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "sse_configuration.0.customer_managed_key_enabled"),
 					resource.TestCheckResourceAttr(resourceName, "sse_configuration.0.customer_managed_key_enabled", "true"),
 					resource.TestCheckResourceAttrSet(resourceName, "sse_configuration.0.kms_key_arn"),
@@ -176,7 +176,7 @@ func testAccVerifiedAccessGroup_disappears(t *testing.T, semaphore tfsync.Semaph
 		CheckDestroy:             testAccCheckVerifiedAccessGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVerifiedAccessGroupConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccVerifiedAccessGroupConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVerifiedAccessGroup(), resourceName),
@@ -204,11 +204,11 @@ func testAccVerifiedAccessGroup_tags(t *testing.T, semaphore tfsync.Semaphore) {
 		CheckDestroy:             testAccCheckVerifiedAccessGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVerifiedAccessGroupConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccVerifiedAccessGroupConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -218,20 +218,20 @@ func testAccVerifiedAccessGroup_tags(t *testing.T, semaphore tfsync.Semaphore) {
 				ImportStateVerifyIgnore: []string{},
 			},
 			{
-				Config: testAccVerifiedAccessGroupConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccVerifiedAccessGroupConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccVerifiedAccessGroupConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccVerifiedAccessGroupConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -260,7 +260,7 @@ func testAccVerifiedAccessGroup_policy(t *testing.T, semaphore tfsync.Semaphore)
 				Config: testAccVerifiedAccessGroupConfig_policy(rName, description, policyDoc),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttr(resourceName, "policy_document", policyDoc),
 				),
 			},
@@ -297,7 +297,7 @@ func testAccVerifiedAccessGroup_updatePolicy(t *testing.T, semaphore tfsync.Sema
 				Config: testAccVerifiedAccessGroupConfig_policy(rName, description, policyDoc),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttr(resourceName, "policy_document", policyDoc),
 				),
 			},
@@ -311,7 +311,7 @@ func testAccVerifiedAccessGroup_updatePolicy(t *testing.T, semaphore tfsync.Sema
 				Config: testAccVerifiedAccessGroupConfig_policy(rName, description, policyDocUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttr(resourceName, "policy_document", policyDocUpdate),
 				),
 			},
@@ -346,13 +346,13 @@ func testAccVerifiedAccessGroup_setPolicy(t *testing.T, semaphore tfsync.Semapho
 				Config: testAccVerifiedAccessGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
+					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
 					resource.TestCheckResourceAttr(resourceName, "deletion_time", ""),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_time"),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwner),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner"),
 					resource.TestCheckResourceAttr(resourceName, "policy_document", ""),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "verifiedaccess_group_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "verifiedaccess_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "verifiedaccess_instance_id"),
@@ -368,7 +368,7 @@ func testAccVerifiedAccessGroup_setPolicy(t *testing.T, semaphore tfsync.Semapho
 				Config: testAccVerifiedAccessGroupConfig_policy(rName, description, policyDoc),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttr(resourceName, "policy_document", policyDoc),
 				),
 			},

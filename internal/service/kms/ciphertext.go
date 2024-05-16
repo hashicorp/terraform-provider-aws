@@ -7,19 +7,18 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/kms"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_kms_ciphertext", name="Ciphertext")
-func resourceCiphertext() *schema.Resource {
+// @SDKResource("aws_kms_ciphertext")
+func ResourceCiphertext() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCiphertextCreate,
 		ReadWithoutTimeout:   schema.NoopContext,
@@ -33,10 +32,10 @@ func resourceCiphertext() *schema.Resource {
 			"context": {
 				Type:     schema.TypeMap,
 				Optional: true,
-				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+				ForceNew: true,
 			},
-			names.AttrKeyID: {
+			"key_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -53,19 +52,19 @@ func resourceCiphertext() *schema.Resource {
 
 func resourceCiphertextCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KMSClient(ctx)
+	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
-	keyID := d.Get(names.AttrKeyID).(string)
+	keyID := d.Get("key_id").(string)
 	input := &kms.EncryptInput{
-		KeyId:     aws.String(d.Get(names.AttrKeyID).(string)),
+		KeyId:     aws.String(d.Get("key_id").(string)),
 		Plaintext: []byte(d.Get("plaintext").(string)),
 	}
 
 	if v, ok := d.GetOk("context"); ok && len(v.(map[string]interface{})) > 0 {
-		input.EncryptionContext = flex.ExpandStringValueMap(v.(map[string]interface{}))
+		input.EncryptionContext = flex.ExpandStringMap(v.(map[string]interface{}))
 	}
 
-	output, err := conn.Encrypt(ctx, input)
+	output, err := conn.EncryptWithContext(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "encrypting with KMS Key (%s): %s", keyID, err)

@@ -11,6 +11,6 @@ const (
 // Equivalent to <service>.ServiceID
 const (
 {{- range .Services }}
-	{{ .ProviderNameUpper }}ServiceID = "{{ .SDKID }}"
+	{{ .ProviderNameUpper }}ServiceID = "{{ .SdkID }}"
 {{- end }}
 )

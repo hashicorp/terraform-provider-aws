@@ -38,8 +38,8 @@ func testAccDomainNameAPIAssociation_basic(t *testing.T) {
 				Config: testAccDomainNameAPIAssociationConfig_basic(appsyncCertDomain, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainNameAPIAssociationExists(ctx, resourceName, &association),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrDomainName, "aws_appsync_domain_name.test", names.AttrDomainName),
-					resource.TestCheckResourceAttrPair(resourceName, "api_id", "aws_appsync_graphql_api.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_name", "aws_appsync_domain_name.test", "domain_name"),
+					resource.TestCheckResourceAttrPair(resourceName, "api_id", "aws_appsync_graphql_api.test", "id"),
 				),
 			},
 			{
@@ -51,8 +51,8 @@ func testAccDomainNameAPIAssociation_basic(t *testing.T) {
 				Config: testAccDomainNameAPIAssociationConfig_updated(appsyncCertDomain, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainNameAPIAssociationExists(ctx, resourceName, &association),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrDomainName, "aws_appsync_domain_name.test", names.AttrDomainName),
-					resource.TestCheckResourceAttrPair(resourceName, "api_id", "aws_appsync_graphql_api.test2", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_name", "aws_appsync_domain_name.test", "domain_name"),
+					resource.TestCheckResourceAttrPair(resourceName, "api_id", "aws_appsync_graphql_api.test2", "id"),
 				),
 			},
 		},

@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_api_gateway_rest_api_policy", name="REST API Policy")
@@ -35,7 +34,7 @@ func resourceRestAPIPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrPolicy: {
+			"policy": {
 				Type:                  schema.TypeString,
 				Required:              true,
 				ValidateFunc:          validation.StringIsJSON,
@@ -62,7 +61,7 @@ func resourceRestAPIPolicyPut(ctx context.Context, d *schema.ResourceData, meta 
 	apiID := d.Get("rest_api_id").(string)
 	operations := make([]types.PatchOperation, 0)
 
-	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
+	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -111,7 +110,7 @@ func resourceRestAPIPolicyRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set(names.AttrPolicy, policy)
+	d.Set("policy", policy)
 	d.Set("rest_api_id", api.Id)
 
 	return diags

@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_redshiftserverless_workgroup", name="Workgroup")
@@ -19,20 +18,20 @@ func dataSourceWorkgroup() *schema.Resource {
 		ReadWithoutTimeout: dataSourceWorkgroupRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrEndpoint: {
+			"endpoint": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrAddress: {
+						"address": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrPort: {
+						"port": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -46,11 +45,11 @@ func dataSourceWorkgroup() *schema.Resource {
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												names.AttrAvailabilityZone: {
+												"availability_zone": {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												names.AttrNetworkInterfaceID: {
+												"network_interface_id": {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
@@ -58,18 +57,18 @@ func dataSourceWorkgroup() *schema.Resource {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												names.AttrSubnetID: {
+												"subnet_id": {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
 											},
 										},
 									},
-									names.AttrVPCEndpointID: {
+									"vpc_endpoint_id": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									names.AttrVPCID: {
+									"vpc_id": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -87,18 +86,18 @@ func dataSourceWorkgroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrPubliclyAccessible: {
+			"publicly_accessible": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			names.AttrSecurityGroupIDs: {
+			"security_group_ids": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
-			names.AttrSubnetIDs: {
+			"subnet_ids": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -130,15 +129,15 @@ func dataSourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.SetId(workgroupName)
-	d.Set(names.AttrARN, resource.WorkgroupArn)
-	if err := d.Set(names.AttrEndpoint, []interface{}{flattenEndpoint(resource.Endpoint)}); err != nil {
+	d.Set("arn", resource.WorkgroupArn)
+	if err := d.Set("endpoint", []interface{}{flattenEndpoint(resource.Endpoint)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoint: %s", err)
 	}
 	d.Set("enhanced_vpc_routing", resource.EnhancedVpcRouting)
 	d.Set("namespace_name", resource.NamespaceName)
-	d.Set(names.AttrPubliclyAccessible, resource.PubliclyAccessible)
-	d.Set(names.AttrSecurityGroupIDs, resource.SecurityGroupIds)
-	d.Set(names.AttrSubnetIDs, resource.SubnetIds)
+	d.Set("publicly_accessible", resource.PubliclyAccessible)
+	d.Set("security_group_ids", resource.SecurityGroupIds)
+	d.Set("subnet_ids", resource.SubnetIds)
 	d.Set("workgroup_id", resource.WorkgroupId)
 
 	return diags

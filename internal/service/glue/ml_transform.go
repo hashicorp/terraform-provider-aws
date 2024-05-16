@@ -37,7 +37,7 @@ func ResourceMLTransform() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -47,15 +47,15 @@ func ResourceMLTransform() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrDatabaseName: {
+						"database_name": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						names.AttrTableName: {
+						"table_name": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						names.AttrCatalogID: {
+						"catalog_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -66,7 +66,7 @@ func ResourceMLTransform() *schema.Resource {
 					},
 				},
 			},
-			names.AttrParameters: {
+			"parameters": {
 				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1,
@@ -107,7 +107,7 @@ func ResourceMLTransform() *schema.Resource {
 					},
 				},
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -116,7 +116,7 @@ func ResourceMLTransform() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			names.AttrMaxCapacity: {
+			"max_capacity": {
 				Type:          schema.TypeFloat,
 				Optional:      true,
 				Computed:      true,
@@ -128,20 +128,20 @@ func ResourceMLTransform() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(0, 10),
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
-			names.AttrRoleARN: {
+			"role_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrTimeout: {
+			"timeout": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  2880,
@@ -149,14 +149,14 @@ func ResourceMLTransform() *schema.Resource {
 			"worker_type": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{names.AttrMaxCapacity},
+				ConflictsWith: []string{"max_capacity"},
 				ValidateFunc:  validation.StringInSlice(glue.WorkerType_Values(), false),
 				RequiredWith:  []string{"number_of_workers"},
 			},
 			"number_of_workers": {
 				Type:          schema.TypeInt,
 				Optional:      true,
-				ConflictsWith: []string{names.AttrMaxCapacity},
+				ConflictsWith: []string{"max_capacity"},
 				ValidateFunc:  validation.IntAtLeast(1),
 				RequiredWith:  []string{"worker_type"},
 			},
@@ -164,12 +164,12 @@ func ResourceMLTransform() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			names.AttrSchema: {
+			"schema": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrName: {
+						"name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -189,19 +189,19 @@ func resourceMLTransformCreate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	input := &glue.CreateMLTransformInput{
-		Name:              aws.String(d.Get(names.AttrName).(string)),
-		Role:              aws.String(d.Get(names.AttrRoleARN).(string)),
+		Name:              aws.String(d.Get("name").(string)),
+		Role:              aws.String(d.Get("role_arn").(string)),
 		Tags:              getTagsIn(ctx),
-		Timeout:           aws.Int64(int64(d.Get(names.AttrTimeout).(int))),
+		Timeout:           aws.Int64(int64(d.Get("timeout").(int))),
 		InputRecordTables: expandMLTransformInputRecordTables(d.Get("input_record_tables").([]interface{})),
-		Parameters:        expandMLTransformParameters(d.Get(names.AttrParameters).([]interface{})),
+		Parameters:        expandMLTransformParameters(d.Get("parameters").([]interface{})),
 	}
 
-	if v, ok := d.GetOk(names.AttrMaxCapacity); ok {
+	if v, ok := d.GetOk("max_capacity"); ok {
 		input.MaxCapacity = aws.Float64(v.(float64))
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -266,15 +266,15 @@ func resourceMLTransformRead(ctx context.Context, d *schema.ResourceData, meta i
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("mlTransform/%s", d.Id()),
 	}.String()
-	d.Set(names.AttrARN, mlTransformArn)
+	d.Set("arn", mlTransformArn)
 
-	d.Set(names.AttrDescription, output.Description)
+	d.Set("description", output.Description)
 	d.Set("glue_version", output.GlueVersion)
-	d.Set(names.AttrMaxCapacity, output.MaxCapacity)
+	d.Set("max_capacity", output.MaxCapacity)
 	d.Set("max_retries", output.MaxRetries)
-	d.Set(names.AttrName, output.Name)
-	d.Set(names.AttrRoleARN, output.Role)
-	d.Set(names.AttrTimeout, output.Timeout)
+	d.Set("name", output.Name)
+	d.Set("role_arn", output.Role)
+	d.Set("timeout", output.Timeout)
 	d.Set("worker_type", output.WorkerType)
 	d.Set("number_of_workers", output.NumberOfWorkers)
 	d.Set("label_count", output.LabelCount)
@@ -283,11 +283,11 @@ func resourceMLTransformRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting input_record_tables: %s", err)
 	}
 
-	if err := d.Set(names.AttrParameters, flattenMLTransformParameters(output.Parameters)); err != nil {
+	if err := d.Set("parameters", flattenMLTransformParameters(output.Parameters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting parameters: %s", err)
 	}
 
-	if err := d.Set(names.AttrSchema, flattenMLTransformSchemaColumns(output.Schema)); err != nil {
+	if err := d.Set("schema", flattenMLTransformSchemaColumns(output.Schema)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting schema: %s", err)
 	}
 
@@ -298,15 +298,15 @@ func resourceMLTransformUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
-	if d.HasChanges(names.AttrDescription, "glue_version", names.AttrMaxCapacity, "max_retries", "number_of_workers",
-		names.AttrRoleARN, names.AttrTimeout, "worker_type", names.AttrParameters) {
+	if d.HasChanges("description", "glue_version", "max_capacity", "max_retries", "number_of_workers",
+		"role_arn", "timeout", "worker_type", "parameters") {
 		input := &glue.UpdateMLTransformInput{
 			TransformId: aws.String(d.Id()),
-			Role:        aws.String(d.Get(names.AttrRoleARN).(string)),
-			Timeout:     aws.Int64(int64(d.Get(names.AttrTimeout).(int))),
+			Role:        aws.String(d.Get("role_arn").(string)),
+			Timeout:     aws.Int64(int64(d.Get("timeout").(int))),
 		}
 
-		if v, ok := d.GetOk(names.AttrDescription); ok {
+		if v, ok := d.GetOk("description"); ok {
 			input.Description = aws.String(v.(string))
 		}
 
@@ -321,7 +321,7 @@ func resourceMLTransformUpdate(ctx context.Context, d *schema.ResourceData, meta
 		if v, ok := d.GetOk("number_of_workers"); ok {
 			input.NumberOfWorkers = aws.Int64(int64(v.(int)))
 		} else {
-			if v, ok := d.GetOk(names.AttrMaxCapacity); ok {
+			if v, ok := d.GetOk("max_capacity"); ok {
 				input.MaxCapacity = aws.Float64(v.(float64))
 			}
 		}
@@ -330,7 +330,7 @@ func resourceMLTransformUpdate(ctx context.Context, d *schema.ResourceData, meta
 			input.GlueVersion = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk(names.AttrParameters); ok {
+		if v, ok := d.GetOk("parameters"); ok {
 			input.Parameters = expandMLTransformParameters(v.([]interface{}))
 		}
 
@@ -380,11 +380,11 @@ func expandMLTransformInputRecordTables(l []interface{}) []*glue.Table {
 
 		table := &glue.Table{}
 
-		if v, ok := m[names.AttrTableName].(string); ok {
+		if v, ok := m["table_name"].(string); ok {
 			table.TableName = aws.String(v)
 		}
 
-		if v, ok := m[names.AttrDatabaseName].(string); ok {
+		if v, ok := m["database_name"].(string); ok {
 			table.DatabaseName = aws.String(v)
 		}
 
@@ -392,7 +392,7 @@ func expandMLTransformInputRecordTables(l []interface{}) []*glue.Table {
 			table.ConnectionName = aws.String(v)
 		}
 
-		if v, ok := m[names.AttrCatalogID].(string); ok && v != "" {
+		if v, ok := m["catalog_id"].(string); ok && v != "" {
 			table.CatalogId = aws.String(v)
 		}
 
@@ -407,8 +407,8 @@ func flattenMLTransformInputRecordTables(tables []*glue.Table) []interface{} {
 
 	for _, table := range tables {
 		m := map[string]interface{}{
-			names.AttrTableName:    aws.StringValue(table.TableName),
-			names.AttrDatabaseName: aws.StringValue(table.DatabaseName),
+			"table_name":    aws.StringValue(table.TableName),
+			"database_name": aws.StringValue(table.DatabaseName),
 		}
 
 		if table.ConnectionName != nil {
@@ -416,7 +416,7 @@ func flattenMLTransformInputRecordTables(tables []*glue.Table) []interface{} {
 		}
 
 		if table.CatalogId != nil {
-			m[names.AttrCatalogID] = aws.StringValue(table.CatalogId)
+			m["catalog_id"] = aws.StringValue(table.CatalogId)
 		}
 
 		l = append(l, m)
@@ -510,8 +510,8 @@ func flattenMLTransformSchemaColumns(schemaCols []*glue.SchemaColumn) []interfac
 
 	for _, schemaCol := range schemaCols {
 		m := map[string]interface{}{
-			names.AttrName: aws.StringValue(schemaCol.Name),
-			"data_type":    aws.StringValue(schemaCol.DataType),
+			"name":      aws.StringValue(schemaCol.Name),
+			"data_type": aws.StringValue(schemaCol.DataType),
 		}
 
 		l = append(l, m)

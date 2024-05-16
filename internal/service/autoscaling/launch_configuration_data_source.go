@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_launch_configuration", name="Launch Configuration")
@@ -19,7 +18,7 @@ func dataSourceLaunchConfiguration() *schema.Resource {
 		ReadWithoutTimeout: dataSourceLaunchConfigurationRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -32,19 +31,19 @@ func dataSourceLaunchConfiguration() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrDeleteOnTermination: {
+						"delete_on_termination": {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						names.AttrDeviceName: {
+						"device_name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrEncrypted: {
+						"encrypted": {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						names.AttrIOPS: {
+						"iops": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -52,7 +51,7 @@ func dataSourceLaunchConfiguration() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						names.AttrSnapshotID: {
+						"snapshot_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -60,11 +59,11 @@ func dataSourceLaunchConfiguration() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						names.AttrVolumeSize: {
+						"volume_size": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						names.AttrVolumeType: {
+						"volume_type": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -84,7 +83,7 @@ func dataSourceLaunchConfiguration() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrDeviceName: {
+						"device_name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -103,7 +102,7 @@ func dataSourceLaunchConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrInstanceType: {
+			"instance_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -131,7 +130,7 @@ func dataSourceLaunchConfiguration() *schema.Resource {
 					},
 				},
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -144,15 +143,15 @@ func dataSourceLaunchConfiguration() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrDeleteOnTermination: {
+						"delete_on_termination": {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						names.AttrEncrypted: {
+						"encrypted": {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						names.AttrIOPS: {
+						"iops": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -160,18 +159,18 @@ func dataSourceLaunchConfiguration() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						names.AttrVolumeSize: {
+						"volume_size": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						names.AttrVolumeType: {
+						"volume_type": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			names.AttrSecurityGroups: {
+			"security_groups": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -193,7 +192,7 @@ func dataSourceLaunchConfigurationRead(ctx context.Context, d *schema.ResourceDa
 	autoscalingconn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 	ec2conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	lc, err := findLaunchConfigurationByName(ctx, autoscalingconn, name)
 
 	if err != nil {
@@ -202,7 +201,7 @@ func dataSourceLaunchConfigurationRead(ctx context.Context, d *schema.ResourceDa
 
 	d.SetId(name)
 
-	d.Set(names.AttrARN, lc.LaunchConfigurationARN)
+	d.Set("arn", lc.LaunchConfigurationARN)
 	d.Set("associate_public_ip_address", lc.AssociatePublicIpAddress)
 	d.Set("ebs_optimized", lc.EbsOptimized)
 	if lc.InstanceMonitoring != nil {
@@ -212,7 +211,7 @@ func dataSourceLaunchConfigurationRead(ctx context.Context, d *schema.ResourceDa
 	}
 	d.Set("iam_instance_profile", lc.IamInstanceProfile)
 	d.Set("image_id", lc.ImageId)
-	d.Set(names.AttrInstanceType, lc.InstanceType)
+	d.Set("instance_type", lc.InstanceType)
 	d.Set("key_name", lc.KeyName)
 	if lc.MetadataOptions != nil {
 		if err := d.Set("metadata_options", []interface{}{flattenInstanceMetadataOptions(lc.MetadataOptions)}); err != nil {
@@ -221,9 +220,9 @@ func dataSourceLaunchConfigurationRead(ctx context.Context, d *schema.ResourceDa
 	} else {
 		d.Set("metadata_options", nil)
 	}
-	d.Set(names.AttrName, lc.LaunchConfigurationName)
+	d.Set("name", lc.LaunchConfigurationName)
 	d.Set("placement_tenancy", lc.PlacementTenancy)
-	d.Set(names.AttrSecurityGroups, lc.SecurityGroups)
+	d.Set("security_groups", lc.SecurityGroups)
 	d.Set("spot_price", lc.SpotPrice)
 	d.Set("user_data", lc.UserData)
 

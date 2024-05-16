@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -40,7 +39,7 @@ func sweepDomains(region string) error {
 
 		for _, v := range page.DomainNames {
 			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceDomain, client,
-				framework.NewAttribute(names.AttrID, aws.StringValue(v)),
+				framework.NewAttribute("id", aws.StringValue(v)),
 			))
 		}
 

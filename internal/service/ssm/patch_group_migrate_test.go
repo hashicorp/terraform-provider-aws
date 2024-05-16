@@ -1,20 +1,20 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package ssm
+package ssm_test
 
 import (
-	"context"
 	"fmt"
 	"reflect"
 	"testing"
 
-	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 )
 
 func testResourcePatchGroupStateDataV0() map[string]interface{} {
 	return map[string]interface{}{
-		names.AttrID:  "testgroup",
+		"id":          "testgroup",
 		"baseline_id": "pb-0c4e592064EXAMPLE",
 		"patch_group": "testgroup",
 	}
@@ -23,18 +23,18 @@ func testResourcePatchGroupStateDataV0() map[string]interface{} {
 func testResourcePatchGroupStateDataV1() map[string]interface{} {
 	v0 := testResourcePatchGroupStateDataV0()
 	return map[string]interface{}{
-		names.AttrID:  fmt.Sprintf("%s,%s", v0["patch_group"], v0["baseline_id"]),
+		"id":          fmt.Sprintf("%s,%s", v0["patch_group"], v0["baseline_id"]),
 		"baseline_id": v0["baseline_id"],
 		"patch_group": v0["patch_group"],
 	}
 }
 
 func TestPatchGroupStateUpgradeV0(t *testing.T) {
-	ctx := context.Background()
+	ctx := acctest.Context(t)
 	t.Parallel()
 
 	expected := testResourcePatchGroupStateDataV1()
-	actual, err := patchGroupStateUpgradeV0(ctx, testResourcePatchGroupStateDataV0(), nil)
+	actual, err := tfssm.PatchGroupStateUpgradeV0(ctx, testResourcePatchGroupStateDataV0(), nil)
 	if err != nil {
 		t.Fatalf("error migrating state: %s", err)
 	}

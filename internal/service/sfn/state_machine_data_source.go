@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_sfn_state_machine")
@@ -21,11 +20,11 @@ func DataSourceStateMachine() *schema.Resource {
 		ReadWithoutTimeout: dataSourceStateMachineRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrCreationDate: {
+			"creation_date": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -33,15 +32,15 @@ func DataSourceStateMachine() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrRoleARN: {
+			"role_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -49,7 +48,7 @@ func DataSourceStateMachine() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -60,7 +59,7 @@ func DataSourceStateMachine() *schema.Resource {
 func dataSourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SFNConn(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	var arns []string
 
 	err := conn.ListStateMachinesPagesWithContext(ctx, &sfn.ListStateMachinesInput{}, func(page *sfn.ListStateMachinesOutput, lastPage bool) bool {
@@ -95,14 +94,14 @@ func dataSourceStateMachineRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.SetId(arn)
-	d.Set(names.AttrARN, output.StateMachineArn)
-	d.Set(names.AttrCreationDate, output.CreationDate.Format(time.RFC3339))
-	d.Set(names.AttrDescription, output.Description)
+	d.Set("arn", output.StateMachineArn)
+	d.Set("creation_date", output.CreationDate.Format(time.RFC3339))
+	d.Set("description", output.Description)
 	d.Set("definition", output.Definition)
-	d.Set(names.AttrName, output.Name)
-	d.Set(names.AttrRoleARN, output.RoleArn)
+	d.Set("name", output.Name)
+	d.Set("role_arn", output.RoleArn)
 	d.Set("revision_id", output.RevisionId)
-	d.Set(names.AttrStatus, output.Status)
+	d.Set("status", output.Status)
 
 	return nil
 }

@@ -8,16 +8,15 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_lambda_function_url", name="Function URL")
-func dataSourceFunctionURL() *schema.Resource {
+// @SDKDataSource("aws_lambda_function_url")
+func DataSourceFunctionURL() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceFunctionURLRead,
 
@@ -62,11 +61,11 @@ func dataSourceFunctionURL() *schema.Resource {
 					},
 				},
 			},
-			names.AttrCreationTime: {
+			"creation_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrFunctionARN: {
+			"function_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -100,18 +99,20 @@ func dataSourceFunctionURL() *schema.Resource {
 
 func dataSourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
+
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	name := d.Get("function_name").(string)
 	qualifier := d.Get("qualifier").(string)
-	id := functionURLCreateResourceID(name, qualifier)
-	output, err := findFunctionURLByTwoPartKey(ctx, conn, name, qualifier)
+	id := FunctionURLCreateResourceID(name, qualifier)
+	output, err := FindFunctionURLByNameAndQualifier(ctx, conn, name, qualifier)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Lambda Function URL (%s): %s", id, err)
 	}
 
-	functionURL := aws.ToString(output.FunctionUrl)
+	functionURL := aws.StringValue(output.FunctionUrl)
+
 	d.SetId(id)
 	d.Set("authorization_type", output.AuthType)
 	if output.Cors != nil {
@@ -121,8 +122,8 @@ func dataSourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta
 	} else {
 		d.Set("cors", nil)
 	}
-	d.Set(names.AttrCreationTime, output.CreationTime)
-	d.Set(names.AttrFunctionARN, output.FunctionArn)
+	d.Set("creation_time", output.CreationTime)
+	d.Set("function_arn", output.FunctionArn)
 	d.Set("function_name", name)
 	d.Set("function_url", functionURL)
 	d.Set("invoke_mode", output.InvokeMode)

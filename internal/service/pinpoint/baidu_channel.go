@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_pinpoint_baidu_channel")
@@ -34,7 +33,7 @@ func ResourceBaiduChannel() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrEnabled: {
+			"enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
@@ -44,7 +43,7 @@ func ResourceBaiduChannel() *schema.Resource {
 				Required:  true,
 				Sensitive: true,
 			},
-			names.AttrSecretKey: {
+			"secret_key": {
 				Type:      schema.TypeString,
 				Required:  true,
 				Sensitive: true,
@@ -61,9 +60,9 @@ func resourceBaiduChannelUpsert(ctx context.Context, d *schema.ResourceData, met
 
 	params := &pinpoint.BaiduChannelRequest{}
 
-	params.Enabled = aws.Bool(d.Get(names.AttrEnabled).(bool))
+	params.Enabled = aws.Bool(d.Get("enabled").(bool))
 	params.ApiKey = aws.String(d.Get("api_key").(string))
-	params.SecretKey = aws.String(d.Get(names.AttrSecretKey).(string))
+	params.SecretKey = aws.String(d.Get("secret_key").(string))
 
 	req := pinpoint.UpdateBaiduChannelInput{
 		ApplicationId:       aws.String(applicationId),
@@ -100,7 +99,7 @@ func resourceBaiduChannelRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.Set("application_id", output.BaiduChannelResponse.ApplicationId)
-	d.Set(names.AttrEnabled, output.BaiduChannelResponse.Enabled)
+	d.Set("enabled", output.BaiduChannelResponse.Enabled)
 	// ApiKey and SecretKey are never returned
 
 	return diags

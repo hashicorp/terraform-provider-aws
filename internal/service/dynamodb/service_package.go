@@ -6,29 +6,23 @@ package dynamodb
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/retry"
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/names"
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	request_sdkv1 "github.com/aws/aws-sdk-go/aws/request"
+	dynamodb_sdkv1 "github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 )
 
-// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*dynamodb.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
-
-	return dynamodb.NewFromConfig(cfg, func(o *dynamodb.Options) {
-		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
-			o.BaseEndpoint = aws.String(endpoint)
+// CustomizeConn customizes a new AWS SDK for Go v1 client for this service package's AWS API.
+func (p *servicePackage) CustomizeConn(ctx context.Context, conn *dynamodb_sdkv1.DynamoDB) (*dynamodb_sdkv1.DynamoDB, error) {
+	// See https://github.com/aws/aws-sdk-go/pull/1276.
+	conn.Handlers.Retry.PushBack(func(r *request_sdkv1.Request) {
+		if r.Operation.Name != "PutItem" && r.Operation.Name != "UpdateItem" && r.Operation.Name != "DeleteItem" {
+			return
 		}
+		if tfawserr.ErrMessageContains(r.Error, dynamodb_sdkv1.ErrCodeLimitExceededException, "Subscriber limit exceeded:") {
+			r.Retryable = aws_sdkv1.Bool(true)
+		}
+	})
 
-		o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retry.IsErrorRetryableFunc(func(err error) aws.Ternary {
-			if errs.IsAErrorMessageContains[*awstypes.LimitExceededException](err, "Subscriber limit exceeded:") {
-				return aws.TrueTernary
-			}
-			return aws.UnknownTernary // Delegate to configured Retryer.
-		}))
-	}), nil
+	return conn, nil
 }

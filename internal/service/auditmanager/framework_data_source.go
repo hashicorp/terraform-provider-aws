@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource
@@ -39,11 +38,11 @@ func (d *dataSourceFramework) Metadata(_ context.Context, request datasource.Met
 func (d *dataSourceFramework) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			"arn": framework.ARNAttributeComputedOnly(),
 			"compliance_type": schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrDescription: schema.StringAttribute{
+			"description": schema.StringAttribute{
 				Computed: true,
 			},
 			"framework_type": schema.StringAttribute{
@@ -52,18 +51,18 @@ func (d *dataSourceFramework) Schema(ctx context.Context, req datasource.SchemaR
 					enum.FrameworkValidate[awstypes.FrameworkType](),
 				},
 			},
-			names.AttrID: framework.IDAttribute(),
-			names.AttrName: schema.StringAttribute{
+			"id": framework.IDAttribute(),
+			"name": schema.StringAttribute{
 				Required: true,
 			},
-			names.AttrTags: tftags.TagsAttributeComputedOnly(),
+			"tags": tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
 			"control_sets": schema.SetNestedBlock{
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						names.AttrID: framework.IDAttribute(),
-						names.AttrName: schema.StringAttribute{
+						"id": framework.IDAttribute(),
+						"name": schema.StringAttribute{
 							Computed: true,
 						},
 					},
@@ -71,7 +70,7 @@ func (d *dataSourceFramework) Schema(ctx context.Context, req datasource.SchemaR
 						"controls": schema.SetNestedBlock{
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									names.AttrID: schema.StringAttribute{
+									"id": schema.StringAttribute{
 										Computed: true,
 									},
 								},

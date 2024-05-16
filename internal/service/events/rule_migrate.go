@@ -6,7 +6,7 @@ package events
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/service/eventbridge/types"
+	"github.com/aws/aws-sdk-go/service/eventbridge"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -17,11 +17,11 @@ import (
 func resourceRuleV0() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -35,7 +35,7 @@ func resourceRuleV0() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				StateFunc: func(v interface{}) string {
-					json, _ := ruleEventPatternJSONDecoder(v.(string))
+					json, _ := RuleEventPatternJSONDecoder(v.(string))
 					return json
 				},
 			},
@@ -43,28 +43,28 @@ func resourceRuleV0() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			names.AttrNamePrefix: {
+			"name_prefix": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			names.AttrRoleARN: {
+			"role_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			names.AttrScheduleExpression: {
+			"schedule_expression": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			names.AttrState: {
+			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -85,9 +85,9 @@ func resourceRuleUpgradeV0(ctx context.Context, rawState map[string]any, meta an
 	})
 
 	if rawState["is_enabled"].(bool) {
-		rawState[names.AttrState] = types.RuleStateEnabled
+		rawState["state"] = eventbridge.RuleStateEnabled
 	} else {
-		rawState[names.AttrState] = types.RuleStateDisabled
+		rawState["state"] = eventbridge.RuleStateDisabled
 	}
 
 	return rawState, nil

@@ -21,7 +21,7 @@ func DataSourceSinks() *schema.Resource {
 		ReadWithoutTimeout: dataSourceSinksRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARNs: {
+			"arns": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -54,7 +54,7 @@ func dataSourceSinksRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set(names.AttrARNs, arns)
+	d.Set("arns", arns)
 
 	return nil
 }

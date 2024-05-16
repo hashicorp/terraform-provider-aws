@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflightsail "github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccLightsailInstancePublicPorts_basic(t *testing.T) {
@@ -39,11 +38,11 @@ func TestAccLightsailInstancePublicPorts_basic(t *testing.T) {
 				Config: testAccInstancePublicPortsConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstancePublicPortsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "port_info.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "port_info.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "port_info.*", map[string]string{
-						names.AttrProtocol: "tcp",
-						"from_port":        "80",
-						"to_port":          "80",
+						"protocol":  "tcp",
+						"from_port": "80",
+						"to_port":   "80",
 					}),
 				),
 			},
@@ -70,16 +69,16 @@ func TestAccLightsailInstancePublicPorts_multiple(t *testing.T) {
 				Config: testAccInstancePublicPortsConfig_multiple(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstancePublicPortsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "port_info.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "port_info.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "port_info.*", map[string]string{
-						names.AttrProtocol: "tcp",
-						"from_port":        "80",
-						"to_port":          "80",
+						"protocol":  "tcp",
+						"from_port": "80",
+						"to_port":   "80",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "port_info.*", map[string]string{
-						names.AttrProtocol: "tcp",
-						"from_port":        "443",
-						"to_port":          "443",
+						"protocol":  "tcp",
+						"from_port": "443",
+						"to_port":   "443",
 					}),
 				),
 			},
@@ -106,12 +105,12 @@ func TestAccLightsailInstancePublicPorts_cidrs(t *testing.T) {
 				Config: testAccInstancePublicPortsConfig_cidrs(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstancePublicPortsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "port_info.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "port_info.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "port_info.*", map[string]string{
-						names.AttrProtocol: "tcp",
-						"from_port":        "125",
-						"to_port":          "125",
-						"cidrs.#":          acctest.Ct2,
+						"protocol":  "tcp",
+						"from_port": "125",
+						"to_port":   "125",
+						"cidrs.#":   "2",
 					}),
 					resource.TestCheckTypeSetElemAttr(resourceName, "port_info.*.cidrs.*", "1.1.1.1/32"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "port_info.*.cidrs.*", "192.168.1.0/24"),
@@ -140,12 +139,12 @@ func TestAccLightsailInstancePublicPorts_cidrListAliases(t *testing.T) {
 				Config: testAccInstancePublicPortsConfig_cidrListAliases(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstancePublicPortsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "port_info.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "port_info.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "port_info.*", map[string]string{
-						names.AttrProtocol:    "tcp",
+						"protocol":            "tcp",
 						"from_port":           "22",
 						"to_port":             "22",
-						"cidr_list_aliases.#": acctest.Ct1,
+						"cidr_list_aliases.#": "1",
 					}),
 					resource.TestCheckTypeSetElemAttr(resourceName, "port_info.*.cidr_list_aliases.*", "lightsail-connect"),
 				),
@@ -279,7 +278,7 @@ resource "aws_lightsail_instance" "test" {
   name              = %[1]q
   availability_zone = data.aws_availability_zones.available.names[0]
   blueprint_id      = "amazon_linux_2"
-  bundle_id         = "nano_3_0"
+  bundle_id         = "nano_1_0"
 }
 
 resource "aws_lightsail_instance_public_ports" "test" {
@@ -309,7 +308,7 @@ resource "aws_lightsail_instance" "test" {
   name              = %[1]q
   availability_zone = data.aws_availability_zones.available.names[0]
   blueprint_id      = "amazon_linux_2"
-  bundle_id         = "nano_3_0"
+  bundle_id         = "nano_1_0"
 }
 
 resource "aws_lightsail_instance_public_ports" "test" {
@@ -345,7 +344,7 @@ resource "aws_lightsail_instance" "test" {
   name              = %[1]q
   availability_zone = data.aws_availability_zones.available.names[0]
   blueprint_id      = "amazon_linux_2"
-  bundle_id         = "nano_3_0"
+  bundle_id         = "nano_1_0"
 }
 
 resource "aws_lightsail_instance_public_ports" "test" {
@@ -376,7 +375,7 @@ resource "aws_lightsail_instance" "test" {
   name              = %[1]q
   availability_zone = data.aws_availability_zones.available.names[0]
   blueprint_id      = "amazon_linux_2"
-  bundle_id         = "nano_3_0"
+  bundle_id         = "nano_1_0"
 }
 
 resource "aws_lightsail_instance_public_ports" "test" {

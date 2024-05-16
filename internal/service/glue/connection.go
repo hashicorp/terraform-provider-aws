@@ -39,11 +39,11 @@ func ResourceConnection() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrCatalogID: {
+			"catalog_id": {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
@@ -62,7 +62,7 @@ func ResourceConnection() *schema.Resource {
 				Default:      glue.ConnectionTypeJdbc,
 				ValidateFunc: validation.StringInSlice(glue.ConnectionType_Values(), false),
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 2048),
@@ -76,7 +76,7 @@ func ResourceConnection() *schema.Resource {
 					ValidateFunc: validation.StringLenBetween(1, 255),
 				},
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -88,7 +88,7 @@ func ResourceConnection() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrAvailabilityZone: {
+						"availability_zone": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -98,7 +98,7 @@ func ResourceConnection() *schema.Resource {
 							MaxItems: 50,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						names.AttrSubnetID: {
+						"subnet_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -116,12 +116,12 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	var catalogID string
-	if v, ok := d.GetOkExists(names.AttrCatalogID); ok {
+	if v, ok := d.GetOkExists("catalog_id"); ok {
 		catalogID = v.(string)
 	} else {
 		catalogID = meta.(*conns.AWSClient).AccountID
 	}
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 
 	input := &glue.CreateConnectionInput{
 		CatalogId:       aws.String(catalogID),
@@ -167,18 +167,18 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta in
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("connection/%s", connectionName),
 	}.String()
-	d.Set(names.AttrARN, connectionArn)
+	d.Set("arn", connectionArn)
 
-	d.Set(names.AttrCatalogID, catalogID)
+	d.Set("catalog_id", catalogID)
 	if err := d.Set("connection_properties", aws.StringValueMap(connection.ConnectionProperties)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting connection_properties: %s", err)
 	}
 	d.Set("connection_type", connection.ConnectionType)
-	d.Set(names.AttrDescription, connection.Description)
+	d.Set("description", connection.Description)
 	if err := d.Set("match_criteria", flex.FlattenStringList(connection.MatchCriteria)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting match_criteria: %s", err)
 	}
-	d.Set(names.AttrName, connection.Name)
+	d.Set("name", connection.Name)
 	if err := d.Set("physical_connection_requirements", flattenPhysicalConnectionRequirements(connection.PhysicalConnectionRequirements)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting physical_connection_requirements: %s", err)
 	}
@@ -190,7 +190,7 @@ func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		catalogID, connectionName, err := DecodeConnectionID(d.Id())
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Glue Connection (%s): %s", d.Id(), err)
@@ -266,10 +266,10 @@ func expandConnectionInput(d *schema.ResourceData) *glue.ConnectionInput {
 	connectionInput := &glue.ConnectionInput{
 		ConnectionProperties: aws.StringMap(connectionProperties),
 		ConnectionType:       aws.String(d.Get("connection_type").(string)),
-		Name:                 aws.String(d.Get(names.AttrName).(string)),
+		Name:                 aws.String(d.Get("name").(string)),
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		connectionInput.Description = aws.String(v.(string))
 	}
 
@@ -288,7 +288,7 @@ func expandConnectionInput(d *schema.ResourceData) *glue.ConnectionInput {
 func expandPhysicalConnectionRequirements(m map[string]interface{}) *glue.PhysicalConnectionRequirements {
 	physicalConnectionRequirements := &glue.PhysicalConnectionRequirements{}
 
-	if v, ok := m[names.AttrAvailabilityZone]; ok {
+	if v, ok := m["availability_zone"]; ok {
 		physicalConnectionRequirements.AvailabilityZone = aws.String(v.(string))
 	}
 
@@ -296,7 +296,7 @@ func expandPhysicalConnectionRequirements(m map[string]interface{}) *glue.Physic
 		physicalConnectionRequirements.SecurityGroupIdList = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	if v, ok := m[names.AttrSubnetID]; ok {
+	if v, ok := m["subnet_id"]; ok {
 		physicalConnectionRequirements.SubnetId = aws.String(v.(string))
 	}
 
@@ -309,9 +309,9 @@ func flattenPhysicalConnectionRequirements(physicalConnectionRequirements *glue.
 	}
 
 	m := map[string]interface{}{
-		names.AttrAvailabilityZone: aws.StringValue(physicalConnectionRequirements.AvailabilityZone),
-		"security_group_id_list":   flex.FlattenStringSet(physicalConnectionRequirements.SecurityGroupIdList),
-		names.AttrSubnetID:         aws.StringValue(physicalConnectionRequirements.SubnetId),
+		"availability_zone":      aws.StringValue(physicalConnectionRequirements.AvailabilityZone),
+		"security_group_id_list": flex.FlattenStringSet(physicalConnectionRequirements.SecurityGroupIdList),
+		"subnet_id":              aws.StringValue(physicalConnectionRequirements.SubnetId),
 	}
 
 	return []map[string]interface{}{m}

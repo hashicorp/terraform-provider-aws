@@ -36,13 +36,13 @@ func TestAccNeptuneClusterEndpoint_basic(t *testing.T) {
 				Config: testAccClusterEndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterEndpointExists(ctx, resourceName, &dbCluster),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(`cluster-endpoint:.+`)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "READER"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexache.MustCompile(`cluster-endpoint:.+`)),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "READER"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_endpoint_identifier", rName),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrClusterIdentifier, "aws_neptune_cluster.test", names.AttrClusterIdentifier),
-					resource.TestCheckResourceAttr(resourceName, "tags.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "static_members.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "excluded_members.#", acctest.Ct0),
+					resource.TestCheckResourceAttrPair(resourceName, "cluster_identifier", "aws_neptune_cluster.test", "cluster_identifier"),
+					resource.TestCheckResourceAttr(resourceName, "tags.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "static_members.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "excluded_members.#", "0"),
 				),
 			},
 			{
@@ -67,11 +67,11 @@ func TestAccNeptuneClusterEndpoint_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterEndpointConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccClusterEndpointConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -80,20 +80,20 @@ func TestAccNeptuneClusterEndpoint_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterEndpointConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccClusterEndpointConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccClusterEndpointConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccClusterEndpointConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -157,7 +157,7 @@ func testAccCheckClusterEndpointDestroy(ctx context.Context) resource.TestCheckF
 				continue
 			}
 
-			_, err := tfneptune.FindClusterEndpointByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrClusterIdentifier], rs.Primary.Attributes["cluster_endpoint_identifier"])
+			_, err := tfneptune.FindClusterEndpointByTwoPartKey(ctx, conn, rs.Primary.Attributes["cluster_identifier"], rs.Primary.Attributes["cluster_endpoint_identifier"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -183,7 +183,7 @@ func testAccCheckClusterEndpointExists(ctx context.Context, n string, v *neptune
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn(ctx)
 
-		output, err := tfneptune.FindClusterEndpointByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrClusterIdentifier], rs.Primary.Attributes["cluster_endpoint_identifier"])
+		output, err := tfneptune.FindClusterEndpointByTwoPartKey(ctx, conn, rs.Primary.Attributes["cluster_identifier"], rs.Primary.Attributes["cluster_endpoint_identifier"])
 
 		if err != nil {
 			return err

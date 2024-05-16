@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -31,7 +30,7 @@ import (
 
 // @SDKResource("aws_fsx_data_repository_association", name="Data Repository Association")
 // @Tags(identifierAttribute="arn")
-func resourceDataRepositoryAssociation() *schema.Resource {
+func ResourceDataRepositoryAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDataRepositoryAssociationCreate,
 		ReadWithoutTimeout:   resourceDataRepositoryAssociationRead,
@@ -49,7 +48,7 @@ func resourceDataRepositoryAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -76,7 +75,7 @@ func resourceDataRepositoryAssociation() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			names.AttrFileSystemID: {
+			"file_system_id": {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
@@ -168,7 +167,7 @@ func resourceDataRepositoryAssociationCreate(ctx context.Context, d *schema.Reso
 	input := &fsx.CreateDataRepositoryAssociationInput{
 		ClientRequestToken: aws.String(id.UniqueId()),
 		DataRepositoryPath: aws.String(d.Get("data_repository_path").(string)),
-		FileSystemId:       aws.String(d.Get(names.AttrFileSystemID).(string)),
+		FileSystemId:       aws.String(d.Get("file_system_id").(string)),
 		FileSystemPath:     aws.String(d.Get("file_system_path").(string)),
 		Tags:               getTagsIn(ctx),
 	}
@@ -185,13 +184,13 @@ func resourceDataRepositoryAssociationCreate(ctx context.Context, d *schema.Reso
 		input.S3 = expandDataRepositoryAssociationS3(v.([]interface{}))
 	}
 
-	output, err := conn.CreateDataRepositoryAssociationWithContext(ctx, input)
+	result, err := conn.CreateDataRepositoryAssociationWithContext(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating FSx for Lustre Data Repository Association: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.Association.AssociationId))
+	d.SetId(aws.StringValue(result.Association.AssociationId))
 
 	if _, err := waitDataRepositoryAssociationCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for FSx for Lustre Data Repository Association (%s) create: %s", d.Id(), err)
@@ -204,7 +203,7 @@ func resourceDataRepositoryAssociationRead(ctx context.Context, d *schema.Resour
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	association, err := findDataRepositoryAssociationByID(ctx, conn, d.Id())
+	association, err := FindDataRepositoryAssociationByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FSx for Lustre Data Repository Association (%s) not found, removing from state", d.Id())
@@ -216,10 +215,10 @@ func resourceDataRepositoryAssociationRead(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendErrorf(diags, "reading FSx for Lustre Data Repository Association (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, association.ResourceARN)
+	d.Set("arn", association.ResourceARN)
 	d.Set("batch_import_meta_data_on_create", association.BatchImportMetaDataOnCreate)
 	d.Set("data_repository_path", association.DataRepositoryPath)
-	d.Set(names.AttrFileSystemID, association.FileSystemId)
+	d.Set("file_system_id", association.FileSystemId)
 	d.Set("file_system_path", association.FileSystemPath)
 	d.Set("imported_file_chunk_size", association.ImportedFileChunkSize)
 	if err := d.Set("s3", flattenDataRepositoryAssociationS3(association.S3)); err != nil {
@@ -235,7 +234,7 @@ func resourceDataRepositoryAssociationUpdate(ctx context.Context, d *schema.Reso
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &fsx.UpdateDataRepositoryAssociationInput{
 			AssociationId:      aws.String(d.Id()),
 			ClientRequestToken: aws.String(id.UniqueId()),
@@ -382,16 +381,16 @@ func flattenS3AutoImportPolicy(policy *fsx.AutoImportPolicy) []map[string][]inte
 	return []map[string][]interface{}{result}
 }
 
-func findDataRepositoryAssociationByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.DataRepositoryAssociation, error) {
+func FindDataRepositoryAssociationByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.DataRepositoryAssociation, error) {
 	input := &fsx.DescribeDataRepositoryAssociationsInput{
 		AssociationIds: aws.StringSlice([]string{id}),
 	}
 
-	return findDataRepositoryAssociation(ctx, conn, input, tfslices.PredicateTrue[*fsx.DataRepositoryAssociation]())
+	return findDataRepositoryAssociation(ctx, conn, input)
 }
 
-func findDataRepositoryAssociation(ctx context.Context, conn *fsx.FSx, input *fsx.DescribeDataRepositoryAssociationsInput, filter tfslices.Predicate[*fsx.DataRepositoryAssociation]) (*fsx.DataRepositoryAssociation, error) {
-	output, err := findDataRepositoryAssociations(ctx, conn, input, filter)
+func findDataRepositoryAssociation(ctx context.Context, conn *fsx.FSx, input *fsx.DescribeDataRepositoryAssociationsInput) (*fsx.DataRepositoryAssociation, error) {
+	output, err := findDataRepositoryAssociations(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -400,7 +399,7 @@ func findDataRepositoryAssociation(ctx context.Context, conn *fsx.FSx, input *fs
 	return tfresource.AssertSinglePtrResult(output)
 }
 
-func findDataRepositoryAssociations(ctx context.Context, conn *fsx.FSx, input *fsx.DescribeDataRepositoryAssociationsInput, filter tfslices.Predicate[*fsx.DataRepositoryAssociation]) ([]*fsx.DataRepositoryAssociation, error) {
+func findDataRepositoryAssociations(ctx context.Context, conn *fsx.FSx, input *fsx.DescribeDataRepositoryAssociationsInput) ([]*fsx.DataRepositoryAssociation, error) {
 	var output []*fsx.DataRepositoryAssociation
 
 	err := conn.DescribeDataRepositoryAssociationsPagesWithContext(ctx, input, func(page *fsx.DescribeDataRepositoryAssociationsOutput, lastPage bool) bool {
@@ -409,7 +408,7 @@ func findDataRepositoryAssociations(ctx context.Context, conn *fsx.FSx, input *f
 		}
 
 		for _, v := range page.Associations {
-			if v != nil && filter(v) {
+			if v != nil {
 				output = append(output, v)
 			}
 		}
@@ -433,7 +432,7 @@ func findDataRepositoryAssociations(ctx context.Context, conn *fsx.FSx, input *f
 
 func statusDataRepositoryAssociation(ctx context.Context, conn *fsx.FSx, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findDataRepositoryAssociationByID(ctx, conn, id)
+		output, err := FindDataRepositoryAssociationByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

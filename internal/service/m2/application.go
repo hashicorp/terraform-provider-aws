@@ -66,7 +66,7 @@ func (r *applicationResource) Schema(ctx context.Context, request resource.Schem
 			"current_version": schema.Int64Attribute{
 				Computed: true,
 			},
-			names.AttrDescription: schema.StringAttribute{
+			"description": schema.StringAttribute{
 				Optional: true,
 				Validators: []validator.String{
 					stringvalidator.LengthAtMost(500),
@@ -80,13 +80,13 @@ func (r *applicationResource) Schema(ctx context.Context, request resource.Schem
 				},
 			},
 			names.AttrID: framework.IDAttribute(),
-			names.AttrKMSKeyID: schema.StringAttribute{
+			"kms_key_id": schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrName: schema.StringAttribute{
+			"name": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_\-]{1,59}$`), ""),
@@ -95,7 +95,7 @@ func (r *applicationResource) Schema(ctx context.Context, request resource.Schem
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrRoleARN: schema.StringAttribute{
+			"role_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Optional:   true,
 				PlanModifiers: []planmodifier.String{
@@ -114,12 +114,12 @@ func (r *applicationResource) Schema(ctx context.Context, request resource.Schem
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						names.AttrContent: schema.StringAttribute{
+						"content": schema.StringAttribute{
 							Optional: true,
 							Validators: []validator.String{
 								stringvalidator.LengthBetween(1, 65000),
 								stringvalidator.ExactlyOneOf(
-									path.MatchRelative().AtParent().AtName(names.AttrContent),
+									path.MatchRelative().AtParent().AtName("content"),
 									path.MatchRelative().AtParent().AtName("s3_location"),
 								),
 							},
@@ -130,7 +130,7 @@ func (r *applicationResource) Schema(ctx context.Context, request resource.Schem
 					},
 				},
 			},
-			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+			"timeouts": timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,

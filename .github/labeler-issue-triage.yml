@@ -105,8 +105,6 @@ service/budgets:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_budgets_'
 service/ce:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ce_'
-service/chatbot:
-  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_chatbot_'
 service/chime:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_chime_'
 service/chimesdkidentity:
@@ -571,8 +569,6 @@ service/route53:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_route53_(?!resolver_)'
 service/route53domains:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_route53domains_'
-service/route53profiles:
-  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_route53profiles_'
 service/route53recoverycluster:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_route53recoverycluster_'
 service/route53recoverycontrolconfig:

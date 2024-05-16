@@ -39,10 +39,10 @@ func testAccMember_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName, &detectiveOutput),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_id"),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, dataSourceAlternate, names.AttrAccountID),
+					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_time"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_time"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, detective.MemberStatusInvited),
+					resource.TestCheckResourceAttr(resourceName, "status", detective.MemberStatusInvited),
 				),
 			},
 			{
@@ -104,17 +104,17 @@ func testAccMember_message(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName, &detectiveOutput),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_id"),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, dataSourceAlternate, names.AttrAccountID),
+					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_time"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_time"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, detective.MemberStatusInvited),
+					resource.TestCheckResourceAttr(resourceName, "status", detective.MemberStatusInvited),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrMessage, "disable_email_notification"},
+				ImportStateVerifyIgnore: []string{"message", "disable_email_notification"},
 			},
 		},
 	})

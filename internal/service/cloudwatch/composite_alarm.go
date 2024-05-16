@@ -89,7 +89,7 @@ func resourceCompositeAlarm() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 10240),
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -192,7 +192,7 @@ func resourceCompositeAlarmRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("alarm_description", alarm.AlarmDescription)
 	d.Set("alarm_name", alarm.AlarmName)
 	d.Set("alarm_rule", alarm.AlarmRule)
-	d.Set(names.AttrARN, alarm.AlarmArn)
+	d.Set("arn", alarm.AlarmArn)
 	d.Set("insufficient_data_actions", alarm.InsufficientDataActions)
 	d.Set("ok_actions", alarm.OKActions)
 
@@ -203,7 +203,7 @@ func resourceCompositeAlarmUpdate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudWatchClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := expandPutCompositeAlarmInput(ctx, d)
 
 		_, err := conn.PutCompositeAlarm(ctx, input)

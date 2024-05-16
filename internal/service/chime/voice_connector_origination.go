@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_chime_voice_connector_origination")
@@ -51,23 +50,23 @@ func ResourceVoiceConnectorOrigination() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.IsIPAddress,
 						},
-						names.AttrPort: {
+						"port": {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      5060,
 							ValidateFunc: validation.IsPortNumber,
 						},
-						names.AttrPriority: {
+						"priority": {
 							Type:         schema.TypeInt,
 							Required:     true,
 							ValidateFunc: validation.IntBetween(1, 99),
 						},
-						names.AttrProtocol: {
+						"protocol": {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.OriginationRouteProtocol](),
 						},
-						names.AttrWeight: {
+						"weight": {
 							Type:         schema.TypeInt,
 							Required:     true,
 							ValidateFunc: validation.IntBetween(1, 99),
@@ -200,10 +199,10 @@ func expandOriginationRoutes(data []interface{}) []awstypes.OriginationRoute {
 		item := rItem.(map[string]interface{})
 		originationRoutes = append(originationRoutes, awstypes.OriginationRoute{
 			Host:     aws.String(item["host"].(string)),
-			Port:     aws.Int32(int32(item[names.AttrPort].(int))),
-			Priority: aws.Int32(int32(item[names.AttrPriority].(int))),
-			Protocol: awstypes.OriginationRouteProtocol(item[names.AttrProtocol].(string)),
-			Weight:   aws.Int32(int32(item[names.AttrWeight].(int))),
+			Port:     aws.Int32(int32(item["port"].(int))),
+			Priority: aws.Int32(int32(item["priority"].(int))),
+			Protocol: awstypes.OriginationRouteProtocol(item["protocol"].(string)),
+			Weight:   aws.Int32(int32(item["weight"].(int))),
 		})
 	}
 
@@ -215,11 +214,11 @@ func flattenOriginationRoutes(routes []awstypes.OriginationRoute) []interface{} 
 
 	for _, route := range routes {
 		r := map[string]interface{}{
-			"host":             aws.ToString(route.Host),
-			names.AttrPort:     aws.ToInt32(route.Port),
-			names.AttrPriority: aws.ToInt32(route.Priority),
-			names.AttrProtocol: string(route.Protocol),
-			names.AttrWeight:   aws.ToInt32(route.Weight),
+			"host":     aws.ToString(route.Host),
+			"port":     aws.ToInt32(route.Port),
+			"priority": aws.ToInt32(route.Priority),
+			"protocol": string(route.Protocol),
+			"weight":   aws.ToInt32(route.Weight),
 		}
 
 		rawRoutes = append(rawRoutes, r)

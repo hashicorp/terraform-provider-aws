@@ -328,14 +328,14 @@ See [ProjectFileSystemLocation](https://docs.aws.amazon.com/codebuild/latest/API
 * `git_submodules_config` - (Optional) Configuration block. Detailed below.
 * `insecure_ssl` - (Optional) Ignore SSL warnings when connecting to source control.
 * `location` - (Optional) Location of the source code from git or s3.
-* `report_build_status` - (Optional) Whether to report the status of a build's start and finish to your source provider. This option is valid only when your source provider is GitHub, GitHub Enterprise, GitLab, GitLab Self Managed, or Bitbucket.
-* `build_status_config` - (Optional) Configuration block that contains information that defines how the build project reports the build status to the source provider. This option is only used when the source provider is GitHub, GitHub Enterprise, GitLab, GitLab Self Managed, or Bitbucket. `build_status_config` blocks are documented below.
+* `report_build_status` - (Optional) Whether to report the status of a build's start and finish to your source provider. This option is only valid when your source provider is `GITHUB`, `BITBUCKET`, or `GITHUB_ENTERPRISE`.
+* `build_status_config` - (Optional) Configuration block that contains information that defines how the build project reports the build status to the source provider. This option is only used when the source provider is `GITHUB`, `GITHUB_ENTERPRISE`, or `BITBUCKET`. `build_status_config` blocks are documented below.
 * `source_identifier` - (Required) An identifier for this project source. The identifier can only contain alphanumeric characters and underscores, and must be less than 128 characters in length.
-* `type` - (Required) Type of repository that contains the source code to be built. Valid values: `BITBUCKET`, `CODECOMMIT`, `CODEPIPELINE`, `GITHUB`, `GITHUB_ENTERPRISE`, `GITLAB`, `GITLAB_SELF_MANAGED`, `NO_SOURCE`, `S3`.
+* `type` - (Required) Type of repository that contains the source code to be built. Valid values: `CODECOMMIT`, `CODEPIPELINE`, `GITHUB`, `GITHUB_ENTERPRISE`, `BITBUCKET` or `S3`.
 
 #### secondary_sources: git_submodules_config
 
-This block is only valid when the `type` is `CODECOMMIT`, `GITHUB`, `GITHUB_ENTERPRISE`, `GITLAB`, or `GITLAB_SELF_MANAGED`.
+This block is only valid when the `type` is `CODECOMMIT`, `GITHUB` or `GITHUB_ENTERPRISE`.
 
 * `fetch_submodules` - (Required) Whether to fetch Git submodules for the AWS CodeBuild build project.
 
@@ -356,13 +356,13 @@ This block is only valid when the `type` is `CODECOMMIT`, `GITHUB`, `GITHUB_ENTE
 * `git_submodules_config` - (Optional) Configuration block. Detailed below.
 * `insecure_ssl` - (Optional) Ignore SSL warnings when connecting to source control.
 * `location` - (Optional) Location of the source code from git or s3.
-* `report_build_status` - (Optional) Whether to report the status of a build's start and finish to your source provider. This option is valid only when your source provider is GitHub, GitHub Enterprise, GitLab, GitLab Self Managed, or Bitbucket.
-* `build_status_config` - (Optional) Configuration block that contains information that defines how the build project reports the build status to the source provider. This option is only used when the source provider is GitHub, GitHub Enterprise, GitLab, GitLab Self Managed, or Bitbucket. `build_status_config` blocks are documented below.
-* `type` - (Required) Type of repository that contains the source code to be built. Valid values: `BITBUCKET`, `CODECOMMIT`, `CODEPIPELINE`, `GITHUB`, `GITHUB_ENTERPRISE`, `GITLAB`, `GITLAB_SELF_MANAGED`, `NO_SOURCE`, `S3`.
+* `report_build_status` - (Optional) Whether to report the status of a build's start and finish to your source provider. This option is only valid when the `type` is `BITBUCKET` or `GITHUB`.
+* `build_status_config` - (Optional) Configuration block that contains information that defines how the build project reports the build status to the source provider. This option is only used when the source provider is `GITHUB`, `GITHUB_ENTERPRISE`, or `BITBUCKET`. `build_status_config` blocks are documented below.
+* `type` - (Required) Type of repository that contains the source code to be built. Valid values: `CODECOMMIT`, `CODEPIPELINE`, `GITHUB`, `GITHUB_ENTERPRISE`, `BITBUCKET`, `S3`, `NO_SOURCE`.
 
 #### source: git_submodules_config
 
-This block is only valid when the `type` is `CODECOMMIT`, `GITHUB`, `GITHUB_ENTERPRISE`, `GITLAB`, or `GITLAB_SELF_MANAGED`.
+This block is only valid when the `type` is `CODECOMMIT`, `GITHUB` or `GITHUB_ENTERPRISE`.
 
 * `fetch_submodules` - (Required) Whether to fetch Git submodules for the AWS CodeBuild build project.
 
@@ -412,4 +412,4 @@ Using `terraform import`, import CodeBuild Project using the `name`. For example
 % terraform import aws_codebuild_project.name project-name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d24e55e597e710bcc4ba1d53cf8186ec803f1c93b8b23b0f7b037f760d5c6670 -->
+<!-- cache-key: cdktf-0.20.1 input-9408d46dafdd1238b0c08ffc98bfeb1718f425ca25af7c76a088a12255646436 -->

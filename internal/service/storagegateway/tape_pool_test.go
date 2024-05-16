@@ -36,11 +36,11 @@ func TestAccStorageGatewayTapePool_basic(t *testing.T) {
 				Config: testAccTapePoolConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTapePoolExists(ctx, resourceName, &TapePool),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`tapepool/pool-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexache.MustCompile(`tapepool/pool-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "pool_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "storage_class", "GLACIER"),
 					resource.TestCheckResourceAttr(resourceName, "retention_lock_type", "NONE"),
-					resource.TestCheckResourceAttr(resourceName, "retention_lock_time_in_days", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "retention_lock_time_in_days", "0"),
 				),
 			},
 			{
@@ -68,11 +68,11 @@ func TestAccStorageGatewayTapePool_retention(t *testing.T) {
 				Config: testAccTapePoolConfig_retention(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTapePoolExists(ctx, resourceName, &TapePool),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`tapepool/pool-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexache.MustCompile(`tapepool/pool-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "pool_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "storage_class", "GLACIER"),
 					resource.TestCheckResourceAttr(resourceName, "retention_lock_type", "GOVERNANCE"),
-					resource.TestCheckResourceAttr(resourceName, "retention_lock_time_in_days", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "retention_lock_time_in_days", "1"),
 				),
 			},
 			{
@@ -97,11 +97,11 @@ func TestAccStorageGatewayTapePool_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckTapePoolDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTapePoolConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccTapePoolConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTapePoolExists(ctx, resourceName, &TapePool),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -110,20 +110,20 @@ func TestAccStorageGatewayTapePool_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTapePoolConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccTapePoolConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTapePoolExists(ctx, resourceName, &TapePool),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccTapePoolConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccTapePoolConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTapePoolExists(ctx, resourceName, &TapePool),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},

@@ -11,7 +11,6 @@ import (
 	"log"
 	"net"
 	"os"
-	"os/exec"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -29,17 +28,15 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	inspector2types "github.com/aws/aws-sdk-go-v2/service/inspector2/types"
-	organizationstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	ssoadmintypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
-	"github.com/aws/aws-sdk-go-v2/service/wafv2"
-	wafv2types "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/outposts"
+	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -119,9 +116,7 @@ var (
 // the use of saving and referencing specific ProviderFactories instances.
 //
 // PreCheck(t) must be called before using this provider instance.
-var (
-	Provider *schema.Provider = errs.Must(provider.New(context.Background()))
-)
+var Provider *schema.Provider
 
 type ProviderFunc func() *schema.Provider
 
@@ -132,6 +127,15 @@ type ProviderFunc func() *schema.Provider
 // not prevent reconfiguration that may happen should the address of
 // Provider be errantly reused in ProviderFactories.
 var testAccProviderConfigure sync.Once
+
+func init() {
+	var err error
+	Provider, err = provider.New(context.Background())
+
+	if err != nil {
+		panic(err)
+	}
+}
 
 func protoV5ProviderFactoriesInit(ctx context.Context, providerNames ...string) map[string]func() (tfprotov5.ProviderServer, error) {
 	factories := make(map[string]func() (tfprotov5.ProviderServer, error), len(providerNames))
@@ -205,25 +209,21 @@ func protoV5ProviderFactoriesPlusProvidersInit(ctx context.Context, t *testing.T
 // For cross-account testing: Typically paired with PreCheckAlternateAccount and ConfigAlternateAccountProvider.
 func ProtoV5FactoriesPlusProvidersAlternate(ctx context.Context, t *testing.T, providers *[]*schema.Provider) map[string]func() (tfprotov5.ProviderServer, error) {
 	t.Helper()
-
 	return protoV5ProviderFactoriesPlusProvidersInit(ctx, t, providers, ProviderName, ProviderNameAlternate)
 }
 
 func ProtoV5FactoriesNamedAlternate(ctx context.Context, t *testing.T, providers map[string]*schema.Provider) map[string]func() (tfprotov5.ProviderServer, error) {
 	t.Helper()
-
 	return ProtoV5FactoriesNamed(ctx, t, providers, ProviderName, ProviderNameAlternate)
 }
 
 func ProtoV5FactoriesNamed(ctx context.Context, t *testing.T, providers map[string]*schema.Provider, providerNames ...string) map[string]func() (tfprotov5.ProviderServer, error) {
 	t.Helper()
-
 	return protoV5ProviderFactoriesNamedInit(ctx, t, providers, providerNames...)
 }
 
 func ProtoV5FactoriesAlternate(ctx context.Context, t *testing.T) map[string]func() (tfprotov5.ProviderServer, error) {
 	t.Helper()
-
 	return protoV5ProviderFactoriesInit(ctx, ProviderName, ProviderNameAlternate)
 }
 
@@ -233,7 +233,6 @@ func ProtoV5FactoriesAlternate(ctx context.Context, t *testing.T) map[string]fun
 // and ConfigAlternateAccountAndAlternateRegionProvider.
 func ProtoV5FactoriesAlternateAccountAndAlternateRegion(ctx context.Context, t *testing.T) map[string]func() (tfprotov5.ProviderServer, error) {
 	t.Helper()
-
 	return protoV5ProviderFactoriesInit(
 		ctx,
 		ProviderName,
@@ -248,7 +247,6 @@ func ProtoV5FactoriesAlternateAccountAndAlternateRegion(ctx context.Context, t *
 // Usage typically paired with PreCheckMultipleRegion and ConfigMultipleRegionProvider.
 func ProtoV5FactoriesMultipleRegions(ctx context.Context, t *testing.T, n int) map[string]func() (tfprotov5.ProviderServer, error) {
 	t.Helper()
-
 	switch n {
 	case 2:
 		return protoV5ProviderFactoriesInit(ctx, ProviderName, ProviderNameAlternate)
@@ -703,7 +701,7 @@ func CheckResourceAttrJMES(name, key, jmesPath, value string) resource.TestCheck
 
 		result, err := jmespath.Search(jmesPath, jsonData)
 		if err != nil {
-			return fmt.Errorf("invalid JMESPath %q: %w", jmesPath, err)
+			return fmt.Errorf("Invalid JMESPath %q: %w", jmesPath, err)
 		}
 
 		var v string
@@ -751,7 +749,7 @@ func CheckResourceAttrJMESPair(nameFirst, keyFirst, jmesPath, nameSecond, keySec
 
 		result, err := jmespath.Search(jmesPath, jsonData)
 		if err != nil {
-			return fmt.Errorf("invalid JMESPath %q: %w", jmesPath, err)
+			return fmt.Errorf("Invalid JMESPath %q: %w", jmesPath, err)
 		}
 
 		var value string
@@ -831,35 +829,51 @@ func AccountID() string {
 }
 
 func Region() string {
-	return envvar.GetWithDefault(envvar.DefaultRegion, names.USWest2RegionID)
+	return envvar.GetWithDefault(envvar.DefaultRegion, endpoints.UsWest2RegionID)
 }
 
 func AlternateRegion() string {
-	return envvar.GetWithDefault(envvar.AlternateRegion, names.USEast1RegionID)
+	return envvar.GetWithDefault(envvar.AlternateRegion, endpoints.UsEast1RegionID)
 }
 
 func ThirdRegion() string {
-	return envvar.GetWithDefault(envvar.ThirdRegion, names.USEast2RegionID)
+	return envvar.GetWithDefault(envvar.ThirdRegion, endpoints.UsEast2RegionID)
 }
 
 func Partition() string {
-	return names.PartitionForRegion(Region())
+	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), Region()); ok {
+		return partition.ID()
+	}
+	return endpoints.AwsPartitionID
 }
 
 func PartitionDNSSuffix() string {
-	return names.DNSSuffixForPartition(Partition())
+	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), Region()); ok {
+		return partition.DNSSuffix()
+	}
+	return "amazonaws.com"
 }
 
 func PartitionReverseDNSPrefix() string {
-	return names.ReverseDNS(PartitionDNSSuffix())
+	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), Region()); ok {
+		return names.ReverseDNS(partition.DNSSuffix())
+	}
+
+	return "com.amazonaws"
 }
 
 func alternateRegionPartition() string {
-	return names.PartitionForRegion(AlternateRegion())
+	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), AlternateRegion()); ok {
+		return partition.ID()
+	}
+	return endpoints.AwsPartitionID
 }
 
 func thirdRegionPartition() string {
-	return names.PartitionForRegion(ThirdRegion())
+	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), ThirdRegion()); ok {
+		return partition.ID()
+	}
+	return endpoints.AwsPartitionID
 }
 
 func PreCheckAlternateAccount(t *testing.T) {
@@ -904,7 +918,7 @@ func PreCheckMultipleRegion(t *testing.T, regions int) {
 	}
 
 	if regions >= 3 {
-		if thirdRegionPartition() == names.USGovCloudPartitionID || Partition() == names.USGovCloudPartitionID {
+		if thirdRegionPartition() == endpoints.AwsUsGovPartitionID || Partition() == endpoints.AwsUsGovPartitionID {
 			t.Skipf("wanted %d regions, partition (%s) only has 2 regions", regions, Partition())
 		}
 
@@ -1008,7 +1022,7 @@ func PreCheckInspector2(ctx context.Context, t *testing.T) {
 func PreCheckOrganizationsAccount(ctx context.Context, t *testing.T) {
 	t.Helper()
 
-	_, err := tforganizations.FindOrganization(ctx, Provider.Meta().(*conns.AWSClient).OrganizationsClient(ctx))
+	_, err := tforganizations.FindOrganization(ctx, Provider.Meta().(*conns.AWSClient).OrganizationsConn(ctx))
 
 	if tfresource.NotFound(err) {
 		return
@@ -1021,16 +1035,10 @@ func PreCheckOrganizationsAccount(ctx context.Context, t *testing.T) {
 	t.Skip("skipping tests; this AWS account must not be an existing member of an AWS Organization")
 }
 
-func PreCheckOrganizationsEnabled(ctx context.Context, t *testing.T) *organizationstypes.Organization {
+func PreCheckOrganizationsEnabled(ctx context.Context, t *testing.T) {
 	t.Helper()
 
-	return PreCheckOrganizationsEnabledWithProvider(ctx, t, func() *schema.Provider { return Provider })
-}
-
-func PreCheckOrganizationsEnabledWithProvider(ctx context.Context, t *testing.T, providerF ProviderFunc) *organizationstypes.Organization {
-	t.Helper()
-
-	organization, err := tforganizations.FindOrganization(ctx, providerF().Meta().(*conns.AWSClient).OrganizationsClient(ctx))
+	_, err := tforganizations.FindOrganization(ctx, Provider.Meta().(*conns.AWSClient).OrganizationsConn(ctx))
 
 	if tfresource.NotFound(err) {
 		t.Skip("this AWS account must be an existing member of an AWS Organization")
@@ -1039,22 +1047,24 @@ func PreCheckOrganizationsEnabledWithProvider(ctx context.Context, t *testing.T,
 	if err != nil {
 		t.Fatalf("describing AWS Organization: %s", err)
 	}
-
-	return organization
 }
 
 func PreCheckOrganizationManagementAccount(ctx context.Context, t *testing.T) {
 	t.Helper()
-
 	PreCheckOrganizationManagementAccountWithProvider(ctx, t, func() *schema.Provider { return Provider })
 }
 
 func PreCheckOrganizationManagementAccountWithProvider(ctx context.Context, t *testing.T, providerF ProviderFunc) {
 	t.Helper()
 
-	organization := PreCheckOrganizationsEnabledWithProvider(ctx, t, providerF)
+	awsClient := providerF().Meta().(*conns.AWSClient)
+	organization, err := tforganizations.FindOrganization(ctx, awsClient.OrganizationsConn(ctx))
 
-	callerIdentity, err := tfsts.FindCallerIdentity(ctx, providerF().Meta().(*conns.AWSClient).STSClient(ctx))
+	if err != nil {
+		t.Fatalf("describing AWS Organization: %s", err)
+	}
+
+	callerIdentity, err := tfsts.FindCallerIdentity(ctx, awsClient.STSClient(ctx))
 
 	if err != nil {
 		t.Fatalf("getting current identity: %s", err)
@@ -1067,16 +1077,20 @@ func PreCheckOrganizationManagementAccountWithProvider(ctx context.Context, t *t
 
 func PreCheckOrganizationMemberAccount(ctx context.Context, t *testing.T) {
 	t.Helper()
-
 	PreCheckOrganizationMemberAccountWithProvider(ctx, t, func() *schema.Provider { return Provider })
 }
 
 func PreCheckOrganizationMemberAccountWithProvider(ctx context.Context, t *testing.T, providerF ProviderFunc) {
 	t.Helper()
 
-	organization := PreCheckOrganizationsEnabledWithProvider(ctx, t, providerF)
+	awsClient := providerF().Meta().(*conns.AWSClient)
+	organization, err := tforganizations.FindOrganization(ctx, awsClient.OrganizationsConn(ctx))
 
-	callerIdentity, err := tfsts.FindCallerIdentity(ctx, providerF().Meta().(*conns.AWSClient).STSClient(ctx))
+	if err != nil {
+		t.Fatalf("describing AWS Organization: %s", err)
+	}
+
+	callerIdentity, err := tfsts.FindCallerIdentity(ctx, awsClient.STSClient(ctx))
 
 	if err != nil {
 		t.Fatalf("getting current identity: %s", err)
@@ -1148,7 +1162,6 @@ func PreCheckHasIAMRole(ctx context.Context, t *testing.T, roleName string) {
 
 func PreCheckIAMServiceLinkedRole(ctx context.Context, t *testing.T, pathPrefix string) {
 	t.Helper()
-
 	PreCheckIAMServiceLinkedRoleWithProvider(ctx, t, func() *schema.Provider { return Provider }, pathPrefix)
 }
 
@@ -1249,18 +1262,18 @@ func PreCheckWAFV2CloudFrontScope(ctx context.Context, t *testing.T) {
 	t.Helper()
 
 	switch Partition() {
-	case names.StandardPartitionID:
-		PreCheckRegion(t, names.USEast1RegionID)
-	case names.ChinaPartitionID:
-		PreCheckRegion(t, names.CNNorthwest1RegionID)
+	case endpoints.AwsPartitionID:
+		PreCheckRegion(t, endpoints.UsEast1RegionID)
+	case endpoints.AwsCnPartitionID:
+		PreCheckRegion(t, endpoints.CnNorthwest1RegionID)
 	}
 
-	conn := Provider.Meta().(*conns.AWSClient).WAFV2Client(ctx)
+	conn := Provider.Meta().(*conns.AWSClient).WAFV2Conn(ctx)
 	input := &wafv2.ListWebACLsInput{
-		Scope: wafv2types.ScopeCloudfront,
+		Scope: aws.String(wafv2.ScopeCloudfront),
 	}
 
-	_, err := conn.ListWebACLs(ctx, input)
+	_, err := conn.ListWebACLsWithContext(ctx, input)
 
 	if PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -1854,7 +1867,7 @@ func (d domainName) Subdomain(name string) domainName {
 }
 
 func (d domainName) RandomSubdomain() domainName {
-	return d.Subdomain(sdkacctest.RandString(8)) //nolint:mnd // standard length of 8
+	return d.Subdomain(sdkacctest.RandString(8)) //nolint:gomnd
 }
 
 func (d domainName) FQDN() domainName {
@@ -2111,7 +2124,7 @@ func CheckACMPCACertificateAuthorityExists(ctx context.Context, n string, certif
 func PreCheckAPIGatewayTypeEDGE(t *testing.T) {
 	t.Helper()
 
-	if Partition() != names.StandardPartitionID {
+	if Partition() != endpoints.AwsPartitionID {
 		t.Skipf("skipping test; Endpoint Configuration type EDGE is not supported in this partition (%s)", Partition())
 	}
 }
@@ -2405,34 +2418,6 @@ resource "aws_subnet" "test" {
 	)
 }
 
-func ConfigVPCWithSubnetsEnableDNSHostnames(rName string, subnetCount int) string {
-	return ConfigCompose(
-		ConfigAvailableAZsNoOptInDefaultExclude(),
-		fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block           = "10.0.0.0/16"
-  enable_dns_hostnames = true
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count = %[2]d
-
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName, subnetCount),
-	)
-}
-
 func ConfigVPCWithSubnetsIPv6(rName string, subnetCount int) string {
 	return ConfigCompose(
 		ConfigAvailableAZsNoOptInDefaultExclude(),
@@ -2522,6 +2507,10 @@ func CheckCallerIdentityAccountID(n string) resource.TestCheckFunc {
 			return fmt.Errorf("can't find AccountID resource: %s", n)
 		}
 
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("account Id resource ID not set.")
+		}
+
 		expected := Provider.Meta().(*conns.AWSClient).AccountID
 		if rs.Primary.Attributes["account_id"] != expected {
 			return fmt.Errorf("incorrect Account ID: expected %q, got %q", expected, rs.Primary.Attributes["account_id"])
@@ -2595,18 +2584,6 @@ func SkipIfEnvVarNotSet(t *testing.T, key string) string {
 	v := os.Getenv(key)
 	if v == "" {
 		t.Skipf("Environment variable %s is not set, skipping test", key)
-	}
-	return v
-}
-
-// SkipIfExeNotOnPath skips the current test if the specified executable is not found in the directories named by the PATH environment variable.
-// The absolute path to the executable is returned.
-func SkipIfExeNotOnPath(t *testing.T, file string) string {
-	t.Helper()
-
-	v, err := exec.LookPath(file)
-	if err != nil {
-		t.Skipf("File %s not found on PATH, skipping test: %s", v, err)
 	}
 	return v
 }

@@ -168,13 +168,13 @@ func main() {
 		}
 
 		deprecatedEnvVar := l.DeprecatedEnvVar() != ""
-		tfAwsEnvVar := l.TFAWSEnvVar() != ""
+		tfAwsEnvVar := l.TfAwsEnvVar() != ""
 		if deprecatedEnvVar != tfAwsEnvVar {
-			log.Fatalf("in service data, line %d, for service %s, either both DeprecatedEnvVar and TFAWSEnvVar must be specified or neither can be", i+lineOffset, l.HumanFriendly())
+			log.Fatalf("in service data, line %d, for service %s, either both DeprecatedEnvVar and TfAwsEnvVar must be specified or neither can be", i+lineOffset, l.HumanFriendly())
 		}
 
-		if l.SDKID() == "" && !l.Exclude() {
-			log.Fatalf("in service data, line %d, for service %s, SDKID is required unless Exclude is set", i+lineOffset, l.HumanFriendly())
+		if l.SdkId() == "" && !l.Exclude() {
+			log.Fatalf("in service data, line %d, for service %s, SdkId is required unless Exclude is set", i+lineOffset, l.HumanFriendly())
 		}
 
 		if l.EndpointAPICall() == "" && !l.NotImplemented() && !l.Exclude() {

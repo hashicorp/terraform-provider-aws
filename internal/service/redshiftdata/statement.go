@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_redshiftdata_statement")
@@ -40,12 +39,12 @@ func resourceStatement() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrClusterIdentifier: {
+			"cluster_identifier": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			names.AttrDatabase: {
+			"database": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -55,19 +54,19 @@ func resourceStatement() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			names.AttrParameters: {
+			"parameters": {
 				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
 				MinItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrName: {
+						"name": {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
 						},
-						names.AttrValue: {
+						"value": {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -110,12 +109,12 @@ func resourceStatementCreate(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).RedshiftDataClient(ctx)
 
 	input := &redshiftdata.ExecuteStatementInput{
-		Database:  aws.String(d.Get(names.AttrDatabase).(string)),
+		Database:  aws.String(d.Get("database").(string)),
 		Sql:       aws.String(d.Get("sql").(string)),
 		WithEvent: aws.Bool(d.Get("with_event").(bool)),
 	}
 
-	if v, ok := d.GetOk(names.AttrClusterIdentifier); ok {
+	if v, ok := d.GetOk("cluster_identifier"); ok {
 		input.ClusterIdentifier = aws.String(v.(string))
 	}
 
@@ -123,7 +122,7 @@ func resourceStatementCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.DbUser = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrParameters); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk("parameters"); ok && len(v.([]interface{})) > 0 {
 		input.Parameters = expandParameters(v.([]interface{}))
 	}
 
@@ -170,10 +169,10 @@ func resourceStatementRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "reading Redshift Data Statement (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrClusterIdentifier, sub.ClusterIdentifier)
-	d.Set(names.AttrDatabase, d.Get(names.AttrDatabase).(string))
+	d.Set("cluster_identifier", sub.ClusterIdentifier)
+	d.Set("database", d.Get("database").(string))
 	d.Set("db_user", d.Get("db_user").(string))
-	if err := d.Set(names.AttrParameters, flattenParameters(sub.QueryParameters)); err != nil {
+	if err := d.Set("parameters", flattenParameters(sub.QueryParameters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting parameters: %s", err)
 	}
 	d.Set("secret_arn", sub.SecretArn)
@@ -267,11 +266,11 @@ func expandParameter(tfMap map[string]interface{}) *types.SqlParameter {
 
 	apiObject := &types.SqlParameter{}
 
-	if v, ok := tfMap[names.AttrName].(string); ok {
+	if v, ok := tfMap["name"].(string); ok {
 		apiObject.Name = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrValue].(string); ok {
+	if v, ok := tfMap["value"].(string); ok {
 		apiObject.Value = aws.String(v)
 	}
 
@@ -308,11 +307,11 @@ func flattenParameter(apiObject types.SqlParameter) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Name; v != nil {
-		tfMap[names.AttrName] = aws.ToString(v)
+		tfMap["name"] = aws.ToString(v)
 	}
 
 	if v := apiObject.Value; v != nil {
-		tfMap[names.AttrValue] = aws.ToString(v)
+		tfMap["value"] = aws.ToString(v)
 	}
 	return tfMap
 }

@@ -43,7 +43,7 @@ func resourceNotificationRule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -59,7 +59,7 @@ func resourceNotificationRule() *schema.Resource {
 				MaxItems: 200,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
@@ -73,7 +73,7 @@ func resourceNotificationRule() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Default:          types.NotificationRuleStatusEnabled,
@@ -81,22 +81,22 @@ func resourceNotificationRule() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrTarget: {
+			"target": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				MaxItems: 10,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrAddress: {
+						"address": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						names.AttrStatus: {
+						"status": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrType: {
+						"type": {
 							Type:     schema.TypeString,
 							Default:  "SNS",
 							Optional: true,
@@ -114,15 +114,15 @@ func resourceNotificationRuleCreate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeStarNotificationsClient(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &codestarnotifications.CreateNotificationRuleInput{
 		DetailType:   types.DetailType(d.Get("detail_type").(string)),
 		EventTypeIds: flex.ExpandStringValueSet(d.Get("event_type_ids").(*schema.Set)),
 		Name:         aws.String(name),
 		Resource:     aws.String(d.Get("resource").(string)),
-		Status:       types.NotificationRuleStatus(d.Get(names.AttrStatus).(string)),
+		Status:       types.NotificationRuleStatus(d.Get("status").(string)),
 		Tags:         getTagsIn(ctx),
-		Targets:      expandNotificationRuleTargets(d.Get(names.AttrTarget).(*schema.Set).List()),
+		Targets:      expandNotificationRuleTargets(d.Get("target").(*schema.Set).List()),
 	}
 
 	output, err := conn.CreateNotificationRule(ctx, input)
@@ -152,25 +152,25 @@ func resourceNotificationRuleRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading CodeStar Notification Rule (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, rule.Arn)
+	d.Set("arn", rule.Arn)
 	d.Set("detail_type", rule.DetailType)
 	eventTypeIDs := tfslices.ApplyToAll(rule.EventTypes, func(v types.EventTypeSummary) string {
 		return aws.ToString(v.EventTypeId)
 	})
 	d.Set("event_type_ids", eventTypeIDs)
-	d.Set(names.AttrName, rule.Name)
+	d.Set("name", rule.Name)
 	d.Set("resource", rule.Resource)
-	d.Set(names.AttrStatus, rule.Status)
+	d.Set("status", rule.Status)
 
 	targets := make([]map[string]interface{}, 0, len(rule.Targets))
 	for _, t := range rule.Targets {
 		targets = append(targets, map[string]interface{}{
-			names.AttrAddress: aws.ToString(t.TargetAddress),
-			names.AttrType:    aws.ToString(t.TargetType),
-			names.AttrStatus:  t.TargetStatus,
+			"address": aws.ToString(t.TargetAddress),
+			"type":    aws.ToString(t.TargetType),
+			"status":  t.TargetStatus,
 		})
 	}
-	if err := d.Set(names.AttrTarget, targets); err != nil {
+	if err := d.Set("target", targets); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting target: %s", err)
 	}
 
@@ -187,17 +187,17 @@ func resourceNotificationRuleUpdate(ctx context.Context, d *schema.ResourceData,
 		Arn:          aws.String(d.Id()),
 		DetailType:   types.DetailType(d.Get("detail_type").(string)),
 		EventTypeIds: flex.ExpandStringValueSet(d.Get("event_type_ids").(*schema.Set)),
-		Name:         aws.String(d.Get(names.AttrName).(string)),
-		Status:       types.NotificationRuleStatus(d.Get(names.AttrStatus).(string)),
-		Targets:      expandNotificationRuleTargets(d.Get(names.AttrTarget).(*schema.Set).List()),
+		Name:         aws.String(d.Get("name").(string)),
+		Status:       types.NotificationRuleStatus(d.Get("status").(string)),
+		Targets:      expandNotificationRuleTargets(d.Get("target").(*schema.Set).List()),
 	}
 
 	if _, err := conn.UpdateNotificationRule(ctx, input); err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating CodeStar Notification Rule (%s): %s", d.Id(), err)
 	}
 
-	if d.HasChange(names.AttrTarget) {
-		o, n := d.GetChange(names.AttrTarget)
+	if d.HasChange("target") {
+		o, n := d.GetChange("target")
 		if err := cleanupNotificationRuleTargets(ctx, conn, o.(*schema.Set), n.(*schema.Set)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "deleting CodeStar Notification Rule (%s) targets: %s", d.Id(), err)
 		}
@@ -219,7 +219,7 @@ func resourceNotificationRuleDelete(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "deleting CodeStar Notification Rule (%s): %s", d.Id(), err)
 	}
 
-	if err = cleanupNotificationRuleTargets(ctx, conn, d.Get(names.AttrTarget).(*schema.Set), nil); err != nil {
+	if err = cleanupNotificationRuleTargets(ctx, conn, d.Get("target").(*schema.Set), nil); err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting CodeStar Notification Rule (%s) targets: %s", d.Id(), err)
 	}
 
@@ -273,7 +273,7 @@ func cleanupNotificationRuleTargets(ctx context.Context, conn *codestarnotificat
 
 		input := &codestarnotifications.DeleteTargetInput{
 			ForceUnsubscribeAll: false,
-			TargetAddress:       aws.String(target[names.AttrAddress].(string)),
+			TargetAddress:       aws.String(target["address"].(string)),
 		}
 
 		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, targetSubscriptionTimeout, func() (interface{}, error) {
@@ -298,8 +298,8 @@ func expandNotificationRuleTargets(targetsData []interface{}) []types.Target {
 	for _, t := range targetsData {
 		target := t.(map[string]interface{})
 		targets = append(targets, types.Target{
-			TargetAddress: aws.String(target[names.AttrAddress].(string)),
-			TargetType:    aws.String(target[names.AttrType].(string)),
+			TargetAddress: aws.String(target["address"].(string)),
+			TargetType:    aws.String(target["type"].(string)),
 		})
 	}
 	return targets

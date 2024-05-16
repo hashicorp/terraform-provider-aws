@@ -7,14 +7,12 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -39,7 +37,7 @@ func ResourceEBSSnapshotCopy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -47,17 +45,17 @@ func ResourceEBSSnapshotCopy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			names.AttrEncrypted: {
+			"encrypted": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				ForceNew: true,
 			},
-			names.AttrKMSKeyID: {
+			"kms_key_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -70,7 +68,7 @@ func ResourceEBSSnapshotCopy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrOwnerID: {
+			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -92,7 +90,7 @@ func ResourceEBSSnapshotCopy() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.StringInSlice(enum.Slice(append(awstypes.TargetStorageTier.Values(""), TargetStorageTierStandard)...), false),
+				ValidateFunc: validation.StringInSlice(append(ec2.TargetStorageTier_Values(), TargetStorageTierStandard), false),
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -104,7 +102,7 @@ func ResourceEBSSnapshotCopy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrVolumeSize: {
+			"volume_size": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -114,40 +112,39 @@ func ResourceEBSSnapshotCopy() *schema.Resource {
 
 func resourceEBSSnapshotCopyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CopySnapshotInput{
 		SourceRegion:      aws.String(d.Get("source_region").(string)),
 		SourceSnapshotId:  aws.String(d.Get("source_snapshot_id").(string)),
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeSnapshot),
+		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeSnapshot),
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrEncrypted); ok {
+	if v, ok := d.GetOk("encrypted"); ok {
 		input.Encrypted = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
+	if v, ok := d.GetOk("kms_key_id"); ok {
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
-	output, err := conn.CopySnapshot(ctx, input)
+	output, err := conn.CopySnapshotWithContext(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EBS Snapshot Copy: %s", err)
 	}
 
-	d.SetId(aws.ToString(output.SnapshotId))
+	d.SetId(aws.StringValue(output.SnapshotId))
 
 	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate),
 		func() (interface{}, error) {
-			waiter := ec2.NewSnapshotCompletedWaiter(conn)
-			return waiter.WaitForOutput(ctx, &ec2.DescribeSnapshotsInput{
-				SnapshotIds: []string{d.Id()},
-			}, d.Timeout(schema.TimeoutCreate))
+			return nil, conn.WaitUntilSnapshotCompletedWithContext(ctx, &ec2.DescribeSnapshotsInput{
+				SnapshotIds: aws.StringSlice([]string{d.Id()}),
+			})
 		},
 		errCodeResourceNotReady)
 
@@ -155,10 +152,10 @@ func resourceEBSSnapshotCopyCreate(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "waiting for EBS Snapshot Copy (%s) create: %s", d.Id(), err)
 	}
 
-	if v, ok := d.GetOk("storage_tier"); ok && v.(string) == string(awstypes.TargetStorageTierArchive) {
-		_, err = conn.ModifySnapshotTier(ctx, &ec2.ModifySnapshotTierInput{
+	if v, ok := d.GetOk("storage_tier"); ok && v.(string) == ec2.TargetStorageTierArchive {
+		_, err = conn.ModifySnapshotTierWithContext(ctx, &ec2.ModifySnapshotTierInput{
 			SnapshotId:  aws.String(d.Id()),
-			StorageTier: awstypes.TargetStorageTier(v.(string)),
+			StorageTier: aws.String(v.(string)),
 		})
 
 		if err != nil {

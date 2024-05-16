@@ -35,8 +35,8 @@ func TestAccIAMGroupPolicy_basic(t *testing.T) {
 				Config: testAccGroupPolicyConfig_basic(rName, "*"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupPolicyExists(ctx, resourceName, &groupPolicy),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
 				),
 			},
 			{
@@ -88,8 +88,8 @@ func TestAccIAMGroupPolicy_nameGenerated(t *testing.T) {
 				Config: testAccGroupPolicyConfig_nameGenerated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupPolicyExists(ctx, resourceName, &groupPolicy),
-					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, id.UniqueIdPrefix),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", id.UniqueIdPrefix),
 				),
 			},
 			{
@@ -117,8 +117,8 @@ func TestAccIAMGroupPolicy_namePrefix(t *testing.T) {
 				Config: testAccGroupPolicyConfig_namePrefix(rName, "tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupPolicyExists(ctx, resourceName, &groupPolicy),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-acc-test-prefix-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
 				),
 			},
 			{
@@ -151,7 +151,7 @@ func TestAccIAMGroupPolicy_unknownsInPolicy(t *testing.T) {
 				Config: testAccGroupPolicyConfig_unknowns(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupPolicyExists(ctx, resourceName, &groupPolicy),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
 		},
@@ -174,16 +174,16 @@ func TestAccIAMGroupPolicy_update(t *testing.T) {
 				Config: testAccGroupPolicyConfig_basic(rName, "*"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupPolicyExists(ctx, resourceName, &groupPolicy),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
 				),
 			},
 			{
 				Config: testAccGroupPolicyConfig_basic(rName, "ec2:*"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupPolicyExists(ctx, resourceName, &groupPolicy),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
 				),
 			},
 		},

@@ -51,7 +51,7 @@ func TestAccIAMUser_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrForceDestroy},
+					"force_destroy"},
 			},
 			{
 				Config: testAccUserConfig_basic(name2, path2),
@@ -114,7 +114,7 @@ func TestAccIAMUser_ForceDestroy_accessKey(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrForceDestroy},
+					"force_destroy"},
 			},
 		},
 	})
@@ -145,7 +145,7 @@ func TestAccIAMUser_ForceDestroy_loginProfile(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrForceDestroy},
+					"force_destroy"},
 			},
 		},
 	})
@@ -176,7 +176,7 @@ func TestAccIAMUser_ForceDestroy_mfaDevice(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrForceDestroy},
+					"force_destroy"},
 			},
 		},
 	})
@@ -206,7 +206,7 @@ func TestAccIAMUser_ForceDestroy_sshKey(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 		},
 	})
@@ -236,7 +236,7 @@ func TestAccIAMUser_ForceDestroy_serviceSpecificCred(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 		},
 	})
@@ -267,7 +267,7 @@ func TestAccIAMUser_ForceDestroy_signingCertificate(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrForceDestroy},
+					"force_destroy"},
 			},
 		},
 	})
@@ -372,7 +372,7 @@ func TestAccIAMUser_nameChange(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrForceDestroy},
+					"force_destroy"},
 			},
 			{
 				Config: testAccUserConfig_basic(name2, path),
@@ -410,7 +410,7 @@ func TestAccIAMUser_pathChange(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrForceDestroy},
+					"force_destroy"},
 			},
 			{
 				Config: testAccUserConfig_basic(name, path2),
@@ -452,7 +452,7 @@ func TestAccIAMUser_permissionsBoundary(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrForceDestroy},
+					"force_destroy"},
 			},
 			// Test update
 			{
@@ -468,7 +468,7 @@ func TestAccIAMUser_permissionsBoundary(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 			// Test removal
 			{
@@ -825,4 +825,49 @@ resource "aws_iam_user" "test" {
   name          = %q
 }
 `, rName)
+}
+
+func testAccUserConfig_tags0(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_user" "test" {
+  name = %[1]q
+}
+`, rName)
+}
+
+func testAccUserConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_user" "test" {
+  name = %[1]q
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccUserConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_user" "test" {
+  name = %[1]q
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccUserConfig_tagsNull(rName, tagKey1 string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_user" "test" {
+  name = %[1]q
+
+  tags = {
+    %[2]q = null
+  }
+}
+`, rName, tagKey1)
 }

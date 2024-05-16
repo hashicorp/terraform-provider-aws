@@ -33,9 +33,9 @@ func TestAccVPCEndpointConnectionNotification_basic(t *testing.T) {
 				Config: testAccVPCEndpointConnectionNotificationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointConnectionNotificationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "connection_events.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "connection_events.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "notification_type", "Topic"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrState, "Enabled"),
+					resource.TestCheckResourceAttr(resourceName, "state", "Enabled"),
 				),
 			},
 			{
@@ -47,9 +47,9 @@ func TestAccVPCEndpointConnectionNotification_basic(t *testing.T) {
 				Config: testAccVPCEndpointConnectionNotificationConfig_modified(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointConnectionNotificationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "connection_events.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "connection_events.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "notification_type", "Topic"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrState, "Enabled"),
+					resource.TestCheckResourceAttr(resourceName, "state", "Enabled"),
 				),
 			},
 		},

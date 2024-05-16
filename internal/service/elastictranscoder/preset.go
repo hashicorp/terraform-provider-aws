@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_elastictranscoder_preset")
@@ -31,7 +30,7 @@ func ResourcePreset() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -129,7 +128,7 @@ func ResourcePreset() *schema.Resource {
 								"LittleEndian",
 							}, false),
 						},
-						names.AttrProfile: {
+						"profile": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -177,13 +176,13 @@ func ResourcePreset() *schema.Resource {
 				}, false),
 			},
 
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
 
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -210,7 +209,7 @@ func ResourcePreset() *schema.Resource {
 								"16:9",
 							}, false),
 						},
-						names.AttrFormat: {
+						"format": {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -219,7 +218,7 @@ func ResourcePreset() *schema.Resource {
 								"png",
 							}, false),
 						},
-						names.AttrInterval: {
+						"interval": {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -265,7 +264,7 @@ func ResourcePreset() *schema.Resource {
 				},
 			},
 
-			names.AttrType: {
+			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -437,7 +436,7 @@ func ResourcePreset() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 						},
-						names.AttrID: {
+						"id": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
@@ -468,7 +467,7 @@ func ResourcePreset() *schema.Resource {
 								"ShrinkToFit",
 							}, false),
 						},
-						names.AttrTarget: {
+						"target": {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -513,16 +512,16 @@ func resourcePresetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	req := &elastictranscoder.CreatePresetInput{
 		Audio:       expandETAudioParams(d),
 		Container:   aws.String(d.Get("container").(string)),
-		Description: aws.String(d.Get(names.AttrDescription).(string)),
+		Description: aws.String(d.Get("description").(string)),
 		Thumbnails:  expandETThumbnails(d),
 		Video:       expandETVideoParams(d),
 	}
 
-	if name, ok := d.GetOk(names.AttrName); ok {
+	if name, ok := d.GetOk("name"); ok {
 		req.Name = aws.String(name.(string))
 	} else {
 		name := id.PrefixedUniqueId("tf-et-preset-")
-		d.Set(names.AttrName, name)
+		d.Set("name", name)
 		req.Name = aws.String(name)
 	}
 
@@ -559,11 +558,11 @@ func expandETThumbnails(d *schema.ResourceData) *elastictranscoder.Thumbnails {
 		thumbnails.AspectRatio = aws.String(v.(string))
 	}
 
-	if v, ok := t[names.AttrInterval]; ok && v.(string) != "" {
+	if v, ok := t["interval"]; ok && v.(string) != "" {
 		thumbnails.Interval = aws.String(v.(string))
 	}
 
-	if v, ok := t[names.AttrFormat]; ok && v.(string) != "" {
+	if v, ok := t["format"]; ok && v.(string) != "" {
 		thumbnails.Format = aws.String(v.(string))
 	}
 
@@ -631,7 +630,7 @@ func expandETAudioCodecOptions(d *schema.ResourceData) *elastictranscoder.AudioC
 		codecOpts.Signed = aws.String(v.(string))
 	}
 
-	if v, ok := codec[names.AttrProfile]; ok && v.(string) != "" {
+	if v, ok := codec["profile"]; ok && v.(string) != "" {
 		codecOpts.Profile = aws.String(v.(string))
 	}
 
@@ -738,12 +737,12 @@ func expandETVideoWatermarks(d *schema.ResourceData) []*elastictranscoder.Preset
 		watermark := &elastictranscoder.PresetWatermark{
 			HorizontalAlign:  aws.String(p["horizontal_align"].(string)),
 			HorizontalOffset: aws.String(p["horizontal_offset"].(string)),
-			Id:               aws.String(p[names.AttrID].(string)),
+			Id:               aws.String(p["id"].(string)),
 			MaxHeight:        aws.String(p["max_height"].(string)),
 			MaxWidth:         aws.String(p["max_width"].(string)),
 			Opacity:          aws.String(p["opacity"].(string)),
 			SizingPolicy:     aws.String(p["sizing_policy"].(string)),
-			Target:           aws.String(p[names.AttrTarget].(string)),
+			Target:           aws.String(p["target"].(string)),
 			VerticalAlign:    aws.String(p["vertical_align"].(string)),
 			VerticalOffset:   aws.String(p["vertical_offset"].(string)),
 		}
@@ -771,7 +770,7 @@ func resourcePresetRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	preset := resp.Preset
-	d.Set(names.AttrARN, preset.Arn)
+	d.Set("arn", preset.Arn)
 
 	if preset.Audio != nil {
 		if err := d.Set("audio", flattenETAudioParameters(preset.Audio)); err != nil {
@@ -786,8 +785,8 @@ func resourcePresetRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.Set("container", preset.Container)
-	d.Set(names.AttrName, preset.Name)
-	d.Set(names.AttrDescription, preset.Description)
+	d.Set("name", preset.Name)
+	d.Set("description", preset.Description)
 
 	if preset.Thumbnails != nil {
 		err := d.Set("thumbnails", flattenETThumbnails(preset.Thumbnails))
@@ -796,7 +795,7 @@ func resourcePresetRead(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	}
 
-	d.Set(names.AttrType, preset.Type)
+	d.Set("type", preset.Type)
 
 	if preset.Video != nil {
 		err := d.Set("video", flattenETVideoParams(preset.Video))
@@ -845,10 +844,10 @@ func flattenETAudioCodecOptions(opts *elastictranscoder.AudioCodecOptions) []map
 	}
 
 	result := map[string]interface{}{
-		"bit_depth":       aws.StringValue(opts.BitDepth),
-		"bit_order":       aws.StringValue(opts.BitOrder),
-		names.AttrProfile: aws.StringValue(opts.Profile),
-		"signed":          aws.StringValue(opts.Signed),
+		"bit_depth": aws.StringValue(opts.BitDepth),
+		"bit_order": aws.StringValue(opts.BitOrder),
+		"profile":   aws.StringValue(opts.Profile),
+		"signed":    aws.StringValue(opts.Signed),
 	}
 
 	return []map[string]interface{}{result}
@@ -860,14 +859,14 @@ func flattenETThumbnails(thumbs *elastictranscoder.Thumbnails) []map[string]inte
 	}
 
 	result := map[string]interface{}{
-		"aspect_ratio":     aws.StringValue(thumbs.AspectRatio),
-		names.AttrFormat:   aws.StringValue(thumbs.Format),
-		names.AttrInterval: aws.StringValue(thumbs.Interval),
-		"max_height":       aws.StringValue(thumbs.MaxHeight),
-		"max_width":        aws.StringValue(thumbs.MaxWidth),
-		"padding_policy":   aws.StringValue(thumbs.PaddingPolicy),
-		"resolution":       aws.StringValue(thumbs.Resolution),
-		"sizing_policy":    aws.StringValue(thumbs.SizingPolicy),
+		"aspect_ratio":   aws.StringValue(thumbs.AspectRatio),
+		"format":         aws.StringValue(thumbs.Format),
+		"interval":       aws.StringValue(thumbs.Interval),
+		"max_height":     aws.StringValue(thumbs.MaxHeight),
+		"max_width":      aws.StringValue(thumbs.MaxWidth),
+		"padding_policy": aws.StringValue(thumbs.PaddingPolicy),
+		"resolution":     aws.StringValue(thumbs.Resolution),
+		"sizing_policy":  aws.StringValue(thumbs.SizingPolicy),
 	}
 
 	return []map[string]interface{}{result}
@@ -904,12 +903,12 @@ func flattenETWatermarks(watermarks []*elastictranscoder.PresetWatermark) []map[
 		watermark := map[string]interface{}{
 			"horizontal_align":  aws.StringValue(w.HorizontalAlign),
 			"horizontal_offset": aws.StringValue(w.HorizontalOffset),
-			names.AttrID:        aws.StringValue(w.Id),
+			"id":                aws.StringValue(w.Id),
 			"max_height":        aws.StringValue(w.MaxHeight),
 			"max_width":         aws.StringValue(w.MaxWidth),
 			"opacity":           aws.StringValue(w.Opacity),
 			"sizing_policy":     aws.StringValue(w.SizingPolicy),
-			names.AttrTarget:    aws.StringValue(w.Target),
+			"target":            aws.StringValue(w.Target),
 			"vertical_align":    aws.StringValue(w.VerticalAlign),
 			"vertical_offset":   aws.StringValue(w.VerticalOffset),
 		}

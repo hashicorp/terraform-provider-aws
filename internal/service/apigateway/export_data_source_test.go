@@ -28,7 +28,7 @@ func TestAccAPIGatewayExportDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair("aws_api_gateway_stage.test", "rest_api_id", dataSourceName, "rest_api_id"),
 					resource.TestCheckResourceAttrPair("aws_api_gateway_stage.test", "stage_name", dataSourceName, "stage_name"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "body"),
-					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrContentType),
+					resource.TestCheckResourceAttrSet(dataSourceName, "content_type"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "content_disposition"),
 				),
 			},

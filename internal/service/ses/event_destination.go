@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ses_event_destination")
@@ -35,7 +34,7 @@ func ResourceEventDestination() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -46,7 +45,7 @@ func ResourceEventDestination() *schema.Resource {
 				ConflictsWith: []string{"kinesis_destination", "sns_destination"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrDefaultValue: {
+						"default_value": {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.All(
@@ -75,7 +74,7 @@ func ResourceEventDestination() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrEnabled: {
+			"enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -89,12 +88,12 @@ func ResourceEventDestination() *schema.Resource {
 				ConflictsWith: []string{"cloudwatch_destination", "sns_destination"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrRoleARN: {
+						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						names.AttrStreamARN: {
+						"stream_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
@@ -112,7 +111,7 @@ func ResourceEventDestination() *schema.Resource {
 					ValidateFunc: validation.StringInSlice(ses.EventType_Values(), false),
 				},
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -129,7 +128,7 @@ func ResourceEventDestination() *schema.Resource {
 				ConflictsWith: []string{"cloudwatch_destination", "kinesis_destination"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrTopicARN: {
+						"topic_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
@@ -146,8 +145,8 @@ func resourceEventDestinationCreate(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	configurationSetName := d.Get("configuration_set_name").(string)
-	eventDestinationName := d.Get(names.AttrName).(string)
-	enabled := d.Get(names.AttrEnabled).(bool)
+	eventDestinationName := d.Get("name").(string)
+	enabled := d.Get("enabled").(bool)
 	matchingEventTypes := d.Get("matching_types").(*schema.Set)
 
 	createOpts := &ses.CreateConfigurationSetEventDestinationInput{
@@ -172,8 +171,8 @@ func resourceEventDestinationCreate(ctx context.Context, d *schema.ResourceData,
 
 		kinesis := destination[0].(map[string]interface{})
 		createOpts.EventDestination.KinesisFirehoseDestination = &ses.KinesisFirehoseDestination{
-			DeliveryStreamARN: aws.String(kinesis[names.AttrStreamARN].(string)),
-			IAMRoleARN:        aws.String(kinesis[names.AttrRoleARN].(string)),
+			DeliveryStreamARN: aws.String(kinesis["stream_arn"].(string)),
+			IAMRoleARN:        aws.String(kinesis["role_arn"].(string)),
 		}
 		log.Printf("[DEBUG] Creating kinesis destination: %#v", kinesis)
 	}
@@ -182,7 +181,7 @@ func resourceEventDestinationCreate(ctx context.Context, d *schema.ResourceData,
 		destination := v.([]interface{})
 		sns := destination[0].(map[string]interface{})
 		createOpts.EventDestination.SNSDestination = &ses.SNSDestination{
-			TopicARN: aws.String(sns[names.AttrTopicARN].(string)),
+			TopicARN: aws.String(sns["topic_arn"].(string)),
 		}
 		log.Printf("[DEBUG] Creating sns destination: %#v", sns)
 	}
@@ -232,8 +231,8 @@ func resourceEventDestinationRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	d.Set("configuration_set_name", output.ConfigurationSet.Name)
-	d.Set(names.AttrEnabled, thisEventDestination.Enabled)
-	d.Set(names.AttrName, thisEventDestination.Name)
+	d.Set("enabled", thisEventDestination.Enabled)
+	d.Set("name", thisEventDestination.Name)
 	if err := d.Set("cloudwatch_destination", flattenCloudWatchDestination(thisEventDestination.CloudWatchDestination)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting cloudwatch_destination: %s", err)
 	}
@@ -254,7 +253,7 @@ func resourceEventDestinationRead(ctx context.Context, d *schema.ResourceData, m
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("configuration-set/%s:event-destination/%s", configurationSetName, d.Id()),
 	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set("arn", arn)
 
 	return diags
 }
@@ -297,7 +296,7 @@ func generateCloudWatchDestination(v []interface{}) []*ses.CloudWatchDimensionCo
 	for i, vI := range v {
 		cloudwatch := vI.(map[string]interface{})
 		b[i] = &ses.CloudWatchDimensionConfiguration{
-			DefaultDimensionValue: aws.String(cloudwatch[names.AttrDefaultValue].(string)),
+			DefaultDimensionValue: aws.String(cloudwatch["default_value"].(string)),
 			DimensionName:         aws.String(cloudwatch["dimension_name"].(string)),
 			DimensionValueSource:  aws.String(cloudwatch["value_source"].(string)),
 		}
@@ -315,9 +314,9 @@ func flattenCloudWatchDestination(destination *ses.CloudWatchDestination) []inte
 
 	for _, dimensionConfiguration := range destination.DimensionConfigurations {
 		mDimensionConfiguration := map[string]interface{}{
-			names.AttrDefaultValue: aws.StringValue(dimensionConfiguration.DefaultDimensionValue),
-			"dimension_name":       aws.StringValue(dimensionConfiguration.DimensionName),
-			"value_source":         aws.StringValue(dimensionConfiguration.DimensionValueSource),
+			"default_value":  aws.StringValue(dimensionConfiguration.DefaultDimensionValue),
+			"dimension_name": aws.StringValue(dimensionConfiguration.DimensionName),
+			"value_source":   aws.StringValue(dimensionConfiguration.DimensionValueSource),
 		}
 
 		vDimensionConfigurations = append(vDimensionConfigurations, mDimensionConfiguration)
@@ -332,8 +331,8 @@ func flattenKinesisFirehoseDestination(destination *ses.KinesisFirehoseDestinati
 	}
 
 	mDestination := map[string]interface{}{
-		names.AttrRoleARN:   aws.StringValue(destination.IAMRoleARN),
-		names.AttrStreamARN: aws.StringValue(destination.DeliveryStreamARN),
+		"role_arn":   aws.StringValue(destination.IAMRoleARN),
+		"stream_arn": aws.StringValue(destination.DeliveryStreamARN),
 	}
 
 	return []interface{}{mDestination}
@@ -345,7 +344,7 @@ func flattenSNSDestination(destination *ses.SNSDestination) []interface{} {
 	}
 
 	mDestination := map[string]interface{}{
-		names.AttrTopicARN: aws.StringValue(destination.TopicARN),
+		"topic_arn": aws.StringValue(destination.TopicARN),
 	}
 
 	return []interface{}{mDestination}

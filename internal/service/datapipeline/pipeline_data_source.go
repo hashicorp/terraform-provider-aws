@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_datapipeline_pipeline")
@@ -24,15 +23,15 @@ func DataSourcePipeline() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -51,12 +50,12 @@ func dataSourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "describing DataPipeline Pipeline (%s): %s", pipelineId, err)
 	}
 
-	d.Set(names.AttrName, v.Name)
-	d.Set(names.AttrDescription, v.Description)
+	d.Set("name", v.Name)
+	d.Set("description", v.Description)
 
 	tags := KeyValueTags(ctx, v.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	if err := d.Set(names.AttrTags, tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

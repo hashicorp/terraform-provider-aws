@@ -38,18 +38,18 @@ func testAccOrganizationCustomRule_basic(t *testing.T) {
 				Config: testAccOrganizationCustomRuleConfig_triggerTypes1(rName, "ConfigurationItemChangeNotification"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationCustomRuleExists(ctx, resourceName, &rule),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "config", regexache.MustCompile(fmt.Sprintf("organization-config-rule/%s-.+", rName))),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", acctest.Ct0),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "config", regexache.MustCompile(fmt.Sprintf("organization-config-rule/%s-.+", rName))),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "input_parameters", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "lambda_function_arn", lambdaFunctionResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_function_arn", lambdaFunctionResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "maximum_execution_frequency", ""),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "resource_id_scope", ""),
-					resource.TestCheckResourceAttr(resourceName, "resource_types_scope.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "resource_types_scope.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tag_key_scope", ""),
 					resource.TestCheckResourceAttr(resourceName, "tag_value_scope", ""),
-					resource.TestCheckResourceAttr(resourceName, "trigger_types.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "trigger_types.#", "1"),
 				),
 			},
 			{
@@ -119,7 +119,7 @@ func testAccOrganizationCustomRule_Description(t *testing.T) {
 				Config: testAccOrganizationCustomRuleConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationCustomRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
+					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
 				),
 			},
 			{
@@ -131,7 +131,7 @@ func testAccOrganizationCustomRule_Description(t *testing.T) {
 				Config: testAccOrganizationCustomRuleConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationCustomRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
+					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
 				),
 			},
 		},
@@ -154,7 +154,7 @@ func testAccOrganizationCustomRule_ExcludedAccounts(t *testing.T) {
 				Config: testAccOrganizationCustomRuleConfig_excludedAccounts1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationCustomRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "1"),
 				),
 			},
 			{
@@ -166,7 +166,7 @@ func testAccOrganizationCustomRule_ExcludedAccounts(t *testing.T) {
 				Config: testAccOrganizationCustomRuleConfig_excludedAccounts2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationCustomRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "2"),
 				),
 			},
 		},
@@ -229,7 +229,7 @@ func testAccOrganizationCustomRule_lambdaFunctionARN(t *testing.T) {
 				Config: testAccOrganizationCustomRuleConfig_lambdaFunctionARN1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationCustomRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttrPair(resourceName, "lambda_function_arn", lambdaFunctionResourceName1, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_function_arn", lambdaFunctionResourceName1, "arn"),
 				),
 			},
 			{
@@ -241,7 +241,7 @@ func testAccOrganizationCustomRule_lambdaFunctionARN(t *testing.T) {
 				Config: testAccOrganizationCustomRuleConfig_lambdaFunctionARN2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationCustomRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttrPair(resourceName, "lambda_function_arn", lambdaFunctionResourceName2, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_function_arn", lambdaFunctionResourceName2, "arn"),
 				),
 			},
 		},
@@ -334,7 +334,7 @@ func testAccOrganizationCustomRule_ResourceTypesScope(t *testing.T) {
 				Config: testAccOrganizationCustomRuleConfig_resourceTypesScope1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationCustomRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "resource_types_scope.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "resource_types_scope.#", "1"),
 				),
 			},
 			{
@@ -346,7 +346,7 @@ func testAccOrganizationCustomRule_ResourceTypesScope(t *testing.T) {
 				Config: testAccOrganizationCustomRuleConfig_resourceTypesScope2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationCustomRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "resource_types_scope.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "resource_types_scope.#", "2"),
 				),
 			},
 		},
@@ -366,10 +366,10 @@ func testAccOrganizationCustomRule_TagKeyScope(t *testing.T) {
 		CheckDestroy:             testAccCheckOrganizationCustomRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationCustomRuleConfig_tagKeyScope(rName, acctest.CtKey1),
+				Config: testAccOrganizationCustomRuleConfig_tagKeyScope(rName, "key1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationCustomRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "tag_key_scope", acctest.CtKey1),
+					resource.TestCheckResourceAttr(resourceName, "tag_key_scope", "key1"),
 				),
 			},
 			{
@@ -378,10 +378,10 @@ func testAccOrganizationCustomRule_TagKeyScope(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccOrganizationCustomRuleConfig_tagKeyScope(rName, acctest.CtKey2),
+				Config: testAccOrganizationCustomRuleConfig_tagKeyScope(rName, "key2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationCustomRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "tag_key_scope", acctest.CtKey2),
+					resource.TestCheckResourceAttr(resourceName, "tag_key_scope", "key2"),
 				),
 			},
 		},
@@ -401,10 +401,10 @@ func testAccOrganizationCustomRule_TagValueScope(t *testing.T) {
 		CheckDestroy:             testAccCheckOrganizationCustomRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationCustomRuleConfig_tagValueScope(rName, acctest.CtValue1),
+				Config: testAccOrganizationCustomRuleConfig_tagValueScope(rName, "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationCustomRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "tag_value_scope", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tag_value_scope", "value1"),
 				),
 			},
 			{
@@ -413,10 +413,10 @@ func testAccOrganizationCustomRule_TagValueScope(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccOrganizationCustomRuleConfig_tagValueScope(rName, acctest.CtValue2),
+				Config: testAccOrganizationCustomRuleConfig_tagValueScope(rName, "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationCustomRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "tag_value_scope", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tag_value_scope", "value2"),
 				),
 			},
 		},
@@ -439,7 +439,7 @@ func testAccOrganizationCustomRule_TriggerTypes(t *testing.T) {
 				Config: testAccOrganizationCustomRuleConfig_triggerTypes1(rName, "ScheduledNotification"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationCustomRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "trigger_types.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "trigger_types.#", "1"),
 				),
 			},
 			{
@@ -451,7 +451,7 @@ func testAccOrganizationCustomRule_TriggerTypes(t *testing.T) {
 				Config: testAccOrganizationCustomRuleConfig_triggerTypes2(rName, "ConfigurationItemChangeNotification", "OversizedConfigurationItemChangeNotification"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationCustomRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "trigger_types.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "trigger_types.#", "2"),
 				),
 			},
 		},

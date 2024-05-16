@@ -36,13 +36,13 @@ func testAccMesh_basic(t *testing.T) {
 				Config: testAccMeshConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMeshExists(ctx, resourceName, &mesh),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", regexache.MustCompile(`mesh/.+`)),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appmesh", regexache.MustCompile(`mesh/.+`)),
+					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					resource.TestCheckResourceAttr(resourceName, "spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 				),
 			},
 			{
@@ -94,10 +94,9 @@ func testAccMesh_egressFilter(t *testing.T) {
 				Config: testAccMeshConfig_egressFilter(rName, "ALLOW_ALL"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMeshExists(ctx, resourceName, &mesh),
-					resource.TestCheckResourceAttr(resourceName, "spec.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.egress_filter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.egress_filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.egress_filter.0.type", "ALLOW_ALL"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.#", acctest.Ct0),
 				),
 			},
 			{
@@ -109,62 +108,13 @@ func testAccMesh_egressFilter(t *testing.T) {
 				Config: testAccMeshConfig_egressFilter(rName, "DROP_ALL"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMeshExists(ctx, resourceName, &mesh),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.egress_filter.0.type", "DROP_ALL"),
 				),
 			},
 			{
 				PlanOnly: true,
 				Config:   testAccMeshConfig_basic(rName),
-			},
-		},
-	})
-}
-
-func testAccMesh_serviceDiscovery(t *testing.T) {
-	ctx := acctest.Context(t)
-	var mesh appmesh.MeshData
-	resourceName := "aws_appmesh_mesh.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMeshDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccMeshConfig_serviceDiscovery(rName, "IPv6_PREFERRED"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMeshExists(ctx, resourceName, &mesh),
-					resource.TestCheckResourceAttr(resourceName, "spec.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.ip_preference", "IPv6_PREFERRED"),
-				),
-			},
-			{
-				Config: testAccMeshConfig_serviceDiscovery(rName, "IPv4_PREFERRED"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMeshExists(ctx, resourceName, &mesh),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.ip_preference", "IPv4_PREFERRED"),
-				),
-			},
-			{
-				Config: testAccMeshConfig_serviceDiscovery(rName, "IPv4_ONLY"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMeshExists(ctx, resourceName, &mesh),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.ip_preference", "IPv4_ONLY"),
-				),
-			},
-			{
-				Config: testAccMeshConfig_serviceDiscovery(rName, "IPv6_ONLY"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMeshExists(ctx, resourceName, &mesh),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.ip_preference", "IPv6_ONLY"),
-				),
 			},
 		},
 	})
@@ -183,11 +133,11 @@ func testAccMesh_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckMeshDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMeshConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccMeshConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMeshExists(ctx, resourceName, &mesh),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -196,20 +146,20 @@ func testAccMesh_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccMeshConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccMeshConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMeshExists(ctx, resourceName, &mesh),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccMeshConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccMeshConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMeshExists(ctx, resourceName, &mesh),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -286,20 +236,6 @@ resource "aws_appmesh_mesh" "test" {
   }
 }
 `, rName, egressFilterType)
-}
-
-func testAccMeshConfig_serviceDiscovery(rName, serviceDiscoveryIpPreference string) string {
-	return fmt.Sprintf(`
-resource "aws_appmesh_mesh" "test" {
-  name = %[1]q
-
-  spec {
-    service_discovery {
-      ip_preference = %[2]q
-    }
-  }
-}
-`, rName, serviceDiscoveryIpPreference)
 }
 
 func testAccMeshConfig_tags1(rName, tagKey1, tagValue1 string) string {

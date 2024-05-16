@@ -46,11 +46,11 @@ func resourceBucket() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrBucket: {
+			"bucket": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -61,7 +61,7 @@ func resourceBucket() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`[0-9a-z]$`), "must end with lowercase letter or number"),
 				),
 			},
-			names.AttrCreationDate: {
+			"creation_date": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -86,7 +86,7 @@ func resourceBucket() *schema.Resource {
 func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
-	bucket := d.Get(names.AttrBucket).(string)
+	bucket := d.Get("bucket").(string)
 	input := &s3control.CreateBucketInput{
 		Bucket:    aws.String(bucket),
 		OutpostId: aws.String(d.Get("outpost_id").(string)),
@@ -137,10 +137,10 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.Errorf("reading S3 Control Bucket (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, d.Id())
-	d.Set(names.AttrBucket, output.Bucket)
+	d.Set("arn", d.Id())
+	d.Set("bucket", output.Bucket)
 	if output.CreationDate != nil {
-		d.Set(names.AttrCreationDate, aws.ToTime(output.CreationDate).Format(time.RFC3339))
+		d.Set("creation_date", aws.ToTime(output.CreationDate).Format(time.RFC3339))
 	}
 	d.Set("outpost_id", arnResourceParts[1])
 	d.Set("public_access_block_enabled", output.PublicAccessBlockEnabled)
@@ -159,8 +159,8 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
-	if d.HasChange(names.AttrTagsAll) {
-		o, n := d.GetChange(names.AttrTagsAll)
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		if err := bucketUpdateTags(ctx, conn, d.Id(), o, n); err != nil {
 			return diag.Errorf("updating S3 Control Bucket (%s) tags: %s", d.Id(), err)

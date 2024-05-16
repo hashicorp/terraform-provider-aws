@@ -63,7 +63,7 @@ func (d *foundationModelDataSource) Schema(ctx context.Context, request datasour
 				ElementType: types.StringType,
 				Computed:    true,
 			},
-			names.AttrProviderName: schema.StringAttribute{
+			"provider_name": schema.StringAttribute{
 				Computed: true,
 			},
 			"response_streaming_supported": schema.BoolAttribute{

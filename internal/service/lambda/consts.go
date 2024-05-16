@@ -18,27 +18,22 @@ const (
 )
 
 const (
-	iamPropagationTimeout    = 2 * time.Minute
-	lambdaPropagationTimeout = 5 * time.Minute // nosemgrep:ci.lambda-in-const-name, ci.lambda-in-var-name
+	propagationTimeout = 5 * time.Minute
 )
-
-type invocationAction string
 
 const (
-	invocationActionCreate invocationAction = "create"
-	invocationActionDelete invocationAction = "delete"
-	invocationActionUpdate invocationAction = "update"
+	invocationActionCreate = "create"
+	invocationActionDelete = "delete"
+	invocationActionUpdate = "update"
 )
-
-type lifecycleScope string
 
 const (
-	lifecycleScopeCreateOnly lifecycleScope = "CREATE_ONLY"
-	lifecycleScopeCrud       lifecycleScope = "CRUD"
+	lifecycleScopeCreateOnly = "CREATE_ONLY"
+	lifecycleScopeCrud       = "CRUD"
 )
 
-func (lifecycleScope) Values() []lifecycleScope {
-	return []lifecycleScope{
+func lifecycleScope_Values() []string {
+	return []string{
 		lifecycleScopeCreateOnly,
 		lifecycleScopeCrud,
 	}

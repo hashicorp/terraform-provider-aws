@@ -43,38 +43,38 @@ func ResourceParameterGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 				Default:  "Managed by Terraform",
 			},
-			names.AttrFamily: {
+			"family": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
+				ConflictsWith: []string{"name_prefix"},
 				ValidateFunc:  validParamGroupName,
 			},
-			names.AttrNamePrefix: {
+			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
+				ConflictsWith: []string{"name"},
 				ValidateFunc:  validParamGroupNamePrefix,
 			},
-			names.AttrParameter: {
+			"parameter": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -84,11 +84,11 @@ func ResourceParameterGroup() *schema.Resource {
 							Optional: true,
 							Default:  "immediate",
 						},
-						names.AttrName: {
+						"name": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						names.AttrValue: {
+						"value": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -108,11 +108,11 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &rds.CreateDBParameterGroupInput{
-		DBParameterGroupFamily: aws.String(d.Get(names.AttrFamily).(string)),
+		DBParameterGroupFamily: aws.String(d.Get("family").(string)),
 		DBParameterGroupName:   aws.String(name),
-		Description:            aws.String(d.Get(names.AttrDescription).(string)),
+		Description:            aws.String(d.Get("description").(string)),
 		Tags:                   getTagsIn(ctx),
 	}
 
@@ -124,7 +124,7 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 	d.SetId(aws.StringValue(output.DBParameterGroup.DBParameterGroupName))
 
 	// Set for update
-	d.Set(names.AttrARN, output.DBParameterGroup.DBParameterGroupArn)
+	d.Set("arn", output.DBParameterGroup.DBParameterGroupArn)
 
 	return append(diags, resourceParameterGroupUpdate(ctx, d, meta)...)
 }
@@ -146,16 +146,16 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	arn := aws.StringValue(dbParameterGroup.DBParameterGroupArn)
-	d.Set(names.AttrARN, arn)
-	d.Set(names.AttrDescription, dbParameterGroup.Description)
-	d.Set(names.AttrFamily, dbParameterGroup.DBParameterGroupFamily)
-	d.Set(names.AttrName, dbParameterGroup.DBParameterGroupName)
+	d.Set("arn", arn)
+	d.Set("description", dbParameterGroup.Description)
+	d.Set("family", dbParameterGroup.DBParameterGroupFamily)
+	d.Set("name", dbParameterGroup.DBParameterGroupName)
 
 	input := &rds.DescribeDBParametersInput{
 		DBParameterGroupName: aws.String(d.Id()),
 	}
 
-	configParams := d.Get(names.AttrParameter).(*schema.Set)
+	configParams := d.Get("parameter").(*schema.Set)
 	if configParams.Len() < 1 {
 		// if we don't have any params in the ResourceData already, two possibilities
 		// first, we don't have a config available to us. Second, we do, but it has
@@ -219,7 +219,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	if err := d.Set(names.AttrParameter, flattenParameters(userParams)); err != nil {
+	if err := d.Set("parameter", flattenParameters(userParams)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting parameter: %s", err)
 	}
 
@@ -233,8 +233,8 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
-	if d.HasChange(names.AttrParameter) {
-		o, n := d.GetChange(names.AttrParameter)
+	if d.HasChange("parameter") {
+		o, n := d.GetChange("parameter")
 		if o == nil {
 			o = new(schema.Set)
 		}
@@ -383,9 +383,9 @@ func resourceParameterHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	// Store the value as a lower case string, to match how we store them in FlattenParameters
-	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(m[names.AttrName].(string))))
+	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(m["name"].(string))))
 	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(m["apply_method"].(string))))
-	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrValue].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m["value"].(string)))
 
 	// This hash randomly affects the "order" of the set, which affects in what order parameters
 	// are applied, when there are more than 20 (chunked).

@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func KeyPairMigrateState(
@@ -33,7 +32,7 @@ func migrateKeyPairStateV0toV1(is *terraform.InstanceState) (*terraform.Instance
 
 	// replace public_key with a stripped version, removing `\n` from the end
 	// see https://github.com/hashicorp/terraform/issues/3455
-	is.Attributes[names.AttrPublicKey] = strings.TrimSpace(is.Attributes[names.AttrPublicKey])
+	is.Attributes["public_key"] = strings.TrimSpace(is.Attributes["public_key"])
 
 	log.Printf("[DEBUG] Attributes after migration: %#v", is.Attributes)
 	return is, nil

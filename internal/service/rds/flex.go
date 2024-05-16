@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func expandScalingConfiguration(tfMap map[string]interface{}) *rds.ScalingConfiguration {
@@ -24,7 +23,7 @@ func expandScalingConfiguration(tfMap map[string]interface{}) *rds.ScalingConfig
 		apiObject.AutoPause = aws.Bool(v)
 	}
 
-	if v, ok := tfMap[names.AttrMaxCapacity].(int); ok {
+	if v, ok := tfMap["max_capacity"].(int); ok {
 		apiObject.MaxCapacity = aws.Int64(int64(v))
 	}
 
@@ -50,7 +49,7 @@ func flattenManagedMasterUserSecret(apiObject *rds.MasterUserSecret) map[string]
 
 	tfMap := map[string]interface{}{}
 	if v := apiObject.KmsKeyId; v != nil {
-		tfMap[names.AttrKMSKeyID] = aws.StringValue(v)
+		tfMap["kms_key_id"] = aws.StringValue(v)
 	}
 	if v := apiObject.SecretArn; v != nil {
 		tfMap["secret_arn"] = aws.StringValue(v)
@@ -74,11 +73,11 @@ func flattenScalingConfigurationInfo(apiObject *rds.ScalingConfigurationInfo) ma
 	}
 
 	if v := apiObject.MaxCapacity; v != nil {
-		tfMap[names.AttrMaxCapacity] = aws.Int64Value(v)
+		tfMap["max_capacity"] = aws.Int64Value(v)
 	}
 
 	if v := apiObject.MaxCapacity; v != nil {
-		tfMap[names.AttrMaxCapacity] = aws.Int64Value(v)
+		tfMap["max_capacity"] = aws.Int64Value(v)
 	}
 
 	if v := apiObject.MinCapacity; v != nil {
@@ -103,7 +102,7 @@ func expandServerlessV2ScalingConfiguration(tfMap map[string]interface{}) *rds.S
 
 	apiObject := &rds.ServerlessV2ScalingConfiguration{}
 
-	if v, ok := tfMap[names.AttrMaxCapacity].(float64); ok && v != 0.0 {
+	if v, ok := tfMap["max_capacity"].(float64); ok && v != 0.0 {
 		apiObject.MaxCapacity = aws.Float64(v)
 	}
 
@@ -122,7 +121,7 @@ func flattenServerlessV2ScalingConfigurationInfo(apiObject *rds.ServerlessV2Scal
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.MaxCapacity; v != nil {
-		tfMap[names.AttrMaxCapacity] = aws.Float64Value(v)
+		tfMap["max_capacity"] = aws.Float64Value(v)
 	}
 
 	if v := apiObject.MinCapacity; v != nil {
@@ -142,7 +141,7 @@ func expandOptionConfiguration(configured []interface{}) []*rds.OptionConfigurat
 			OptionName: aws.String(data["option_name"].(string)),
 		}
 
-		if raw, ok := data[names.AttrPort]; ok {
+		if raw, ok := data["port"]; ok {
 			port := raw.(int)
 			if port != 0 {
 				o.Port = aws.Int64(int64(port))
@@ -167,7 +166,7 @@ func expandOptionConfiguration(configured []interface{}) []*rds.OptionConfigurat
 			o.OptionSettings = expandOptionSetting(raw.(*schema.Set).List())
 		}
 
-		if raw, ok := data[names.AttrVersion]; ok && raw.(string) != "" {
+		if raw, ok := data["version"]; ok && raw.(string) != "" {
 			o.OptionVersion = aws.String(raw.(string))
 		}
 
@@ -224,25 +223,25 @@ func flattenOptions(apiOptions []*rds.Option, optionConfigurations []*rds.Option
 			}
 
 			optionSetting := map[string]interface{}{
-				names.AttrName:  aws.StringValue(apiOptionSetting.Name),
-				names.AttrValue: aws.StringValue(apiOptionSetting.Value),
+				"name":  aws.StringValue(apiOptionSetting.Name),
+				"value": aws.StringValue(apiOptionSetting.Value),
 			}
 
 			// Some values, like passwords, are sent back from the API as ****.
 			// Set the response to match the configuration to prevent an unexpected difference
 			if configuredOptionSetting != nil && aws.StringValue(apiOptionSetting.Value) == "****" {
-				optionSetting[names.AttrValue] = aws.StringValue(configuredOptionSetting.Value)
+				optionSetting["value"] = aws.StringValue(configuredOptionSetting.Value)
 			}
 
 			optionSettings = append(optionSettings, optionSetting)
 		}
 		optionSettingsResource := &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				names.AttrName: {
+				"name": {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				names.AttrValue: {
+				"value": {
 					Type:     schema.TypeString,
 					Required: true,
 				},
@@ -264,11 +263,11 @@ func flattenOptions(apiOptions []*rds.Option, optionConfigurations []*rds.Option
 		}
 
 		if apiOption.OptionVersion != nil && configuredOption != nil && configuredOption.OptionVersion != nil {
-			r[names.AttrVersion] = aws.StringValue(apiOption.OptionVersion)
+			r["version"] = aws.StringValue(apiOption.OptionVersion)
 		}
 
 		if apiOption.Port != nil && configuredOption != nil && configuredOption.Port != nil {
-			r[names.AttrPort] = aws.Int64Value(apiOption.Port)
+			r["port"] = aws.Int64Value(apiOption.Port)
 		}
 
 		result = append(result, r)
@@ -284,8 +283,8 @@ func expandOptionSetting(list []interface{}) []*rds.OptionSetting {
 		data := oRaw.(map[string]interface{})
 
 		o := &rds.OptionSetting{
-			Name:  aws.String(data[names.AttrName].(string)),
-			Value: aws.String(data[names.AttrValue].(string)),
+			Name:  aws.String(data["name"].(string)),
+			Value: aws.String(data["value"].(string)),
 		}
 
 		options = append(options, o)
@@ -304,13 +303,13 @@ func expandParameters(configured []interface{}) []*rds.Parameter {
 	for _, pRaw := range configured {
 		data := pRaw.(map[string]interface{})
 
-		if data[names.AttrName].(string) == "" {
+		if data["name"].(string) == "" {
 			continue
 		}
 
 		p := &rds.Parameter{
-			ParameterName:  aws.String(strings.ToLower(data[names.AttrName].(string))),
-			ParameterValue: aws.String(data[names.AttrValue].(string)),
+			ParameterName:  aws.String(strings.ToLower(data["name"].(string))),
+			ParameterValue: aws.String(data["value"].(string)),
 		}
 
 		if data["apply_method"].(string) != "" {
@@ -333,12 +332,12 @@ func flattenParameters(list []*rds.Parameter) []map[string]interface{} {
 				r["apply_method"] = strings.ToLower(aws.StringValue(i.ApplyMethod))
 			}
 
-			r[names.AttrName] = strings.ToLower(aws.StringValue(i.ParameterName))
+			r["name"] = strings.ToLower(aws.StringValue(i.ParameterName))
 
 			// Default empty string, guard against nil parameter values
-			r[names.AttrValue] = ""
+			r["value"] = ""
 			if i.ParameterValue != nil {
-				r[names.AttrValue] = aws.StringValue(i.ParameterValue)
+				r["value"] = aws.StringValue(i.ParameterValue)
 			}
 
 			result = append(result, r)

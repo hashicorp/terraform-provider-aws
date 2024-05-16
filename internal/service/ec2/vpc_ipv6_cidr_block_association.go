@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_vpc_ipv6_cidr_block_association")
@@ -69,7 +68,7 @@ func ResourceVPCIPv6CIDRBlockAssociation() *schema.Resource {
 				// This RequiredWith setting should be applied once L57 is completed
 				// RequiredWith:  []string{"ipv6_ipam_pool_id"},
 			},
-			names.AttrVPCID: {
+			"vpc_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -87,7 +86,7 @@ func resourceVPCIPv6CIDRBlockAssociationCreate(ctx context.Context, d *schema.Re
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	vpcID := d.Get(names.AttrVPCID).(string)
+	vpcID := d.Get("vpc_id").(string)
 	input := &ec2.AssociateVpcCidrBlockInput{
 		VpcId: aws.String(vpcID),
 	}
@@ -139,7 +138,7 @@ func resourceVPCIPv6CIDRBlockAssociationRead(ctx context.Context, d *schema.Reso
 	}
 
 	d.Set("ipv6_cidr_block", vpcIpv6CidrBlockAssociation.Ipv6CidrBlock)
-	d.Set(names.AttrVPCID, vpc.VpcId)
+	d.Set("vpc_id", vpc.VpcId)
 
 	return diags
 }

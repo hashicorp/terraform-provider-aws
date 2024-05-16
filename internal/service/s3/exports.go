@@ -7,6 +7,4 @@ package s3
 var (
 	ResourceBucket = resourceBucket
 	ResourceObject = resourceObject
-
-	BucketListTags = bucketListTags
 )

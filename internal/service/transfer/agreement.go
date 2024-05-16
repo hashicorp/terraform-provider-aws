@@ -43,7 +43,7 @@ func ResourceAgreement() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -51,7 +51,7 @@ func ResourceAgreement() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -67,7 +67,7 @@ func ResourceAgreement() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -92,7 +92,7 @@ func resourceAgreementCreate(ctx context.Context, d *schema.ResourceData, meta i
 		Tags:             getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -130,13 +130,13 @@ func resourceAgreementRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.Set("access_role", output.AccessRole)
 	d.Set("agreement_id", output.AgreementId)
-	d.Set(names.AttrARN, output.Arn)
+	d.Set("arn", output.Arn)
 	d.Set("base_directory", output.BaseDirectory)
-	d.Set(names.AttrDescription, output.Description)
+	d.Set("description", output.Description)
 	d.Set("local_profile_id", output.LocalProfileId)
 	d.Set("partner_profile_id", output.PartnerProfileId)
 	d.Set("server_id", output.ServerId)
-	d.Set(names.AttrStatus, output.Status)
+	d.Set("status", output.Status)
 	setTagsOut(ctx, output.Tags)
 
 	return diags
@@ -151,7 +151,7 @@ func resourceAgreementUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &transfer.UpdateAgreementInput{
 			AgreementId: aws.String(agreementID),
 			ServerId:    aws.String(serverID),
@@ -165,8 +165,8 @@ func resourceAgreementUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			input.BaseDirectory = aws.String(d.Get("base_directory").(string))
 		}
 
-		if d.HasChange(names.AttrDescription) {
-			input.Description = aws.String(d.Get(names.AttrDescription).(string))
+		if d.HasChange("description") {
+			input.Description = aws.String(d.Get("description").(string))
 		}
 
 		if d.HasChange("local_profile_id") {

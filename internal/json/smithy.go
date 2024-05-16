@@ -37,9 +37,3 @@ func SmithyDocumentToString(document smithydocument.Unmarshaler) (string, error)
 
 	return string(bytes), nil
 }
-
-// JSONStringer interface is used to marshal and unmarshal JSON interface objects.
-type JSONStringer interface {
-	smithydocument.Marshaler
-	smithydocument.Unmarshaler
-}

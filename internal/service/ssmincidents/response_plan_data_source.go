@@ -20,7 +20,7 @@ func DataSourceResponsePlan() *schema.Resource {
 		ReadWithoutTimeout: dataSourceResponsePlanRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrAction: {
+			"action": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -34,7 +34,7 @@ func DataSourceResponsePlan() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									names.AttrRoleARN: {
+									"role_arn": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -46,16 +46,16 @@ func DataSourceResponsePlan() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									names.AttrParameter: {
+									"parameter": {
 										Type:     schema.TypeSet,
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												names.AttrName: {
+												"name": {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												names.AttrValues: {
+												"values": {
 													Type:     schema.TypeSet,
 													Computed: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
@@ -74,7 +74,7 @@ func DataSourceResponsePlan() *schema.Resource {
 					},
 				},
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -84,7 +84,7 @@ func DataSourceResponsePlan() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			names.AttrDisplayName: {
+			"display_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -117,7 +117,7 @@ func DataSourceResponsePlan() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrSNSTopicARN: {
+									"sns_topic_arn": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -141,7 +141,7 @@ func DataSourceResponsePlan() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrName: {
+									"name": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -159,11 +159,11 @@ func DataSourceResponsePlan() *schema.Resource {
 					},
 				},
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -175,7 +175,7 @@ const (
 func dataSourceResponsePlanRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
-	d.SetId(d.Get(names.AttrARN).(string))
+	d.SetId(d.Get("arn").(string))
 
 	responsePlan, err := FindResponsePlanByID(ctx, client, d.Id())
 
@@ -195,7 +195,7 @@ func dataSourceResponsePlanRead(ctx context.Context, d *schema.ResourceData, met
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	//lintignore:AWSR002
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return create.DiagError(names.SSMIncidents, create.ErrActionSetting, DSNameResponsePlan, d.Id(), err)
 	}
 

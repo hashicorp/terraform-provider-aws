@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/customerprofiles"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCustomerProfilesProfile_full(t *testing.T) {
@@ -37,10 +36,10 @@ func TestAccCustomerProfilesProfile_full(t *testing.T) {
 				Config: testAccProfileConfig_full(rName, accountNumber, email),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProfileExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrDomainName),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_name"),
 					resource.TestCheckResourceAttr(resourceName, "account_number", accountNumber),
 					resource.TestCheckResourceAttr(resourceName, "additional_information", "Low Profile Customer"),
-					resource.TestCheckResourceAttr(resourceName, "address.0.%", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "address.0.%", "10"),
 					resource.TestCheckResourceAttr(resourceName, "address.0.address_1", "123 Sample Street"),
 					resource.TestCheckResourceAttr(resourceName, "address.0.address_2", "Apt 5"),
 					resource.TestCheckResourceAttr(resourceName, "address.0.address_3", "null"),
@@ -51,10 +50,10 @@ func TestAccCustomerProfilesProfile_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "address.0.postal_code", "98110"),
 					resource.TestCheckResourceAttr(resourceName, "address.0.province", "null"),
 					resource.TestCheckResourceAttr(resourceName, "address.0.state", "WA"),
-					resource.TestCheckResourceAttr(resourceName, "attributes.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "attributes.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.SSN", "123-44-0000"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.LoyaltyPoints", "30000"),
-					resource.TestCheckResourceAttr(resourceName, "billing_address.0.%", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "billing_address.0.%", "10"),
 					resource.TestCheckResourceAttr(resourceName, "billing_address.0.address_1", "789 Sample St"),
 					resource.TestCheckResourceAttr(resourceName, "billing_address.0.address_2", "Apt 1"),
 					resource.TestCheckResourceAttr(resourceName, "billing_address.0.address_3", "null"),
@@ -71,7 +70,7 @@ func TestAccCustomerProfilesProfile_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "business_phone_number", "555-334-3389"),
 					resource.TestCheckResourceAttr(resourceName, "last_name", "Doe"),
 					resource.TestCheckResourceAttr(resourceName, "gender_string", "MALE"),
-					resource.TestCheckResourceAttr(resourceName, "mailing_address.0.%", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "mailing_address.0.%", "10"),
 					resource.TestCheckResourceAttr(resourceName, "mailing_address.0.address_1", "234 Home St"),
 					resource.TestCheckResourceAttr(resourceName, "mailing_address.0.address_2", "Apt 5"),
 					resource.TestCheckResourceAttr(resourceName, "mailing_address.0.address_3", "null"),
@@ -87,7 +86,7 @@ func TestAccCustomerProfilesProfile_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "party_type_string", "INDIVIDUAL"),
 					resource.TestCheckResourceAttr(resourceName, "personal_email_address", email),
 					resource.TestCheckResourceAttr(resourceName, "phone_number", "555-334-6666"),
-					resource.TestCheckResourceAttr(resourceName, "shipping_address.0.%", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "shipping_address.0.%", "10"),
 					resource.TestCheckResourceAttr(resourceName, "shipping_address.0.address_1", "555 A St"),
 					resource.TestCheckResourceAttr(resourceName, "shipping_address.0.address_2", "Suite 100"),
 					resource.TestCheckResourceAttr(resourceName, "shipping_address.0.address_3", "null"),
@@ -110,9 +109,9 @@ func TestAccCustomerProfilesProfile_full(t *testing.T) {
 				Config: testAccProfileConfig_fullUpdated(rName, accountNumberUpdated, emailUpdated),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProfileExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrDomainName),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_name"),
 					resource.TestCheckResourceAttr(resourceName, "additional_information", "High Profile Customer"),
-					resource.TestCheckResourceAttr(resourceName, "address.0.%", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "address.0.%", "10"),
 					resource.TestCheckResourceAttr(resourceName, "address.0.address_1", "123 Sample St"),
 					resource.TestCheckResourceAttr(resourceName, "address.0.address_2", "Apt 4"),
 					resource.TestCheckResourceAttr(resourceName, "address.0.address_3", "null-updated"),
@@ -123,10 +122,10 @@ func TestAccCustomerProfilesProfile_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "address.0.postal_code", "98011-updated"),
 					resource.TestCheckResourceAttr(resourceName, "address.0.province", "null-updated"),
 					resource.TestCheckResourceAttr(resourceName, "address.0.state", "WA-updated"),
-					resource.TestCheckResourceAttr(resourceName, "attributes.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "attributes.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.SSN", "123-44-3433"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.LoyaltyPoints", "3000"),
-					resource.TestCheckResourceAttr(resourceName, "billing_address.0.%", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "billing_address.0.%", "10"),
 					resource.TestCheckResourceAttr(resourceName, "billing_address.0.address_1", "789 Sample St-updated"),
 					resource.TestCheckResourceAttr(resourceName, "billing_address.0.address_2", "Apt 1-updated"),
 					resource.TestCheckResourceAttr(resourceName, "billing_address.0.address_3", "null-updated"),
@@ -143,7 +142,7 @@ func TestAccCustomerProfilesProfile_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "business_phone_number", "555-334-3389-updated"),
 					resource.TestCheckResourceAttr(resourceName, "last_name", "Doe-updated"),
 					resource.TestCheckResourceAttr(resourceName, "gender_string", "MALE-updated"),
-					resource.TestCheckResourceAttr(resourceName, "mailing_address.0.%", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "mailing_address.0.%", "10"),
 					resource.TestCheckResourceAttr(resourceName, "mailing_address.0.address_1", "234 Home St-updated"),
 					resource.TestCheckResourceAttr(resourceName, "mailing_address.0.address_2", "Apt 5-updated"),
 					resource.TestCheckResourceAttr(resourceName, "mailing_address.0.address_3", "null-updated"),
@@ -159,7 +158,7 @@ func TestAccCustomerProfilesProfile_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "party_type_string", "INDIVIDUAL-updated"),
 					resource.TestCheckResourceAttr(resourceName, "personal_email_address", emailUpdated),
 					resource.TestCheckResourceAttr(resourceName, "phone_number", "555-334-6666-updated"),
-					resource.TestCheckResourceAttr(resourceName, "shipping_address.0.%", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "shipping_address.0.%", "10"),
 					resource.TestCheckResourceAttr(resourceName, "shipping_address.0.address_1", "555 A St-updated"),
 					resource.TestCheckResourceAttr(resourceName, "shipping_address.0.address_2", "Suite 100-updated"),
 					resource.TestCheckResourceAttr(resourceName, "shipping_address.0.address_3", "null-updated"),
@@ -210,7 +209,7 @@ func testAccCheckProfileExists(ctx context.Context, n string) resource.TestCheck
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CustomerProfilesClient(ctx)
 
-		_, err := customerprofiles.FindProfileByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes[names.AttrDomainName])
+		_, err := customerprofiles.FindProfileByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["domain_name"])
 
 		return err
 	}
@@ -225,7 +224,7 @@ func testAccCheckProfileDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := customerprofiles.FindProfileByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes[names.AttrDomainName])
+			_, err := customerprofiles.FindProfileByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["domain_name"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -249,7 +248,7 @@ func testAccProfileImportStateIdFunc(resourceName string) resource.ImportStateId
 			return "", fmt.Errorf("Not Found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s/%s", rs.Primary.Attributes[names.AttrDomainName], rs.Primary.ID), nil
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["domain_name"], rs.Primary.ID), nil
 	}
 }
 

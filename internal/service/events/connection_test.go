@@ -10,8 +10,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/eventbridge"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -54,8 +54,8 @@ func TestAccEventsConnection_apiKey(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", authorizationType),
 					resource.TestCheckResourceAttr(resourceName, "auth_parameters.0.api_key.0.key", key),
 				),
@@ -76,10 +76,10 @@ func TestAccEventsConnection_apiKey(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &v2),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "events", regexache.MustCompile(fmt.Sprintf("connection/%s/%s", nameModified, uuidRegex))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexache.MustCompile(fmt.Sprintf("connection/%s/%s", nameModified, uuidRegex))),
 					testAccCheckConnectionRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, nameModified),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionModified),
+					resource.TestCheckResourceAttr(resourceName, "name", nameModified),
+					resource.TestCheckResourceAttr(resourceName, "description", descriptionModified),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", authorizationType),
 					resource.TestCheckResourceAttr(resourceName, "auth_parameters.0.api_key.0.key", keyModified),
 				),
@@ -95,8 +95,8 @@ func TestAccEventsConnection_apiKey(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &v3),
 					testAccCheckConnectionNotRecreated(&v2, &v3),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, nameModified),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionModified),
+					resource.TestCheckResourceAttr(resourceName, "name", nameModified),
+					resource.TestCheckResourceAttr(resourceName, "description", descriptionModified),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", authorizationType),
 					resource.TestCheckResourceAttr(resourceName, "auth_parameters.0.api_key.0.key", keyModified),
 				),
@@ -137,8 +137,8 @@ func TestAccEventsConnection_basic(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", authorizationType),
 					resource.TestCheckResourceAttr(resourceName, "auth_parameters.0.basic.0.username", username),
 				),
@@ -159,10 +159,10 @@ func TestAccEventsConnection_basic(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &v2),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "events", regexache.MustCompile(fmt.Sprintf("connection/%s/%s", nameModified, uuidRegex))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexache.MustCompile(fmt.Sprintf("connection/%s/%s", nameModified, uuidRegex))),
 					testAccCheckConnectionRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, nameModified),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionModified),
+					resource.TestCheckResourceAttr(resourceName, "name", nameModified),
+					resource.TestCheckResourceAttr(resourceName, "description", descriptionModified),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", authorizationType),
 					resource.TestCheckResourceAttr(resourceName, "auth_parameters.0.basic.0.username", usernameModified),
 				),
@@ -178,8 +178,8 @@ func TestAccEventsConnection_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &v3),
 					testAccCheckConnectionNotRecreated(&v2, &v3),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, nameModified),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionModified),
+					resource.TestCheckResourceAttr(resourceName, "name", nameModified),
+					resource.TestCheckResourceAttr(resourceName, "description", descriptionModified),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", authorizationType),
 					resource.TestCheckResourceAttr(resourceName, "auth_parameters.0.basic.0.username", usernameModified),
 				),
@@ -248,16 +248,6 @@ func TestAccEventsConnection_oAuth(t *testing.T) {
 		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectionConfig_oauthHTTPParametersEmpty(
-					nameModified,
-					descriptionModified,
-					authorizationType,
-					authorizationEndpointModified,
-					httpMethod,
-				),
-				ExpectError: regexache.MustCompile("Missing required argument"),
-			},
-			{
 				Config: testAccConnectionConfig_oauth(
 					name,
 					description,
@@ -278,8 +268,8 @@ func TestAccEventsConnection_oAuth(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", authorizationType),
 					resource.TestCheckResourceAttr(resourceName, "auth_parameters.0.oauth.0.authorization_endpoint", authorizationEndpoint),
 					resource.TestCheckResourceAttr(resourceName, "auth_parameters.0.oauth.0.http_method", httpMethod),
@@ -324,10 +314,10 @@ func TestAccEventsConnection_oAuth(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &v2),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "events", regexache.MustCompile(fmt.Sprintf("connection/%s/%s", nameModified, uuidRegex))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexache.MustCompile(fmt.Sprintf("connection/%s/%s", nameModified, uuidRegex))),
 					testAccCheckConnectionRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, nameModified),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionModified),
+					resource.TestCheckResourceAttr(resourceName, "name", nameModified),
+					resource.TestCheckResourceAttr(resourceName, "description", descriptionModified),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", authorizationType),
 					resource.TestCheckResourceAttr(resourceName, "auth_parameters.0.oauth.0.authorization_endpoint", authorizationEndpointModified),
 					resource.TestCheckResourceAttr(resourceName, "auth_parameters.0.oauth.0.http_method", httpMethodModified),
@@ -362,8 +352,8 @@ func TestAccEventsConnection_oAuth(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &v3),
 					testAccCheckConnectionNotRecreated(&v2, &v3),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, nameModified),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionModified),
+					resource.TestCheckResourceAttr(resourceName, "name", nameModified),
+					resource.TestCheckResourceAttr(resourceName, "description", descriptionModified),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", authorizationType),
 					resource.TestCheckResourceAttr(resourceName, "auth_parameters.0.oauth.0.authorization_endpoint", authorizationEndpointModified),
 					resource.TestCheckResourceAttr(resourceName, "auth_parameters.0.oauth.0.http_method", httpMethodModified),
@@ -424,10 +414,6 @@ func TestAccEventsConnection_invocationHTTPParameters(t *testing.T) {
 		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccConnectionConfig_invocationHTTPParametersEmpty(name, description),
-				ExpectError: regexache.MustCompile("Missing required argument"),
-			},
-			{
 				Config: testAccConnectionConfig_invocationHTTPParameters(
 					name,
 					description,
@@ -446,8 +432,8 @@ func TestAccEventsConnection_invocationHTTPParameters(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", authorizationType),
 					resource.TestCheckResourceAttr(resourceName, "auth_parameters.0.api_key.0.key", key),
 					resource.TestCheckResourceAttr(resourceName, "auth_parameters.0.invocation_http_parameters.0.body.0.key", bodyKey),
@@ -498,8 +484,8 @@ func TestAccEventsConnection_invocationHTTPParameters(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &v2),
 					testAccCheckConnectionNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", authorizationType),
 					resource.TestCheckResourceAttr(resourceName, "auth_parameters.0.api_key.0.key", key),
 					resource.TestCheckResourceAttr(resourceName, "auth_parameters.0.invocation_http_parameters.0.body.0.key", bodyKeyModified),
@@ -536,8 +522,8 @@ func TestAccEventsConnection_invocationHTTPParameters(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &v3),
 					testAccCheckConnectionNotRecreated(&v2, &v3),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", authorizationType),
 					resource.TestCheckResourceAttr(resourceName, "auth_parameters.0.api_key.0.key", key),
 					resource.TestCheckResourceAttr(resourceName, "auth_parameters.0.invocation_http_parameters.0.body.0.key", bodyKeyModified),
@@ -594,7 +580,7 @@ func TestAccEventsConnection_disappears(t *testing.T) {
 
 func testAccCheckConnectionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_event_connection" {
@@ -611,7 +597,7 @@ func testAccCheckConnectionDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			return fmt.Errorf("EventBridge Connection %s still exists", rs.Primary.ID)
+			return fmt.Errorf("EventBridge connection %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -625,7 +611,7 @@ func testAccCheckConnectionExists(ctx context.Context, n string, v *eventbridge.
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn(ctx)
 
 		output, err := tfevents.FindConnectionByName(ctx, conn, rs.Primary.ID)
 
@@ -641,7 +627,7 @@ func testAccCheckConnectionExists(ctx context.Context, n string, v *eventbridge.
 
 func testAccCheckConnectionRecreated(i, j *eventbridge.DescribeConnectionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.ToString(i.ConnectionArn) == aws.ToString(j.ConnectionArn) {
+		if aws.StringValue(i.ConnectionArn) == aws.StringValue(j.ConnectionArn) {
 			return fmt.Errorf("EventBridge Connection not recreated")
 		}
 		return nil
@@ -650,7 +636,7 @@ func testAccCheckConnectionRecreated(i, j *eventbridge.DescribeConnectionOutput)
 
 func testAccCheckConnectionNotRecreated(i, j *eventbridge.DescribeConnectionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.ToString(i.ConnectionArn) != aws.ToString(j.ConnectionArn) {
+		if aws.StringValue(i.ConnectionArn) != aws.StringValue(j.ConnectionArn) {
 			return fmt.Errorf("EventBridge Connection was recreated")
 		}
 		return nil
@@ -847,40 +833,4 @@ resource "aws_cloudwatch_event_connection" "invocation_http_parameters" {
 		queryStringKey,
 		queryStringValue,
 		queryStringIsSecretValue)
-}
-
-func testAccConnectionConfig_invocationHTTPParametersEmpty(name, description string) string {
-	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_connection" "invocation_http_parameters" {
-  name        = %[1]q
-  description = %[2]q
-  auth_parameters {
-    invocation_http_parameters {
-    }
-  }
-}
-`, name, description)
-}
-
-func testAccConnectionConfig_oauthHTTPParametersEmpty(
-	name,
-	description,
-	authorizationType,
-	authorizationEndpoint,
-	httpMethod string) string {
-	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_connection" "oauth" {
-  name               = %[1]q
-  description        = %[2]q
-  authorization_type = %[3]q
-  auth_parameters {
-    oauth {
-      authorization_endpoint = %[4]q
-      http_method            = %[5]q
-      oauth_http_parameters {
-      }
-    }
-  }
-}
-`, name, description, authorizationType, authorizationEndpoint, httpMethod)
 }

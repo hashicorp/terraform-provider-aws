@@ -23,12 +23,11 @@ func TestAccECSAccountSettingDefault_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(*testing.T){
-		"containerInstanceLongARNFormat":  testAccAccountSettingDefault_containerInstanceLongARNFormat,
-		"serviceLongARNFormat":            testAccAccountSettingDefault_serviceLongARNFormat,
-		"taskLongARNFormat":               testAccAccountSettingDefault_taskLongARNFormat,
-		"vpcTrunking":                     testAccAccountSettingDefault_vpcTrunking,
-		"containerInsights":               testAccAccountSettingDefault_containerInsights,
-		"fargateTaskRetirementWaitPeriod": testAccAccountSettingDefault_fargateTaskRetirementWaitPeriod,
+		"containerInstanceLongARNFormat": testAccAccountSettingDefault_containerInstanceLongARNFormat,
+		"serviceLongARNFormat":           testAccAccountSettingDefault_serviceLongARNFormat,
+		"taskLongARNFormat":              testAccAccountSettingDefault_taskLongARNFormat,
+		"vpcTrunking":                    testAccAccountSettingDefault_vpcTrunking,
+		"containerInsights":              testAccAccountSettingDefault_containerInsights,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -48,8 +47,8 @@ func testAccAccountSettingDefault_containerInstanceLongARNFormat(t *testing.T) {
 			{
 				Config: testAccAccountSettingDefaultConfig_basic(settingName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, settingName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrValue, names.AttrEnabled),
+					resource.TestCheckResourceAttr(resourceName, "name", settingName),
+					resource.TestCheckResourceAttr(resourceName, "value", "enabled"),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
 				),
 			},
@@ -77,8 +76,8 @@ func testAccAccountSettingDefault_serviceLongARNFormat(t *testing.T) {
 			{
 				Config: testAccAccountSettingDefaultConfig_basic(settingName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, settingName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrValue, names.AttrEnabled),
+					resource.TestCheckResourceAttr(resourceName, "name", settingName),
+					resource.TestCheckResourceAttr(resourceName, "value", "enabled"),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
 				),
 			},
@@ -106,8 +105,8 @@ func testAccAccountSettingDefault_taskLongARNFormat(t *testing.T) {
 			{
 				Config: testAccAccountSettingDefaultConfig_basic(settingName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, settingName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrValue, names.AttrEnabled),
+					resource.TestCheckResourceAttr(resourceName, "name", settingName),
+					resource.TestCheckResourceAttr(resourceName, "value", "enabled"),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
 				),
 			},
@@ -135,8 +134,8 @@ func testAccAccountSettingDefault_vpcTrunking(t *testing.T) {
 			{
 				Config: testAccAccountSettingDefaultConfig_basic(settingName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, settingName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrValue, names.AttrEnabled),
+					resource.TestCheckResourceAttr(resourceName, "name", settingName),
+					resource.TestCheckResourceAttr(resourceName, "value", "enabled"),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
 				),
 			},
@@ -164,43 +163,14 @@ func testAccAccountSettingDefault_containerInsights(t *testing.T) {
 			{
 				Config: testAccAccountSettingDefaultConfig_basic(settingName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, settingName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrValue, names.AttrEnabled),
+					resource.TestCheckResourceAttr(resourceName, "name", settingName),
+					resource.TestCheckResourceAttr(resourceName, "value", "enabled"),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportStateId:     settingName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func testAccAccountSettingDefault_fargateTaskRetirementWaitPeriod(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_ecs_account_setting_default.test"
-	settingName := ecs.SettingNameFargateTaskRetirementWaitPeriod
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccountSettingDefaultDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAccountSettingDefaultConfig_fargateTaskRetirementWaitPeriod(settingName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, "fargateTaskRetirementWaitPeriod"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "14"),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportStateId:     "fargateTaskRetirementWaitPeriod",
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -217,7 +187,7 @@ func testAccCheckAccountSettingDefaultDestroy(ctx context.Context) resource.Test
 				continue
 			}
 
-			name := rs.Primary.Attributes[names.AttrName]
+			name := rs.Primary.Attributes["name"]
 
 			input := &ecs.ListAccountSettingsInput{
 				Name:              aws.String(name),
@@ -235,7 +205,7 @@ func testAccCheckAccountSettingDefaultDestroy(ctx context.Context) resource.Test
 			}
 
 			for _, value := range resp.Settings {
-				if aws.StringValue(value.Value) != "disabled" && aws.StringValue(value.Value) != "7" {
+				if aws.StringValue(value.Value) != "disabled" {
 					switch name {
 					case ecs.SettingNameContainerInstanceLongArnFormat:
 						return nil
@@ -259,15 +229,6 @@ func testAccAccountSettingDefaultConfig_basic(settingName string) string {
 resource "aws_ecs_account_setting_default" "test" {
   name  = %[1]q
   value = "enabled"
-}
-`, settingName)
-}
-
-func testAccAccountSettingDefaultConfig_fargateTaskRetirementWaitPeriod(settingName string) string {
-	return fmt.Sprintf(`
-resource "aws_ecs_account_setting_default" "test" {
-  name  = %[1]q
-  value = "14"
 }
 `, settingName)
 }

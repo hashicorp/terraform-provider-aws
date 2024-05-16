@@ -5,8 +5,9 @@ package kms
 import (
 	"context"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	kms_sdkv2 "github.com/aws/aws-sdk-go-v2/service/kms"
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	kms_sdkv1 "github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -25,39 +26,32 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceAlias,
+			Factory:  DataSourceAlias,
 			TypeName: "aws_kms_alias",
-			Name:     "Alias",
 		},
 		{
-			Factory:  dataSourceCiphertext,
+			Factory:  DataSourceCiphertext,
 			TypeName: "aws_kms_ciphertext",
-			Name:     "Ciphertext",
 		},
 		{
-			Factory:  dataSourceCustomKeyStore,
+			Factory:  DataSourceCustomKeyStore,
 			TypeName: "aws_kms_custom_key_store",
-			Name:     "Custom Key Store",
 		},
 		{
-			Factory:  dataSourceKey,
+			Factory:  DataSourceKey,
 			TypeName: "aws_kms_key",
-			Name:     "Key",
 		},
 		{
-			Factory:  dataSourcePublicKey,
+			Factory:  DataSourcePublicKey,
 			TypeName: "aws_kms_public_key",
-			Name:     "Public Key",
 		},
 		{
-			Factory:  dataSourceSecret,
+			Factory:  DataSourceSecret,
 			TypeName: "aws_kms_secret",
-			Name:     "Secret",
 		},
 		{
-			Factory:  dataSourceSecrets,
+			Factory:  DataSourceSecrets,
 			TypeName: "aws_kms_secrets",
-			Name:     "Secrets",
 		},
 	}
 }
@@ -65,60 +59,55 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  resourceAlias,
+			Factory:  ResourceAlias,
 			TypeName: "aws_kms_alias",
-			Name:     "Alias",
 		},
 		{
-			Factory:  resourceCiphertext,
+			Factory:  ResourceCiphertext,
 			TypeName: "aws_kms_ciphertext",
-			Name:     "Ciphertext",
 		},
 		{
-			Factory:  resourceCustomKeyStore,
+			Factory:  ResourceCustomKeyStore,
 			TypeName: "aws_kms_custom_key_store",
-			Name:     "Custom Key Store",
 		},
 		{
-			Factory:  resourceExternalKey,
+			Factory:  ResourceExternalKey,
 			TypeName: "aws_kms_external_key",
 			Name:     "External Key",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
+				IdentifierAttribute: "id",
 			},
 		},
 		{
-			Factory:  resourceGrant,
+			Factory:  ResourceGrant,
 			TypeName: "aws_kms_grant",
-			Name:     "Grant",
 		},
 		{
-			Factory:  resourceKey,
+			Factory:  ResourceKey,
 			TypeName: "aws_kms_key",
 			Name:     "Key",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
+				IdentifierAttribute: "id",
 			},
 		},
 		{
-			Factory:  resourceKeyPolicy,
+			Factory:  ResourceKeyPolicy,
 			TypeName: "aws_kms_key_policy",
-			Name:     "Key Policy",
 		},
 		{
-			Factory:  resourceReplicaExternalKey,
+			Factory:  ResourceReplicaExternalKey,
 			TypeName: "aws_kms_replica_external_key",
 			Name:     "Replica External Key",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
+				IdentifierAttribute: "id",
 			},
 		},
 		{
-			Factory:  resourceReplicaKey,
+			Factory:  ResourceReplicaKey,
 			TypeName: "aws_kms_replica_key",
 			Name:     "Replica Key",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
+				IdentifierAttribute: "id",
 			},
 		},
 	}
@@ -128,15 +117,11 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.KMS
 }
 
-// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*kms_sdkv2.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
+func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*kms_sdkv1.KMS, error) {
+	sess := config["session"].(*session_sdkv1.Session)
 
-	return kms_sdkv2.NewFromConfig(cfg, func(o *kms_sdkv2.Options) {
-		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
-			o.BaseEndpoint = aws_sdkv2.String(endpoint)
-		}
-	}), nil
+	return kms_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

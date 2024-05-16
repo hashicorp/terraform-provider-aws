@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_connect_user")
@@ -25,7 +24,7 @@ func DataSourceUser() *schema.Resource {
 		ReadWithoutTimeout: dataSourceUserRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -42,7 +41,7 @@ func DataSourceUser() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrEmail: {
+						"email": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -57,16 +56,16 @@ func DataSourceUser() *schema.Resource {
 					},
 				},
 			},
-			names.AttrInstanceID: {
+			"instance_id": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{names.AttrName, "user_id"},
+				ExactlyOneOf: []string{"name", "user_id"},
 			},
 			"phone_config": {
 				Type:     schema.TypeList,
@@ -103,12 +102,12 @@ func DataSourceUser() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 			"user_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"user_id", names.AttrName},
+				ExactlyOneOf: []string{"user_id", "name"},
 			},
 		},
 	}
@@ -120,7 +119,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	instanceID := d.Get(names.AttrInstanceID).(string)
+	instanceID := d.Get("instance_id").(string)
 
 	input := &connect.DescribeUserInput{
 		InstanceId: aws.String(instanceID),
@@ -128,7 +127,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if v, ok := d.GetOk("user_id"); ok {
 		input.UserId = aws.String(v.(string))
-	} else if v, ok := d.GetOk(names.AttrName); ok {
+	} else if v, ok := d.GetOk("name"); ok {
 		name := v.(string)
 		userSummary, err := dataSourceGetUserSummaryByName(ctx, conn, instanceID, name)
 
@@ -155,11 +154,11 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	user := resp.User
 
-	d.Set(names.AttrARN, user.Arn)
+	d.Set("arn", user.Arn)
 	d.Set("directory_user_id", user.DirectoryUserId)
 	d.Set("hierarchy_group_id", user.HierarchyGroupId)
-	d.Set(names.AttrInstanceID, instanceID)
-	d.Set(names.AttrName, user.Username)
+	d.Set("instance_id", instanceID)
+	d.Set("name", user.Username)
 	d.Set("routing_profile_id", user.RoutingProfileId)
 	d.Set("security_profile_ids", flex.FlattenStringSet(user.SecurityProfileIds))
 	d.Set("user_id", user.Id)
@@ -172,7 +171,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "setting phone_config: %s", err)
 	}
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, user.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, user.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_networkfirewall_logging_configuration")
@@ -38,7 +37,7 @@ func ResourceLoggingConfiguration() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrLoggingConfiguration: {
+			"logging_configuration": {
 				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1,
@@ -85,7 +84,7 @@ func resourceLoggingConfigurationCreate(ctx context.Context, d *schema.ResourceD
 
 	log.Printf("[DEBUG] Adding Logging Configuration to NetworkFirewall Firewall: %s", firewallArn)
 
-	loggingConfigs := expandLoggingConfiguration(d.Get(names.AttrLoggingConfiguration).([]interface{}))
+	loggingConfigs := expandLoggingConfiguration(d.Get("logging_configuration").([]interface{}))
 	// cumulatively add the configured "log_destination_config" in "logging_configuration"
 	err := putLoggingConfiguration(ctx, conn, firewallArn, loggingConfigs)
 	if err != nil {
@@ -121,7 +120,7 @@ func resourceLoggingConfigurationRead(ctx context.Context, d *schema.ResourceDat
 
 	d.Set("firewall_arn", output.FirewallArn)
 
-	if err := d.Set(names.AttrLoggingConfiguration, flattenLoggingConfiguration(output.LoggingConfiguration)); err != nil {
+	if err := d.Set("logging_configuration", flattenLoggingConfiguration(output.LoggingConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting logging_configuration: %s", err)
 	}
 
@@ -135,7 +134,7 @@ func resourceLoggingConfigurationUpdate(ctx context.Context, d *schema.ResourceD
 
 	log.Printf("[DEBUG] Updating Logging Configuration for NetworkFirewall Firewall: %s", d.Id())
 
-	o, n := d.GetChange(names.AttrLoggingConfiguration)
+	o, n := d.GetChange("logging_configuration")
 	// Remove destination configs one by one, if any
 	if oldConfig := o.([]interface{}); len(oldConfig) != 0 && oldConfig[0] != nil {
 		loggingConfig := expandLoggingConfigurationOnUpdate(oldConfig)
@@ -148,7 +147,7 @@ func resourceLoggingConfigurationUpdate(ctx context.Context, d *schema.ResourceD
 	}
 	// Only send new LoggingConfiguration with content
 	if newConfig := n.([]interface{}); len(newConfig) != 0 && newConfig[0] != nil {
-		loggingConfigs := expandLoggingConfiguration(d.Get(names.AttrLoggingConfiguration).([]interface{}))
+		loggingConfigs := expandLoggingConfiguration(d.Get("logging_configuration").([]interface{}))
 		// cumulatively add the configured "log_destination_config" in "logging_configuration"
 		err := putLoggingConfiguration(ctx, conn, d.Id(), loggingConfigs)
 		if err != nil {

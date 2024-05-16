@@ -37,14 +37,14 @@ func TestAccEMRContainersJobTemplate_basic(t *testing.T) {
 				Config: testAccJobTemplateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobTemplateExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "job_template_data.#", acctest.Ct1),
-					resource.TestCheckResourceAttrPair(resourceName, "job_template_data.0.execution_role_arn", "aws_iam_role.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "job_template_data.0.job_driver.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "job_template_data.0.job_driver.0.spark_sql_job_driver.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "job_template_data.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "job_template_data.0.execution_role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "job_template_data.0.job_driver.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "job_template_data.0.job_driver.0.spark_sql_job_driver.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "job_template_data.0.job_driver.0.spark_sql_job_driver.0.entry_point", "default"),
 					resource.TestCheckResourceAttr(resourceName, "job_template_data.0.release_label", "emr-6.10.0-latest"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -97,11 +97,11 @@ func TestAccEMRContainersJobTemplate_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckJobTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobTemplateConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccJobTemplateConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobTemplateExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{

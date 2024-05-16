@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_glue_data_catalog_encryption_settings")
@@ -20,7 +19,7 @@ func DataSourceDataCatalogEncryptionSettings() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDataCatalogEncryptionSettingsRead,
 		Schema: map[string]*schema.Schema{
-			names.AttrCatalogID: {
+			"catalog_id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -77,7 +76,7 @@ func dataSourceDataCatalogEncryptionSettingsRead(ctx context.Context, d *schema.
 
 	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
-	catalogID := d.Get(names.AttrCatalogID).(string)
+	catalogID := d.Get("catalog_id").(string)
 	output, err := conn.GetDataCatalogEncryptionSettingsWithContext(ctx, &glue.GetDataCatalogEncryptionSettingsInput{
 		CatalogId: aws.String(catalogID),
 	})
@@ -87,7 +86,7 @@ func dataSourceDataCatalogEncryptionSettingsRead(ctx context.Context, d *schema.
 	}
 
 	d.SetId(catalogID)
-	d.Set(names.AttrCatalogID, d.Id())
+	d.Set("catalog_id", d.Id())
 	if output.DataCatalogEncryptionSettings != nil {
 		if err := d.Set("data_catalog_encryption_settings", []interface{}{flattenDataCatalogEncryptionSettings(output.DataCatalogEncryptionSettings)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting data_catalog_encryption_settings: %s", err)

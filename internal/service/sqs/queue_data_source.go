@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_sqs_queue")
@@ -27,16 +26,16 @@ func dataSourceQueue() *schema.Resource {
 		ReadWithoutTimeout: dataSourceQueueRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			names.AttrURL: {
+			"tags": tftags.TagsSchemaComputed(),
+			"url": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -48,7 +47,7 @@ func dataSourceQueueRead(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).SQSClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	urlOutput, err := findQueueURLByName(ctx, conn, name)
 
 	if err != nil {
@@ -63,8 +62,8 @@ func dataSourceQueueRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.SetId(queueURL)
-	d.Set(names.AttrARN, attributesOutput)
-	d.Set(names.AttrURL, queueURL)
+	d.Set("arn", attributesOutput)
+	d.Set("url", queueURL)
 
 	tags, err := listTags(ctx, conn, queueURL)
 
@@ -78,7 +77,7 @@ func dataSourceQueueRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.Errorf("listing tags for SQS Queue (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.Errorf("setting tags: %s", err)
 	}
 

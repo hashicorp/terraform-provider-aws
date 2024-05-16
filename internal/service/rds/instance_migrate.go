@@ -21,26 +21,26 @@ import (
 func resourceInstanceResourceV0() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
 
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			names.AttrUsername: {
+			"username": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
 
-			names.AttrPassword: {
+			"password": {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Sensitive: true,
@@ -58,7 +58,7 @@ func resourceInstanceResourceV0() *schema.Resource {
 				ForceNew: true,
 			},
 
-			names.AttrEngineVersion: {
+			"engine_version": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -89,13 +89,13 @@ func resourceInstanceResourceV0() *schema.Resource {
 				Computed: true,
 			},
 
-			names.AttrStorageType: {
+			"storage_type": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
 
-			names.AttrIdentifier: {
+			"identifier": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -114,7 +114,7 @@ func resourceInstanceResourceV0() *schema.Resource {
 				Required: true,
 			},
 
-			names.AttrAvailabilityZone: {
+			"availability_zone": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -133,7 +133,7 @@ func resourceInstanceResourceV0() *schema.Resource {
 				Computed: true,
 			},
 
-			names.AttrIOPS: {
+			"iops": {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
@@ -161,19 +161,19 @@ func resourceInstanceResourceV0() *schema.Resource {
 				Computed: true,
 			},
 
-			names.AttrPort: {
+			"port": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
 
-			names.AttrPubliclyAccessible: {
+			"publicly_accessible": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
 
-			names.AttrVPCSecurityGroupIDs: {
+			"vpc_security_group_ids": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -203,12 +203,12 @@ func resourceInstanceResourceV0() *schema.Resource {
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrBucketName: {
+						"bucket_name": {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
 						},
-						names.AttrBucketPrefix: {
+						"bucket_prefix": {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -256,27 +256,27 @@ func resourceInstanceResourceV0() *schema.Resource {
 				Computed: true,
 			},
 
-			names.AttrAddress: {
+			"address": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			names.AttrEndpoint: {
+			"endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			names.AttrHostedZoneID: {
+			"hosted_zone_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			names.AttrStatus: {
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			names.AttrApplyImmediately: {
+			"apply_immediately": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
@@ -299,7 +299,7 @@ func resourceInstanceResourceV0() *schema.Resource {
 				ForceNew: true,
 			},
 
-			names.AttrAutoMinorVersionUpgrade: {
+			"auto_minor_version_upgrade": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
@@ -328,7 +328,7 @@ func resourceInstanceResourceV0() *schema.Resource {
 				Computed: true,
 			},
 
-			names.AttrKMSKeyID: {
+			"kms_key_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -347,7 +347,7 @@ func resourceInstanceResourceV0() *schema.Resource {
 				Optional: true,
 			},
 
-			names.AttrResourceID: {
+			"resource_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -358,7 +358,7 @@ func resourceInstanceResourceV0() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
-			names.AttrDomain: {
+			"domain": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -386,7 +386,7 @@ func resourceInstanceResourceV0() *schema.Resource {
 				Computed: true,
 			},
 
-			names.AttrTags: tftags.TagsSchema(),
+			"tags": tftags.TagsSchema(),
 		},
 	}
 }
@@ -404,7 +404,7 @@ func InstanceStateUpgradeV0(_ context.Context, rawState map[string]interface{}, 
 func resourceInstanceResourceV1() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			names.AttrAddress: {
+			"address": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -441,21 +441,21 @@ func resourceInstanceResourceV1() *schema.Resource {
 			// apply_immediately is used to determine when the update modifications
 			// take place.
 			// See http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.DBInstance.Modifying.html
-			names.AttrApplyImmediately: {
+			"apply_immediately": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrAutoMinorVersionUpgrade: {
+			"auto_minor_version_upgrade": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
-			names.AttrAvailabilityZone: {
+			"availability_zone": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -479,7 +479,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
+						"enabled": {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
@@ -535,7 +535,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			names.AttrDomain: {
+			"domain": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -551,7 +551,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 					ValidateFunc: validation.StringInSlice(InstanceExportableLogType_Values(), false),
 				},
 			},
-			names.AttrEndpoint: {
+			"endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -565,7 +565,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 					return strings.ToLower(value)
 				},
 			},
-			names.AttrEngineVersion: {
+			"engine_version": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -584,7 +584,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 					validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end in a hyphen"),
 				),
 			},
-			names.AttrHostedZoneID: {
+			"hosted_zone_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -592,7 +592,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			names.AttrIdentifier: {
+			"identifier": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -603,19 +603,19 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
-				ConflictsWith: []string{names.AttrIdentifier},
+				ConflictsWith: []string{"identifier"},
 				ValidateFunc:  validIdentifierPrefix,
 			},
 			"instance_class": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrIOPS: {
+			"iops": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			names.AttrKMSKeyID: {
+			"kms_key_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -636,15 +636,15 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrAddress: {
+						"address": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrHostedZoneID: {
+						"hosted_zone_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrPort: {
+						"port": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -667,14 +667,14 @@ func resourceInstanceResourceV1() *schema.Resource {
 			"manage_master_user_password": {
 				Type:          schema.TypeBool,
 				Optional:      true,
-				ConflictsWith: []string{names.AttrPassword},
+				ConflictsWith: []string{"password"},
 			},
 			"master_user_secret": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrKMSKeyID: {
+						"kms_key_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -744,7 +744,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			names.AttrPassword: {
+			"password": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Sensitive:     true,
@@ -766,12 +766,12 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			names.AttrPort: {
+			"port": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			names.AttrPubliclyAccessible: {
+			"publicly_accessible": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -791,7 +791,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			names.AttrResourceID: {
+			"resource_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -843,12 +843,12 @@ func resourceInstanceResourceV1() *schema.Resource {
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrBucketName: {
+						"bucket_name": {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
 						},
-						names.AttrBucketPrefix: {
+						"bucket_prefix": {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -882,7 +882,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -896,7 +896,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			names.AttrStorageType: {
+			"storage_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -910,14 +910,14 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			names.AttrUsername: {
+			"username": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"replicate_source_db"},
 			},
-			names.AttrVPCSecurityGroupIDs: {
+			"vpc_security_group_ids": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -932,7 +932,7 @@ func InstanceStateUpgradeV1(_ context.Context, rawState map[string]interface{}, 
 		return nil, nil
 	}
 
-	rawState[names.AttrID] = rawState[names.AttrResourceID]
+	rawState["id"] = rawState["resource_id"]
 
 	return rawState, nil
 }

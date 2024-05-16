@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ecr_replication_configuration", name="Replication Configuration")
@@ -43,19 +42,19 @@ func resourceReplicationConfiguration() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrRule: {
+						"rule": {
 							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 10,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrDestination: {
+									"destination": {
 										Type:     schema.TypeList,
 										Required: true,
 										MaxItems: 25,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												names.AttrRegion: {
+												"region": {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: verify.ValidRegionName,
@@ -75,7 +74,7 @@ func resourceReplicationConfiguration() *schema.Resource {
 										MaxItems: 100,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												names.AttrFilter: {
+												"filter": {
 													Type:     schema.TypeString,
 													Required: true,
 												},
@@ -183,7 +182,7 @@ func expandReplicationConfigurationReplicationConfiguration(data []interface{}) 
 
 	ec := data[0].(map[string]interface{})
 	config := &types.ReplicationConfiguration{
-		Rules: expandReplicationConfigurationReplicationConfigurationRules(ec[names.AttrRule].([]interface{})),
+		Rules: expandReplicationConfigurationReplicationConfigurationRules(ec["rule"].([]interface{})),
 	}
 	return config
 }
@@ -194,7 +193,7 @@ func flattenReplicationConfigurationReplicationConfiguration(ec *types.Replicati
 	}
 
 	config := map[string]interface{}{
-		names.AttrRule: flattenReplicationConfigurationReplicationConfigurationRules(ec.Rules),
+		"rule": flattenReplicationConfigurationReplicationConfigurationRules(ec.Rules),
 	}
 
 	return []map[string]interface{}{
@@ -212,7 +211,7 @@ func expandReplicationConfigurationReplicationConfigurationRules(data []interfac
 	for _, rule := range data {
 		ec := rule.(map[string]interface{})
 		config := types.ReplicationRule{
-			Destinations:      expandReplicationConfigurationReplicationConfigurationRulesDestinations(ec[names.AttrDestination].([]interface{})),
+			Destinations:      expandReplicationConfigurationReplicationConfigurationRulesDestinations(ec["destination"].([]interface{})),
 			RepositoryFilters: expandReplicationConfigurationReplicationConfigurationRulesRepositoryFilters(ec["repository_filter"].([]interface{})),
 		}
 
@@ -230,8 +229,8 @@ func flattenReplicationConfigurationReplicationConfigurationRules(ec []types.Rep
 
 	for _, apiObject := range ec {
 		tfMap := map[string]interface{}{
-			names.AttrDestination: flattenReplicationConfigurationReplicationConfigurationRulesDestinations(apiObject.Destinations),
-			"repository_filter":   flattenReplicationConfigurationReplicationConfigurationRulesRepositoryFilters(apiObject.RepositoryFilters),
+			"destination":       flattenReplicationConfigurationReplicationConfigurationRulesDestinations(apiObject.Destinations),
+			"repository_filter": flattenReplicationConfigurationReplicationConfigurationRulesRepositoryFilters(apiObject.RepositoryFilters),
 		}
 
 		tfList = append(tfList, tfMap)
@@ -250,7 +249,7 @@ func expandReplicationConfigurationReplicationConfigurationRulesDestinations(dat
 	for _, dest := range data {
 		ec := dest.(map[string]interface{})
 		config := types.ReplicationDestination{
-			Region:     aws.String(ec[names.AttrRegion].(string)),
+			Region:     aws.String(ec["region"].(string)),
 			RegistryId: aws.String(ec["registry_id"].(string)),
 		}
 
@@ -268,8 +267,8 @@ func flattenReplicationConfigurationReplicationConfigurationRulesDestinations(ec
 
 	for _, apiObject := range ec {
 		tfMap := map[string]interface{}{
-			names.AttrRegion: aws.ToString(apiObject.Region),
-			"registry_id":    aws.ToString(apiObject.RegistryId),
+			"region":      aws.ToString(apiObject.Region),
+			"registry_id": aws.ToString(apiObject.RegistryId),
 		}
 
 		tfList = append(tfList, tfMap)
@@ -288,7 +287,7 @@ func expandReplicationConfigurationReplicationConfigurationRulesRepositoryFilter
 	for _, filter := range data {
 		ec := filter.(map[string]interface{})
 		config := types.RepositoryFilter{
-			Filter:     aws.String(ec[names.AttrFilter].(string)),
+			Filter:     aws.String(ec["filter"].(string)),
 			FilterType: types.RepositoryFilterType((ec["filter_type"].(string))),
 		}
 
@@ -306,8 +305,8 @@ func flattenReplicationConfigurationReplicationConfigurationRulesRepositoryFilte
 
 	for _, apiObject := range ec {
 		tfMap := map[string]interface{}{
-			names.AttrFilter: aws.ToString(apiObject.Filter),
-			"filter_type":    apiObject.FilterType,
+			"filter":      aws.ToString(apiObject.Filter),
+			"filter_type": apiObject.FilterType,
 		}
 
 		tfList = append(tfList, tfMap)

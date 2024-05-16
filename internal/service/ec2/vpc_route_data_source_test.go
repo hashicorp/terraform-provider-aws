@@ -37,17 +37,17 @@ func TestAccVPCRouteDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					// By destination CIDR.
 					resource.TestCheckResourceAttrPair(datasource1Name, "destination_cidr_block", instanceRouteResourceName, "destination_cidr_block"),
-					resource.TestCheckResourceAttrPair(datasource1Name, "route_table_id", rtResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(datasource1Name, "route_table_id", rtResourceName, "id"),
 
 					// By instance ID.
 					resource.TestCheckResourceAttrPair(datasource2Name, "destination_cidr_block", instanceRouteResourceName, "destination_cidr_block"),
-					resource.TestCheckResourceAttrPair(datasource2Name, names.AttrInstanceID, instanceResourceName, names.AttrID),
-					resource.TestCheckResourceAttrPair(datasource2Name, "route_table_id", rtResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(datasource2Name, "instance_id", instanceResourceName, "id"),
+					resource.TestCheckResourceAttrPair(datasource2Name, "route_table_id", rtResourceName, "id"),
 
 					// By VPC peering connection ID.
 					resource.TestCheckResourceAttrPair(datasource3Name, "destination_cidr_block", pcxRouteResourceName, "destination_cidr_block"),
-					resource.TestCheckResourceAttrPair(datasource3Name, "route_table_id", rtResourceName, names.AttrID),
-					resource.TestCheckResourceAttrPair(datasource3Name, "vpc_peering_connection_id", pcxResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(datasource3Name, "route_table_id", rtResourceName, "id"),
+					resource.TestCheckResourceAttrPair(datasource3Name, "vpc_peering_connection_id", pcxResourceName, "id"),
 				),
 			},
 		},
@@ -74,7 +74,7 @@ func TestAccVPCRouteDataSource_transitGatewayID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "destination_cidr_block", dataSourceName, "destination_cidr_block"),
 					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", dataSourceName, "route_table_id"),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayID, dataSourceName, names.AttrTransitGatewayID),
+					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", dataSourceName, "transit_gateway_id"),
 				),
 			},
 		},

@@ -35,10 +35,10 @@ func TestAccVPCInternetGateway_basic(t *testing.T) {
 				Config: testAccVPCInternetGatewayConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInternetGatewayExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`internet-gateway/igw-.+`)),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVPCID, ""),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`internet-gateway/igw-.+`)),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_id", ""),
 				),
 			},
 			{
@@ -91,7 +91,7 @@ func TestAccVPCInternetGateway_Attachment(t *testing.T) {
 				Config: testAccVPCInternetGatewayConfig_attachment(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInternetGatewayExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, vpc1ResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpc1ResourceName, "id"),
 				),
 			},
 			{
@@ -103,7 +103,7 @@ func TestAccVPCInternetGateway_Attachment(t *testing.T) {
 				Config: testAccVPCInternetGatewayConfig_attachmentUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInternetGatewayExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, vpc2ResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpc2ResourceName, "id"),
 				),
 			},
 		},
@@ -123,11 +123,11 @@ func TestAccVPCInternetGateway_Tags(t *testing.T) {
 		CheckDestroy:             testAccCheckInternetGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCInternetGatewayConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccVPCInternetGatewayConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInternetGatewayExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -136,20 +136,20 @@ func TestAccVPCInternetGateway_Tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVPCInternetGatewayConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccVPCInternetGatewayConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInternetGatewayExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccVPCInternetGatewayConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccVPCInternetGatewayConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInternetGatewayExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},

@@ -5,17 +5,21 @@ package dynamodb_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"log"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfdynamodb "github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -38,7 +42,7 @@ func TestAccDynamoDBTableReplica_basic(t *testing.T) {
 				Config: testAccTableReplicaConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 				),
 			},
 			{
@@ -223,7 +227,7 @@ func TestAccDynamoDBTableReplica_tags(t *testing.T) {
 				Config: testAccTableReplicaConfig_tags1(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.tape", "Valladolid"),
 				),
 			},
@@ -236,7 +240,7 @@ func TestAccDynamoDBTableReplica_tags(t *testing.T) {
 				Config: testAccTableReplicaConfig_tags2(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "5"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "5"),
 					resource.TestCheckResourceAttr(resourceName, "tags.arise", "Melandru"),
 					resource.TestCheckResourceAttr(resourceName, "tags.brightest", "Lights"),
 					resource.TestCheckResourceAttr(resourceName, "tags.shooting", "Stars"),
@@ -253,7 +257,7 @@ func TestAccDynamoDBTableReplica_tags(t *testing.T) {
 				Config: testAccTableReplicaConfig_tags3(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -344,37 +348,50 @@ func TestAccDynamoDBTableReplica_keys(t *testing.T) {
 
 func testAccCheckTableReplicaDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBClient(ctx)
-		replicaRegion := acctest.Region()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn(ctx)
+		replicaRegion := aws.StringValue(conn.Config.Region)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dynamodb_table_replica" {
 				continue
 			}
 
-			tableName, mainRegion, err := tfdynamodb.TableReplicaParseResourceID(rs.Primary.ID)
+			log.Printf("[DEBUG] Checking if DynamoDB table replica %s was destroyed", rs.Primary.ID)
+
+			if rs.Primary.ID == "" {
+				return create.Error(names.DynamoDB, create.ErrActionCheckingDestroyed, tfdynamodb.ResNameTableReplica, rs.Primary.ID, errors.New("no ID"))
+			}
+
+			tableName, mainRegion, err := tfdynamodb.TableReplicaParseID(rs.Primary.ID)
 			if err != nil {
-				return err
+				return create.Error(names.DynamoDB, create.ErrActionCheckingDestroyed, tfdynamodb.ResNameTableReplica, rs.Primary.ID, err)
 			}
 
-			optFn := func(o *dynamodb.Options) {
-				o.Region = mainRegion
-			}
-			output, err := tfdynamodb.FindTableByName(ctx, conn, tableName, optFn)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConnForRegion(ctx, mainRegion)
 
-			if tfresource.NotFound(err) {
+			params := &dynamodb.DescribeTableInput{
+				TableName: aws.String(tableName),
+			}
+
+			result, err := conn.DescribeTableWithContext(ctx, params)
+
+			if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
 				continue
 			}
 
 			if err != nil {
-				return err
+				return create.Error(names.DynamoDB, create.ErrActionCheckingDestroyed, tfdynamodb.ResNameTableReplica, rs.Primary.ID, err)
 			}
 
-			if tfdynamodb.ReplicaForRegion(output.Replicas, replicaRegion) == nil {
+			if result == nil || result.Table == nil {
 				continue
 			}
 
-			return fmt.Errorf("DynamoDB Table Replica %s still exists", rs.Primary.ID)
+			if _, err := tfdynamodb.FilterReplicasByRegion(result.Table.Replicas, replicaRegion); err == nil {
+				return create.Error(names.DynamoDB, create.ErrActionCheckingDestroyed, tfdynamodb.ResNameTableReplica, rs.Primary.ID, errors.New("still exists"))
+			}
+
+			return err
 		}
 
 		return nil
@@ -383,24 +400,33 @@ func testAccCheckTableReplicaDestroy(ctx context.Context) resource.TestCheckFunc
 
 func testAccCheckTableReplicaExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
+		log.Printf("[DEBUG] Trying to create initial table replica state!")
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", n)
+			return create.Error(names.DynamoDB, create.ErrActionCheckingExistence, tfdynamodb.ResNameTableReplica, rs.Primary.ID, fmt.Errorf("not found: %s", n))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBClient(ctx)
+		if rs.Primary.ID == "" {
+			return create.Error(names.DynamoDB, create.ErrActionCheckingExistence, tfdynamodb.ResNameTableReplica, rs.Primary.ID, errors.New("no ID"))
+		}
 
-		tableName, mainRegion, err := tfdynamodb.TableReplicaParseResourceID(rs.Primary.ID)
+		tableName, mainRegion, err := tfdynamodb.TableReplicaParseID(rs.Primary.ID)
 		if err != nil {
-			return err
+			return create.Error(names.DynamoDB, create.ErrActionCheckingExistence, tfdynamodb.ResNameTableReplica, rs.Primary.ID, err)
 		}
 
-		optFn := func(o *dynamodb.Options) {
-			o.Region = mainRegion
-		}
-		_, err = tfdynamodb.FindTableByName(ctx, conn, tableName, optFn)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConnForRegion(ctx, mainRegion)
 
-		return err
+		params := &dynamodb.DescribeTableInput{
+			TableName: aws.String(tableName),
+		}
+
+		_, err = conn.DescribeTableWithContext(ctx, params)
+		if err != nil {
+			return create.Error(names.DynamoDB, create.ErrActionCheckingExistence, tfdynamodb.ResNameTableReplica, rs.Primary.ID, err)
+		}
+
+		return nil
 	}
 }
 

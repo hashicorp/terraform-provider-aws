@@ -5,17 +5,18 @@ package dynamodb_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfdynamodb "github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -26,7 +27,7 @@ func TestAccDynamoDBTableExport_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var tableexport awstypes.ExportDescription
+	var tableexport dynamodb.DescribeExportOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dynamodb_table_export.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
@@ -43,17 +44,17 @@ func TestAccDynamoDBTableExport_basic(t *testing.T) {
 					testAccCheckTableExportExists(ctx, resourceName, &tableexport),
 					resource.TestCheckResourceAttr(resourceName, "export_format", "DYNAMODB_JSON"),
 					resource.TestCheckResourceAttr(resourceName, "export_status", "COMPLETED"),
-					resource.TestCheckResourceAttr(resourceName, "item_count", acctest.Ct0),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrS3Bucket, s3BucketResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "item_count", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "s3_bucket", s3BucketResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "s3_bucket_owner", ""),
 					resource.TestCheckResourceAttr(resourceName, "s3_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "s3_sse_algorithm", "AES256"),
 					resource.TestCheckResourceAttr(resourceName, "s3_sse_kms_key_id", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "manifest_files_s3_key"),
 					resource.TestCheckResourceAttrSet(resourceName, "export_time"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrStartTime),
+					resource.TestCheckResourceAttrSet(resourceName, "start_time"),
 					resource.TestCheckResourceAttrSet(resourceName, "end_time"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "dynamodb", regexache.MustCompile(
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dynamodb", regexache.MustCompile(
 						fmt.Sprintf("table\\/%s\\/export\\/+.", rName),
 					)),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "table_arn", "dynamodb", fmt.Sprintf("table/%s", rName)),
@@ -74,7 +75,7 @@ func TestAccDynamoDBTableExport_kms(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var tableexport awstypes.ExportDescription
+	var tableexport dynamodb.DescribeExportOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dynamodb_table_export.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
@@ -84,7 +85,7 @@ func TestAccDynamoDBTableExport_kms(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DynamoDB)
-			testAccPreCheckTableExport(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -96,17 +97,17 @@ func TestAccDynamoDBTableExport_kms(t *testing.T) {
 					testAccCheckTableExportExists(ctx, resourceName, &tableexport),
 					resource.TestCheckResourceAttr(resourceName, "export_format", "DYNAMODB_JSON"),
 					resource.TestCheckResourceAttr(resourceName, "export_status", "COMPLETED"),
-					resource.TestCheckResourceAttr(resourceName, "item_count", acctest.Ct0),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrS3Bucket, s3BucketResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "item_count", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "s3_bucket", s3BucketResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "s3_bucket_owner", ""),
 					resource.TestCheckResourceAttr(resourceName, "s3_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "s3_sse_algorithm", "KMS"),
-					resource.TestCheckResourceAttrPair(resourceName, "s3_sse_kms_key_id", kmsKeyResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "s3_sse_kms_key_id", kmsKeyResourceName, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "manifest_files_s3_key"),
 					resource.TestCheckResourceAttrSet(resourceName, "export_time"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrStartTime),
+					resource.TestCheckResourceAttrSet(resourceName, "start_time"),
 					resource.TestCheckResourceAttrSet(resourceName, "end_time"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "dynamodb", regexache.MustCompile(
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dynamodb", regexache.MustCompile(
 						fmt.Sprintf("table\\/%s\\/export\\/+.", rName),
 					)),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "table_arn", "dynamodb", fmt.Sprintf("table/%s", rName)),
@@ -127,38 +128,39 @@ func TestAccDynamoDBTableExport_s3Prefix(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var tableexport awstypes.ExportDescription
+	var tableexport dynamodb.DescribeExportOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dynamodb_table_export.test"
 	s3BucketResourceName := "aws_s3_bucket.test"
+	s3BucketPrefix := "test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DynamoDB)
-			testAccPreCheckTableExport(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTableExportConfig_s3Prefix(rName, "test"),
+				Config: testAccTableExportConfig_s3Prefix(rName, s3BucketPrefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTableExportExists(ctx, resourceName, &tableexport),
 					resource.TestCheckResourceAttr(resourceName, "export_format", "DYNAMODB_JSON"),
 					resource.TestCheckResourceAttr(resourceName, "export_status", "COMPLETED"),
-					resource.TestCheckResourceAttr(resourceName, "item_count", acctest.Ct0),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrS3Bucket, s3BucketResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "item_count", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "s3_bucket", s3BucketResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "s3_bucket_owner", ""),
 					resource.TestCheckResourceAttr(resourceName, "s3_prefix", "test"),
 					resource.TestCheckResourceAttr(resourceName, "s3_sse_algorithm", "AES256"),
 					resource.TestCheckResourceAttr(resourceName, "s3_sse_kms_key_id", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "manifest_files_s3_key"),
 					resource.TestCheckResourceAttrSet(resourceName, "export_time"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrStartTime),
+					resource.TestCheckResourceAttrSet(resourceName, "start_time"),
 					resource.TestCheckResourceAttrSet(resourceName, "end_time"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "dynamodb", regexache.MustCompile(
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dynamodb", regexache.MustCompile(
 						fmt.Sprintf("table\\/%s\\/export\\/+.", rName),
 					)),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "table_arn", "dynamodb", fmt.Sprintf("table/%s", rName)),
@@ -173,32 +175,35 @@ func TestAccDynamoDBTableExport_s3Prefix(t *testing.T) {
 	})
 }
 
-func testAccCheckTableExportExists(ctx context.Context, n string, v *awstypes.ExportDescription) resource.TestCheckFunc {
+func testAccCheckTableExportExists(ctx context.Context, name string, tableexport *dynamodb.DescribeExportOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
+		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return fmt.Errorf("Not found: %s", n)
+			return create.Error(names.DynamoDB, create.ErrActionCheckingExistence, tfdynamodb.ResNameTableExport, name, errors.New("not found"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBClient(ctx)
+		if rs.Primary.ID == "" {
+			return create.Error(names.DynamoDB, create.ErrActionCheckingExistence, tfdynamodb.ResNameTableExport, name, errors.New("not set"))
+		}
 
-		output, err := tfdynamodb.FindTableExportByARN(ctx, conn, rs.Primary.ID)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn(ctx)
+		resp, err := tfdynamodb.FindTableExportByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return err
+			return create.Error(names.DynamoDB, create.ErrActionCheckingExistence, tfdynamodb.ResNameTableExport, rs.Primary.ID, err)
 		}
 
-		*v = *output
+		*tableexport = *resp
 
 		return nil
 	}
 }
 
-func testAccPreCheckTableExport(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBClient(ctx)
+func testAccPreCheck(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn(ctx)
 
 	input := &dynamodb.ListExportsInput{}
-	_, err := conn.ListExports(ctx, input)
+	_, err := conn.ListExportsWithContext(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

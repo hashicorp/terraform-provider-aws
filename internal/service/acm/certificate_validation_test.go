@@ -36,7 +36,7 @@ func TestAccACMCertificateValidation_basic(t *testing.T) {
 				Config: testAccCertificateValidationConfig_basic(rootDomain, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateValidationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateARN, certificateResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", certificateResourceName, "arn"),
 				),
 			},
 		},
@@ -85,7 +85,7 @@ func TestAccACMCertificateValidation_validationRecordFQDNS(t *testing.T) {
 				Config: testAccCertificateValidationConfig_recordFQDNsOneRoute53Record(rootDomain, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateValidationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateARN, certificateResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", certificateResourceName, "arn"),
 				),
 			},
 		},
@@ -127,7 +127,7 @@ func TestAccACMCertificateValidation_validationRecordFQDNSRoot(t *testing.T) {
 				Config: testAccCertificateValidationConfig_recordFQDNsOneRoute53Record(rootDomain, rootDomain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateValidationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateARN, certificateResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", certificateResourceName, "arn"),
 				),
 			},
 		},
@@ -151,7 +151,7 @@ func TestAccACMCertificateValidation_validationRecordFQDNSRootAndWildcard(t *tes
 				Config: testAccCertificateValidationConfig_recordFQDNsTwoRoute53Records(rootDomain, rootDomain, strconv.Quote(wildcardDomain)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateValidationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateARN, certificateResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", certificateResourceName, "arn"),
 				),
 			},
 		},
@@ -176,7 +176,7 @@ func TestAccACMCertificateValidation_validationRecordFQDNSSan(t *testing.T) {
 				Config: testAccCertificateValidationConfig_recordFQDNsTwoRoute53Records(rootDomain, domain, strconv.Quote(sanDomain)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateValidationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateARN, certificateResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", certificateResourceName, "arn"),
 				),
 			},
 		},
@@ -200,7 +200,7 @@ func TestAccACMCertificateValidation_validationRecordFQDNSWildcard(t *testing.T)
 				Config: testAccCertificateValidationConfig_recordFQDNsOneRoute53Record(rootDomain, wildcardDomain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateValidationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateARN, certificateResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", certificateResourceName, "arn"),
 				),
 				// ExpectNonEmptyPlan: true, // https://github.com/hashicorp/terraform-provider-aws/issues/16913
 			},
@@ -225,7 +225,7 @@ func TestAccACMCertificateValidation_validationRecordFQDNSWildcardAndRoot(t *tes
 				Config: testAccCertificateValidationConfig_recordFQDNsTwoRoute53Records(rootDomain, wildcardDomain, strconv.Quote(rootDomain)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateValidationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateARN, certificateResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", certificateResourceName, "arn"),
 				),
 				// ExpectNonEmptyPlan: true, // https://github.com/hashicorp/terraform-provider-aws/issues/16913
 			},
@@ -246,7 +246,7 @@ func testAccCheckCertificateValidationExists(ctx context.Context, n string) reso
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMClient(ctx)
 
-		_, err := tfacm.FindCertificateValidationByARN(ctx, conn, rs.Primary.Attributes[names.AttrCertificateARN])
+		_, err := tfacm.FindCertificateValidationByARN(ctx, conn, rs.Primary.Attributes["certificate_arn"])
 
 		return err
 	}

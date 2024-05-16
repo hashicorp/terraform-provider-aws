@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_iam_user_ssh_key", name="User SSH Key")
@@ -31,7 +30,7 @@ func dataSourceUserSSHKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrPublicKey: {
+			"public_key": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -39,11 +38,11 @@ func dataSourceUserSSHKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrUsername: {
+			"username": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -57,7 +56,7 @@ func dataSourceUserSSHKeyRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	encoding := d.Get("encoding").(string)
 	sshPublicKeyId := d.Get("ssh_public_key_id").(string)
-	username := d.Get(names.AttrUsername).(string)
+	username := d.Get("username").(string)
 
 	request := &iam.GetSSHPublicKeyInput{
 		Encoding:       awstypes.EncodingType(encoding),
@@ -78,8 +77,8 @@ func dataSourceUserSSHKeyRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	d.SetId(aws.ToString(publicKey.SSHPublicKeyId))
 	d.Set("fingerprint", publicKey.Fingerprint)
-	d.Set(names.AttrPublicKey, publicKeyBody)
-	d.Set(names.AttrStatus, publicKey.Status)
+	d.Set("public_key", publicKeyBody)
+	d.Set("status", publicKey.Status)
 
 	return diags
 }

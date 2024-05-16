@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ami_launch_permission")
@@ -36,18 +35,18 @@ func ResourceAMILaunchPermission() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrAccountID: {
+			"account_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{names.AttrAccountID, "group", "organization_arn", "organizational_unit_arn"},
+				ExactlyOneOf: []string{"account_id", "group", "organization_arn", "organizational_unit_arn"},
 			},
 			"group": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(ec2.PermissionGroup_Values(), false),
-				ExactlyOneOf: []string{names.AttrAccountID, "group", "organization_arn", "organizational_unit_arn"},
+				ExactlyOneOf: []string{"account_id", "group", "organization_arn", "organizational_unit_arn"},
 			},
 			"image_id": {
 				Type:     schema.TypeString,
@@ -59,14 +58,14 @@ func ResourceAMILaunchPermission() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
-				ExactlyOneOf: []string{names.AttrAccountID, "group", "organization_arn", "organizational_unit_arn"},
+				ExactlyOneOf: []string{"account_id", "group", "organization_arn", "organizational_unit_arn"},
 			},
 			"organizational_unit_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
-				ExactlyOneOf: []string{names.AttrAccountID, "group", "organization_arn", "organizational_unit_arn"},
+				ExactlyOneOf: []string{"account_id", "group", "organization_arn", "organizational_unit_arn"},
 			},
 		},
 	}
@@ -78,7 +77,7 @@ func resourceAMILaunchPermissionCreate(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	imageID := d.Get("image_id").(string)
-	accountID := d.Get(names.AttrAccountID).(string)
+	accountID := d.Get("account_id").(string)
 	group := d.Get("group").(string)
 	organizationARN := d.Get("organization_arn").(string)
 	organizationalUnitARN := d.Get("organizational_unit_arn").(string)
@@ -126,7 +125,7 @@ func resourceAMILaunchPermissionRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading AMI Launch Permission (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrAccountID, accountID)
+	d.Set("account_id", accountID)
 	d.Set("group", group)
 	d.Set("image_id", imageID)
 	d.Set("organization_arn", organizationARN)

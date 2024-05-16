@@ -34,7 +34,7 @@ func ResourceCodeRepository() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -119,7 +119,7 @@ func resourceCodeRepositoryRead(ctx context.Context, d *schema.ResourceData, met
 
 	arn := aws.StringValue(codeRepository.CodeRepositoryArn)
 	d.Set("code_repository_name", codeRepository.CodeRepositoryName)
-	d.Set(names.AttrARN, arn)
+	d.Set("arn", arn)
 
 	if err := d.Set("git_config", flattenCodeRepositoryGitConfig(codeRepository.GitConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting git_config for sagemaker code repository (%s): %s", d.Id(), err)

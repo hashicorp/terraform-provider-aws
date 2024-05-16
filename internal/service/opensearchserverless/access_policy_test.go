@@ -42,7 +42,7 @@ func TestAccOpenSearchServerlessAccessPolicy_basic(t *testing.T) {
 				Config: testAccAccessPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPolicyExists(ctx, resourceName, &accesspolicy),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, "data"),
+					resource.TestCheckResourceAttr(resourceName, "type", "data"),
 				),
 			},
 			{
@@ -72,19 +72,19 @@ func TestAccOpenSearchServerlessAccessPolicy_update(t *testing.T) {
 		CheckDestroy:             testAccCheckAccessPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccessPolicyConfig_update(rName, names.AttrDescription),
+				Config: testAccAccessPolicyConfig_update(rName, "description"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPolicyExists(ctx, resourceName, &accesspolicy),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, "data"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, names.AttrDescription),
+					resource.TestCheckResourceAttr(resourceName, "type", "data"),
+					resource.TestCheckResourceAttr(resourceName, "description", "description"),
 				),
 			},
 			{
 				Config: testAccAccessPolicyConfig_update(rName, "description updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPolicyExists(ctx, resourceName, &accesspolicy),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, "data"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description updated"),
+					resource.TestCheckResourceAttr(resourceName, "type", "data"),
+					resource.TestCheckResourceAttr(resourceName, "description", "description updated"),
 				),
 			},
 		},
@@ -129,7 +129,7 @@ func testAccCheckAccessPolicyDestroy(ctx context.Context) resource.TestCheckFunc
 				continue
 			}
 
-			_, err := tfopensearchserverless.FindAccessPolicyByNameAndType(ctx, conn, rs.Primary.ID, rs.Primary.Attributes[names.AttrType])
+			_, err := tfopensearchserverless.FindAccessPolicyByNameAndType(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["type"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -158,7 +158,7 @@ func testAccCheckAccessPolicyExists(ctx context.Context, name string, accesspoli
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient(ctx)
-		resp, err := tfopensearchserverless.FindAccessPolicyByNameAndType(ctx, conn, rs.Primary.ID, rs.Primary.Attributes[names.AttrType])
+		resp, err := tfopensearchserverless.FindAccessPolicyByNameAndType(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["type"])
 
 		if err != nil {
 			return create.Error(names.OpenSearchServerless, create.ErrActionCheckingExistence, tfopensearchserverless.ResNameAccessPolicy, rs.Primary.ID, err)
@@ -177,7 +177,7 @@ func testAccAccessPolicyImportStateIdFunc(resourceName string) resource.ImportSt
 			return "", fmt.Errorf("not found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s/%s", rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes[names.AttrType]), nil
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["name"], rs.Primary.Attributes["type"]), nil
 	}
 }
 

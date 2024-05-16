@@ -33,7 +33,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_finspace_kx_cluster",
 			Name:     "Kx Cluster",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "arn",
 			},
 		},
 		{
@@ -41,7 +41,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_finspace_kx_database",
 			Name:     "Kx Database",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "arn",
 			},
 		},
 		{
@@ -49,7 +49,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_finspace_kx_dataview",
 			Name:     "Kx Dataview",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "arn",
 			},
 		},
 		{
@@ -57,7 +57,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_finspace_kx_environment",
 			Name:     "Kx Environment",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "arn",
 			},
 		},
 		{
@@ -65,7 +65,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_finspace_kx_scaling_group",
 			Name:     "Kx Scaling Group",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "arn",
 			},
 		},
 		{
@@ -73,7 +73,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_finspace_kx_user",
 			Name:     "Kx User",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "arn",
 			},
 		},
 		{
@@ -81,7 +81,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_finspace_kx_volume",
 			Name:     "Kx Volume",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "arn",
 			},
 		},
 	}
@@ -96,7 +96,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
 	return finspace_sdkv2.NewFromConfig(cfg, func(o *finspace_sdkv2.Options) {
-		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
+		if endpoint := config["endpoint"].(string); endpoint != "" {
 			o.BaseEndpoint = aws_sdkv2.String(endpoint)
 		}
 	}), nil

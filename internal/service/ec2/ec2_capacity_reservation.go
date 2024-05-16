@@ -38,11 +38,11 @@ func ResourceCapacityReservation() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrAvailabilityZone: {
+			"availability_zone": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -70,7 +70,7 @@ func ResourceCapacityReservation() *schema.Resource {
 				ForceNew: true,
 				Default:  false,
 			},
-			names.AttrInstanceCount: {
+			"instance_count": {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
@@ -87,7 +87,7 @@ func ResourceCapacityReservation() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(ec2.CapacityReservationInstancePlatform_Values(), false),
 			},
-			names.AttrInstanceType: {
+			"instance_type": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -97,7 +97,7 @@ func ResourceCapacityReservation() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			names.AttrOwnerID: {
+			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -124,12 +124,12 @@ func resourceCapacityReservationCreate(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateCapacityReservationInput{
-		AvailabilityZone:  aws.String(d.Get(names.AttrAvailabilityZone).(string)),
+		AvailabilityZone:  aws.String(d.Get("availability_zone").(string)),
 		ClientToken:       aws.String(id.UniqueId()),
 		EndDateType:       aws.String(d.Get("end_date_type").(string)),
-		InstanceCount:     aws.Int64(int64(d.Get(names.AttrInstanceCount).(int))),
+		InstanceCount:     aws.Int64(int64(d.Get("instance_count").(int))),
 		InstancePlatform:  aws.String(d.Get("instance_platform").(string)),
-		InstanceType:      aws.String(d.Get(names.AttrInstanceType).(string)),
+		InstanceType:      aws.String(d.Get("instance_type").(string)),
 		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeCapacityReservation),
 	}
 
@@ -194,8 +194,8 @@ func resourceCapacityReservationRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Capacity Reservation (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, reservation.CapacityReservationArn)
-	d.Set(names.AttrAvailabilityZone, reservation.AvailabilityZone)
+	d.Set("arn", reservation.CapacityReservationArn)
+	d.Set("availability_zone", reservation.AvailabilityZone)
 	d.Set("ebs_optimized", reservation.EbsOptimized)
 	if reservation.EndDate != nil {
 		d.Set("end_date", aws.TimeValue(reservation.EndDate).Format(time.RFC3339))
@@ -204,12 +204,12 @@ func resourceCapacityReservationRead(ctx context.Context, d *schema.ResourceData
 	}
 	d.Set("end_date_type", reservation.EndDateType)
 	d.Set("ephemeral_storage", reservation.EphemeralStorage)
-	d.Set(names.AttrInstanceCount, reservation.TotalInstanceCount)
+	d.Set("instance_count", reservation.TotalInstanceCount)
 	d.Set("instance_match_criteria", reservation.InstanceMatchCriteria)
 	d.Set("instance_platform", reservation.InstancePlatform)
-	d.Set(names.AttrInstanceType, reservation.InstanceType)
+	d.Set("instance_type", reservation.InstanceType)
 	d.Set("outpost_arn", reservation.OutpostArn)
-	d.Set(names.AttrOwnerID, reservation.OwnerId)
+	d.Set("owner_id", reservation.OwnerId)
 	d.Set("placement_group_arn", reservation.PlacementGroupArn)
 	d.Set("tenancy", reservation.Tenancy)
 
@@ -222,11 +222,11 @@ func resourceCapacityReservationUpdate(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &ec2.ModifyCapacityReservationInput{
 			CapacityReservationId: aws.String(d.Id()),
 			EndDateType:           aws.String(d.Get("end_date_type").(string)),
-			InstanceCount:         aws.Int64(int64(d.Get(names.AttrInstanceCount).(int))),
+			InstanceCount:         aws.Int64(int64(d.Get("instance_count").(int))),
 		}
 
 		if v, ok := d.GetOk("end_date"); ok {

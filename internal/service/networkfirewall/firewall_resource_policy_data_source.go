@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_networkfirewall_resource_policy")
@@ -20,11 +19,11 @@ func DataSourceFirewallResourcePolicy() *schema.Resource {
 		ReadWithoutTimeout: dataSourceFirewallResourcePolicyRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrPolicy: {
+			"policy": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrResourceARN: {
+			"resource_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -39,7 +38,7 @@ func dataSourceFirewallResourcePolicyRead(ctx context.Context, d *schema.Resourc
 
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 
-	resourceARN := d.Get(names.AttrResourceARN).(string)
+	resourceARN := d.Get("resource_arn").(string)
 	policy, err := FindResourcePolicy(ctx, conn, resourceARN)
 
 	if err != nil {
@@ -51,8 +50,8 @@ func dataSourceFirewallResourcePolicyRead(ctx context.Context, d *schema.Resourc
 	}
 
 	d.SetId(resourceARN)
-	d.Set(names.AttrPolicy, policy)
-	d.Set(names.AttrResourceARN, resourceARN)
+	d.Set("policy", policy)
+	d.Set("resource_arn", resourceARN)
 
 	return diags
 }

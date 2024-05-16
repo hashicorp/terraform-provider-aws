@@ -42,7 +42,7 @@ func resourceDefaultRouteTable() *schema.Resource {
 		// The top-level attributes must be a superset of the aws_route_table resource's attributes as common CRUD handlers are used.
 		//
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -51,7 +51,7 @@ func resourceDefaultRouteTable() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrOwnerID: {
+			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -101,7 +101,7 @@ func resourceDefaultRouteTable() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						names.AttrInstanceID: {
+						"instance_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -109,15 +109,15 @@ func resourceDefaultRouteTable() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						names.AttrNetworkInterfaceID: {
+						"network_interface_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						names.AttrTransitGatewayID: {
+						"transit_gateway_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						names.AttrVPCEndpointID: {
+						"vpc_endpoint_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -131,7 +131,7 @@ func resourceDefaultRouteTable() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVPCID: {
+			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},

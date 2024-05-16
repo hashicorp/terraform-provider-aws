@@ -26,7 +26,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_kendra_experience")
@@ -48,11 +47,11 @@ func ResourceExperience() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrConfiguration: {
+			"configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
@@ -119,21 +118,21 @@ func ResourceExperience() *schema.Resource {
 					},
 				},
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1000),
 			},
-			names.AttrEndpoints: {
+			"endpoints": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrEndpoint: {
+						"endpoint": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrEndpointType: {
+						"endpoint_type": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -150,7 +149,7 @@ func ResourceExperience() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z-]*`), ""),
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
@@ -158,19 +157,19 @@ func ResourceExperience() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z_-]*`), ""),
 				),
 			},
-			names.AttrRoleARN: {
+			"role_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ForceNewIfChange(names.AttrDescription, func(_ context.Context, old, new, meta interface{}) bool {
+			customdiff.ForceNewIfChange("description", func(_ context.Context, old, new, meta interface{}) bool {
 				// Any existing value cannot be cleared.
 				return new.(string) == ""
 			}),
@@ -186,25 +185,25 @@ func resourceExperienceCreate(ctx context.Context, d *schema.ResourceData, meta 
 	in := &kendra.CreateExperienceInput{
 		ClientToken: aws.String(id.UniqueId()),
 		IndexId:     aws.String(d.Get("index_id").(string)),
-		Name:        aws.String(d.Get(names.AttrName).(string)),
-		RoleArn:     aws.String(d.Get(names.AttrRoleARN).(string)),
+		Name:        aws.String(d.Get("name").(string)),
+		RoleArn:     aws.String(d.Get("role_arn").(string)),
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		in.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk("configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		in.Configuration = expandConfiguration(v.([]interface{}))
 	}
 
 	out, err := conn.CreateExperience(ctx, in)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Amazon Kendra Experience (%s): %s", d.Get(names.AttrName).(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating Amazon Kendra Experience (%s): %s", d.Get("name").(string), err)
 	}
 
 	if out == nil {
-		return sdkdiag.AppendErrorf(diags, "creating Amazon Kendra Experience (%s): empty output", d.Get(names.AttrName).(string))
+		return sdkdiag.AppendErrorf(diags, "creating Amazon Kendra Experience (%s): empty output", d.Get("name").(string))
 	}
 
 	id := aws.ToString(out.Id)
@@ -249,19 +248,19 @@ func resourceExperienceRead(ctx context.Context, d *schema.ResourceData, meta in
 		Resource:  fmt.Sprintf("index/%s/experience/%s", indexId, id),
 	}.String()
 
-	d.Set(names.AttrARN, arn)
+	d.Set("arn", arn)
 	d.Set("index_id", out.IndexId)
-	d.Set(names.AttrDescription, out.Description)
+	d.Set("description", out.Description)
 	d.Set("experience_id", out.Id)
-	d.Set(names.AttrName, out.Name)
-	d.Set(names.AttrRoleARN, out.RoleArn)
-	d.Set(names.AttrStatus, out.Status)
+	d.Set("name", out.Name)
+	d.Set("role_arn", out.RoleArn)
+	d.Set("status", out.Status)
 
-	if err := d.Set(names.AttrEndpoints, flattenEndpoints(out.Endpoints)); err != nil {
+	if err := d.Set("endpoints", flattenEndpoints(out.Endpoints)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoints argument: %s", err)
 	}
 
-	if err := d.Set(names.AttrConfiguration, flattenConfiguration(out.Configuration)); err != nil {
+	if err := d.Set("configuration", flattenConfiguration(out.Configuration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting configuration argument: %s", err)
 	}
 
@@ -283,20 +282,20 @@ func resourceExperienceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		IndexId: aws.String(indexId),
 	}
 
-	if d.HasChange(names.AttrConfiguration) {
-		in.Configuration = expandConfiguration(d.Get(names.AttrConfiguration).([]interface{}))
+	if d.HasChange("configuration") {
+		in.Configuration = expandConfiguration(d.Get("configuration").([]interface{}))
 	}
 
-	if d.HasChange(names.AttrDescription) {
-		in.Description = aws.String(d.Get(names.AttrDescription).(string))
+	if d.HasChange("description") {
+		in.Description = aws.String(d.Get("description").(string))
 	}
 
-	if d.HasChange(names.AttrName) {
-		in.Name = aws.String(d.Get(names.AttrName).(string))
+	if d.HasChange("name") {
+		in.Name = aws.String(d.Get("name").(string))
 	}
 
-	if d.HasChange(names.AttrRoleARN) {
-		in.RoleArn = aws.String(d.Get(names.AttrRoleARN).(string))
+	if d.HasChange("role_arn") {
+		in.RoleArn = aws.String(d.Get("role_arn").(string))
 	}
 
 	log.Printf("[DEBUG] Updating Kendra Experience (%s): %#v", d.Id(), in)
@@ -492,11 +491,11 @@ func flattenEndpoints(apiObjects []types.ExperienceEndpoint) []interface{} {
 		m := make(map[string]interface{})
 
 		if v := apiObject.Endpoint; v != nil {
-			m[names.AttrEndpoint] = aws.ToString(v)
+			m["endpoint"] = aws.ToString(v)
 		}
 
 		if v := string(apiObject.EndpointType); v != "" {
-			m[names.AttrEndpointType] = v
+			m["endpoint_type"] = v
 		}
 
 		l = append(l, m)

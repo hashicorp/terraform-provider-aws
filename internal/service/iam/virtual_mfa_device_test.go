@@ -37,12 +37,12 @@ func TestAccIAMVirtualMFADevice_basic(t *testing.T) {
 				Config: testAccVirtualMFADeviceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("mfa/%s", rName)),
+					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("mfa/%s", rName)),
 					resource.TestCheckResourceAttrSet(resourceName, "base_32_string_seed"),
 					resource.TestCheckNoResourceAttr(resourceName, "enable_date"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/"),
+					resource.TestCheckResourceAttr(resourceName, "path", "/"),
 					resource.TestCheckResourceAttrSet(resourceName, "qr_code_png"),
-					resource.TestCheckNoResourceAttr(resourceName, names.AttrUserName),
+					resource.TestCheckNoResourceAttr(resourceName, "user_name"),
 				),
 			},
 			{
@@ -77,8 +77,8 @@ func TestAccIAMVirtualMFADevice_path(t *testing.T) {
 				Config: testAccVirtualMFADeviceConfig_path(rName, path),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("mfa%s%s", path, rName)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPath, path),
+					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("mfa%s%s", path, rName)),
+					resource.TestCheckResourceAttr(resourceName, "path", path),
 				),
 			},
 			{
@@ -184,4 +184,49 @@ resource "aws_iam_virtual_mfa_device" "test" {
   path = %[2]q
 }
 `, rName, path)
+}
+
+func testAccVirtualMFADeviceConfig_tags0(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_virtual_mfa_device" "test" {
+  virtual_mfa_device_name = %[1]q
+}
+`, rName)
+}
+
+func testAccVirtualMFADeviceConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_virtual_mfa_device" "test" {
+  virtual_mfa_device_name = %[1]q
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccVirtualMFADeviceConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_virtual_mfa_device" "test" {
+  virtual_mfa_device_name = %[1]q
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccVirtualMFADeviceConfig_tagsNull(rName, tagKey1 string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_virtual_mfa_device" "test" {
+  virtual_mfa_device_name = %[1]q
+
+  tags = {
+    %[2]q = null
+  }
+}
+`, rName, tagKey1)
 }

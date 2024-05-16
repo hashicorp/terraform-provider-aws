@@ -29,7 +29,7 @@ func GetTag(ctx context.Context, conn *ec2.Client, identifier, key string, optFn
 				Values: []string{identifier},
 			},
 			{
-				Name:   aws.String(names.AttrKey),
+				Name:   aws.String("key"),
 				Values: []string{key},
 			},
 		},

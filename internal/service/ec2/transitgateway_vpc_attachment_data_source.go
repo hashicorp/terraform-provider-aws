@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ec2_transit_gateway_vpc_attachment")
@@ -36,8 +35,8 @@ func DataSourceTransitGatewayVPCAttachment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrFilter: customFiltersSchema(),
-			names.AttrID: {
+			"filter": customFiltersSchema(),
+			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -46,17 +45,17 @@ func DataSourceTransitGatewayVPCAttachment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrSubnetIDs: {
+			"subnet_ids": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrTransitGatewayID: {
+			"transit_gateway_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			names.AttrVPCID: {
+			"tags": tftags.TagsSchemaComputed(),
+			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -76,7 +75,7 @@ func dataSourceTransitGatewayVPCAttachmentRead(ctx context.Context, d *schema.Re
 	input := &ec2.DescribeTransitGatewayVpcAttachmentsInput{}
 
 	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get(names.AttrFilter).(*schema.Set),
+		d.Get("filter").(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {
@@ -84,7 +83,7 @@ func dataSourceTransitGatewayVPCAttachmentRead(ctx context.Context, d *schema.Re
 		input.Filters = nil
 	}
 
-	if v, ok := d.GetOk(names.AttrID); ok {
+	if v, ok := d.GetOk("id"); ok {
 		input.TransitGatewayAttachmentIds = aws.StringSlice([]string{v.(string)})
 	}
 
@@ -98,12 +97,12 @@ func dataSourceTransitGatewayVPCAttachmentRead(ctx context.Context, d *schema.Re
 	d.Set("appliance_mode_support", transitGatewayVPCAttachment.Options.ApplianceModeSupport)
 	d.Set("dns_support", transitGatewayVPCAttachment.Options.DnsSupport)
 	d.Set("ipv6_support", transitGatewayVPCAttachment.Options.Ipv6Support)
-	d.Set(names.AttrSubnetIDs, aws.StringValueSlice(transitGatewayVPCAttachment.SubnetIds))
-	d.Set(names.AttrTransitGatewayID, transitGatewayVPCAttachment.TransitGatewayId)
-	d.Set(names.AttrVPCID, transitGatewayVPCAttachment.VpcId)
+	d.Set("subnet_ids", aws.StringValueSlice(transitGatewayVPCAttachment.SubnetIds))
+	d.Set("transit_gateway_id", transitGatewayVPCAttachment.TransitGatewayId)
+	d.Set("vpc_id", transitGatewayVPCAttachment.VpcId)
 	d.Set("vpc_owner_id", transitGatewayVPCAttachment.VpcOwnerId)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, transitGatewayVPCAttachment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, transitGatewayVPCAttachment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

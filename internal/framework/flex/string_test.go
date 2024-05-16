@@ -208,7 +208,7 @@ func TestARNStringFromFramework(t *testing.T) {
 	}
 	tests := map[string]testCase{
 		"valid ARN": {
-			input:    fwtypes.ARNValue("arn:aws:iam::123456789012:user/David"),
+			input:    fwtypes.ARNValueMust("arn:aws:iam::123456789012:user/David"),
 			expected: aws.String("arn:aws:iam::123456789012:user/David"),
 		},
 		"null ARN": {
@@ -245,7 +245,7 @@ func TestStringToFrameworkARN(t *testing.T) {
 	tests := map[string]testCase{
 		"valid ARN": {
 			input:    aws.String("arn:aws:iam::123456789012:user/David"),
-			expected: fwtypes.ARNValue("arn:aws:iam::123456789012:user/David"),
+			expected: fwtypes.ARNValueMust("arn:aws:iam::123456789012:user/David"),
 		},
 		"null ARN": {
 			input:    nil,
@@ -259,46 +259,6 @@ func TestStringToFrameworkARN(t *testing.T) {
 			t.Parallel()
 
 			got := flex.StringToFrameworkARN(context.Background(), test.input)
-
-			if diff := cmp.Diff(got, test.expected); diff != "" {
-				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
-			}
-		})
-	}
-}
-
-func TestEmptyStringAsNull(t *testing.T) {
-	t.Parallel()
-
-	type testCase struct {
-		input    types.String
-		expected types.String
-	}
-	tests := map[string]testCase{
-		"valid": {
-			input:    types.StringValue("TEST"),
-			expected: types.StringValue("TEST"),
-		},
-		"empty": {
-			input:    types.StringValue(""),
-			expected: types.StringNull(),
-		},
-		"null": {
-			input:    types.StringNull(),
-			expected: types.StringNull(),
-		},
-		"unknown": {
-			input:    types.StringUnknown(),
-			expected: types.StringUnknown(),
-		},
-	}
-
-	for name, test := range tests {
-		name, test := name, test
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-
-			got := flex.EmptyStringAsNull(test.input)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)

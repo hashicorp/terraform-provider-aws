@@ -1,5 +1,8 @@
 # Adding a New Function
 
+!!! tip
+    Provider-defined function support is in technical preview and offered without compatibility promises until Terraform 1.8 is generally available.
+
 Provider-defined functions were introduced with Terraform 1.8, enabling provider developers to expose functions specific to a given cloud provider or use case.
 Functions in the AWS provider provide a utility that is valuable when paired with AWS resources.
 
@@ -19,35 +22,18 @@ Data manipulation tasks tend to be the most common use cases.
 For a new function use a branch named `f-{function name}`, for example, `f-arn_parse`.
 See [Raising a Pull Request](raising-a-pull-request.md) for more details.
 
-### Generate function scaffolding
+### Create and name the function
 
-The `skaff function` subcommand can be used to generate an outline for the new function.
+The function name should be descriptive of its functionality and succinct.
+Existing examples include `arn_parse` for decomposing ARN strings and `arn_build` for constructing them.
 
-First, install `skaff` and navigate to the directory where provider functions are defined (`internal/function`).
-
-```console
-make skaff
-```
-
-```console
-cd internal/function
-```
-
-Next, run the `skaff function` subcommand.
-The name and description flags are required.
-The name argument should be camel cased (ie. `FooBar`), and the generator will handle converting the name to snake case where appropriate.
-
-```console
-skaff function -n Example -d "Makes some output from an input."
-```
-
-This will generate files storing the function definition, unit tests, and registry documentation.
-The following steps describe how to complete the function implementation.
+At this time [skaff](skaff.md) does not support the creation of new functions.
+New functions can be created by copying the format of an existing function inside `internal/functions`.
 
 ### Fill out the function parameter(s) and return value
 
 The function struct's `Definition` method will document the expected parameters and return value.
-Parameter names and return values should be specified in `snake_case`.
+Parameter names and return values should be specified in `camel_case`.
 
 ```go
 func (f exampleFunction) Definition(ctx context.Context, req function.DefinitionRequest, resp *function.DefinitionResponse) {
@@ -75,10 +61,6 @@ func (f exampleFunction) Run(ctx context.Context, req function.RunRequest, resp 
 	if resp.Error != nil {
 		return
 	}
-
-	//
-	// Function logic goes here
-	//
 
 	resp.Error = function.ConcatFuncErrors(resp.Result.Set(ctx, data))
 }
@@ -113,12 +95,9 @@ An example outline is included below:
 package function_test
 
 import (
-	"fmt"
 	"testing"
 
-	"github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -127,12 +106,9 @@ func TestExampleFunction_basic(t *testing.T) {
 
 	resource.UnitTest(t, resource.TestCase{
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(version.Must(version.NewVersion("1.8.0"))),
-		},
 		Steps: []resource.TestStep{
 			{
-				Config: testExampleFunctionConfig("foo"),
+				Config: testExampleFunctionConfig(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckOutput("test", "foo"),
 				),
@@ -141,25 +117,24 @@ func TestExampleFunction_basic(t *testing.T) {
 	})
 }
 
-func testExampleFunctionConfig(arg string) string {
-	return fmt.Sprintf(`
+func testExampleFunctionConfig() string {
+	return `
 output "test" {
-  value = provider::aws::example(%[1]q)
-}`, arg)
+  value = provider::aws::example("foo")
+}`
 }
 ```
 
 With Terraform 1.8+ installed, individual tests can be run like:
 
 ```console
-go test -run='^TestExampleFunction' -v ./internal/function/
+go test -run='^TestExample' -v ./internal/function/
 ```
 
 ### Create documentation for the resource
 
-`skaff` will have generated framed out registry documentation in `website/docs/functions/<function name>.html.markdown`.
-The `Example Usage`, `Signature`, and `Arguments` sections should all be updated with the appropriate content.
-Once released, this documentation will appear on the [Terraform Registry](https://registry.terraform.io/providers/hashicorp/aws/latest).
+Add a file covering the use of the new function in `website/docs/functions/<function name>.html.markdown`.
+This documentation will appear on the [Terraform Registry](https://registry.terraform.io/providers/hashicorp/aws/latest) when the function is made available in a provider release.
 
 ### Raise a pull request
 

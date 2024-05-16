@@ -39,7 +39,7 @@ func (d *dataSourcePrincipalApplicationAssignments) Metadata(_ context.Context, 
 func (d *dataSourcePrincipalApplicationAssignments) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
+			"id": framework.IDAttribute(),
 			"instance_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,

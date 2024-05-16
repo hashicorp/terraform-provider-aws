@@ -39,7 +39,7 @@ func testAccDelegatedAdminAccount_basic(t *testing.T) {
 				Config: testAccDelegatedAdminAccountConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDelegatedAdminAccountExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, "data.aws_caller_identity.current", names.AttrAccountID),
+					resource.TestCheckResourceAttrPair(resourceName, "account_id", "data.aws_caller_identity.current", "account_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "relationship_status"),
 				),
 			},

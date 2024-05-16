@@ -22,7 +22,6 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // AWS flip-flop on the capitalization of status codes. Use uppercase.
@@ -49,7 +48,7 @@ func ResourceInstanceAutomatedBackupsReplication() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrKMSKeyID: {
+			"kms_key_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -61,7 +60,7 @@ func ResourceInstanceAutomatedBackupsReplication() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			names.AttrRetentionPeriod: {
+			"retention_period": {
 				Type:     schema.TypeInt,
 				ForceNew: true,
 				Optional: true,
@@ -82,11 +81,11 @@ func resourceInstanceAutomatedBackupsReplicationCreate(ctx context.Context, d *s
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	input := &rds.StartDBInstanceAutomatedBackupsReplicationInput{
-		BackupRetentionPeriod: aws.Int64(int64(d.Get(names.AttrRetentionPeriod).(int))),
+		BackupRetentionPeriod: aws.Int64(int64(d.Get("retention_period").(int))),
 		SourceDBInstanceArn:   aws.String(d.Get("source_db_instance_arn").(string)),
 	}
 
-	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
+	if v, ok := d.GetOk("kms_key_id"); ok {
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
@@ -124,8 +123,8 @@ func resourceInstanceAutomatedBackupsReplicationRead(ctx context.Context, d *sch
 		return sdkdiag.AppendErrorf(diags, "reading RDS instance automated backup (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrKMSKeyID, backup.KmsKeyId)
-	d.Set(names.AttrRetentionPeriod, backup.BackupRetentionPeriod)
+	d.Set("kms_key_id", backup.KmsKeyId)
+	d.Set("retention_period", backup.BackupRetentionPeriod)
 	d.Set("source_db_instance_arn", backup.DBInstanceArn)
 
 	return diags

@@ -34,7 +34,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_dataexchange_data_set",
 			Name:     "Data Set",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "arn",
 			},
 		},
 		{
@@ -42,7 +42,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_dataexchange_revision",
 			Name:     "Revision",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "arn",
 			},
 		},
 	}
@@ -54,9 +54,9 @@ func (p *servicePackage) ServicePackageName() string {
 
 // NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
 func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*dataexchange_sdkv1.DataExchange, error) {
-	sess := config[names.AttrSession].(*session_sdkv1.Session)
+	sess := config["session"].(*session_sdkv1.Session)
 
-	return dataexchange_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config[names.AttrEndpoint].(string))})), nil
+	return dataexchange_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

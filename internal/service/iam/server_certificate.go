@@ -31,7 +31,7 @@ import (
 
 // @SDKResource("aws_iam_server_certificate", name="Server Certificate")
 // @Tags(identifierAttribute="name", resourceType="ServerCertificate")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.ServerCertificate", tlsKey=true, importStateId="rName", importIgnore="private_key")
+// @Testing(tagsTest=false)
 func resourceServerCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServerCertificateCreate,
@@ -44,7 +44,7 @@ func resourceServerCertificate() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -55,7 +55,7 @@ func resourceServerCertificate() *schema.Resource {
 				DiffSuppressFunc: suppressNormalizeCertRemoval,
 				StateFunc:        StateTrimSpace,
 			},
-			names.AttrCertificateChain: {
+			"certificate_chain": {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ForceNew:         true,
@@ -66,29 +66,29 @@ func resourceServerCertificate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
+				ConflictsWith: []string{"name_prefix"},
 				ValidateFunc:  validation.StringLenBetween(0, 128),
 			},
-			names.AttrNamePrefix: {
+			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
+				ConflictsWith: []string{"name"},
 				ValidateFunc:  validation.StringLenBetween(0, 128-id.UniqueIDSuffixLength),
 			},
-			names.AttrPath: {
+			"path": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "/",
 				ForceNew: true,
 			},
-			names.AttrPrivateKey: {
+			"private_key": {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
@@ -112,19 +112,19 @@ func resourceServerCertificateCreate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	sslCertName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	sslCertName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &iam.UploadServerCertificateInput{
 		CertificateBody:       aws.String(d.Get("certificate_body").(string)),
-		PrivateKey:            aws.String(d.Get(names.AttrPrivateKey).(string)),
+		PrivateKey:            aws.String(d.Get("private_key").(string)),
 		ServerCertificateName: aws.String(sslCertName),
 		Tags:                  getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk(names.AttrCertificateChain); ok {
+	if v, ok := d.GetOk("certificate_chain"); ok {
 		input.CertificateChain = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrPath); ok {
+	if v, ok := d.GetOk("path"); ok {
 		input.Path = aws.String(v.(string))
 	}
 
@@ -143,7 +143,7 @@ func resourceServerCertificateCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	d.SetId(aws.ToString(output.ServerCertificateMetadata.ServerCertificateId))
-	d.Set(names.AttrName, sslCertName) // Required for resource Read.
+	d.Set("name", sslCertName) // Required for resource Read.
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
 	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
@@ -166,7 +166,7 @@ func resourceServerCertificateRead(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	cert, err := findServerCertificateByName(ctx, conn, d.Get(names.AttrName).(string))
+	cert, err := findServerCertificateByName(ctx, conn, d.Get("name").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IAM Server Certificate (%s) not found, removing from state", d.Id())
@@ -180,17 +180,17 @@ func resourceServerCertificateRead(ctx context.Context, d *schema.ResourceData, 
 
 	metadata := cert.ServerCertificateMetadata
 	d.SetId(aws.ToString(metadata.ServerCertificateId))
-	d.Set(names.AttrARN, metadata.Arn)
+	d.Set("arn", metadata.Arn)
 	d.Set("certificate_body", cert.CertificateBody)
-	d.Set(names.AttrCertificateChain, cert.CertificateChain)
+	d.Set("certificate_chain", cert.CertificateChain)
 	if metadata.Expiration != nil {
 		d.Set("expiration", aws.ToTime(metadata.Expiration).Format(time.RFC3339))
 	} else {
 		d.Set("expiration", nil)
 	}
-	d.Set(names.AttrName, metadata.ServerCertificateName)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(metadata.ServerCertificateName)))
-	d.Set(names.AttrPath, metadata.Path)
+	d.Set("name", metadata.ServerCertificateName)
+	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(metadata.ServerCertificateName)))
+	d.Set("path", metadata.Path)
 	if metadata.UploadDate != nil {
 		d.Set("upload_date", aws.ToTime(metadata.UploadDate).Format(time.RFC3339))
 	} else {
@@ -220,7 +220,7 @@ func resourceServerCertificateDelete(ctx context.Context, d *schema.ResourceData
 
 	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.DeleteConflictException](ctx, deleteTimeout, func() (interface{}, error) {
 		return conn.DeleteServerCertificate(ctx, &iam.DeleteServerCertificateInput{
-			ServerCertificateName: aws.String(d.Get(names.AttrName).(string)),
+			ServerCertificateName: aws.String(d.Get("name").(string)),
 		})
 	}, "currently in use by arn")
 
@@ -236,7 +236,7 @@ func resourceServerCertificateDelete(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceServerCertificateImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	d.Set(names.AttrName, d.Id())
+	d.Set("name", d.Id())
 	// private_key can't be fetched from any API call
 	return []*schema.ResourceData{d}, nil
 }
@@ -303,15 +303,4 @@ func stripCR(b []byte) []byte {
 // This DiffSuppressFunc prevents the resource from triggering needless recreation.
 func suppressNormalizeCertRemoval(k, old, new string, d *schema.ResourceData) bool {
 	return normalizeCert(new) == old
-}
-
-func serverCertificateTags(ctx context.Context, conn *iam.Client, identifier string) ([]awstypes.Tag, error) {
-	output, err := conn.ListServerCertificateTags(ctx, &iam.ListServerCertificateTagsInput{
-		ServerCertificateName: aws.String(identifier),
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return output.Tags, nil
 }

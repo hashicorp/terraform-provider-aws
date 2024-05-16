@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_lb_ssl_negotiation_policy")
@@ -34,11 +33,11 @@ func ResourceSSLNegotiationPolicy() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrName: {
+						"name": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						names.AttrValue: {
+						"value": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -55,12 +54,12 @@ func ResourceSSLNegotiationPolicy() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrTriggers: {
+			"triggers": {
 				Type:     schema.TypeMap,
 				Optional: true,
 				ForceNew: true,
@@ -76,7 +75,7 @@ func resourceSSLNegotiationPolicyCreate(ctx context.Context, d *schema.ResourceD
 
 	lbName := d.Get("load_balancer").(string)
 	lbPort := d.Get("lb_port").(int)
-	policyName := d.Get(names.AttrName).(string)
+	policyName := d.Get("name").(string)
 	id := SSLNegotiationPolicyCreateResourceID(lbName, lbPort, policyName)
 
 	{
@@ -140,7 +139,7 @@ func resourceSSLNegotiationPolicyRead(ctx context.Context, d *schema.ResourceDat
 
 	d.Set("lb_port", lbPort)
 	d.Set("load_balancer", lbName)
-	d.Set(names.AttrName, policyName)
+	d.Set("name", policyName)
 
 	// TODO: fix attribute
 	// This was previously erroneously setting "attributes", however this cannot

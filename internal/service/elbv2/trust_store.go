@@ -49,7 +49,7 @@ func ResourceTrustStore() *schema.Resource {
 		),
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -72,20 +72,20 @@ func ResourceTrustStore() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
-			names.AttrName: {
+			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
+				ConflictsWith: []string{"name_prefix"},
 				ValidateFunc:  validName,
 			},
-			names.AttrNamePrefix: {
+			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
+				ConflictsWith: []string{"name"},
 				ValidateFunc:  validNamePrefix,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
@@ -99,8 +99,8 @@ func resourceTrustStoreCreate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
 	name := create.NewNameGenerator(
-		create.WithConfiguredName(d.Get(names.AttrName).(string)),
-		create.WithConfiguredPrefix(d.Get(names.AttrNamePrefix).(string)),
+		create.WithConfiguredName(d.Get("name").(string)),
+		create.WithConfiguredPrefix(d.Get("name_prefix").(string)),
 		create.WithDefaultPrefix("tf-"),
 	).Generate()
 	input := &elbv2.CreateTrustStoreInput{
@@ -178,9 +178,9 @@ func resourceTrustStoreRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Trust Store (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, trustStore.TrustStoreArn)
-	d.Set(names.AttrName, trustStore.Name)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(trustStore.Name)))
+	d.Set("arn", trustStore.TrustStoreArn)
+	d.Set("name", trustStore.Name)
+	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(trustStore.Name)))
 
 	return diags
 }
@@ -189,7 +189,7 @@ func resourceTrustStoreUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &elbv2.ModifyTrustStoreInput{
 			CaCertificatesBundleS3Bucket: aws.String(d.Get("ca_certificates_bundle_s3_bucket").(string)),
 			CaCertificatesBundleS3Key:    aws.String(d.Get("ca_certificates_bundle_s3_key").(string)),

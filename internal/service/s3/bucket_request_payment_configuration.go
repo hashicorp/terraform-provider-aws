@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_s3_bucket_request_payment_configuration", name="Bucket Request Payment Configuration")
@@ -35,7 +34,7 @@ func resourceBucketRequestPaymentConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrBucket: {
+			"bucket": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -59,7 +58,7 @@ func resourceBucketRequestPaymentConfiguration() *schema.Resource {
 func resourceBucketRequestPaymentConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket := d.Get(names.AttrBucket).(string)
+	bucket := d.Get("bucket").(string)
 	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
 	input := &s3.PutBucketRequestPaymentInput{
 		Bucket: aws.String(bucket),
@@ -116,7 +115,7 @@ func resourceBucketRequestPaymentConfigurationRead(ctx context.Context, d *schem
 		return diag.Errorf("reading S3 Bucket Request Payment Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrBucket, bucket)
+	d.Set("bucket", bucket)
 	d.Set("expected_bucket_owner", expectedBucketOwner)
 	d.Set("payer", output.Payer)
 

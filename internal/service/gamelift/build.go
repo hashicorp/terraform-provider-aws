@@ -35,11 +35,11 @@ func ResourceBuild() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
@@ -57,12 +57,12 @@ func ResourceBuild() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrBucket: {
+						"bucket": {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
 						},
-						names.AttrKey: {
+						"key": {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -72,7 +72,7 @@ func ResourceBuild() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 						},
-						names.AttrRoleARN: {
+						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -81,7 +81,7 @@ func ResourceBuild() *schema.Resource {
 					},
 				},
 			},
-			names.AttrVersion: {
+			"version": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
@@ -99,13 +99,13 @@ func resourceBuildCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).GameLiftConn(ctx)
 
 	input := gamelift.CreateBuildInput{
-		Name:            aws.String(d.Get(names.AttrName).(string)),
+		Name:            aws.String(d.Get("name").(string)),
 		OperatingSystem: aws.String(d.Get("operating_system").(string)),
 		StorageLocation: expandStorageLocation(d.Get("storage_location").([]interface{})),
 		Tags:            getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk(names.AttrVersion); ok {
+	if v, ok := d.GetOk("version"); ok {
 		input.Version = aws.String(v.(string))
 	}
 
@@ -154,12 +154,12 @@ func resourceBuildRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading GameLift Build (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrName, build.Name)
+	d.Set("name", build.Name)
 	d.Set("operating_system", build.OperatingSystem)
-	d.Set(names.AttrVersion, build.Version)
+	d.Set("version", build.Version)
 
 	arn := aws.StringValue(build.BuildArn)
-	d.Set(names.AttrARN, arn)
+	d.Set("arn", arn)
 
 	return diags
 }
@@ -168,13 +168,13 @@ func resourceBuildUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GameLiftConn(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		log.Printf("[INFO] Updating GameLift Build: %s", d.Id())
 		input := gamelift.UpdateBuildInput{
 			BuildId: aws.String(d.Id()),
-			Name:    aws.String(d.Get(names.AttrName).(string)),
+			Name:    aws.String(d.Get("name").(string)),
 		}
-		if v, ok := d.GetOk(names.AttrVersion); ok {
+		if v, ok := d.GetOk("version"); ok {
 			input.Version = aws.String(v.(string))
 		}
 
@@ -205,9 +205,9 @@ func expandStorageLocation(cfg []interface{}) *gamelift.S3Location {
 	loc := cfg[0].(map[string]interface{})
 
 	location := &gamelift.S3Location{
-		Bucket:  aws.String(loc[names.AttrBucket].(string)),
-		Key:     aws.String(loc[names.AttrKey].(string)),
-		RoleArn: aws.String(loc[names.AttrRoleARN].(string)),
+		Bucket:  aws.String(loc["bucket"].(string)),
+		Key:     aws.String(loc["key"].(string)),
+		RoleArn: aws.String(loc["role_arn"].(string)),
 	}
 
 	if v, ok := loc["object_version"].(string); ok && v != "" {

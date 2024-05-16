@@ -45,7 +45,7 @@ func resourceLedger() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -54,7 +54,7 @@ func resourceLedger() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
-			names.AttrKMSKey: {
+			"kms_key": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -63,7 +63,7 @@ func resourceLedger() *schema.Resource {
 					verify.ValidARN,
 				),
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -89,7 +89,7 @@ func resourceLedger() *schema.Resource {
 func resourceLedgerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).QLDBClient(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), "tf")
+	name := create.Name(d.Get("name").(string), "tf")
 	input := &qldb.CreateLedgerInput{
 		DeletionProtection: aws.Bool(d.Get("deletion_protection").(bool)),
 		Name:               aws.String(name),
@@ -97,7 +97,7 @@ func resourceLedgerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		Tags:               getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk(names.AttrKMSKey); ok {
+	if v, ok := d.GetOk("kms_key"); ok {
 		input.KmsKey = aws.String(v.(string))
 	}
 
@@ -131,14 +131,14 @@ func resourceLedgerRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.Errorf("reading QLDB Ledger (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, ledger.Arn)
+	d.Set("arn", ledger.Arn)
 	d.Set("deletion_protection", ledger.DeletionProtection)
 	if ledger.EncryptionDescription != nil {
-		d.Set(names.AttrKMSKey, ledger.EncryptionDescription.KmsKeyArn)
+		d.Set("kms_key", ledger.EncryptionDescription.KmsKeyArn)
 	} else {
-		d.Set(names.AttrKMSKey, nil)
+		d.Set("kms_key", nil)
 	}
-	d.Set(names.AttrName, ledger.Name)
+	d.Set("name", ledger.Name)
 	d.Set("permissions_mode", ledger.PermissionsMode)
 
 	return nil
@@ -158,14 +158,14 @@ func resourceLedgerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	if d.HasChanges("deletion_protection", names.AttrKMSKey) {
+	if d.HasChanges("deletion_protection", "kms_key") {
 		input := &qldb.UpdateLedgerInput{
 			DeletionProtection: aws.Bool(d.Get("deletion_protection").(bool)),
 			Name:               aws.String(d.Id()),
 		}
 
-		if d.HasChange(names.AttrKMSKey) {
-			input.KmsKey = aws.String(d.Get(names.AttrKMSKey).(string))
+		if d.HasChange("kms_key") {
+			input.KmsKey = aws.String(d.Get("kms_key").(string))
 		}
 
 		if _, err := conn.UpdateLedger(ctx, input); err != nil {

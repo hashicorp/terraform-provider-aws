@@ -35,17 +35,17 @@ func ResourceFirewallRuleGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validResolverName,
 			},
-			names.AttrOwnerID: {
+			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -64,7 +64,7 @@ func ResourceFirewallRuleGroup() *schema.Resource {
 func resourceFirewallRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &route53resolver.CreateFirewallRuleGroupInput{
 		CreatorRequestId: aws.String(id.PrefixedUniqueId("tf-r53-resolver-firewall-rule-group-")),
 		Name:             aws.String(name),
@@ -98,9 +98,9 @@ func resourceFirewallRuleGroupRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	arn := aws.StringValue(ruleGroup.Arn)
-	d.Set(names.AttrARN, arn)
-	d.Set(names.AttrName, ruleGroup.Name)
-	d.Set(names.AttrOwnerID, ruleGroup.OwnerId)
+	d.Set("arn", arn)
+	d.Set("name", ruleGroup.Name)
+	d.Set("owner_id", ruleGroup.OwnerId)
 	d.Set("share_status", ruleGroup.ShareStatus)
 
 	return nil

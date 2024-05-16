@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_backup_vault_notifications")
@@ -38,7 +37,7 @@ func ResourceVaultNotifications() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{1,50}$`), "must consist of lowercase letters, numbers, and hyphens."),
 			},
-			names.AttrSNSTopicARN: {
+			"sns_topic_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -67,7 +66,7 @@ func resourceVaultNotificationsCreate(ctx context.Context, d *schema.ResourceDat
 
 	input := &backup.PutBackupVaultNotificationsInput{
 		BackupVaultName:   aws.String(d.Get("backup_vault_name").(string)),
-		SNSTopicArn:       aws.String(d.Get(names.AttrSNSTopicARN).(string)),
+		SNSTopicArn:       aws.String(d.Get("sns_topic_arn").(string)),
 		BackupVaultEvents: flex.ExpandStringSet(d.Get("backup_vault_events").(*schema.Set)),
 	}
 
@@ -100,7 +99,7 @@ func resourceVaultNotificationsRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "reading Backup Vault Notifications (%s): %s", d.Id(), err)
 	}
 	d.Set("backup_vault_name", resp.BackupVaultName)
-	d.Set(names.AttrSNSTopicARN, resp.SNSTopicArn)
+	d.Set("sns_topic_arn", resp.SNSTopicArn)
 	d.Set("backup_vault_arn", resp.BackupVaultArn)
 	if err := d.Set("backup_vault_events", flex.FlattenStringSet(resp.BackupVaultEvents)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting backup_vault_events: %s", err)

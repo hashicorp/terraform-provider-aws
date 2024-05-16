@@ -23,7 +23,6 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_apprunner_custom_domain_association", name="Custom Domain Association")
@@ -43,19 +42,19 @@ func resourceCustomDomainAssociation() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrName: {
+						"name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrStatus: {
+						"status": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrType: {
+						"type": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrValue: {
+						"value": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -66,7 +65,7 @@ func resourceCustomDomainAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDomainName: {
+			"domain_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -84,7 +83,7 @@ func resourceCustomDomainAssociation() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -97,7 +96,7 @@ func resourceCustomDomainAssociationCreate(ctx context.Context, d *schema.Resour
 
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
-	domainName := d.Get(names.AttrDomainName).(string)
+	domainName := d.Get("domain_name").(string)
 	serviceARN := d.Get("service_arn").(string)
 	id := customDomainAssociationCreateResourceID(domainName, serviceARN)
 	input := &apprunner.AssociateCustomDomainInput{
@@ -147,10 +146,10 @@ func resourceCustomDomainAssociationRead(ctx context.Context, d *schema.Resource
 	if err := d.Set("certificate_validation_records", flattenCustomDomainCertificateValidationRecords(customDomain.CertificateValidationRecords)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting certificate_validation_records: %s", err)
 	}
-	d.Set(names.AttrDomainName, customDomain.DomainName)
+	d.Set("domain_name", customDomain.DomainName)
 	d.Set("enable_www_subdomain", customDomain.EnableWWWSubdomain)
 	d.Set("service_arn", serviceArn)
-	d.Set(names.AttrStatus, customDomain.Status)
+	d.Set("status", customDomain.Status)
 
 	return diags
 }
@@ -335,10 +334,10 @@ func flattenCustomDomainCertificateValidationRecords(records []types.Certificate
 
 	for _, record := range records {
 		m := map[string]interface{}{
-			names.AttrName:   aws.ToString(record.Name),
-			names.AttrStatus: record.Status,
-			names.AttrType:   aws.ToString(record.Type),
-			names.AttrValue:  aws.ToString(record.Value),
+			"name":   aws.ToString(record.Name),
+			"status": record.Status,
+			"type":   aws.ToString(record.Type),
+			"value":  aws.ToString(record.Value),
 		}
 
 		results = append(results, m)

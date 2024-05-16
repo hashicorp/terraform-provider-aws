@@ -14,7 +14,7 @@ func TestAccSecurityHub_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Account": {
-			acctest.CtBasic:               testAccAccount_basic,
+			"basic":                       testAccAccount_basic,
 			"disappears":                  testAccAccount_disappears,
 			"EnableDefaultStandardsFalse": testAccAccount_enableDefaultStandardsFalse,
 			"MigrateV0":                   testAccAccount_migrateV0,
@@ -22,7 +22,7 @@ func TestAccSecurityHub_serial(t *testing.T) {
 			"RemoveControlFindingGeneratorDefaultValue": testAccAccount_removeControlFindingGeneratorDefaultValue,
 		},
 		"AutomationRule": {
-			acctest.CtBasic: testAccAutomationRule_basic,
+			"basic":         testAccAutomationRule_basic,
 			"full":          testAccAutomationRule_full,
 			"disappears":    testAccAutomationRule_disappears,
 			"stringFilters": testAccAutomationRule_stringFilters,
@@ -32,27 +32,27 @@ func TestAccSecurityHub_serial(t *testing.T) {
 			"tags":          testAccAutomationRule_tags,
 		},
 		"ActionTarget": {
-			acctest.CtBasic: testAccActionTarget_basic,
-			"disappears":    testAccActionTarget_disappears,
-			"Description":   testAccActionTarget_Description,
-			"Name":          testAccActionTarget_Name,
+			"basic":       testAccActionTarget_basic,
+			"disappears":  testAccActionTarget_disappears,
+			"Description": testAccActionTarget_Description,
+			"Name":        testAccActionTarget_Name,
 		},
 		"ConfigurationPolicy": {
-			acctest.CtBasic:      testAccConfigurationPolicy_basic,
+			"basic":              testAccConfigurationPolicy_basic,
 			"disappears":         testAccConfigurationPolicy_disappears,
 			"CustomParameters":   testAccConfigurationPolicy_controlCustomParameters,
 			"ControlIdentifiers": testAccConfigurationPolicy_specificControlIdentifiers,
 		},
 		"ConfigurationPolicyAssociation": {
-			acctest.CtBasic: testAccConfigurationPolicyAssociation_basic,
-			"disappears":    testAccConfigurationPolicyAssociation_disappears,
+			"basic":      testAccConfigurationPolicyAssociation_basic,
+			"disappears": testAccConfigurationPolicyAssociation_disappears,
 		},
 		"FindingAggregator": {
-			acctest.CtBasic: testAccFindingAggregator_basic,
-			"disappears":    testAccFindingAggregator_disappears,
+			"basic":      testAccFindingAggregator_basic,
+			"disappears": testAccFindingAggregator_disappears,
 		},
 		"Insight": {
-			acctest.CtBasic:    testAccInsight_basic,
+			"basic":            testAccInsight_basic,
 			"disappears":       testAccInsight_disappears,
 			"DateFilters":      testAccInsight_DateFilters,
 			"GroupByAttribute": testAccInsight_GroupByAttribute,
@@ -65,33 +65,33 @@ func TestAccSecurityHub_serial(t *testing.T) {
 			"WorkflowStatus":   testAccInsight_WorkflowStatus,
 		},
 		"InviteAccepter": {
-			acctest.CtBasic: testAccInviteAccepter_basic,
+			"basic": testAccInviteAccepter_basic,
 		},
 		"Member": {
-			acctest.CtBasic: testAccMember_basic,
-			"invite":        testAccMember_invite,
+			"basic":  testAccMember_basic,
+			"invite": testAccMember_invite,
 		},
 		"OrganizationAdminAccount": {
-			acctest.CtBasic: testAccOrganizationAdminAccount_basic,
-			"disappears":    testAccOrganizationAdminAccount_disappears,
-			"MultiRegion":   testAccOrganizationAdminAccount_MultiRegion,
+			"basic":       testAccOrganizationAdminAccount_basic,
+			"disappears":  testAccOrganizationAdminAccount_disappears,
+			"MultiRegion": testAccOrganizationAdminAccount_MultiRegion,
 		},
 		"OrganizationConfiguration": {
-			acctest.CtBasic:        testAccOrganizationConfiguration_basic,
+			"basic":                testAccOrganizationConfiguration_basic,
 			"AutoEnableStandards":  testAccOrganizationConfiguration_autoEnableStandards,
 			"CentralConfiguration": testAccOrganizationConfiguration_centralConfiguration,
 		},
 		"ProductSubscription": {
-			acctest.CtBasic: testAccProductSubscription_basic,
+			"basic": testAccProductSubscription_basic,
 		},
 		"StandardsControl": {
-			acctest.CtBasic:                         testAccStandardsControl_basic,
+			"basic":                                 testAccStandardsControl_basic,
 			"DisabledControlStatus":                 testAccStandardsControl_disabledControlStatus,
 			"EnabledControlStatusAndDisabledReason": testAccStandardsControl_enabledControlStatusAndDisabledReason,
 		},
 		"StandardsSubscription": {
-			acctest.CtBasic: testAccStandardsSubscription_basic,
-			"disappears":    testAccStandardsSubscription_disappears,
+			"basic":      testAccStandardsSubscription_basic,
+			"disappears": testAccStandardsSubscription_disappears,
 		},
 	}
 

@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cognito_identity_provider", name="Identity Provider")
@@ -62,7 +61,7 @@ func resourceIdentityProvider() *schema.Resource {
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrProviderName: {
+			"provider_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -90,7 +89,7 @@ func resourceIdentityProviderCreate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
-	providerName := d.Get(names.AttrProviderName).(string)
+	providerName := d.Get("provider_name").(string)
 	userPoolID := d.Get("user_pool_id").(string)
 	id := identityProviderCreateResourceID(userPoolID, providerName)
 	input := &cognitoidentityprovider.CreateIdentityProviderInput{
@@ -146,7 +145,7 @@ func resourceIdentityProviderRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("attribute_mapping", aws.StringValueMap(idp.AttributeMapping))
 	d.Set("idp_identifiers", aws.StringValueSlice(idp.IdpIdentifiers))
 	d.Set("provider_details", aws.StringValueMap(idp.ProviderDetails))
-	d.Set(names.AttrProviderName, idp.ProviderName)
+	d.Set("provider_name", idp.ProviderName)
 	d.Set("provider_type", idp.ProviderType)
 	d.Set("user_pool_id", idp.UserPoolId)
 

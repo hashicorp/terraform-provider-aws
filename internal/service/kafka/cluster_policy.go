@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_msk_cluster_policy", name="Cluster Policy")
@@ -44,7 +43,7 @@ func resourceClusterPolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrPolicy: {
+			"policy": {
 				Type:                  schema.TypeString,
 				Required:              true,
 				ValidateFunc:          validation.StringIsJSON,
@@ -63,7 +62,7 @@ func resourceClusterPolicyPut(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
-	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
+	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -110,14 +109,14 @@ func resourceClusterPolicyRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("cluster_arn", d.Id())
 	d.Set("current_version", output.CurrentVersion)
 	if output.Policy != nil {
-		policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), aws.ToString(output.Policy))
+		policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.ToString(output.Policy))
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
-		d.Set(names.AttrPolicy, policyToSet)
+		d.Set("policy", policyToSet)
 	} else {
-		d.Set(names.AttrPolicy, nil)
+		d.Set("policy", nil)
 	}
 
 	return diags

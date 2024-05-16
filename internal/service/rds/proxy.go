@@ -47,7 +47,7 @@ func resourceProxy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -67,7 +67,7 @@ func resourceProxy() *schema.Resource {
 							Computed:         true,
 							ValidateDiagFunc: enum.Validate[types.ClientPasswordAuthType](),
 						},
-						names.AttrDescription: {
+						"description": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -81,19 +81,19 @@ func resourceProxy() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						names.AttrUsername: {
+						"username": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
 					},
 				},
-				Set: sdkv2.SimpleSchemaSetFunc("auth_scheme", names.AttrDescription, "iam_auth", "secret_arn", names.AttrUsername),
+				Set: sdkv2.SimpleSchemaSetFunc("auth_scheme", "description", "iam_auth", "secret_arn", "username"),
 			},
 			"debug_logging": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			names.AttrEndpoint: {
+			"endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -108,7 +108,7 @@ func resourceProxy() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validIdentifier,
@@ -117,14 +117,14 @@ func resourceProxy() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			names.AttrRoleARN: {
+			"role_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVPCSecurityGroupIDs: {
+			"vpc_security_group_ids": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -146,12 +146,12 @@ func resourceProxyCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &rds.CreateDBProxyInput{
 		Auth:         expandUserAuthConfigs(d.Get("auth").(*schema.Set).List()),
 		DBProxyName:  aws.String(name),
 		EngineFamily: types.EngineFamily(d.Get("engine_family").(string)),
-		RoleArn:      aws.String(d.Get(names.AttrRoleARN).(string)),
+		RoleArn:      aws.String(d.Get("role_arn").(string)),
 		Tags:         getTagsInV2(ctx),
 		VpcSubnetIds: flex.ExpandStringValueSet(d.Get("vpc_subnet_ids").(*schema.Set)),
 	}
@@ -168,7 +168,7 @@ func resourceProxyCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.RequireTLS = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk("vpc_security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
 		input.VpcSecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
@@ -203,17 +203,17 @@ func resourceProxyRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading RDS DB Proxy (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, dbProxy.DBProxyArn)
+	d.Set("arn", dbProxy.DBProxyArn)
 	d.Set("auth", flattenUserAuthConfigInfos(dbProxy.Auth))
-	d.Set(names.AttrName, dbProxy.DBProxyName)
+	d.Set("name", dbProxy.DBProxyName)
 	d.Set("debug_logging", dbProxy.DebugLogging)
 	d.Set("engine_family", dbProxy.EngineFamily)
 	d.Set("idle_client_timeout", dbProxy.IdleClientTimeout)
 	d.Set("require_tls", dbProxy.RequireTLS)
-	d.Set(names.AttrRoleARN, dbProxy.RoleArn)
+	d.Set("role_arn", dbProxy.RoleArn)
 	d.Set("vpc_subnet_ids", dbProxy.VpcSubnetIds)
-	d.Set(names.AttrVPCSecurityGroupIDs, dbProxy.VpcSecurityGroupIds)
-	d.Set(names.AttrEndpoint, dbProxy.Endpoint)
+	d.Set("vpc_security_group_ids", dbProxy.VpcSecurityGroupIds)
+	d.Set("endpoint", dbProxy.Endpoint)
 
 	return diags
 }
@@ -222,22 +222,22 @@ func resourceProxyUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		oName, nName := d.GetChange(names.AttrName)
+	if d.HasChangesExcept("tags", "tags_all") {
+		oName, nName := d.GetChange("name")
 		input := &rds.ModifyDBProxyInput{
 			Auth:           expandUserAuthConfigs(d.Get("auth").(*schema.Set).List()),
 			DBProxyName:    aws.String(oName.(string)),
 			DebugLogging:   aws.Bool(d.Get("debug_logging").(bool)),
 			NewDBProxyName: aws.String(nName.(string)),
 			RequireTLS:     aws.Bool(d.Get("require_tls").(bool)),
-			RoleArn:        aws.String(d.Get(names.AttrRoleARN).(string)),
+			RoleArn:        aws.String(d.Get("role_arn").(string)),
 		}
 
 		if v, ok := d.GetOk("idle_client_timeout"); ok {
 			input.IdleClientTimeout = aws.Int32(int32(v.(int)))
 		}
 
-		if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
+		if v, ok := d.GetOk("vpc_security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
 			input.SecurityGroups = flex.ExpandStringValueSet(v.(*schema.Set))
 		}
 
@@ -431,7 +431,7 @@ func expandUserAuthConfigs(tfList []interface{}) []types.UserAuthConfig {
 			apiObject.ClientPasswordAuthType = types.ClientPasswordAuthType(v)
 		}
 
-		if v, ok := tfMap[names.AttrDescription].(string); ok && v != "" {
+		if v, ok := tfMap["description"].(string); ok && v != "" {
 			apiObject.Description = aws.String(v)
 		}
 
@@ -443,7 +443,7 @@ func expandUserAuthConfigs(tfList []interface{}) []types.UserAuthConfig {
 			apiObject.SecretArn = aws.String(v)
 		}
 
-		if v, ok := tfMap[names.AttrUsername].(string); ok && v != "" {
+		if v, ok := tfMap["username"].(string); ok && v != "" {
 			apiObject.UserName = aws.String(v)
 		}
 
@@ -461,7 +461,7 @@ func flattenUserAuthConfigInfo(apiObject types.UserAuthConfigInfo) map[string]in
 	}
 
 	if v := apiObject.Description; v != nil {
-		tfMap[names.AttrDescription] = aws.ToString(v)
+		tfMap["description"] = aws.ToString(v)
 	}
 
 	if v := apiObject.SecretArn; v != nil {
@@ -469,7 +469,7 @@ func flattenUserAuthConfigInfo(apiObject types.UserAuthConfigInfo) map[string]in
 	}
 
 	if v := apiObject.UserName; v != nil {
-		tfMap[names.AttrUsername] = aws.ToString(v)
+		tfMap["username"] = aws.ToString(v)
 	}
 
 	return tfMap

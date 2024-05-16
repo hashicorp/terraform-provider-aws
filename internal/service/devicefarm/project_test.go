@@ -44,9 +44,9 @@ func TestAccDeviceFarmProject_basic(t *testing.T) {
 				Config: testAccProjectConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &proj),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "devicefarm", regexache.MustCompile(`project:.+`)),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "devicefarm", regexache.MustCompile(`project:.+`)),
 				),
 			},
 			{
@@ -58,8 +58,8 @@ func TestAccDeviceFarmProject_basic(t *testing.T) {
 				Config: testAccProjectConfig_basic(rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &proj),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "devicefarm", regexache.MustCompile(`project:.+`)),
+					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "devicefarm", regexache.MustCompile(`project:.+`)),
 				),
 			},
 		},
@@ -88,8 +88,8 @@ func TestAccDeviceFarmProject_timeout(t *testing.T) {
 				Config: testAccProjectConfig_defaultJobTimeout(rName, 10),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &proj),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "default_job_timeout_minutes", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "default_job_timeout_minutes", "10"),
 				),
 			},
 			{
@@ -101,7 +101,7 @@ func TestAccDeviceFarmProject_timeout(t *testing.T) {
 				Config: testAccProjectConfig_defaultJobTimeout(rName, 20),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &proj),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "default_job_timeout_minutes", "20"),
 				),
 			},
@@ -128,11 +128,11 @@ func TestAccDeviceFarmProject_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccProjectConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &proj),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -141,20 +141,20 @@ func TestAccDeviceFarmProject_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccProjectConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &proj),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccProjectConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccProjectConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &proj),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},

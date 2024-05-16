@@ -38,7 +38,7 @@ func ResourceChannel() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -48,7 +48,7 @@ func ResourceChannel() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[\w-]+$`), "must only contain alphanumeric characters, dashes or underscores"),
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "Managed by Terraform",
@@ -63,16 +63,16 @@ func ResourceChannel() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrPassword: {
+									"password": {
 										Type:      schema.TypeString,
 										Computed:  true,
 										Sensitive: true,
 									},
-									names.AttrURL: {
+									"url": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									names.AttrUsername: {
+									"username": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -96,7 +96,7 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	input := &mediapackage.CreateChannelInput{
 		Id:          aws.String(d.Get("channel_id").(string)),
-		Description: aws.String(d.Get(names.AttrDescription).(string)),
+		Description: aws.String(d.Get("description").(string)),
 		Tags:        getTagsIn(ctx),
 	}
 
@@ -126,9 +126,9 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading MediaPackage Channel: %s", err)
 	}
 
-	d.Set(names.AttrARN, resp.Arn)
+	d.Set("arn", resp.Arn)
 	d.Set("channel_id", resp.Id)
-	d.Set(names.AttrDescription, resp.Description)
+	d.Set("description", resp.Description)
 
 	if err := d.Set("hls_ingest", flattenHLSIngest(resp.HlsIngest)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting hls_ingest: %s", err)
@@ -145,7 +145,7 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 	input := &mediapackage.UpdateChannelInput{
 		Id:          aws.String(d.Id()),
-		Description: aws.String(d.Get(names.AttrDescription).(string)),
+		Description: aws.String(d.Get("description").(string)),
 	}
 
 	_, err := conn.UpdateChannel(ctx, input)
@@ -206,9 +206,9 @@ func flattenHLSIngest(h *types.HlsIngest) []map[string]interface{} {
 	var ingestEndpoints []map[string]interface{}
 	for _, e := range h.IngestEndpoints {
 		endpoint := map[string]interface{}{
-			names.AttrPassword: aws.ToString(e.Password),
-			names.AttrURL:      aws.ToString(e.Url),
-			names.AttrUsername: aws.ToString(e.Username),
+			"password": aws.ToString(e.Password),
+			"url":      aws.ToString(e.Url),
+			"username": aws.ToString(e.Username),
 		}
 
 		ingestEndpoints = append(ingestEndpoints, endpoint)

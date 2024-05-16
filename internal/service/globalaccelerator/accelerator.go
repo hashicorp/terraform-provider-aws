@@ -9,17 +9,15 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/globalaccelerator"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/globalaccelerator/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/globalaccelerator"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -30,7 +28,7 @@ import (
 
 // @SDKResource("aws_globalaccelerator_accelerator", name="Accelerator")
 // @Tags(identifierAttribute="id")
-func resourceAccelerator() *schema.Resource {
+func ResourceAccelerator() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAcceleratorCreate,
 		ReadWithoutTimeout:   resourceAcceleratorRead,
@@ -47,7 +45,7 @@ func resourceAccelerator() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrAttributes: {
+			"attributes": {
 				Type:             schema.TypeList,
 				Optional:         true,
 				MaxItems:         1,
@@ -72,7 +70,7 @@ func resourceAccelerator() *schema.Resource {
 					},
 				},
 			},
-			names.AttrDNSName: {
+			"dns_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -80,20 +78,20 @@ func resourceAccelerator() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrEnabled: {
+			"enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
-			names.AttrHostedZoneID: {
+			"hosted_zone_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrIPAddressType: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.IpAddressTypeIpv4,
-				ValidateDiagFunc: enum.Validate[awstypes.IpAddressType](),
+			"ip_address_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      globalaccelerator.IpAddressTypeIpv4,
+				ValidateFunc: validation.StringInSlice(globalaccelerator.IpAddressType_Values(), false),
 			},
 			"ip_addresses": {
 				Type:     schema.TypeList,
@@ -118,7 +116,7 @@ func resourceAccelerator() *schema.Resource {
 					},
 				},
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
@@ -138,48 +136,49 @@ func resourceAccelerator() *schema.Resource {
 
 func resourceAcceleratorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
+
+	name := d.Get("name").(string)
 	input := &globalaccelerator.CreateAcceleratorInput{
-		Enabled:          aws.Bool(d.Get(names.AttrEnabled).(bool)),
+		Enabled:          aws.Bool(d.Get("enabled").(bool)),
 		IdempotencyToken: aws.String(id.UniqueId()),
 		Name:             aws.String(name),
 		Tags:             getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk(names.AttrIPAddressType); ok {
-		input.IpAddressType = awstypes.IpAddressType(v.(string))
+	if v, ok := d.GetOk("ip_address_type"); ok {
+		input.IpAddressType = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("ip_addresses"); ok && len(v.([]interface{})) > 0 {
-		input.IpAddresses = flex.ExpandStringValueList(v.([]interface{}))
+		input.IpAddresses = flex.ExpandStringList(v.([]interface{}))
 	}
 
-	output, err := conn.CreateAccelerator(ctx, input)
+	output, err := conn.CreateAcceleratorWithContext(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Global Accelerator Accelerator (%s): %s", name, err)
 	}
 
-	d.SetId(aws.ToString(output.Accelerator.AcceleratorArn))
+	d.SetId(aws.StringValue(output.Accelerator.AcceleratorArn))
 
 	if _, err := waitAcceleratorDeployed(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Accelerator (%s) deploy: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Accelerator (%s) deployment: %s", d.Id(), err)
 	}
 
-	if v, ok := d.GetOk(names.AttrAttributes); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk("attributes"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input := expandUpdateAcceleratorAttributesInput(v.([]interface{})[0].(map[string]interface{}))
 		input.AcceleratorArn = aws.String(d.Id())
 
-		_, err := conn.UpdateAcceleratorAttributes(ctx, input)
+		_, err := conn.UpdateAcceleratorAttributesWithContext(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Global Accelerator Accelerator (%s) attributes: %s", d.Id(), err)
 		}
 
 		if _, err := waitAcceleratorDeployed(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Accelerator (%s) deploy: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Accelerator (%s) deployment: %s", d.Id(), err)
 		}
 	}
 
@@ -188,9 +187,10 @@ func resourceAcceleratorCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceAcceleratorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
-	accelerator, err := findAcceleratorByARN(ctx, conn, d.Id())
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
+
+	accelerator, err := FindAcceleratorByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Global Accelerator Accelerator (%s) not found, removing from state", d.Id())
@@ -202,23 +202,23 @@ func resourceAcceleratorRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading Global Accelerator Accelerator (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrDNSName, accelerator.DnsName)
+	d.Set("dns_name", accelerator.DnsName)
 	d.Set("dual_stack_dns_name", accelerator.DualStackDnsName)
-	d.Set(names.AttrEnabled, accelerator.Enabled)
-	d.Set(names.AttrHostedZoneID, meta.(*conns.AWSClient).GlobalAcceleratorHostedZoneID(ctx))
-	d.Set(names.AttrIPAddressType, accelerator.IpAddressType)
+	d.Set("enabled", accelerator.Enabled)
+	d.Set("hosted_zone_id", meta.(*conns.AWSClient).GlobalAcceleratorHostedZoneID(ctx))
+	d.Set("ip_address_type", accelerator.IpAddressType)
 	if err := d.Set("ip_sets", flattenIPSets(accelerator.IpSets)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ip_sets: %s", err)
 	}
-	d.Set(names.AttrName, accelerator.Name)
+	d.Set("name", accelerator.Name)
 
-	acceleratorAttributes, err := findAcceleratorAttributesByARN(ctx, conn, d.Id())
+	acceleratorAttributes, err := FindAcceleratorAttributesByARN(ctx, conn, d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Global Accelerator Accelerator (%s) attributes: %s", d.Id(), err)
 	}
 
-	if err := d.Set(names.AttrAttributes, []interface{}{flattenAcceleratorAttributes(acceleratorAttributes)}); err != nil {
+	if err := d.Set("attributes", []interface{}{flattenAcceleratorAttributes(acceleratorAttributes)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting attributes: %s", err)
 	}
 
@@ -227,32 +227,33 @@ func resourceAcceleratorRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceAcceleratorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
-	if d.HasChanges(names.AttrName, names.AttrIPAddressType, names.AttrEnabled) {
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
+
+	if d.HasChanges("name", "ip_address_type", "enabled") {
 		input := &globalaccelerator.UpdateAcceleratorInput{
 			AcceleratorArn: aws.String(d.Id()),
-			Enabled:        aws.Bool(d.Get(names.AttrEnabled).(bool)),
-			Name:           aws.String(d.Get(names.AttrName).(string)),
+			Enabled:        aws.Bool(d.Get("enabled").(bool)),
+			Name:           aws.String(d.Get("name").(string)),
 		}
 
-		if v, ok := d.GetOk(names.AttrIPAddressType); ok {
-			input.IpAddressType = awstypes.IpAddressType(v.(string))
+		if v, ok := d.GetOk("ip_address_type"); ok {
+			input.IpAddressType = aws.String(v.(string))
 		}
 
-		_, err := conn.UpdateAccelerator(ctx, input)
+		_, err := conn.UpdateAcceleratorWithContext(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Global Accelerator Accelerator (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitAcceleratorDeployed(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Accelerator (%s) deploy: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Accelerator (%s) deployment: %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange(names.AttrAttributes) {
-		o, n := d.GetChange(names.AttrAttributes)
+	if d.HasChange("attributes") {
+		o, n := d.GetChange("attributes")
 		if len(o.([]interface{})) > 0 && o.([]interface{})[0] != nil {
 			if len(n.([]interface{})) > 0 && n.([]interface{})[0] != nil {
 				oInput := expandUpdateAcceleratorAttributesInput(o.([]interface{})[0].(map[string]interface{}))
@@ -261,28 +262,28 @@ func resourceAcceleratorUpdate(ctx context.Context, d *schema.ResourceData, meta
 				nInput.AcceleratorArn = aws.String(d.Id())
 
 				// To change flow logs bucket and prefix attributes while flows are enabled, first disable flow logs.
-				if aws.ToBool(oInput.FlowLogsEnabled) && aws.ToBool(nInput.FlowLogsEnabled) {
+				if aws.BoolValue(oInput.FlowLogsEnabled) && aws.BoolValue(nInput.FlowLogsEnabled) {
 					oInput.FlowLogsEnabled = aws.Bool(false)
 
-					_, err := conn.UpdateAcceleratorAttributes(ctx, oInput)
+					_, err := conn.UpdateAcceleratorAttributesWithContext(ctx, oInput)
 
 					if err != nil {
 						return sdkdiag.AppendErrorf(diags, "updating Global Accelerator Accelerator (%s) attributes: %s", d.Id(), err)
 					}
 
 					if _, err := waitAcceleratorDeployed(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-						return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Accelerator (%s) deploy: %s", d.Id(), err)
+						return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Accelerator (%s) deployment: %s", d.Id(), err)
 					}
 				}
 
-				_, err := conn.UpdateAcceleratorAttributes(ctx, nInput)
+				_, err := conn.UpdateAcceleratorAttributesWithContext(ctx, nInput)
 
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "updating Global Accelerator Accelerator (%s) attributes: %s", d.Id(), err)
 				}
 
 				if _, err := waitAcceleratorDeployed(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-					return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Accelerator (%s) deploy: %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Accelerator (%s) deployment: %s", d.Id(), err)
 				}
 			}
 		}
@@ -293,16 +294,17 @@ func resourceAcceleratorUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceAcceleratorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
+
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 
 	input := &globalaccelerator.UpdateAcceleratorInput{
 		AcceleratorArn: aws.String(d.Id()),
 		Enabled:        aws.Bool(false),
 	}
 
-	_, err := conn.UpdateAccelerator(ctx, input)
+	_, err := conn.UpdateAcceleratorWithContext(ctx, input)
 
-	if errs.IsA[*awstypes.AcceleratorNotFoundException](err) {
+	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeAcceleratorNotFoundException) {
 		return diags
 	}
 
@@ -311,15 +313,15 @@ func resourceAcceleratorDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if _, err := waitAcceleratorDeployed(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Accelerator (%s) deploy: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Accelerator (%s) deployment: %s", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Deleting Global Accelerator Accelerator: %s", d.Id())
-	_, err = conn.DeleteAccelerator(ctx, &globalaccelerator.DeleteAcceleratorInput{
+	_, err = conn.DeleteAcceleratorWithContext(ctx, &globalaccelerator.DeleteAcceleratorInput{
 		AcceleratorArn: aws.String(d.Id()),
 	})
 
-	if errs.IsA[*awstypes.AcceleratorNotFoundException](err) {
+	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeAcceleratorNotFoundException) {
 		return diags
 	}
 
@@ -330,14 +332,18 @@ func resourceAcceleratorDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func findAcceleratorByARN(ctx context.Context, conn *globalaccelerator.Client, arn string) (*awstypes.Accelerator, error) {
+func FindAcceleratorByARN(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.Accelerator, error) {
 	input := &globalaccelerator.DescribeAcceleratorInput{
 		AcceleratorArn: aws.String(arn),
 	}
 
-	output, err := conn.DescribeAccelerator(ctx, input)
+	return findAccelerator(ctx, conn, input)
+}
 
-	if errs.IsA[*awstypes.AcceleratorNotFoundException](err) {
+func findAccelerator(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, input *globalaccelerator.DescribeAcceleratorInput) (*globalaccelerator.Accelerator, error) {
+	output, err := conn.DescribeAcceleratorWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeAcceleratorNotFoundException) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -355,14 +361,18 @@ func findAcceleratorByARN(ctx context.Context, conn *globalaccelerator.Client, a
 	return output.Accelerator, nil
 }
 
-func findAcceleratorAttributesByARN(ctx context.Context, conn *globalaccelerator.Client, arn string) (*awstypes.AcceleratorAttributes, error) {
+func FindAcceleratorAttributesByARN(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.AcceleratorAttributes, error) {
 	input := &globalaccelerator.DescribeAcceleratorAttributesInput{
 		AcceleratorArn: aws.String(arn),
 	}
 
-	output, err := conn.DescribeAcceleratorAttributes(ctx, input)
+	return findAcceleratorAttributes(ctx, conn, input)
+}
 
-	if errs.IsA[*awstypes.AcceleratorNotFoundException](err) {
+func findAcceleratorAttributes(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, input *globalaccelerator.DescribeAcceleratorAttributesInput) (*globalaccelerator.AcceleratorAttributes, error) {
+	output, err := conn.DescribeAcceleratorAttributesWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeAcceleratorNotFoundException) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -380,9 +390,9 @@ func findAcceleratorAttributesByARN(ctx context.Context, conn *globalaccelerator
 	return output.AcceleratorAttributes, nil
 }
 
-func statusAccelerator(ctx context.Context, conn *globalaccelerator.Client, arn string) retry.StateRefreshFunc {
+func statusAccelerator(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		accelerator, err := findAcceleratorByARN(ctx, conn, arn)
+		accelerator, err := FindAcceleratorByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -392,21 +402,21 @@ func statusAccelerator(ctx context.Context, conn *globalaccelerator.Client, arn 
 			return nil, "", err
 		}
 
-		return accelerator, string(accelerator.Status), nil
+		return accelerator, aws.StringValue(accelerator.Status), nil
 	}
 }
 
-func waitAcceleratorDeployed(ctx context.Context, conn *globalaccelerator.Client, arn string, timeout time.Duration) (*awstypes.Accelerator, error) { //nolint:unparam
+func waitAcceleratorDeployed(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, arn string, timeout time.Duration) (*globalaccelerator.Accelerator, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.AcceleratorStatusInProgress),
-		Target:  enum.Slice(awstypes.AcceleratorStatusDeployed),
+		Pending: []string{globalaccelerator.AcceleratorStatusInProgress},
+		Target:  []string{globalaccelerator.AcceleratorStatusDeployed},
 		Refresh: statusAccelerator(ctx, conn, arn),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*awstypes.Accelerator); ok {
+	if output, ok := outputRaw.(*globalaccelerator.Accelerator); ok {
 		return output, err
 	}
 
@@ -435,7 +445,7 @@ func expandUpdateAcceleratorAttributesInput(tfMap map[string]interface{}) *globa
 	return apiObject
 }
 
-func flattenIPSet(apiObject *awstypes.IpSet) map[string]interface{} {
+func flattenIPSet(apiObject *globalaccelerator.IpSet) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -443,17 +453,17 @@ func flattenIPSet(apiObject *awstypes.IpSet) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.IpAddresses; v != nil {
-		tfMap["ip_addresses"] = v
+		tfMap["ip_addresses"] = aws.StringValueSlice(v)
 	}
 
 	if v := apiObject.IpFamily; v != nil {
-		tfMap["ip_family"] = aws.ToString(v)
+		tfMap["ip_family"] = aws.StringValue(v)
 	}
 
 	return tfMap
 }
 
-func flattenIPSets(apiObjects []awstypes.IpSet) []interface{} {
+func flattenIPSets(apiObjects []*globalaccelerator.IpSet) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -461,13 +471,17 @@ func flattenIPSets(apiObjects []awstypes.IpSet) []interface{} {
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		tfList = append(tfList, flattenIPSet(&apiObject))
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenIPSet(apiObject))
 	}
 
 	return tfList
 }
 
-func flattenAcceleratorAttributes(apiObject *awstypes.AcceleratorAttributes) map[string]interface{} {
+func flattenAcceleratorAttributes(apiObject *globalaccelerator.AcceleratorAttributes) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -475,15 +489,15 @@ func flattenAcceleratorAttributes(apiObject *awstypes.AcceleratorAttributes) map
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.FlowLogsEnabled; v != nil {
-		tfMap["flow_logs_enabled"] = aws.ToBool(v)
+		tfMap["flow_logs_enabled"] = aws.BoolValue(v)
 	}
 
 	if v := apiObject.FlowLogsS3Bucket; v != nil {
-		tfMap["flow_logs_s3_bucket"] = aws.ToString(v)
+		tfMap["flow_logs_s3_bucket"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.FlowLogsS3Prefix; v != nil {
-		tfMap["flow_logs_s3_prefix"] = aws.ToString(v)
+		tfMap["flow_logs_s3_prefix"] = aws.StringValue(v)
 	}
 
 	return tfMap

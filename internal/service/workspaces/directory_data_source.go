@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_workspaces_directory")
@@ -22,7 +21,7 @@ func DataSourceDirectory() *schema.Resource {
 		ReadWithoutTimeout: dataSourceDirectoryRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrAlias: {
+			"alias": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -88,12 +87,12 @@ func DataSourceDirectory() *schema.Resource {
 					},
 				},
 			},
-			names.AttrSubnetIDs: {
+			"subnet_ids": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrTags: tftags.TagsSchema(),
+			"tags": tftags.TagsSchema(),
 			"workspace_access_properties": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -194,9 +193,9 @@ func dataSourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("registration_code", directory.RegistrationCode)
 	d.Set("directory_name", directory.DirectoryName)
 	d.Set("directory_type", directory.DirectoryType)
-	d.Set(names.AttrAlias, directory.Alias)
+	d.Set("alias", directory.Alias)
 
-	if err := d.Set(names.AttrSubnetIDs, flex.FlattenStringValueSet(directory.SubnetIds)); err != nil {
+	if err := d.Set("subnet_ids", flex.FlattenStringValueSet(directory.SubnetIds)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting subnet_ids: %s", err)
 	}
 
@@ -224,7 +223,7 @@ func dataSourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta i
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags: %s", err)
 	}
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

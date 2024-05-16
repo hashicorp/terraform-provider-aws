@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -49,7 +48,7 @@ func sweepRepositories(region string) error {
 			r := resourceRepository()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.RepositoryName))
-			d.Set(names.AttrForceDelete, true)
+			d.Set("force_delete", true)
 			d.Set("registry_id", v.RegistryId)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))

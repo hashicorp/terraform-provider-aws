@@ -38,11 +38,11 @@ func ResourceDomain() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDomainName: {
+			"domain_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -90,7 +90,7 @@ func ResourceDomain() *schema.Resource {
 											},
 										},
 									},
-									names.AttrEnabled: {
+									"enabled": {
 										Type:     schema.TypeBool,
 										Required: true,
 									},
@@ -101,7 +101,7 @@ func ResourceDomain() *schema.Resource {
 								},
 							},
 						},
-						names.AttrEnabled: {
+						"enabled": {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
@@ -139,7 +139,7 @@ func ResourceDomain() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrAddress: {
+									"address": {
 										Type:     schema.TypeList,
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
@@ -163,7 +163,7 @@ func ResourceDomain() *schema.Resource {
 							},
 						},
 						"conflict_resolution": conflictResolutionSchema(),
-						names.AttrEnabled: {
+						"enabled": {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
@@ -173,7 +173,7 @@ func ResourceDomain() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrRule: {
+									"rule": {
 										Type:     schema.TypeList,
 										Required: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
@@ -189,7 +189,7 @@ func ResourceDomain() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
-						names.AttrStatus: {
+						"status": {
 							Type:             schema.TypeString,
 							Computed:         true,
 							Optional:         true,
@@ -240,7 +240,7 @@ func exportingConfigSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							names.AttrS3BucketName: {
+							"s3_bucket_name": {
 								Type:     schema.TypeString,
 								Required: true,
 							},
@@ -260,7 +260,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CustomerProfilesClient(ctx)
 
-	name := d.Get(names.AttrDomainName).(string)
+	name := d.Get("domain_name").(string)
 	input := &customerprofiles.CreateDomainInput{
 		DomainName: aws.String(name),
 		Tags:       getTagsIn(ctx),
@@ -313,8 +313,8 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading Customer Profiles Domain: (%s) %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, buildDomainARN(meta.(*conns.AWSClient), d.Id()))
-	d.Set(names.AttrDomainName, output.DomainName)
+	d.Set("arn", buildDomainARN(meta.(*conns.AWSClient), d.Id()))
+	d.Set("domain_name", output.DomainName)
 	d.Set("dead_letter_queue_url", output.DeadLetterQueueUrl)
 	d.Set("default_encryption_key", output.DefaultEncryptionKey)
 	d.Set("default_expiration_days", output.DefaultExpirationDays)
@@ -330,9 +330,9 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CustomerProfilesClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &customerprofiles.UpdateDomainInput{
-			DomainName: aws.String(d.Get(names.AttrDomainName).(string)),
+			DomainName: aws.String(d.Get("domain_name").(string)),
 		}
 
 		if d.HasChange("dead_letter_queue_url") {
@@ -422,7 +422,7 @@ func expandMatching(tfMap []interface{}) *types.MatchingRequest {
 
 	apiObject := &types.MatchingRequest{}
 
-	if v, ok := tfList[names.AttrEnabled]; ok {
+	if v, ok := tfList["enabled"]; ok {
 		apiObject.Enabled = aws.Bool(v.(bool))
 	}
 
@@ -453,7 +453,7 @@ func expandAutoMerging(tfMap []interface{}) *types.AutoMerging {
 
 	apiObject := &types.AutoMerging{}
 
-	if v, ok := tfList[names.AttrEnabled]; ok {
+	if v, ok := tfList["enabled"]; ok {
 		apiObject.Enabled = aws.Bool(v.(bool))
 	}
 
@@ -545,7 +545,7 @@ func expandS3ExportingConfig(tfMap []interface{}) *types.S3ExportingConfig {
 
 	apiObject := &types.S3ExportingConfig{}
 
-	if v, ok := tfList[names.AttrS3BucketName]; ok {
+	if v, ok := tfList["s3_bucket_name"]; ok {
 		apiObject.S3BucketName = aws.String(v.(string))
 	}
 
@@ -591,7 +591,7 @@ func expandRuleBasedMatching(tfMap []interface{}) *types.RuleBasedMatchingReques
 
 	apiObject := &types.RuleBasedMatchingRequest{}
 
-	if v, ok := tfList[names.AttrEnabled]; ok {
+	if v, ok := tfList["enabled"]; ok {
 		apiObject.Enabled = aws.Bool(v.(bool))
 	}
 
@@ -638,7 +638,7 @@ func expandAttributesTypesSelector(tfMap []interface{}) *types.AttributeTypesSel
 		apiObject.AttributeMatchingModel = types.AttributeMatchingModel(v.(string))
 	}
 
-	if v, ok := tfList[names.AttrAddress]; ok {
+	if v, ok := tfList["address"]; ok {
 		apiObject.Address = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
@@ -686,7 +686,7 @@ func expandMatchingRules(tfMap []interface{}) []types.MatchingRule {
 
 		apiObject := types.MatchingRule{}
 
-		if v, ok := matchingRule[names.AttrRule]; ok {
+		if v, ok := matchingRule["rule"]; ok {
 			apiObject.Rule = flex.ExpandStringValueList(v.([]interface{}))
 		}
 
@@ -708,7 +708,7 @@ func flattenMatching(apiObject *types.MatchingResponse) []interface{} {
 	}
 
 	if v := apiObject.Enabled; v != nil {
-		tfMap[names.AttrEnabled] = aws.ToBool(v)
+		tfMap["enabled"] = aws.ToBool(v)
 	}
 
 	if v := apiObject.ExportingConfig; v != nil {
@@ -738,7 +738,7 @@ func flattenRuleBasedMatching(apiObject *types.RuleBasedMatchingResponse) []inte
 	}
 
 	if v := apiObject.Enabled; v != nil {
-		tfMap[names.AttrEnabled] = aws.ToBool(v)
+		tfMap["enabled"] = aws.ToBool(v)
 	}
 
 	if v := apiObject.ExportingConfig; v != nil {
@@ -757,7 +757,7 @@ func flattenRuleBasedMatching(apiObject *types.RuleBasedMatchingResponse) []inte
 		tfMap["max_allowed_rule_level_for_merging"] = aws.ToInt32(v)
 	}
 
-	tfMap[names.AttrStatus] = types.IdentityResolutionJobStatus(apiObject.Status)
+	tfMap["status"] = types.IdentityResolutionJobStatus(apiObject.Status)
 
 	return []interface{}{tfMap}
 }
@@ -778,7 +778,7 @@ func flattenAutoMerging(apiObject *types.AutoMerging) []interface{} {
 	}
 
 	if v := apiObject.Enabled; v != nil {
-		tfMap[names.AttrEnabled] = aws.ToBool(v)
+		tfMap["enabled"] = aws.ToBool(v)
 	}
 
 	if v := apiObject.MinAllowedConfidenceScoreForMerging; v != nil {
@@ -840,7 +840,7 @@ func flattenS3Exporting(apiObject *types.S3ExportingConfig) []interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.S3BucketName; v != nil {
-		tfMap[names.AttrS3BucketName] = aws.ToString(v)
+		tfMap["s3_bucket_name"] = aws.ToString(v)
 	}
 
 	if v := apiObject.S3KeyName; v != nil {
@@ -874,7 +874,7 @@ func flattenAttributeTypesSelector(apiObject *types.AttributeTypesSelector) []in
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Address; v != nil {
-		tfMap[names.AttrAddress] = flex.FlattenStringValueList(v)
+		tfMap["address"] = flex.FlattenStringValueList(v)
 	}
 
 	tfMap["attribute_matching_model"] = apiObject.AttributeMatchingModel
@@ -900,7 +900,7 @@ func flattenMatchingRules(apiObject []types.MatchingRule) []interface{} {
 	for _, matchingRule := range apiObject {
 		if v := matchingRule.Rule; v != nil {
 			tfMap := map[string]interface{}{}
-			tfMap[names.AttrRule] = flex.FlattenStringValueList(v)
+			tfMap["rule"] = flex.FlattenStringValueList(v)
 			tfList = append(tfList, tfMap)
 		}
 	}

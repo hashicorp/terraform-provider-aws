@@ -34,12 +34,12 @@ func TestAccACMPCAPermission_basic(t *testing.T) {
 				Config: testAccPermissionConfig_basic(commonName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName, &permission),
-					resource.TestCheckResourceAttr(resourceName, "actions.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "actions.#", "3"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "actions.*", "GetCertificate"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "actions.*", "IssueCertificate"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "actions.*", "ListPermissions"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPrincipal, "acm.amazonaws.com"),
+					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckResourceAttr(resourceName, "principal", "acm.amazonaws.com"),
 					acctest.CheckResourceAttrAccountID(resourceName, "source_account"),
 				),
 			},
@@ -103,7 +103,7 @@ func testAccCheckPermissionDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfacmpca.FindPermissionByThreePartKey(ctx, conn, rs.Primary.Attributes["certificate_authority_arn"], rs.Primary.Attributes[names.AttrPrincipal], rs.Primary.Attributes["source_account"])
+			_, err := tfacmpca.FindPermissionByThreePartKey(ctx, conn, rs.Primary.Attributes["certificate_authority_arn"], rs.Primary.Attributes["principal"], rs.Primary.Attributes["source_account"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -129,7 +129,7 @@ func testAccCheckPermissionExists(ctx context.Context, n string, v *types.Permis
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAClient(ctx)
 
-		output, err := tfacmpca.FindPermissionByThreePartKey(ctx, conn, rs.Primary.Attributes["certificate_authority_arn"], rs.Primary.Attributes[names.AttrPrincipal], rs.Primary.Attributes["source_account"])
+		output, err := tfacmpca.FindPermissionByThreePartKey(ctx, conn, rs.Primary.Attributes["certificate_authority_arn"], rs.Primary.Attributes["principal"], rs.Primary.Attributes["source_account"])
 
 		if err != nil {
 			return err

@@ -8,22 +8,20 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_dynamodb_global_table", name="Global Table")
-func resourceGlobalTable() *schema.Resource {
+// @SDKResource("aws_dynamodb_global_table")
+func ResourceGlobalTable() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGlobalTableCreate,
 		ReadWithoutTimeout:   resourceGlobalTableRead,
@@ -69,7 +67,7 @@ func resourceGlobalTable() *schema.Resource {
 
 func resourceGlobalTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	input := &dynamodb.CreateGlobalTableInput{
@@ -77,7 +75,7 @@ func resourceGlobalTableCreate(ctx context.Context, d *schema.ResourceData, meta
 		ReplicationGroup: expandReplicas(d.Get("replica").(*schema.Set).List()),
 	}
 
-	_, err := conn.CreateGlobalTable(ctx, input)
+	_, err := conn.CreateGlobalTableWithContext(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating DynamoDB Global Table (%s): %s", name, err)
@@ -94,9 +92,9 @@ func resourceGlobalTableCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceGlobalTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
-	globalTableDescription, err := findGlobalTableByName(ctx, conn, d.Id())
+	globalTableDescription, err := FindGlobalTableByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DynamoDB Global Table %s not found, removing from state", d.Id())
@@ -119,7 +117,7 @@ func resourceGlobalTableRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceGlobalTableUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	o, n := d.GetChange("replica")
 	if o == nil {
@@ -129,11 +127,12 @@ func resourceGlobalTableUpdate(ctx context.Context, d *schema.ResourceData, meta
 		n = new(schema.Set)
 	}
 
-	os, ns := o.(*schema.Set), n.(*schema.Set)
+	os := o.(*schema.Set)
+	ns := n.(*schema.Set)
 	replicaUpdateCreateReplicas := expandReplicaUpdateCreateReplicas(ns.Difference(os).List())
 	replicaUpdateDeleteReplicas := expandReplicaUpdateDeleteReplicas(os.Difference(ns).List())
 
-	replicaUpdates := make([]awstypes.ReplicaUpdate, 0, (len(replicaUpdateCreateReplicas) + len(replicaUpdateDeleteReplicas)))
+	replicaUpdates := make([]*dynamodb.ReplicaUpdate, 0, (len(replicaUpdateCreateReplicas) + len(replicaUpdateDeleteReplicas)))
 	replicaUpdates = append(replicaUpdates, replicaUpdateCreateReplicas...)
 	replicaUpdates = append(replicaUpdates, replicaUpdateDeleteReplicas...)
 
@@ -142,7 +141,7 @@ func resourceGlobalTableUpdate(ctx context.Context, d *schema.ResourceData, meta
 		ReplicaUpdates:  replicaUpdates,
 	}
 
-	_, err := conn.UpdateGlobalTable(ctx, input)
+	_, err := conn.UpdateGlobalTableWithContext(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating DynamoDB Global Table (%s): %s", d.Id(), err)
@@ -158,15 +157,15 @@ func resourceGlobalTableUpdate(ctx context.Context, d *schema.ResourceData, meta
 // Deleting a DynamoDB Global Table is represented by removing all replicas.
 func resourceGlobalTableDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	log.Printf("[DEBUG] Deleting DynamoDB Global Table: %s", d.Id())
-	_, err := conn.UpdateGlobalTable(ctx, &dynamodb.UpdateGlobalTableInput{
+	_, err := conn.UpdateGlobalTableWithContext(ctx, &dynamodb.UpdateGlobalTableInput{
 		GlobalTableName: aws.String(d.Id()),
 		ReplicaUpdates:  expandReplicaUpdateDeleteReplicas(d.Get("replica").(*schema.Set).List()),
 	})
 
-	if errs.IsA[*awstypes.GlobalTableNotFoundException](err) || errs.IsA[*awstypes.ReplicaNotFoundException](err) {
+	if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeGlobalTableNotFoundException, dynamodb.ErrCodeReplicaNotFoundException) {
 		return diags
 	}
 
@@ -181,14 +180,14 @@ func resourceGlobalTableDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func findGlobalTableByName(ctx context.Context, conn *dynamodb.Client, name string) (*awstypes.GlobalTableDescription, error) {
+func FindGlobalTableByName(ctx context.Context, conn *dynamodb.DynamoDB, name string) (*dynamodb.GlobalTableDescription, error) {
 	input := &dynamodb.DescribeGlobalTableInput{
 		GlobalTableName: aws.String(name),
 	}
 
-	output, err := conn.DescribeGlobalTable(ctx, input)
+	output, err := conn.DescribeGlobalTableWithContext(ctx, input)
 
-	if errs.IsA[*awstypes.GlobalTableNotFoundException](err) {
+	if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeGlobalTableNotFoundException) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -206,9 +205,9 @@ func findGlobalTableByName(ctx context.Context, conn *dynamodb.Client, name stri
 	return output.GlobalTableDescription, nil
 }
 
-func statusGlobalTable(ctx context.Context, conn *dynamodb.Client, name string) retry.StateRefreshFunc {
+func statusGlobalTable(ctx context.Context, conn *dynamodb.DynamoDB, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findGlobalTableByName(ctx, conn, name)
+		output, err := FindGlobalTableByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -218,14 +217,14 @@ func statusGlobalTable(ctx context.Context, conn *dynamodb.Client, name string) 
 			return nil, "", err
 		}
 
-		return output, string(output.GlobalTableStatus), nil
+		return output, aws.StringValue(output.GlobalTableStatus), nil
 	}
 }
 
-func waitGlobalTableCreated(ctx context.Context, conn *dynamodb.Client, name string, timeout time.Duration) (*awstypes.GlobalTableDescription, error) {
+func waitGlobalTableCreated(ctx context.Context, conn *dynamodb.DynamoDB, name string, timeout time.Duration) (*dynamodb.GlobalTableDescription, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:    enum.Slice(awstypes.GlobalTableStatusCreating),
-		Target:     enum.Slice(awstypes.GlobalTableStatusActive),
+		Pending:    []string{dynamodb.GlobalTableStatusCreating},
+		Target:     []string{dynamodb.GlobalTableStatusActive},
 		Refresh:    statusGlobalTable(ctx, conn, name),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
@@ -233,34 +232,16 @@ func waitGlobalTableCreated(ctx context.Context, conn *dynamodb.Client, name str
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*awstypes.GlobalTableDescription); ok {
+	if output, ok := outputRaw.(*dynamodb.GlobalTableDescription); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitGlobalTableUpdated(ctx context.Context, conn *dynamodb.Client, name string, timeout time.Duration) (*awstypes.GlobalTableDescription, error) {
+func waitGlobalTableDeleted(ctx context.Context, conn *dynamodb.DynamoDB, name string, timeout time.Duration) (*dynamodb.GlobalTableDescription, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:    enum.Slice(awstypes.GlobalTableStatusUpdating),
-		Target:     enum.Slice(awstypes.GlobalTableStatusActive),
-		Refresh:    statusGlobalTable(ctx, conn, name),
-		Timeout:    timeout,
-		MinTimeout: 10 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.GlobalTableDescription); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitGlobalTableDeleted(ctx context.Context, conn *dynamodb.Client, name string, timeout time.Duration) (*awstypes.GlobalTableDescription, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:    enum.Slice(awstypes.GlobalTableStatusActive, awstypes.GlobalTableStatusDeleting),
+		Pending:    []string{dynamodb.GlobalTableStatusActive, dynamodb.GlobalTableStatusDeleting},
 		Target:     []string{},
 		Refresh:    statusGlobalTable(ctx, conn, name),
 		Timeout:    timeout,
@@ -269,87 +250,93 @@ func waitGlobalTableDeleted(ctx context.Context, conn *dynamodb.Client, name str
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*awstypes.GlobalTableDescription); ok {
+	if output, ok := outputRaw.(*dynamodb.GlobalTableDescription); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func expandReplicaUpdateCreateReplicas(tfList []interface{}) []awstypes.ReplicaUpdate {
-	apiObjects := make([]awstypes.ReplicaUpdate, 0, len(tfList))
-
-	for _, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
-		apiObjects = append(apiObjects, *expandReplicaUpdateCreateReplica(tfMap))
+func waitGlobalTableUpdated(ctx context.Context, conn *dynamodb.DynamoDB, name string, timeout time.Duration) (*dynamodb.GlobalTableDescription, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{dynamodb.GlobalTableStatusUpdating},
+		Target:     []string{dynamodb.GlobalTableStatusActive},
+		Refresh:    statusGlobalTable(ctx, conn, name),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
 	}
 
-	return apiObjects
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*dynamodb.GlobalTableDescription); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
-func expandReplicaUpdateCreateReplica(tfMap map[string]interface{}) *awstypes.ReplicaUpdate {
-	apiObject := &awstypes.ReplicaUpdate{
-		Create: &awstypes.CreateReplicaAction{
-			RegionName: aws.String(tfMap["region_name"].(string)),
+func expandReplicaUpdateCreateReplicas(configuredReplicas []interface{}) []*dynamodb.ReplicaUpdate {
+	replicaUpdates := make([]*dynamodb.ReplicaUpdate, 0, len(configuredReplicas))
+	for _, replicaRaw := range configuredReplicas {
+		replica := replicaRaw.(map[string]interface{})
+		replicaUpdates = append(replicaUpdates, expandReplicaUpdateCreateReplica(replica))
+	}
+	return replicaUpdates
+}
+
+func expandReplicaUpdateCreateReplica(configuredReplica map[string]interface{}) *dynamodb.ReplicaUpdate {
+	replicaUpdate := &dynamodb.ReplicaUpdate{
+		Create: &dynamodb.CreateReplicaAction{
+			RegionName: aws.String(configuredReplica["region_name"].(string)),
 		},
 	}
-
-	return apiObject
+	return replicaUpdate
 }
 
-func expandReplicaUpdateDeleteReplicas(tfList []interface{}) []awstypes.ReplicaUpdate {
-	apiObjects := make([]awstypes.ReplicaUpdate, 0, len(tfList))
-
-	for _, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
-		apiObjects = append(apiObjects, *expandReplicaUpdateDeleteReplica(tfMap))
+func expandReplicaUpdateDeleteReplicas(configuredReplicas []interface{}) []*dynamodb.ReplicaUpdate {
+	replicaUpdates := make([]*dynamodb.ReplicaUpdate, 0, len(configuredReplicas))
+	for _, replicaRaw := range configuredReplicas {
+		replica := replicaRaw.(map[string]interface{})
+		replicaUpdates = append(replicaUpdates, expandReplicaUpdateDeleteReplica(replica))
 	}
-
-	return apiObjects
+	return replicaUpdates
 }
 
-func expandReplicaUpdateDeleteReplica(tfMap map[string]interface{}) *awstypes.ReplicaUpdate {
-	apiObject := &awstypes.ReplicaUpdate{
-		Delete: &awstypes.DeleteReplicaAction{
-			RegionName: aws.String(tfMap["region_name"].(string)),
+func expandReplicaUpdateDeleteReplica(configuredReplica map[string]interface{}) *dynamodb.ReplicaUpdate {
+	replicaUpdate := &dynamodb.ReplicaUpdate{
+		Delete: &dynamodb.DeleteReplicaAction{
+			RegionName: aws.String(configuredReplica["region_name"].(string)),
 		},
 	}
-
-	return apiObject
+	return replicaUpdate
 }
 
-func expandReplicas(tfList []interface{}) []awstypes.Replica {
-	apiObjects := make([]awstypes.Replica, 0, len(tfList))
-
-	for _, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
-		apiObjects = append(apiObjects, *expandReplica(tfMap))
+func expandReplicas(configuredReplicas []interface{}) []*dynamodb.Replica {
+	replicas := make([]*dynamodb.Replica, 0, len(configuredReplicas))
+	for _, replicaRaw := range configuredReplicas {
+		replica := replicaRaw.(map[string]interface{})
+		replicas = append(replicas, expandReplica(replica))
 	}
-
-	return apiObjects
+	return replicas
 }
 
-func expandReplica(tfMap map[string]interface{}) *awstypes.Replica {
-	apiObject := &awstypes.Replica{
-		RegionName: aws.String(tfMap["region_name"].(string)),
+func expandReplica(configuredReplica map[string]interface{}) *dynamodb.Replica {
+	replica := &dynamodb.Replica{
+		RegionName: aws.String(configuredReplica["region_name"].(string)),
 	}
-
-	return apiObject
+	return replica
 }
 
-func flattenReplicas(apiObjects []awstypes.ReplicaDescription) []interface{} {
-	tfList := []interface{}{}
-
-	for _, apiObject := range apiObjects {
-		tfList = append(tfList, flattenReplica(&apiObject))
+func flattenReplicas(replicaDescriptions []*dynamodb.ReplicaDescription) []interface{} {
+	replicas := []interface{}{}
+	for _, replicaDescription := range replicaDescriptions {
+		replicas = append(replicas, flattenReplica(replicaDescription))
 	}
-
-	return tfList
+	return replicas
 }
 
-func flattenReplica(apiObject *awstypes.ReplicaDescription) map[string]interface{} {
-	tfMap := make(map[string]interface{})
-	tfMap["region_name"] = aws.ToString(apiObject.RegionName)
-
-	return tfMap
+func flattenReplica(replicaDescription *dynamodb.ReplicaDescription) map[string]interface{} {
+	replica := make(map[string]interface{})
+	replica["region_name"] = aws.StringValue(replicaDescription.RegionName)
+	return replica
 }

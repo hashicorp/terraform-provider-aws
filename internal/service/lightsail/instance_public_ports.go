@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_lightsail_instance_public_ports")
@@ -78,7 +77,7 @@ func ResourceInstancePublicPorts() *schema.Resource {
 								ValidateFunc: verify.ValidCIDRNetworkAddress,
 							},
 						},
-						names.AttrProtocol: {
+						"protocol": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -196,7 +195,7 @@ func expandPortInfo(tfMap map[string]interface{}) types.PortInfo {
 	apiObject := types.PortInfo{
 		FromPort: int32(tfMap["from_port"].(int)),
 		ToPort:   int32(tfMap["to_port"].(int)),
-		Protocol: types.NetworkProtocol(tfMap[names.AttrProtocol].(string)),
+		Protocol: types.NetworkProtocol(tfMap["protocol"].(string)),
 	}
 
 	if v, ok := tfMap["cidrs"].(*schema.Set); ok && v.Len() > 0 {
@@ -245,7 +244,7 @@ func flattenInstancePortState(apiObject types.InstancePortState) map[string]inte
 
 	tfMap["from_port"] = int(apiObject.FromPort)
 	tfMap["to_port"] = int(apiObject.ToPort)
-	tfMap[names.AttrProtocol] = string(apiObject.Protocol)
+	tfMap["protocol"] = string(apiObject.Protocol)
 
 	if v := apiObject.Cidrs; v != nil {
 		tfMap["cidrs"] = v

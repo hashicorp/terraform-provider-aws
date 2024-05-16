@@ -65,7 +65,7 @@ func ResourceTrigger() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						names.AttrTimeout: {
+						"timeout": {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							ValidateFunc: validation.IntAtLeast(1),
@@ -91,16 +91,16 @@ func ResourceTrigger() *schema.Resource {
 					},
 				},
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 2048),
 			},
-			names.AttrEnabled: {
+			"enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
@@ -125,7 +125,7 @@ func ResourceTrigger() *schema.Resource {
 					},
 				},
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -157,7 +157,7 @@ func ResourceTrigger() *schema.Resource {
 										Default:      glue.LogicalOperatorEquals,
 										ValidateFunc: validation.StringInSlice(glue.LogicalOperator_Values(), false),
 									},
-									names.AttrState: {
+									"state": {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringInSlice(glue.JobRunState_Values(), false),
@@ -179,11 +179,11 @@ func ResourceTrigger() *schema.Resource {
 					},
 				},
 			},
-			names.AttrSchedule: {
+			"schedule": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			names.AttrState: {
+			"state": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -193,7 +193,7 @@ func ResourceTrigger() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrType: {
+			"type": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -212,8 +212,8 @@ func resourceTriggerCreate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
-	name := d.Get(names.AttrName).(string)
-	triggerType := d.Get(names.AttrType).(string)
+	name := d.Get("name").(string)
+	triggerType := d.Get("type").(string)
 	input := &glue.CreateTriggerInput{
 		Actions:         expandActions(d.Get("actions").([]interface{})),
 		Name:            aws.String(name),
@@ -222,7 +222,7 @@ func resourceTriggerCreate(ctx context.Context, d *schema.ResourceData, meta int
 		StartOnCreation: aws.Bool(d.Get("start_on_creation").(bool)),
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -234,7 +234,7 @@ func resourceTriggerCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.Predicate = expandPredicate(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk(names.AttrSchedule); ok {
+	if v, ok := d.GetOk("schedule"); ok {
 		input.Schedule = aws.String(v.(string))
 	}
 
@@ -242,7 +242,7 @@ func resourceTriggerCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.WorkflowName = aws.String(v.(string))
 	}
 
-	if d.Get(names.AttrEnabled).(bool) && triggerType != glue.TriggerTypeOnDemand {
+	if d.Get("enabled").(bool) && triggerType != glue.TriggerTypeOnDemand {
 		start := true
 
 		if triggerType == glue.TriggerTypeEvent {
@@ -294,7 +294,7 @@ func resourceTriggerCreate(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "waiting for Glue Trigger (%s) to be Created: %s", d.Id(), err)
 	}
 
-	if d.Get(names.AttrEnabled).(bool) && triggerType == glue.TriggerTypeOnDemand {
+	if d.Get("enabled").(bool) && triggerType == glue.TriggerTypeOnDemand {
 		input := &glue.StartTriggerInput{
 			Name: aws.String(d.Id()),
 		}
@@ -341,20 +341,20 @@ func resourceTriggerRead(ctx context.Context, d *schema.ResourceData, meta inter
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("trigger/%s", d.Id()),
 	}.String()
-	d.Set(names.AttrARN, triggerARN)
+	d.Set("arn", triggerARN)
 
-	d.Set(names.AttrDescription, trigger.Description)
+	d.Set("description", trigger.Description)
 
 	var enabled bool
 	state := aws.StringValue(trigger.State)
-	d.Set(names.AttrState, state)
+	d.Set("state", state)
 
 	if aws.StringValue(trigger.Type) == glue.TriggerTypeOnDemand || aws.StringValue(trigger.Type) == glue.TriggerTypeEvent {
-		enabled = (state == glue.TriggerStateCreated || state == glue.TriggerStateCreating) && d.Get(names.AttrEnabled).(bool)
+		enabled = (state == glue.TriggerStateCreated || state == glue.TriggerStateCreating) && d.Get("enabled").(bool)
 	} else {
 		enabled = (state == glue.TriggerStateActivated || state == glue.TriggerStateActivating)
 	}
-	d.Set(names.AttrEnabled, enabled)
+	d.Set("enabled", enabled)
 
 	if err := d.Set("predicate", flattenPredicate(trigger.Predicate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting predicate: %s", err)
@@ -364,9 +364,9 @@ func resourceTriggerRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting event_batching_condition: %s", err)
 	}
 
-	d.Set(names.AttrName, trigger.Name)
-	d.Set(names.AttrSchedule, trigger.Schedule)
-	d.Set(names.AttrType, trigger.Type)
+	d.Set("name", trigger.Name)
+	d.Set("schedule", trigger.Schedule)
+	d.Set("type", trigger.Type)
 	d.Set("workflow_name", trigger.WorkflowName)
 
 	return diags
@@ -376,12 +376,12 @@ func resourceTriggerUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
-	if d.HasChanges("actions", names.AttrDescription, "predicate", names.AttrSchedule, "event_batching_condition") {
+	if d.HasChanges("actions", "description", "predicate", "schedule", "event_batching_condition") {
 		triggerUpdate := &glue.TriggerUpdate{
 			Actions: expandActions(d.Get("actions").([]interface{})),
 		}
 
-		if v, ok := d.GetOk(names.AttrDescription); ok {
+		if v, ok := d.GetOk("description"); ok {
 			triggerUpdate.Description = aws.String(v.(string))
 		}
 
@@ -389,7 +389,7 @@ func resourceTriggerUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			triggerUpdate.Predicate = expandPredicate(v.([]interface{}))
 		}
 
-		if v, ok := d.GetOk(names.AttrSchedule); ok {
+		if v, ok := d.GetOk("schedule"); ok {
 			triggerUpdate.Schedule = aws.String(v.(string))
 		}
 
@@ -413,8 +413,8 @@ func resourceTriggerUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	if d.HasChange(names.AttrEnabled) {
-		if d.Get(names.AttrEnabled).(bool) {
+	if d.HasChange("enabled") {
+		if d.Get("enabled").(bool) {
 			input := &glue.StartTriggerInput{
 				Name: aws.String(d.Id()),
 			}
@@ -426,7 +426,7 @@ func resourceTriggerUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			}
 		} else {
 			//Skip if Trigger is type is ON_DEMAND and is in CREATED state as this means the trigger is not running or has ran already.
-			if !(d.Get(names.AttrType).(string) == glue.TriggerTypeOnDemand && d.Get(names.AttrState).(string) == glue.TriggerStateCreated) {
+			if !(d.Get("type").(string) == glue.TriggerTypeOnDemand && d.Get("state").(string) == glue.TriggerStateCreated) {
 				input := &glue.StopTriggerInput{
 					Name: aws.String(d.Id()),
 				}
@@ -500,7 +500,7 @@ func expandActions(l []interface{}) []*glue.Action {
 			action.Arguments = flex.ExpandStringMap(v)
 		}
 
-		if v, ok := m[names.AttrTimeout].(int); ok && v > 0 {
+		if v, ok := m["timeout"].(int); ok && v > 0 {
 			action.Timeout = aws.Int64(int64(v))
 		}
 
@@ -552,7 +552,7 @@ func expandConditions(l []interface{}) []*glue.Condition {
 			condition.JobName = aws.String(v)
 		}
 
-		if v, ok := m[names.AttrState].(string); ok && v != "" {
+		if v, ok := m["state"].(string); ok && v != "" {
 			condition.State = aws.String(v)
 		}
 
@@ -581,8 +581,8 @@ func flattenActions(actions []*glue.Action) []interface{} {
 
 	for _, action := range actions {
 		m := map[string]interface{}{
-			"arguments":       aws.StringValueMap(action.Arguments),
-			names.AttrTimeout: int(aws.Int64Value(action.Timeout)),
+			"arguments": aws.StringValueMap(action.Arguments),
+			"timeout":   int(aws.Int64Value(action.Timeout)),
 		}
 
 		if v := aws.StringValue(action.CrawlerName); v != "" {
@@ -628,7 +628,7 @@ func flattenConditions(conditions []*glue.Condition) []interface{} {
 		}
 
 		if v := aws.StringValue(condition.State); v != "" {
-			m[names.AttrState] = v
+			m["state"] = v
 		}
 
 		l = append(l, m)

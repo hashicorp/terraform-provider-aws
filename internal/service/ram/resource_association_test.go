@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ram/types"
+	"github.com/aws/aws-sdk-go/service/ram"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,15 +22,12 @@ import (
 
 func TestAccRAMResourceAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var resourceShareAssociation awstypes.ResourceShareAssociation
+	var resourceShareAssociation ram.ResourceShareAssociation
 	resourceName := "aws_ram_resource_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheckSharingWithOrganizationEnabled(ctx, t)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourceAssociationDestroy(ctx),
@@ -52,15 +49,12 @@ func TestAccRAMResourceAssociation_basic(t *testing.T) {
 
 func TestAccRAMResourceAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var resourceShareAssociation awstypes.ResourceShareAssociation
+	var resourceShareAssociation ram.ResourceShareAssociation
 	resourceName := "aws_ram_resource_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheckSharingWithOrganizationEnabled(ctx, t)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourceAssociationDestroy(ctx),
@@ -82,10 +76,7 @@ func TestAccRAMResourceAssociation_duplicate(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheckSharingWithOrganizationEnabled(ctx, t)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourceAssociationDestroy(ctx),
@@ -98,16 +89,16 @@ func TestAccRAMResourceAssociation_duplicate(t *testing.T) {
 	})
 }
 
-func testAccCheckResourceAssociationExists(ctx context.Context, n string, v *awstypes.ResourceShareAssociation) resource.TestCheckFunc {
+func testAccCheckResourceAssociationExists(ctx context.Context, n string, v *ram.ResourceShareAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn(ctx)
 
-		output, err := tfram.FindResourceAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["resource_share_arn"], rs.Primary.Attributes[names.AttrResourceARN])
+		output, err := tfram.FindResourceAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["resource_share_arn"], rs.Primary.Attributes["resource_arn"])
 
 		if err != nil {
 			return err
@@ -121,14 +112,14 @@ func testAccCheckResourceAssociationExists(ctx context.Context, n string, v *aws
 
 func testAccCheckResourceAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ram_resource_association" {
 				continue
 			}
 
-			_, err := tfram.FindResourceAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["resource_share_arn"], rs.Primary.Attributes[names.AttrResourceARN])
+			_, err := tfram.FindResourceAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["resource_share_arn"], rs.Primary.Attributes["resource_arn"])
 
 			if tfresource.NotFound(err) {
 				continue

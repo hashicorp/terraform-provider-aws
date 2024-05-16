@@ -28,8 +28,8 @@ func testAccLambdaFunctionAssociationDataSource_basic(t *testing.T) {
 			{
 				Config: testAccLambdaFunctionAssociationDataSourceConfig_basic(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceID, resourceName, names.AttrInstanceID),
-					resource.TestCheckResourceAttrPair(datasourceName, names.AttrFunctionARN, resourceName, names.AttrFunctionARN),
+					resource.TestCheckResourceAttrPair(datasourceName, "instance_id", resourceName, "instance_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "function_arn", resourceName, "function_arn"),
 				),
 			},
 		},

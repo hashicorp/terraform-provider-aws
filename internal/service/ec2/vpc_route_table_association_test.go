@@ -37,8 +37,8 @@ func TestAccVPCRouteTableAssociation_Subnet_basic(t *testing.T) {
 				Config: testAccVPCRouteTableAssociationConfig_subnet(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableAssociationExists(ctx, resourceName, &rta),
-					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable, names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, resourceNameSubnet, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", resourceNameSubnet, "id"),
 				),
 			},
 			{
@@ -70,16 +70,16 @@ func TestAccVPCRouteTableAssociation_Subnet_changeRouteTable(t *testing.T) {
 				Config: testAccVPCRouteTableAssociationConfig_subnet(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableAssociationExists(ctx, resourceName, &rta),
-					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable1, names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, resourceNameSubnet, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable1, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", resourceNameSubnet, "id"),
 				),
 			},
 			{
 				Config: testAccVPCRouteTableAssociationConfig_subnetChange(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableAssociationExists(ctx, resourceName, &rta),
-					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable2, names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, resourceNameSubnet, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable2, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", resourceNameSubnet, "id"),
 				),
 			},
 		},
@@ -104,8 +104,8 @@ func TestAccVPCRouteTableAssociation_Gateway_basic(t *testing.T) {
 				Config: testAccVPCRouteTableAssociationConfig_gateway(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableAssociationExists(ctx, resourceName, &rta),
-					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable, names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", resourceNameGateway, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", resourceNameGateway, "id"),
 				),
 			},
 			{
@@ -137,16 +137,16 @@ func TestAccVPCRouteTableAssociation_Gateway_changeRouteTable(t *testing.T) {
 				Config: testAccVPCRouteTableAssociationConfig_gateway(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableAssociationExists(ctx, resourceName, &rta),
-					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable1, names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", resourceNameGateway, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable1, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", resourceNameGateway, "id"),
 				),
 			},
 			{
 				Config: testAccVPCRouteTableAssociationConfig_gatewayChange(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableAssociationExists(ctx, resourceName, &rta),
-					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable2, names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", resourceNameGateway, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "route_table_id", resourceNameRouteTable2, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", resourceNameGateway, "id"),
 				),
 			},
 		},
@@ -235,8 +235,8 @@ func testAccRouteTabAssocImportStateIdFunc(resourceName string) resource.ImportS
 			return "", fmt.Errorf("not found: %s", resourceName)
 		}
 		var target string
-		if rs.Primary.Attributes[names.AttrSubnetID] != "" {
-			target = rs.Primary.Attributes[names.AttrSubnetID]
+		if rs.Primary.Attributes["subnet_id"] != "" {
+			target = rs.Primary.Attributes["subnet_id"]
 		} else if rs.Primary.Attributes["gateway_id"] != "" {
 			target = rs.Primary.Attributes["gateway_id"]
 		}

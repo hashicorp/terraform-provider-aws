@@ -37,8 +37,8 @@ func (d *dataSourceResourceCollection) Metadata(_ context.Context, req datasourc
 func (d *dataSourceResourceCollection) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
-			names.AttrType: schema.StringAttribute{
+			"id": framework.IDAttribute(),
+			"type": schema.StringAttribute{
 				Required:   true,
 				CustomType: fwtypes.StringEnumType[awstypes.ResourceCollectionType](),
 			},
@@ -56,7 +56,7 @@ func (d *dataSourceResourceCollection) Schema(ctx context.Context, req datasourc
 					},
 				},
 			},
-			names.AttrTags: schema.ListNestedBlock{
+			"tags": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[tagsData](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{

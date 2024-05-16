@@ -5,27 +5,21 @@ package ssm
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"strings"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/ssm"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-const (
-	patchGroupResourceIDPartCount = 2
-)
-
-// @SDKResource("aws_ssm_patch_group", name="Patch Group")
-func resourcePatchGroup() *schema.Resource {
+// @SDKResource("aws_ssm_patch_group")
+func ResourcePatchGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePatchGroupCreate,
 		ReadWithoutTimeout:   resourcePatchGroupRead,
@@ -35,7 +29,7 @@ func resourcePatchGroup() *schema.Resource {
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Type:    resourcePatchGroupV0().CoreConfigSchema().ImpliedType(),
-				Upgrade: patchGroupStateUpgradeV0,
+				Upgrade: PatchGroupStateUpgradeV0,
 				Version: 0,
 			},
 		},
@@ -57,54 +51,57 @@ func resourcePatchGroup() *schema.Resource {
 
 func resourcePatchGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMClient(ctx)
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
-	baselineID := d.Get("baseline_id").(string)
+	baselineId := d.Get("baseline_id").(string)
 	patchGroup := d.Get("patch_group").(string)
-	id := errs.Must(flex.FlattenResourceId([]string{patchGroup, baselineID}, patchGroupResourceIDPartCount, false))
-	input := &ssm.RegisterPatchBaselineForPatchGroupInput{
-		BaselineId: aws.String(baselineID),
+
+	params := &ssm.RegisterPatchBaselineForPatchGroupInput{
+		BaselineId: aws.String(baselineId),
 		PatchGroup: aws.String(patchGroup),
 	}
 
-	_, err := conn.RegisterPatchBaselineForPatchGroup(ctx, input)
-
+	resp, err := conn.RegisterPatchBaselineForPatchGroupWithContext(ctx, params)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SSM Patch Group (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "registering SSM Patch Baseline (%s) for Patch Group (%s): %s", baselineId, patchGroup, err)
 	}
 
-	d.SetId(id)
+	d.SetId(fmt.Sprintf("%s,%s", aws.StringValue(resp.PatchGroup), aws.StringValue(resp.BaselineId)))
 
 	return append(diags, resourcePatchGroupRead(ctx, d, meta)...)
 }
 
 func resourcePatchGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMClient(ctx)
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
-	parts, err := flex.ExpandResourceId(d.Id(), patchGroupResourceIDPartCount, false)
+	patchGroup, baselineId, err := ParsePatchGroupID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+		return sdkdiag.AppendErrorf(diags, "parsing SSM Patch Group ID (%s): %s", d.Id(), err)
 	}
 
-	patchGroup, baselineID := parts[0], parts[1]
-	group, err := findPatchGroupByTwoPartKey(ctx, conn, patchGroup, baselineID)
-
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] SSM Patch Group %s not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
+	group, err := FindPatchGroup(ctx, conn, patchGroup, baselineId)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading SSM Patch Group (%s): %s", d.Id(), err)
 	}
 
-	var groupBaselineID string
-	if group.BaselineIdentity != nil {
-		groupBaselineID = aws.ToString(group.BaselineIdentity.BaselineId)
+	if group == nil {
+		if d.IsNewResource() {
+			return sdkdiag.AppendErrorf(diags, "reading SSM Patch Group (%s): not found after creation", d.Id())
+		}
+
+		log.Printf("[WARN] SSM Patch Group (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
 	}
-	d.Set("baseline_id", groupBaselineID)
+
+	var groupBaselineId string
+	if group.BaselineIdentity != nil {
+		groupBaselineId = aws.StringValue(group.BaselineIdentity.BaselineId)
+	}
+
+	d.Set("baseline_id", groupBaselineId)
 	d.Set("patch_group", group.PatchGroup)
 
 	return diags
@@ -112,73 +109,36 @@ func resourcePatchGroupRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourcePatchGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMClient(ctx)
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
-	parts, err := flex.ExpandResourceId(d.Id(), patchGroupResourceIDPartCount, false)
+	patchGroup, baselineId, err := ParsePatchGroupID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	patchGroup, baselineID := parts[0], parts[1]
-
 	log.Printf("[WARN] Deleting SSM Patch Group: %s", d.Id())
-	_, err = conn.DeregisterPatchBaselineForPatchGroup(ctx, &ssm.DeregisterPatchBaselineForPatchGroupInput{
-		BaselineId: aws.String(baselineID),
+	_, err = conn.DeregisterPatchBaselineForPatchGroupWithContext(ctx, &ssm.DeregisterPatchBaselineForPatchGroupInput{
+		BaselineId: aws.String(baselineId),
 		PatchGroup: aws.String(patchGroup),
 	})
 
-	if errs.IsA[*awstypes.DoesNotExistException](err) {
+	if tfawserr.ErrCodeEquals(err, ssm.ErrCodeDoesNotExistException) {
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting SSM Patch Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deregistering SSM Patch Baseline (%s) for Patch Group (%s): %s", baselineId, patchGroup, err)
 	}
 
 	return diags
 }
 
-func findPatchGroupByTwoPartKey(ctx context.Context, conn *ssm.Client, patchGroup, baselineID string) (*awstypes.PatchGroupPatchBaselineMapping, error) {
-	input := &ssm.DescribePatchGroupsInput{}
+func ParsePatchGroupID(id string) (string, string, error) {
+	parts := strings.SplitN(id, ",", 2)
 
-	return findPatchGroup(ctx, conn, input, func(v *awstypes.PatchGroupPatchBaselineMapping) bool {
-		if aws.ToString(v.PatchGroup) == patchGroup {
-			if v.BaselineIdentity != nil && aws.ToString(v.BaselineIdentity.BaselineId) == baselineID {
-				return true
-			}
-		}
-
-		return false
-	})
-}
-
-func findPatchGroup(ctx context.Context, conn *ssm.Client, input *ssm.DescribePatchGroupsInput, filter tfslices.Predicate[*awstypes.PatchGroupPatchBaselineMapping]) (*awstypes.PatchGroupPatchBaselineMapping, error) {
-	output, err := findPatchGroups(ctx, conn, input, filter)
-
-	if err != nil {
-		return nil, err
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("please make sure ID is in format PATCH_GROUP,BASELINE_ID")
 	}
 
-	return tfresource.AssertSingleValueResult(output)
-}
-
-func findPatchGroups(ctx context.Context, conn *ssm.Client, input *ssm.DescribePatchGroupsInput, filter tfslices.Predicate[*awstypes.PatchGroupPatchBaselineMapping]) ([]awstypes.PatchGroupPatchBaselineMapping, error) {
-	var output []awstypes.PatchGroupPatchBaselineMapping
-
-	pages := ssm.NewDescribePatchGroupsPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if err != nil {
-			return nil, err
-		}
-
-		for _, v := range page.Mappings {
-			if filter(&v) {
-				output = append(output, v)
-			}
-		}
-	}
-
-	return output, nil
+	return parts[0], parts[1], nil
 }

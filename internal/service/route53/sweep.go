@@ -166,9 +166,9 @@ func sweepKeySigningKeys(region string) error {
 				r := ResourceKeySigningKey()
 				d := r.Data(nil)
 				d.SetId(id)
-				d.Set(names.AttrHostedZoneID, id)
-				d.Set(names.AttrName, dns.Name)
-				d.Set(names.AttrStatus, dns.Status)
+				d.Set("hosted_zone_id", id)
+				d.Set("name", dns.Name)
+				d.Set("status", dns.Status)
 
 				sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 			}
@@ -368,8 +368,8 @@ func sweepZones(region string) error {
 			r := ResourceZone()
 			d := r.Data(nil)
 			d.SetId(id)
-			d.Set(names.AttrForceDestroy, true)
-			d.Set(names.AttrName, v.Name)
+			d.Set("force_destroy", true)
+			d.Set("name", v.Name)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

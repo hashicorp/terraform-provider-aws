@@ -8,23 +8,19 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/ssm"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ssm_resource_data_sync", name="Resource Data Sync")
-func resourceResourceDataSync() *schema.Resource {
+// @SDKResource("aws_ssm_resource_data_sync")
+func ResourceResourceDataSync() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourceDataSyncCreate,
 		ReadWithoutTimeout:   resourceResourceDataSyncRead,
@@ -35,7 +31,7 @@ func resourceResourceDataSync() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -47,34 +43,31 @@ func resourceResourceDataSync() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrBucketName: {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						names.AttrKMSKeyARN: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						names.AttrPrefix: {
+						"kms_key_arn": {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						names.AttrRegion: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidRegionName,
+						"bucket_name": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+						"prefix": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+						},
+						"region": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
 						},
 						"sync_format": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ForceNew:         true,
-							Default:          awstypes.ResourceDataSyncS3FormatJsonSerde,
-							ValidateDiagFunc: enum.Validate[awstypes.ResourceDataSyncS3Format](),
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  ssm.ResourceDataSyncS3FormatJsonSerDe,
+							ForceNew: true,
 						},
 					},
 				},
@@ -85,35 +78,42 @@ func resourceResourceDataSync() *schema.Resource {
 
 func resourceResourceDataSyncCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMClient(ctx)
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
+
 	input := &ssm.CreateResourceDataSyncInput{
 		S3Destination: expandResourceDataSyncS3Destination(d),
 		SyncName:      aws.String(name),
 	}
 
-	const (
-		timeout = 1 * time.Minute
-	)
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ResourceDataSyncInvalidConfigurationException](ctx, timeout, func() (interface{}, error) {
-		return conn.CreateResourceDataSync(ctx, input)
-	}, "S3 write failed for bucket")
+	err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
+		_, err := conn.CreateResourceDataSyncWithContext(ctx, input)
+		if err != nil {
+			if tfawserr.ErrMessageContains(err, ssm.ErrCodeResourceDataSyncInvalidConfigurationException, "S3 write failed for bucket") {
+				return retry.RetryableError(err)
+			}
+			return retry.NonRetryableError(err)
+		}
+		return nil
+	})
+	if tfresource.TimedOut(err) {
+		_, err = conn.CreateResourceDataSyncWithContext(ctx, input)
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating SSM Resource Data Sync (%s): %s", name, err)
 	}
 
 	d.SetId(name)
-
 	return append(diags, resourceResourceDataSyncRead(ctx, d, meta)...)
 }
 
 func resourceResourceDataSyncRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMClient(ctx)
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
-	syncItem, err := findResourceDataSyncByName(ctx, conn, d.Id())
+	syncItem, err := FindResourceDataSyncItem(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SSM Resource Data Sync (%s) not found, removing from state", d.Id())
@@ -125,103 +125,84 @@ func resourceResourceDataSyncRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading SSM Resource Data Sync (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrName, syncItem.SyncName)
-	if err := d.Set("s3_destination", flattenResourceDataSyncS3Destination(syncItem.S3Destination)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting s3_destination: %s", err)
-	}
-
+	d.Set("name", syncItem.SyncName)
+	d.Set("s3_destination", flattenResourceDataSyncS3Destination(syncItem.S3Destination))
 	return diags
 }
 
 func resourceResourceDataSyncDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMClient(ctx)
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
-	log.Printf("[DEBUG] Deleting SSM Resource Data Sync: %s", d.Id())
-	_, err := conn.DeleteResourceDataSync(ctx, &ssm.DeleteResourceDataSyncInput{
+	input := &ssm.DeleteResourceDataSyncInput{
 		SyncName: aws.String(d.Id()),
-	})
+	}
 
-	if errs.IsA[*awstypes.ResourceDataSyncNotFoundException](err) {
+	_, err := conn.DeleteResourceDataSyncWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, ssm.ErrCodeResourceDataSyncNotFoundException) {
 		return diags
 	}
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting SSM Resource Data Sync (%s): %s", d.Id(), err)
 	}
-
 	return diags
 }
 
-func findResourceDataSyncByName(ctx context.Context, conn *ssm.Client, name string) (*awstypes.ResourceDataSyncItem, error) {
+func FindResourceDataSyncItem(ctx context.Context, conn *ssm.SSM, name string) (*ssm.ResourceDataSyncItem, error) {
+	var result *ssm.ResourceDataSyncItem
 	input := &ssm.ListResourceDataSyncInput{}
 
-	return findResourceDataSync(ctx, conn, input, func(v *awstypes.ResourceDataSyncItem) bool {
-		return aws.ToString(v.SyncName) == name
-	})
-}
+	err := conn.ListResourceDataSyncPagesWithContext(ctx, input, func(page *ssm.ListResourceDataSyncOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
 
-func findResourceDataSync(ctx context.Context, conn *ssm.Client, input *ssm.ListResourceDataSyncInput, filter tfslices.Predicate[*awstypes.ResourceDataSyncItem]) (*awstypes.ResourceDataSyncItem, error) {
-	output, err := findResourceDataSyncs(ctx, conn, input, filter)
+		for _, item := range page.ResourceDataSyncItems {
+			if aws.StringValue(item.SyncName) == name {
+				result = item
+				return false
+			}
+		}
+
+		return !lastPage
+	})
 
 	if err != nil {
 		return nil, err
 	}
-
-	return tfresource.AssertSingleValueResult(output)
+	if result == nil {
+		return nil, &retry.NotFoundError{}
+	}
+	return result, nil
 }
 
-func findResourceDataSyncs(ctx context.Context, conn *ssm.Client, input *ssm.ListResourceDataSyncInput, filter tfslices.Predicate[*awstypes.ResourceDataSyncItem]) ([]awstypes.ResourceDataSyncItem, error) {
-	var output []awstypes.ResourceDataSyncItem
-
-	pages := ssm.NewListResourceDataSyncPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if err != nil {
-			return nil, err
-		}
-
-		for _, v := range page.ResourceDataSyncItems {
-			if filter(&v) {
-				output = append(output, v)
-			}
-		}
+func flattenResourceDataSyncS3Destination(dest *ssm.ResourceDataSyncS3Destination) []interface{} {
+	result := make(map[string]interface{})
+	result["bucket_name"] = aws.StringValue(dest.BucketName)
+	result["region"] = aws.StringValue(dest.Region)
+	result["sync_format"] = aws.StringValue(dest.SyncFormat)
+	if dest.AWSKMSKeyARN != nil {
+		result["kms_key_arn"] = aws.StringValue(dest.AWSKMSKeyARN)
 	}
-
-	return output, nil
+	if dest.Prefix != nil {
+		result["prefix"] = aws.StringValue(dest.Prefix)
+	}
+	return []interface{}{result}
 }
 
-func flattenResourceDataSyncS3Destination(apiObject *awstypes.ResourceDataSyncS3Destination) []interface{} {
-	tfMap := make(map[string]interface{})
-
-	tfMap[names.AttrBucketName] = aws.ToString(apiObject.BucketName)
-	tfMap[names.AttrRegion] = aws.ToString(apiObject.Region)
-	tfMap["sync_format"] = apiObject.SyncFormat
-	if apiObject.AWSKMSKeyARN != nil {
-		tfMap[names.AttrKMSKeyARN] = aws.ToString(apiObject.AWSKMSKeyARN)
+func expandResourceDataSyncS3Destination(d *schema.ResourceData) *ssm.ResourceDataSyncS3Destination {
+	raw := d.Get("s3_destination").([]interface{})[0].(map[string]interface{})
+	s3dest := &ssm.ResourceDataSyncS3Destination{
+		BucketName: aws.String(raw["bucket_name"].(string)),
+		Region:     aws.String(raw["region"].(string)),
+		SyncFormat: aws.String(raw["sync_format"].(string)),
 	}
-	if apiObject.Prefix != nil {
-		tfMap[names.AttrPrefix] = aws.ToString(apiObject.Prefix)
+	if v, ok := raw["kms_key_arn"].(string); ok && v != "" {
+		s3dest.AWSKMSKeyARN = aws.String(v)
 	}
-
-	return []interface{}{tfMap}
-}
-
-func expandResourceDataSyncS3Destination(d *schema.ResourceData) *awstypes.ResourceDataSyncS3Destination {
-	tfMap := d.Get("s3_destination").([]interface{})[0].(map[string]interface{})
-	apiObject := &awstypes.ResourceDataSyncS3Destination{
-		BucketName: aws.String(tfMap[names.AttrBucketName].(string)),
-		Region:     aws.String(tfMap[names.AttrRegion].(string)),
-		SyncFormat: awstypes.ResourceDataSyncS3Format(tfMap["sync_format"].(string)),
+	if v, ok := raw["prefix"].(string); ok && v != "" {
+		s3dest.Prefix = aws.String(v)
 	}
-
-	if v, ok := tfMap[names.AttrKMSKeyARN].(string); ok && v != "" {
-		apiObject.AWSKMSKeyARN = aws.String(v)
-	}
-
-	if v, ok := tfMap[names.AttrPrefix].(string); ok && v != "" {
-		apiObject.Prefix = aws.String(v)
-	}
-
-	return apiObject
+	return s3dest
 }

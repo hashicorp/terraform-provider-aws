@@ -35,7 +35,7 @@ func TestAccDynamoDBTableDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "attribute.#", resourceName, "attribute.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "global_secondary_index.#", resourceName, "global_secondary_index.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "ttl.#", resourceName, "ttl.#"),
-					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
+					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.Name", resourceName, "tags.Name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.Environment", resourceName, "tags.Environment"),
 					resource.TestCheckResourceAttrPair(datasourceName, "server_side_encryption.#", resourceName, "server_side_encryption.#"),

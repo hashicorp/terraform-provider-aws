@@ -19,7 +19,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
 	return s3.NewFromConfig(cfg, func(o *s3.Options) {
-		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
+		if endpoint := config["endpoint"].(string); endpoint != "" {
 			o.BaseEndpoint = aws.String(endpoint)
 		} else if o.Region == names.USEast1RegionID && config["s3_us_east_1_regional_endpoint"].(string) != "regional" {
 			// Maintain the AWS SDK for Go v1 default of using the global endpoint in us-east-1.

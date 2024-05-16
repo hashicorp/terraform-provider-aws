@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_vpc_ipam_pool_cidrs")
@@ -26,7 +25,7 @@ func DataSourceIPAMPoolCIDRs() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrFilter: customFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"ipam_pool_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -40,7 +39,7 @@ func DataSourceIPAMPoolCIDRs() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrState: {
+						"state": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -61,7 +60,7 @@ func dataSourceIPAMPoolCIDRsRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get(names.AttrFilter).(*schema.Set),
+		d.Get("filter").(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {
@@ -91,6 +90,6 @@ func flattenIPAMPoolCIDRs(c []*ec2.IpamPoolCidr) []interface{} {
 func flattenIPAMPoolCIDR(c *ec2.IpamPoolCidr) map[string]interface{} {
 	cidr := make(map[string]interface{})
 	cidr["cidr"] = aws.StringValue(c.Cidr)
-	cidr[names.AttrState] = aws.StringValue(c.State)
+	cidr["state"] = aws.StringValue(c.State)
 	return cidr
 }

@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_quicksight_user", name="User")
@@ -30,7 +29,7 @@ func DataSourceUser() *schema.Resource {
 					Type:     schema.TypeBool,
 					Computed: true,
 				},
-				names.AttrARN: {
+				"arn": {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -39,7 +38,7 @@ func DataSourceUser() *schema.Resource {
 					Optional: true,
 					Computed: true,
 				},
-				names.AttrEmail: {
+				"email": {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -47,7 +46,7 @@ func DataSourceUser() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrNamespace: {
+				"namespace": {
 					Type:     schema.TypeString,
 					Optional: true,
 					Default:  DefaultUserNamespace,
@@ -60,7 +59,7 @@ func DataSourceUser() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrUserName: {
+				"user_name": {
 					Type:     schema.TypeString,
 					Required: true,
 				},
@@ -81,9 +80,9 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if v, ok := d.GetOk("aws_account_id"); ok {
 		awsAccountID = v.(string)
 	}
-	namespace := d.Get(names.AttrNamespace).(string)
+	namespace := d.Get("namespace").(string)
 	in := &quicksight.DescribeUserInput{
-		UserName:     aws.String(d.Get(names.AttrUserName).(string)),
+		UserName:     aws.String(d.Get("user_name").(string)),
 		AwsAccountId: aws.String(awsAccountID),
 		Namespace:    aws.String(namespace),
 	}
@@ -98,12 +97,12 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.SetId(fmt.Sprintf("%s/%s/%s", awsAccountID, namespace, aws.StringValue(out.User.UserName)))
 	d.Set("active", out.User.Active)
-	d.Set(names.AttrARN, out.User.Arn)
+	d.Set("arn", out.User.Arn)
 	d.Set("aws_account_id", awsAccountID)
-	d.Set(names.AttrEmail, out.User.Email)
+	d.Set("email", out.User.Email)
 	d.Set("identity_type", out.User.IdentityType)
 	d.Set("principal_id", out.User.PrincipalId)
-	d.Set(names.AttrUserName, out.User.UserName)
+	d.Set("user_name", out.User.UserName)
 	d.Set("user_role", out.User.Role)
 
 	return diags

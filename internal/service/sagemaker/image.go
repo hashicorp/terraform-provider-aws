@@ -35,7 +35,7 @@ func ResourceImage() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -49,18 +49,18 @@ func ResourceImage() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z])*$`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
 				),
 			},
-			names.AttrRoleARN: {
+			"role_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			names.AttrDisplayName: {
+			"display_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 512),
@@ -80,15 +80,15 @@ func resourceImageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	name := d.Get("image_name").(string)
 	input := &sagemaker.CreateImageInput{
 		ImageName: aws.String(name),
-		RoleArn:   aws.String(d.Get(names.AttrRoleARN).(string)),
+		RoleArn:   aws.String(d.Get("role_arn").(string)),
 		Tags:      getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk(names.AttrDisplayName); ok {
+	if v, ok := d.GetOk("display_name"); ok {
 		input.DisplayName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -124,10 +124,10 @@ func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	arn := aws.StringValue(image.ImageArn)
 	d.Set("image_name", image.ImageName)
-	d.Set(names.AttrARN, arn)
-	d.Set(names.AttrRoleARN, image.RoleArn)
-	d.Set(names.AttrDisplayName, image.DisplayName)
-	d.Set(names.AttrDescription, image.Description)
+	d.Set("arn", arn)
+	d.Set("role_arn", image.RoleArn)
+	d.Set("display_name", image.DisplayName)
+	d.Set("description", image.Description)
 
 	return diags
 }
@@ -143,8 +143,8 @@ func resourceImageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	var deleteProperties []*string
 
-	if d.HasChange(names.AttrDescription) {
-		if v, ok := d.GetOk(names.AttrDescription); ok {
+	if d.HasChange("description") {
+		if v, ok := d.GetOk("description"); ok {
 			input.Description = aws.String(v.(string))
 		} else {
 			deleteProperties = append(deleteProperties, aws.String("Description"))
@@ -153,8 +153,8 @@ func resourceImageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		needsUpdate = true
 	}
 
-	if d.HasChange(names.AttrDisplayName) {
-		if v, ok := d.GetOk(names.AttrDisplayName); ok {
+	if d.HasChange("display_name") {
+		if v, ok := d.GetOk("display_name"); ok {
 			input.DisplayName = aws.String(v.(string))
 		} else {
 			deleteProperties = append(deleteProperties, aws.String("DisplayName"))

@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudwatch_log_data_protection_policy")
@@ -36,7 +35,7 @@ func resourceDataProtectionPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrLogGroupName: {
+			"log_group_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -62,7 +61,7 @@ func resourceDataProtectionPolicyPut(ctx context.Context, d *schema.ResourceData
 
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
-	logGroupName := d.Get(names.AttrLogGroupName).(string)
+	logGroupName := d.Get("log_group_name").(string)
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy_document").(string))
 
@@ -105,7 +104,7 @@ func resourceDataProtectionPolicyRead(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Logs Data Protection Policy (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrLogGroupName, output.LogGroupIdentifier)
+	d.Set("log_group_name", output.LogGroupIdentifier)
 
 	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy_document").(string), aws.ToString(output.PolicyDocument))
 

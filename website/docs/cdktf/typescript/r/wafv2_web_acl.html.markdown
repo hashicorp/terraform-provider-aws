@@ -476,7 +476,7 @@ Each `customResponseBody` block supports the following arguments:
 
 The `defaultAction` block supports the following arguments:
 
-~> **Note** One of `allow` or `block` is required when specifying a `defaultAction`
+~> **Note** One of `allow` or `block`, expressed as an empty configuration block `{}`, is required when specifying a `defaultAction`
 
 * `allow` - (Optional) Specifies that AWS WAF should allow requests by default. See [`allow`](#allow-block) below for details.
 * `block` - (Optional) Specifies that AWS WAF should block requests by default. See [`block`](#block-block) below for details.
@@ -1132,4 +1132,4 @@ Using `terraform import`, import WAFv2 Web ACLs using `ID/Name/Scope`. For examp
 % terraform import aws_wafv2_web_acl.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-98918acd75c91f53bec892e0742397665a585245baef770d45408170e11972c7 -->
+<!-- cache-key: cdktf-0.20.1 input-634d5847255912d7ff836d946ccf0f9066065a5f808a6e96c042f64ae7680c29 -->

@@ -5,27 +5,24 @@ package dynamodb
 
 import (
 	"context"
+	"errors"
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_dynamodb_table_export", name="Table Export")
-func resourceTableExport() *schema.Resource {
+// @SDKResource("aws_dynamodb_table_export")
+func ResourceTableExport() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTableExportCreate,
 		ReadWithoutTimeout:   resourceTableExportRead,
@@ -41,7 +38,7 @@ func resourceTableExport() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -54,11 +51,11 @@ func resourceTableExport() *schema.Resource {
 				Computed: true,
 			},
 			"export_format": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          awstypes.ExportFormatDynamodbJson,
-				ValidateDiagFunc: enum.Validate[awstypes.ExportFormat](),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(dynamodb.ExportFormat_Values(), false),
+				ForceNew:     true,
+				Default:      dynamodb.ExportFormatDynamodbJson,
 			},
 			"export_status": {
 				Type:     schema.TypeString,
@@ -68,8 +65,8 @@ func resourceTableExport() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ForceNew:     true,
 				ValidateFunc: verify.ValidUTCTimestamp,
+				ForceNew:     true,
 			},
 			"item_count": {
 				Type:     schema.TypeInt,
@@ -79,7 +76,7 @@ func resourceTableExport() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrS3Bucket: {
+			"s3_bucket": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -88,89 +85,97 @@ func resourceTableExport() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
+				ForceNew:     true,
 			},
 			"s3_prefix": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1024),
+				ForceNew:     true,
 			},
 			"s3_sse_algorithm": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.S3SseAlgorithm](),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(dynamodb.S3SseAlgorithm_Values(), false),
+				ForceNew:     true,
 			},
 			"s3_sse_kms_key_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(0, 2048),
+				ForceNew:     true,
 			},
-			names.AttrStartTime: {
+			"start_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"table_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 		},
 	}
 }
 
+const (
+	ResNameTableExport = "Table Export"
+)
+
 func resourceTableExportCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
-	s3Bucket := d.Get(names.AttrS3Bucket).(string)
-	tableARN := d.Get("table_arn").(string)
-	input := &dynamodb.ExportTableToPointInTimeInput{
+	s3Bucket := d.Get("s3_bucket").(string)
+	tableArn := d.Get("table_arn").(string)
+
+	in := &dynamodb.ExportTableToPointInTimeInput{
 		S3Bucket: aws.String(s3Bucket),
-		TableArn: aws.String(tableARN),
+		TableArn: aws.String(tableArn),
 	}
 
 	if v, ok := d.GetOk("export_format"); ok {
-		input.ExportFormat = awstypes.ExportFormat(v.(string))
+		in.ExportFormat = aws.String(v.(string))
 	}
-
 	if v, ok := d.GetOk("export_time"); ok {
 		v, _ := time.Parse(time.RFC3339, v.(string))
-		input.ExportTime = aws.Time(v)
+		in.ExportTime = aws.Time(v)
 	}
 
 	if v, ok := d.GetOk("s3_bucket_owner"); ok {
-		input.S3BucketOwner = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("s3_prefix"); ok {
-		input.S3Prefix = aws.String(v.(string))
+		in.S3BucketOwner = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("s3_sse_algorithm"); ok {
-		input.S3SseAlgorithm = awstypes.S3SseAlgorithm(v.(string))
+		in.S3SseAlgorithm = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("s3_prefix"); ok {
+		in.S3Prefix = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("s3_sse_kms_key_id"); ok {
-		input.S3SseKmsKeyId = aws.String(v.(string))
+		in.S3SseKmsKeyId = aws.String(v.(string))
 	}
 
-	output, err := conn.ExportTableToPointInTime(ctx, input)
+	log.Printf("Creating export table: %s", in)
 
+	out, err := conn.ExportTableToPointInTimeWithContext(ctx, in)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "exporting DynamoDB Table (%s): %s", tableARN, err)
+		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, ResNameTableExport, d.Get("table_arn").(string), err)
 	}
 
-	d.SetId(aws.ToString(output.ExportDescription.ExportArn))
+	if out == nil || out.ExportDescription == nil {
+		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, ResNameTableExport, d.Get("table_arn").(string), errors.New("empty output"))
+	}
+
+	d.SetId(aws.StringValue(out.ExportDescription.ExportArn))
 
 	if _, err := waitTableExportCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for DynamoDB Table Export (%s) create: %s", d.Id(), err)
+		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForCreation, ResNameTableExport, d.Id(), err)
 	}
 
 	return append(diags, resourceTableExportRead(ctx, d, meta)...)
@@ -178,98 +183,42 @@ func resourceTableExportCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceTableExportRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
-	desc, err := findTableExportByARN(ctx, conn, d.Id())
+	out, err := FindTableExportByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] DynamoDB Table Export (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] DynamoDB TableExport (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading DynamoDB Table Export (%s): %s", d.Id(), err)
+		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionReading, ResNameTableExport, d.Id(), err)
 	}
+	desc := out.ExportDescription
 
-	d.Set(names.AttrARN, desc.ExportArn)
+	d.Set("arn", desc.ExportArn)
 	d.Set("billed_size_in_bytes", desc.BilledSizeBytes)
-	if desc.EndTime != nil {
-		d.Set("end_time", aws.ToTime(desc.EndTime).Format(time.RFC3339))
-	}
-	d.Set("export_format", desc.ExportFormat)
-	d.Set("export_status", desc.ExportStatus)
-	if desc.ExportTime != nil {
-		d.Set("export_time", aws.ToTime(desc.ExportTime).Format(time.RFC3339))
-	}
 	d.Set("item_count", desc.ItemCount)
 	d.Set("manifest_files_s3_key", desc.ExportManifest)
-	d.Set(names.AttrS3Bucket, desc.S3Bucket)
+	d.Set("table_arn", desc.TableArn)
+	d.Set("s3_bucket", desc.S3Bucket)
 	d.Set("s3_bucket_owner", desc.S3BucketOwner)
+	d.Set("export_format", desc.ExportFormat)
 	d.Set("s3_prefix", desc.S3Prefix)
 	d.Set("s3_sse_algorithm", desc.S3SseAlgorithm)
 	d.Set("s3_sse_kms_key_id", desc.S3SseKmsKeyId)
-	if desc.StartTime != nil {
-		d.Set(names.AttrStartTime, aws.ToTime(desc.StartTime).Format(time.RFC3339))
+	d.Set("export_status", desc.ExportStatus)
+	if desc.EndTime != nil {
+		d.Set("end_time", aws.TimeValue(desc.EndTime).Format(time.RFC3339))
 	}
-	d.Set("table_arn", desc.TableArn)
+	if desc.StartTime != nil {
+		d.Set("start_time", aws.TimeValue(desc.StartTime).Format(time.RFC3339))
+	}
+	if desc.ExportTime != nil {
+		d.Set("export_time", aws.TimeValue(desc.ExportTime).Format(time.RFC3339))
+	}
 
 	return diags
-}
-
-func findTableExportByARN(ctx context.Context, conn *dynamodb.Client, arn string) (*awstypes.ExportDescription, error) {
-	input := &dynamodb.DescribeExportInput{
-		ExportArn: aws.String(arn),
-	}
-
-	output, err := conn.DescribeExport(ctx, input)
-
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if output == nil || output.ExportDescription == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.ExportDescription, nil
-}
-
-func statusTableExport(ctx context.Context, conn *dynamodb.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := findTableExportByARN(ctx, conn, arn)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, string(output.ExportStatus), nil
-	}
-}
-
-func waitTableExportCreated(ctx context.Context, conn *dynamodb.Client, id string, timeout time.Duration) (*awstypes.ExportDescription, error) {
-	const (
-		maxTimeout = 60 * time.Minute
-	)
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.ExportStatusInProgress),
-		Target:  enum.Slice(awstypes.ExportStatusCompleted, awstypes.ExportStatusFailed),
-		Refresh: statusTableExport(ctx, conn, id),
-		Timeout: max(maxTimeout, timeout),
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.ExportDescription); ok {
-		return output, err
-	}
-
-	return nil, err
 }

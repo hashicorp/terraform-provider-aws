@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_neptune_orderable_db_instance")
@@ -23,7 +22,7 @@ func DataSourceOrderableDBInstance() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOrderableDBInstanceRead,
 		Schema: map[string]*schema.Schema{
-			names.AttrAvailabilityZones: {
+			"availability_zones": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -33,7 +32,7 @@ func DataSourceOrderableDBInstance() *schema.Resource {
 				Optional: true,
 				Default:  engineNeptune,
 			},
-			names.AttrEngineVersion: {
+			"engine_version": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -87,7 +86,7 @@ func DataSourceOrderableDBInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			names.AttrStorageType: {
+			"storage_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -134,7 +133,7 @@ func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceDa
 		input.Engine = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrEngineVersion); ok {
+	if v, ok := d.GetOk("engine_version"); ok {
 		input.EngineVersion = aws.String(v.(string))
 	}
 
@@ -176,11 +175,11 @@ func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	d.SetId(aws.StringValue(orderableDBInstance.DBInstanceClass))
-	d.Set(names.AttrAvailabilityZones, tfslices.ApplyToAll(orderableDBInstance.AvailabilityZones, func(v *neptune.AvailabilityZone) string {
+	d.Set("availability_zones", tfslices.ApplyToAll(orderableDBInstance.AvailabilityZones, func(v *neptune.AvailabilityZone) string {
 		return aws.StringValue(v.Name)
 	}))
 	d.Set("engine", orderableDBInstance.Engine)
-	d.Set(names.AttrEngineVersion, orderableDBInstance.EngineVersion)
+	d.Set("engine_version", orderableDBInstance.EngineVersion)
 	d.Set("license_model", orderableDBInstance.LicenseModel)
 	d.Set("max_iops_per_db_instance", orderableDBInstance.MaxIopsPerDbInstance)
 	d.Set("max_iops_per_gib", orderableDBInstance.MaxIopsPerGib)
@@ -191,7 +190,7 @@ func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("multi_az_capable", orderableDBInstance.MultiAZCapable)
 	d.Set("instance_class", orderableDBInstance.DBInstanceClass)
 	d.Set("read_replica_capable", orderableDBInstance.ReadReplicaCapable)
-	d.Set(names.AttrStorageType, orderableDBInstance.StorageType)
+	d.Set("storage_type", orderableDBInstance.StorageType)
 	d.Set("supports_enhanced_monitoring", orderableDBInstance.SupportsEnhancedMonitoring)
 	d.Set("supports_iam_database_authentication", orderableDBInstance.SupportsIAMDatabaseAuthentication)
 	d.Set("supports_iops", orderableDBInstance.SupportsIops)

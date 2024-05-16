@@ -71,7 +71,7 @@ func (r *drtAccessLogBucketAssociationResource) Schema(ctx context.Context, requ
 			},
 		},
 		Blocks: map[string]schema.Block{
-			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+			"timeouts": timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Delete: true,
 			}),

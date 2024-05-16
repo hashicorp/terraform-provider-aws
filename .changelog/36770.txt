@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_glue_job: Mark `number_of_workers` and `worker_type` as optional/computed, preventing persistent differences when `max_capacity` is set.
-```

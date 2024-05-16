@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_iot_authorizer")
@@ -38,7 +37,7 @@ func ResourceAuthorizer() *schema.Resource {
 		CustomizeDiff: resourceAuthorizerCustomizeDiff,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -52,7 +51,7 @@ func ResourceAuthorizer() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
@@ -65,7 +64,7 @@ func ResourceAuthorizer() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      iot.AuthorizerStatusActive,
@@ -93,13 +92,13 @@ func resourceAuthorizerCreate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &iot.CreateAuthorizerInput{
 		AuthorizerFunctionArn: aws.String(d.Get("authorizer_function_arn").(string)),
 		AuthorizerName:        aws.String(name),
 		EnableCachingForHttp:  aws.Bool(d.Get("enable_caching_for_http").(bool)),
 		SigningDisabled:       aws.Bool(d.Get("signing_disabled").(bool)),
-		Status:                aws.String(d.Get(names.AttrStatus).(string)),
+		Status:                aws.String(d.Get("status").(string)),
 	}
 
 	if v, ok := d.GetOk("token_key_name"); ok {
@@ -138,12 +137,12 @@ func resourceAuthorizerRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading IoT Authorizer (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, authorizer.AuthorizerArn)
+	d.Set("arn", authorizer.AuthorizerArn)
 	d.Set("authorizer_function_arn", authorizer.AuthorizerFunctionArn)
 	d.Set("enable_caching_for_http", authorizer.EnableCachingForHttp)
-	d.Set(names.AttrName, authorizer.AuthorizerName)
+	d.Set("name", authorizer.AuthorizerName)
 	d.Set("signing_disabled", authorizer.SigningDisabled)
-	d.Set(names.AttrStatus, authorizer.Status)
+	d.Set("status", authorizer.Status)
 	d.Set("token_key_name", authorizer.TokenKeyName)
 	d.Set("token_signing_public_keys", aws.StringValueMap(authorizer.TokenSigningPublicKeys))
 
@@ -166,8 +165,8 @@ func resourceAuthorizerUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		input.EnableCachingForHttp = aws.Bool(d.Get("enable_caching_for_http").(bool))
 	}
 
-	if d.HasChange(names.AttrStatus) {
-		input.Status = aws.String(d.Get(names.AttrStatus).(string))
+	if d.HasChange("status") {
+		input.Status = aws.String(d.Get("status").(string))
 	}
 
 	if d.HasChange("token_key_name") {
@@ -193,7 +192,7 @@ func resourceAuthorizerDelete(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	// In order to delete an IoT Authorizer, you must set it inactive first.
-	if d.Get(names.AttrStatus).(string) == iot.AuthorizerStatusActive {
+	if d.Get("status").(string) == iot.AuthorizerStatusActive {
 		log.Printf("[INFO] Deactivating IoT Authorizer: %s", d.Id())
 		_, err := conn.UpdateAuthorizerWithContext(ctx, &iot.UpdateAuthorizerInput{
 			AuthorizerName: aws.String(d.Id()),

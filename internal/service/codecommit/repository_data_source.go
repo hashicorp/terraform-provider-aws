@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_codecommit_repository", name="Repository")
@@ -21,7 +20,7 @@ func dataSourceRepository() *schema.Resource {
 		ReadWithoutTimeout: dataSourceRepositoryRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -33,7 +32,7 @@ func dataSourceRepository() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrKMSKeyID: {
+			"kms_key_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -41,7 +40,7 @@ func dataSourceRepository() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrRepositoryName: {
+			"repository_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(0, 100),
@@ -54,7 +53,7 @@ func dataSourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeCommitClient(ctx)
 
-	name := d.Get(names.AttrRepositoryName).(string)
+	name := d.Get("repository_name").(string)
 	repository, err := findRepositoryByName(ctx, conn, name)
 
 	if err != nil {
@@ -62,12 +61,12 @@ func dataSourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.SetId(aws.ToString(repository.RepositoryName))
-	d.Set(names.AttrARN, repository.Arn)
+	d.Set("arn", repository.Arn)
 	d.Set("clone_url_http", repository.CloneUrlHttp)
 	d.Set("clone_url_ssh", repository.CloneUrlSsh)
-	d.Set(names.AttrKMSKeyID, repository.KmsKeyId)
+	d.Set("kms_key_id", repository.KmsKeyId)
 	d.Set("repository_id", repository.RepositoryId)
-	d.Set(names.AttrRepositoryName, repository.RepositoryName)
+	d.Set("repository_name", repository.RepositoryName)
 
 	return diags
 }

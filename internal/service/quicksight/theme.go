@@ -48,7 +48,7 @@ func ResourceTheme() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
-				names.AttrARN: {
+				"arn": {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -63,7 +63,7 @@ func ResourceTheme() *schema.Resource {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				names.AttrConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ThemeConfiguration.html
+				"configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ThemeConfiguration.html
 					Type:     schema.TypeList,
 					MaxItems: 1,
 					Optional: true,
@@ -283,7 +283,7 @@ func ResourceTheme() *schema.Resource {
 						},
 					},
 				},
-				names.AttrCreatedTime: {
+				"created_time": {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -296,12 +296,12 @@ func ResourceTheme() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrName: {
+				"name": {
 					Type:         schema.TypeString,
 					Required:     true,
 					ValidateFunc: validation.StringLenBetween(1, 2048),
 				},
-				names.AttrPermissions: {
+				"permissions": {
 					Type:     schema.TypeList,
 					Optional: true,
 					MinItems: 1,
@@ -315,7 +315,7 @@ func ResourceTheme() *schema.Resource {
 								MaxItems: 16,
 								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
-							names.AttrPrincipal: {
+							"principal": {
 								Type:         schema.TypeString,
 								Required:     true,
 								ValidateFunc: validation.StringLenBetween(1, 256),
@@ -323,7 +323,7 @@ func ResourceTheme() *schema.Resource {
 						},
 					},
 				},
-				names.AttrStatus: {
+				"status": {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -363,7 +363,7 @@ func resourceThemeCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	input := &quicksight.CreateThemeInput{
 		AwsAccountId: aws.String(awsAccountId),
 		ThemeId:      aws.String(themeId),
-		Name:         aws.String(d.Get(names.AttrName).(string)),
+		Name:         aws.String(d.Get("name").(string)),
 		BaseThemeId:  aws.String(d.Get("base_theme_id").(string)),
 		Tags:         getTagsIn(ctx),
 	}
@@ -372,17 +372,17 @@ func resourceThemeCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.VersionDescription = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk("configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Configuration = expandThemeConfiguration(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk(names.AttrPermissions); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk("permissions"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Permissions = expandResourcePermissions(v.([]interface{}))
 	}
 
 	_, err := conn.CreateThemeWithContext(ctx, input)
 	if err != nil {
-		return create.DiagError(names.QuickSight, create.ErrActionCreating, ResNameTheme, d.Get(names.AttrName).(string), err)
+		return create.DiagError(names.QuickSight, create.ErrActionCreating, ResNameTheme, d.Get("name").(string), err)
 	}
 
 	if _, err := waitThemeCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
@@ -412,18 +412,18 @@ func resourceThemeRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return create.DiagError(names.QuickSight, create.ErrActionReading, ResNameTheme, d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, out.Arn)
+	d.Set("arn", out.Arn)
 	d.Set("aws_account_id", awsAccountId)
 	d.Set("base_theme_id", out.Version.BaseThemeId)
-	d.Set(names.AttrCreatedTime, out.CreatedTime.Format(time.RFC3339))
+	d.Set("created_time", out.CreatedTime.Format(time.RFC3339))
 	d.Set("last_updated_time", out.LastUpdatedTime.Format(time.RFC3339))
-	d.Set(names.AttrName, out.Name)
-	d.Set(names.AttrStatus, out.Version.Status)
+	d.Set("name", out.Name)
+	d.Set("status", out.Version.Status)
 	d.Set("theme_id", out.ThemeId)
 	d.Set("version_description", out.Version.Description)
 	d.Set("version_number", out.Version.VersionNumber)
 
-	if err := d.Set(names.AttrConfiguration, flattenThemeConfiguration(out.Version.Configuration)); err != nil {
+	if err := d.Set("configuration", flattenThemeConfiguration(out.Version.Configuration)); err != nil {
 		return diag.Errorf("setting configuration: %s", err)
 	}
 
@@ -436,7 +436,7 @@ func resourceThemeRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return diag.Errorf("describing QuickSight Theme (%s) Permissions: %s", d.Id(), err)
 	}
 
-	if err := d.Set(names.AttrPermissions, flattenPermissions(permsResp.Permissions)); err != nil {
+	if err := d.Set("permissions", flattenPermissions(permsResp.Permissions)); err != nil {
 		return diag.Errorf("setting permissions: %s", err)
 	}
 
@@ -451,15 +451,15 @@ func resourceThemeUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.FromErr(err)
 	}
 
-	if d.HasChangesExcept(names.AttrPermissions, names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("permissions", "tags", "tags_all") {
 		in := &quicksight.UpdateThemeInput{
 			AwsAccountId: aws.String(awsAccountId),
 			ThemeId:      aws.String(themeId),
 			BaseThemeId:  aws.String(d.Get("base_theme_id").(string)),
-			Name:         aws.String(d.Get(names.AttrName).(string)),
+			Name:         aws.String(d.Get("name").(string)),
 		}
 
-		if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if v, ok := d.GetOk("configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			in.Configuration = expandThemeConfiguration(v.([]interface{}))
 		}
 
@@ -474,8 +474,8 @@ func resourceThemeUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	if d.HasChange(names.AttrPermissions) {
-		oraw, nraw := d.GetChange(names.AttrPermissions)
+	if d.HasChange("permissions") {
+		oraw, nraw := d.GetChange("permissions")
 		o := oraw.([]interface{})
 		n := nraw.([]interface{})
 

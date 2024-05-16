@@ -72,7 +72,7 @@ func ResourceVPCPeeringConnectionAccepter() *schema.Resource {
 			"requester":       vpcPeeringConnectionOptionsSchema,
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVPCID: {
+			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},

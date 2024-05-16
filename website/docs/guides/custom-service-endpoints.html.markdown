@@ -99,7 +99,6 @@ provider "aws" {
   <li><code>bedrockagent</code></li>
   <li><code>budgets</code></li>
   <li><code>ce</code> (or <code>costexplorer</code>)</li>
-  <li><code>chatbot</code></li>
   <li><code>chime</code></li>
   <li><code>chimesdkmediapipelines</code></li>
   <li><code>chimesdkvoice</code></li>
@@ -254,7 +253,6 @@ provider "aws" {
   <li><code>rolesanywhere</code></li>
   <li><code>route53</code></li>
   <li><code>route53domains</code></li>
-  <li><code>route53profiles</code></li>
   <li><code>route53recoverycontrolconfig</code></li>
   <li><code>route53recoveryreadiness</code></li>
   <li><code>route53resolver</code></li>
@@ -302,7 +300,6 @@ provider "aws" {
   <li><code>wellarchitected</code></li>
   <li><code>worklink</code></li>
   <li><code>workspaces</code></li>
-  <li><code>workspacesweb</code></li>
   <li><code>xray</code></li>
 </ul>
 </div>

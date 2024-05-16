@@ -8,7 +8,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentity/types"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func validIdentityPoolName(v interface{}, k string) (ws []string, errors []error) {
@@ -68,7 +67,7 @@ func validProviderDeveloperName(v interface{}, k string) (ws []string, errors []
 }
 
 func validRoleMappingsAmbiguousRoleResolutionAgainstType(v map[string]interface{}) (errors []error) {
-	t := v[names.AttrType].(string)
+	t := v["type"].(string)
 	isRequired := t == string(awstypes.RoleMappingTypeToken) || t == string(awstypes.RoleMappingTypeRules)
 
 	if value, ok := v["ambiguous_role_resolution"]; (!ok || value == "") && isRequired {
@@ -89,7 +88,7 @@ func validRoleMappingsRulesClaim(v interface{}, k string) (ws []string, errors [
 }
 
 func validRoleMappingsRulesConfiguration(v map[string]interface{}) (errors []error) {
-	t := v[names.AttrType].(string)
+	t := v["type"].(string)
 	valLength := 0
 	if value, ok := v["mapping_rule"]; ok {
 		valLength = len(value.([]interface{}))

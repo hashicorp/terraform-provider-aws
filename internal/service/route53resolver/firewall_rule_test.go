@@ -35,11 +35,11 @@ func TestAccRoute53ResolverFirewallRule_basic(t *testing.T) {
 				Config: testAccFirewallRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallRuleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "ALLOW"),
-					resource.TestCheckResourceAttrPair(resourceName, "firewall_rule_group_id", "aws_route53_resolver_firewall_rule_group.test", names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, "firewall_domain_list_id", "aws_route53_resolver_firewall_domain_list.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "action", "ALLOW"),
+					resource.TestCheckResourceAttrPair(resourceName, "firewall_rule_group_id", "aws_route53_resolver_firewall_rule_group.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "firewall_domain_list_id", "aws_route53_resolver_firewall_domain_list.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "priority", "100"),
 				),
 			},
 			{
@@ -67,8 +67,8 @@ func TestAccRoute53ResolverFirewallRule_block(t *testing.T) {
 				Config: testAccFirewallRuleConfig_block(rName, "NODATA"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallRuleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "BLOCK"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "action", "BLOCK"),
 					resource.TestCheckResourceAttr(resourceName, "block_response", "NODATA"),
 				),
 			},
@@ -97,8 +97,8 @@ func TestAccRoute53ResolverFirewallRule_blockOverride(t *testing.T) {
 				Config: testAccFirewallRuleConfig_blockOverride(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallRuleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "BLOCK"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "action", "BLOCK"),
 					resource.TestCheckResourceAttr(resourceName, "block_override_dns_type", "CNAME"),
 					resource.TestCheckResourceAttr(resourceName, "block_override_domain", "example.com."),
 					resource.TestCheckResourceAttr(resourceName, "block_override_ttl", "60"),

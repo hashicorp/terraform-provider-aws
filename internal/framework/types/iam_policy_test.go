@@ -7,29 +7,34 @@ import (
 	"context"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
-func TestIAMPolicyValidateAttribute(t *testing.T) {
+func TestIAMPolicyTypeValidate(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
-		val         fwtypes.IAMPolicy
+		val         tftypes.Value
 		expectError bool
 	}
 	tests := map[string]testCase{
-		"unknown": {
-			val: fwtypes.IAMPolicyUnknown(),
+		"not a string": {
+			val:         tftypes.NewValue(tftypes.Bool, true),
+			expectError: true,
 		},
-		"null": {
-			val: fwtypes.IAMPolicyNull(),
+		"unknown string": {
+			val: tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
 		},
-		"valid": {
-			val: fwtypes.IAMPolicyValue(`{"Key1": "Value", "Key2": [1, 2, 3]}`),
+		"null string": {
+			val: tftypes.NewValue(tftypes.String, nil),
 		},
-		"invalid": {
-			val:         fwtypes.IAMPolicyValue("not ok"),
+		"valid string": {
+			val: tftypes.NewValue(tftypes.String, `{"Key1": "Value", "Key2": [1, 2, 3]}`),
+		},
+		"invalid string": {
+			val:         tftypes.NewValue(tftypes.String, "not ok"),
 			expectError: true,
 		},
 	}
@@ -41,12 +46,14 @@ func TestIAMPolicyValidateAttribute(t *testing.T) {
 
 			ctx := context.Background()
 
-			req := xattr.ValidateAttributeRequest{}
-			resp := xattr.ValidateAttributeResponse{}
+			diags := fwtypes.IAMPolicyType.Validate(ctx, test.val, path.Root("test"))
 
-			test.val.ValidateAttribute(ctx, req, &resp)
-			if resp.Diagnostics.HasError() != test.expectError {
-				t.Errorf("resp.Diagnostics.HasError() = %t, want = %t", resp.Diagnostics.HasError(), test.expectError)
+			if !diags.HasError() && test.expectError {
+				t.Fatal("expected error, got no error")
+			}
+
+			if diags.HasError() && !test.expectError {
+				t.Fatalf("got unexpected error: %#v", diags)
 			}
 		})
 	}

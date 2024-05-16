@@ -95,7 +95,6 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - Amazon Resource Name of the file system.
 * `dns_name` - DNS name for the file system, e.g., `fs-12345678.fsx.us-west-2.amazonaws.com`
-* `endpoint_ip_address` - IP address of the endpoint that is used to access data or to manage the file system.
 * `id` - Identifier of the file system, e.g., `fs-12345678`
 * `network_interface_ids` - Set of Elastic Network Interface identifiers from which the file system is accessible The first network interface returned is the primary network interface.
 * `root_volume_id` - Identifier of the root volume, e.g., `fsvol-12345678`
@@ -162,4 +161,4 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-4e0cc4e5a4a2e688dc6d768e513f95dfd4aaaf5fcbbac16ed12f3207f063ad29 -->
+<!-- cache-key: cdktf-0.20.1 input-af4899de9ee7dd3b7cff44d8d15d27240f39d0d61a29add1622c39d4e1c27352 -->

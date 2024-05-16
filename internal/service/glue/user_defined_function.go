@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_glue_user_defined_function")
@@ -34,21 +33,21 @@ func ResourceUserDefinedFunction() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrCatalogID: {
+			"catalog_id": {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
 			},
-			names.AttrDatabaseName: {
+			"database_name": {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				ForceNew:     true,
 				Required:     true,
@@ -75,12 +74,12 @@ func ResourceUserDefinedFunction() *schema.Resource {
 				MaxItems: 1000,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrResourceType: {
+						"resource_type": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(glue.ResourceType_Values(), false),
 						},
-						names.AttrURI: {
+						"uri": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 1024),
@@ -88,7 +87,7 @@ func ResourceUserDefinedFunction() *schema.Resource {
 					},
 				},
 			},
-			names.AttrCreateTime: {
+			"create_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -100,8 +99,8 @@ func resourceUserDefinedFunctionCreate(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
-	dbName := d.Get(names.AttrDatabaseName).(string)
-	funcName := d.Get(names.AttrName).(string)
+	dbName := d.Get("database_name").(string)
+	funcName := d.Get("name").(string)
 
 	input := &glue.CreateUserDefinedFunctionInput{
 		CatalogId:     aws.String(catalogID),
@@ -178,15 +177,15 @@ func resourceUserDefinedFunctionRead(ctx context.Context, d *schema.ResourceData
 		Resource:  fmt.Sprintf("userDefinedFunction/%s/%s", dbName, aws.StringValue(udf.FunctionName)),
 	}.String()
 
-	d.Set(names.AttrARN, udfArn)
-	d.Set(names.AttrName, udf.FunctionName)
-	d.Set(names.AttrCatalogID, catalogID)
-	d.Set(names.AttrDatabaseName, dbName)
+	d.Set("arn", udfArn)
+	d.Set("name", udf.FunctionName)
+	d.Set("catalog_id", catalogID)
+	d.Set("database_name", dbName)
 	d.Set("owner_type", udf.OwnerType)
 	d.Set("owner_name", udf.OwnerName)
 	d.Set("class_name", udf.ClassName)
 	if udf.CreateTime != nil {
-		d.Set(names.AttrCreateTime, udf.CreateTime.Format(time.RFC3339))
+		d.Set("create_time", udf.CreateTime.Format(time.RFC3339))
 	}
 	if err := d.Set("resource_uris", flattenUserDefinedFunctionResourceURI(udf.ResourceUris)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Glue User Defined Function (%s): setting resource_uris: %s", d.Id(), err)
@@ -226,7 +225,7 @@ func ReadUDFID(id string) (catalogID string, dbName string, funcName string, err
 func expandUserDefinedFunctionInput(d *schema.ResourceData) *glue.UserDefinedFunctionInput {
 	udf := &glue.UserDefinedFunctionInput{
 		ClassName:    aws.String(d.Get("class_name").(string)),
-		FunctionName: aws.String(d.Get(names.AttrName).(string)),
+		FunctionName: aws.String(d.Get("name").(string)),
 		OwnerName:    aws.String(d.Get("owner_name").(string)),
 		OwnerType:    aws.String(d.Get("owner_type").(string)),
 	}
@@ -249,8 +248,8 @@ func expandUserDefinedFunctionResourceURI(conf *schema.Set) []*glue.ResourceUri 
 		}
 
 		uri := &glue.ResourceUri{
-			ResourceType: aws.String(uriRaw[names.AttrResourceType].(string)),
-			Uri:          aws.String(uriRaw[names.AttrURI].(string)),
+			ResourceType: aws.String(uriRaw["resource_type"].(string)),
+			Uri:          aws.String(uriRaw["uri"].(string)),
 		}
 
 		result = append(result, uri)
@@ -264,8 +263,8 @@ func flattenUserDefinedFunctionResourceURI(uris []*glue.ResourceUri) []map[strin
 
 	for _, i := range uris {
 		l := map[string]interface{}{
-			names.AttrResourceType: aws.StringValue(i.ResourceType),
-			names.AttrURI:          aws.StringValue(i.Uri),
+			"resource_type": aws.StringValue(i.ResourceType),
+			"uri":           aws.StringValue(i.Uri),
 		}
 
 		result = append(result, l)

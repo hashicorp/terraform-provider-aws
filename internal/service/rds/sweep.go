@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -232,8 +231,8 @@ func sweepClusters(region string) error {
 			r := ResourceCluster()
 			d := r.Data(nil)
 			d.SetId(id)
-			d.Set(names.AttrApplyImmediately, true)
-			d.Set(names.AttrARN, arn)
+			d.Set("apply_immediately", true)
+			d.Set("arn", arn)
 			d.Set("delete_automated_backups", true)
 			d.Set("deletion_protection", false)
 			d.Set("skip_final_snapshot", true)
@@ -336,7 +335,7 @@ func sweepGlobalClusters(region string) error {
 			r := ResourceGlobalCluster()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.GlobalClusterIdentifier))
-			d.Set(names.AttrForceDestroy, true)
+			d.Set("force_destroy", true)
 			d.Set("global_cluster_members", flattenGlobalClusterMembers(v.GlobalClusterMembers))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
@@ -382,10 +381,10 @@ func sweepInstances(region string) error {
 			r := ResourceInstance()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.DbiResourceId))
-			d.Set(names.AttrApplyImmediately, true)
+			d.Set("apply_immediately", true)
 			d.Set("delete_automated_backups", true)
 			d.Set("deletion_protection", false)
-			d.Set(names.AttrIdentifier, v.DBInstanceIdentifier)
+			d.Set("identifier", v.DBInstanceIdentifier)
 			d.Set("skip_final_snapshot", true)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))

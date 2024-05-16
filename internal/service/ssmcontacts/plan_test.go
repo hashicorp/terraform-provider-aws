@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccPlan_basic(t *testing.T) {
+func testPlan_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -47,8 +47,8 @@ func testAccPlan_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, contactResourceName),
 					testAccCheckPlanExists(ctx, planResourceName),
-					resource.TestCheckResourceAttr(planResourceName, "stage.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(planResourceName, "stage.0.duration_in_minutes", acctest.Ct1),
+					resource.TestCheckResourceAttr(planResourceName, "stage.#", "1"),
+					resource.TestCheckResourceAttr(planResourceName, "stage.0.duration_in_minutes", "1"),
 					acctest.CheckResourceAttrRegionalARN(
 						planResourceName,
 						"contact_id",
@@ -73,7 +73,7 @@ func testAccPlan_basic(t *testing.T) {
 	})
 }
 
-func testAccPlan_disappears(t *testing.T) {
+func testPlan_disappears(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -105,7 +105,7 @@ func testAccPlan_disappears(t *testing.T) {
 	})
 }
 
-func testAccPlan_updateContactId(t *testing.T) {
+func testPlan_updateContactId(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -131,7 +131,7 @@ func testAccPlan_updateContactId(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, contactOneResourceName),
 					testAccCheckPlanExists(ctx, planResourceName),
-					resource.TestCheckTypeSetElemAttrPair(planResourceName, "contact_id", contactOneResourceName, names.AttrARN),
+					resource.TestCheckTypeSetElemAttrPair(planResourceName, "contact_id", contactOneResourceName, "arn"),
 				),
 			},
 			{
@@ -144,7 +144,7 @@ func testAccPlan_updateContactId(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, contactTwoResourceName),
 					testAccCheckPlanExists(ctx, planResourceName),
-					resource.TestCheckTypeSetElemAttrPair(planResourceName, "contact_id", contactTwoResourceName, names.AttrARN),
+					resource.TestCheckTypeSetElemAttrPair(planResourceName, "contact_id", contactTwoResourceName, "arn"),
 				),
 			},
 			{
@@ -156,7 +156,7 @@ func testAccPlan_updateContactId(t *testing.T) {
 	})
 }
 
-func testAccPlan_updateStages(t *testing.T) {
+func testPlan_updateStages(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -180,9 +180,9 @@ func testAccPlan_updateStages(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, contactResourceName),
 					testAccCheckPlanExists(ctx, planResourceName),
-					resource.TestCheckResourceAttr(planResourceName, "stage.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(planResourceName, "stage.0.duration_in_minutes", acctest.Ct1),
-					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(planResourceName, "stage.#", "1"),
+					resource.TestCheckResourceAttr(planResourceName, "stage.0.duration_in_minutes", "1"),
+					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", "0"),
 				),
 			},
 			{
@@ -195,11 +195,11 @@ func testAccPlan_updateStages(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, contactResourceName),
 					testAccCheckPlanExists(ctx, planResourceName),
-					resource.TestCheckResourceAttr(planResourceName, "stage.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(planResourceName, "stage.0.duration_in_minutes", acctest.Ct1),
-					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(planResourceName, "stage.1.duration_in_minutes", acctest.Ct2),
-					resource.TestCheckResourceAttr(planResourceName, "stage.1.target.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(planResourceName, "stage.#", "2"),
+					resource.TestCheckResourceAttr(planResourceName, "stage.0.duration_in_minutes", "1"),
+					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", "0"),
+					resource.TestCheckResourceAttr(planResourceName, "stage.1.duration_in_minutes", "2"),
+					resource.TestCheckResourceAttr(planResourceName, "stage.1.target.#", "0"),
 				),
 			},
 			{
@@ -212,9 +212,9 @@ func testAccPlan_updateStages(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, contactResourceName),
 					testAccCheckPlanExists(ctx, planResourceName),
-					resource.TestCheckResourceAttr(planResourceName, "stage.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(planResourceName, "stage.0.duration_in_minutes", acctest.Ct1),
-					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(planResourceName, "stage.#", "1"),
+					resource.TestCheckResourceAttr(planResourceName, "stage.0.duration_in_minutes", "1"),
+					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", "0"),
 				),
 			},
 			{
@@ -226,7 +226,7 @@ func testAccPlan_updateStages(t *testing.T) {
 	})
 }
 
-func testAccPlan_updateDurationInMinutes(t *testing.T) {
+func testPlan_updateDurationInMinutes(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -285,7 +285,7 @@ func testAccPlan_updateDurationInMinutes(t *testing.T) {
 	})
 }
 
-func testAccPlan_updateTargets(t *testing.T) {
+func testPlan_updateTargets(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -311,7 +311,7 @@ func testAccPlan_updateTargets(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, escalationPlanResourceName),
 					testAccCheckPlanExists(ctx, planResourceName),
-					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", "1"),
 					resource.TestCheckResourceAttr(
 						planResourceName,
 						"stage.0.target.0.contact_target_info.0.is_essential",
@@ -335,7 +335,7 @@ func testAccPlan_updateTargets(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, escalationPlanResourceName),
 					testAccCheckPlanExists(ctx, planResourceName),
-					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", "2"),
 					resource.TestCheckResourceAttr(
 						planResourceName,
 						"stage.0.target.0.contact_target_info.0.is_essential",
@@ -370,7 +370,7 @@ func testAccPlan_updateTargets(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, escalationPlanResourceName),
 					testAccCheckPlanExists(ctx, planResourceName),
-					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", "1"),
 					resource.TestCheckResourceAttr(
 						planResourceName,
 						"stage.0.target.0.contact_target_info.0.is_essential",
@@ -393,7 +393,7 @@ func testAccPlan_updateTargets(t *testing.T) {
 	})
 }
 
-func testAccPlan_updateContactTargetInfo(t *testing.T) {
+func testPlan_updateContactTargetInfo(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -419,7 +419,7 @@ func testAccPlan_updateContactTargetInfo(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, escalationPlanResourceName),
 					testAccCheckPlanExists(ctx, planResourceName),
-					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", "1"),
 					resource.TestCheckResourceAttr(
 						planResourceName,
 						"stage.0.target.0.contact_target_info.0.is_essential",
@@ -443,7 +443,7 @@ func testAccPlan_updateContactTargetInfo(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, escalationPlanResourceName),
 					testAccCheckPlanExists(ctx, planResourceName),
-					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", "1"),
 					resource.TestCheckResourceAttr(
 						planResourceName,
 						"stage.0.target.0.contact_target_info.0.is_essential",
@@ -466,7 +466,7 @@ func testAccPlan_updateContactTargetInfo(t *testing.T) {
 	})
 }
 
-func testAccPlan_updateChannelTargetInfo(t *testing.T) {
+func testPlan_updateChannelTargetInfo(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -499,12 +499,12 @@ func testAccPlan_updateChannelTargetInfo(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, escalationPlanResourceName),
 					testAccCheckPlanExists(ctx, planResourceName),
-					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", "1"),
 					resource.TestCheckResourceAttrPair(
 						planResourceName,
 						"stage.0.target.0.channel_target_info.0.contact_channel_id",
 						contactChannelOneResourceName,
-						names.AttrARN,
+						"arn",
 					),
 					resource.TestCheckResourceAttr(
 						planResourceName,
@@ -527,12 +527,12 @@ func testAccPlan_updateChannelTargetInfo(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, escalationPlanResourceName),
 					testAccCheckPlanExists(ctx, planResourceName),
-					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", "1"),
 					resource.TestCheckResourceAttrPair(
 						planResourceName,
 						"stage.0.target.0.channel_target_info.0.contact_channel_id",
 						contactChannelTwoResourceName,
-						names.AttrARN,
+						"arn",
 					),
 					resource.TestCheckResourceAttr(
 						planResourceName,

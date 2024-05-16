@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_iam_user_login_profile", name="User Login Profile")
@@ -74,7 +73,7 @@ func resourceUserLoginProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrPassword: {
+			"password": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -174,10 +173,10 @@ func resourceUserLoginProfileCreate(ctx context.Context, d *schema.ResourceData,
 		d.Set("key_fingerprint", fingerprint)
 		d.Set("encrypted_password", encrypted)
 	} else {
-		d.Set(names.AttrPassword, initialPassword)
+		d.Set("password", initialPassword)
 	}
 
-	return append(diags, resourceUserLoginProfileRead(ctx, d, meta)...)
+	return diags
 }
 
 func resourceUserLoginProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -224,7 +223,11 @@ func resourceUserLoginProfileRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading IAM User Login Profile (%s): empty response", d.Id())
 	}
 
-	d.Set("user", output.LoginProfile.UserName)
+	loginProfile := output.LoginProfile
+
+	d.Set("user", loginProfile.UserName)
+	d.Set("password_reset_required", loginProfile.PasswordResetRequired)
+
 	return diags
 }
 

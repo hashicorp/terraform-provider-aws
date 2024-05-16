@@ -28,8 +28,8 @@ func TestAccCloudControlResourceDataSource_basic(t *testing.T) {
 			{
 				Config: testAccResourceDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrProperties, resourceName, names.AttrProperties),
+					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "properties", resourceName, "properties"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "type_name", resourceName, "type_name"),
 				),
 			},

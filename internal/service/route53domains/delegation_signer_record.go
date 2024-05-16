@@ -55,7 +55,7 @@ func (r *delegationSignerRecordResource) Schema(ctx context.Context, request res
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"dnssec_key_id": framework.IDAttribute(),
-			names.AttrDomainName: schema.StringAttribute{
+			"domain_name": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -80,7 +80,7 @@ func (r *delegationSignerRecordResource) Schema(ctx context.Context, request res
 								int64planmodifier.RequiresReplace(),
 							},
 						},
-						names.AttrPublicKey: schema.StringAttribute{
+						"public_key": schema.StringAttribute{
 							Required: true,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
@@ -96,7 +96,7 @@ func (r *delegationSignerRecordResource) Schema(ctx context.Context, request res
 					listvalidator.SizeAtMost(1),
 				},
 			},
-			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+			"timeouts": timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Delete: true,
 			}),

@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_guardduty_publishing_destination")
@@ -45,12 +44,12 @@ func ResourcePublishingDestination() *schema.Resource {
 				Default:      guardduty.DestinationTypeS3,
 				ValidateFunc: validation.StringInSlice(guardduty.DestinationType_Values(), false),
 			},
-			names.AttrDestinationARN: {
+			"destination_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			names.AttrKMSKeyARN: {
+			"kms_key_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -67,8 +66,8 @@ func resourcePublishingDestinationCreate(ctx context.Context, d *schema.Resource
 	input := guardduty.CreatePublishingDestinationInput{
 		DetectorId: aws.String(detectorID),
 		DestinationProperties: &guardduty.DestinationProperties{
-			DestinationArn: aws.String(d.Get(names.AttrDestinationARN).(string)),
-			KmsKeyArn:      aws.String(d.Get(names.AttrKMSKeyARN).(string)),
+			DestinationArn: aws.String(d.Get("destination_arn").(string)),
+			KmsKeyArn:      aws.String(d.Get("kms_key_arn").(string)),
 		},
 		DestinationType: aws.String(d.Get("destination_type").(string)),
 	}
@@ -117,8 +116,8 @@ func resourcePublishingDestinationRead(ctx context.Context, d *schema.ResourceDa
 
 	d.Set("detector_id", detectorId)
 	d.Set("destination_type", gdo.DestinationType)
-	d.Set(names.AttrKMSKeyARN, gdo.DestinationProperties.KmsKeyArn)
-	d.Set(names.AttrDestinationARN, gdo.DestinationProperties.DestinationArn)
+	d.Set("kms_key_arn", gdo.DestinationProperties.KmsKeyArn)
+	d.Set("destination_arn", gdo.DestinationProperties.DestinationArn)
 	return diags
 }
 
@@ -136,8 +135,8 @@ func resourcePublishingDestinationUpdate(ctx context.Context, d *schema.Resource
 		DestinationId: aws.String(destinationId),
 		DetectorId:    aws.String(detectorId),
 		DestinationProperties: &guardduty.DestinationProperties{
-			DestinationArn: aws.String(d.Get(names.AttrDestinationARN).(string)),
-			KmsKeyArn:      aws.String(d.Get(names.AttrKMSKeyARN).(string)),
+			DestinationArn: aws.String(d.Get("destination_arn").(string)),
+			KmsKeyArn:      aws.String(d.Get("kms_key_arn").(string)),
 		},
 	}
 

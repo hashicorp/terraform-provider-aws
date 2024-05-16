@@ -16,8 +16,6 @@ data class ServiceSpec(
     val vpcLock: Boolean = false,
     val parallelismOverride: Int? = null,
     val regionOverride: String? = null,
-    val splitPackageRealPackage: String? = null,
-    val excludePattern: String? = null,
 )
 
 data class Notifier(
@@ -26,7 +24,7 @@ data class Notifier(
 )
 
 class Service(name: String, spec: ServiceSpec) {
-    private var packageName = name
+    val packageName = name
     val spec = spec
 
     fun buildType(notifier: Notifier?): BuildType {
@@ -54,14 +52,6 @@ class Service(name: String, spec: ServiceSpec) {
                 params {
                     text("env.AWS_DEFAULT_REGION", spec.regionOverride, display = ParameterDisplay.HIDDEN)
                 }
-            }
-            if (spec.excludePattern != null) {
-                params {
-                    text("TEST_EXCLUDE_PATTERN", spec.excludePattern, display = ParameterDisplay.HIDDEN)
-                }
-            }
-            if (spec.splitPackageRealPackage != null) {
-                packageName = spec.splitPackageRealPackage
             }
 
             val serviceDir = "./internal/service/$packageName"

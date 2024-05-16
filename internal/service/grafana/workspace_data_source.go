@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_grafana_workspace")
@@ -28,7 +27,7 @@ func DataSourceWorkspace() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -37,7 +36,7 @@ func DataSourceWorkspace() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrCreatedDate: {
+			"created_date": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -46,11 +45,11 @@ func DataSourceWorkspace() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrEndpoint: {
+			"endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -58,11 +57,11 @@ func DataSourceWorkspace() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrLastUpdatedDate: {
+			"last_updated_date": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -84,7 +83,7 @@ func DataSourceWorkspace() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrRoleARN: {
+			"role_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -96,11 +95,11 @@ func DataSourceWorkspace() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 			"workspace_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -131,25 +130,25 @@ func dataSourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta i
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("/workspaces/%s", d.Id()),
 	}.String()
-	d.Set(names.AttrARN, workspaceARN)
+	d.Set("arn", workspaceARN)
 	d.Set("authentication_providers", workspace.Authentication.Providers)
-	d.Set(names.AttrCreatedDate, workspace.Created.Format(time.RFC3339))
+	d.Set("created_date", workspace.Created.Format(time.RFC3339))
 	d.Set("data_sources", workspace.DataSources)
-	d.Set(names.AttrDescription, workspace.Description)
-	d.Set(names.AttrEndpoint, workspace.Endpoint)
+	d.Set("description", workspace.Description)
+	d.Set("endpoint", workspace.Endpoint)
 	d.Set("grafana_version", workspace.GrafanaVersion)
-	d.Set(names.AttrLastUpdatedDate, workspace.Modified.Format(time.RFC3339))
-	d.Set(names.AttrName, workspace.Name)
+	d.Set("last_updated_date", workspace.Modified.Format(time.RFC3339))
+	d.Set("name", workspace.Name)
 	d.Set("notification_destinations", workspace.NotificationDestinations)
 	d.Set("organization_role_name", workspace.OrganizationRoleName)
 	d.Set("organizational_units", workspace.OrganizationalUnits)
 	d.Set("permission_type", workspace.PermissionType)
-	d.Set(names.AttrRoleARN, workspace.WorkspaceRoleArn)
+	d.Set("role_arn", workspace.WorkspaceRoleArn)
 	d.Set("saml_configuration_status", workspace.Authentication.SamlConfigurationStatus)
 	d.Set("stack_set_name", workspace.StackSetName)
-	d.Set(names.AttrStatus, workspace.Status)
+	d.Set("status", workspace.Status)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, workspace.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, workspace.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

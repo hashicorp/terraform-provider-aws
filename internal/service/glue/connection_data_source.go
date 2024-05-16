@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_glue_connection")
@@ -25,16 +24,16 @@ func DataSourceConnection() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceConnectionRead,
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrID: {
+			"id": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
-			names.AttrCatalogID: {
+			"catalog_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -48,11 +47,11 @@ func DataSourceConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -68,7 +67,7 @@ func DataSourceConnection() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrAvailabilityZone: {
+						"availability_zone": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -77,14 +76,14 @@ func DataSourceConnection() *schema.Resource {
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						names.AttrSubnetID: {
+						"subnet_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -95,7 +94,7 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	id := d.Get(names.AttrID).(string)
+	id := d.Get("id").(string)
 	catalogID, connectionName, err := DecodeConnectionID(id)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "decoding Glue Connection %s: %s", id, err)
@@ -110,10 +109,10 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.SetId(id)
-	d.Set(names.AttrCatalogID, catalogID)
+	d.Set("catalog_id", catalogID)
 	d.Set("connection_type", connection.ConnectionType)
-	d.Set(names.AttrName, connection.Name)
-	d.Set(names.AttrDescription, connection.Description)
+	d.Set("name", connection.Name)
+	d.Set("description", connection.Description)
 
 	connectionArn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
@@ -122,7 +121,7 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("connection/%s", connectionName),
 	}.String()
-	d.Set(names.AttrARN, connectionArn)
+	d.Set("arn", connectionArn)
 
 	if err := d.Set("connection_properties", aws.StringValueMap(connection.ConnectionProperties)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting connection_properties: %s", err)
@@ -143,7 +142,7 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	//lintignore:AWSR002
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

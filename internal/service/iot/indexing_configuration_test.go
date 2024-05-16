@@ -15,7 +15,7 @@ func TestAccIoTIndexingConfiguration_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic: testAccIndexingConfiguration_basic,
+		"basic":         testAccIndexingConfiguration_basic,
 		"allAttributes": testAccIndexingConfiguration_allAttributes,
 	}
 
@@ -35,14 +35,14 @@ func testAccIndexingConfiguration_basic(t *testing.T) {
 			{
 				Config: testAccIndexingConfigurationConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "thing_group_indexing_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "thing_group_indexing_configuration.0.custom_field.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "thing_group_indexing_configuration.0.managed_field.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "thing_group_indexing_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "thing_group_indexing_configuration.0.custom_field.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "thing_group_indexing_configuration.0.managed_field.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "thing_group_indexing_configuration.0.thing_group_indexing_mode", "OFF"),
-					resource.TestCheckResourceAttr(resourceName, "thing_indexing_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "thing_indexing_configuration.0.custom_field.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "thing_indexing_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "thing_indexing_configuration.0.custom_field.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "thing_indexing_configuration.0.device_defender_indexing_mode", "OFF"),
-					resource.TestCheckResourceAttr(resourceName, "thing_indexing_configuration.0.managed_field.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "thing_indexing_configuration.0.managed_field.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "thing_indexing_configuration.0.named_shadow_indexing_mode", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, "thing_indexing_configuration.0.thing_connectivity_indexing_mode", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, "thing_indexing_configuration.0.thing_indexing_mode", "OFF"),
@@ -70,30 +70,30 @@ func testAccIndexingConfiguration_allAttributes(t *testing.T) {
 			{
 				Config: testAccIndexingConfigurationConfig_allAttributes,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "thing_group_indexing_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "thing_group_indexing_configuration.0.custom_field.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "thing_group_indexing_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "thing_group_indexing_configuration.0.custom_field.#", "0"),
 					acctest.CheckResourceAttrGreaterThanValue(resourceName, "thing_group_indexing_configuration.0.managed_field.#", 0),
 					resource.TestCheckResourceAttr(resourceName, "thing_group_indexing_configuration.0.thing_group_indexing_mode", "ON"),
-					resource.TestCheckResourceAttr(resourceName, "thing_indexing_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "thing_indexing_configuration.0.custom_field.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "thing_indexing_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "thing_indexing_configuration.0.custom_field.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "thing_indexing_configuration.0.custom_field.*", map[string]string{
-						names.AttrName: "attributes.version",
-						names.AttrType: "Number",
+						"name": "attributes.version",
+						"type": "Number",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "thing_indexing_configuration.0.custom_field.*", map[string]string{
-						names.AttrName: "shadow.name.thing1shadow.desired.DefaultDesired",
-						names.AttrType: "String",
+						"name": "shadow.name.thing1shadow.desired.DefaultDesired",
+						"type": "String",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "thing_indexing_configuration.0.custom_field.*", map[string]string{
-						names.AttrName: "deviceDefender.securityProfile1.NUMBER_VALUE_BEHAVIOR.lastViolationValue.number",
-						names.AttrType: "Number",
+						"name": "deviceDefender.securityProfile1.NUMBER_VALUE_BEHAVIOR.lastViolationValue.number",
+						"type": "Number",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "thing_indexing_configuration.0.device_defender_indexing_mode", "VIOLATIONS"),
 					acctest.CheckResourceAttrGreaterThanValue(resourceName, "thing_group_indexing_configuration.0.managed_field.#", 0),
 					resource.TestCheckResourceAttr(resourceName, "thing_indexing_configuration.0.named_shadow_indexing_mode", "ON"),
 					resource.TestCheckResourceAttr(resourceName, "thing_indexing_configuration.0.thing_connectivity_indexing_mode", "STATUS"),
 					resource.TestCheckResourceAttr(resourceName, "thing_indexing_configuration.0.thing_indexing_mode", "REGISTRY_AND_SHADOW"),
-					resource.TestCheckResourceAttr(resourceName, "thing_indexing_configuration.0.filter.0.named_shadow_names.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "thing_indexing_configuration.0.filter.0.named_shadow_names.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "thing_indexing_configuration.0.filter.0.named_shadow_names.*", "thing1shadow"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "thing_indexing_configuration.0.filter.0.named_shadow_names.*", "$package"),
 				),

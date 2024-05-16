@@ -38,50 +38,44 @@ func ResourceVPCDHCPOptions() *schema.Resource {
 		// Keep in sync with aws_default_vpc_dhcp_options' schema.
 		// See notes in vpc_default_vpc_dhcp_options.go.
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDomainName: {
+			"domain_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				AtLeastOneOf: []string{names.AttrDomainName, "domain_name_servers", "ipv6_address_preferred_lease_time", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
+				AtLeastOneOf: []string{"domain_name", "domain_name_servers", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
 			},
 			"domain_name_servers": {
 				Type:         schema.TypeList,
 				Optional:     true,
 				ForceNew:     true,
 				Elem:         &schema.Schema{Type: schema.TypeString},
-				AtLeastOneOf: []string{names.AttrDomainName, "domain_name_servers", "ipv6_address_preferred_lease_time", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
-			},
-			"ipv6_address_preferred_lease_time": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				AtLeastOneOf: []string{names.AttrDomainName, "domain_name_servers", "ipv6_address_preferred_lease_time", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
+				AtLeastOneOf: []string{"domain_name", "domain_name_servers", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
 			},
 			"netbios_name_servers": {
 				Type:         schema.TypeList,
 				Optional:     true,
 				ForceNew:     true,
 				Elem:         &schema.Schema{Type: schema.TypeString},
-				AtLeastOneOf: []string{names.AttrDomainName, "domain_name_servers", "ipv6_address_preferred_lease_time", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
+				AtLeastOneOf: []string{"domain_name", "domain_name_servers", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
 			},
 			"netbios_node_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				AtLeastOneOf: []string{names.AttrDomainName, "domain_name_servers", "ipv6_address_preferred_lease_time", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
+				AtLeastOneOf: []string{"domain_name", "domain_name_servers", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
 			},
 			"ntp_servers": {
 				Type:         schema.TypeList,
 				Optional:     true,
 				ForceNew:     true,
 				Elem:         &schema.Schema{Type: schema.TypeString},
-				AtLeastOneOf: []string{names.AttrDomainName, "domain_name_servers", "ipv6_address_preferred_lease_time", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
+				AtLeastOneOf: []string{"domain_name", "domain_name_servers", "netbios_name_servers", "netbios_node_type", "ntp_servers"},
 			},
-			names.AttrOwnerID: {
+			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -95,12 +89,11 @@ func ResourceVPCDHCPOptions() *schema.Resource {
 
 var (
 	optionsMap = newDHCPOptionsMap(map[string]string{
-		names.AttrDomainName:                "domain-name",
-		"domain_name_servers":               "domain-name-servers",
-		"ipv6_address_preferred_lease_time": "ipv6-address-preferred-lease-time",
-		"netbios_name_servers":              "netbios-name-servers",
-		"netbios_node_type":                 "netbios-node-type",
-		"ntp_servers":                       "ntp-servers",
+		"domain_name":          "domain-name",
+		"domain_name_servers":  "domain-name-servers",
+		"netbios_name_servers": "netbios-name-servers",
+		"netbios_node_type":    "netbios-node-type",
+		"ntp_servers":          "ntp-servers",
 	})
 )
 
@@ -158,8 +151,8 @@ func resourceVPCDHCPOptionsRead(ctx context.Context, d *schema.ResourceData, met
 		AccountID: ownerID,
 		Resource:  fmt.Sprintf("dhcp-options/%s", d.Id()),
 	}.String()
-	d.Set(names.AttrARN, arn)
-	d.Set(names.AttrOwnerID, ownerID)
+	d.Set("arn", arn)
+	d.Set("owner_id", ownerID)
 
 	err = optionsMap.dhcpConfigurationsToResourceData(opts.DhcpConfigurations, d)
 
@@ -221,7 +214,7 @@ func resourceVPCDHCPOptionsDelete(ctx context.Context, d *schema.ResourceData, m
 		return conn.DeleteDhcpOptionsWithContext(ctx, input)
 	}, errCodeDependencyViolation)
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidDHCPOptionsIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidDHCPOptionIDNotFound) {
 		return diags
 	}
 

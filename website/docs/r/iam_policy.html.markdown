@@ -53,7 +53,6 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN assigned by AWS to this policy.
-* `attachment_count` - Number of entities (users, groups, and roles) that the policy is attached to.
 * `id` - ARN assigned by AWS to this policy.
 * `policy_id` - Policy's ID.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

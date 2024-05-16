@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_connect_instance_storage_config")
@@ -27,12 +26,12 @@ func DataSourceInstanceStorageConfig() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
-			names.AttrInstanceID: {
+			"instance_id": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
-			names.AttrResourceType: {
+			"resource_type": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(connect.InstanceStorageResourceType_Values(), false),
@@ -59,7 +58,7 @@ func DataSourceInstanceStorageConfig() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrStreamARN: {
+									"stream_arn": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -80,14 +79,14 @@ func DataSourceInstanceStorageConfig() *schema.Resource {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												names.AttrKeyID: {
+												"key_id": {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
 											},
 										},
 									},
-									names.AttrPrefix: {
+									"prefix": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -103,11 +102,11 @@ func DataSourceInstanceStorageConfig() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrBucketName: {
+									"bucket_name": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									names.AttrBucketPrefix: {
+									"bucket_prefix": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -120,7 +119,7 @@ func DataSourceInstanceStorageConfig() *schema.Resource {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												names.AttrKeyID: {
+												"key_id": {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
@@ -130,7 +129,7 @@ func DataSourceInstanceStorageConfig() *schema.Resource {
 								},
 							},
 						},
-						names.AttrStorageType: {
+						"storage_type": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -147,8 +146,8 @@ func dataSourceInstanceStorageConfigRead(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	associationId := d.Get("association_id").(string)
-	instanceId := d.Get(names.AttrInstanceID).(string)
-	resourceType := d.Get(names.AttrResourceType).(string)
+	instanceId := d.Get("instance_id").(string)
+	resourceType := d.Get("resource_type").(string)
 
 	input := &connect.DescribeInstanceStorageConfigInput{
 		AssociationId: aws.String(associationId),

@@ -256,14 +256,17 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `containerProperties` - (Optional) A valid [container properties](http://docs.aws.amazon.com/batch/latest/APIReference/API_RegisterJobDefinition.html) provided as a single valid JSON document. This parameter is only valid if the `type` parameter is `container`.
+* `containerProperties` - (Optional) A valid [container properties](http://docs.aws.amazon.com/batch/latest/APIReference/API_RegisterJobDefinition.html)
+    provided as a single valid JSON document. This parameter is only valid if the `type` parameter is `container`.
 * `deregisterOnNewRevision` - (Optional) When updating a job definition a new revision is created. This parameter determines if the previous version is `deregistered` (`INACTIVE`) or left  `ACTIVE`. Defaults to `true`.
-* `nodeProperties` - (Optional) A valid [node properties](http://docs.aws.amazon.com/batch/latest/APIReference/API_RegisterJobDefinition.html) provided as a single valid JSON document. This parameter is required if the `type` parameter is `multinode`.
+* `nodeProperties` - (Optional) A valid [node properties](http://docs.aws.amazon.com/batch/latest/APIReference/API_RegisterJobDefinition.html)
+    provided as a single valid JSON document. This parameter is required if the `type` parameter is `multinode`.
 * `eksProperties` - (Optional) A valid [eks properties](#eks_properties). This parameter is only valid if the `type` parameter is `container`.
 * `parameters` - (Optional) Specifies the parameter substitution placeholders to set in the job definition.
 * `platformCapabilities` - (Optional) The platform capabilities required by the job definition. If no value is specified, it defaults to `EC2`. To run the job on Fargate resources, specify `FARGATE`.
 * `propagateTags` - (Optional) Specifies whether to propagate the tags from the job definition to the corresponding Amazon ECS task. Default is `false`.
-* `retryStrategy` - (Optional) Specifies the retry strategy to use for failed jobs that are submitted with this job definition. Maximum number of `retryStrategy` is `1`.  Defined below.
+* `retryStrategy` - (Optional) Specifies the retry strategy to use for failed jobs that are submitted with this job definition.
+    Maximum number of `retryStrategy` is `1`.  Defined below.
 * `schedulingPriority` - (Optional) The scheduling priority of the job definition. This only affects jobs in job queues with a fair share policy. Jobs with a higher scheduling priority are scheduled before jobs with a lower scheduling priority. Allowed values `0` through `9999`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `timeout` - (Optional) Specifies the timeout for jobs so that if a job runs longer, AWS Batch terminates the job. Maximum number of `timeout` is `1`. Defined below.
@@ -319,7 +322,7 @@ The following arguments are optional:
 
 #### `evaluateOnExit`
 
-* `action` - (Required) Specifies the action to take if all of the specified conditions are met. The values are not case sensitive. Valid values: `retry`, `exit`.
+* `action` - (Required) Specifies the action to take if all of the specified conditions are met. The values are not case sensitive. Valid values: `RETRY`, `EXIT`.
 * `onExitCode` - (Optional) A glob pattern to match against the decimal representation of the exit code returned for a job.
 * `onReason` - (Optional) A glob pattern to match against the reason returned for a job.
 * `onStatusReason` - (Optional) A glob pattern to match against the status reason returned for a job.
@@ -369,4 +372,4 @@ Using `terraform import`, import Batch Job Definition using the `arn`. For examp
 % terraform import aws_batch_job_definition.test arn:aws:batch:us-east-1:123456789012:job-definition/sample
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-a601dba3c095da075f0b1e61565a10ccc796a5a15ab0385930fcb09cf34abb8c -->
+<!-- cache-key: cdktf-0.20.1 input-bd9147ef7f6fa35db163f0270a06f4b1163f2e6f23072ece378070600f017a0e -->

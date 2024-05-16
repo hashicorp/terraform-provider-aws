@@ -20,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_redshift_authentication_profile", name="Authentication Profile")
-func resourceAuthenticationProfile() *schema.Resource {
+// @SDKResource("aws_redshift_authentication_profile")
+func ResourceAuthenticationProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAuthenticationProfileCreate,
 		ReadWithoutTimeout:   resourceAuthenticationProfileRead,
@@ -78,8 +78,7 @@ func resourceAuthenticationProfileRead(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	out, err := findAuthenticationProfileByID(ctx, conn, d.Id())
-
+	out, err := FindAuthenticationProfileByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Authentication Profile (%s) not found, removing from state", d.Id())
 		d.SetId("")

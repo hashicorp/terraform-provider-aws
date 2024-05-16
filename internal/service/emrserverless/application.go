@@ -51,7 +51,7 @@ func resourceApplication() *schema.Resource {
 				Default:          types.ArchitectureX8664,
 				ValidateDiagFunc: enum.Validate[types.Architecture](),
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -62,7 +62,7 @@ func resourceApplication() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
+						"enabled": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  true,
@@ -77,7 +77,7 @@ func resourceApplication() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
+						"enabled": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  true,
@@ -179,26 +179,26 @@ func resourceApplication() *schema.Resource {
 					},
 				},
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 64),
 			},
-			names.AttrNetworkConfiguration: {
+			"network_configuration": {
 				Type:             schema.TypeList,
 				Optional:         true,
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				MaxItems:         1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrSecurityGroupIDs: {
+						"security_group_ids": {
 							Type:     schema.TypeSet,
 							Optional: true,
 							ForceNew: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						names.AttrSubnetIDs: {
+						"subnet_ids": {
 							Type:     schema.TypeSet,
 							Optional: true,
 							ForceNew: true,
@@ -213,7 +213,7 @@ func resourceApplication() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrType: {
+			"type": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -229,13 +229,13 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRServerlessClient(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &emrserverless.CreateApplicationInput{
 		ClientToken:  aws.String(id.UniqueId()),
 		ReleaseLabel: aws.String(d.Get("release_label").(string)),
 		Name:         aws.String(name),
 		Tags:         getTagsIn(ctx),
-		Type:         aws.String(d.Get(names.AttrType).(string)),
+		Type:         aws.String(d.Get("type").(string)),
 	}
 
 	if v, ok := d.GetOk("architecture"); ok {
@@ -262,7 +262,7 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.MaximumCapacity = expandMaximumCapacity(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk(names.AttrNetworkConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk("network_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.NetworkConfiguration = expandNetworkConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -298,10 +298,10 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.Set("architecture", application.Architecture)
-	d.Set(names.AttrARN, application.Arn)
-	d.Set(names.AttrName, application.Name)
+	d.Set("arn", application.Arn)
+	d.Set("name", application.Name)
 	d.Set("release_label", application.ReleaseLabel)
-	d.Set(names.AttrType, strings.ToLower(aws.ToString(application.Type)))
+	d.Set("type", strings.ToLower(aws.ToString(application.Type)))
 
 	if err := d.Set("auto_start_configuration", []interface{}{flattenAutoStartConfig(application.AutoStartConfiguration)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting auto_start_configuration: %s", err)
@@ -323,7 +323,7 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting maximum_capacity: %s", err)
 	}
 
-	if err := d.Set(names.AttrNetworkConfiguration, []interface{}{flattenNetworkConfiguration(application.NetworkConfiguration)}); err != nil {
+	if err := d.Set("network_configuration", []interface{}{flattenNetworkConfiguration(application.NetworkConfiguration)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting network_configuration: %s", err)
 	}
 
@@ -336,7 +336,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRServerlessClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &emrserverless.UpdateApplicationInput{
 			ApplicationId: aws.String(d.Id()),
 			ClientToken:   aws.String(id.UniqueId()),
@@ -366,7 +366,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 			input.MaximumCapacity = expandMaximumCapacity(v.([]interface{})[0].(map[string]interface{}))
 		}
 
-		if v, ok := d.GetOk(names.AttrNetworkConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if v, ok := d.GetOk("network_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input.NetworkConfiguration = expandNetworkConfiguration(v.([]interface{})[0].(map[string]interface{}))
 		}
 
@@ -516,7 +516,7 @@ func expandAutoStartConfig(tfMap map[string]interface{}) *types.AutoStartConfig 
 
 	apiObject := &types.AutoStartConfig{}
 
-	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
+	if v, ok := tfMap["enabled"].(bool); ok {
 		apiObject.Enabled = aws.Bool(v)
 	}
 
@@ -531,7 +531,7 @@ func flattenAutoStartConfig(apiObject *types.AutoStartConfig) map[string]interfa
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Enabled; v != nil {
-		tfMap[names.AttrEnabled] = aws.ToBool(v)
+		tfMap["enabled"] = aws.ToBool(v)
 	}
 
 	return tfMap
@@ -544,7 +544,7 @@ func expandAutoStopConfig(tfMap map[string]interface{}) *types.AutoStopConfig {
 
 	apiObject := &types.AutoStopConfig{}
 
-	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
+	if v, ok := tfMap["enabled"].(bool); ok {
 		apiObject.Enabled = aws.Bool(v)
 	}
 
@@ -563,7 +563,7 @@ func flattenAutoStopConfig(apiObject *types.AutoStopConfig) map[string]interface
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Enabled; v != nil {
-		tfMap[names.AttrEnabled] = aws.ToBool(v)
+		tfMap["enabled"] = aws.ToBool(v)
 	}
 
 	if v := apiObject.IdleTimeoutMinutes; v != nil {
@@ -624,11 +624,11 @@ func expandNetworkConfiguration(tfMap map[string]interface{}) *types.NetworkConf
 
 	apiObject := &types.NetworkConfiguration{}
 
-	if v, ok := tfMap[names.AttrSecurityGroupIDs].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SecurityGroupIds = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := tfMap[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap["subnet_ids"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SubnetIds = flex.ExpandStringValueSet(v)
 	}
 
@@ -643,11 +643,11 @@ func flattenNetworkConfiguration(apiObject *types.NetworkConfiguration) map[stri
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.SecurityGroupIds; v != nil {
-		tfMap[names.AttrSecurityGroupIDs] = flex.FlattenStringValueSet(v)
+		tfMap["security_group_ids"] = flex.FlattenStringValueSet(v)
 	}
 
 	if v := apiObject.SubnetIds; v != nil {
-		tfMap[names.AttrSubnetIDs] = flex.FlattenStringValueSet(v)
+		tfMap["subnet_ids"] = flex.FlattenStringValueSet(v)
 	}
 
 	return tfMap

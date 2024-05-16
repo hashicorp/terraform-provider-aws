@@ -9,7 +9,6 @@ import (
 	"log"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -23,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -47,7 +45,7 @@ func ResourceDeployment() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9a-z]{4,7}`), ""),
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -73,7 +71,7 @@ func ResourceDeployment() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`(^[0-9a-z]{4,7}$|^AppConfig\.[0-9A-Za-z]{9,40}$)`), ""),
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -85,7 +83,7 @@ func ResourceDeployment() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9a-z]{4,7}`), ""),
 			},
-			names.AttrKMSKeyARN: {
+			"kms_key_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -97,7 +95,7 @@ func ResourceDeployment() *schema.Resource {
 					verify.ValidARN,
 					validation.StringLenBetween(1, 256)),
 			},
-			names.AttrState: {
+			"state": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -118,7 +116,7 @@ func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta 
 		ConfigurationProfileId: aws.String(d.Get("configuration_profile_id").(string)),
 		ConfigurationVersion:   aws.String(d.Get("configuration_version").(string)),
 		DeploymentStrategyId:   aws.String(d.Get("deployment_strategy_id").(string)),
-		Description:            aws.String(d.Get(names.AttrDescription).(string)),
+		Description:            aws.String(d.Get("description").(string)),
 		Tags:                   getTagsIn(ctx),
 	}
 
@@ -126,18 +124,16 @@ func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.KmsKeyIdentifier = aws.String(v.(string))
 	}
 
-	const (
-		timeout = 30 * time.Minute // AWS SDK for Go v1 compatibility.
-	)
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, timeout, func() (interface{}, error) {
-		return conn.StartDeployment(ctx, input)
-	})
+	output, err := conn.StartDeployment(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "starting AppConfig Deployment: %s", err)
 	}
 
-	output := outputRaw.(*appconfig.StartDeploymentOutput)
+	if output == nil {
+		return sdkdiag.AppendErrorf(diags, "starting AppConfig Deployment: empty response")
+	}
+
 	appID := aws.ToString(output.ApplicationId)
 	envID := aws.ToString(output.EnvironmentId)
 
@@ -158,7 +154,7 @@ func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	input := &appconfig.GetDeploymentInput{
 		ApplicationId:    aws.String(appID),
-		DeploymentNumber: aws.Int32(deploymentNum),
+		DeploymentNumber: aws.Int32(int32(deploymentNum)),
 		EnvironmentId:    aws.String(envID),
 	}
 
@@ -187,16 +183,16 @@ func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta in
 	}.String()
 
 	d.Set("application_id", output.ApplicationId)
-	d.Set(names.AttrARN, arn)
+	d.Set("arn", arn)
 	d.Set("configuration_profile_id", output.ConfigurationProfileId)
 	d.Set("configuration_version", output.ConfigurationVersion)
 	d.Set("deployment_number", output.DeploymentNumber)
 	d.Set("deployment_strategy_id", output.DeploymentStrategyId)
-	d.Set(names.AttrDescription, output.Description)
+	d.Set("description", output.Description)
 	d.Set("environment_id", output.EnvironmentId)
-	d.Set(names.AttrKMSKeyARN, output.KmsKeyArn)
+	d.Set("kms_key_arn", output.KmsKeyArn)
 	d.Set("kms_key_identifier", output.KmsKeyIdentifier)
-	d.Set(names.AttrState, output.State)
+	d.Set("state", output.State)
 
 	return diags
 }
@@ -215,17 +211,17 @@ func resourceDeploymentDelete(ctx context.Context, _ *schema.ResourceData, _ int
 	return diags
 }
 
-func DeploymentParseID(id string) (string, string, int32, error) {
+func DeploymentParseID(id string) (string, string, int, error) {
 	parts := strings.Split(id, "/")
 
 	if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
 		return "", "", 0, fmt.Errorf("unexpected format of ID (%q), expected ApplicationID:EnvironmentID:DeploymentNumber", id)
 	}
 
-	num, err := strconv.ParseInt(parts[2], 0, 32)
+	num, err := strconv.Atoi(parts[2])
 	if err != nil {
 		return "", "", 0, fmt.Errorf("parsing AppConfig Deployment resource ID deployment_number: %w", err)
 	}
 
-	return parts[0], parts[1], int32(num), nil
+	return parts[0], parts[1], num, nil
 }

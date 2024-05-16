@@ -66,7 +66,7 @@ func ResourceDevice() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -90,7 +90,7 @@ func ResourceDevice() *schema.Resource {
 					},
 				},
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
@@ -106,7 +106,7 @@ func ResourceDevice() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrAddress: {
+						"address": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(0, 256),
@@ -140,7 +140,7 @@ func ResourceDevice() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrType: {
+			"type": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
@@ -165,7 +165,7 @@ func resourceDeviceCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		Tags:            getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -189,7 +189,7 @@ func resourceDeviceCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.SiteId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrType); ok {
+	if v, ok := d.GetOk("type"); ok {
 		input.Type = aws.String(v.(string))
 	}
 
@@ -231,7 +231,7 @@ func resourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading Network Manager Device (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, device.DeviceArn)
+	d.Set("arn", device.DeviceArn)
 	if device.AWSLocation != nil {
 		if err := d.Set("aws_location", []interface{}{flattenAWSLocation(device.AWSLocation)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting aws_location: %s", err)
@@ -239,7 +239,7 @@ func resourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta interf
 	} else {
 		d.Set("aws_location", nil)
 	}
-	d.Set(names.AttrDescription, device.Description)
+	d.Set("description", device.Description)
 	d.Set("global_network_id", device.GlobalNetworkId)
 	if device.Location != nil {
 		if err := d.Set("location", []interface{}{flattenLocation(device.Location)}); err != nil {
@@ -251,7 +251,7 @@ func resourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("model", device.Model)
 	d.Set("serial_number", device.SerialNumber)
 	d.Set("site_id", device.SiteId)
-	d.Set(names.AttrType, device.Type)
+	d.Set("type", device.Type)
 	d.Set("vendor", device.Vendor)
 
 	setTagsOut(ctx, device.Tags)
@@ -264,16 +264,16 @@ func resourceDeviceUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		globalNetworkID := d.Get("global_network_id").(string)
 		input := &networkmanager.UpdateDeviceInput{
-			Description:     aws.String(d.Get(names.AttrDescription).(string)),
+			Description:     aws.String(d.Get("description").(string)),
 			DeviceId:        aws.String(d.Id()),
 			GlobalNetworkId: aws.String(globalNetworkID),
 			Model:           aws.String(d.Get("model").(string)),
 			SerialNumber:    aws.String(d.Get("serial_number").(string)),
 			SiteId:          aws.String(d.Get("site_id").(string)),
-			Type:            aws.String(d.Get(names.AttrType).(string)),
+			Type:            aws.String(d.Get("type").(string)),
 			Vendor:          aws.String(d.Get("vendor").(string)),
 		}
 

@@ -43,7 +43,7 @@ func TestAccDynamoDBResourcePolicy_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"confirm_remove_self_resource_access", names.AttrPolicy},
+				ImportStateVerifyIgnore: []string{"confirm_remove_self_resource_access", "policy"},
 			},
 		},
 	})
@@ -72,12 +72,12 @@ func TestAccDynamoDBResourcePolicy_update(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"confirm_remove_self_resource_access", names.AttrPolicy},
+				ImportStateVerifyIgnore: []string{"confirm_remove_self_resource_access", "policy"},
 			},
 			{
 				Config: testAccResourcePolicyConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`.*GetItem.*`)),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(`.*GetItem.*`)),
 				),
 			},
 		},

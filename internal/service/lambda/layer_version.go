@@ -10,29 +10,26 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
-	"github.com/aws/aws-sdk-go-v2/service/lambda"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
+	"github.com/aws/aws-sdk-go/aws"
+	arn2 "github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const mutexLayerKey = `aws_lambda_layer_version`
 
-// @SDKResource("aws_lambda_layer_version", name="Layer Version")
-func resourceLayerVersion() *schema.Resource {
+// @SDKResource("aws_lambda_layer_version")
+func ResourceLayerVersion() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceLayerVersionCreate,
+		CreateWithoutTimeout: resourceLayerVersionPublish,
 		ReadWithoutTimeout:   resourceLayerVersionRead,
 		DeleteWithoutTimeout: resourceLayerVersionDelete,
 
@@ -41,7 +38,7 @@ func resourceLayerVersion() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -51,8 +48,8 @@ func resourceLayerVersion() *schema.Resource {
 				ForceNew: true,
 				MaxItems: 2,
 				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[awstypes.Architecture](),
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(lambda.Architecture_Values(), false),
 				},
 			},
 			"compatible_runtimes": {
@@ -62,15 +59,15 @@ func resourceLayerVersion() *schema.Resource {
 				MinItems: 0,
 				MaxItems: 15,
 				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[awstypes.Runtime](),
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(lambda.Runtime_Values(), false),
 				},
 			},
-			names.AttrCreatedDate: {
+			"created_date": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -79,7 +76,7 @@ func resourceLayerVersion() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{names.AttrS3Bucket, "s3_key", "s3_object_version"},
+				ConflictsWith: []string{"s3_bucket", "s3_key", "s3_object_version"},
 			},
 			"layer_arn": {
 				Type:     schema.TypeString,
@@ -96,7 +93,7 @@ func resourceLayerVersion() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(0, 512),
 			},
-			names.AttrS3Bucket: {
+			"s3_bucket": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
@@ -122,7 +119,7 @@ func resourceLayerVersion() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrSkipDestroy: {
+			"skip_destroy": {
 				Type:     schema.TypeBool,
 				Default:  false,
 				ForceNew: true,
@@ -138,7 +135,7 @@ func resourceLayerVersion() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			names.AttrVersion: {
+			"version": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -146,13 +143,13 @@ func resourceLayerVersion() *schema.Resource {
 	}
 }
 
-func resourceLayerVersionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceLayerVersionPublish(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
 	layerName := d.Get("layer_name").(string)
 	filename, hasFilename := d.GetOk("filename")
-	s3Bucket, bucketOk := d.GetOk(names.AttrS3Bucket)
+	s3Bucket, bucketOk := d.GetOk("s3_bucket")
 	s3Key, keyOk := d.GetOk("s3_key")
 	s3ObjectVersion, versionOk := d.GetOk("s3_object_version")
 
@@ -160,24 +157,22 @@ func resourceLayerVersionCreate(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "filename or s3_* attributes must be set")
 	}
 
-	var layerContent *awstypes.LayerVersionContentInput
+	var layerContent *lambda.LayerVersionContentInput
 	if hasFilename {
 		conns.GlobalMutexKV.Lock(mutexLayerKey)
 		defer conns.GlobalMutexKV.Unlock(mutexLayerKey)
-
 		file, err := readFileContents(filename.(string))
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading ZIP file (%s): %s", filename, err)
+			return sdkdiag.AppendErrorf(diags, "Unable to load %q: %s", filename.(string), err)
 		}
-
-		layerContent = &awstypes.LayerVersionContentInput{
+		layerContent = &lambda.LayerVersionContentInput{
 			ZipFile: file,
 		}
 	} else {
 		if !bucketOk || !keyOk {
 			return sdkdiag.AppendErrorf(diags, "s3_bucket and s3_key must all be set while using s3 code source")
 		}
-		layerContent = &awstypes.LayerVersionContentInput{
+		layerContent = &lambda.LayerVersionContentInput{
 			S3Bucket: aws.String(s3Bucket.(string)),
 			S3Key:    aws.String(s3Key.(string)),
 		}
@@ -186,42 +181,42 @@ func resourceLayerVersionCreate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	input := &lambda.PublishLayerVersionInput{
+	params := &lambda.PublishLayerVersionInput{
 		Content:     layerContent,
-		Description: aws.String(d.Get(names.AttrDescription).(string)),
+		Description: aws.String(d.Get("description").(string)),
 		LayerName:   aws.String(layerName),
 		LicenseInfo: aws.String(d.Get("license_info").(string)),
 	}
 
-	if v, ok := d.GetOk("compatible_architectures"); ok && v.(*schema.Set).Len() > 0 {
-		input.CompatibleArchitectures = flex.ExpandStringyValueSet[awstypes.Architecture](v.(*schema.Set))
-	}
-
 	if v, ok := d.GetOk("compatible_runtimes"); ok && v.(*schema.Set).Len() > 0 {
-		input.CompatibleRuntimes = flex.ExpandStringyValueSet[awstypes.Runtime](v.(*schema.Set))
+		params.CompatibleRuntimes = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	output, err := conn.PublishLayerVersion(ctx, input)
+	if v, ok := d.GetOk("compatible_architectures"); ok && v.(*schema.Set).Len() > 0 {
+		params.CompatibleArchitectures = flex.ExpandStringSet(v.(*schema.Set))
+	}
 
+	log.Printf("[DEBUG] Publishing Lambda layer: %s", params)
+	result, err := conn.PublishLayerVersionWithContext(ctx, params)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "publishing Lambda Layer (%s) Version: %s", layerName, err)
+		return sdkdiag.AppendErrorf(diags, "creating lambda layer: %s", err)
 	}
 
-	d.SetId(aws.ToString(output.LayerVersionArn))
+	d.SetId(aws.StringValue(result.LayerVersionArn))
 
 	return append(diags, resourceLayerVersionRead(ctx, d, meta)...)
 }
 
 func resourceLayerVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
-	layerName, versionNumber, err := layerVersionParseResourceID(d.Id())
+	layerName, versionNumber, err := LayerVersionParseID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	output, err := findLayerVersionByTwoPartKey(ctx, conn, layerName, versionNumber)
+	output, err := FindLayerVersionByTwoPartKey(ctx, conn, layerName, versionNumber)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Lambda Layer Version %s not found, removing from state", d.Id())
@@ -233,11 +228,11 @@ func resourceLayerVersionRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading Lambda Layer Version (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, output.LayerVersionArn)
-	d.Set("compatible_architectures", output.CompatibleArchitectures)
-	d.Set("compatible_runtimes", output.CompatibleRuntimes)
-	d.Set(names.AttrCreatedDate, output.CreatedDate)
-	d.Set(names.AttrDescription, output.Description)
+	d.Set("arn", output.LayerVersionArn)
+	d.Set("compatible_architectures", aws.StringValueSlice(output.CompatibleArchitectures))
+	d.Set("compatible_runtimes", aws.StringValueSlice(output.CompatibleRuntimes))
+	d.Set("created_date", output.CreatedDate)
+	d.Set("description", output.Description)
 	d.Set("layer_arn", output.LayerArn)
 	d.Set("layer_name", layerName)
 	d.Set("license_info", output.LicenseInfo)
@@ -245,27 +240,26 @@ func resourceLayerVersionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("signing_profile_version_arn", output.Content.SigningProfileVersionArn)
 	d.Set("source_code_hash", output.Content.CodeSha256)
 	d.Set("source_code_size", output.Content.CodeSize)
-	d.Set(names.AttrVersion, strconv.FormatInt(versionNumber, 10))
+	d.Set("version", strconv.FormatInt(versionNumber, 10))
 
 	return diags
 }
 
 func resourceLayerVersionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
-	if d.Get(names.AttrSkipDestroy).(bool) {
+	if d.Get("skip_destroy").(bool) {
 		log.Printf("[DEBUG] Retaining Lambda Layer Version %q", d.Id())
 		return diags
 	}
 
-	layerName, versionNumber, err := layerVersionParseResourceID(d.Id())
+	layerName, versionNumber, err := LayerVersionParseID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	log.Printf("[INFO] Deleting Lambda Layer Version: %s", d.Id())
-	_, err = conn.DeleteLayerVersion(ctx, &lambda.DeleteLayerVersionInput{
+	_, err = conn.DeleteLayerVersionWithContext(ctx, &lambda.DeleteLayerVersionInput{
 		LayerName:     aws.String(layerName),
 		VersionNumber: aws.Int64(versionNumber),
 	})
@@ -277,35 +271,15 @@ func resourceLayerVersionDelete(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func layerVersionParseResourceID(id string) (layerName string, version int64, err error) {
-	v, err := arn.Parse(id)
-	if err != nil {
-		return
-	}
-	parts := strings.Split(v.Resource, ":")
-	if len(parts) != 3 || parts[0] != "layer" {
-		err = fmt.Errorf("lambda_layer ID must be a valid Layer ARN")
-		return
-	}
-
-	layerName = parts[1]
-	version, err = strconv.ParseInt(parts[2], 10, 64)
-	return
-}
-
-func findLayerVersionByTwoPartKey(ctx context.Context, conn *lambda.Client, layerName string, versionNumber int64) (*lambda.GetLayerVersionOutput, error) {
+func FindLayerVersionByTwoPartKey(ctx context.Context, conn *lambda.Lambda, layerName string, versionNumber int64) (*lambda.GetLayerVersionOutput, error) {
 	input := &lambda.GetLayerVersionInput{
 		LayerName:     aws.String(layerName),
 		VersionNumber: aws.Int64(versionNumber),
 	}
 
-	return findLayerVersion(ctx, conn, input)
-}
+	output, err := conn.GetLayerVersionWithContext(ctx, input)
 
-func findLayerVersion(ctx context.Context, conn *lambda.Client, input *lambda.GetLayerVersionInput) (*lambda.GetLayerVersionOutput, error) {
-	output, err := conn.GetLayerVersion(ctx, input)
-
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+	if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -321,4 +295,20 @@ func findLayerVersion(ctx context.Context, conn *lambda.Client, input *lambda.Ge
 	}
 
 	return output, nil
+}
+
+func LayerVersionParseID(id string) (layerName string, version int64, err error) {
+	arn, err := arn2.Parse(id)
+	if err != nil {
+		return
+	}
+	parts := strings.Split(arn.Resource, ":")
+	if len(parts) != 3 || parts[0] != "layer" {
+		err = fmt.Errorf("lambda_layer ID must be a valid Layer ARN")
+		return
+	}
+
+	layerName = parts[1]
+	version, err = strconv.ParseInt(parts[2], 10, 64)
+	return
 }

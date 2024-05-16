@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_appsync_type")
@@ -38,11 +37,11 @@ func ResourceType() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -50,12 +49,12 @@ func ResourceType() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrFormat: {
+			"format": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(appsync.TypeDefinitionFormat_Values(), false),
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -72,7 +71,7 @@ func resourceTypeCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	params := &appsync.CreateTypeInput{
 		ApiId:      aws.String(apiID),
 		Definition: aws.String(d.Get("definition").(string)),
-		Format:     aws.String(d.Get(names.AttrFormat).(string)),
+		Format:     aws.String(d.Get("format").(string)),
 	}
 
 	out, err := conn.CreateTypeWithContext(ctx, params)
@@ -106,11 +105,11 @@ func resourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	d.Set("api_id", apiID)
-	d.Set(names.AttrARN, resp.Arn)
-	d.Set(names.AttrName, resp.Name)
-	d.Set(names.AttrFormat, resp.Format)
+	d.Set("arn", resp.Arn)
+	d.Set("name", resp.Name)
+	d.Set("format", resp.Format)
 	d.Set("definition", resp.Definition)
-	d.Set(names.AttrDescription, resp.Description)
+	d.Set("description", resp.Description)
 
 	return diags
 }
@@ -121,8 +120,8 @@ func resourceTypeUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	params := &appsync.UpdateTypeInput{
 		ApiId:      aws.String(d.Get("api_id").(string)),
-		Format:     aws.String(d.Get(names.AttrFormat).(string)),
-		TypeName:   aws.String(d.Get(names.AttrName).(string)),
+		Format:     aws.String(d.Get("format").(string)),
+		TypeName:   aws.String(d.Get("name").(string)),
 		Definition: aws.String(d.Get("definition").(string)),
 	}
 
@@ -140,7 +139,7 @@ func resourceTypeDelete(ctx context.Context, d *schema.ResourceData, meta interf
 
 	input := &appsync.DeleteTypeInput{
 		ApiId:    aws.String(d.Get("api_id").(string)),
-		TypeName: aws.String(d.Get(names.AttrName).(string)),
+		TypeName: aws.String(d.Get("name").(string)),
 	}
 	_, err := conn.DeleteTypeWithContext(ctx, input)
 	if err != nil {

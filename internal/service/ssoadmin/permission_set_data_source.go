@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ssoadmin_permission_set")
@@ -27,18 +26,18 @@ func DataSourcePermissionSet() *schema.Resource {
 		ReadWithoutTimeout: dataSourcePermissionSetRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: verify.ValidARN,
-				ExactlyOneOf: []string{names.AttrARN, names.AttrName},
+				ExactlyOneOf: []string{"arn", "name"},
 			},
-			names.AttrCreatedDate: {
+			"created_date": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -47,7 +46,7 @@ func DataSourcePermissionSet() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -55,7 +54,7 @@ func DataSourcePermissionSet() *schema.Resource {
 					validation.StringLenBetween(1, 32),
 					validation.StringMatch(regexache.MustCompile(`[\w+=,.@-]+`), "must match [\\w+=,.@-]"),
 				),
-				ExactlyOneOf: []string{names.AttrName, names.AttrARN},
+				ExactlyOneOf: []string{"name", "arn"},
 			},
 			"relay_state": {
 				Type:     schema.TypeString,
@@ -65,7 +64,7 @@ func DataSourcePermissionSet() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -79,7 +78,7 @@ func dataSourcePermissionSetRead(ctx context.Context, d *schema.ResourceData, me
 
 	var permissionSet *awstypes.PermissionSet
 
-	if v, ok := d.GetOk(names.AttrARN); ok {
+	if v, ok := d.GetOk("arn"); ok {
 		arn := v.(string)
 
 		input := &ssoadmin.DescribePermissionSetInput{
@@ -97,7 +96,7 @@ func dataSourcePermissionSetRead(ctx context.Context, d *schema.ResourceData, me
 		}
 
 		permissionSet = output.PermissionSet
-	} else if v, ok := d.GetOk(names.AttrName); ok {
+	} else if v, ok := d.GetOk("name"); ok {
 		name := v.(string)
 
 		input := &ssoadmin.ListPermissionSetsInput{
@@ -143,11 +142,11 @@ func dataSourcePermissionSetRead(ctx context.Context, d *schema.ResourceData, me
 	arn := aws.ToString(permissionSet.PermissionSetArn)
 
 	d.SetId(arn)
-	d.Set(names.AttrARN, arn)
-	d.Set(names.AttrCreatedDate, permissionSet.CreatedDate.Format(time.RFC3339))
-	d.Set(names.AttrDescription, permissionSet.Description)
+	d.Set("arn", arn)
+	d.Set("created_date", permissionSet.CreatedDate.Format(time.RFC3339))
+	d.Set("description", permissionSet.Description)
 	d.Set("instance_arn", instanceArn)
-	d.Set(names.AttrName, permissionSet.Name)
+	d.Set("name", permissionSet.Name)
 	d.Set("session_duration", permissionSet.SessionDuration)
 	d.Set("relay_state", permissionSet.RelayState)
 
@@ -156,7 +155,7 @@ func dataSourcePermissionSetRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "listing tags for SSO Permission Set (%s): %s", arn, err)
 	}
 
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

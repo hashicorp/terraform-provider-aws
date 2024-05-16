@@ -7,6 +7,9 @@ import (
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	cloudfront_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudfront"
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	cloudfront_sdkv1 "github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -21,12 +24,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newContinuousDeploymentPolicyResource,
-			Name:    "Continuous Deployment Policy",
-		},
-		{
 			Factory: newKeyValueStoreResource,
 			Name:    "Key Value Store",
+		},
+		{
+			Factory: newResourceContinuousDeploymentPolicy,
+			Name:    "Continuous Deployment Policy",
 		},
 	}
 }
@@ -34,17 +37,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceCachePolicy,
+			Factory:  DataSourceCachePolicy,
 			TypeName: "aws_cloudfront_cache_policy",
-			Name:     "Cache Policy",
 		},
 		{
-			Factory:  dataSourceDistribution,
+			Factory:  DataSourceDistribution,
 			TypeName: "aws_cloudfront_distribution",
-			Name:     "Distribution",
-			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			},
 		},
 		{
 			Factory:  dataSourceFunction,
@@ -52,34 +50,28 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Function",
 		},
 		{
-			Factory:  dataSourceLogDeliveryCanonicalUserID,
+			Factory:  DataSourceLogDeliveryCanonicalUserID,
 			TypeName: "aws_cloudfront_log_delivery_canonical_user_id",
-			Name:     "Log Delivery Canonical User ID",
 		},
 		{
-			Factory:  dataSourceOriginAccessIdentities,
+			Factory:  DataSourceOriginAccessIdentities,
 			TypeName: "aws_cloudfront_origin_access_identities",
-			Name:     "Origin Access Identities",
 		},
 		{
-			Factory:  dataSourceOriginAccessIdentity,
+			Factory:  DataSourceOriginAccessIdentity,
 			TypeName: "aws_cloudfront_origin_access_identity",
-			Name:     "Origin Access Identity",
 		},
 		{
-			Factory:  dataSourceOriginRequestPolicy,
+			Factory:  DataSourceOriginRequestPolicy,
 			TypeName: "aws_cloudfront_origin_request_policy",
-			Name:     "Origin Request Policy",
 		},
 		{
-			Factory:  dataSourceRealtimeLogConfig,
+			Factory:  DataSourceRealtimeLogConfig,
 			TypeName: "aws_cloudfront_realtime_log_config",
-			Name:     "Real-time Log Config",
 		},
 		{
-			Factory:  dataSourceResponseHeadersPolicy,
+			Factory:  DataSourceResponseHeadersPolicy,
 			TypeName: "aws_cloudfront_response_headers_policy",
-			Name:     "Response Headers Policy",
 		},
 	}
 }
@@ -87,27 +79,24 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  resourceCachePolicy,
+			Factory:  ResourceCachePolicy,
 			TypeName: "aws_cloudfront_cache_policy",
-			Name:     "Cache Policy",
 		},
 		{
-			Factory:  resourceDistribution,
+			Factory:  ResourceDistribution,
 			TypeName: "aws_cloudfront_distribution",
 			Name:     "Distribution",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "arn",
 			},
 		},
 		{
-			Factory:  resourceFieldLevelEncryptionConfig,
+			Factory:  ResourceFieldLevelEncryptionConfig,
 			TypeName: "aws_cloudfront_field_level_encryption_config",
-			Name:     "Field-level Encryption Config",
 		},
 		{
-			Factory:  resourceFieldLevelEncryptionProfile,
+			Factory:  ResourceFieldLevelEncryptionProfile,
 			TypeName: "aws_cloudfront_field_level_encryption_profile",
-			Name:     "Field-level Encryption Profile",
 		},
 		{
 			Factory:  resourceFunction,
@@ -115,44 +104,36 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Function",
 		},
 		{
-			Factory:  resourceKeyGroup,
+			Factory:  ResourceKeyGroup,
 			TypeName: "aws_cloudfront_key_group",
-			Name:     "Key Group",
 		},
 		{
-			Factory:  resourceMonitoringSubscription,
+			Factory:  ResourceMonitoringSubscription,
 			TypeName: "aws_cloudfront_monitoring_subscription",
-			Name:     "Monitoring Subscription",
 		},
 		{
-			Factory:  resourceOriginAccessControl,
+			Factory:  ResourceOriginAccessControl,
 			TypeName: "aws_cloudfront_origin_access_control",
-			Name:     "Origin Access Control",
 		},
 		{
-			Factory:  resourceOriginAccessIdentity,
+			Factory:  ResourceOriginAccessIdentity,
 			TypeName: "aws_cloudfront_origin_access_identity",
-			Name:     "Origin Access Identity",
 		},
 		{
-			Factory:  resourceOriginRequestPolicy,
+			Factory:  ResourceOriginRequestPolicy,
 			TypeName: "aws_cloudfront_origin_request_policy",
-			Name:     "Origin Request Policy",
 		},
 		{
-			Factory:  resourcePublicKey,
+			Factory:  ResourcePublicKey,
 			TypeName: "aws_cloudfront_public_key",
-			Name:     "Public Key",
 		},
 		{
-			Factory:  resourceRealtimeLogConfig,
+			Factory:  ResourceRealtimeLogConfig,
 			TypeName: "aws_cloudfront_realtime_log_config",
-			Name:     "Real-time Log Config",
 		},
 		{
-			Factory:  resourceResponseHeadersPolicy,
+			Factory:  ResourceResponseHeadersPolicy,
 			TypeName: "aws_cloudfront_response_headers_policy",
-			Name:     "Response Headers Policy",
 		},
 	}
 }
@@ -161,12 +142,19 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.CloudFront
 }
 
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
+func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*cloudfront_sdkv1.CloudFront, error) {
+	sess := config["session"].(*session_sdkv1.Session)
+
+	return cloudfront_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+}
+
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*cloudfront_sdkv2.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
 	return cloudfront_sdkv2.NewFromConfig(cfg, func(o *cloudfront_sdkv2.Options) {
-		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
+		if endpoint := config["endpoint"].(string); endpoint != "" {
 			o.BaseEndpoint = aws_sdkv2.String(endpoint)
 		}
 	}), nil

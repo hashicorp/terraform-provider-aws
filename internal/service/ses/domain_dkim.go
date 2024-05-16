@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ses_domain_dkim")
@@ -27,7 +26,7 @@ func ResourceDomainDKIM() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrDomain: {
+			"domain": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -45,7 +44,7 @@ func resourceDomainDKIMCreate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
-	domainName := d.Get(names.AttrDomain).(string)
+	domainName := d.Get("domain").(string)
 
 	createOpts := &ses.VerifyDomainDkimInput{
 		Domain: aws.String(domainName),
@@ -66,7 +65,7 @@ func resourceDomainDKIMRead(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	domainName := d.Id()
-	d.Set(names.AttrDomain, domainName)
+	d.Set("domain", domainName)
 
 	readOpts := &ses.GetIdentityDkimAttributesInput{
 		Identities: []*string{

@@ -14,15 +14,15 @@ func TestAccGlue_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"DataCatalogEncryptionSettings": {
-			acctest.CtBasic: testAccDataCatalogEncryptionSettings_basic,
-			"dataSource":    testAccDataCatalogEncryptionSettingsDataSource_basic,
+			"basic":      testAccDataCatalogEncryptionSettings_basic,
+			"dataSource": testAccDataCatalogEncryptionSettingsDataSource_basic,
 		},
 		"ResourcePolicy": {
-			acctest.CtBasic: testAccResourcePolicy_basic,
-			"update":        testAccResourcePolicy_update,
-			"hybrid":        testAccResourcePolicy_hybrid,
-			"disappears":    testAccResourcePolicy_disappears,
-			"equivalent":    testAccResourcePolicy_ignoreEquivalent,
+			"basic":      testAccResourcePolicy_basic,
+			"update":     testAccResourcePolicy_update,
+			"hybrid":     testAccResourcePolicy_hybrid,
+			"disappears": testAccResourcePolicy_disappears,
+			"equivalent": testAccResourcePolicy_ignoreEquivalent,
 		},
 	}
 

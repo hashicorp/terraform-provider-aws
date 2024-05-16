@@ -42,7 +42,7 @@ func ResourceSourceRepository() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -54,7 +54,7 @@ func ResourceSourceRepository() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -72,18 +72,18 @@ func resourceSourceRepositoryCreate(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).CodeCatalystClient(ctx)
 
 	in := &codecatalyst.CreateSourceRepositoryInput{
-		Name:        aws.String(d.Get(names.AttrName).(string)),
+		Name:        aws.String(d.Get("name").(string)),
 		ProjectName: aws.String(d.Get("project_name").(string)),
 		SpaceName:   aws.String(d.Get("space_name").(string)),
 	}
 
 	out, err := conn.CreateSourceRepository(ctx, in)
 	if err != nil {
-		return create.AppendDiagError(diags, names.CodeCatalyst, create.ErrActionCreating, ResNameSourceRepository, d.Get(names.AttrName).(string), err)
+		return create.AppendDiagError(diags, names.CodeCatalyst, create.ErrActionCreating, ResNameSourceRepository, d.Get("name").(string), err)
 	}
 
 	if out == nil || out.Name == nil {
-		return create.AppendDiagError(diags, names.CodeCatalyst, create.ErrActionCreating, ResNameSourceRepository, d.Get(names.AttrName).(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.CodeCatalyst, create.ErrActionCreating, ResNameSourceRepository, d.Get("name").(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.Name))
@@ -110,10 +110,10 @@ func resourceSourceRepositoryRead(ctx context.Context, d *schema.ResourceData, m
 		return create.AppendDiagError(diags, names.CodeCatalyst, create.ErrActionReading, ResNameSourceRepository, d.Id(), err)
 	}
 
-	d.Set(names.AttrName, out.Name)
+	d.Set("name", out.Name)
 	d.Set("project_name", out.ProjectName)
 	d.Set("space_name", out.SpaceName)
-	d.Set(names.AttrDescription, out.Description)
+	d.Set("description", out.Description)
 
 	return diags
 }

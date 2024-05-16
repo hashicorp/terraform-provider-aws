@@ -41,9 +41,9 @@ var routeTableValidTargets = []string{
 	"gateway_id",
 	"local_gateway_id",
 	"nat_gateway_id",
-	names.AttrNetworkInterfaceID,
-	names.AttrTransitGatewayID,
-	names.AttrVPCEndpointID,
+	"network_interface_id",
+	"transit_gateway_id",
+	"vpc_endpoint_id",
 	"vpc_peering_connection_id",
 }
 
@@ -67,11 +67,11 @@ func resourceRouteTable() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrOwnerID: {
+			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -132,15 +132,15 @@ func resourceRouteTable() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						names.AttrNetworkInterfaceID: {
+						"network_interface_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						names.AttrTransitGatewayID: {
+						"transit_gateway_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						names.AttrVPCEndpointID: {
+						"vpc_endpoint_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -154,7 +154,7 @@ func resourceRouteTable() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVPCID: {
+			"vpc_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -172,7 +172,7 @@ func resourceRouteTableCreate(ctx context.Context, d *schema.ResourceData, meta 
 	input := &ec2.CreateRouteTableInput{
 		ClientToken:       aws.String(id.UniqueId()),
 		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeRouteTable),
-		VpcId:             aws.String(d.Get(names.AttrVPCID).(string)),
+		VpcId:             aws.String(d.Get("vpc_id").(string)),
 	}
 
 	output, err := conn.CreateRouteTableWithContext(ctx, input)
@@ -237,8 +237,8 @@ func resourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta in
 		AccountID: ownerID,
 		Resource:  fmt.Sprintf("route-table/%s", d.Id()),
 	}.String()
-	d.Set(names.AttrARN, arn)
-	d.Set(names.AttrOwnerID, ownerID)
+	d.Set("arn", arn)
+	d.Set("owner_id", ownerID)
 	propagatingVGWs := make([]string, 0, len(routeTable.PropagatingVgws))
 	for _, v := range routeTable.PropagatingVgws {
 		propagatingVGWs = append(propagatingVGWs, aws.StringValue(v.GatewayId))
@@ -249,7 +249,7 @@ func resourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta in
 	if err := d.Set("route", flattenRoutes(ctx, conn, d, routeTable.Routes)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting route: %s", err)
 	}
-	d.Set(names.AttrVPCID, routeTable.VpcId)
+	d.Set("vpc_id", routeTable.VpcId)
 
 	// Ignore the AmazonFSx service tag in addition to standard ignores.
 	setTagsOut(ctx, Tags(KeyValueTags(ctx, routeTable.Tags).Ignore(tftags.New(ctx, []string{"AmazonFSx"}))))
@@ -432,7 +432,7 @@ func resourceRouteTableHash(v interface{}) int {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 
-	if v, ok := m[names.AttrTransitGatewayID]; ok {
+	if v, ok := m["transit_gateway_id"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 
@@ -440,7 +440,7 @@ func resourceRouteTableHash(v interface{}) int {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 
-	if v, ok := m[names.AttrVPCEndpointID]; ok {
+	if v, ok := m["vpc_endpoint_id"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 
@@ -448,7 +448,7 @@ func resourceRouteTableHash(v interface{}) int {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 
-	if v, ok := m[names.AttrNetworkInterfaceID]; ok && !natGatewaySet {
+	if v, ok := m["network_interface_id"]; ok && !natGatewaySet {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 
@@ -694,15 +694,15 @@ func expandCreateRouteInput(tfMap map[string]interface{}) *ec2.CreateRouteInput 
 		apiObject.NatGatewayId = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrNetworkInterfaceID].(string); ok && v != "" {
+	if v, ok := tfMap["network_interface_id"].(string); ok && v != "" {
 		apiObject.NetworkInterfaceId = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrTransitGatewayID].(string); ok && v != "" {
+	if v, ok := tfMap["transit_gateway_id"].(string); ok && v != "" {
 		apiObject.TransitGatewayId = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrVPCEndpointID].(string); ok && v != "" {
+	if v, ok := tfMap["vpc_endpoint_id"].(string); ok && v != "" {
 		apiObject.VpcEndpointId = aws.String(v)
 	}
 
@@ -760,15 +760,15 @@ func expandReplaceRouteInput(tfMap map[string]interface{}) *ec2.ReplaceRouteInpu
 		apiObject.NatGatewayId = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrNetworkInterfaceID].(string); ok && v != "" {
+	if v, ok := tfMap["network_interface_id"].(string); ok && v != "" {
 		apiObject.NetworkInterfaceId = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrTransitGatewayID].(string); ok && v != "" {
+	if v, ok := tfMap["transit_gateway_id"].(string); ok && v != "" {
 		apiObject.TransitGatewayId = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrVPCEndpointID].(string); ok && v != "" {
+	if v, ok := tfMap["vpc_endpoint_id"].(string); ok && v != "" {
 		apiObject.VpcEndpointId = aws.String(v)
 	}
 
@@ -812,7 +812,7 @@ func flattenRoute(apiObject *ec2.Route) map[string]interface{} {
 
 	if v := apiObject.GatewayId; v != nil {
 		if strings.HasPrefix(aws.StringValue(v), "vpce-") {
-			tfMap[names.AttrVPCEndpointID] = aws.StringValue(v)
+			tfMap["vpc_endpoint_id"] = aws.StringValue(v)
 		} else {
 			tfMap["gateway_id"] = aws.StringValue(v)
 		}
@@ -827,11 +827,11 @@ func flattenRoute(apiObject *ec2.Route) map[string]interface{} {
 	}
 
 	if v := apiObject.NetworkInterfaceId; v != nil {
-		tfMap[names.AttrNetworkInterfaceID] = aws.StringValue(v)
+		tfMap["network_interface_id"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.TransitGatewayId; v != nil {
-		tfMap[names.AttrTransitGatewayID] = aws.StringValue(v)
+		tfMap["transit_gateway_id"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.VpcPeeringConnectionId; v != nil {

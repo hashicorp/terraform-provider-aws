@@ -10,8 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -31,12 +31,12 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			names.AttrApplyImmediately: {
+			"apply_immediately": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -53,7 +53,7 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 				ValidateFunc:  validReplicationGroupAuthToken,
 				ConflictsWith: []string{"user_group_ids"},
 			},
-			names.AttrAutoMinorVersionUpgrade: {
+			"auto_minor_version_upgrade": {
 				Type:         nullable.TypeNullableBool,
 				Optional:     true,
 				Computed:     true,
@@ -78,7 +78,7 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -91,7 +91,7 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 				Default:      engineRedis,
 				ValidateFunc: validation.StringInSlice([]string{engineRedis}, true),
 			},
-			names.AttrEngineVersion: {
+			"engine_version": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -110,7 +110,7 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 					"num_node_groups",
 					"parameter_group_name",
 					"engine",
-					names.AttrEngineVersion,
+					"engine_version",
 					"node_type",
 					"security_group_names",
 					"transit_encryption_enabled",
@@ -136,7 +136,7 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(elasticache.DestinationType_Values(), false),
 						},
-						names.AttrDestination: {
+						"destination": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -211,7 +211,7 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 					return strings.HasPrefix(old, "global-datastore-")
 				},
 			},
-			names.AttrPort: {
+			"port": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				ForceNew: true,
@@ -258,7 +258,7 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			names.AttrSecurityGroupIDs: {
+			"security_group_ids": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -316,7 +316,7 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 				Set:           schema.HashString,
 				ConflictsWith: []string{"auth_token"},
 			},
-			names.AttrKMSKeyID: {
+			"kms_key_id": {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,

@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_secretsmanager_secret_rotation", name="Secret Rotation")
@@ -72,12 +71,12 @@ func resourceSecretRotation() *schema.Resource {
 							ExactlyOneOf:  []string{"rotation_rules.0.automatically_after_days", "rotation_rules.0.schedule_expression"},
 							ValidateFunc:  validation.IntBetween(1, 1000),
 						},
-						names.AttrDuration: {
+						"duration": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9h]+`), ""),
 						},
-						names.AttrScheduleExpression: {
+						"schedule_expression": {
 							Type:          schema.TypeString,
 							Optional:      true,
 							ConflictsWith: []string{"rotation_rules.0.automatically_after_days"},
@@ -216,11 +215,11 @@ func expandRotationRules(l []interface{}) *types.RotationRulesType {
 		rules.AutomaticallyAfterDays = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap[names.AttrDuration].(string); ok && v != "" {
+	if v, ok := tfMap["duration"].(string); ok && v != "" {
 		rules.Duration = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrScheduleExpression].(string); ok && v != "" {
+	if v, ok := tfMap["schedule_expression"].(string); ok && v != "" {
 		rules.ScheduleExpression = aws.String(v)
 	}
 
@@ -240,11 +239,11 @@ func flattenRotationRules(rules *types.RotationRulesType) []interface{} {
 	}
 
 	if v := rules.Duration; v != nil {
-		m[names.AttrDuration] = aws.ToString(v)
+		m["duration"] = aws.ToString(v)
 	}
 
 	if v := rules.ScheduleExpression; v != nil {
-		m[names.AttrScheduleExpression] = aws.ToString(v)
+		m["schedule_expression"] = aws.ToString(v)
 	}
 
 	return []interface{}{m}

@@ -12,12 +12,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource
 func newDataSourceCallerIdentity(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceCallerIdentity{}
+	d.SetMigratedFromPluginSDK(true)
 
 	return d, nil
 }
@@ -36,13 +36,13 @@ func (d *dataSourceCallerIdentity) Metadata(_ context.Context, request datasourc
 func (d *dataSourceCallerIdentity) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrAccountID: schema.StringAttribute{
+			"account_id": schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrARN: schema.StringAttribute{
+			"arn": schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrID: schema.StringAttribute{
+			"id": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},

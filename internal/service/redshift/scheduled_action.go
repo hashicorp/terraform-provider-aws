@@ -18,11 +18,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_redshift_scheduled_action", name="Scheduled Action")
-func resourceScheduledAction() *schema.Resource {
+// @SDKResource("aws_redshift_scheduled_action")
+func ResourceScheduledAction() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceScheduledActionCreate,
 		ReadWithoutTimeout:   resourceScheduledActionRead,
@@ -34,7 +33,7 @@ func resourceScheduledAction() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -52,17 +51,17 @@ func resourceScheduledAction() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9a-z-]{1,63}$`), ""),
 			},
-			names.AttrSchedule: {
+			"schedule": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrStartTime: {
+			"start_time": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.IsRFC3339Time,
@@ -79,7 +78,7 @@ func resourceScheduledAction() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrClusterIdentifier: {
+									"cluster_identifier": {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -102,7 +101,7 @@ func resourceScheduledAction() *schema.Resource {
 										Optional: true,
 										Default:  false,
 									},
-									names.AttrClusterIdentifier: {
+									"cluster_identifier": {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -132,7 +131,7 @@ func resourceScheduledAction() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrClusterIdentifier: {
+									"cluster_identifier": {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -155,16 +154,16 @@ func resourceScheduledActionCreate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &redshift.CreateScheduledActionInput{
 		Enable:              aws.Bool(d.Get("enable").(bool)),
 		IamRole:             aws.String(d.Get("iam_role").(string)),
-		Schedule:            aws.String(d.Get(names.AttrSchedule).(string)),
+		Schedule:            aws.String(d.Get("schedule").(string)),
 		ScheduledActionName: aws.String(name),
 		TargetAction:        expandScheduledActionType(d.Get("target_action").([]interface{})[0].(map[string]interface{})),
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.ScheduledActionDescription = aws.String(v.(string))
 	}
 
@@ -174,7 +173,7 @@ func resourceScheduledActionCreate(ctx context.Context, d *schema.ResourceData, 
 		input.EndTime = aws.Time(t)
 	}
 
-	if v, ok := d.GetOk(names.AttrStartTime); ok {
+	if v, ok := d.GetOk("start_time"); ok {
 		t, _ := time.Parse(time.RFC3339, v.(string))
 
 		input.StartTime = aws.Time(t)
@@ -207,7 +206,7 @@ func resourceScheduledActionRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	scheduledAction, err := findScheduledActionByName(ctx, conn, d.Id())
+	scheduledAction, err := FindScheduledActionByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Scheduled Action (%s) not found, removing from state", d.Id())
@@ -219,7 +218,7 @@ func resourceScheduledActionRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "reading Redshift Scheduled Action (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrDescription, scheduledAction.ScheduledActionDescription)
+	d.Set("description", scheduledAction.ScheduledActionDescription)
 	if aws.StringValue(scheduledAction.State) == redshift.ScheduledActionStateActive {
 		d.Set("enable", true)
 	} else {
@@ -231,12 +230,12 @@ func resourceScheduledActionRead(ctx context.Context, d *schema.ResourceData, me
 		d.Set("end_time", nil)
 	}
 	d.Set("iam_role", scheduledAction.IamRole)
-	d.Set(names.AttrName, scheduledAction.ScheduledActionName)
-	d.Set(names.AttrSchedule, scheduledAction.Schedule)
+	d.Set("name", scheduledAction.ScheduledActionName)
+	d.Set("schedule", scheduledAction.Schedule)
 	if scheduledAction.StartTime != nil {
-		d.Set(names.AttrStartTime, aws.TimeValue(scheduledAction.StartTime).Format(time.RFC3339))
+		d.Set("start_time", aws.TimeValue(scheduledAction.StartTime).Format(time.RFC3339))
 	} else {
-		d.Set(names.AttrStartTime, nil)
+		d.Set("start_time", nil)
 	}
 
 	if scheduledAction.TargetAction != nil {
@@ -255,11 +254,11 @@ func resourceScheduledActionUpdate(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	input := &redshift.ModifyScheduledActionInput{
-		ScheduledActionName: aws.String(d.Get(names.AttrName).(string)),
+		ScheduledActionName: aws.String(d.Get("name").(string)),
 	}
 
-	if d.HasChange(names.AttrDescription) {
-		input.ScheduledActionDescription = aws.String(d.Get(names.AttrDescription).(string))
+	if d.HasChange("description") {
+		input.ScheduledActionDescription = aws.String(d.Get("description").(string))
 	}
 
 	if d.HasChange("enable") {
@@ -276,11 +275,11 @@ func resourceScheduledActionUpdate(ctx context.Context, d *schema.ResourceData, 
 		input.IamRole = aws.String(d.Get("iam_role").(string))
 	}
 
-	if d.HasChange(names.AttrSchedule) {
-		input.Schedule = aws.String(d.Get(names.AttrSchedule).(string))
+	if d.HasChange("schedule") {
+		input.Schedule = aws.String(d.Get("schedule").(string))
 	}
 
-	if hasChange, v := d.HasChange(names.AttrStartTime), d.Get(names.AttrStartTime).(string); hasChange && v != "" {
+	if hasChange, v := d.HasChange("start_time"), d.Get("start_time").(string); hasChange && v != "" {
 		t, _ := time.Parse(time.RFC3339, v)
 
 		input.StartTime = aws.Time(t)
@@ -349,7 +348,7 @@ func expandPauseClusterMessage(tfMap map[string]interface{}) *redshift.PauseClus
 
 	apiObject := &redshift.PauseClusterMessage{}
 
-	if v, ok := tfMap[names.AttrClusterIdentifier].(string); ok && v != "" {
+	if v, ok := tfMap["cluster_identifier"].(string); ok && v != "" {
 		apiObject.ClusterIdentifier = aws.String(v)
 	}
 
@@ -367,7 +366,7 @@ func expandResizeClusterMessage(tfMap map[string]interface{}) *redshift.ResizeCl
 		apiObject.Classic = aws.Bool(v)
 	}
 
-	if v, ok := tfMap[names.AttrClusterIdentifier].(string); ok && v != "" {
+	if v, ok := tfMap["cluster_identifier"].(string); ok && v != "" {
 		apiObject.ClusterIdentifier = aws.String(v)
 	}
 
@@ -393,7 +392,7 @@ func expandResumeClusterMessage(tfMap map[string]interface{}) *redshift.ResumeCl
 
 	apiObject := &redshift.ResumeClusterMessage{}
 
-	if v, ok := tfMap[names.AttrClusterIdentifier].(string); ok && v != "" {
+	if v, ok := tfMap["cluster_identifier"].(string); ok && v != "" {
 		apiObject.ClusterIdentifier = aws.String(v)
 	}
 
@@ -430,7 +429,7 @@ func flattenPauseClusterMessage(apiObject *redshift.PauseClusterMessage) map[str
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.ClusterIdentifier; v != nil {
-		tfMap[names.AttrClusterIdentifier] = aws.StringValue(v)
+		tfMap["cluster_identifier"] = aws.StringValue(v)
 	}
 
 	return tfMap
@@ -448,7 +447,7 @@ func flattenResizeClusterMessage(apiObject *redshift.ResizeClusterMessage) map[s
 	}
 
 	if v := apiObject.ClusterIdentifier; v != nil {
-		tfMap[names.AttrClusterIdentifier] = aws.StringValue(v)
+		tfMap["cluster_identifier"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.ClusterType; v != nil {
@@ -474,7 +473,7 @@ func flattenResumeClusterMessage(apiObject *redshift.ResumeClusterMessage) map[s
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.ClusterIdentifier; v != nil {
-		tfMap[names.AttrClusterIdentifier] = aws.StringValue(v)
+		tfMap["cluster_identifier"] = aws.StringValue(v)
 	}
 
 	return tfMap

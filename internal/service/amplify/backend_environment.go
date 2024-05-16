@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_amplify_backend_environment", name="Backend Environment")
@@ -41,7 +40,7 @@ func resourceBackendEnvironment() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -123,7 +122,7 @@ func resourceBackendEnvironmentRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	d.Set("app_id", appID)
-	d.Set(names.AttrARN, backendEnvironment.BackendEnvironmentArn)
+	d.Set("arn", backendEnvironment.BackendEnvironmentArn)
 	d.Set("deployment_artifacts", backendEnvironment.DeploymentArtifacts)
 	d.Set("environment_name", backendEnvironment.EnvironmentName)
 	d.Set("stack_name", backendEnvironment.StackName)

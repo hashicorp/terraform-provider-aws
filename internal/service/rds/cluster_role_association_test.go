@@ -38,9 +38,9 @@ func TestAccRDSClusterRoleAssociation_basic(t *testing.T) {
 				Config: testAccClusterRoleAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterRoleAssociationExists(ctx, resourceName, &dbClusterRole),
-					resource.TestCheckResourceAttrPair(resourceName, "db_cluster_identifier", dbClusterResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "db_cluster_identifier", dbClusterResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "feature_name", "s3Import"),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamRoleResourceName, "arn"),
 				),
 			},
 			{

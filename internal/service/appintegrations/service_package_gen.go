@@ -5,8 +5,9 @@ package appintegrations
 import (
 	"context"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	appintegrations_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appintegrations"
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	appintegrationsservice_sdkv1 "github.com/aws/aws-sdk-go/service/appintegrationsservice"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -39,7 +40,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_appintegrations_data_integration",
 			Name:     "Data Integration",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "arn",
 			},
 		},
 		{
@@ -47,7 +48,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_appintegrations_event_integration",
 			Name:     "Event Integration",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "arn",
 			},
 		},
 	}
@@ -57,15 +58,11 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.AppIntegrations
 }
 
-// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*appintegrations_sdkv2.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
+func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*appintegrationsservice_sdkv1.AppIntegrationsService, error) {
+	sess := config["session"].(*session_sdkv1.Session)
 
-	return appintegrations_sdkv2.NewFromConfig(cfg, func(o *appintegrations_sdkv2.Options) {
-		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
-			o.BaseEndpoint = aws_sdkv2.String(endpoint)
-		}
-	}), nil
+	return appintegrationsservice_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

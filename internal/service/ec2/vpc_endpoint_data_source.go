@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_vpc_endpoint")
@@ -31,7 +30,7 @@ func DataSourceVPCEndpoint() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -45,11 +44,11 @@ func DataSourceVPCEndpoint() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrDNSName: {
+						"dns_name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrHostedZoneID: {
+						"hosted_zone_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -72,13 +71,13 @@ func DataSourceVPCEndpoint() *schema.Resource {
 					},
 				},
 			},
-			names.AttrFilter: customFiltersSchema(),
-			names.AttrID: {
+			"filter": customFiltersSchema(),
+			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			names.AttrIPAddressType: {
+			"ip_address_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -87,11 +86,11 @@ func DataSourceVPCEndpoint() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrOwnerID: {
+			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrPolicy: {
+			"policy": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -112,32 +111,32 @@ func DataSourceVPCEndpoint() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrSecurityGroupIDs: {
+			"security_group_ids": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrServiceName: {
+			"service_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			names.AttrState: {
+			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			names.AttrSubnetIDs: {
+			"subnet_ids": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 			"vpc_endpoint_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrVPCID: {
+			"vpc_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -154,22 +153,22 @@ func dataSourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 	input := &ec2.DescribeVpcEndpointsInput{
 		Filters: newAttributeFilterList(
 			map[string]string{
-				"vpc-endpoint-state": d.Get(names.AttrState).(string),
-				"vpc-id":             d.Get(names.AttrVPCID).(string),
-				"service-name":       d.Get(names.AttrServiceName).(string),
+				"vpc-endpoint-state": d.Get("state").(string),
+				"vpc-id":             d.Get("vpc_id").(string),
+				"service-name":       d.Get("service_name").(string),
 			},
 		),
 	}
 
-	if v, ok := d.GetOk(names.AttrID); ok {
+	if v, ok := d.GetOk("id"); ok {
 		input.VpcEndpointIds = aws.StringSlice([]string{v.(string)})
 	}
 
 	input.Filters = append(input.Filters, newTagFilterList(
-		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
+		Tags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
 	)...)
 	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get(names.AttrFilter).(*schema.Set),
+		d.Get("filter").(*schema.Set),
 	)...)
 	if len(input.Filters) == 0 {
 		// Don't send an empty filters list; the EC2 API won't accept it.
@@ -193,7 +192,7 @@ func dataSourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 	}.String()
 	serviceName := aws.StringValue(vpce.ServiceName)
 
-	d.Set(names.AttrARN, arn)
+	d.Set("arn", arn)
 	if err := d.Set("dns_entry", flattenDNSEntries(vpce.DnsEntries)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting dns_entry: %s", err)
 	}
@@ -204,23 +203,23 @@ func dataSourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 	} else {
 		d.Set("dns_options", nil)
 	}
-	d.Set(names.AttrIPAddressType, vpce.IpAddressType)
+	d.Set("ip_address_type", vpce.IpAddressType)
 	d.Set("network_interface_ids", aws.StringValueSlice(vpce.NetworkInterfaceIds))
-	d.Set(names.AttrOwnerID, vpce.OwnerId)
+	d.Set("owner_id", vpce.OwnerId)
 	d.Set("private_dns_enabled", vpce.PrivateDnsEnabled)
 	d.Set("requester_managed", vpce.RequesterManaged)
 	d.Set("route_table_ids", aws.StringValueSlice(vpce.RouteTableIds))
-	d.Set(names.AttrSecurityGroupIDs, flattenSecurityGroupIdentifiers(vpce.Groups))
-	d.Set(names.AttrServiceName, serviceName)
-	d.Set(names.AttrState, vpce.State)
-	d.Set(names.AttrSubnetIDs, aws.StringValueSlice(vpce.SubnetIds))
+	d.Set("security_group_ids", flattenSecurityGroupIdentifiers(vpce.Groups))
+	d.Set("service_name", serviceName)
+	d.Set("state", vpce.State)
+	d.Set("subnet_ids", aws.StringValueSlice(vpce.SubnetIds))
 	// VPC endpoints don't have types in GovCloud, so set type to default if empty
 	if v := aws.StringValue(vpce.VpcEndpointType); v == "" {
 		d.Set("vpc_endpoint_type", ec2.VpcEndpointTypeGateway)
 	} else {
 		d.Set("vpc_endpoint_type", v)
 	}
-	d.Set(names.AttrVPCID, vpce.VpcId)
+	d.Set("vpc_id", vpce.VpcId)
 
 	if pl, err := FindPrefixListByName(ctx, conn, serviceName); err != nil {
 		if tfresource.NotFound(err) {
@@ -239,9 +238,9 @@ func dataSourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "policy contains invalid JSON: %s", err)
 	}
 
-	d.Set(names.AttrPolicy, policy)
+	d.Set("policy", policy)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, vpce.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, vpce.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

@@ -4,17 +4,17 @@ package appstream_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"maps"
+	"net/url"
 	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	appstream_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appstream"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
+	appstream_sdkv1 "github.com/aws/aws-sdk-go/service/appstream"
 	"github.com/aws/smithy-go/middleware"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/google/go-cmp/cmp"
@@ -25,7 +25,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type endpointTestCase struct {
@@ -213,44 +212,32 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 }
 
 func defaultEndpoint(region string) string {
-	r := appstream_sdkv2.NewDefaultEndpointResolverV2()
+	r := endpoints.DefaultResolver()
 
-	ep, err := r.ResolveEndpoint(context.Background(), appstream_sdkv2.EndpointParameters{
-		Region: aws_sdkv2.String(region),
-	})
+	ep, err := r.EndpointFor(appstream_sdkv1.EndpointsID, region)
 	if err != nil {
 		return err.Error()
 	}
 
-	if ep.URI.Path == "" {
-		ep.URI.Path = "/"
+	url, _ := url.Parse(ep.URL)
+
+	if url.Path == "" {
+		url.Path = "/"
 	}
 
-	return ep.URI.String()
+	return url.String()
 }
 
 func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) string {
 	t.Helper()
 
-	var endpoint string
+	client := meta.AppStreamConn(ctx)
 
-	client := meta.AppStreamClient(ctx)
+	req, _ := client.ListAssociatedFleetsRequest(&appstream_sdkv1.ListAssociatedFleetsInput{})
 
-	_, err := client.ListAssociatedFleets(ctx, &appstream_sdkv2.ListAssociatedFleetsInput{
-		StackName: aws_sdkv2.String("test"),
-	},
-		func(opts *appstream_sdkv2.Options) {
-			opts.APIOptions = append(opts.APIOptions,
-				addRetrieveEndpointURLMiddleware(t, &endpoint),
-				addCancelRequestMiddleware(),
-			)
-		},
-	)
-	if err == nil {
-		t.Fatal("Expected an error, got none")
-	} else if !errors.Is(err, errCancelOperation) {
-		t.Fatalf("Unexpected error: %s", err)
-	}
+	req.HTTPRequest.URL.Path = "/"
+
+	endpoint := req.HTTPRequest.URL.String()
 
 	return endpoint
 }
@@ -260,12 +247,12 @@ func withNoConfig(_ *caseSetup) {
 }
 
 func withPackageNameEndpointInConfig(setup *caseSetup) {
-	if _, ok := setup.config[names.AttrEndpoints]; !ok {
-		setup.config[names.AttrEndpoints] = []any{
+	if _, ok := setup.config["endpoints"]; !ok {
+		setup.config["endpoints"] = []any{
 			map[string]any{},
 		}
 	}
-	endpoints := setup.config[names.AttrEndpoints].([]any)[0].(map[string]any)
+	endpoints := setup.config["endpoints"].([]any)[0].(map[string]any)
 	endpoints[packageName] = packageNameConfigEndpoint
 }
 
@@ -336,17 +323,17 @@ func testEndpointCase(t *testing.T, region string, testcase endpointTestCase, ca
 	}
 
 	config := map[string]any{
-		names.AttrAccessKey:                 servicemocks.MockStaticAccessKey,
-		names.AttrSecretKey:                 servicemocks.MockStaticSecretKey,
-		names.AttrRegion:                    region,
-		names.AttrSkipCredentialsValidation: true,
-		names.AttrSkipRequestingAccountID:   true,
+		"access_key":                  servicemocks.MockStaticAccessKey,
+		"secret_key":                  servicemocks.MockStaticSecretKey,
+		"region":                      region,
+		"skip_credentials_validation": true,
+		"skip_requesting_account_id":  true,
 	}
 
 	maps.Copy(config, setup.config)
 
 	if setup.configFile.baseUrl != "" || setup.configFile.serviceUrl != "" {
-		config[names.AttrProfile] = "default"
+		config["profile"] = "default"
 		tempDir := t.TempDir()
 		writeSharedConfigFile(t, &config, tempDir, generateSharedConfigFile(setup.configFile))
 	}
@@ -489,10 +476,10 @@ func writeSharedConfigFile(t *testing.T, config *map[string]any, tempDir, conten
 		t.Fatalf(" writing shared configuration file: %s", err)
 	}
 
-	if v, ok := (*config)[names.AttrSharedConfigFiles]; !ok {
-		(*config)[names.AttrSharedConfigFiles] = []any{file.Name()}
+	if v, ok := (*config)["shared_config_files"]; !ok {
+		(*config)["shared_config_files"] = []any{file.Name()}
 	} else {
-		(*config)[names.AttrSharedConfigFiles] = append(v.([]any), file.Name())
+		(*config)["shared_config_files"] = append(v.([]any), file.Name())
 	}
 
 	return file.Name()

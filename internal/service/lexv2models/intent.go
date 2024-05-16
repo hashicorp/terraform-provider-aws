@@ -66,7 +66,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 		CustomType: fwtypes.NewListNestedObjectTypeOf[SlotPriority](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				names.AttrPriority: schema.Int64Attribute{
+				"priority": schema.Int64Attribute{
 					Required: true,
 				},
 				"slot_id": schema.StringAttribute{
@@ -94,7 +94,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 		CustomType: fwtypes.NewListNestedObjectTypeOf[OutputContext](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				names.AttrName: schema.StringAttribute{
+				"name": schema.StringAttribute{
 					Required: true,
 				},
 				"time_to_live_in_seconds": schema.Int64Attribute{
@@ -134,7 +134,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 		CustomType: fwtypes.NewListNestedObjectTypeOf[CustomPayload](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				names.AttrValue: schema.StringAttribute{
+				"value": schema.StringAttribute{
 					Required: true,
 				},
 			},
@@ -148,7 +148,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 				"text": schema.StringAttribute{
 					Required: true,
 				},
-				names.AttrValue: schema.StringAttribute{
+				"value": schema.StringAttribute{
 					Required: true,
 				},
 			},
@@ -185,7 +185,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 		CustomType: fwtypes.NewListNestedObjectTypeOf[PlainTextMessage](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				names.AttrValue: schema.StringAttribute{
+				"value": schema.StringAttribute{
 					Required: true,
 				},
 			},
@@ -199,7 +199,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 		CustomType: fwtypes.NewListNestedObjectTypeOf[SSMLMessage](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				names.AttrValue: schema.StringAttribute{
+				"value": schema.StringAttribute{
 					Required: true,
 				},
 			},
@@ -222,7 +222,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 		CustomType: fwtypes.NewListNestedObjectTypeOf[MessageGroup](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
-				names.AttrMessage: schema.ListNestedBlock{
+				"message": schema.ListNestedBlock{
 					Validators: []validator.List{
 						listvalidator.SizeBetween(1, 1),
 					},
@@ -267,7 +267,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 				},
 			},
 			Blocks: map[string]schema.Block{
-				names.AttrValue: slotValueLNB,
+				"value": slotValueLNB,
 			},
 		},
 	}
@@ -281,7 +281,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 		CustomType: fwtypes.NewListNestedObjectTypeOf[DialogAction](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				names.AttrType: schema.StringAttribute{
+				"type": schema.StringAttribute{
 					Required:   true,
 					CustomType: fwtypes.StringEnumType[awstypes.DialogActionType](),
 				},
@@ -302,7 +302,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 		CustomType: fwtypes.NewListNestedObjectTypeOf[IntentOverride](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				names.AttrName: schema.StringAttribute{
+				"name": schema.StringAttribute{
 					Optional: true,
 				},
 			},
@@ -364,12 +364,12 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 		CustomType: fwtypes.NewListNestedObjectTypeOf[ConditionalBranch](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				names.AttrName: schema.StringAttribute{
+				"name": schema.StringAttribute{
 					Required: true,
 				},
 			},
 			Blocks: map[string]schema.Block{
-				names.AttrCondition: conditionLNB,
+				"condition": conditionLNB,
 				"next_step": schema.ListNestedBlock{
 					Validators: []validator.List{
 						listvalidator.SizeBetween(1, 1),
@@ -447,7 +447,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 		CustomType: fwtypes.NewListNestedObjectTypeOf[InputContext](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				names.AttrName: schema.StringAttribute{
+				"name": schema.StringAttribute{
 					Required: true,
 				},
 			},
@@ -795,7 +795,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 				"active": schema.BoolAttribute{
 					Optional: true,
 				},
-				names.AttrEnabled: schema.BoolAttribute{
+				"enabled": schema.BoolAttribute{
 					Required: true,
 				},
 			},
@@ -819,7 +819,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 		CustomType: fwtypes.NewListNestedObjectTypeOf[DialogCodeHookSettings](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				names.AttrEnabled: schema.BoolAttribute{
+				"enabled": schema.BoolAttribute{
 					Required: true,
 				},
 			},
@@ -848,10 +848,10 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrDescription: schema.StringAttribute{
+			"description": schema.StringAttribute{
 				Optional: true,
 			},
-			names.AttrID: framework.IDAttribute(),
+			"id": framework.IDAttribute(),
 			"intent_id": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -872,7 +872,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrName: schema.StringAttribute{
+			"name": schema.StringAttribute{
 				Required: true,
 			},
 			"parent_intent_signature": schema.StringAttribute{
@@ -890,7 +890,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 			"output_context":           outputContextLNB,
 			"sample_utterance":         sampleUtteranceLNB,
 			"slot_priority":            slotPriorityLNB,
-			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+			"timeouts": timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,

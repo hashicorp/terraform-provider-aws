@@ -6,33 +6,31 @@ package wafv2
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/wafv2"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_wafv2_regex_pattern_set", name="Regex Pattern Set")
-func dataSourceRegexPatternSet() *schema.Resource {
+// @SDKDataSource("aws_wafv2_regex_pattern_set")
+func DataSourceRegexPatternSet() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRegexPatternSetRead,
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
-				names.AttrARN: {
+				"arn": {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrDescription: {
+				"description": {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrName: {
+				"name": {
 					Type:     schema.TypeString,
 					Required: true,
 				},
@@ -48,10 +46,10 @@ func dataSourceRegexPatternSet() *schema.Resource {
 						},
 					},
 				},
-				names.AttrScope: {
-					Type:             schema.TypeString,
-					Required:         true,
-					ValidateDiagFunc: enum.Validate[awstypes.Scope](),
+				"scope": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringInSlice(wafv2.Scope_Values(), false),
 				},
 			}
 		},
@@ -60,17 +58,17 @@ func dataSourceRegexPatternSet() *schema.Resource {
 
 func dataSourceRegexPatternSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
-	name := d.Get(names.AttrName).(string)
+	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
+	name := d.Get("name").(string)
 
-	var foundRegexPatternSet awstypes.RegexPatternSetSummary
+	var foundRegexPatternSet *wafv2.RegexPatternSetSummary
 	input := &wafv2.ListRegexPatternSetsInput{
-		Scope: awstypes.Scope(d.Get(names.AttrScope).(string)),
-		Limit: aws.Int32(100),
+		Scope: aws.String(d.Get("scope").(string)),
+		Limit: aws.Int64(100),
 	}
 
 	for {
-		resp, err := conn.ListRegexPatternSets(ctx, input)
+		resp, err := conn.ListRegexPatternSetsWithContext(ctx, input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading WAFv2 RegexPatternSets: %s", err)
 		}
@@ -80,26 +78,26 @@ func dataSourceRegexPatternSetRead(ctx context.Context, d *schema.ResourceData, 
 		}
 
 		for _, regexPatternSet := range resp.RegexPatternSets {
-			if aws.ToString(regexPatternSet.Name) == name {
+			if regexPatternSet != nil && aws.StringValue(regexPatternSet.Name) == name {
 				foundRegexPatternSet = regexPatternSet
 				break
 			}
 		}
 
-		if resp.NextMarker == nil {
+		if resp.NextMarker == nil || foundRegexPatternSet != nil {
 			break
 		}
 		input.NextMarker = resp.NextMarker
 	}
 
-	if foundRegexPatternSet.Id == nil {
+	if foundRegexPatternSet == nil {
 		return sdkdiag.AppendErrorf(diags, "WAFv2 RegexPatternSet not found for name: %s", name)
 	}
 
-	resp, err := conn.GetRegexPatternSet(ctx, &wafv2.GetRegexPatternSetInput{
+	resp, err := conn.GetRegexPatternSetWithContext(ctx, &wafv2.GetRegexPatternSetInput{
 		Id:    foundRegexPatternSet.Id,
 		Name:  foundRegexPatternSet.Name,
-		Scope: awstypes.Scope(d.Get(names.AttrScope).(string)),
+		Scope: aws.String(d.Get("scope").(string)),
 	})
 
 	if err != nil {
@@ -110,9 +108,9 @@ func dataSourceRegexPatternSetRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading WAFv2 RegexPatternSet")
 	}
 
-	d.SetId(aws.ToString(resp.RegexPatternSet.Id))
-	d.Set(names.AttrARN, resp.RegexPatternSet.ARN)
-	d.Set(names.AttrDescription, resp.RegexPatternSet.Description)
+	d.SetId(aws.StringValue(resp.RegexPatternSet.Id))
+	d.Set("arn", resp.RegexPatternSet.ARN)
+	d.Set("description", resp.RegexPatternSet.Description)
 
 	if err := d.Set("regular_expression", flattenRegexPatternSet(resp.RegexPatternSet.RegularExpressionList)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting regular_expression: %s", err)

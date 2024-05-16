@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/securitylake"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/securitylake/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -51,7 +50,7 @@ func (r *customLogSourceResource) Metadata(_ context.Context, request resource.M
 func (r *customLogSourceResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrAttributes: schema.ListAttribute{
+			"attributes": schema.ListAttribute{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[customLogSourceAttributesModel](ctx),
 				Computed:   true,
 				ElementType: types.ObjectType{
@@ -79,8 +78,8 @@ func (r *customLogSourceResource) Schema(ctx context.Context, request resource.S
 				Computed:   true,
 				ElementType: types.ObjectType{
 					AttrTypes: map[string]attr.Type{
-						"location":        types.StringType,
-						names.AttrRoleARN: types.StringType,
+						"location": types.StringType,
+						"role_arn": types.StringType,
 					},
 				},
 				PlanModifiers: []planmodifier.List{
@@ -89,9 +88,6 @@ func (r *customLogSourceResource) Schema(ctx context.Context, request resource.S
 			},
 			"source_name": schema.StringAttribute{
 				Required: true,
-				Validators: []validator.String{
-					stringvalidator.LengthAtMost(20),
-				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -105,7 +101,7 @@ func (r *customLogSourceResource) Schema(ctx context.Context, request resource.S
 			},
 		},
 		Blocks: map[string]schema.Block{
-			names.AttrConfiguration: schema.ListNestedBlock{
+			"configuration": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[customLogSourceConfigurationModel](ctx),
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.RequiresReplace(),
@@ -129,7 +125,7 @@ func (r *customLogSourceResource) Schema(ctx context.Context, request resource.S
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									names.AttrRoleARN: schema.StringAttribute{
+									"role_arn": schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
 										Required:   true,
 										PlanModifiers: []planmodifier.String{
@@ -151,13 +147,13 @@ func (r *customLogSourceResource) Schema(ctx context.Context, request resource.S
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									names.AttrExternalID: schema.StringAttribute{
+									"external_id": schema.StringAttribute{
 										Required: true,
 										PlanModifiers: []planmodifier.String{
 											stringplanmodifier.RequiresReplace(),
 										},
 									},
-									names.AttrPrincipal: schema.StringAttribute{
+									"principal": schema.StringAttribute{
 										Required: true,
 										PlanModifiers: []planmodifier.String{
 											stringplanmodifier.RequiresReplace(),
@@ -188,9 +184,7 @@ func (r *customLogSourceResource) Create(ctx context.Context, request resource.C
 		return
 	}
 
-	output, err := retryDataLakeConflictWithMutex(ctx, func() (*securitylake.CreateCustomLogSourceOutput, error) {
-		return conn.CreateCustomLogSource(ctx, input)
-	})
+	output, err := conn.CreateCustomLogSource(ctx, input)
 
 	if err != nil {
 		response.Diagnostics.AddError("creating Security Lake Custom Log Source", err.Error())
@@ -272,9 +266,7 @@ func (r *customLogSourceResource) Delete(ctx context.Context, request resource.D
 		return
 	}
 
-	_, err := retryDataLakeConflictWithMutex(ctx, func() (*securitylake.DeleteCustomLogSourceOutput, error) {
-		return conn.DeleteCustomLogSource(ctx, input)
-	})
+	_, err := conn.DeleteCustomLogSource(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return

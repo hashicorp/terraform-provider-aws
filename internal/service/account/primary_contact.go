@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_account_primary_contact")
@@ -36,7 +35,7 @@ func resourcePrimaryContact() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrAccountID: {
+			"account_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -113,7 +112,7 @@ func resourcePrimaryContactPut(ctx context.Context, d *schema.ResourceData, meta
 		},
 	}
 
-	if v, ok := d.GetOk(names.AttrAccountID); ok {
+	if v, ok := d.GetOk("account_id"); ok {
 		id = v.(string)
 		input.AccountId = aws.String(id)
 	}
@@ -160,7 +159,7 @@ func resourcePrimaryContactRead(ctx context.Context, d *schema.ResourceData, met
 
 	conn := meta.(*conns.AWSClient).AccountClient(ctx)
 
-	contactInformation, err := findContactInformation(ctx, conn, d.Get(names.AttrAccountID).(string))
+	contactInformation, err := findContactInformation(ctx, conn, d.Get("account_id").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Account Primary Contact (%s) not found, removing from state", d.Id())
@@ -172,7 +171,7 @@ func resourcePrimaryContactRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading Account Primary Contact (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrAccountID, d.Get(names.AttrAccountID))
+	d.Set("account_id", d.Get("account_id"))
 	d.Set("address_line_1", contactInformation.AddressLine1)
 	d.Set("address_line_2", contactInformation.AddressLine2)
 	d.Set("address_line_3", contactInformation.AddressLine3)

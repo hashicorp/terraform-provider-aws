@@ -16,7 +16,6 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_efs_file_system")
@@ -25,7 +24,7 @@ func DataSourceFileSystem() *schema.Resource {
 		ReadWithoutTimeout: dataSourceFileSystemRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -43,20 +42,20 @@ func DataSourceFileSystem() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringLenBetween(0, 64),
 			},
-			names.AttrDNSName: {
+			"dns_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrEncrypted: {
+			"encrypted": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			names.AttrFileSystemID: {
+			"file_system_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			names.AttrKMSKeyID: {
+			"kms_key_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -80,7 +79,7 @@ func DataSourceFileSystem() *schema.Resource {
 					},
 				},
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -108,7 +107,7 @@ func DataSourceFileSystem() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 			"throughput_mode": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -128,13 +127,13 @@ func dataSourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta 
 		input.CreationToken = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrFileSystemID); ok {
+	if v, ok := d.GetOk("file_system_id"); ok {
 		input.FileSystemId = aws.String(v.(string))
 	}
 
 	filter := tfslices.PredicateTrue[*efs.FileSystemDescription]()
 
-	if tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig); len(tagsToMatch) > 0 {
+	if tagsToMatch := tftags.New(ctx, d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig); len(tagsToMatch) > 0 {
 		filter = func(v *efs.FileSystemDescription) bool {
 			return KeyValueTags(ctx, v.Tags).ContainsAll(tagsToMatch)
 		}
@@ -148,15 +147,15 @@ func dataSourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	fsID := aws.StringValue(fs.FileSystemId)
 	d.SetId(fsID)
-	d.Set(names.AttrARN, fs.FileSystemArn)
+	d.Set("arn", fs.FileSystemArn)
 	d.Set("availability_zone_id", fs.AvailabilityZoneId)
 	d.Set("availability_zone_name", fs.AvailabilityZoneName)
 	d.Set("creation_token", fs.CreationToken)
-	d.Set(names.AttrDNSName, meta.(*conns.AWSClient).RegionalHostname(ctx, d.Id()+".efs"))
-	d.Set(names.AttrFileSystemID, fsID)
-	d.Set(names.AttrEncrypted, fs.Encrypted)
-	d.Set(names.AttrKMSKeyID, fs.KmsKeyId)
-	d.Set(names.AttrName, fs.Name)
+	d.Set("dns_name", meta.(*conns.AWSClient).RegionalHostname(ctx, d.Id()+".efs"))
+	d.Set("file_system_id", fsID)
+	d.Set("encrypted", fs.Encrypted)
+	d.Set("kms_key_id", fs.KmsKeyId)
+	d.Set("name", fs.Name)
 	d.Set("performance_mode", fs.PerformanceMode)
 	if err := d.Set("protection", flattenFileSystemProtection(fs.FileSystemProtection)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting protection: %s", err)
@@ -167,7 +166,7 @@ func dataSourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	d.Set("throughput_mode", fs.ThroughputMode)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, fs.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, fs.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

@@ -33,15 +33,15 @@ func TestAccNetworkManagerDevice_basic(t *testing.T) {
 				Config: testAccDeviceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDeviceExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "aws_location.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "location.#", acctest.Ct0),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "aws_location.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "location.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "model", ""),
 					resource.TestCheckResourceAttr(resourceName, "serial_number", ""),
 					resource.TestCheckResourceAttr(resourceName, "site_id", ""),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, ""),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "type", ""),
 					resource.TestCheckResourceAttr(resourceName, "vendor", ""),
 				),
 			},
@@ -90,11 +90,11 @@ func TestAccNetworkManagerDevice_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckDeviceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeviceConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccDeviceConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -104,20 +104,20 @@ func TestAccNetworkManagerDevice_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDeviceConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccDeviceConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccDeviceConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccDeviceConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -141,15 +141,15 @@ func TestAccNetworkManagerDevice_allAttributes(t *testing.T) {
 				Config: testAccDeviceConfig_allAttributes(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDeviceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
-					resource.TestCheckResourceAttr(resourceName, "location.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+					resource.TestCheckResourceAttr(resourceName, "location.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.address", "Address 1"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.latitude", "1.1"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.longitude", "-1.1"),
 					resource.TestCheckResourceAttr(resourceName, "model", "model1"),
 					resource.TestCheckResourceAttr(resourceName, "serial_number", "sn1"),
-					resource.TestCheckResourceAttrPair(resourceName, "site_id", site1ResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, "type1"),
+					resource.TestCheckResourceAttrPair(resourceName, "site_id", site1ResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "type", "type1"),
 					resource.TestCheckResourceAttr(resourceName, "vendor", "vendor1"),
 				),
 			},
@@ -163,15 +163,15 @@ func TestAccNetworkManagerDevice_allAttributes(t *testing.T) {
 				Config: testAccDeviceConfig_allAttributesUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDeviceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
-					resource.TestCheckResourceAttr(resourceName, "location.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+					resource.TestCheckResourceAttr(resourceName, "location.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.address", "Address 2"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.latitude", "22"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.longitude", "-22"),
 					resource.TestCheckResourceAttr(resourceName, "model", "model2"),
 					resource.TestCheckResourceAttr(resourceName, "serial_number", "sn2"),
-					resource.TestCheckResourceAttrPair(resourceName, "site_id", site2ResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, "type2"),
+					resource.TestCheckResourceAttrPair(resourceName, "site_id", site2ResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "type", "type2"),
 					resource.TestCheckResourceAttr(resourceName, "vendor", "vendor2"),
 				),
 			},
@@ -195,8 +195,8 @@ func TestAccNetworkManagerDevice_awsLocation(t *testing.T) { // nosemgrep:ci.aws
 				Config: testAccDeviceConfig_awsLocation(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDeviceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "aws_location.#", acctest.Ct1),
-					resource.TestCheckResourceAttrPair(resourceName, "aws_location.0.subnet_arn", subnetResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "aws_location.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "aws_location.0.subnet_arn", subnetResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "aws_location.0.zone", ""),
 				),
 			},
@@ -210,9 +210,9 @@ func TestAccNetworkManagerDevice_awsLocation(t *testing.T) { // nosemgrep:ci.aws
 				Config: testAccDeviceConfig_awsLocationUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDeviceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "aws_location.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "aws_location.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "aws_location.0.subnet_arn", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "aws_location.0.zone", subnetResourceName, names.AttrAvailabilityZone),
+					resource.TestCheckResourceAttrPair(resourceName, "aws_location.0.zone", subnetResourceName, "availability_zone"),
 				),
 			},
 		},
@@ -496,6 +496,6 @@ func testAccDeviceImportStateIdFunc(resourceName string) resource.ImportStateIdF
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return rs.Primary.Attributes[names.AttrARN], nil
+		return rs.Primary.Attributes["arn"], nil
 	}
 }

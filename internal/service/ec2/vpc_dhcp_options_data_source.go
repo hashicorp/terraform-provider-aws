@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_vpc_dhcp_options")
@@ -30,7 +29,7 @@ func DataSourceVPCDHCPOptions() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -39,7 +38,7 @@ func DataSourceVPCDHCPOptions() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			names.AttrDomainName: {
+			"domain_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -48,11 +47,7 @@ func DataSourceVPCDHCPOptions() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrFilter: customFiltersSchema(),
-			"ipv6_address_preferred_lease_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+			"filter": customFiltersSchema(),
 			"netbios_name_servers": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -67,11 +62,11 @@ func DataSourceVPCDHCPOptions() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrOwnerID: {
+			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -88,7 +83,7 @@ func dataSourceVPCDHCPOptionsRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get(names.AttrFilter).(*schema.Set),
+		d.Get("filter").(*schema.Set),
 	)...)
 	if len(input.Filters) == 0 {
 		// Don't send an empty filters list; the EC2 API won't accept it.
@@ -111,9 +106,9 @@ func dataSourceVPCDHCPOptionsRead(ctx context.Context, d *schema.ResourceData, m
 		AccountID: ownerID,
 		Resource:  fmt.Sprintf("dhcp-options/%s", d.Id()),
 	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set("arn", arn)
 	d.Set("dhcp_options_id", d.Id())
-	d.Set(names.AttrOwnerID, ownerID)
+	d.Set("owner_id", ownerID)
 
 	err = optionsMap.dhcpConfigurationsToResourceData(opts.DhcpConfigurations, d)
 
@@ -121,7 +116,7 @@ func dataSourceVPCDHCPOptionsRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading EC2 DHCP Options: %s", err)
 	}
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, opts.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, opts.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

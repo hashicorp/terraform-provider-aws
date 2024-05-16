@@ -9,7 +9,6 @@ import (
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestInstanceStateUpgradeV0(t *testing.T) {
@@ -29,23 +28,23 @@ func TestInstanceStateUpgradeV0(t *testing.T) {
 		{
 			Description: "adds delete_automated_backups",
 			InputState: map[string]interface{}{
-				"allocated_storage":  10,
-				"engine":             "mariadb",
-				names.AttrIdentifier: "my-test-instance",
-				"instance_class":     "db.t2.micro",
-				names.AttrPassword:   "avoid-plaintext-passwords",
-				names.AttrUsername:   "tfacctest",
-				names.AttrTags:       map[string]interface{}{acctest.CtKey1: acctest.CtValue1},
+				"allocated_storage": 10,
+				"engine":            "mariadb",
+				"identifier":        "my-test-instance",
+				"instance_class":    "db.t2.micro",
+				"password":          "avoid-plaintext-passwords",
+				"username":          "tfacctest",
+				"tags":              map[string]interface{}{"key1": "value1"},
 			},
 			ExpectedState: map[string]interface{}{
 				"allocated_storage":        10,
 				"delete_automated_backups": true,
 				"engine":                   "mariadb",
-				names.AttrIdentifier:       "my-test-instance",
+				"identifier":               "my-test-instance",
 				"instance_class":           "db.t2.micro",
-				names.AttrPassword:         "avoid-plaintext-passwords",
-				names.AttrUsername:         "tfacctest",
-				names.AttrTags:             map[string]interface{}{acctest.CtKey1: acctest.CtValue1},
+				"password":                 "avoid-plaintext-passwords",
+				"username":                 "tfacctest",
+				"tags":                     map[string]interface{}{"key1": "value1"},
 			},
 		},
 	}
@@ -84,26 +83,26 @@ func TestInstanceStateUpgradeV1(t *testing.T) {
 		{
 			Description: "change id to resource id",
 			InputState: map[string]interface{}{
-				"allocated_storage":  10,
-				"engine":             "mariadb",
-				names.AttrID:         "my-test-instance",
-				names.AttrIdentifier: "my-test-instance",
-				"instance_class":     "db.t2.micro",
-				names.AttrPassword:   "avoid-plaintext-passwords",
-				names.AttrResourceID: "db-cnuap2ilnbmok4eunzklfvwjca",
-				names.AttrTags:       map[string]interface{}{acctest.CtKey1: acctest.CtValue1},
-				names.AttrUsername:   "tfacctest",
+				"allocated_storage": 10,
+				"engine":            "mariadb",
+				"id":                "my-test-instance",
+				"identifier":        "my-test-instance",
+				"instance_class":    "db.t2.micro",
+				"password":          "avoid-plaintext-passwords",
+				"resource_id":       "db-cnuap2ilnbmok4eunzklfvwjca",
+				"tags":              map[string]interface{}{"key1": "value1"},
+				"username":          "tfacctest",
 			},
 			ExpectedState: map[string]interface{}{
-				"allocated_storage":  10,
-				"engine":             "mariadb",
-				names.AttrID:         "db-cnuap2ilnbmok4eunzklfvwjca",
-				names.AttrIdentifier: "my-test-instance",
-				"instance_class":     "db.t2.micro",
-				names.AttrPassword:   "avoid-plaintext-passwords",
-				names.AttrResourceID: "db-cnuap2ilnbmok4eunzklfvwjca",
-				names.AttrTags:       map[string]interface{}{acctest.CtKey1: acctest.CtValue1},
-				names.AttrUsername:   "tfacctest",
+				"allocated_storage": 10,
+				"engine":            "mariadb",
+				"id":                "db-cnuap2ilnbmok4eunzklfvwjca",
+				"identifier":        "my-test-instance",
+				"instance_class":    "db.t2.micro",
+				"password":          "avoid-plaintext-passwords",
+				"resource_id":       "db-cnuap2ilnbmok4eunzklfvwjca",
+				"tags":              map[string]interface{}{"key1": "value1"},
+				"username":          "tfacctest",
 			},
 		},
 	}

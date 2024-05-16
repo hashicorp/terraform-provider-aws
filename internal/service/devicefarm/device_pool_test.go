@@ -44,11 +44,11 @@ func TestAccDeviceFarmDevicePool_basic(t *testing.T) {
 				Config: testAccDevicePoolConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevicePoolExists(ctx, resourceName, &pool),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
-					resource.TestCheckResourceAttrPair(resourceName, "project_arn", "aws_devicefarm_project.test", names.AttrARN),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "devicefarm", regexache.MustCompile(`devicepool:.+`)),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "project_arn", "aws_devicefarm_project.test", "arn"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "devicefarm", regexache.MustCompile(`devicepool:.+`)),
 				),
 			},
 			{
@@ -60,8 +60,8 @@ func TestAccDeviceFarmDevicePool_basic(t *testing.T) {
 				Config: testAccDevicePoolConfig_basic(rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevicePoolExists(ctx, resourceName, &pool),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "devicefarm", regexache.MustCompile(`devicepool:.+`)),
+					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "devicefarm", regexache.MustCompile(`devicepool:.+`)),
 				),
 			},
 		},
@@ -87,11 +87,11 @@ func TestAccDeviceFarmDevicePool_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckDevicePoolDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDevicePoolConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccDevicePoolConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevicePoolExists(ctx, resourceName, &pool),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -100,20 +100,20 @@ func TestAccDeviceFarmDevicePool_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDevicePoolConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccDevicePoolConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevicePoolExists(ctx, resourceName, &pool),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccDevicePoolConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccDevicePoolConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevicePoolExists(ctx, resourceName, &pool),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},

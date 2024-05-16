@@ -34,8 +34,8 @@ func TestAccGlobalAcceleratorListener_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "client_affinity", "NONE"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "TCP"),
-					resource.TestCheckResourceAttr(resourceName, "port_range.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "protocol", "TCP"),
+					resource.TestCheckResourceAttr(resourceName, "port_range.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "port_range.*", map[string]string{
 						"from_port": "80",
 						"to_port":   "81",
@@ -93,8 +93,8 @@ func TestAccGlobalAcceleratorListener_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "client_affinity", "SOURCE_IP"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "UDP"),
-					resource.TestCheckResourceAttr(resourceName, "port_range.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "protocol", "UDP"),
+					resource.TestCheckResourceAttr(resourceName, "port_range.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "port_range.*", map[string]string{
 						"from_port": "443",
 						"to_port":   "444",
@@ -112,12 +112,16 @@ func TestAccGlobalAcceleratorListener_update(t *testing.T) {
 
 func testAccCheckListenerExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn(ctx)
+
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorClient(ctx)
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Global Accelerator Listener ID is set")
+		}
 
 		_, err := tfglobalaccelerator.FindListenerByARN(ctx, conn, rs.Primary.ID)
 
@@ -127,7 +131,7 @@ func testAccCheckListenerExists(ctx context.Context, n string) resource.TestChec
 
 func testAccCheckListenerDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_globalaccelerator_listener" {

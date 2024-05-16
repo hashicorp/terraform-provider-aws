@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_vpc_endpoint_connection_notification", name="VPC Endpoint Connection Notification")
@@ -49,21 +48,21 @@ func ResourceVPCEndpointConnectionNotification() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrState: {
+			"state": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrVPCEndpointID: {
+			"vpc_endpoint_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{names.AttrVPCEndpointID, "vpc_endpoint_service_id"},
+				ExactlyOneOf: []string{"vpc_endpoint_id", "vpc_endpoint_service_id"},
 			},
 			"vpc_endpoint_service_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{names.AttrVPCEndpointID, "vpc_endpoint_service_id"},
+				ExactlyOneOf: []string{"vpc_endpoint_id", "vpc_endpoint_service_id"},
 			},
 		},
 	}
@@ -83,7 +82,7 @@ func resourceVPCEndpointConnectionNotificationCreate(ctx context.Context, d *sch
 		input.ServiceId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrVPCEndpointID); ok {
+	if v, ok := d.GetOk("vpc_endpoint_id"); ok {
 		input.VpcEndpointId = aws.String(v.(string))
 	}
 
@@ -117,8 +116,8 @@ func resourceVPCEndpointConnectionNotificationRead(ctx context.Context, d *schem
 	d.Set("connection_events", aws.StringValueSlice(cn.ConnectionEvents))
 	d.Set("connection_notification_arn", cn.ConnectionNotificationArn)
 	d.Set("notification_type", cn.ConnectionNotificationType)
-	d.Set(names.AttrState, cn.ConnectionNotificationState)
-	d.Set(names.AttrVPCEndpointID, cn.VpcEndpointId)
+	d.Set("state", cn.ConnectionNotificationState)
+	d.Set("vpc_endpoint_id", cn.VpcEndpointId)
 	d.Set("vpc_endpoint_service_id", cn.ServiceId)
 
 	return diags

@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cognito_user_in_group", name="Group User")
@@ -24,7 +23,7 @@ func resourceUserInGroup() *schema.Resource {
 		ReadWithoutTimeout:   resourceUserInGroupRead,
 		DeleteWithoutTimeout: resourceUserInGroupDelete,
 		Schema: map[string]*schema.Schema{
-			names.AttrGroupName: {
+			"group_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -36,7 +35,7 @@ func resourceUserInGroup() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validUserPoolID,
 			},
-			names.AttrUsername: {
+			"username": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -52,7 +51,7 @@ func resourceUserInGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	input := &cognitoidentityprovider.AdminAddUserToGroupInput{}
 
-	if v, ok := d.GetOk(names.AttrGroupName); ok {
+	if v, ok := d.GetOk("group_name"); ok {
 		input.GroupName = aws.String(v.(string))
 	}
 
@@ -60,7 +59,7 @@ func resourceUserInGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.UserPoolId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrUsername); ok {
+	if v, ok := d.GetOk("username"); ok {
 		input.Username = aws.String(v.(string))
 	}
 
@@ -80,9 +79,9 @@ func resourceUserInGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
-	groupName := d.Get(names.AttrGroupName).(string)
+	groupName := d.Get("group_name").(string)
 	userPoolId := d.Get("user_pool_id").(string)
-	username := d.Get(names.AttrUsername).(string)
+	username := d.Get("username").(string)
 
 	found, err := FindCognitoUserInGroup(ctx, conn, groupName, userPoolId, username)
 
@@ -101,9 +100,9 @@ func resourceUserInGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
-	groupName := d.Get(names.AttrGroupName).(string)
+	groupName := d.Get("group_name").(string)
 	userPoolID := d.Get("user_pool_id").(string)
-	username := d.Get(names.AttrUsername).(string)
+	username := d.Get("username").(string)
 
 	input := &cognitoidentityprovider.AdminRemoveUserFromGroupInput{
 		GroupName:  aws.String(groupName),

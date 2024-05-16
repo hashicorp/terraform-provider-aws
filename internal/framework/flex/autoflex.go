@@ -27,47 +27,10 @@ const (
 // autoFlexer is the interface implemented by an auto-flattener or expander.
 type autoFlexer interface {
 	convert(context.Context, reflect.Value, reflect.Value) diag.Diagnostics
-	getOptions() AutoFlexOptions
 }
-
-// AutoFlexOptions stores configurable options for an auto-flattener or expander.
-type AutoFlexOptions struct {
-	// ignoredFieldNames stores names which expanders and flatteners will
-	// not read from or write to
-	ignoredFieldNames []string
-}
-
-// IsIgnoredField returns true if s is in the list of ignored field names
-func (o *AutoFlexOptions) IsIgnoredField(s string) bool {
-	for _, name := range o.ignoredFieldNames {
-		if s == name {
-			return true
-		}
-	}
-	return false
-}
-
-// AddIgnoredField appends s to the list of ignored field names
-func (o *AutoFlexOptions) AddIgnoredField(s string) {
-	o.ignoredFieldNames = append(o.ignoredFieldNames, s)
-}
-
-// SetIgnoredFields replaces the list of ignored field names
-//
-// To preseve existing items in the list, use the AddIgnoredField
-// method instead.
-func (o *AutoFlexOptions) SetIgnoredFields(fields []string) {
-	o.ignoredFieldNames = fields
-}
-
-var (
-	DefaultIgnoredFieldNames = []string{
-		"Tags", // Resource tags are handled separately.
-	}
-)
 
 // AutoFlexOptionsFunc is a type alias for an autoFlexer functional option.
-type AutoFlexOptionsFunc func(*AutoFlexOptions)
+type AutoFlexOptionsFunc func(autoFlexer)
 
 // autoFlexConvert converts `from` to `to` using the specified auto-flexer.
 func autoFlexConvert(ctx context.Context, from, to any, flexer autoFlexer) diag.Diagnostics {
@@ -123,21 +86,20 @@ func autoFlexConvertStruct(ctx context.Context, from any, to any, flexer autoFle
 		return diags
 	}
 
-	opts := flexer.getOptions()
 	for i, typFrom := 0, valFrom.Type(); i < typFrom.NumField(); i++ {
 		field := typFrom.Field(i)
 		if field.PkgPath != "" {
 			continue // Skip unexported fields.
 		}
 		fieldName := field.Name
-		if opts.IsIgnoredField(fieldName) {
-			continue
+		if fieldName == "Tags" {
+			continue // Resource tags are handled separately.
 		}
 		if fieldName == MapBlockKey {
 			continue
 		}
 
-		toFieldVal := findFieldFuzzy(ctx, fieldName, valTo, valFrom, flexer)
+		toFieldVal := findFieldFuzzy(ctx, fieldName, valTo, valFrom)
 		if !toFieldVal.IsValid() {
 			continue // Corresponding field not found in to.
 		}
@@ -155,7 +117,7 @@ func autoFlexConvertStruct(ctx context.Context, from any, to any, flexer autoFle
 	return diags
 }
 
-func findFieldFuzzy(ctx context.Context, fieldNameFrom string, valTo, valFrom reflect.Value, flexer autoFlexer) reflect.Value {
+func findFieldFuzzy(ctx context.Context, fieldNameFrom string, valTo, valFrom reflect.Value) reflect.Value {
 	// first precedence is exact match (case sensitive)
 	if v := valTo.FieldByName(fieldNameFrom); v.IsValid() {
 		return v
@@ -168,15 +130,14 @@ func findFieldFuzzy(ctx context.Context, fieldNameFrom string, valTo, valFrom re
 	// to make sure fuzzy matches are not in "from".
 
 	// second precedence is exact match (case insensitive)
-	opts := flexer.getOptions()
 	for i, typTo := 0, valTo.Type(); i < typTo.NumField(); i++ {
 		field := typTo.Field(i)
 		if field.PkgPath != "" {
 			continue // Skip unexported fields.
 		}
 		fieldNameTo := field.Name
-		if opts.IsIgnoredField(fieldNameTo) {
-			continue
+		if fieldNameTo == "Tags" {
+			continue // Resource tags are handled separately.
 		}
 		if v := valTo.FieldByName(fieldNameTo); v.IsValid() && strings.EqualFold(fieldNameFrom, fieldNameTo) && !fieldExistsInStruct(fieldNameTo, valFrom) {
 			// probably could assume validity here since reflect gave the field name
@@ -204,9 +165,9 @@ func findFieldFuzzy(ctx context.Context, fieldNameFrom string, valTo, valFrom re
 			// so it will only recurse once
 			ctx = context.WithValue(ctx, ResourcePrefixRecurse, true)
 			if strings.HasPrefix(fieldNameFrom, v) {
-				return findFieldFuzzy(ctx, strings.TrimPrefix(fieldNameFrom, v), valTo, valFrom, flexer)
+				return findFieldFuzzy(ctx, strings.TrimPrefix(fieldNameFrom, v), valTo, valFrom)
 			}
-			return findFieldFuzzy(ctx, v+fieldNameFrom, valTo, valFrom, flexer)
+			return findFieldFuzzy(ctx, v+fieldNameFrom, valTo, valFrom)
 		}
 	}
 

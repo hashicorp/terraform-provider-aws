@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_codestarconnections_connection")
@@ -24,12 +23,12 @@ func dataSourceConnection() *schema.Resource {
 		ReadWithoutTimeout: dataSourceConnectionRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: verify.ValidARN,
-				ExactlyOneOf: []string{names.AttrARN, names.AttrName},
+				ExactlyOneOf: []string{"arn", "name"},
 			},
 			"connection_status": {
 				Type:     schema.TypeString,
@@ -39,17 +38,17 @@ func dataSourceConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{names.AttrARN, names.AttrName},
+				ExactlyOneOf: []string{"arn", "name"},
 			},
 			"provider_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -61,7 +60,7 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	var connection *types.Connection
 
-	if v, ok := d.GetOk(names.AttrARN); ok {
+	if v, ok := d.GetOk("arn"); ok {
 		arn := v.(string)
 		var err error
 
@@ -70,7 +69,7 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading CodeStar Connections Connection (%s): %s", arn, err)
 		}
-	} else if v, ok := d.GetOk(names.AttrName); ok {
+	} else if v, ok := d.GetOk("name"); ok {
 		name := v.(string)
 
 		input := &codestarconnections.ListConnectionsInput{}
@@ -99,10 +98,10 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	arn := aws.ToString(connection.ConnectionArn)
 	d.SetId(arn)
-	d.Set(names.AttrARN, arn)
+	d.Set("arn", arn)
 	d.Set("connection_status", connection.ConnectionStatus)
 	d.Set("host_arn", connection.HostArn)
-	d.Set(names.AttrName, connection.ConnectionName)
+	d.Set("name", connection.ConnectionName)
 	d.Set("provider_type", connection.ProviderType)
 
 	tags, err := listTags(ctx, conn, arn)
@@ -111,7 +110,7 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "listing tags for CodeStar Connections Connection (%s): %s", arn, err)
 	}
 
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

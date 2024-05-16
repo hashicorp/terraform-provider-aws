@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_mskconnect_worker_configuration")
@@ -22,11 +21,11 @@ func DataSourceWorkerConfiguration() *schema.Resource {
 		ReadWithoutTimeout: dataSourceWorkerConfigurationRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -34,7 +33,7 @@ func DataSourceWorkerConfiguration() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -51,7 +50,7 @@ func dataSourceWorkerConfigurationRead(ctx context.Context, d *schema.ResourceDa
 
 	conn := meta.(*conns.AWSClient).KafkaConnectConn(ctx)
 
-	name := d.Get(names.AttrName)
+	name := d.Get("name")
 	var output []*kafkaconnect.WorkerConfigurationSummary
 
 	err := conn.ListWorkerConfigurationsPagesWithContext(ctx, &kafkaconnect.ListWorkerConfigurationsInput{}, func(page *kafkaconnect.ListWorkerConfigurationsOutput, lastPage bool) bool {
@@ -91,9 +90,9 @@ func dataSourceWorkerConfigurationRead(ctx context.Context, d *schema.ResourceDa
 
 	d.SetId(aws.StringValue(config.Name))
 
-	d.Set(names.AttrARN, config.WorkerConfigurationArn)
-	d.Set(names.AttrDescription, config.Description)
-	d.Set(names.AttrName, config.Name)
+	d.Set("arn", config.WorkerConfigurationArn)
+	d.Set("description", config.Description)
+	d.Set("name", config.Name)
 
 	if config.LatestRevision != nil {
 		d.Set("latest_revision", config.LatestRevision.Revision)

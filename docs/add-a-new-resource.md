@@ -49,7 +49,7 @@ Resources use a self-registration process that adds them to the provider using t
         "github.com/hashicorp/terraform-provider-aws/internal/framework"
     )
 
-    // @FrameworkResource("aws_something_example", name="Example")
+    // @FrameworkResource(name="Example")
     func newResourceExample(_ context.Context) (resource.ResourceWithConfigure, error) {
     	return &resourceExample{}, nil
     }

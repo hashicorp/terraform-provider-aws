@@ -10,16 +10,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/wafv2"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/wafv2"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -34,7 +32,7 @@ const (
 
 // @SDKResource("aws_wafv2_ip_set", name="IP Set")
 // @Tags(identifierAttribute="arn")
-func resourceIPSet() *schema.Resource {
+func ResourceIPSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIPSetCreate,
 		ReadWithoutTimeout:   resourceIPSetRead,
@@ -51,8 +49,8 @@ func resourceIPSet() *schema.Resource {
 				name := idParts[1]
 				scope := idParts[2]
 				d.SetId(id)
-				d.Set(names.AttrName, name)
-				d.Set(names.AttrScope, scope)
+				d.Set("name", name)
+				d.Set("scope", scope)
 				return []*schema.ResourceData{d}, nil
 			},
 		},
@@ -88,36 +86,36 @@ func resourceIPSet() *schema.Resource {
 						return false
 					},
 				},
-				names.AttrARN: {
+				"arn": {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrDescription: {
+				"description": {
 					Type:         schema.TypeString,
 					Optional:     true,
 					ValidateFunc: validation.StringLenBetween(1, 256),
 				},
 				"ip_address_version": {
-					Type:             schema.TypeString,
-					Required:         true,
-					ForceNew:         true,
-					ValidateDiagFunc: enum.Validate[awstypes.IPAddressVersion](),
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringInSlice(wafv2.IPAddressVersion_Values(), false),
 				},
 				"lock_token": {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrName: {
+				"name": {
 					Type:         schema.TypeString,
 					Required:     true,
 					ForceNew:     true,
 					ValidateFunc: validation.StringLenBetween(1, 128),
 				},
-				names.AttrScope: {
-					Type:             schema.TypeString,
-					Required:         true,
-					ForceNew:         true,
-					ValidateDiagFunc: enum.Validate[awstypes.Scope](),
+				"scope": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringInSlice(wafv2.Scope_Values(), false),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -129,40 +127,40 @@ func resourceIPSet() *schema.Resource {
 }
 
 func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
+	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &wafv2.CreateIPSetInput{
-		Addresses:        []string{},
-		IPAddressVersion: awstypes.IPAddressVersion(d.Get("ip_address_version").(string)),
+		Addresses:        aws.StringSlice([]string{}),
+		IPAddressVersion: aws.String(d.Get("ip_address_version").(string)),
 		Name:             aws.String(name),
-		Scope:            awstypes.Scope(d.Get(names.AttrScope).(string)),
+		Scope:            aws.String(d.Get("scope").(string)),
 		Tags:             getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("addresses"); ok && v.(*schema.Set).Len() > 0 {
-		input.Addresses = flex.ExpandStringValueSet(v.(*schema.Set))
+		input.Addresses = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateIPSet(ctx, input)
+	output, err := conn.CreateIPSetWithContext(ctx, input)
 
 	if err != nil {
 		return diag.Errorf("creating WAFv2 IPSet (%s): %s", name, err)
 	}
 
-	d.SetId(aws.ToString(output.Summary.Id))
+	d.SetId(aws.StringValue(output.Summary.Id))
 
 	return resourceIPSetRead(ctx, d, meta)
 }
 
 func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
+	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 
-	output, err := findIPSetByThreePartKey(ctx, conn, d.Id(), d.Get(names.AttrName).(string), d.Get(names.AttrScope).(string))
+	output, err := FindIPSetByThreePartKey(ctx, conn, d.Id(), d.Get("name").(string), d.Get("scope").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] WAFv2 IPSet (%s) not found, removing from state", d.Id())
@@ -175,39 +173,39 @@ func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	ipSet := output.IPSet
-	d.Set("addresses", ipSet.Addresses)
-	arn := aws.ToString(ipSet.ARN)
-	d.Set(names.AttrARN, arn)
-	d.Set(names.AttrDescription, ipSet.Description)
+	d.Set("addresses", aws.StringValueSlice(ipSet.Addresses))
+	arn := aws.StringValue(ipSet.ARN)
+	d.Set("arn", arn)
+	d.Set("description", ipSet.Description)
 	d.Set("ip_address_version", ipSet.IPAddressVersion)
 	d.Set("lock_token", output.LockToken)
-	d.Set(names.AttrName, ipSet.Name)
+	d.Set("name", ipSet.Name)
 
 	return nil
 }
 
 func resourceIPSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
+	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &wafv2.UpdateIPSetInput{
-			Addresses: []string{},
+			Addresses: aws.StringSlice([]string{}),
 			Id:        aws.String(d.Id()),
 			LockToken: aws.String(d.Get("lock_token").(string)),
-			Name:      aws.String(d.Get(names.AttrName).(string)),
-			Scope:     awstypes.Scope(d.Get(names.AttrScope).(string)),
+			Name:      aws.String(d.Get("name").(string)),
+			Scope:     aws.String(d.Get("scope").(string)),
 		}
 
 		if v, ok := d.GetOk("addresses"); ok && v.(*schema.Set).Len() > 0 {
-			input.Addresses = flex.ExpandStringValueSet(v.(*schema.Set))
+			input.Addresses = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
-		if v, ok := d.GetOk(names.AttrDescription); ok {
+		if v, ok := d.GetOk("description"); ok {
 			input.Description = aws.String(v.(string))
 		}
 
-		log.Printf("[INFO] Updating WAFv2 IPSet: %s", d.Id())
-		_, err := conn.UpdateIPSet(ctx, input)
+		log.Printf("[INFO] Updating WAFv2 IPSet: %s", input)
+		_, err := conn.UpdateIPSetWithContext(ctx, input)
 
 		if err != nil {
 			return diag.Errorf("updating WAFv2 IPSet (%s): %s", d.Id(), err)
@@ -218,21 +216,21 @@ func resourceIPSetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceIPSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
+	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 
 	input := &wafv2.DeleteIPSetInput{
 		Id:        aws.String(d.Id()),
 		LockToken: aws.String(d.Get("lock_token").(string)),
-		Name:      aws.String(d.Get(names.AttrName).(string)),
-		Scope:     awstypes.Scope(d.Get(names.AttrScope).(string)),
+		Name:      aws.String(d.Get("name").(string)),
+		Scope:     aws.String(d.Get("scope").(string)),
 	}
 
 	log.Printf("[INFO] Deleting WAFv2 IPSet: %s", d.Id())
-	_, err := tfresource.RetryWhenIsA[*awstypes.WAFAssociatedItemException](ctx, ipSetDeleteTimeout, func() (interface{}, error) {
-		return conn.DeleteIPSet(ctx, input)
-	})
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, ipSetDeleteTimeout, func() (interface{}, error) {
+		return conn.DeleteIPSetWithContext(ctx, input)
+	}, wafv2.ErrCodeWAFAssociatedItemException)
 
-	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
+	if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFNonexistentItemException) {
 		return nil
 	}
 
@@ -243,16 +241,16 @@ func resourceIPSetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	return nil
 }
 
-func findIPSetByThreePartKey(ctx context.Context, conn *wafv2.Client, id, name, scope string) (*wafv2.GetIPSetOutput, error) {
+func FindIPSetByThreePartKey(ctx context.Context, conn *wafv2.WAFV2, id, name, scope string) (*wafv2.GetIPSetOutput, error) {
 	input := &wafv2.GetIPSetInput{
 		Id:    aws.String(id),
 		Name:  aws.String(name),
-		Scope: awstypes.Scope(scope),
+		Scope: aws.String(scope),
 	}
 
-	output, err := conn.GetIPSet(ctx, input)
+	output, err := conn.GetIPSetWithContext(ctx, input)
 
-	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
+	if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFNonexistentItemException) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

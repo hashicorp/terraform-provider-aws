@@ -7,11 +7,14 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/defaults"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
@@ -26,8 +29,48 @@ func (dummyValueser) Values() []dummyValueser {
 }
 
 var (
-	_ basetypes.StringTypable = (*stringEnumType[dummyValueser])(nil)
+	_ xattr.TypeWithValidate   = (*stringEnumType[dummyValueser])(nil)
+	_ basetypes.StringTypable  = (*stringEnumType[dummyValueser])(nil)
+	_ basetypes.StringValuable = (*StringEnum[dummyValueser])(nil)
 )
+
+type customStringTypeWithValidator struct {
+	basetypes.StringType
+	validator validator.String
+}
+
+func (t customStringTypeWithValidator) Validate(ctx context.Context, in tftypes.Value, path path.Path) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if in.IsNull() || !in.IsKnown() {
+		return diags
+	}
+
+	var value string
+	err := in.As(&value)
+	if err != nil {
+		diags.AddAttributeError(
+			path,
+			"Invalid Terraform Value",
+			"An unexpected error occurred while attempting to convert a Terraform value to a string. "+
+				"This generally is an issue with the provider schema implementation. "+
+				"Please contact the provider developers.\n\n"+
+				"Path: "+path.String()+"\n"+
+				"Error: "+err.Error(),
+		)
+		return diags
+	}
+
+	request := validator.StringRequest{
+		ConfigValue: types.StringValue(value),
+		Path:        path,
+	}
+	response := validator.StringResponse{}
+	t.validator.ValidateString(ctx, request, &response)
+	diags.Append(response.Diagnostics...)
+
+	return diags
+}
 
 type stringEnumTypeWithAttributeDefault[T enum.Valueser[T]] interface {
 	basetypes.StringTypable
@@ -35,11 +78,11 @@ type stringEnumTypeWithAttributeDefault[T enum.Valueser[T]] interface {
 }
 
 type stringEnumType[T enum.Valueser[T]] struct {
-	basetypes.StringType
+	customStringTypeWithValidator
 }
 
 func StringEnumType[T enum.Valueser[T]]() stringEnumTypeWithAttributeDefault[T] {
-	return stringEnumType[T]{}
+	return stringEnumType[T]{customStringTypeWithValidator: customStringTypeWithValidator{validator: stringvalidator.OneOf(tfslices.AppendUnique(enum.Values[T](), "")...)}}
 }
 
 func (t stringEnumType[T]) Equal(o attr.Type) bool {
@@ -101,15 +144,6 @@ func (t stringEnumType[T]) AttributeDefault(defaultVal T) defaults.String {
 	return stringdefault.StaticString(string(defaultVal))
 }
 
-var (
-	_ basetypes.StringValuable    = (*StringEnum[dummyValueser])(nil)
-	_ xattr.ValidateableAttribute = (*StringEnum[dummyValueser])(nil)
-)
-
-type StringEnum[T enum.Valueser[T]] struct {
-	basetypes.StringValue
-}
-
 func StringEnumNull[T enum.Valueser[T]]() StringEnum[T] {
 	return StringEnum[T]{StringValue: basetypes.NewStringNull()}
 }
@@ -120,6 +154,10 @@ func StringEnumUnknown[T enum.Valueser[T]]() StringEnum[T] {
 
 func StringEnumValue[T enum.Valueser[T]](value T) StringEnum[T] {
 	return StringEnum[T]{StringValue: basetypes.NewStringValue(string(value))}
+}
+
+type StringEnum[T enum.Valueser[T]] struct {
+	basetypes.StringValue
 }
 
 func (v StringEnum[T]) Equal(o attr.Value) bool {
@@ -145,28 +183,4 @@ func (v StringEnum[T]) ValueEnum() T {
 // It's called via reflection inside AutoFlEx.
 func (v StringEnum[T]) StringEnumValue(value string) StringEnum[T] {
 	return StringEnum[T]{StringValue: basetypes.NewStringValue(value)}
-}
-
-func (v StringEnum[T]) ValidateAttribute(ctx context.Context, req xattr.ValidateAttributeRequest, resp *xattr.ValidateAttributeResponse) {
-	if v.IsNull() || v.IsUnknown() {
-		return
-	}
-
-	vs := v.ValueString()
-	validValues := tfslices.AppendUnique(v.ValueEnum().Values(), "")
-
-	for _, enumVal := range validValues {
-		if vs == string(enumVal) {
-			return
-		}
-	}
-
-	resp.Diagnostics.AddAttributeError(
-		req.Path,
-		"Invalid String Enum Value",
-		"The provided value does not match any valid values.\n\n"+
-			"Path: "+req.Path.String()+"\n"+
-			"Given Value: "+vs+"\n"+
-			"Valid Values: "+fmt.Sprintf("%s", validValues),
-	)
 }

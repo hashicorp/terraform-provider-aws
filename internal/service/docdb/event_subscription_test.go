@@ -37,15 +37,15 @@ func TestAccDocDBEventSubscription_basic(t *testing.T) {
 				Config: testAccEventSubscriptionConfig_enabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &eventSubscription),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
-					resource.TestCheckResourceAttr(resourceName, "event_categories.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "event_categories.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "creation"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "failure"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
-					resource.TestCheckResourceAttr(resourceName, "source_ids.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrSourceType, "db-cluster"),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrSNSTopicARN, snsTopicResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "source_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source_type", "db-cluster"),
+					resource.TestCheckResourceAttrPair(resourceName, "sns_topic_arn", snsTopicResourceName, "arn"),
 				),
 			},
 			{
@@ -73,8 +73,8 @@ func TestAccDocDBEventSubscription_nameGenerated(t *testing.T) {
 				Config: testAccEventSubscriptionConfig_nameGenerated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &eventSubscription),
-					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, id.UniqueIdPrefix),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", id.UniqueIdPrefix),
 				),
 			},
 			{
@@ -126,7 +126,7 @@ func TestAccDocDBEventSubscription_enabled(t *testing.T) {
 				Config: testAccEventSubscriptionConfig_enabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &eventSubscription),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
 				),
 			},
 			{
@@ -138,14 +138,14 @@ func TestAccDocDBEventSubscription_enabled(t *testing.T) {
 				Config: testAccEventSubscriptionConfig_enabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &eventSubscription),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 				),
 			},
 			{
 				Config: testAccEventSubscriptionConfig_enabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &eventSubscription),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
 				),
 			},
 		},
@@ -168,7 +168,7 @@ func TestAccDocDBEventSubscription_eventCategories(t *testing.T) {
 				Config: testAccEventSubscriptionConfig_categories2(rName, "creation", "failure"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &eventSubscription),
-					resource.TestCheckResourceAttr(resourceName, "event_categories.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "event_categories.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "creation"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "failure"),
 				),
@@ -182,7 +182,7 @@ func TestAccDocDBEventSubscription_eventCategories(t *testing.T) {
 				Config: testAccEventSubscriptionConfig_categories2(rName, "configuration change", "deletion"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &eventSubscription),
-					resource.TestCheckResourceAttr(resourceName, "event_categories.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "event_categories.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "configuration change"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "deletion"),
 				),
@@ -204,11 +204,11 @@ func TestAccDocDBEventSubscription_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckEventSubscriptionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventSubscriptionConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccEventSubscriptionConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &eventSubscription),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -217,20 +217,20 @@ func TestAccDocDBEventSubscription_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEventSubscriptionConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccEventSubscriptionConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &eventSubscription),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccEventSubscriptionConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccEventSubscriptionConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &eventSubscription),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},

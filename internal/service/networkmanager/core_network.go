@@ -62,7 +62,7 @@ func ResourceCoreNetwork() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -102,11 +102,11 @@ func ResourceCoreNetwork() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			names.AttrCreatedAt: {
+			"created_at": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
@@ -148,7 +148,7 @@ func ResourceCoreNetwork() *schema.Resource {
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						names.AttrName: {
+						"name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -160,7 +160,7 @@ func ResourceCoreNetwork() *schema.Resource {
 					},
 				},
 			},
-			names.AttrState: {
+			"state": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -182,7 +182,7 @@ func resourceCoreNetworkCreate(ctx context.Context, d *schema.ResourceData, meta
 		Tags:            getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -243,13 +243,13 @@ func resourceCoreNetworkRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading Network Manager Core Network (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, coreNetwork.CoreNetworkArn)
+	d.Set("arn", coreNetwork.CoreNetworkArn)
 	if coreNetwork.CreatedAt != nil {
-		d.Set(names.AttrCreatedAt, aws.TimeValue(coreNetwork.CreatedAt).Format(time.RFC3339))
+		d.Set("created_at", aws.TimeValue(coreNetwork.CreatedAt).Format(time.RFC3339))
 	} else {
-		d.Set(names.AttrCreatedAt, nil)
+		d.Set("created_at", nil)
 	}
-	d.Set(names.AttrDescription, coreNetwork.Description)
+	d.Set("description", coreNetwork.Description)
 	if err := d.Set("edges", flattenCoreNetworkEdges(coreNetwork.Edges)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting edges: %s", err)
 	}
@@ -257,7 +257,7 @@ func resourceCoreNetworkRead(ctx context.Context, d *schema.ResourceData, meta i
 	if err := d.Set("segments", flattenCoreNetworkSegments(coreNetwork.Segments)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting segments: %s", err)
 	}
-	d.Set(names.AttrState, coreNetwork.State)
+	d.Set("state", coreNetwork.State)
 
 	setTagsOut(ctx, coreNetwork.Tags)
 
@@ -269,10 +269,10 @@ func resourceCoreNetworkUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
-	if d.HasChange(names.AttrDescription) {
+	if d.HasChange("description") {
 		_, err := conn.UpdateCoreNetworkWithContext(ctx, &networkmanager.UpdateCoreNetworkInput{
 			CoreNetworkId: aws.String(d.Id()),
-			Description:   aws.String(d.Get(names.AttrDescription).(string)),
+			Description:   aws.String(d.Get("description").(string)),
 		})
 
 		if err != nil {
@@ -514,7 +514,7 @@ func flattenCoreNetworkSegment(apiObject *networkmanager.CoreNetworkSegment) map
 	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap[names.AttrName] = aws.StringValue(v)
+		tfMap["name"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.SharedSegments; v != nil {

@@ -41,7 +41,7 @@ func resourceCustomActionType() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -58,15 +58,15 @@ func resourceCustomActionType() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrDescription: {
+						"description": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						names.AttrKey: {
+						"key": {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
-						names.AttrName: {
+						"name": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -82,7 +82,7 @@ func resourceCustomActionType() *schema.Resource {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
-						names.AttrType: {
+						"type": {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ValidateDiagFunc: enum.Validate[types.ActionConfigurationPropertyType](),
@@ -132,11 +132,11 @@ func resourceCustomActionType() *schema.Resource {
 					},
 				},
 			},
-			names.AttrOwner: {
+			"owner": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrProviderName: {
+			"provider_name": {
 				Type:         schema.TypeString,
 				ForceNew:     true,
 				Required:     true,
@@ -171,7 +171,7 @@ func resourceCustomActionType() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVersion: {
+			"version": {
 				Type:         schema.TypeString,
 				ForceNew:     true,
 				Required:     true,
@@ -188,8 +188,8 @@ func resourceCustomActionTypeCreate(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).CodePipelineClient(ctx)
 
 	category := d.Get("category").(string)
-	provider := d.Get(names.AttrProviderName).(string)
-	version := d.Get(names.AttrVersion).(string)
+	provider := d.Get("provider_name").(string)
+	version := d.Get("version").(string)
 	id := CustomActionTypeCreateResourceID(category, provider, version)
 	input := &codepipeline.CreateCustomActionTypeInput{
 		Category: types.ActionCategory(category),
@@ -253,7 +253,7 @@ func resourceCustomActionTypeRead(ctx context.Context, d *schema.ResourceData, m
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("actiontype:%s/%s/%s/%s", types.ActionOwnerCustom, category, provider, version),
 	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set("arn", arn)
 	d.Set("category", actionType.Id.Category)
 	if err := d.Set("configuration_property", flattenActionConfigurationProperties(d, actionType.ActionConfigurationProperties)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting configuration_property: %s", err)
@@ -272,8 +272,8 @@ func resourceCustomActionTypeRead(ctx context.Context, d *schema.ResourceData, m
 	} else {
 		d.Set("output_artifact_details", nil)
 	}
-	d.Set(names.AttrOwner, actionType.Id.Owner)
-	d.Set(names.AttrProviderName, actionType.Id.Provider)
+	d.Set("owner", actionType.Id.Owner)
+	d.Set("provider_name", actionType.Id.Provider)
 	if actionType.Settings != nil &&
 		// Service can return empty ({}) Settings.
 		(actionType.Settings.EntityUrlTemplate != nil || actionType.Settings.ExecutionUrlTemplate != nil || actionType.Settings.RevisionUrlTemplate != nil || actionType.Settings.ThirdPartyConfigurationUrl != nil) {
@@ -283,7 +283,7 @@ func resourceCustomActionTypeRead(ctx context.Context, d *schema.ResourceData, m
 	} else {
 		d.Set("settings", nil)
 	}
-	d.Set(names.AttrVersion, actionType.Id.Version)
+	d.Set("version", actionType.Id.Version)
 
 	return diags
 }
@@ -391,15 +391,15 @@ func expandActionConfigurationProperty(tfMap map[string]interface{}) *types.Acti
 
 	apiObject := &types.ActionConfigurationProperty{}
 
-	if v, ok := tfMap[names.AttrDescription].(string); ok && v != "" {
+	if v, ok := tfMap["description"].(string); ok && v != "" {
 		apiObject.Description = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrKey].(bool); ok {
+	if v, ok := tfMap["key"].(bool); ok {
 		apiObject.Key = v
 	}
 
-	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
+	if v, ok := tfMap["name"].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
@@ -415,7 +415,7 @@ func expandActionConfigurationProperty(tfMap map[string]interface{}) *types.Acti
 		apiObject.Secret = v
 	}
 
-	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
+	if v, ok := tfMap["type"].(string); ok && v != "" {
 		apiObject.Type = types.ActionConfigurationPropertyType(v)
 	}
 
@@ -494,26 +494,26 @@ func expandActionTypeSettings(tfMap map[string]interface{}) *types.ActionTypeSet
 
 func flattenActionConfigurationProperty(d *schema.ResourceData, i int, apiObject types.ActionConfigurationProperty) map[string]interface{} {
 	tfMap := map[string]interface{}{
-		names.AttrKey: apiObject.Key,
-		"queryable":   apiObject.Queryable,
-		"required":    apiObject.Required,
-		"secret":      apiObject.Secret,
+		"key":       apiObject.Key,
+		"queryable": apiObject.Queryable,
+		"required":  apiObject.Required,
+		"secret":    apiObject.Secret,
 	}
 
 	if v := apiObject.Description; v != nil {
-		tfMap[names.AttrDescription] = aws.ToString(v)
+		tfMap["description"] = aws.ToString(v)
 	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap[names.AttrName] = aws.ToString(v)
+		tfMap["name"] = aws.ToString(v)
 	}
 
 	if v := apiObject.Type; v != "" {
-		tfMap[names.AttrType] = v
+		tfMap["type"] = v
 	} else {
 		// The AWS API does not return Type.
 		key := fmt.Sprintf("configuration_property.%d.type", i)
-		tfMap[names.AttrType] = d.Get(key).(string)
+		tfMap["type"] = d.Get(key).(string)
 	}
 
 	return tfMap

@@ -20,7 +20,6 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_alb_listener")
@@ -38,17 +37,17 @@ func DataSourceListener() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
-				ConflictsWith: []string{"load_balancer_arn", names.AttrPort},
+				ConflictsWith: []string{"load_balancer_arn", "port"},
 			},
-			names.AttrCertificateARN: {
+			"certificate_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDefaultAction: {
+			"default_action": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -67,7 +66,7 @@ func DataSourceListener() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									names.AttrScope: {
+									"scope": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -108,16 +107,16 @@ func DataSourceListener() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									names.AttrClientID: {
+									"client_id": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									names.AttrClientSecret: {
+									"client_secret": {
 										Type:      schema.TypeString,
 										Computed:  true,
 										Sensitive: true,
 									},
-									names.AttrIssuer: {
+									"issuer": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -125,7 +124,7 @@ func DataSourceListener() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									names.AttrScope: {
+									"scope": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -153,7 +152,7 @@ func DataSourceListener() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrContentType: {
+									"content_type": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -161,7 +160,7 @@ func DataSourceListener() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									names.AttrStatusCode: {
+									"status_code": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -178,11 +177,11 @@ func DataSourceListener() *schema.Resource {
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												names.AttrDuration: {
+												"duration": {
 													Type:     schema.TypeInt,
 													Computed: true,
 												},
-												names.AttrEnabled: {
+												"enabled": {
 													Type:     schema.TypeBool,
 													Computed: true,
 												},
@@ -194,11 +193,11 @@ func DataSourceListener() *schema.Resource {
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												names.AttrARN: {
+												"arn": {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												names.AttrWeight: {
+												"weight": {
 													Type:     schema.TypeInt,
 													Computed: true,
 												},
@@ -221,15 +220,15 @@ func DataSourceListener() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									names.AttrPath: {
+									"path": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									names.AttrPort: {
+									"port": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									names.AttrProtocol: {
+									"protocol": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -237,7 +236,7 @@ func DataSourceListener() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									names.AttrStatusCode: {
+									"status_code": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -248,7 +247,7 @@ func DataSourceListener() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrType: {
+						"type": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -259,15 +258,15 @@ func DataSourceListener() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
-				ConflictsWith: []string{names.AttrARN},
-				RequiredWith:  []string{names.AttrPort},
+				ConflictsWith: []string{"arn"},
+				RequiredWith:  []string{"port"},
 			},
 			"mutual_authentication": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrMode: {
+						"mode": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -282,14 +281,14 @@ func DataSourceListener() *schema.Resource {
 					},
 				},
 			},
-			names.AttrPort: {
+			"port": {
 				Type:          schema.TypeInt,
 				Optional:      true,
 				Computed:      true,
-				ConflictsWith: []string{names.AttrARN},
+				ConflictsWith: []string{"arn"},
 				RequiredWith:  []string{"load_balancer_arn"},
 			},
-			names.AttrProtocol: {
+			"protocol": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -297,7 +296,7 @@ func DataSourceListener() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -309,14 +308,14 @@ func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	input := &elasticloadbalancingv2.DescribeListenersInput{}
 
-	if v, ok := d.GetOk(names.AttrARN); ok {
+	if v, ok := d.GetOk("arn"); ok {
 		input.ListenerArns = []string{v.(string)}
 	} else if v, ok := d.GetOk("load_balancer_arn"); ok {
 		input.LoadBalancerArn = aws.String(v.(string))
 	}
 
 	filter := tfslices.PredicateTrue[*awstypes.Listener]()
-	if v, ok := d.GetOk(names.AttrPort); ok {
+	if v, ok := d.GetOk("port"); ok {
 		port := v.(int)
 		filter = func(v *awstypes.Listener) bool {
 			return int(aws.ToInt32(v.Port)) == port
@@ -332,22 +331,22 @@ func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta in
 	if listener.AlpnPolicy != nil && len(listener.AlpnPolicy) == 1 {
 		d.Set("alpn_policy", listener.AlpnPolicy[0])
 	}
-	d.Set(names.AttrARN, listener.ListenerArn)
+	d.Set("arn", listener.ListenerArn)
 	if listener.Certificates != nil && len(listener.Certificates) == 1 {
-		d.Set(names.AttrCertificateARN, listener.Certificates[0].CertificateArn)
+		d.Set("certificate_arn", listener.Certificates[0].CertificateArn)
 	}
 	sort.Slice(listener.DefaultActions, func(i, j int) bool {
 		return aws.ToInt32(listener.DefaultActions[i].Order) < aws.ToInt32(listener.DefaultActions[j].Order)
 	})
-	if err := d.Set(names.AttrDefaultAction, flattenLbListenerActions(d, names.AttrDefaultAction, listener.DefaultActions)); err != nil {
+	if err := d.Set("default_action", flattenLbListenerActions(d, "default_action", listener.DefaultActions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting default_action: %s", err)
 	}
 	d.Set("load_balancer_arn", listener.LoadBalancerArn)
 	if err := d.Set("mutual_authentication", flattenMutualAuthenticationAttributes(listener.MutualAuthentication)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting mutual_authentication: %s", err)
 	}
-	d.Set(names.AttrPort, listener.Port)
-	d.Set(names.AttrProtocol, listener.Protocol)
+	d.Set("port", listener.Port)
+	d.Set("protocol", listener.Protocol)
 	d.Set("ssl_policy", listener.SslPolicy)
 
 	tags, err := listTagsV2(ctx, conn, d.Id())
@@ -361,7 +360,7 @@ func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "listing tags for (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

@@ -47,7 +47,7 @@ func ResourceReplicationConfig() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -57,7 +57,7 @@ func ResourceReplicationConfig() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrAvailabilityZone: {
+						"availability_zone": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -67,7 +67,7 @@ func ResourceReplicationConfig() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						names.AttrKMSKeyID: {
+						"kms_key_id": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -87,7 +87,7 @@ func ResourceReplicationConfig() *schema.Resource {
 							Optional: true,
 							Computed: true,
 						},
-						names.AttrPreferredMaintenanceWindow: {
+						"preferred_maintenance_window": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -99,7 +99,7 @@ func ResourceReplicationConfig() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: validReplicationSubnetGroupID,
 						},
-						names.AttrVPCSecurityGroupIDs: {
+						"vpc_security_group_ids": {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Computed: true,
@@ -113,16 +113,11 @@ func ResourceReplicationConfig() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			// "replication_settings" is equivalent to "replication_task_settings" on "aws_dms_replication_task"
-			// All changes to this field and supporting tests should be mirrored in "aws_dms_replication_task"
 			"replication_settings": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateDiagFunc: validation.AllDiag(
-					validation.ToDiagFunc(validation.StringIsJSON),
-					validateReplicationSettings,
-				),
+				Type:                  schema.TypeString,
+				Optional:              true,
+				Computed:              true,
+				ValidateFunc:          validation.StringIsJSON,
 				DiffSuppressFunc:      suppressEquivalentTaskSettings,
 				DiffSuppressOnRefresh: true,
 			},
@@ -235,7 +230,7 @@ func resourceReplicationConfigRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading DMS Replication Config (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, replicationConfig.ReplicationConfigArn)
+	d.Set("arn", replicationConfig.ReplicationConfigArn)
 	if err := d.Set("compute_config", flattenComputeConfig(replicationConfig.ComputeConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting compute_config: %s", err)
 	}
@@ -254,7 +249,7 @@ func resourceReplicationConfigUpdate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, "start_replication") {
+	if d.HasChangesExcept("tags", "tags_all", "start_replication") {
 		if err := stopReplication(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -627,15 +622,15 @@ func flattenComputeConfig(apiObject *dms.ComputeConfig) []interface{} {
 	}
 
 	tfMap := map[string]interface{}{
-		names.AttrAvailabilityZone:           aws.StringValue(apiObject.AvailabilityZone),
-		"dns_name_servers":                   aws.StringValue(apiObject.DnsNameServers),
-		names.AttrKMSKeyID:                   aws.StringValue(apiObject.KmsKeyId),
-		"max_capacity_units":                 aws.Int64Value(apiObject.MaxCapacityUnits),
-		"min_capacity_units":                 aws.Int64Value(apiObject.MinCapacityUnits),
-		"multi_az":                           aws.BoolValue(apiObject.MultiAZ),
-		names.AttrPreferredMaintenanceWindow: aws.StringValue(apiObject.PreferredMaintenanceWindow),
-		"replication_subnet_group_id":        aws.StringValue(apiObject.ReplicationSubnetGroupId),
-		names.AttrVPCSecurityGroupIDs:        flex.FlattenStringSet(apiObject.VpcSecurityGroupIds),
+		"availability_zone":            aws.StringValue(apiObject.AvailabilityZone),
+		"dns_name_servers":             aws.StringValue(apiObject.DnsNameServers),
+		"kms_key_id":                   aws.StringValue(apiObject.KmsKeyId),
+		"max_capacity_units":           aws.Int64Value(apiObject.MaxCapacityUnits),
+		"min_capacity_units":           aws.Int64Value(apiObject.MinCapacityUnits),
+		"multi_az":                     aws.BoolValue(apiObject.MultiAZ),
+		"preferred_maintenance_window": aws.StringValue(apiObject.PreferredMaintenanceWindow),
+		"replication_subnet_group_id":  aws.StringValue(apiObject.ReplicationSubnetGroupId),
+		"vpc_security_group_ids":       flex.FlattenStringSet(apiObject.VpcSecurityGroupIds),
 	}
 
 	return []interface{}{tfMap}
@@ -648,7 +643,7 @@ func expandComputeConfigInput(tfMap map[string]interface{}) *dms.ComputeConfig {
 
 	apiObject := &dms.ComputeConfig{}
 
-	if v, ok := tfMap[names.AttrAvailabilityZone].(string); ok && v != "" {
+	if v, ok := tfMap["availability_zone"].(string); ok && v != "" {
 		apiObject.AvailabilityZone = aws.String(v)
 	}
 
@@ -656,7 +651,7 @@ func expandComputeConfigInput(tfMap map[string]interface{}) *dms.ComputeConfig {
 		apiObject.DnsNameServers = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrKMSKeyID].(string); ok && v != "" {
+	if v, ok := tfMap["kms_key_id"].(string); ok && v != "" {
 		apiObject.KmsKeyId = aws.String(v)
 	}
 
@@ -672,7 +667,7 @@ func expandComputeConfigInput(tfMap map[string]interface{}) *dms.ComputeConfig {
 		apiObject.MultiAZ = aws.Bool(v)
 	}
 
-	if v, ok := tfMap[names.AttrPreferredMaintenanceWindow].(string); ok && v != "" {
+	if v, ok := tfMap["preferred_maintenance_window"].(string); ok && v != "" {
 		apiObject.PreferredMaintenanceWindow = aws.String(v)
 	}
 
@@ -680,7 +675,7 @@ func expandComputeConfigInput(tfMap map[string]interface{}) *dms.ComputeConfig {
 		apiObject.ReplicationSubnetGroupId = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrVPCSecurityGroupIDs].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap["vpc_security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.VpcSecurityGroupIds = flex.ExpandStringSet(v)
 	}
 

@@ -42,7 +42,7 @@ func ResourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -54,7 +54,7 @@ func ResourceUser() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"passwords": {
 							Type:     schema.TypeSet,
-							Optional: true,
+							Required: true,
 							MinItems: 1,
 							MaxItems: 2,
 							Elem: &schema.Schema{
@@ -68,7 +68,7 @@ func ResourceUser() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						names.AttrType: {
+						"type": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(memorydb.InputAuthenticationType_Values(), false),
@@ -82,7 +82,7 @@ func ResourceUser() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrUserName: {
+			"user_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -97,15 +97,15 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
-	userName := d.Get(names.AttrUserName).(string)
+	userName := d.Get("user_name").(string)
 	input := &memorydb.CreateUserInput{
 		AccessString: aws.String(d.Get("access_string").(string)),
-		Tags:         getTagsIn(ctx),
-		UserName:     aws.String(userName),
-	}
-
-	if v, ok := d.GetOk("authentication_mode"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.AuthenticationMode = expandAuthenticationMode(v.([]interface{})[0].(map[string]interface{}))
+		AuthenticationMode: &memorydb.AuthenticationMode{
+			Passwords: flex.ExpandStringSet(d.Get("authentication_mode.0.passwords").(*schema.Set)),
+			Type:      aws.String(d.Get("authentication_mode.0.type").(string)),
+		},
+		Tags:     getTagsIn(ctx),
+		UserName: aws.String(userName),
 	}
 
 	_, err := conn.CreateUserWithContext(ctx, input)
@@ -137,13 +137,13 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	d.Set("access_string", user.AccessString)
-	d.Set(names.AttrARN, user.ARN)
+	d.Set("arn", user.ARN)
 
 	if v := user.Authentication; v != nil {
 		authenticationMode := map[string]interface{}{
 			"passwords":      d.Get("authentication_mode.0.passwords"),
 			"password_count": aws.Int64Value(v.PasswordCount),
-			names.AttrType:   aws.StringValue(v.Type),
+			"type":           aws.StringValue(v.Type),
 		}
 
 		if err := d.Set("authentication_mode", []interface{}{authenticationMode}); err != nil {
@@ -152,7 +152,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	d.Set("minimum_engine_version", user.MinimumEngineVersion)
-	d.Set(names.AttrUserName, user.Name)
+	d.Set("user_name", user.Name)
 
 	return diags
 }
@@ -162,7 +162,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &memorydb.UpdateUserInput{
 			UserName: aws.String(d.Id()),
 		}
@@ -171,8 +171,11 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			input.AccessString = aws.String(d.Get("access_string").(string))
 		}
 
-		if v, ok := d.GetOk("authentication_mode"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.AuthenticationMode = expandAuthenticationMode(v.([]interface{})[0].(map[string]interface{}))
+		if d.HasChange("authentication_mode") {
+			input.AuthenticationMode = &memorydb.AuthenticationMode{
+				Passwords: flex.ExpandStringSet(d.Get("authentication_mode.0.passwords").(*schema.Set)),
+				Type:      aws.String(d.Get("authentication_mode.0.type").(string)),
+			}
 		}
 
 		_, err := conn.UpdateUserWithContext(ctx, input)
@@ -212,22 +215,4 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	return diags
-}
-
-func expandAuthenticationMode(tfMap map[string]interface{}) *memorydb.AuthenticationMode {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &memorydb.AuthenticationMode{}
-
-	if v, ok := tfMap["passwords"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.Passwords = flex.ExpandStringSet(v)
-	}
-
-	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
-		apiObject.Type = aws.String(v)
-	}
-
-	return apiObject
 }

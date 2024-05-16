@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_serverlessapplicationrepository_application")
@@ -32,7 +31,7 @@ func DataSourceApplication() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -71,7 +70,7 @@ func dataSourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	d.SetId(applicationID)
-	d.Set(names.AttrName, output.Name)
+	d.Set("name", output.Name)
 	d.Set("semantic_version", output.Version.SemanticVersion)
 	d.Set("source_code_url", output.Version.SourceCodeUrl)
 	d.Set("template_url", output.Version.TemplateUrl)

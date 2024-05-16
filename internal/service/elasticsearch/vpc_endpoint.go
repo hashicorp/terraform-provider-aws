@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_elasticsearch_vpc_endpoint")
@@ -48,7 +47,7 @@ func ResourceVPCEndpoint() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			names.AttrEndpoint: {
+			"endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -58,23 +57,23 @@ func ResourceVPCEndpoint() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrAvailabilityZones: {
+						"availability_zones": {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						names.AttrSecurityGroupIDs: {
+						"security_group_ids": {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						names.AttrSubnetIDs: {
+						"subnet_ids": {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						names.AttrVPCID: {
+						"vpc_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -126,7 +125,7 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.Set("domain_arn", endpoint.DomainArn)
-	d.Set(names.AttrEndpoint, endpoint.Endpoint)
+	d.Set("endpoint", endpoint.Endpoint)
 	if endpoint.VpcOptions != nil {
 		if err := d.Set("vpc_options", []interface{}{flattenVPCDerivedInfo(endpoint.VpcOptions)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting vpc_options: %s", err)

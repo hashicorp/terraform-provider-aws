@@ -40,7 +40,7 @@ func ResourceContactList() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -53,7 +53,7 @@ func ResourceContactList() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -73,11 +73,11 @@ func ResourceContactList() *schema.Resource {
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[types.SubscriptionStatus](),
 						},
-						names.AttrDescription: {
+						"description": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						names.AttrDisplayName: {
+						"display_name": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -106,7 +106,7 @@ func resourceContactListCreate(ctx context.Context, d *schema.ResourceData, meta
 		Tags:            getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		in.Description = aws.String(v.(string))
 	}
 
@@ -151,10 +151,10 @@ func resourceContactListRead(ctx context.Context, d *schema.ResourceData, meta i
 		Resource:  fmt.Sprintf("contact-list/%s", d.Id()),
 	}.String()
 
-	d.Set(names.AttrARN, arn)
+	d.Set("arn", arn)
 	d.Set("contact_list_name", out.ContactListName)
 	d.Set("created_timestamp", aws.ToTime(out.CreatedTimestamp).Format(time.RFC3339))
-	d.Set(names.AttrDescription, out.Description)
+	d.Set("description", out.Description)
 	d.Set("last_updated_timestamp", aws.ToTime(out.LastUpdatedTimestamp).Format(time.RFC3339))
 
 	if err := d.Set("topic", flattenTopics(out.Topics)); err != nil {
@@ -171,8 +171,8 @@ func resourceContactListUpdate(ctx context.Context, d *schema.ResourceData, meta
 		ContactListName: aws.String(d.Id()),
 	}
 
-	if d.HasChanges(names.AttrDescription, "topic") {
-		in.Description = aws.String(d.Get(names.AttrDescription).(string))
+	if d.HasChanges("description", "topic") {
+		in.Description = aws.String(d.Get("description").(string))
 		in.Topics = expandTopics(d.Get("topic").(*schema.Set).List())
 
 		log.Printf("[DEBUG] Updating SESV2 ContactList (%s): %#v", d.Id(), in)
@@ -266,11 +266,11 @@ func expandTopic(tfMap map[string]interface{}) *types.Topic {
 		apiObject.DefaultSubscriptionStatus = types.SubscriptionStatus(v)
 	}
 
-	if v, ok := tfMap[names.AttrDescription].(string); ok && v != "" {
+	if v, ok := tfMap["description"].(string); ok && v != "" {
 		apiObject.Description = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrDisplayName].(string); ok && v != "" {
+	if v, ok := tfMap["display_name"].(string); ok && v != "" {
 		apiObject.DisplayName = aws.String(v)
 	}
 
@@ -305,11 +305,11 @@ func flattenTopic(apiObject *types.Topic) map[string]interface{} {
 	}
 
 	if v := apiObject.Description; v != nil {
-		tfMap[names.AttrDescription] = aws.ToString(v)
+		tfMap["description"] = aws.ToString(v)
 	}
 
 	if v := apiObject.DisplayName; v != nil {
-		tfMap[names.AttrDisplayName] = aws.ToString(v)
+		tfMap["display_name"] = aws.ToString(v)
 	}
 
 	if v := apiObject.TopicName; v != nil {

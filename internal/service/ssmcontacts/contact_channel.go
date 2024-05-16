@@ -36,7 +36,7 @@ func ResourceContactChannel() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -58,11 +58,11 @@ func ResourceContactChannel() *schema.Resource {
 					},
 				},
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrType: {
+			"type": {
 				ForceNew: true,
 				Type:     schema.TypeString,
 				Required: true,
@@ -83,17 +83,17 @@ func resourceContactChannelCreate(ctx context.Context, d *schema.ResourceData, m
 		ContactId:       aws.String(d.Get("contact_id").(string)),
 		DeferActivation: aws.Bool(true),
 		DeliveryAddress: delivery_address,
-		Name:            aws.String(d.Get(names.AttrName).(string)),
-		Type:            types.ChannelType(d.Get(names.AttrType).(string)),
+		Name:            aws.String(d.Get("name").(string)),
+		Type:            types.ChannelType(d.Get("type").(string)),
 	}
 
 	out, err := conn.CreateContactChannel(ctx, in)
 	if err != nil {
-		return create.DiagError(names.SSMContacts, create.ErrActionCreating, ResNameContactChannel, d.Get(names.AttrName).(string), err)
+		return create.DiagError(names.SSMContacts, create.ErrActionCreating, ResNameContactChannel, d.Get("name").(string), err)
 	}
 
 	if out == nil {
-		return create.DiagError(names.SSMContacts, create.ErrActionCreating, ResNameContactChannel, d.Get(names.AttrName).(string), errors.New("empty output"))
+		return create.DiagError(names.SSMContacts, create.ErrActionCreating, ResNameContactChannel, d.Get("name").(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.ContactChannelArn))
@@ -137,8 +137,8 @@ func resourceContactChannelUpdate(ctx context.Context, d *schema.ResourceData, m
 		update = true
 	}
 
-	if d.HasChanges(names.AttrName) {
-		in.Name = aws.String(d.Get(names.AttrName).(string))
+	if d.HasChanges("name") {
+		in.Name = aws.String(d.Get("name").(string))
 		update = true
 	}
 

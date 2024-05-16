@@ -40,7 +40,7 @@ func resourceLocationNFS() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -51,7 +51,7 @@ func resourceLocationNFS() *schema.Resource {
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrVersion: {
+						"version": {
 							Type:             schema.TypeString,
 							Default:          awstypes.NfsVersionAutomatic,
 							Optional:         true,
@@ -102,7 +102,7 @@ func resourceLocationNFS() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrURI: {
+			"uri": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -164,7 +164,7 @@ func resourceLocationNFSRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set(names.AttrARN, output.LocationArn)
+	d.Set("arn", output.LocationArn)
 	if err := d.Set("mount_options", flattenNFSMountOptions(output.MountOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting mount_options: %s", err)
 	}
@@ -173,7 +173,7 @@ func resourceLocationNFSRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	d.Set("server_hostname", serverHostName)
 	d.Set("subdirectory", subdirectory)
-	d.Set(names.AttrURI, uri)
+	d.Set("uri", uri)
 
 	return diags
 }
@@ -182,7 +182,7 @@ func resourceLocationNFSUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &datasync.UpdateLocationNfsInput{
 			LocationArn:  aws.String(d.Id()),
 			OnPremConfig: expandOnPremConfig(d.Get("on_prem_config").([]interface{})),
@@ -256,7 +256,7 @@ func expandNFSMountOptions(l []interface{}) *awstypes.NfsMountOptions {
 	m := l[0].(map[string]interface{})
 
 	nfsMountOptions := &awstypes.NfsMountOptions{
-		Version: awstypes.NfsVersion(m[names.AttrVersion].(string)),
+		Version: awstypes.NfsVersion(m["version"].(string)),
 	}
 
 	return nfsMountOptions
@@ -268,7 +268,7 @@ func flattenNFSMountOptions(mountOptions *awstypes.NfsMountOptions) []interface{
 	}
 
 	m := map[string]interface{}{
-		names.AttrVersion: string(mountOptions.Version),
+		"version": string(mountOptions.Version),
 	}
 
 	return []interface{}{m}

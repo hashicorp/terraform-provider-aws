@@ -5,14 +5,17 @@ package ec2_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -37,7 +40,7 @@ func TestAccEC2EBSFastSnapshotRestore_basic(t *testing.T) {
 				Config: testAccEBSFastSnapshotRestoreConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEBSFastSnapshotRestoreExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrSnapshotID, snapshotResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "snapshot_id", snapshotResourceName, "id"),
 				),
 			},
 			{
@@ -111,40 +114,47 @@ func testAccCheckEBSFastSnapshotRestoreDestroy(ctx context.Context) resource.Tes
 				continue
 			}
 
-			_, err := tfec2.FindFastSnapshotRestoreByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAvailabilityZone], rs.Primary.Attributes[names.AttrSnapshotID])
-
-			if tfresource.NotFound(err) {
-				continue
+			out, err := tfec2.FindEBSFastSnapshotRestoreByID(ctx, conn, rs.Primary.ID)
+			if errors.Is(err, tfresource.ErrEmptyResult) || out.State == types.FastSnapshotRestoreStateCodeDisabled {
+				return nil
 			}
-
 			if err != nil {
-				return err
+				return create.Error(names.EC2, create.ErrActionCheckingDestroyed, tfec2.ResNameEBSFastSnapshotRestore, rs.Primary.ID, err)
 			}
 
-			return fmt.Errorf("EC2 EBS Fast Snapshot Restore %s still exists", rs.Primary.ID)
+			return create.Error(names.EC2, create.ErrActionCheckingDestroyed, tfec2.ResNameEBSFastSnapshotRestore, rs.Primary.ID, errors.New("not destroyed"))
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckEBSFastSnapshotRestoreExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckEBSFastSnapshotRestoreExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
+		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return fmt.Errorf("Not found: %s", n)
+			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameEBSFastSnapshotRestore, name, errors.New("not found"))
+		}
+
+		if rs.Primary.ID == "" {
+			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameEBSFastSnapshotRestore, name, errors.New("not set"))
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		_, err := tfec2.FindFastSnapshotRestoreByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAvailabilityZone], rs.Primary.Attributes[names.AttrSnapshotID])
+		_, err := tfec2.FindEBSFastSnapshotRestoreByID(ctx, conn, rs.Primary.ID)
+		if err != nil {
+			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameEBSFastSnapshotRestore, rs.Primary.ID, err)
+		}
 
-		return err
+		return nil
 	}
 }
 
-func testAccEBSFastSnapshotRestoreConfig_base(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+func testAccEBSFastSnapshotRestoreBaseConfig(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptIn(),
+		fmt.Sprintf(`
 resource "aws_ebs_volume" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   size              = 1
@@ -156,16 +166,14 @@ resource "aws_ebs_volume" "test" {
 
 resource "aws_ebs_snapshot" "test" {
   volume_id = aws_ebs_volume.test.id
-
-  tags = {
-    Name = %[1]q
-  }
 }
 `, rName))
 }
 
 func testAccEBSFastSnapshotRestoreConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccEBSFastSnapshotRestoreConfig_base(rName), `
+	return acctest.ConfigCompose(
+		testAccEBSFastSnapshotRestoreBaseConfig(rName),
+		`
 resource "aws_ebs_fast_snapshot_restore" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
   snapshot_id       = aws_ebs_snapshot.test.id

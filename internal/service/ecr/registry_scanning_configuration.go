@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ecr_registry_scanning_configuration", name="Registry Scanning Configuration")
@@ -38,7 +37,7 @@ func resourceRegistryScanningConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrRule: {
+			"rule": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				MinItems: 0,
@@ -51,7 +50,7 @@ func resourceRegistryScanningConfiguration() *schema.Resource {
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrFilter: {
+									"filter": {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.All(
@@ -90,7 +89,7 @@ func resourceRegistryScanningConfigurationPut(ctx context.Context, d *schema.Res
 
 	input := ecr.PutRegistryScanningConfigurationInput{
 		ScanType: types.ScanType(d.Get("scan_type").(string)),
-		Rules:    expandScanningRegistryRules(d.Get(names.AttrRule).(*schema.Set).List()),
+		Rules:    expandScanningRegistryRules(d.Get("rule").(*schema.Set).List()),
 	}
 
 	_, err := conn.PutRegistryScanningConfiguration(ctx, &input)
@@ -123,7 +122,7 @@ func resourceRegistryScanningConfigurationRead(ctx context.Context, d *schema.Re
 	}
 
 	d.Set("registry_id", output.RegistryId)
-	if err := d.Set(names.AttrRule, flattenScanningConfigurationRules(output.ScanningConfiguration.Rules)); err != nil {
+	if err := d.Set("rule", flattenScanningConfigurationRules(output.ScanningConfiguration.Rules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 	}
 	d.Set("scan_type", output.ScanningConfiguration.ScanType)
@@ -205,7 +204,7 @@ func expandScanningRegistryRuleRepositoryFilters(l []interface{}) []types.Scanni
 		}
 		m := f.(map[string]interface{})
 		filters = append(filters, types.ScanningRepositoryFilter{
-			Filter:     aws.String(m[names.AttrFilter].(string)),
+			Filter:     aws.String(m["filter"].(string)),
 			FilterType: types.ScanningRepositoryFilterType((m["filter_type"].(string))),
 		})
 	}
@@ -232,8 +231,8 @@ func flattenScanningConfigurationFilters(l []types.ScanningRepositoryFilter) []i
 	out := make([]interface{}, len(l))
 	for i, filter := range l {
 		out[i] = map[string]interface{}{
-			names.AttrFilter: aws.ToString(filter.Filter),
-			"filter_type":    filter.FilterType,
+			"filter":      aws.ToString(filter.Filter),
+			"filter_type": filter.FilterType,
 		}
 	}
 

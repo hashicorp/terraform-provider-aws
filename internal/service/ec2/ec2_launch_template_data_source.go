@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_launch_template")
@@ -31,7 +30,7 @@ func DataSourceLaunchTemplate() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -40,7 +39,7 @@ func DataSourceLaunchTemplate() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrDeviceName: {
+						"device_name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -49,23 +48,23 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrDeleteOnTermination: {
+									"delete_on_termination": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									names.AttrEncrypted: {
+									"encrypted": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									names.AttrIOPS: {
+									"iops": {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									names.AttrKMSKeyID: {
+									"kms_key_id": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									names.AttrSnapshotID: {
+									"snapshot_id": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -73,11 +72,11 @@ func DataSourceLaunchTemplate() *schema.Resource {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									names.AttrVolumeSize: {
+									"volume_size": {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									names.AttrVolumeType: {
+									"volume_type": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -159,7 +158,7 @@ func DataSourceLaunchTemplate() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -180,7 +179,7 @@ func DataSourceLaunchTemplate() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrType: {
+						"type": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -192,7 +191,7 @@ func DataSourceLaunchTemplate() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrType: {
+						"type": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -204,14 +203,14 @@ func DataSourceLaunchTemplate() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
+						"enabled": {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
 					},
 				},
 			},
-			names.AttrFilter: customFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"hibernation_options": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -229,18 +228,18 @@ func DataSourceLaunchTemplate() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrARN: {
+						"arn": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrName: {
+						"name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			names.AttrID: {
+			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -303,11 +302,11 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrMax: {
+									"max": {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									names.AttrMin: {
+									"min": {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
@@ -329,11 +328,11 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrMax: {
+									"max": {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									names.AttrMin: {
+									"min": {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
@@ -359,11 +358,11 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrMax: {
+									"max": {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									names.AttrMin: {
+									"min": {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
@@ -403,11 +402,11 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrMax: {
+									"max": {
 										Type:     schema.TypeFloat,
 										Computed: true,
 									},
-									names.AttrMin: {
+									"min": {
 										Type:     schema.TypeFloat,
 										Computed: true,
 									},
@@ -419,11 +418,11 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrMax: {
+									"max": {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									names.AttrMin: {
+									"min": {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
@@ -435,11 +434,11 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrMax: {
+									"max": {
 										Type:     schema.TypeFloat,
 										Computed: true,
 									},
-									names.AttrMin: {
+									"min": {
 										Type:     schema.TypeFloat,
 										Computed: true,
 									},
@@ -451,11 +450,11 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrMax: {
+									"max": {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									names.AttrMin: {
+									"min": {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
@@ -479,11 +478,11 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrMax: {
+									"max": {
 										Type:     schema.TypeFloat,
 										Computed: true,
 									},
-									names.AttrMin: {
+									"min": {
 										Type:     schema.TypeFloat,
 										Computed: true,
 									},
@@ -495,11 +494,11 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrMax: {
+									"max": {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									names.AttrMin: {
+									"min": {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
@@ -509,7 +508,7 @@ func DataSourceLaunchTemplate() *schema.Resource {
 					},
 				},
 			},
-			names.AttrInstanceType: {
+			"instance_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -582,14 +581,14 @@ func DataSourceLaunchTemplate() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
+						"enabled": {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
 					},
 				},
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -607,11 +606,11 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrDeleteOnTermination: {
+						"delete_on_termination": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrDescription: {
+						"description": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -663,7 +662,7 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						names.AttrNetworkInterfaceID: {
+						"network_interface_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -671,12 +670,12 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrSecurityGroups: {
+						"security_groups": {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						names.AttrSubnetID: {
+						"subnet_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -692,11 +691,11 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrAvailabilityZone: {
+						"availability_zone": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrGroupName: {
+						"group_name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -757,20 +756,20 @@ func DataSourceLaunchTemplate() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrResourceType: {
+						"resource_type": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrTags: tftags.TagsSchemaComputed(),
+						"tags": tftags.TagsSchemaComputed(),
 					},
 				},
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 			"user_data": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrVPCSecurityGroupIDs: {
+			"vpc_security_group_ids": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -786,20 +785,20 @@ func dataSourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, m
 
 	input := &ec2.DescribeLaunchTemplatesInput{}
 
-	if v, ok := d.GetOk(names.AttrID); ok {
+	if v, ok := d.GetOk("id"); ok {
 		input.LaunchTemplateIds = aws.StringSlice([]string{v.(string)})
 	}
 
-	if v, ok := d.GetOk(names.AttrName); ok {
+	if v, ok := d.GetOk("name"); ok {
 		input.LaunchTemplateNames = aws.StringSlice([]string{v.(string)})
 	}
 
 	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get(names.AttrFilter).(*schema.Set),
+		d.Get("filter").(*schema.Set),
 	)...)
 
 	input.Filters = append(input.Filters, newTagFilterList(
-		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
+		Tags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
 	)...)
 
 	if len(input.Filters) == 0 {
@@ -828,17 +827,17 @@ func dataSourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, m
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("launch-template/%s", d.Id()),
 	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set("arn", arn)
 	d.Set("default_version", lt.DefaultVersionNumber)
-	d.Set(names.AttrDescription, ltv.VersionDescription)
+	d.Set("description", ltv.VersionDescription)
 	d.Set("latest_version", lt.LatestVersionNumber)
-	d.Set(names.AttrName, lt.LaunchTemplateName)
+	d.Set("name", lt.LaunchTemplateName)
 
 	if err := flattenResponseLaunchTemplateData(ctx, conn, d, ltv.LaunchTemplateData); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, lt.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, lt.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "settings tags: %s", err)
 	}
 

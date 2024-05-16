@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_servicecatalog_portfolio")
@@ -35,31 +34,31 @@ func DataSourcePortfolio() *schema.Resource {
 				Default:      "en",
 				ValidateFunc: validation.StringInSlice(AcceptLanguage_Values(), false),
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrCreatedTime: {
+			"created_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrID: {
+			"id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrProviderName: {
+			"provider_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -69,7 +68,7 @@ func dataSourcePortfolioRead(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	input := &servicecatalog.DescribePortfolioInput{
-		Id: aws.String(d.Get(names.AttrID).(string)),
+		Id: aws.String(d.Get("id").(string)),
 	}
 
 	if v, ok := d.GetOk("accept_language"); ok {
@@ -79,30 +78,30 @@ func dataSourcePortfolioRead(ctx context.Context, d *schema.ResourceData, meta i
 	output, err := conn.DescribePortfolioWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting Service Catalog Portfolio (%s): %s", d.Get(names.AttrID).(string), err)
+		return sdkdiag.AppendErrorf(diags, "getting Service Catalog Portfolio (%s): %s", d.Get("id").(string), err)
 	}
 
 	if output == nil || output.PortfolioDetail == nil {
-		return sdkdiag.AppendErrorf(diags, "getting Service Catalog Portfolio (%s): empty response", d.Get(names.AttrID).(string))
+		return sdkdiag.AppendErrorf(diags, "getting Service Catalog Portfolio (%s): empty response", d.Get("id").(string))
 	}
 
 	detail := output.PortfolioDetail
 
 	d.SetId(aws.StringValue(detail.Id))
 
-	if err := d.Set(names.AttrCreatedTime, aws.TimeValue(detail.CreatedTime).Format(time.RFC3339)); err != nil {
+	if err := d.Set("created_time", aws.TimeValue(detail.CreatedTime).Format(time.RFC3339)); err != nil {
 		log.Printf("[DEBUG] Error setting created_time: %s", err)
 	}
 
-	d.Set(names.AttrARN, detail.ARN)
-	d.Set(names.AttrDescription, detail.Description)
-	d.Set(names.AttrName, detail.DisplayName)
-	d.Set(names.AttrProviderName, detail.ProviderName)
+	d.Set("arn", detail.ARN)
+	d.Set("description", detail.Description)
+	d.Set("name", detail.DisplayName)
+	d.Set("provider_name", detail.ProviderName)
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	tags := KeyValueTags(ctx, output.Tags)
 
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

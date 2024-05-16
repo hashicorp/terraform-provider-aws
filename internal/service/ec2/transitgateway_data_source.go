@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ec2_transit_gateway")
@@ -32,7 +31,7 @@ func DataSourceTransitGateway() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -52,7 +51,7 @@ func DataSourceTransitGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -60,8 +59,8 @@ func DataSourceTransitGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrFilter: customFiltersSchema(),
-			names.AttrID: {
+			"filter": customFiltersSchema(),
+			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -70,7 +69,7 @@ func DataSourceTransitGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrOwnerID: {
+			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -78,7 +77,7 @@ func DataSourceTransitGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 			"transit_gateway_cidr_blocks": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -100,7 +99,7 @@ func dataSourceTransitGatewayRead(ctx context.Context, d *schema.ResourceData, m
 	input := &ec2.DescribeTransitGatewaysInput{}
 
 	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get(names.AttrFilter).(*schema.Set),
+		d.Get("filter").(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {
@@ -108,7 +107,7 @@ func dataSourceTransitGatewayRead(ctx context.Context, d *schema.ResourceData, m
 		input.Filters = nil
 	}
 
-	if v, ok := d.GetOk(names.AttrID); ok {
+	if v, ok := d.GetOk("id"); ok {
 		input.TransitGatewayIds = aws.StringSlice([]string{v.(string)})
 	}
 
@@ -120,20 +119,20 @@ func dataSourceTransitGatewayRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId(aws.StringValue(transitGateway.TransitGatewayId))
 	d.Set("amazon_side_asn", transitGateway.Options.AmazonSideAsn)
-	d.Set(names.AttrARN, transitGateway.TransitGatewayArn)
+	d.Set("arn", transitGateway.TransitGatewayArn)
 	d.Set("association_default_route_table_id", transitGateway.Options.AssociationDefaultRouteTableId)
 	d.Set("auto_accept_shared_attachments", transitGateway.Options.AutoAcceptSharedAttachments)
 	d.Set("default_route_table_association", transitGateway.Options.DefaultRouteTableAssociation)
 	d.Set("default_route_table_propagation", transitGateway.Options.DefaultRouteTablePropagation)
-	d.Set(names.AttrDescription, transitGateway.Description)
+	d.Set("description", transitGateway.Description)
 	d.Set("dns_support", transitGateway.Options.DnsSupport)
 	d.Set("multicast_support", transitGateway.Options.MulticastSupport)
-	d.Set(names.AttrOwnerID, transitGateway.OwnerId)
+	d.Set("owner_id", transitGateway.OwnerId)
 	d.Set("propagation_default_route_table_id", transitGateway.Options.PropagationDefaultRouteTableId)
 	d.Set("transit_gateway_cidr_blocks", aws.StringValueSlice(transitGateway.Options.TransitGatewayCidrBlocks))
 	d.Set("vpn_ecmp_support", transitGateway.Options.VpnEcmpSupport)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, transitGateway.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, transitGateway.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

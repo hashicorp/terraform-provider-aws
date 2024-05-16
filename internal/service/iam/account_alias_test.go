@@ -24,10 +24,10 @@ func TestAccIAMAccountAlias_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"DataSource": {
-			acctest.CtBasic: testAccAccountAliasDataSource_basic,
+			"basic": testAccAccountAliasDataSource_basic,
 		},
 		"Resource": {
-			acctest.CtBasic: testAccAccountAlias_basic,
+			"basic": testAccAccountAlias_basic,
 		},
 	}
 

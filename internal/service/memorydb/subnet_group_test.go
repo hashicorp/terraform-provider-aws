@@ -38,15 +38,15 @@ func TestAccMemoryDBSubnetGroup_basic(t *testing.T) {
 				Config: testAccSubnetGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "memorydb", "subnetgroup/"+rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct2),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.0", names.AttrID),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.1", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "memorydb", "subnetgroup/"+rName),
+					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.0", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.1", "id"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Test", "test"),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
 				),
 			},
 			{
@@ -96,8 +96,8 @@ func TestAccMemoryDBSubnetGroup_nameGenerated(t *testing.T) {
 				Config: testAccSubnetGroupConfig_noName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(ctx, resourceName),
-					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform-"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 				),
 			},
 		},
@@ -119,8 +119,8 @@ func TestAccMemoryDBSubnetGroup_namePrefix(t *testing.T) {
 				Config: testAccSubnetGroupConfig_namePrefix(rName, "tftest-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(ctx, resourceName),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tftest-"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tftest-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tftest-"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tftest-"),
 				),
 			},
 		},
@@ -142,7 +142,7 @@ func TestAccMemoryDBSubnetGroup_update_description(t *testing.T) {
 				Config: testAccSubnetGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
+					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
 				),
 			},
 			{
@@ -154,7 +154,7 @@ func TestAccMemoryDBSubnetGroup_update_description(t *testing.T) {
 				Config: testAccSubnetGroupConfig_description(rName, "Updated Description"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Updated Description"),
+					resource.TestCheckResourceAttr(resourceName, "description", "Updated Description"),
 				),
 			},
 			{
@@ -181,8 +181,8 @@ func TestAccMemoryDBSubnetGroup_update_subnetIds(t *testing.T) {
 				Config: testAccSubnetGroupConfig_count(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct1),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.0", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.0", "id"),
 				),
 			},
 			{
@@ -194,10 +194,10 @@ func TestAccMemoryDBSubnetGroup_update_subnetIds(t *testing.T) {
 				Config: testAccSubnetGroupConfig_count(rName, 3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct3),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.0", names.AttrID),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.1", names.AttrID),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.2", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "3"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.0", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.1", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.2", "id"),
 				),
 			},
 			{
@@ -209,9 +209,9 @@ func TestAccMemoryDBSubnetGroup_update_subnetIds(t *testing.T) {
 				Config: testAccSubnetGroupConfig_count(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct2),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.0", names.AttrID),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.1", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.0", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.1", "id"),
 				),
 			},
 			{
@@ -238,8 +238,8 @@ func TestAccMemoryDBSubnetGroup_update_tags(t *testing.T) {
 				Config: testAccSubnetGroupConfig_tags0(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 				),
 			},
 			{
@@ -248,15 +248,15 @@ func TestAccMemoryDBSubnetGroup_update_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSubnetGroupConfig_tags2(rName, "Key1", acctest.CtValue1, "Key2", acctest.CtValue2),
+				Config: testAccSubnetGroupConfig_tags2(rName, "Key1", "value1", "Key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key1", acctest.CtValue1),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key2", acctest.CtValue2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.Key1", acctest.CtValue1),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.Key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.Key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.Key2", "value2"),
 				),
 			},
 			{
@@ -265,13 +265,13 @@ func TestAccMemoryDBSubnetGroup_update_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSubnetGroupConfig_tags1(rName, "Key1", acctest.CtValue1),
+				Config: testAccSubnetGroupConfig_tags1(rName, "Key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key1", acctest.CtValue1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.Key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.Key1", "value1"),
 				),
 			},
 			{
@@ -283,8 +283,8 @@ func TestAccMemoryDBSubnetGroup_update_tags(t *testing.T) {
 				Config: testAccSubnetGroupConfig_tags0(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 				),
 			},
 			{
@@ -305,7 +305,7 @@ func testAccCheckSubnetGroupDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			_, err := tfmemorydb.FindSubnetGroupByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
+			_, err := tfmemorydb.FindSubnetGroupByName(ctx, conn, rs.Primary.Attributes["name"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -335,7 +335,7 @@ func testAccCheckSubnetGroupExists(ctx context.Context, n string) resource.TestC
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn(ctx)
 
-		_, err := tfmemorydb.FindSubnetGroupByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
+		_, err := tfmemorydb.FindSubnetGroupByName(ctx, conn, rs.Primary.Attributes["name"])
 
 		return err
 	}

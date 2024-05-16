@@ -43,7 +43,7 @@ func resourceRepositoryAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -80,7 +80,7 @@ func resourceRepositoryAssociation() *schema.Resource {
 							Optional:         true,
 							ValidateDiagFunc: enum.Validate[types.EncryptionOption](),
 						},
-						names.AttrKMSKeyID: {
+						"kms_key_id": {
 							Type:     schema.TypeString,
 							ForceNew: true,
 							Optional: true,
@@ -92,11 +92,11 @@ func resourceRepositoryAssociation() *schema.Resource {
 					},
 				},
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrOwner: {
+			"owner": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -123,7 +123,7 @@ func resourceRepositoryAssociation() *schema.Resource {
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
 									},
-									names.AttrName: {
+									"name": {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.All(
@@ -131,7 +131,7 @@ func resourceRepositoryAssociation() *schema.Resource {
 											validation.StringMatch(regexache.MustCompile(`^\S[\w.-]*$`), ""),
 										),
 									},
-									names.AttrOwner: {
+									"owner": {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.All(
@@ -149,7 +149,7 @@ func resourceRepositoryAssociation() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrName: {
+									"name": {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.All(
@@ -172,7 +172,7 @@ func resourceRepositoryAssociation() *schema.Resource {
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
 									},
-									names.AttrName: {
+									"name": {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.All(
@@ -180,7 +180,7 @@ func resourceRepositoryAssociation() *schema.Resource {
 											validation.StringMatch(regexache.MustCompile(`^\S[\w.-]*$`), ""),
 										),
 									},
-									names.AttrOwner: {
+									"owner": {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.All(
@@ -191,14 +191,14 @@ func resourceRepositoryAssociation() *schema.Resource {
 								},
 							},
 						},
-						names.AttrS3Bucket: {
+						"s3_bucket": {
 							Type:     schema.TypeList,
 							ForceNew: true,
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrBucketName: {
+									"bucket_name": {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.All(
@@ -206,7 +206,7 @@ func resourceRepositoryAssociation() *schema.Resource {
 											validation.StringMatch(regexache.MustCompile(`^\S(.*\S)?$`), ""),
 										),
 									},
-									names.AttrName: {
+									"name": {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.All(
@@ -225,7 +225,7 @@ func resourceRepositoryAssociation() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrBucketName: {
+						"bucket_name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -248,7 +248,7 @@ func resourceRepositoryAssociation() *schema.Resource {
 					},
 				},
 			},
-			names.AttrState: {
+			"state": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -309,19 +309,19 @@ func resourceRepositoryAssociationRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "reading CodeGuru Repository Association (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, out.AssociationArn)
+	d.Set("arn", out.AssociationArn)
 	d.Set("association_id", out.AssociationId)
 	d.Set("connection_arn", out.ConnectionArn)
 	if err := d.Set("kms_key_details", flattenKMSKeyDetails(out.KMSKeyDetails)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting kms_key_details: %s", err)
 	}
-	d.Set(names.AttrName, out.Name)
-	d.Set(names.AttrOwner, out.Owner)
+	d.Set("name", out.Name)
+	d.Set("owner", out.Owner)
 	d.Set("provider_type", out.ProviderType)
 	if err := d.Set("s3_repository_details", flattenS3RepositoryDetails(out.S3RepositoryDetails)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting s3_repository_details: %s", err)
 	}
-	d.Set(names.AttrState, out.State)
+	d.Set("state", out.State)
 	d.Set("state_reason", out.StateReason)
 
 	return diags
@@ -450,7 +450,7 @@ func flattenKMSKeyDetails(kmsKeyDetails *types.KMSKeyDetails) []interface{} {
 	}
 
 	if v := kmsKeyDetails.KMSKeyId; v != nil {
-		values[names.AttrKMSKeyID] = aws.ToString(v)
+		values["kms_key_id"] = aws.ToString(v)
 	}
 
 	return []interface{}{values}
@@ -464,7 +464,7 @@ func flattenS3RepositoryDetails(s3RepositoryDetails *types.S3RepositoryDetails) 
 	values := map[string]interface{}{}
 
 	if v := s3RepositoryDetails.BucketName; v != nil {
-		values[names.AttrBucketName] = aws.ToString(v)
+		values["bucket_name"] = aws.ToString(v)
 	}
 
 	if v := s3RepositoryDetails.CodeArtifacts; v != nil {
@@ -508,7 +508,7 @@ func expandKMSKeyDetails(kmsKeyDetails []interface{}) *types.KMSKeyDetails {
 		result.EncryptionOption = types.EncryptionOption(v)
 	}
 
-	if v, ok := tfMap[names.AttrKMSKeyID].(string); ok && v != "" {
+	if v, ok := tfMap["kms_key_id"].(string); ok && v != "" {
 		result.KMSKeyId = aws.String(v)
 	}
 
@@ -527,7 +527,7 @@ func expandCodeCommitRepository(repository []interface{}) *types.CodeCommitRepos
 
 	result := &types.CodeCommitRepository{}
 
-	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
+	if v, ok := tfMap["name"].(string); ok && v != "" {
 		result.Name = aws.String(v)
 	}
 
@@ -555,7 +555,7 @@ func expandRepository(repository []interface{}) *types.Repository {
 	if v, ok := tfMap["github_enterprise_server"]; ok {
 		result.GitHubEnterpriseServer = expandThirdPartySourceRepository(v.([]interface{}))
 	}
-	if v, ok := tfMap[names.AttrS3Bucket]; ok {
+	if v, ok := tfMap["s3_bucket"]; ok {
 		result.S3Bucket = expandS3Repository(v.([]interface{}))
 	}
 
@@ -574,11 +574,11 @@ func expandS3Repository(repository []interface{}) *types.S3Repository {
 
 	result := &types.S3Repository{}
 
-	if v, ok := tfMap[names.AttrBucketName].(string); ok && v != "" {
+	if v, ok := tfMap["bucket_name"].(string); ok && v != "" {
 		result.BucketName = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
+	if v, ok := tfMap["name"].(string); ok && v != "" {
 		result.Name = aws.String(v)
 	}
 
@@ -601,11 +601,11 @@ func expandThirdPartySourceRepository(repository []interface{}) *types.ThirdPart
 		result.ConnectionArn = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
+	if v, ok := tfMap["name"].(string); ok && v != "" {
 		result.Name = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrOwner].(string); ok && v != "" {
+	if v, ok := tfMap["owner"].(string); ok && v != "" {
 		result.Owner = aws.String(v)
 	}
 

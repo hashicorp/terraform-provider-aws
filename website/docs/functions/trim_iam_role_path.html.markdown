@@ -8,7 +8,7 @@ description: |-
 
 # Function: trim_iam_role_path
 
-~> Provider-defined functions are supported in Terraform 1.8 and later.
+~> Provider-defined function support is in technical preview and offered without compatibility promises until Terraform 1.8 is generally available.
 
 Trims the path prefix from an IAM role Amazon Resource Name (ARN).
 This function can be used when services require role ARNs to be passed without a path.

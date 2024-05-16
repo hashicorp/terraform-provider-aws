@@ -45,7 +45,7 @@ func TestAccMediaLiveInputSecurityGroup_basic(t *testing.T) {
 				Config: testAccInputSecurityGroupConfig_basic(rName, "10.0.0.8/32"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInputSecurityGroupExists(ctx, resourceName, &inputSecurityGroup),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "whitelist_rules.*", map[string]string{
 						"cidr": "10.0.0.8/32",
 					}),
@@ -84,7 +84,7 @@ func TestAccMediaLiveInputSecurityGroup_updateCIDR(t *testing.T) {
 				Config: testAccInputSecurityGroupConfig_basic(rName, "10.0.0.8/32"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInputSecurityGroupExists(ctx, resourceName, &inputSecurityGroup),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "whitelist_rules.*", map[string]string{
 						"cidr": "10.0.0.8/32",
 					}),
@@ -94,7 +94,7 @@ func TestAccMediaLiveInputSecurityGroup_updateCIDR(t *testing.T) {
 				Config: testAccInputSecurityGroupConfig_basic(rName, "10.2.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInputSecurityGroupExists(ctx, resourceName, &inputSecurityGroup),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "whitelist_rules.*", map[string]string{
 						"cidr": "10.2.0.0/16",
 					}),
@@ -124,28 +124,28 @@ func TestAccMediaLiveInputSecurityGroup_updateTags(t *testing.T) {
 		CheckDestroy:             testAccCheckInputSecurityGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInputSecurityGroupConfig_tags1(acctest.CtKey1, acctest.CtValue1),
+				Config: testAccInputSecurityGroupConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInputSecurityGroupExists(ctx, resourceName, &inputSecurityGroup),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
-				Config: testAccInputSecurityGroupConfig_tags2(acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccInputSecurityGroupConfig_tags2("key1", "value1", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInputSecurityGroupExists(ctx, resourceName, &inputSecurityGroup),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccInputSecurityGroupConfig_tags1(acctest.CtKey2, acctest.CtValue2),
+				Config: testAccInputSecurityGroupConfig_tags1("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInputSecurityGroupExists(ctx, resourceName, &inputSecurityGroup),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},

@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccWorkspace_basic(t *testing.T) {
@@ -50,20 +49,20 @@ func testAccWorkspace_basic(t *testing.T) {
 				Config:  testAccWorkspaceConfig_basic(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "directory_id", directoryResourceName, names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, "bundle_id", bundleDataSourceName, names.AttrID),
-					resource.TestMatchResourceAttr(resourceName, names.AttrIPAddress, regexache.MustCompile(`\d+\.\d+\.\d+\.\d+`)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(types.WorkspaceStateAvailable)),
+					resource.TestCheckResourceAttrPair(resourceName, "directory_id", directoryResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "bundle_id", bundleDataSourceName, "id"),
+					resource.TestMatchResourceAttr(resourceName, "ip_address", regexache.MustCompile(`\d+\.\d+\.\d+\.\d+`)),
+					resource.TestCheckResourceAttr(resourceName, "state", string(types.WorkspaceStateAvailable)),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_encryption_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, "Administrator"),
+					resource.TestCheckResourceAttr(resourceName, "user_name", "Administrator"),
 					resource.TestCheckResourceAttr(resourceName, "volume_encryption_key", ""),
-					resource.TestCheckResourceAttr(resourceName, "workspace_properties.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "workspace_properties.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.compute_type_name", string(types.ComputeValue)),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.root_volume_size_gib", "80"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.running_mode", string(types.RunningModeAlwaysOn)),
-					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.running_mode_auto_stop_timeout_in_minutes", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.user_volume_size_gib", acctest.Ct10),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.running_mode_auto_stop_timeout_in_minutes", "0"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.user_volume_size_gib", "10"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", fmt.Sprintf("tf-testacc-workspaces-workspace-%[1]s", rName)),
 				),
 			},
@@ -99,9 +98,9 @@ func testAccWorkspace_tags(t *testing.T) {
 				Config: testAccWorkspaceConfig_tagsA(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", fmt.Sprintf("tf-testacc-workspaces-workspace-%[1]s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "tags.Alpha", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tags.Alpha", "1"),
 				),
 			},
 			{
@@ -113,16 +112,16 @@ func testAccWorkspace_tags(t *testing.T) {
 				Config: testAccWorkspaceConfig_tagsB(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", fmt.Sprintf("tf-testacc-workspaces-workspace-%[1]s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "tags.Beta", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "tags.Beta", "2"),
 				),
 			},
 			{
 				Config: testAccWorkspaceConfig_tagsC(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v3),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", fmt.Sprintf("tf-testacc-workspaces-workspace-%[1]s", rName)),
 				),
 			},
@@ -154,12 +153,12 @@ func testAccWorkspace_workspaceProperties(t *testing.T) {
 				Config:  testAccWorkspaceConfig_propertiesA(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "workspace_properties.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "workspace_properties.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.compute_type_name", string(types.ComputeValue)),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.root_volume_size_gib", "80"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.running_mode", string(types.RunningModeAutoStop)),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.running_mode_auto_stop_timeout_in_minutes", "120"),
-					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.user_volume_size_gib", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.user_volume_size_gib", "10"),
 				),
 			},
 			{
@@ -171,24 +170,24 @@ func testAccWorkspace_workspaceProperties(t *testing.T) {
 				Config: testAccWorkspaceConfig_propertiesB(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v2),
-					resource.TestCheckResourceAttr(resourceName, "workspace_properties.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "workspace_properties.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.compute_type_name", string(types.ComputeValue)),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.root_volume_size_gib", "80"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.running_mode", string(types.RunningModeAlwaysOn)),
-					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.running_mode_auto_stop_timeout_in_minutes", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.user_volume_size_gib", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.running_mode_auto_stop_timeout_in_minutes", "0"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.user_volume_size_gib", "10"),
 				),
 			},
 			{
 				Config: testAccWorkspaceConfig_propertiesC(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v3),
-					resource.TestCheckResourceAttr(resourceName, "workspace_properties.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "workspace_properties.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.compute_type_name", string(types.ComputeValue)),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.root_volume_size_gib", "80"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.running_mode", string(types.RunningModeAlwaysOn)),
-					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.running_mode_auto_stop_timeout_in_minutes", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.user_volume_size_gib", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.running_mode_auto_stop_timeout_in_minutes", "0"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.user_volume_size_gib", "10"),
 				),
 			},
 		},
@@ -220,12 +219,12 @@ func testAccWorkspace_workspaceProperties_runningModeAlwaysOn(t *testing.T) {
 				Config: testAccWorkspaceConfig_propertiesB(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "workspace_properties.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "workspace_properties.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.compute_type_name", string(types.ComputeValue)),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.root_volume_size_gib", "80"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.running_mode", string(types.RunningModeAlwaysOn)),
-					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.running_mode_auto_stop_timeout_in_minutes", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.user_volume_size_gib", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.running_mode_auto_stop_timeout_in_minutes", "0"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.user_volume_size_gib", "10"),
 				),
 			},
 			{

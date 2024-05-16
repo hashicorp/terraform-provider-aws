@@ -249,7 +249,7 @@ func TestAccIAMUserLoginProfile_nogpg(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserLoginProfileExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "password_length", "20"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrPassword),
+					resource.TestCheckResourceAttrSet(resourceName, "password"),
 				),
 			},
 			{
@@ -260,7 +260,7 @@ func TestAccIAMUserLoginProfile_nogpg(t *testing.T) {
 					"encrypted_password",
 					"key_fingerprint",
 					"password_length",
-					names.AttrPassword,
+					"password",
 				},
 			},
 		},
@@ -288,47 +288,6 @@ func TestAccIAMUserLoginProfile_disappears(t *testing.T) {
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceUserLoginProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func TestAccIAMUserLoginProfile_passwordResetRequired(t *testing.T) {
-	ctx := acctest.Context(t)
-	var conf iam.GetLoginProfileOutput
-
-	resourceName := "aws_iam_user_login_profile.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserLoginProfileDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccUserLoginProfileConfig_passwordResetRequired(rName, testPubKey1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserLoginProfileExists(ctx, resourceName, &conf),
-					testDecryptPasswordAndTest(ctx, resourceName, "aws_iam_access_key.test", testPrivKey1),
-					resource.TestCheckResourceAttrSet(resourceName, "encrypted_password"),
-					resource.TestCheckResourceAttrSet(resourceName, "key_fingerprint"),
-					resource.TestCheckResourceAttr(resourceName, "password_length", "20"),
-					resource.TestCheckResourceAttr(resourceName, "password_reset_required", "true"),
-					resource.TestCheckResourceAttr(resourceName, "pgp_key", testPubKey1+"\n"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"encrypted_password",
-					"key_fingerprint",
-					"password_length",
-					"password_reset_required",
-					"pgp_key",
-				},
 			},
 		},
 	})
@@ -497,21 +456,6 @@ resource "aws_iam_user_login_profile" "test" {
 EOF
 }
 `, passwordLength, pgpKey))
-}
-
-func testAccUserLoginProfileConfig_passwordResetRequired(rName, pgpKey string) string {
-	return acctest.ConfigCompose(
-		testAccUserLoginProfileConfig_base(rName),
-		fmt.Sprintf(`
-resource "aws_iam_user_login_profile" "test" {
-  user                    = aws_iam_user.test.name
-  password_reset_required = true
-
-  pgp_key = <<EOF
-%s
-EOF
-}
-`, pgpKey))
 }
 
 func testAccUserLoginProfileConfig_required(rName, pgpKey string) string {

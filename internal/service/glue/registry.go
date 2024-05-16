@@ -36,11 +36,11 @@ func ResourceRegistry() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 2048),
@@ -69,7 +69,7 @@ func resourceRegistryCreate(ctx context.Context, d *schema.ResourceData, meta in
 		Tags:         getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -104,8 +104,8 @@ func resourceRegistryRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	arn := aws.StringValue(output.RegistryArn)
-	d.Set(names.AttrARN, arn)
-	d.Set(names.AttrDescription, output.Description)
+	d.Set("arn", arn)
+	d.Set("description", output.Description)
 	d.Set("registry_name", output.RegistryName)
 
 	return diags
@@ -115,12 +115,12 @@ func resourceRegistryUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
-	if d.HasChanges(names.AttrDescription) {
+	if d.HasChanges("description") {
 		input := &glue.UpdateRegistryInput{
 			RegistryId: createRegistryID(d.Id()),
 		}
 
-		if v, ok := d.GetOk(names.AttrDescription); ok {
+		if v, ok := d.GetOk("description"); ok {
 			input.Description = aws.String(v.(string))
 		}
 

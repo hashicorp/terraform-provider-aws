@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_route53_resolver_firewall_rule_group_association")
@@ -19,11 +18,11 @@ func DataSourceFirewallRuleGroupAssociation() *schema.Resource {
 		ReadWithoutTimeout: dataSourceRuleGroupAssociationRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrCreationTime: {
+			"creation_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -51,23 +50,23 @@ func DataSourceFirewallRuleGroupAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrPriority: {
+			"priority": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrStatusMessage: {
+			"status_message": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrVPCID: {
+			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -86,19 +85,19 @@ func dataSourceRuleGroupAssociationRead(ctx context.Context, d *schema.ResourceD
 	}
 
 	d.SetId(aws.StringValue(ruleGroupAssociation.Id))
-	d.Set(names.AttrARN, ruleGroupAssociation.Arn)
-	d.Set(names.AttrCreationTime, ruleGroupAssociation.CreationTime)
+	d.Set("arn", ruleGroupAssociation.Arn)
+	d.Set("creation_time", ruleGroupAssociation.CreationTime)
 	d.Set("creator_request_id", ruleGroupAssociation.CreatorRequestId)
 	d.Set("firewall_rule_group_id", ruleGroupAssociation.FirewallRuleGroupId)
 	d.Set("firewall_rule_group_association_id", ruleGroupAssociation.Id)
 	d.Set("managed_owner_name", ruleGroupAssociation.ManagedOwnerName)
 	d.Set("modification_time", ruleGroupAssociation.ModificationTime)
 	d.Set("mutation_protection", ruleGroupAssociation.MutationProtection)
-	d.Set(names.AttrName, ruleGroupAssociation.Name)
-	d.Set(names.AttrPriority, ruleGroupAssociation.Priority)
-	d.Set(names.AttrStatus, ruleGroupAssociation.Status)
-	d.Set(names.AttrStatusMessage, ruleGroupAssociation.StatusMessage)
-	d.Set(names.AttrVPCID, ruleGroupAssociation.VpcId)
+	d.Set("name", ruleGroupAssociation.Name)
+	d.Set("priority", ruleGroupAssociation.Priority)
+	d.Set("status", ruleGroupAssociation.Status)
+	d.Set("status_message", ruleGroupAssociation.StatusMessage)
+	d.Set("vpc_id", ruleGroupAssociation.VpcId)
 
 	return nil
 }

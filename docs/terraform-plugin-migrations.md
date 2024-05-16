@@ -88,7 +88,7 @@ func (r *resourceExampleResource) ModifyPlan(ctx context.Context, request resour
 Transparent Tagging that is used in SDKv2 also applies to the Framework by using the `@Tags` decorator when defining the resource.
 
 ```go
-// @FrameworkResource("aws_service_example", name="Example Resource")
+// @FrameworkResource(name="Example Resource")
 // @Tags(identifierAttribute="arn")
 func newResourceExampleResrouce(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := resourceExampleResource{}

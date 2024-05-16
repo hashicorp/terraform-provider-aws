@@ -56,10 +56,10 @@ func testAccTemplate_basic(t *testing.T) {
 				Config: testAccTemplateConfig_basic(lambdaStorageQuotaCode, lambdaServiceCode, lambdaStorageValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(ctx, resourceName, &template),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrRegion, regionDataSourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, "region", regionDataSourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "quota_code", lambdaStorageQuotaCode),
 					resource.TestCheckResourceAttr(resourceName, "service_code", lambdaServiceCode),
-					resource.TestCheckResourceAttr(resourceName, names.AttrValue, lambdaStorageValue),
+					resource.TestCheckResourceAttr(resourceName, "value", lambdaStorageValue),
 				),
 			},
 			{
@@ -120,10 +120,10 @@ func testAccTemplate_value(t *testing.T) {
 				Config: testAccTemplateConfig_basic(lambdaENIQuotaCode, lambdaServiceCode, lambdaENIValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(ctx, resourceName, &template),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrRegion, regionDataSourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, "region", regionDataSourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "quota_code", lambdaENIQuotaCode),
 					resource.TestCheckResourceAttr(resourceName, "service_code", lambdaServiceCode),
-					resource.TestCheckResourceAttr(resourceName, names.AttrValue, lambdaENIValue),
+					resource.TestCheckResourceAttr(resourceName, "value", lambdaENIValue),
 				),
 			},
 			{
@@ -135,10 +135,10 @@ func testAccTemplate_value(t *testing.T) {
 				Config: testAccTemplateConfig_basic(lambdaENIQuotaCode, lambdaServiceCode, lambdaENIValueUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(ctx, resourceName, &template),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrRegion, regionDataSourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, "region", regionDataSourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "quota_code", lambdaENIQuotaCode),
 					resource.TestCheckResourceAttr(resourceName, "service_code", lambdaServiceCode),
-					resource.TestCheckResourceAttr(resourceName, names.AttrValue, lambdaENIValueUpdated),
+					resource.TestCheckResourceAttr(resourceName, "value", lambdaENIValueUpdated),
 				),
 			},
 		},

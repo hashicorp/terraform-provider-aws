@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_connect_instance")
@@ -22,7 +21,7 @@ func DataSourceInstance() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceInstanceRead,
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -38,7 +37,7 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			names.AttrCreatedTime: {
+			"created_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -58,13 +57,13 @@ func DataSourceInstance() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"instance_alias", names.AttrInstanceID},
+				ExactlyOneOf: []string{"instance_alias", "instance_id"},
 			},
-			names.AttrInstanceID: {
+			"instance_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{names.AttrInstanceID, "instance_alias"},
+				ExactlyOneOf: []string{"instance_id", "instance_alias"},
 			},
 			"multi_party_conference_enabled": {
 				Type:     schema.TypeBool,
@@ -74,11 +73,11 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrServiceRole: {
+			"service_role": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -97,7 +96,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	var matchedInstance *connect.Instance
 
-	if v, ok := d.GetOk(names.AttrInstanceID); ok {
+	if v, ok := d.GetOk("instance_id"); ok {
 		instanceID := v.(string)
 		instance, err := FindInstanceByID(ctx, conn, instanceID)
 
@@ -137,16 +136,16 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	d.SetId(aws.StringValue(matchedInstance.Id))
-	d.Set(names.AttrARN, matchedInstance.Arn)
+	d.Set("arn", matchedInstance.Arn)
 	if matchedInstance.CreatedTime != nil {
-		d.Set(names.AttrCreatedTime, matchedInstance.CreatedTime.Format(time.RFC3339))
+		d.Set("created_time", matchedInstance.CreatedTime.Format(time.RFC3339))
 	}
 	d.Set("identity_management_type", matchedInstance.IdentityManagementType)
 	d.Set("inbound_calls_enabled", matchedInstance.InboundCallsEnabled)
 	d.Set("instance_alias", matchedInstance.InstanceAlias)
 	d.Set("outbound_calls_enabled", matchedInstance.OutboundCallsEnabled)
-	d.Set(names.AttrServiceRole, matchedInstance.ServiceRole)
-	d.Set(names.AttrStatus, matchedInstance.InstanceStatus)
+	d.Set("service_role", matchedInstance.ServiceRole)
+	d.Set("status", matchedInstance.InstanceStatus)
 
 	for att := range InstanceAttributeMapping() {
 		value, err := dataSourceInstanceReadAttribute(ctx, conn, d.Id(), att)

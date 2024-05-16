@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -76,7 +75,7 @@ func sweepBotAliases(region string) error {
 
 					d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(bot.Name), aws.StringValue(botAlias.Name)))
 					d.Set("bot_name", bot.Name)
-					d.Set(names.AttrName, botAlias.Name)
+					d.Set("name", botAlias.Name)
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}

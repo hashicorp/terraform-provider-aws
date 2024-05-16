@@ -6,34 +6,31 @@ package ssm
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/ssm"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ssm_instances, name="Instances")
-func dataSourceInstances() *schema.Resource {
+// @SDKDataSource("aws_ssm_instances")
+func DataSourceInstances() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceInstancesRead,
-
 		Schema: map[string]*schema.Schema{
-			names.AttrFilter: {
+			"filter": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrName: {
+						"name": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						names.AttrValues: {
+
+						"values": {
 							Type:     schema.TypeList,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -41,7 +38,7 @@ func dataSourceInstances() *schema.Resource {
 					},
 				},
 			},
-			names.AttrIDs: {
+			"ids": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -52,41 +49,54 @@ func dataSourceInstances() *schema.Resource {
 
 func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMClient(ctx)
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	input := &ssm.DescribeInstanceInformationInput{}
 
-	if v, ok := d.GetOk(names.AttrFilter); ok {
+	if v, ok := d.GetOk("filter"); ok {
 		input.Filters = expandInstanceInformationStringFilters(v.(*schema.Set).List())
 	}
 
-	var output []awstypes.InstanceInformation
+	var results []*ssm.InstanceInformation
 
-	pages := ssm.NewDescribeInstanceInformationPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading SSM Instances: %s", err)
+	err := conn.DescribeInstanceInformationPagesWithContext(ctx, input, func(page *ssm.DescribeInstanceInformationOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		output = append(output, page.InstanceInformationList...)
+		for _, instanceInformation := range page.InstanceInformationList {
+			if instanceInformation == nil {
+				continue
+			}
+
+			results = append(results, instanceInformation)
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading SSM Instances: %s", err)
+	}
+
+	var instanceIDs []string
+
+	for _, r := range results {
+		instanceIDs = append(instanceIDs, aws.StringValue(r.InstanceId))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set(names.AttrIDs, tfslices.ApplyToAll(output, func(v awstypes.InstanceInformation) string {
-		return aws.ToString(v.InstanceId)
-	}))
+	d.Set("ids", instanceIDs)
 
 	return diags
 }
 
-func expandInstanceInformationStringFilters(tfList []interface{}) []awstypes.InstanceInformationStringFilter {
+func expandInstanceInformationStringFilters(tfList []interface{}) []*ssm.InstanceInformationStringFilter {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []awstypes.InstanceInformationStringFilter
+	var apiObjects []*ssm.InstanceInformationStringFilter
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -101,25 +111,25 @@ func expandInstanceInformationStringFilters(tfList []interface{}) []awstypes.Ins
 			continue
 		}
 
-		apiObjects = append(apiObjects, *apiObject)
+		apiObjects = append(apiObjects, apiObject)
 	}
 
 	return apiObjects
 }
 
-func expandInstanceInformationStringFilter(tfMap map[string]interface{}) *awstypes.InstanceInformationStringFilter {
+func expandInstanceInformationStringFilter(tfMap map[string]interface{}) *ssm.InstanceInformationStringFilter {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &awstypes.InstanceInformationStringFilter{}
+	apiObject := &ssm.InstanceInformationStringFilter{}
 
-	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
+	if v, ok := tfMap["name"].(string); ok && v != "" {
 		apiObject.Key = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
-		apiObject.Values = flex.ExpandStringValueList(v)
+	if v, ok := tfMap["values"].([]interface{}); ok && len(v) > 0 {
+		apiObject.Values = flex.ExpandStringList(v)
 	}
 
 	return apiObject

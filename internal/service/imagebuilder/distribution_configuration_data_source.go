@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_imagebuilder_distribution_configuration")
@@ -23,7 +22,7 @@ func DataSourceDistributionConfiguration() *schema.Resource {
 		ReadWithoutTimeout: dataSourceDistributionConfigurationRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -36,7 +35,7 @@ func DataSourceDistributionConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -51,11 +50,11 @@ func DataSourceDistributionConfiguration() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"ami_tags": tftags.TagsSchemaComputed(),
-									names.AttrDescription: {
+									"description": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									names.AttrKMSKeyID: {
+									"kms_key_id": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -95,7 +94,7 @@ func DataSourceDistributionConfiguration() *schema.Resource {
 											},
 										},
 									},
-									names.AttrName: {
+									"name": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -121,7 +120,7 @@ func DataSourceDistributionConfiguration() *schema.Resource {
 											Type: schema.TypeString,
 										},
 									},
-									names.AttrDescription: {
+									"description": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -130,7 +129,7 @@ func DataSourceDistributionConfiguration() *schema.Resource {
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												names.AttrRepositoryName: {
+												"repository_name": {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
@@ -149,15 +148,15 @@ func DataSourceDistributionConfiguration() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrAccountID: {
+									"account_id": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									names.AttrEnabled: {
+									"enabled": {
 										Type:     schema.TypeBool,
 										Computed: true,
 									},
-									names.AttrLaunchTemplate: {
+									"launch_template": {
 										Type:     schema.TypeSet,
 										Computed: true,
 										Elem: &schema.Resource{
@@ -201,7 +200,7 @@ func DataSourceDistributionConfiguration() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrAccountID: {
+									"account_id": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -223,18 +222,18 @@ func DataSourceDistributionConfiguration() *schema.Resource {
 								Type: schema.TypeString,
 							},
 						},
-						names.AttrRegion: {
+						"region": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -246,7 +245,7 @@ func dataSourceDistributionConfigurationRead(ctx context.Context, d *schema.Reso
 
 	input := &imagebuilder.GetDistributionConfigurationInput{}
 
-	if v, ok := d.GetOk(names.AttrARN); ok {
+	if v, ok := d.GetOk("arn"); ok {
 		input.DistributionConfigurationArn = aws.String(v.(string))
 	}
 
@@ -263,13 +262,13 @@ func dataSourceDistributionConfigurationRead(ctx context.Context, d *schema.Reso
 	distributionConfiguration := output.DistributionConfiguration
 
 	d.SetId(aws.StringValue(distributionConfiguration.Arn))
-	d.Set(names.AttrARN, distributionConfiguration.Arn)
+	d.Set("arn", distributionConfiguration.Arn)
 	d.Set("date_created", distributionConfiguration.DateCreated)
 	d.Set("date_updated", distributionConfiguration.DateUpdated)
-	d.Set(names.AttrDescription, distributionConfiguration.Description)
+	d.Set("description", distributionConfiguration.Description)
 	d.Set("distribution", flattenDistributions(distributionConfiguration.Distributions))
-	d.Set(names.AttrName, distributionConfiguration.Name)
-	d.Set(names.AttrTags, KeyValueTags(ctx, distributionConfiguration.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
+	d.Set("name", distributionConfiguration.Name)
+	d.Set("tags", KeyValueTags(ctx, distributionConfiguration.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 
 	return diags
 }

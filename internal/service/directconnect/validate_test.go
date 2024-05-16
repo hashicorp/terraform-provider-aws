@@ -1,13 +1,10 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package directconnect_test
+package directconnect
 
 import (
 	"testing"
-
-	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
 )
 
 func TestValidConnectionBandWidth(t *testing.T) {
@@ -27,7 +24,7 @@ func TestValidConnectionBandWidth(t *testing.T) {
 		"500Mbps",
 	}
 	for _, v := range validBandwidths {
-		_, errors := tfdirectconnect.ValidConnectionBandWidth()(v, "bandwidth")
+		_, errors := validConnectionBandWidth()(v, "bandwidth")
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid bandwidth: %q", v, errors)
 		}
@@ -37,12 +34,12 @@ func TestValidConnectionBandWidth(t *testing.T) {
 		"1Tbps",
 		"10GBpS",
 		"42Mbps",
-		acctest.Ct0,
+		"0",
 		"???",
 		"a lot",
 	}
 	for _, v := range invalidBandwidths {
-		_, errors := tfdirectconnect.ValidConnectionBandWidth()(v, "bandwidth")
+		_, errors := validConnectionBandWidth()(v, "bandwidth")
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid bandwidth", v)
 		}

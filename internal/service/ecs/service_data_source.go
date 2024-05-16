@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ecs_service")
@@ -23,11 +22,11 @@ func DataSourceService() *schema.Resource {
 		ReadWithoutTimeout: dataSourceServiceRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrServiceName: {
+			"service_name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -51,7 +50,7 @@ func DataSourceService() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -62,7 +61,7 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	clusterArn := d.Get("cluster_arn").(string)
-	serviceName := d.Get(names.AttrServiceName).(string)
+	serviceName := d.Get("service_name").(string)
 
 	params := &ecs.DescribeServicesInput{
 		Cluster:  aws.String(clusterArn),
@@ -87,15 +86,15 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 	service := desc.Services[0]
 	d.SetId(aws.StringValue(service.ServiceArn))
 
-	d.Set(names.AttrServiceName, service.ServiceName)
-	d.Set(names.AttrARN, service.ServiceArn)
+	d.Set("service_name", service.ServiceName)
+	d.Set("arn", service.ServiceArn)
 	d.Set("cluster_arn", service.ClusterArn)
 	d.Set("desired_count", service.DesiredCount)
 	d.Set("launch_type", service.LaunchType)
 	d.Set("scheduling_strategy", service.SchedulingStrategy)
 	d.Set("task_definition", service.TaskDefinition)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, service.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, service.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

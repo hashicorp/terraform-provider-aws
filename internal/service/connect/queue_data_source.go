@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_connect_queue")
@@ -23,11 +22,11 @@ func DataSourceQueue() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceQueueRead,
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -35,7 +34,7 @@ func DataSourceQueue() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrInstanceID: {
+			"instance_id": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
@@ -44,11 +43,11 @@ func DataSourceQueue() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{names.AttrName, "queue_id"},
+				ExactlyOneOf: []string{"name", "queue_id"},
 			},
 			"outbound_caller_config": {
 				Type:     schema.TypeList,
@@ -74,13 +73,13 @@ func DataSourceQueue() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"queue_id", names.AttrName},
+				ExactlyOneOf: []string{"queue_id", "name"},
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -91,7 +90,7 @@ func dataSourceQueueRead(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	instanceID := d.Get(names.AttrInstanceID).(string)
+	instanceID := d.Get("instance_id").(string)
 
 	input := &connect.DescribeQueueInput{
 		InstanceId: aws.String(instanceID),
@@ -99,7 +98,7 @@ func dataSourceQueueRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if v, ok := d.GetOk("queue_id"); ok {
 		input.QueueId = aws.String(v.(string))
-	} else if v, ok := d.GetOk(names.AttrName); ok {
+	} else if v, ok := d.GetOk("name"); ok {
 		name := v.(string)
 		queueSummary, err := dataSourceGetQueueSummaryByName(ctx, conn, instanceID, name)
 
@@ -126,19 +125,19 @@ func dataSourceQueueRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	queue := resp.Queue
 
-	d.Set(names.AttrARN, queue.QueueArn)
-	d.Set(names.AttrDescription, queue.Description)
+	d.Set("arn", queue.QueueArn)
+	d.Set("description", queue.Description)
 	d.Set("hours_of_operation_id", queue.HoursOfOperationId)
 	d.Set("max_contacts", queue.MaxContacts)
-	d.Set(names.AttrName, queue.Name)
+	d.Set("name", queue.Name)
 	d.Set("queue_id", queue.QueueId)
-	d.Set(names.AttrStatus, queue.Status)
+	d.Set("status", queue.Status)
 
 	if err := d.Set("outbound_caller_config", flattenOutboundCallerConfig(queue.OutboundCallerConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting outbound_caller_config: %s", err)
 	}
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, queue.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, queue.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

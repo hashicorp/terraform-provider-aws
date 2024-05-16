@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore/document"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore/types"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func flattenAddress(apiObject *types.Address) map[string]interface{} {
@@ -36,7 +35,7 @@ func flattenAddress(apiObject *types.Address) map[string]interface{} {
 	m["primary"] = apiObject.Primary
 
 	if v := apiObject.Region; v != nil {
-		m[names.AttrRegion] = aws.ToString(v)
+		m["region"] = aws.ToString(v)
 	}
 
 	if v := apiObject.StreetAddress; v != nil {
@@ -44,7 +43,7 @@ func flattenAddress(apiObject *types.Address) map[string]interface{} {
 	}
 
 	if v := apiObject.Type; v != nil {
-		m[names.AttrType] = aws.ToString(v)
+		m["type"] = aws.ToString(v)
 	}
 
 	return m
@@ -75,7 +74,7 @@ func expandAddress(tfMap map[string]interface{}) *types.Address {
 
 	a.Primary = tfMap["primary"].(bool)
 
-	if v, ok := tfMap[names.AttrRegion].(string); ok && v != "" {
+	if v, ok := tfMap["region"].(string); ok && v != "" {
 		a.Region = aws.String(v)
 	}
 
@@ -83,7 +82,7 @@ func expandAddress(tfMap map[string]interface{}) *types.Address {
 		a.StreetAddress = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
+	if v, ok := tfMap["type"].(string); ok && v != "" {
 		a.Type = aws.String(v)
 	}
 
@@ -132,7 +131,7 @@ func expandAlternateIdentifier(tfMap map[string]interface{}) types.AlternateIden
 		return nil
 	}
 
-	if v, ok := tfMap[names.AttrExternalID]; ok && len(v.([]interface{})) > 0 {
+	if v, ok := tfMap["external_id"]; ok && len(v.([]interface{})) > 0 {
 		return &types.AlternateIdentifierMemberExternalId{
 			Value: *expandExternalId(v.([]interface{})[0].(map[string]interface{})),
 		}
@@ -155,11 +154,11 @@ func flattenEmail(apiObject *types.Email) map[string]interface{} {
 	m["primary"] = apiObject.Primary
 
 	if v := apiObject.Type; v != nil {
-		m[names.AttrType] = aws.ToString(v)
+		m["type"] = aws.ToString(v)
 	}
 
 	if v := apiObject.Value; v != nil {
-		m[names.AttrValue] = aws.ToString(v)
+		m["value"] = aws.ToString(v)
 	}
 
 	return m
@@ -174,11 +173,11 @@ func expandEmail(tfMap map[string]interface{}) *types.Email {
 
 	a.Primary = tfMap["primary"].(bool)
 
-	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
+	if v, ok := tfMap["type"].(string); ok && v != "" {
 		a.Type = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
+	if v, ok := tfMap["value"].(string); ok && v != "" {
 		a.Value = aws.String(v)
 	}
 
@@ -229,11 +228,11 @@ func expandExternalId(tfMap map[string]interface{}) *types.ExternalId {
 
 	a := &types.ExternalId{}
 
-	if v, ok := tfMap[names.AttrID].(string); ok && v != "" {
+	if v, ok := tfMap["id"].(string); ok && v != "" {
 		a.Id = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrIssuer].(string); ok && v != "" {
+	if v, ok := tfMap["issuer"].(string); ok && v != "" {
 		a.Issuer = aws.String(v)
 	}
 
@@ -248,11 +247,11 @@ func flattenExternalId(apiObject *types.ExternalId) map[string]interface{} {
 	m := map[string]interface{}{}
 
 	if v := apiObject.Id; v != nil {
-		m[names.AttrID] = aws.ToString(v)
+		m["id"] = aws.ToString(v)
 	}
 
 	if v := apiObject.Issuer; v != nil {
-		m[names.AttrIssuer] = aws.ToString(v)
+		m["issuer"] = aws.ToString(v)
 	}
 
 	return m
@@ -351,11 +350,11 @@ func flattenPhoneNumber(apiObject *types.PhoneNumber) map[string]interface{} {
 	m["primary"] = apiObject.Primary
 
 	if v := apiObject.Type; v != nil {
-		m[names.AttrType] = aws.ToString(v)
+		m["type"] = aws.ToString(v)
 	}
 
 	if v := apiObject.Value; v != nil {
-		m[names.AttrValue] = aws.ToString(v)
+		m["value"] = aws.ToString(v)
 	}
 
 	return m
@@ -370,11 +369,11 @@ func expandPhoneNumber(tfMap map[string]interface{}) *types.PhoneNumber {
 
 	a.Primary = tfMap["primary"].(bool)
 
-	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
+	if v, ok := tfMap["type"].(string); ok && v != "" {
 		a.Type = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
+	if v, ok := tfMap["value"].(string); ok && v != "" {
 		a.Value = aws.String(v)
 	}
 

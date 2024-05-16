@@ -28,6 +28,7 @@ var (
 	ResourceDirectoryBucket                         = newDirectoryBucketResource
 	ResourceObjectCopy                              = resourceObjectCopy
 
+	BucketListTags                        = bucketListTags
 	BucketUpdateTags                      = bucketUpdateTags
 	BucketRegionalDomainName              = bucketRegionalDomainName
 	BucketWebsiteEndpointAndDomain        = bucketWebsiteEndpointAndDomain

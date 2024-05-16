@@ -42,10 +42,10 @@ func TestAccLightsailDisk_basic(t *testing.T) {
 				Config: testAccDiskConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDiskExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "lightsail", regexache.MustCompile(`Disk/.+`)),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "lightsail", regexache.MustCompile(`Disk/.+`)),
+					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "size_in_gb", "8"),
 					resource.TestCheckResourceAttrSet(resourceName, "support_code"),
 				),
@@ -75,11 +75,11 @@ func TestAccLightsailDisk_Tags(t *testing.T) {
 		CheckDestroy:             testAccCheckDiskDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDiskConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccDiskConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDiskExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -88,20 +88,20 @@ func TestAccLightsailDisk_Tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDiskConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccDiskConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDiskExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccDiskConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccDiskConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDiskExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},

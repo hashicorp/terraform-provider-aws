@@ -26,8 +26,8 @@ func TestAccRoute53Domains_serial(t *testing.T) {
 			"transferLock":   testAccRegisteredDomain_transferLock,
 		},
 		"DelegationSignerRecord": {
-			acctest.CtBasic: testAccDelegationSignerRecord_basic,
-			"disappears":    testAccDelegationSignerRecord_disappears,
+			"basic":      testAccDelegationSignerRecord_basic,
+			"disappears": testAccDelegationSignerRecord_disappears,
 		},
 	}
 

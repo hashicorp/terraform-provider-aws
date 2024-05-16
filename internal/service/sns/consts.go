@@ -5,8 +5,6 @@ package sns
 
 import (
 	"time"
-
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -38,7 +36,7 @@ const (
 
 const (
 	subscriptionProtocolApplication = "application"
-	subscriptionProtocolEmail       = names.AttrEmail
+	subscriptionProtocolEmail       = "email"
 	subscriptionProtocolEmailJSON   = "email-json"
 	subscriptionProtocolFirehose    = "firehose"
 	subscriptionProtocolHTTP        = "http"
@@ -51,7 +49,7 @@ const (
 func subscriptionProtocol_Values() []string {
 	return []string{
 		subscriptionProtocolApplication,
-		names.AttrEmail,
+		subscriptionProtocolEmail,
 		subscriptionProtocolEmailJSON,
 		subscriptionProtocolFirehose,
 		subscriptionProtocolHTTP,

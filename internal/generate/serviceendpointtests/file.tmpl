@@ -48,7 +48,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type endpointTestCase struct {
@@ -82,7 +81,7 @@ const (
 	baseEnvvarEndpoint        = "https://base-envvar.endpoint.test/"
 	serviceConfigFileEndpoint = "https://service-configfile.endpoint.test/"
 	baseConfigFileEndpoint    = "https://base-configfile.endpoint.test/"
-	{{ if ne .TFAWSEnvVar "" -}}
+	{{ if ne .TfAwsEnvVar "" -}}
 	tfAwsEnvvarEndpoint       = "https://service-tf-aws-envvar.endpoint.test/"
 	{{- end }}
 	{{ if ne .DeprecatedEnvVar "" -}}
@@ -98,8 +97,8 @@ const (
 	awsEnvVar   = "{{ .AwsEnvVar }}"
 	baseEnvVar  = "AWS_ENDPOINT_URL"
 	configParam = "{{ .ConfigParameter }}"
-	{{ if ne .TFAWSEnvVar "" -}}
-	tfAwsEnvVar       = "{{ .TFAWSEnvVar }}"
+	{{ if ne .TfAwsEnvVar "" -}}
+	tfAwsEnvVar       = "{{ .TfAwsEnvVar }}"
 	{{- end }}
 	{{ if ne .DeprecatedEnvVar "" -}}
 	deprecatedEnvVar  = "{{ .DeprecatedEnvVar }}"
@@ -145,7 +144,7 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 			expected: expectPackageNameConfigEndpoint(),
 		},
 
-{{ if ne .TFAWSEnvVar "" }}
+{{ if ne .TfAwsEnvVar "" }}
 		"package name endpoint config overrides TF_AWS envvar": {
 			with: []setupFunc{
 				withPackageNameEndpointInConfig,
@@ -190,7 +189,7 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 		},
 
 {{ $aliases := .Aliases }}
-{{ $tfAwsEnvVar := .TFAWSEnvVar }}
+{{ $tfAwsEnvVar := .TfAwsEnvVar }}
 {{ $deprecatedEnvVar := .DeprecatedEnvVar }}
 {{ range $i, $alias := .Aliases }}
         // Alias name {{ $i }} endpoint on Config
@@ -275,7 +274,7 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 			expected: expectAwsEnvVarEndpoint(),
 		},
 
-{{ if ne .TFAWSEnvVar "" }}
+{{ if ne .TfAwsEnvVar "" }}
 		"service aws envvar overrides TF_AWS envvar": {
 			with: []setupFunc{
 				withAwsEnvVar,
@@ -319,7 +318,7 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 			expected: expectAwsEnvVarEndpoint(),
 		},
 
-{{ if ne .TFAWSEnvVar "" }}
+{{ if ne .TfAwsEnvVar "" }}
 		// Service endpoint in TF_AWS envvar
 
 		"service TF_AWS envvar": {
@@ -575,23 +574,23 @@ func withNoConfig(_ *caseSetup) {
 }
 
 func withPackageNameEndpointInConfig(setup *caseSetup) {
-	if _, ok := setup.config[names.AttrEndpoints]; !ok {
-		setup.config[names.AttrEndpoints] = []any{
+	if _, ok := setup.config["endpoints"]; !ok {
+		setup.config["endpoints"] = []any{
 			map[string]any{},
 		}
 	}
-	endpoints := setup.config[names.AttrEndpoints].([]any)[0].(map[string]any)
+	endpoints := setup.config["endpoints"].([]any)[0].(map[string]any)
 	endpoints[packageName] = packageNameConfigEndpoint
 }
 
 {{ range $i, $alias := .Aliases }}
 func withAliasName{{ $i }}EndpointInConfig(setup *caseSetup) {
-	if _, ok := setup.config[names.AttrEndpoints]; !ok {
-		setup.config[names.AttrEndpoints] = []any{
+	if _, ok := setup.config["endpoints"]; !ok {
+		setup.config["endpoints"] = []any{
 			map[string]any{},
 		}
 	}
-	endpoints := setup.config[names.AttrEndpoints].([]any)[0].(map[string]any)
+	endpoints := setup.config["endpoints"].([]any)[0].(map[string]any)
 	endpoints[aliasName{{ $i }}] = aliasName{{ $i }}ConfigEndpoint
 }
 {{ end }}
@@ -599,7 +598,7 @@ func withAliasName{{ $i }}EndpointInConfig(setup *caseSetup) {
 {{ if gt (len .Aliases) 0 }}
 func conflictsWith(e caseExpectations) caseExpectations {
 	e.diags = append(e.diags, provider.ConflictingEndpointsWarningDiag(
-		cty.GetAttrPath(names.AttrEndpoints).IndexInt(0),
+		cty.GetAttrPath("endpoints").IndexInt(0),
 		packageName,
 		{{ range $i, $alias := .Aliases -}}
 		aliasName{{ $i }},
@@ -613,7 +612,7 @@ func withAwsEnvVar(setup *caseSetup) {
 	setup.environmentVariables[awsEnvVar] = awsServiceEnvvarEndpoint
 }
 
-{{ if ne .TFAWSEnvVar "" }}
+{{ if ne .TfAwsEnvVar "" }}
 func withTfAwsEnvVar(setup *caseSetup) {
 	setup.environmentVariables[tfAwsEnvVar] = tfAwsEnvvarEndpoint
 }
@@ -669,7 +668,7 @@ func expectBaseEnvVarEndpoint() caseExpectations {
 	}
 }
 
-{{ if ne .TFAWSEnvVar "" }}
+{{ if ne .TfAwsEnvVar "" }}
 func expectTfAwsEnvVarEndpoint() caseExpectations {
 	return caseExpectations{
 		endpoint: tfAwsEnvvarEndpoint,
@@ -718,17 +717,17 @@ func testEndpointCase(t *testing.T, region string, testcase endpointTestCase, ca
 	}
 
 	config := map[string]any{
-		names.AttrAccessKey:                 servicemocks.MockStaticAccessKey,
-		names.AttrSecretKey:                 servicemocks.MockStaticSecretKey,
-		names.AttrRegion:                    region,
-		names.AttrSkipCredentialsValidation: true,
-		names.AttrSkipRequestingAccountID:   true,
+		"access_key":                  servicemocks.MockStaticAccessKey,
+		"secret_key":                  servicemocks.MockStaticSecretKey,
+		"region":                      region,
+		"skip_credentials_validation": true,
+		"skip_requesting_account_id":  true,
 	}
 
 	maps.Copy(config, setup.config)
 
 	if setup.configFile.baseUrl != "" || setup.configFile.serviceUrl != "" {
-		config[names.AttrProfile] = "default"
+		config["profile"] = "default"
 		tempDir := t.TempDir()
 		writeSharedConfigFile(t, &config, tempDir, generateSharedConfigFile(setup.configFile))
 	}
@@ -871,10 +870,10 @@ func writeSharedConfigFile(t *testing.T, config *map[string]any, tempDir, conten
 		t.Fatalf(" writing shared configuration file: %s", err)
 	}
 
-	if v, ok := (*config)[names.AttrSharedConfigFiles]; !ok {
-		(*config)[names.AttrSharedConfigFiles] = []any{file.Name()}
+	if v, ok := (*config)["shared_config_files"]; !ok {
+		(*config)["shared_config_files"] = []any{file.Name()}
 	} else {
-		(*config)[names.AttrSharedConfigFiles] = append(v.([]any), file.Name())
+		(*config)["shared_config_files"] = append(v.([]any), file.Name())
 	}
 
 	return file.Name()

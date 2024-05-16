@@ -23,19 +23,19 @@ func DataSourceAlias() *schema.Resource {
 		ReadWithoutTimeout: dataSourceAliasRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrCreationDate: {
+			"creation_date": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -48,7 +48,7 @@ func DataSourceAlias() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						names.AttrWeight: {
+						"weight": {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
@@ -86,7 +86,7 @@ func dataSourceAliasRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	for _, in := range out.StateMachineAliases {
-		if v := aws.StringValue(in.StateMachineAliasArn); strings.HasSuffix(v, d.Get(names.AttrName).(string)) {
+		if v := aws.StringValue(in.StateMachineAliasArn); strings.HasSuffix(v, d.Get("name").(string)) {
 			aliasArn = v
 		}
 	}
@@ -102,10 +102,10 @@ func dataSourceAliasRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.SetId(aliasArn)
-	d.Set(names.AttrARN, output.StateMachineAliasArn)
-	d.Set(names.AttrName, output.Name)
-	d.Set(names.AttrDescription, output.Description)
-	d.Set(names.AttrCreationDate, aws.TimeValue(output.CreationDate).Format(time.RFC3339))
+	d.Set("arn", output.StateMachineAliasArn)
+	d.Set("name", output.Name)
+	d.Set("description", output.Description)
+	d.Set("creation_date", aws.TimeValue(output.CreationDate).Format(time.RFC3339))
 
 	if err := d.Set("routing_configuration", flattenAliasRoutingConfiguration(output.RoutingConfiguration)); err != nil {
 		return create.DiagError(names.SFN, create.ErrActionSetting, ResNameAlias, d.Id(), err)

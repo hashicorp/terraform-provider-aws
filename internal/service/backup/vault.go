@@ -43,23 +43,23 @@ func ResourceVault() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrForceDestroy: {
+			"force_destroy": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-			names.AttrKMSKeyARN: {
+			"kms_key_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -84,13 +84,13 @@ func resourceVaultCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &backup.CreateBackupVaultInput{
 		BackupVaultName: aws.String(name),
 		BackupVaultTags: getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk(names.AttrKMSKeyARN); ok {
+	if v, ok := d.GetOk("kms_key_arn"); ok {
 		input.EncryptionKeyArn = aws.String(v.(string))
 	}
 
@@ -121,9 +121,9 @@ func resourceVaultRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading Backup Vault (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, output.BackupVaultArn)
-	d.Set(names.AttrKMSKeyARN, output.EncryptionKeyArn)
-	d.Set(names.AttrName, output.BackupVaultName)
+	d.Set("arn", output.BackupVaultArn)
+	d.Set("kms_key_arn", output.EncryptionKeyArn)
+	d.Set("name", output.BackupVaultName)
 	d.Set("recovery_points", output.NumberOfRecoveryPoints)
 
 	return diags
@@ -141,7 +141,7 @@ func resourceVaultDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
-	if d.Get(names.AttrForceDestroy).(bool) {
+	if d.Get("force_destroy").(bool) {
 		input := &backup.ListRecoveryPointsByBackupVaultInput{
 			BackupVaultName: aws.String(d.Id()),
 		}

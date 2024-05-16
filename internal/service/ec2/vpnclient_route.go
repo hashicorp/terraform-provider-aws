@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ec2_client_vpn_route", name="Client VPN Route")
@@ -45,7 +44,7 @@ func ResourceClientVPNRoute() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -65,7 +64,7 @@ func ResourceClientVPNRoute() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrType: {
+			"type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -88,7 +87,7 @@ func resourceClientVPNRouteCreate(ctx context.Context, d *schema.ResourceData, m
 		TargetVpcSubnetId:    aws.String(targetSubnetID),
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -131,11 +130,11 @@ func resourceClientVPNRouteRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.Set("client_vpn_endpoint_id", route.ClientVpnEndpointId)
-	d.Set(names.AttrDescription, route.Description)
+	d.Set("description", route.Description)
 	d.Set("destination_cidr_block", route.DestinationCidr)
 	d.Set("origin", route.Origin)
 	d.Set("target_vpc_subnet_id", route.TargetSubnet)
-	d.Set(names.AttrType, route.Type)
+	d.Set("type", route.Type)
 
 	return diags
 }

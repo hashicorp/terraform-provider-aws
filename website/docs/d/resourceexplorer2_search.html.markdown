@@ -48,12 +48,12 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - Amazon resource name of resource.
 * `last_reported_at` - Date and time that Resource Explorer last queried this resource and updated the index with the latest information about the resource.
 * `owning_account_id` - Amazon Web Services account that owns the resource.
-* `properties` - Structure with additional type-specific details about the resource.  See [`properties`](#properties-attribute-reference) below.
+* `resource_property` - Structure with additional type-specific details about the resource.  See [`resource_property`](#resource_property-attribute-reference) below.
 * `region` - Amazon Web Services Region in which the resource was created and exists.
 * `resource_type` - Type of the resource.
 * `service` - Amazon Web Service that owns the resource and is responsible for creating and updating it.
 
-### `properties` Attribute Reference
+### `resource_property` Attribute Reference
 
 * `data` - Details about this property. The content of this field is a JSON object that varies based on the resource type.
 * `last_reported_at` - The date and time that the information about this resource property was last updated.

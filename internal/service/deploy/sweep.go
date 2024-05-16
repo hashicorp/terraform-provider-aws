@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -48,7 +47,7 @@ func sweepApps(region string) error {
 			r := resourceApp()
 			d := r.Data(nil)
 			d.SetId(fmt.Sprintf("%s:%s", "xxxx", v))
-			d.Set(names.AttrName, v)
+			d.Set("name", v)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

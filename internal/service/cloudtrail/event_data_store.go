@@ -80,7 +80,7 @@ func resourceEventDataStore() *schema.Resource {
 											ValidateFunc: validation.StringLenBetween(1, 2048),
 										},
 									},
-									names.AttrField: {
+									"field": {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Computed:     true,
@@ -129,7 +129,7 @@ func resourceEventDataStore() *schema.Resource {
 								},
 							},
 						},
-						names.AttrName: {
+						"name": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -138,11 +138,11 @@ func resourceEventDataStore() *schema.Resource {
 					},
 				},
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrKMSKeyID: {
+			"kms_key_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -152,7 +152,7 @@ func resourceEventDataStore() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -163,7 +163,7 @@ func resourceEventDataStore() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			names.AttrRetentionPeriod: {
+			"retention_period": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  2555,
@@ -186,12 +186,12 @@ func resourceEventDataStoreCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudTrailClient(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &cloudtrail.CreateEventDataStoreInput{
 		MultiRegionEnabled:           aws.Bool(d.Get("multi_region_enabled").(bool)),
 		Name:                         aws.String(name),
 		OrganizationEnabled:          aws.Bool(d.Get("organization_enabled").(bool)),
-		RetentionPeriod:              aws.Int32(int32(d.Get(names.AttrRetentionPeriod).(int))),
+		RetentionPeriod:              aws.Int32(int32(d.Get("retention_period").(int))),
 		TagsList:                     getTagsIn(ctx),
 		TerminationProtectionEnabled: aws.Bool(d.Get("termination_protection_enabled").(bool)),
 	}
@@ -200,7 +200,7 @@ func resourceEventDataStoreCreate(ctx context.Context, d *schema.ResourceData, m
 		input.AdvancedEventSelectors = expandAdvancedEventSelector(d.Get("advanced_event_selector").([]interface{}))
 	}
 
-	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
+	if v, ok := d.GetOk("kms_key_id"); ok {
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
@@ -238,12 +238,12 @@ func resourceEventDataStoreRead(ctx context.Context, d *schema.ResourceData, met
 	if err := d.Set("advanced_event_selector", flattenAdvancedEventSelector(output.AdvancedEventSelectors)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting advanced_event_selector: %s", err)
 	}
-	d.Set(names.AttrARN, output.EventDataStoreArn)
-	d.Set(names.AttrKMSKeyID, output.KmsKeyId)
+	d.Set("arn", output.EventDataStoreArn)
+	d.Set("kms_key_id", output.KmsKeyId)
 	d.Set("multi_region_enabled", output.MultiRegionEnabled)
-	d.Set(names.AttrName, output.Name)
+	d.Set("name", output.Name)
 	d.Set("organization_enabled", output.OrganizationEnabled)
-	d.Set(names.AttrRetentionPeriod, output.RetentionPeriod)
+	d.Set("retention_period", output.RetentionPeriod)
 	d.Set("termination_protection_enabled", output.TerminationProtectionEnabled)
 
 	return diags
@@ -253,7 +253,7 @@ func resourceEventDataStoreUpdate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudTrailClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &cloudtrail.UpdateEventDataStoreInput{
 			EventDataStore: aws.String(d.Id()),
 		}
@@ -266,16 +266,16 @@ func resourceEventDataStoreUpdate(ctx context.Context, d *schema.ResourceData, m
 			input.MultiRegionEnabled = aws.Bool(d.Get("multi_region_enabled").(bool))
 		}
 
-		if d.HasChange(names.AttrName) {
-			input.Name = aws.String(d.Get(names.AttrName).(string))
+		if d.HasChange("name") {
+			input.Name = aws.String(d.Get("name").(string))
 		}
 
 		if d.HasChange("organization_enabled") {
 			input.OrganizationEnabled = aws.Bool(d.Get("organization_enabled").(bool))
 		}
 
-		if d.HasChange(names.AttrRetentionPeriod) {
-			input.RetentionPeriod = aws.Int32(int32(d.Get(names.AttrRetentionPeriod).(int)))
+		if d.HasChange("retention_period") {
+			input.RetentionPeriod = aws.Int32(int32(d.Get("retention_period").(int)))
 		}
 
 		if d.HasChange("termination_protection_enabled") {

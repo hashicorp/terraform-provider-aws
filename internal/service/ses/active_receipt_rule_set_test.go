@@ -26,11 +26,11 @@ func TestAccSESActiveReceiptRuleSet_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Resource": {
-			acctest.CtBasic: testAccActiveReceiptRuleSet_basic,
-			"disappears":    testAccActiveReceiptRuleSet_disappears,
+			"basic":      testAccActiveReceiptRuleSet_basic,
+			"disappears": testAccActiveReceiptRuleSet_disappears,
 		},
 		"DataSource": {
-			acctest.CtBasic:   testAccActiveReceiptRuleSetDataSource_basic,
+			"basic":           testAccActiveReceiptRuleSetDataSource_basic,
 			"noActiveRuleSet": testAccActiveReceiptRuleSetDataSource_noActiveRuleSet,
 		},
 	}
@@ -57,7 +57,7 @@ func testAccActiveReceiptRuleSet_basic(t *testing.T) {
 				Config: testAccActiveReceiptRuleSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckActiveReceiptRuleSetExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "ses", fmt.Sprintf("receipt-rule-set/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ses", fmt.Sprintf("receipt-rule-set/%s", rName)),
 				),
 			},
 			{

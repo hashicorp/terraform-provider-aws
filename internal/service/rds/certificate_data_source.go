@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_rds_certificate")
@@ -22,7 +21,7 @@ func DataSourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCertificateRead,
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -38,7 +37,7 @@ func DataSourceCertificate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrID: {
+			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -69,7 +68,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 
 	input := &rds.DescribeCertificatesInput{}
 
-	if v, ok := d.GetOk(names.AttrID); ok {
+	if v, ok := d.GetOk("id"); ok {
 		input.CertificateIdentifier = aws.String(v.(string))
 	}
 
@@ -117,7 +116,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 
 	d.SetId(aws.StringValue(certificate.CertificateIdentifier))
 
-	d.Set(names.AttrARN, certificate.CertificateArn)
+	d.Set("arn", certificate.CertificateArn)
 	d.Set("certificate_type", certificate.CertificateType)
 	d.Set("customer_override", certificate.CustomerOverride)
 

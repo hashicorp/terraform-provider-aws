@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_security_group")
@@ -30,27 +29,27 @@ func DataSourceSecurityGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrFilter: customFiltersSchema(),
-			names.AttrID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrName: {
+			"filter": customFiltersSchema(),
+			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			names.AttrVPCID: {
+			"name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"tags": tftags.TagsSchemaComputed(),
+			"vpc_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -68,22 +67,22 @@ func dataSourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, me
 	input := &ec2.DescribeSecurityGroupsInput{
 		Filters: newAttributeFilterList(
 			map[string]string{
-				"group-name": d.Get(names.AttrName).(string),
-				"vpc-id":     d.Get(names.AttrVPCID).(string),
+				"group-name": d.Get("name").(string),
+				"vpc-id":     d.Get("vpc_id").(string),
 			},
 		),
 	}
 
-	if v, ok := d.GetOk(names.AttrID); ok {
+	if v, ok := d.GetOk("id"); ok {
 		input.GroupIds = aws.StringSlice([]string{v.(string)})
 	}
 
 	input.Filters = append(input.Filters, newTagFilterList(
-		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
+		Tags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
 	)...)
 
 	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get(names.AttrFilter).(*schema.Set),
+		d.Get("filter").(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {
@@ -106,12 +105,12 @@ func dataSourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, me
 		AccountID: *sg.OwnerId,
 		Resource:  fmt.Sprintf("security-group/%s", *sg.GroupId),
 	}.String()
-	d.Set(names.AttrARN, arn)
-	d.Set(names.AttrDescription, sg.Description)
-	d.Set(names.AttrName, sg.GroupName)
-	d.Set(names.AttrVPCID, sg.VpcId)
+	d.Set("arn", arn)
+	d.Set("description", sg.Description)
+	d.Set("name", sg.GroupName)
+	d.Set("vpc_id", sg.VpcId)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, sg.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, sg.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

@@ -51,7 +51,7 @@ func ResourceSubnet() *schema.Resource {
 		// Keep in sync with aws_default_subnet's schema.
 		// See notes in vpc_default_subnet.go.
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -60,7 +60,7 @@ func ResourceSubnet() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			names.AttrAvailabilityZone: {
+			"availability_zone": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -72,7 +72,7 @@ func ResourceSubnet() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{names.AttrAvailabilityZone},
+				ConflictsWith: []string{"availability_zone"},
 			},
 			"cidr_block": {
 				Type:         schema.TypeString,
@@ -136,7 +136,7 @@ func ResourceSubnet() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			names.AttrOwnerID: {
+			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -148,7 +148,7 @@ func ResourceSubnet() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVPCID: {
+			"vpc_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -163,10 +163,10 @@ func resourceSubnetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	input := &ec2.CreateSubnetInput{
 		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeSubnet),
-		VpcId:             aws.String(d.Get(names.AttrVPCID).(string)),
+		VpcId:             aws.String(d.Get("vpc_id").(string)),
 	}
 
-	if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
+	if v, ok := d.GetOk("availability_zone"); ok {
 		input.AvailabilityZone = aws.String(v.(string))
 	}
 
@@ -245,9 +245,9 @@ func resourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	subnet := outputRaw.(*ec2.Subnet)
 
-	d.Set(names.AttrARN, subnet.SubnetArn)
+	d.Set("arn", subnet.SubnetArn)
 	d.Set("assign_ipv6_address_on_creation", subnet.AssignIpv6AddressOnCreation)
-	d.Set(names.AttrAvailabilityZone, subnet.AvailabilityZone)
+	d.Set("availability_zone", subnet.AvailabilityZone)
 	d.Set("availability_zone_id", subnet.AvailabilityZoneId)
 	d.Set("cidr_block", subnet.CidrBlock)
 	d.Set("customer_owned_ipv4_pool", subnet.CustomerOwnedIpv4Pool)
@@ -257,8 +257,8 @@ func resourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("map_customer_owned_ip_on_launch", subnet.MapCustomerOwnedIpOnLaunch)
 	d.Set("map_public_ip_on_launch", subnet.MapPublicIpOnLaunch)
 	d.Set("outpost_arn", subnet.OutpostArn)
-	d.Set(names.AttrOwnerID, subnet.OwnerId)
-	d.Set(names.AttrVPCID, subnet.VpcId)
+	d.Set("owner_id", subnet.OwnerId)
+	d.Set("vpc_id", subnet.VpcId)
 
 	// Make sure those values are set, if an IPv6 block exists it'll be set in the loop.
 	d.Set("ipv6_cidr_block_association_id", nil)
@@ -369,7 +369,7 @@ func resourceSubnetDelete(ctx context.Context, d *schema.ResourceData, meta inte
 
 	tflog.Info(ctx, "Deleting EC2 Subnet")
 
-	if err := deleteLingeringENIs(ctx, meta.(*conns.AWSClient).EC2Client(ctx), "subnet-id", d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if err := deleteLingeringENIs(ctx, conn, "subnet-id", d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting ENIs for EC2 Subnet (%s): %s", d.Id(), err)
 	}
 

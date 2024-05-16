@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ecr_repository_policy", name="Repsitory Policy")
@@ -36,7 +35,7 @@ func resourceRepositoryPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrPolicy: {
+			"policy": {
 				Type:                  schema.TypeString,
 				Required:              true,
 				ValidateFunc:          validation.StringIsJSON,
@@ -64,7 +63,7 @@ func resourceRepositoryPolicyPut(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
-	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
+	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -110,7 +109,7 @@ func resourceRepositoryPolicyRead(ctx context.Context, d *schema.ResourceData, m
 
 	output := outputRaw.(*ecr.GetRepositoryPolicyOutput)
 
-	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get(names.AttrPolicy).(string), aws.ToString(output.PolicyText))
+	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), aws.ToString(output.PolicyText))
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -120,7 +119,7 @@ func resourceRepositoryPolicyRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set(names.AttrPolicy, policyToSet)
+	d.Set("policy", policyToSet)
 	d.Set("registry_id", output.RegistryId)
 	d.Set("repository", output.RepositoryName)
 

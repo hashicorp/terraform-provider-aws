@@ -21,7 +21,7 @@ func TestAccClientVPNEndpoint_serial(t *testing.T) {
 	semaphore := tfsync.GetSemaphore("ClientVPN", "AWS_EC2_CLIENT_VPN_LIMIT", 5)
 	testCases := map[string]map[string]func(*testing.T, tfsync.Semaphore){
 		"Endpoint": {
-			acctest.CtBasic:                testAccClientVPNEndpoint_basic,
+			"basic":                        testAccClientVPNEndpoint_basic,
 			"disappears":                   testAccClientVPNEndpoint_disappears,
 			"msADAuth":                     testAccClientVPNEndpoint_msADAuth,
 			"msADAuthAndMutualAuth":        testAccClientVPNEndpoint_msADAuthAndMutualAuth,
@@ -39,21 +39,21 @@ func TestAccClientVPNEndpoint_serial(t *testing.T) {
 			"basicDataSource":              testAccClientVPNEndpointDataSource_basic,
 		},
 		"AuthorizationRule": {
-			acctest.CtBasic:      testAccClientVPNAuthorizationRule_basic,
+			"basic":              testAccClientVPNAuthorizationRule_basic,
 			"groups":             testAccClientVPNAuthorizationRule_groups,
 			"subnets":            testAccClientVPNAuthorizationRule_subnets,
 			"disappears":         testAccClientVPNAuthorizationRule_disappears,
 			"disappearsEndpoint": testAccClientVPNAuthorizationRule_Disappears_endpoint,
 		},
 		"NetworkAssociation": {
-			acctest.CtBasic:   testAccClientVPNNetworkAssociation_basic,
+			"basic":           testAccClientVPNNetworkAssociation_basic,
 			"multipleSubnets": testAccClientVPNNetworkAssociation_multipleSubnets,
 			"disappears":      testAccClientVPNNetworkAssociation_disappears,
 		},
 		"Route": {
-			acctest.CtBasic: testAccClientVPNRoute_basic,
-			"description":   testAccClientVPNRoute_description,
-			"disappears":    testAccClientVPNRoute_disappears,
+			"basic":       testAccClientVPNRoute_basic,
+			"description": testAccClientVPNRoute_description,
+			"disappears":  testAccClientVPNRoute_disappears,
 		},
 	}
 

@@ -26,9 +26,9 @@ func TestAccMediaConvertQueueDataSource_basic(t *testing.T) {
 			{
 				Config: testAccQueueDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
-					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
+					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
 				),
 			},
 		},

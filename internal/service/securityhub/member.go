@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_securityhub_member", name="Member")
@@ -35,13 +34,13 @@ func resourceMember() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrAccountID: {
+			"account_id": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			names.AttrEmail: {
+			"email": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -67,14 +66,14 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	accountID := d.Get(names.AttrAccountID).(string)
+	accountID := d.Get("account_id").(string)
 	input := &securityhub.CreateMembersInput{
 		AccountDetails: []types.AccountDetails{{
 			AccountId: aws.String(accountID),
 		}},
 	}
 
-	if v, ok := d.GetOk(names.AttrEmail); ok {
+	if v, ok := d.GetOk("email"); ok {
 		input.AccountDetails[0].Email = aws.String(v.(string))
 	}
 
@@ -125,8 +124,8 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading Security Hub Member (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrAccountID, member.AccountId)
-	d.Set(names.AttrEmail, member.Email)
+	d.Set("account_id", member.AccountId)
+	d.Set("email", member.Email)
 	status := aws.ToString(member.MemberStatus)
 	const (
 		// Associated is the member status naming for Regions that do not support Organizations.

@@ -5,9 +5,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/costexplorer"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/costexplorer/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/costexplorer"
+	"github.com/aws/aws-sdk-go/service/costexplorer/costexploreriface"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
@@ -19,12 +19,12 @@ import (
 // listTags lists ce service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func listTags(ctx context.Context, conn *costexplorer.Client, identifier string, optFns ...func(*costexplorer.Options)) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn costexploreriface.CostExplorerAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &costexplorer.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResource(ctx, input, optFns...)
+	output, err := conn.ListTagsForResourceWithContext(ctx, input)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -36,7 +36,7 @@ func listTags(ctx context.Context, conn *costexplorer.Client, identifier string,
 // ListTags lists ce service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := listTags(ctx, meta.(*conns.AWSClient).CEClient(ctx), identifier)
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).CEConn(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -52,11 +52,11 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 // []*SERVICE.Tag handling
 
 // Tags returns ce service tags.
-func Tags(tags tftags.KeyValueTags) []awstypes.ResourceTag {
-	result := make([]awstypes.ResourceTag, 0, len(tags))
+func Tags(tags tftags.KeyValueTags) []*costexplorer.ResourceTag {
+	result := make([]*costexplorer.ResourceTag, 0, len(tags))
 
 	for k, v := range tags.Map() {
-		tag := awstypes.ResourceTag{
+		tag := &costexplorer.ResourceTag{
 			Key:   aws.String(k),
 			Value: aws.String(v),
 		}
@@ -68,11 +68,11 @@ func Tags(tags tftags.KeyValueTags) []awstypes.ResourceTag {
 }
 
 // KeyValueTags creates tftags.KeyValueTags from costexplorer service tags.
-func KeyValueTags(ctx context.Context, tags []awstypes.ResourceTag) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags []*costexplorer.ResourceTag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.ToString(tag.Key)] = tag.Value
+		m[aws.StringValue(tag.Key)] = tag.Value
 	}
 
 	return tftags.New(ctx, m)
@@ -80,7 +80,7 @@ func KeyValueTags(ctx context.Context, tags []awstypes.ResourceTag) tftags.KeyVa
 
 // getTagsIn returns ce service tags from Context.
 // nil is returned if there are no input tags.
-func getTagsIn(ctx context.Context) []awstypes.ResourceTag {
+func getTagsIn(ctx context.Context) []*costexplorer.ResourceTag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -91,7 +91,7 @@ func getTagsIn(ctx context.Context) []awstypes.ResourceTag {
 }
 
 // setTagsOut sets ce service tags in Context.
-func setTagsOut(ctx context.Context, tags []awstypes.ResourceTag) {
+func setTagsOut(ctx context.Context, tags []*costexplorer.ResourceTag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
 	}
@@ -100,7 +100,7 @@ func setTagsOut(ctx context.Context, tags []awstypes.ResourceTag) {
 // updateTags updates ce service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func updateTags(ctx context.Context, conn *costexplorer.Client, identifier string, oldTagsMap, newTagsMap any, optFns ...func(*costexplorer.Options)) error {
+func updateTags(ctx context.Context, conn costexploreriface.CostExplorerAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -111,10 +111,10 @@ func updateTags(ctx context.Context, conn *costexplorer.Client, identifier strin
 	if len(removedTags) > 0 {
 		input := &costexplorer.UntagResourceInput{
 			ResourceArn:     aws.String(identifier),
-			ResourceTagKeys: removedTags.Keys(),
+			ResourceTagKeys: aws.StringSlice(removedTags.Keys()),
 		}
 
-		_, err := conn.UntagResource(ctx, input, optFns...)
+		_, err := conn.UntagResourceWithContext(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -129,7 +129,7 @@ func updateTags(ctx context.Context, conn *costexplorer.Client, identifier strin
 			ResourceTags: Tags(updatedTags),
 		}
 
-		_, err := conn.TagResource(ctx, input, optFns...)
+		_, err := conn.TagResourceWithContext(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
@@ -142,5 +142,5 @@ func updateTags(ctx context.Context, conn *costexplorer.Client, identifier strin
 // UpdateTags updates ce service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return updateTags(ctx, meta.(*conns.AWSClient).CEClient(ctx), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).CEConn(ctx), identifier, oldTags, newTags)
 }

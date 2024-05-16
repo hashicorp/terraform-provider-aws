@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_appsync_domain_name_api_association")
@@ -33,7 +32,7 @@ func ResourceDomainNameAPIAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrDomainName: {
+			"domain_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -48,7 +47,7 @@ func resourceDomainNameAPIAssociationCreate(ctx context.Context, d *schema.Resou
 
 	params := &appsync.AssociateApiInput{
 		ApiId:      aws.String(d.Get("api_id").(string)),
-		DomainName: aws.String(d.Get(names.AttrDomainName).(string)),
+		DomainName: aws.String(d.Get("domain_name").(string)),
 	}
 
 	resp, err := conn.AssociateApiWithContext(ctx, params)
@@ -80,7 +79,7 @@ func resourceDomainNameAPIAssociationRead(ctx context.Context, d *schema.Resourc
 		return sdkdiag.AppendErrorf(diags, "getting Appsync Domain Name API Association %q: %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrDomainName, association.DomainName)
+	d.Set("domain_name", association.DomainName)
 	d.Set("api_id", association.ApiId)
 
 	return diags
@@ -92,7 +91,7 @@ func resourceDomainNameAPIAssociationUpdate(ctx context.Context, d *schema.Resou
 
 	params := &appsync.AssociateApiInput{
 		ApiId:      aws.String(d.Get("api_id").(string)),
-		DomainName: aws.String(d.Get(names.AttrDomainName).(string)),
+		DomainName: aws.String(d.Get("domain_name").(string)),
 	}
 
 	_, err := conn.AssociateApiWithContext(ctx, params)

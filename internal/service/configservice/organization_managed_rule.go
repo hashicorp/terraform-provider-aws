@@ -24,7 +24,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_config_organization_managed_rule", name="Organization Managed Rule")
@@ -46,11 +45,11 @@ func resourceOrganizationManagedRule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
@@ -79,7 +78,7 @@ func resourceOrganizationManagedRule() *schema.Resource {
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[types.MaximumExecutionFrequency](),
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -122,7 +121,7 @@ func resourceOrganizationManagedRuleCreate(ctx context.Context, d *schema.Resour
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &configservice.PutOrganizationConfigRuleInput{
 		OrganizationConfigRuleName: aws.String(name),
 		OrganizationManagedRuleMetadata: &types.OrganizationManagedRuleMetadata{
@@ -130,7 +129,7 @@ func resourceOrganizationManagedRuleCreate(ctx context.Context, d *schema.Resour
 		},
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.OrganizationManagedRuleMetadata.Description = aws.String(v.(string))
 	}
 
@@ -196,12 +195,12 @@ func resourceOrganizationManagedRuleRead(ctx context.Context, d *schema.Resource
 	}
 
 	managedRule := configRule.OrganizationManagedRuleMetadata
-	d.Set(names.AttrARN, configRule.OrganizationConfigRuleArn)
-	d.Set(names.AttrDescription, managedRule.Description)
+	d.Set("arn", configRule.OrganizationConfigRuleArn)
+	d.Set("description", managedRule.Description)
 	d.Set("excluded_accounts", configRule.ExcludedAccounts)
 	d.Set("input_parameters", managedRule.InputParameters)
 	d.Set("maximum_execution_frequency", managedRule.MaximumExecutionFrequency)
-	d.Set(names.AttrName, configRule.OrganizationConfigRuleName)
+	d.Set("name", configRule.OrganizationConfigRuleName)
 	d.Set("resource_id_scope", managedRule.ResourceIdScope)
 	d.Set("resource_types_scope", managedRule.ResourceTypesScope)
 	d.Set("rule_identifier", managedRule.RuleIdentifier)
@@ -222,7 +221,7 @@ func resourceOrganizationManagedRuleUpdate(ctx context.Context, d *schema.Resour
 		},
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.OrganizationManagedRuleMetadata.Description = aws.String(v.(string))
 	}
 

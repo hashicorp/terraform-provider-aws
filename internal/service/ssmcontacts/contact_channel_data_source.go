@@ -24,7 +24,7 @@ func DataSourceContactChannel() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -44,11 +44,11 @@ func DataSourceContactChannel() *schema.Resource {
 					},
 				},
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrType: {
+			"type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -63,7 +63,7 @@ const (
 func dataSourceContactChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 
-	arn := d.Get(names.AttrARN).(string)
+	arn := d.Get("arn").(string)
 
 	out, err := findContactChannelByID(ctx, conn, arn)
 	if err != nil {

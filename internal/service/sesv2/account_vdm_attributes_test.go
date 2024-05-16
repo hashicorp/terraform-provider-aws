@@ -23,7 +23,7 @@ func TestAccSESV2AccountVDMAttributes_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:           testAccAccountVDMAttributes_basic,
+		"basic":                   testAccAccountVDMAttributes_basic,
 		"disappears":              testAccAccountVDMAttributes_disappears,
 		"engagementMetrics":       testAccAccountVDMAttributes_engagementMetrics,
 		"optimizedSharedDelivery": testAccAccountVDMAttributes_optimizedSharedDelivery,
@@ -91,7 +91,7 @@ func testAccAccountVDMAttributes_engagementMetrics(t *testing.T) {
 			{
 				Config: testAccAccountVDMAttributesConfig_engagementMetrics(string(types.FeatureStatusEnabled)),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "dashboard_attributes.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "dashboard_attributes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "dashboard_attributes.0.engagement_metrics", string(types.FeatureStatusEnabled)),
 				),
 			},
@@ -103,7 +103,7 @@ func testAccAccountVDMAttributes_engagementMetrics(t *testing.T) {
 			{
 				Config: testAccAccountVDMAttributesConfig_engagementMetrics(string(types.FeatureStatusDisabled)),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "dashboard_attributes.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "dashboard_attributes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "dashboard_attributes.0.engagement_metrics", string(types.FeatureStatusDisabled)),
 				),
 			},
@@ -124,7 +124,7 @@ func testAccAccountVDMAttributes_optimizedSharedDelivery(t *testing.T) {
 			{
 				Config: testAccAccountVDMAttributesConfig_optimizedSharedDelivery(string(types.FeatureStatusEnabled)),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "guardian_attributes.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "guardian_attributes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "guardian_attributes.0.optimized_shared_delivery", string(types.FeatureStatusEnabled)),
 				),
 			},
@@ -136,7 +136,7 @@ func testAccAccountVDMAttributes_optimizedSharedDelivery(t *testing.T) {
 			{
 				Config: testAccAccountVDMAttributesConfig_optimizedSharedDelivery(string(types.FeatureStatusDisabled)),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "guardian_attributes.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "guardian_attributes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "guardian_attributes.0.optimized_shared_delivery", string(types.FeatureStatusDisabled)),
 				),
 			},

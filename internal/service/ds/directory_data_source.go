@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_directory_service_directory")
@@ -27,7 +26,7 @@ func DataSourceDirectory() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrAlias: {
+			"alias": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -36,7 +35,7 @@ func DataSourceDirectory() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrAvailabilityZones: {
+						"availability_zones": {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -55,19 +54,19 @@ func DataSourceDirectory() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrSubnetIDs: {
+						"subnet_ids": {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						names.AttrVPCID: {
+						"vpc_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -88,7 +87,7 @@ func DataSourceDirectory() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -137,12 +136,12 @@ func DataSourceDirectory() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrSize: {
+			"size": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			names.AttrType: {
+			"tags": tftags.TagsSchemaComputed(),
+			"type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -151,17 +150,17 @@ func DataSourceDirectory() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrAvailabilityZones: {
+						"availability_zones": {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						names.AttrSubnetIDs: {
+						"subnet_ids": {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						names.AttrVPCID: {
+						"vpc_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -185,7 +184,7 @@ func dataSourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.SetId(aws.StringValue(dir.DirectoryId))
 	d.Set("access_url", dir.AccessUrl)
-	d.Set(names.AttrAlias, dir.Alias)
+	d.Set("alias", dir.Alias)
 	if dir.ConnectSettings != nil {
 		if err := d.Set("connect_settings", []interface{}{flattenDirectoryConnectSettingsDescription(dir.ConnectSettings, dir.DnsIpAddrs)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting connect_settings: %s", err)
@@ -193,7 +192,7 @@ func dataSourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta i
 	} else {
 		d.Set("connect_settings", nil)
 	}
-	d.Set(names.AttrDescription, dir.Description)
+	d.Set("description", dir.Description)
 	if aws.StringValue(dir.Type) == directoryservice.DirectoryTypeAdconnector {
 		d.Set("dns_ip_addresses", aws.StringValueSlice(dir.ConnectSettings.ConnectIps))
 	} else if aws.StringValue(dir.Type) == directoryservice.DirectoryTypeSharedMicrosoftAd {
@@ -203,7 +202,7 @@ func dataSourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	d.Set("edition", dir.Edition)
 	d.Set("enable_sso", dir.SsoEnabled)
-	d.Set(names.AttrName, dir.Name)
+	d.Set("name", dir.Name)
 	if dir.RadiusSettings != nil {
 		if err := d.Set("radius_settings", []interface{}{flattenRadiusSettings(dir.RadiusSettings)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting radius_settings: %s", err)
@@ -219,8 +218,8 @@ func dataSourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta i
 		d.Set("security_group_id", nil)
 	}
 	d.Set("short_name", dir.ShortName)
-	d.Set(names.AttrSize, dir.Size)
-	d.Set(names.AttrType, dir.Type)
+	d.Set("size", dir.Size)
+	d.Set("type", dir.Type)
 	if dir.VpcSettings != nil {
 		if err := d.Set("vpc_settings", []interface{}{flattenDirectoryVpcSettingsDescription(dir.VpcSettings)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting vpc_settings: %s", err)
@@ -235,7 +234,7 @@ func dataSourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "listing tags for Directory Service Directory (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

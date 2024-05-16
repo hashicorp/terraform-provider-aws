@@ -21,11 +21,11 @@ func DataSourceSink() *schema.Resource {
 		ReadWithoutTimeout: dataSourceSinkRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -37,7 +37,7 @@ func DataSourceSink() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -58,8 +58,8 @@ func dataSourceSinkRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.SetId(aws.ToString(out.Arn))
 
-	d.Set(names.AttrARN, out.Arn)
-	d.Set(names.AttrName, out.Name)
+	d.Set("arn", out.Arn)
+	d.Set("name", out.Name)
 	d.Set("sink_id", out.Id)
 
 	tags, err := listTags(ctx, conn, d.Id())
@@ -69,7 +69,7 @@ func dataSourceSinkRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return create.DiagError(names.ObservabilityAccessManager, create.ErrActionSetting, DSNameSink, d.Id(), err)
 	}
 

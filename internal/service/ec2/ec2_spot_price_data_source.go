@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ec2_spot_price")
@@ -26,12 +25,12 @@ func DataSourceSpotPrice() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrFilter: customFiltersSchema(),
-			names.AttrInstanceType: {
+			"filter": customFiltersSchema(),
+			"instance_type": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			names.AttrAvailabilityZone: {
+			"availability_zone": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -56,19 +55,19 @@ func dataSourceSpotPriceRead(ctx context.Context, d *schema.ResourceData, meta i
 		StartTime: &now,
 	}
 
-	if v, ok := d.GetOk(names.AttrInstanceType); ok {
+	if v, ok := d.GetOk("instance_type"); ok {
 		instanceType := v.(string)
 		input.InstanceTypes = []*string{
 			aws.String(instanceType),
 		}
 	}
 
-	if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
+	if v, ok := d.GetOk("availability_zone"); ok {
 		availabilityZone := v.(string)
 		input.AvailabilityZone = aws.String(availabilityZone)
 	}
 
-	if v, ok := d.GetOk(names.AttrFilter); ok {
+	if v, ok := d.GetOk("filter"); ok {
 		input.Filters = newCustomFilterList(v.(*schema.Set))
 	}
 

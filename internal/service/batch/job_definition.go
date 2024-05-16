@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"reflect"
 	"strings"
 
 	"github.com/YakDriver/regexache"
@@ -17,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/batch"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -34,7 +32,7 @@ import (
 
 // @SDKResource("aws_batch_job_definition", name="Job Definition")
 // @Tags(identifierAttribute="arn")
-// @Testing(existsType="github.com/aws/aws-sdk-go/service/batch;batch.JobDefinition", importIgnore="deregister_on_new_revision")
+// @Testing(existsType="github.com/aws/aws-sdk-go/service/batch.JobDefinition", importIgnore="deregister_on_new_revision")
 func ResourceJobDefinition() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceJobDefinitionCreate,
@@ -47,7 +45,7 @@ func ResourceJobDefinition() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -79,7 +77,7 @@ func ResourceJobDefinition() *schema.Resource {
 				Optional: true,
 			},
 
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -135,11 +133,11 @@ func ResourceJobDefinition() *schema.Resource {
 													Optional: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															names.AttrName: {
+															"name": {
 																Type:     schema.TypeString,
 																Required: true,
 															},
-															names.AttrValue: {
+															"value": {
 																Type:     schema.TypeString,
 																Required: true,
 															},
@@ -155,11 +153,11 @@ func ResourceJobDefinition() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(ImagePullPolicy_Values(), false),
 												},
-												names.AttrName: {
+												"name": {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
-												names.AttrResources: {
+												"resources": {
 													Type:     schema.TypeList,
 													Optional: true,
 													MaxItems: 1,
@@ -216,7 +214,7 @@ func ResourceJobDefinition() *schema.Resource {
 																Type:     schema.TypeString,
 																Required: true,
 															},
-															names.AttrName: {
+															"name": {
 																Type:     schema.TypeString,
 																Required: true,
 															},
@@ -288,14 +286,14 @@ func ResourceJobDefinition() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															names.AttrPath: {
+															"path": {
 																Type:     schema.TypeString,
 																Required: true,
 															},
 														},
 													},
 												},
-												names.AttrName: {
+												"name": {
 													Type:     schema.TypeString,
 													Optional: true,
 													Default:  "Default",
@@ -327,7 +325,7 @@ func ResourceJobDefinition() *schema.Resource {
 				},
 			},
 
-			names.AttrParameters: {
+			"parameters": {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -342,7 +340,7 @@ func ResourceJobDefinition() *schema.Resource {
 				},
 			},
 
-			names.AttrPropagateTags: {
+			"propagate_tags": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -367,7 +365,7 @@ func ResourceJobDefinition() *schema.Resource {
 							MaxItems: 5,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrAction: {
+									"action": {
 										Type:     schema.TypeString,
 										Required: true,
 										StateFunc: func(v interface{}) string {
@@ -419,7 +417,7 @@ func ResourceJobDefinition() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 
-			names.AttrTimeout: {
+			"timeout": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -434,155 +432,26 @@ func ResourceJobDefinition() *schema.Resource {
 				},
 			},
 
-			names.AttrType: {
+			"type": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice([]string{batch.JobDefinitionTypeContainer, batch.JobDefinitionTypeMultinode}, true),
 			},
 		},
 
-		CustomizeDiff: customdiff.Sequence(
-			jobDefinitionCustomizeDiff,
-			verify.SetTagsDiff,
-		),
+		CustomizeDiff: verify.SetTagsDiff,
 	}
-}
-
-func jobDefinitionCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
-	if d.Id() != "" && needsJobDefUpdate(d) && d.Get(names.AttrARN).(string) != "" {
-		d.SetNewComputed(names.AttrARN)
-		d.SetNewComputed("revision")
-		d.SetNewComputed(names.AttrID)
-	}
-
-	return nil
-}
-
-// needsJobDefUpdate determines if the Job Definition needs to be updated. This is the
-// cost of not forcing new when updates to one argument (eg, container_properties)
-// simultaneously impact a computed attribute (eg, arn). The real challenge here is that
-// we have to figure out if a change is **GOING** to cause a new revision to be created,
-// without the benefit of AWS just telling us. This is necessary because waiting until
-// after AWS tells us is too late, and practitioners will need to refresh or worse, get
-// an inconsistent plan. BUT, if we SetNewComputed **without** a change, we'll get a
-// testing error: "the non-refresh plan was not empty".
-func needsJobDefUpdate(d *schema.ResourceDiff) bool {
-	if d.HasChange("container_properties") {
-		o, n := d.GetChange("container_properties")
-
-		equivalent, err := EquivalentContainerPropertiesJSON(o.(string), n.(string))
-		if err != nil {
-			return false
-		}
-
-		if !equivalent {
-			return true
-		}
-	}
-
-	if d.HasChange("node_properties") {
-		o, n := d.GetChange("node_properties")
-
-		equivalent, err := EquivalentNodePropertiesJSON(o.(string), n.(string))
-		if err != nil {
-			return false
-		}
-
-		if !equivalent {
-			return true
-		}
-	}
-
-	if d.HasChange("eks_properties") {
-		o, n := d.GetChange("eks_properties")
-		if len(o.([]interface{})) == 0 && len(n.([]interface{})) == 0 {
-			return false
-		}
-
-		if d.Get(names.AttrType).(string) != batch.JobDefinitionTypeContainer {
-			return false
-		}
-
-		var oeks, neks *batch.EksPodProperties
-		if len(o.([]interface{})) > 0 {
-			oProps := o.([]interface{})[0].(map[string]interface{})
-			if opodProps, ok := oProps["pod_properties"].([]interface{}); ok && len(opodProps) > 0 {
-				oeks = expandEKSPodProperties(opodProps[0].(map[string]interface{}))
-			}
-		}
-
-		if len(n.([]interface{})) > 0 {
-			nProps := n.([]interface{})[0].(map[string]interface{})
-			if npodProps, ok := nProps["pod_properties"].([]interface{}); ok && len(npodProps) > 0 {
-				neks = expandEKSPodProperties(npodProps[0].(map[string]interface{}))
-			}
-		}
-
-		return !reflect.DeepEqual(oeks, neks)
-	}
-
-	if d.HasChange("retry_strategy") {
-		o, n := d.GetChange("retry_strategy")
-		if len(o.([]interface{})) == 0 && len(n.([]interface{})) == 0 {
-			return false
-		}
-
-		var ors, nrs *batch.RetryStrategy
-		if len(o.([]interface{})) > 0 {
-			oProps := o.([]interface{})[0].(map[string]interface{})
-			ors = expandRetryStrategy(oProps)
-		}
-
-		if len(n.([]interface{})) > 0 {
-			nProps := n.([]interface{})[0].(map[string]interface{})
-			nrs = expandRetryStrategy(nProps)
-		}
-
-		return !reflect.DeepEqual(ors, nrs)
-	}
-
-	if d.HasChange(names.AttrTimeout) {
-		o, n := d.GetChange(names.AttrTimeout)
-		if len(o.([]interface{})) == 0 && len(n.([]interface{})) == 0 {
-			return false
-		}
-
-		var ors, nrs *batch.JobTimeout
-		if len(o.([]interface{})) > 0 {
-			oProps := o.([]interface{})[0].(map[string]interface{})
-			ors = expandJobTimeout(oProps)
-		}
-
-		if len(n.([]interface{})) > 0 {
-			nProps := n.([]interface{})[0].(map[string]interface{})
-			nrs = expandJobTimeout(nProps)
-		}
-
-		return !reflect.DeepEqual(ors, nrs)
-	}
-
-	if d.HasChanges(
-		names.AttrPropagateTags,
-		names.AttrParameters,
-		"platform_capabilities",
-		"scheduling_priority",
-		names.AttrType,
-	) {
-		return true
-	}
-
-	return false
 }
 
 func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
-	name := d.Get(names.AttrName).(string)
-	jobDefinitionType := d.Get(names.AttrType).(string)
+	name := d.Get("name").(string)
+	jobDefinitionType := d.Get("type").(string)
 	input := &batch.RegisterJobDefinitionInput{
 		JobDefinitionName: aws.String(name),
-		PropagateTags:     aws.Bool(d.Get(names.AttrPropagateTags).(bool)),
+		PropagateTags:     aws.Bool(d.Get("propagate_tags").(bool)),
 		Tags:              getTagsIn(ctx),
 		Type:              aws.String(jobDefinitionType),
 	}
@@ -638,7 +507,7 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 		}
 	}
 
-	if v, ok := d.GetOk(names.AttrParameters); ok {
+	if v, ok := d.GetOk("parameters"); ok {
 		input.Parameters = expandJobDefinitionParameters(v.(map[string]interface{}))
 	}
 
@@ -654,7 +523,7 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 		input.SchedulingPriority = aws.Int64(int64(v.(int)))
 	}
 
-	if v, ok := d.GetOk(names.AttrTimeout); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk("timeout"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Timeout = expandJobTimeout(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -686,7 +555,7 @@ func resourceJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	arn, revision := aws.StringValue(jobDefinition.JobDefinitionArn), aws.Int64Value(jobDefinition.Revision)
-	d.Set(names.AttrARN, arn)
+	d.Set("arn", arn)
 	d.Set("arn_prefix", strings.TrimSuffix(arn, fmt.Sprintf(":%d", revision)))
 
 	containerProperties, err := flattenContainerProperties(jobDefinition.ContainerProperties)
@@ -703,7 +572,7 @@ func resourceJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "setting eks_properties: %s", err)
 	}
 
-	d.Set(names.AttrName, jobDefinition.JobDefinitionName)
+	d.Set("name", jobDefinition.JobDefinitionName)
 
 	nodeProperties, err := flattenNodeProperties(jobDefinition.NodeProperties)
 
@@ -715,9 +584,9 @@ func resourceJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "setting node_properties: %s", err)
 	}
 
-	d.Set(names.AttrParameters, aws.StringValueMap(jobDefinition.Parameters))
+	d.Set("parameters", aws.StringValueMap(jobDefinition.Parameters))
 	d.Set("platform_capabilities", aws.StringValueSlice(jobDefinition.PlatformCapabilities))
-	d.Set(names.AttrPropagateTags, jobDefinition.PropagateTags)
+	d.Set("propagate_tags", jobDefinition.PropagateTags)
 
 	if jobDefinition.RetryStrategy != nil {
 		if err := d.Set("retry_strategy", []interface{}{flattenRetryStrategy(jobDefinition.RetryStrategy)}); err != nil {
@@ -731,14 +600,14 @@ func resourceJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("scheduling_priority", jobDefinition.SchedulingPriority)
 
 	if jobDefinition.Timeout != nil {
-		if err := d.Set(names.AttrTimeout, []interface{}{flattenJobTimeout(jobDefinition.Timeout)}); err != nil {
+		if err := d.Set("timeout", []interface{}{flattenJobTimeout(jobDefinition.Timeout)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting timeout: %s", err)
 		}
 	} else {
-		d.Set(names.AttrTimeout, nil)
+		d.Set("timeout", nil)
 	}
 
-	d.Set(names.AttrType, jobDefinition.Type)
+	d.Set("type", jobDefinition.Type)
 
 	setTagsOut(ctx, jobDefinition.Tags)
 
@@ -749,11 +618,11 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		name := d.Get(names.AttrName).(string)
+	if d.HasChangesExcept("tags", "tags_all") {
+		name := d.Get("name").(string)
 		input := &batch.RegisterJobDefinitionInput{
 			JobDefinitionName: aws.String(name),
-			Type:              aws.String(d.Get(names.AttrType).(string)),
+			Type:              aws.String(d.Get("type").(string)),
 		}
 
 		if v, ok := d.GetOk("container_properties"); ok {
@@ -790,11 +659,11 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 			input.NodeProperties = props
 		}
 
-		if v, ok := d.GetOk(names.AttrPropagateTags); ok {
+		if v, ok := d.GetOk("propagate_tags"); ok {
 			input.PropagateTags = aws.Bool(v.(bool))
 		}
 
-		if v, ok := d.GetOk(names.AttrParameters); ok {
+		if v, ok := d.GetOk("parameters"); ok {
 			input.Parameters = expandJobDefinitionParameters(v.(map[string]interface{}))
 		}
 
@@ -810,20 +679,20 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 			input.RetryStrategy = expandRetryStrategy(v.([]interface{})[0].(map[string]interface{}))
 		}
 
-		if v, ok := d.GetOk(names.AttrTimeout); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if v, ok := d.GetOk("timeout"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input.Timeout = expandJobTimeout(v.([]interface{})[0].(map[string]interface{}))
 		}
 
 		jd, err := conn.RegisterJobDefinitionWithContext(ctx, input)
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Batch Job Definition (%s): %s", name, err)
 		}
 
 		// arn contains revision which is used in the Read call
-		currentARN := d.Get(names.AttrARN).(string)
+		currentARN := d.Get("arn").(string)
 		d.SetId(aws.StringValue(jd.JobDefinitionArn))
 		d.Set("revision", jd.Revision)
-		d.Set(names.AttrARN, jd.JobDefinitionArn)
 
 		if v := d.Get("deregister_on_new_revision"); v == true {
 			log.Printf("[DEBUG] Deleting Previous Batch Job Definition: %s", currentARN)
@@ -844,7 +713,7 @@ func resourceJobDefinitionDelete(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	jds, err := ListActiveJobDefinitionByName(ctx, conn, name)
 
 	if err != nil {
@@ -1019,8 +888,8 @@ func expandEvaluateOnExit(tfMap map[string]interface{}) *batch.EvaluateOnExit {
 
 	apiObject := &batch.EvaluateOnExit{}
 
-	if v, ok := tfMap[names.AttrAction].(string); ok && v != "" {
-		apiObject.Action = aws.String(strings.ToLower(v))
+	if v, ok := tfMap["action"].(string); ok && v != "" {
+		apiObject.Action = aws.String(v)
 	}
 
 	if v, ok := tfMap["on_exit_code"].(string); ok && v != "" {
@@ -1090,7 +959,7 @@ func flattenEvaluateOnExit(apiObject *batch.EvaluateOnExit) map[string]interface
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Action; v != nil {
-		tfMap[names.AttrAction] = aws.StringValue(v)
+		tfMap["action"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.OnExitCode; v != nil {

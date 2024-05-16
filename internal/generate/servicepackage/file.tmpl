@@ -36,7 +36,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 			{{- if .TransparentTagging }}
 			Tags: &types.ServicePackageResourceTags {
 				{{- if ne .TagsIdentifierAttribute "" }}
-				IdentifierAttribute: {{ .TagsIdentifierAttribute }},
+				IdentifierAttribute: "{{ .TagsIdentifierAttribute }}",
 				{{- end }}
 				{{- if ne .TagsResourceType "" }}
 				ResourceType: "{{ .TagsResourceType }}",
@@ -59,7 +59,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			{{- if .TransparentTagging }}
 			Tags: &types.ServicePackageResourceTags {
 				{{- if ne .TagsIdentifierAttribute "" }}
-				IdentifierAttribute: {{ .TagsIdentifierAttribute }},
+				IdentifierAttribute: "{{ .TagsIdentifierAttribute }}",
 				{{- end }}
 				{{- if ne .TagsResourceType "" }}
 				ResourceType: "{{ .TagsResourceType }}",
@@ -83,7 +83,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			{{- if $value.TransparentTagging }}
 			Tags: &types.ServicePackageResourceTags {
 				{{- if ne $value.TagsIdentifierAttribute "" }}
-				IdentifierAttribute: {{ $value.TagsIdentifierAttribute }},
+				IdentifierAttribute: "{{ $value.TagsIdentifierAttribute }}",
 				{{- end }}
 				{{- if ne .TagsResourceType "" }}
 				ResourceType: "{{ .TagsResourceType }}",
@@ -107,7 +107,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			{{- if $value.TransparentTagging }}
 			Tags: &types.ServicePackageResourceTags {
 				{{- if ne $value.TagsIdentifierAttribute "" }}
-				IdentifierAttribute: {{ $value.TagsIdentifierAttribute }},
+				IdentifierAttribute: "{{ $value.TagsIdentifierAttribute }}",
 				{{- end }}
 				{{- if ne .TagsResourceType "" }}
 				ResourceType: "{{ .TagsResourceType }}",
@@ -131,9 +131,9 @@ func (p *servicePackage) ServicePackageName() string {
 	{{if eq .SDKVersion "1" "1,2" }}
 // NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
 func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*{{ .GoV1Package }}_sdkv1.{{ .GoV1ClientTypeName }}, error) {
-	sess := config[names.AttrSession].(*session_sdkv1.Session)
+	sess := config["session"].(*session_sdkv1.Session)
 
-	return {{ .GoV1Package }}_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config[names.AttrEndpoint].(string))})), nil
+	return {{ .GoV1Package }}_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
 }
 	{{- end }}
 
@@ -143,7 +143,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
 	return {{ .GoV2Package }}_sdkv2.NewFromConfig(cfg, func(o *{{ .GoV2Package }}_sdkv2.Options) {
-		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
+		if endpoint := config["endpoint"].(string); endpoint != "" {
 			o.BaseEndpoint = aws_sdkv2.String(endpoint)
 		}
 	}), nil

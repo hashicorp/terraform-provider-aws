@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -41,9 +40,9 @@ var routeValidTargets = []string{
 	"gateway_id",
 	"local_gateway_id",
 	"nat_gateway_id",
-	names.AttrNetworkInterfaceID,
-	names.AttrTransitGatewayID,
-	names.AttrVPCEndpointID,
+	"network_interface_id",
+	"transit_gateway_id",
+	"vpc_endpoint_id",
 	"vpc_peering_connection_id",
 }
 
@@ -132,18 +131,18 @@ func resourceRoute() *schema.Resource {
 				Optional:     true,
 				ExactlyOneOf: routeValidTargets,
 			},
-			names.AttrNetworkInterfaceID: {
+			"network_interface_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ExactlyOneOf: routeValidTargets,
 			},
-			names.AttrTransitGatewayID: {
+			"transit_gateway_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ExactlyOneOf: routeValidTargets,
 			},
-			names.AttrVPCEndpointID: {
+			"vpc_endpoint_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ExactlyOneOf: routeValidTargets,
@@ -160,7 +159,7 @@ func resourceRoute() *schema.Resource {
 			//
 			// Computed attributes.
 			//
-			names.AttrInstanceID: {
+			"instance_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -172,7 +171,7 @@ func resourceRoute() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrState: {
+			"state": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -324,20 +323,20 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	// VPC Endpoint ID is returned in Gateway ID field
 	if strings.HasPrefix(aws.StringValue(route.GatewayId), "vpce-") {
 		d.Set("gateway_id", "")
-		d.Set(names.AttrVPCEndpointID, route.GatewayId)
+		d.Set("vpc_endpoint_id", route.GatewayId)
 	} else {
 		d.Set("gateway_id", route.GatewayId)
-		d.Set(names.AttrVPCEndpointID, "")
+		d.Set("vpc_endpoint_id", "")
 	}
 	d.Set("egress_only_gateway_id", route.EgressOnlyInternetGatewayId)
 	d.Set("nat_gateway_id", route.NatGatewayId)
 	d.Set("local_gateway_id", route.LocalGatewayId)
-	d.Set(names.AttrInstanceID, route.InstanceId)
+	d.Set("instance_id", route.InstanceId)
 	d.Set("instance_owner_id", route.InstanceOwnerId)
-	d.Set(names.AttrNetworkInterfaceID, route.NetworkInterfaceId)
+	d.Set("network_interface_id", route.NetworkInterfaceId)
 	d.Set("origin", route.Origin)
-	d.Set(names.AttrState, route.State)
-	d.Set(names.AttrTransitGatewayID, route.TransitGatewayId)
+	d.Set("state", route.State)
+	d.Set("transit_gateway_id", route.TransitGatewayId)
 	d.Set("vpc_peering_connection_id", route.VpcPeeringConnectionId)
 
 	return diags

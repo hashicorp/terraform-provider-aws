@@ -3,24 +3,16 @@
 
 package cloudfront
 
-type streamType string
-
 const (
-	streamTypeKinesis streamType = "Kinesis"
+	StreamTypeKinesis = "Kinesis"
+
+	ResNameDistribution         = "Distribution"
+	ResNamePublicKey            = "Public Key"
+	ResNameOriginAccessIdentity = "Origin Access Identity"
 )
 
-func (streamType) Values() []streamType {
-	return []streamType{
-		streamTypeKinesis,
+func StreamType_Values() []string {
+	return []string{
+		StreamTypeKinesis,
 	}
 }
-
-const (
-	distributionStatusDeployed   = "Deployed"
-	distributionStatusInProgress = "InProgress"
-)
-
-const (
-	keyValueStoreStatusProvisioning = "PROVISIONING"
-	keyValueStoreStatusReady        = "READY"
-)

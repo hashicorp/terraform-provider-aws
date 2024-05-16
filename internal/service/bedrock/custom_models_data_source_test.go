@@ -41,7 +41,7 @@ func TestAccBedrockCustomModelsDataSource_basic(t *testing.T) {
 				},
 				Config: testAccCustomModelsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(datasourceName, names.AttrID),
+					resource.TestCheckResourceAttrSet(datasourceName, "id"),
 					acctest.CheckResourceAttrGreaterThanValue(datasourceName, "model_summaries.#", 0),
 					resource.TestCheckResourceAttrSet(datasourceName, "model_summaries.0.creation_time"),
 					resource.TestCheckResourceAttrSet(datasourceName, "model_summaries.0.model_arn"),

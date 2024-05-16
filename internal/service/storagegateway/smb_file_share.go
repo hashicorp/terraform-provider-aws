@@ -54,7 +54,7 @@ func ResourceSMBFileShare() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -133,7 +133,7 @@ func ResourceSMBFileShare() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			names.AttrKMSKeyARN: {
+			"kms_key_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
@@ -165,7 +165,7 @@ func ResourceSMBFileShare() *schema.Resource {
 					validation.StringLenBetween(2, 100),
 				),
 			},
-			names.AttrPath: {
+			"path": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -179,7 +179,7 @@ func ResourceSMBFileShare() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			names.AttrRoleARN: {
+			"role_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -221,7 +221,7 @@ func resourceSMBFileShareCreate(ctx context.Context, d *schema.ResourceData, met
 		LocationARN:            aws.String(d.Get("location_arn").(string)),
 		ReadOnly:               aws.Bool(d.Get("read_only").(bool)),
 		RequesterPays:          aws.Bool(d.Get("requester_pays").(bool)),
-		Role:                   aws.String(d.Get(names.AttrRoleARN).(string)),
+		Role:                   aws.String(d.Get("role_arn").(string)),
 		SMBACLEnabled:          aws.Bool(d.Get("smb_acl_enabled").(bool)),
 		Tags:                   getTagsIn(ctx),
 	}
@@ -262,7 +262,7 @@ func resourceSMBFileShareCreate(ctx context.Context, d *schema.ResourceData, met
 		input.InvalidUserList = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk(names.AttrKMSKeyARN); ok {
+	if v, ok := d.GetOk("kms_key_arn"); ok {
 		input.KMSKey = aws.String(v.(string))
 	}
 
@@ -320,7 +320,7 @@ func resourceSMBFileShareRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	d.Set("access_based_enumeration", fileshare.AccessBasedEnumeration)
 	d.Set("admin_user_list", aws.StringValueSlice(fileshare.AdminUserList))
-	d.Set(names.AttrARN, fileshare.FileShareARN)
+	d.Set("arn", fileshare.FileShareARN)
 	d.Set("audit_destination_arn", fileshare.AuditDestinationARN)
 	d.Set("authentication", fileshare.Authentication)
 	d.Set("bucket_region", fileshare.BucketRegion)
@@ -341,15 +341,15 @@ func resourceSMBFileShareRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("guess_mime_type_enabled", fileshare.GuessMIMETypeEnabled)
 	d.Set("invalid_user_list", aws.StringValueSlice(fileshare.InvalidUserList))
 	d.Set("kms_encrypted", fileshare.KMSEncrypted)
-	d.Set(names.AttrKMSKeyARN, fileshare.KMSKey)
+	d.Set("kms_key_arn", fileshare.KMSKey)
 	d.Set("location_arn", fileshare.LocationARN)
 	d.Set("notification_policy", fileshare.NotificationPolicy)
 	d.Set("object_acl", fileshare.ObjectACL)
 	d.Set("oplocks_enabled", fileshare.OplocksEnabled)
-	d.Set(names.AttrPath, fileshare.Path)
+	d.Set("path", fileshare.Path)
 	d.Set("read_only", fileshare.ReadOnly)
 	d.Set("requester_pays", fileshare.RequesterPays)
-	d.Set(names.AttrRoleARN, fileshare.Role)
+	d.Set("role_arn", fileshare.Role)
 	d.Set("smb_acl_enabled", fileshare.SMBACLEnabled)
 	d.Set("valid_user_list", aws.StringValueSlice(fileshare.ValidUserList))
 	d.Set("vpc_endpoint_dns_name", fileshare.VPCEndpointDNSName)
@@ -363,7 +363,7 @@ func resourceSMBFileShareUpdate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &storagegateway.UpdateSMBFileShareInput{
 			AccessBasedEnumeration: aws.Bool(d.Get("access_based_enumeration").(bool)),
 			FileShareARN:           aws.String(d.Id()),
@@ -403,10 +403,10 @@ func resourceSMBFileShareUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		// This value can only be set when KMSEncrypted is true.
-		if d.HasChange(names.AttrKMSKeyARN) && d.Get("kms_encrypted").(bool) {
-			input.KMSKey = aws.String(d.Get(names.AttrKMSKeyARN).(string))
-		} else if d.Get("kms_encrypted").(bool) && d.Get(names.AttrKMSKeyARN).(string) != "" {
-			input.KMSKey = aws.String(d.Get(names.AttrKMSKeyARN).(string))
+		if d.HasChange("kms_key_arn") && d.Get("kms_encrypted").(bool) {
+			input.KMSKey = aws.String(d.Get("kms_key_arn").(string))
+		} else if d.Get("kms_encrypted").(bool) && d.Get("kms_key_arn").(string) != "" {
+			input.KMSKey = aws.String(d.Get("kms_key_arn").(string))
 		}
 
 		if d.HasChange("notification_policy") {

@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_kendra_experience")
@@ -24,11 +23,11 @@ func DataSourceExperience() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceExperienceRead,
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrConfiguration: {
+			"configuration": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -74,24 +73,24 @@ func DataSourceExperience() *schema.Resource {
 					},
 				},
 			},
-			names.AttrCreatedAt: {
+			"created_at": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrEndpoints: {
+			"endpoints": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrEndpoint: {
+						"endpoint": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrEndpointType: {
+						"endpoint_type": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -121,15 +120,15 @@ func DataSourceExperience() *schema.Resource {
 					"Starts with an alphanumeric character. Subsequently, can contain alphanumeric characters and hyphens. Fixed length of 36.",
 				),
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrRoleARN: {
+			"role_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -162,22 +161,22 @@ func dataSourceExperienceRead(ctx context.Context, d *schema.ResourceData, meta 
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("index/%s/experience/%s", indexID, experienceID),
 	}.String()
-	d.Set(names.AttrARN, arn)
-	d.Set(names.AttrCreatedAt, aws.ToTime(resp.CreatedAt).Format(time.RFC3339))
-	d.Set(names.AttrDescription, resp.Description)
+	d.Set("arn", arn)
+	d.Set("created_at", aws.ToTime(resp.CreatedAt).Format(time.RFC3339))
+	d.Set("description", resp.Description)
 	d.Set("error_message", resp.ErrorMessage)
 	d.Set("experience_id", resp.Id)
 	d.Set("index_id", resp.IndexId)
-	d.Set(names.AttrName, resp.Name)
-	d.Set(names.AttrRoleARN, resp.RoleArn)
-	d.Set(names.AttrStatus, resp.Status)
+	d.Set("name", resp.Name)
+	d.Set("role_arn", resp.RoleArn)
+	d.Set("status", resp.Status)
 	d.Set("updated_at", aws.ToTime(resp.UpdatedAt).Format(time.RFC3339))
 
-	if err := d.Set(names.AttrConfiguration, flattenConfiguration(resp.Configuration)); err != nil {
+	if err := d.Set("configuration", flattenConfiguration(resp.Configuration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting configuration argument: %s", err)
 	}
 
-	if err := d.Set(names.AttrEndpoints, flattenEndpoints(resp.Endpoints)); err != nil {
+	if err := d.Set("endpoints", flattenEndpoints(resp.Endpoints)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoints argument: %s", err)
 	}
 

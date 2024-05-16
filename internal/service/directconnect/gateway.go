@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_dx_gateway")
@@ -40,7 +39,7 @@ func ResourceGateway() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAmazonSideASN,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -61,7 +60,7 @@ func resourceGatewayCreate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &directconnect.CreateDirectConnectGatewayInput{
 		DirectConnectGatewayName: aws.String(name),
 	}
@@ -103,7 +102,7 @@ func resourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.Set("amazon_side_asn", strconv.FormatInt(aws.Int64Value(output.AmazonSideAsn), 10))
-	d.Set(names.AttrName, output.DirectConnectGatewayName)
+	d.Set("name", output.DirectConnectGatewayName)
 	d.Set("owner_account_id", output.OwnerAccount)
 
 	return diags
@@ -113,10 +112,10 @@ func resourceGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
-	if d.HasChange(names.AttrName) {
+	if d.HasChange("name") {
 		input := &directconnect.UpdateDirectConnectGatewayInput{
 			DirectConnectGatewayId:      aws.String(d.Id()),
-			NewDirectConnectGatewayName: aws.String(d.Get(names.AttrName).(string)),
+			NewDirectConnectGatewayName: aws.String(d.Get("name").(string)),
 		}
 
 		_, err := conn.UpdateDirectConnectGatewayWithContext(ctx, input)

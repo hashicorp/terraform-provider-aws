@@ -44,7 +44,7 @@ func ResourceChannel() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -63,7 +63,7 @@ func ResourceChannel() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(ivs.ChannelLatencyMode_Values(), false),
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -81,7 +81,7 @@ func ResourceChannel() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrType: {
+			"type": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -114,7 +114,7 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 		in.LatencyMode = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrName); ok {
+	if v, ok := d.GetOk("name"); ok {
 		in.Name = aws.String(v.(string))
 	}
 
@@ -122,17 +122,17 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 		in.RecordingConfigurationArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrType); ok {
+	if v, ok := d.GetOk("type"); ok {
 		in.Type = aws.String(v.(string))
 	}
 
 	out, err := conn.CreateChannelWithContext(ctx, in)
 	if err != nil {
-		return create.AppendDiagError(diags, names.IVS, create.ErrActionCreating, ResNameChannel, d.Get(names.AttrName).(string), err)
+		return create.AppendDiagError(diags, names.IVS, create.ErrActionCreating, ResNameChannel, d.Get("name").(string), err)
 	}
 
 	if out == nil || out.Channel == nil {
-		return create.AppendDiagError(diags, names.IVS, create.ErrActionCreating, ResNameChannel, d.Get(names.AttrName).(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.IVS, create.ErrActionCreating, ResNameChannel, d.Get("name").(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.StringValue(out.Channel.Arn))
@@ -161,14 +161,14 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return create.AppendDiagError(diags, names.IVS, create.ErrActionReading, ResNameChannel, d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, out.Arn)
+	d.Set("arn", out.Arn)
 	d.Set("authorized", out.Authorized)
 	d.Set("ingest_endpoint", out.IngestEndpoint)
 	d.Set("latency_mode", out.LatencyMode)
-	d.Set(names.AttrName, out.Name)
+	d.Set("name", out.Name)
 	d.Set("playback_url", out.PlaybackUrl)
 	d.Set("recording_configuration_arn", out.RecordingConfigurationArn)
-	d.Set(names.AttrType, out.Type)
+	d.Set("type", out.Type)
 
 	return diags
 }
@@ -195,8 +195,8 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		update = true
 	}
 
-	if d.HasChanges(names.AttrName) {
-		in.Name = aws.String(d.Get(names.AttrName).(string))
+	if d.HasChanges("name") {
+		in.Name = aws.String(d.Get("name").(string))
 		update = true
 	}
 
@@ -205,8 +205,8 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		update = true
 	}
 
-	if d.HasChanges(names.AttrType) {
-		in.Type = aws.String(d.Get(names.AttrType).(string))
+	if d.HasChanges("type") {
+		in.Type = aws.String(d.Get("type").(string))
 		update = true
 	}
 

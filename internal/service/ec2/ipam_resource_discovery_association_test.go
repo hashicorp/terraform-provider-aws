@@ -36,11 +36,11 @@ func testAccIPAMResourceDiscoveryAssociation_basic(t *testing.T) {
 				Config: testAccIPAMResourceDiscoveryAssociationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMResourceDiscoveryAssociationExists(ctx, resourceName, &rda),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`ipam-resource-discovery-association/ipam-res-disco-assoc-[0-9a-f]+$`)),
-					resource.TestCheckResourceAttrPair(resourceName, "ipam_id", ipamName, names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, "ipam_resource_discovery_id", rdName, names.AttrID),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ec2", regexache.MustCompile(`ipam-resource-discovery-association/ipam-res-disco-assoc-[0-9a-f]+$`)),
+					resource.TestCheckResourceAttrPair(resourceName, "ipam_id", ipamName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "ipam_resource_discovery_id", rdName, "id"),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -64,11 +64,11 @@ func testAccIPAMResourceDiscoveryAssociation_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckIPAMResourceDiscoveryAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIPAMResourceDiscoveryAssociationConfig_tags(acctest.CtKey2, acctest.CtValue2),
+				Config: testAccIPAMResourceDiscoveryAssociationConfig_tags("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMResourceDiscoveryAssociationExists(ctx, resourceName, &rda),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
@@ -77,18 +77,18 @@ func testAccIPAMResourceDiscoveryAssociation_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccIPAMResourceDiscoveryAssociationConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccIPAMResourceDiscoveryAssociationConfig_tags2("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccIPAMResourceDiscoveryAssociationConfig_tags(acctest.CtKey2, acctest.CtValue2),
+				Config: testAccIPAMResourceDiscoveryAssociationConfig_tags("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},

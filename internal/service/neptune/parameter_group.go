@@ -44,38 +44,38 @@ func ResourceParameterGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 				Default:  "Managed by Terraform",
 			},
-			names.AttrFamily: {
+			"family": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
+				ConflictsWith: []string{"name_prefix"},
 				ValidateFunc:  validParamGroupName,
 			},
-			names.AttrNamePrefix: {
+			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
+				ConflictsWith: []string{"name"},
 				ValidateFunc:  validParamGroupNamePrefix,
 			},
-			names.AttrParameter: {
+			"parameter": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -86,11 +86,11 @@ func ResourceParameterGroup() *schema.Resource {
 							Default:      neptune.ApplyMethodPendingReboot,
 							ValidateFunc: validation.StringInSlice(neptune.ApplyMethod_Values(), false),
 						},
-						names.AttrName: {
+						"name": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						names.AttrValue: {
+						"value": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -109,11 +109,11 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &neptune.CreateDBParameterGroupInput{
-		DBParameterGroupFamily: aws.String(d.Get(names.AttrFamily).(string)),
+		DBParameterGroupFamily: aws.String(d.Get("family").(string)),
 		DBParameterGroupName:   aws.String(name),
-		Description:            aws.String(d.Get(names.AttrDescription).(string)),
+		Description:            aws.String(d.Get("description").(string)),
 		Tags:                   getTagsIn(ctx),
 	}
 
@@ -125,7 +125,7 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId(aws.StringValue(output.DBParameterGroup.DBParameterGroupName))
 
-	if v, ok := d.GetOk(names.AttrParameter); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk("parameter"); ok && v.(*schema.Set).Len() > 0 {
 		if err := addDBParameterGroupParameters(ctx, conn, d.Id(), expandParameters(v.(*schema.Set).List())); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -150,11 +150,11 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading Neptune Parameter Group (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, dbParameterGroup.DBParameterGroupArn)
-	d.Set(names.AttrDescription, dbParameterGroup.Description)
-	d.Set(names.AttrFamily, dbParameterGroup.DBParameterGroupFamily)
-	d.Set(names.AttrName, dbParameterGroup.DBParameterGroupName)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(dbParameterGroup.DBParameterGroupName)))
+	d.Set("arn", dbParameterGroup.DBParameterGroupArn)
+	d.Set("description", dbParameterGroup.Description)
+	d.Set("family", dbParameterGroup.DBParameterGroupFamily)
+	d.Set("name", dbParameterGroup.DBParameterGroupName)
+	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(dbParameterGroup.DBParameterGroupName)))
 
 	// Only include user customized parameters as there's hundreds of system/default ones.
 	input := &neptune.DescribeDBParametersInput{
@@ -168,7 +168,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading Neptune Parameter Group (%s) parameters: %s", d.Id(), err)
 	}
 
-	if err := d.Set(names.AttrParameter, flattenParameters(parameters)); err != nil {
+	if err := d.Set("parameter", flattenParameters(parameters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting parameter: %s", err)
 	}
 
@@ -179,8 +179,8 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
-	if d.HasChange(names.AttrParameter) {
-		o, n := d.GetChange(names.AttrParameter)
+	if d.HasChange("parameter") {
+		o, n := d.GetChange("parameter")
 		os, ns := o.(*schema.Set), n.(*schema.Set)
 		add, del := ns.Difference(os).List(), os.Difference(ns).List()
 

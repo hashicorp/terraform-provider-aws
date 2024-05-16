@@ -28,7 +28,7 @@ func TestAccRedshiftServerlessWorkgroupDataSource_basic(t *testing.T) {
 			{
 				Config: testAccWorkgroupDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "endpoint.#", resourceName, "endpoint.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "endpoint.0.address", resourceName, "endpoint.0.address"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "endpoint.0.port", resourceName, "endpoint.0.port"),
@@ -42,9 +42,9 @@ func TestAccRedshiftServerlessWorkgroupDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "endpoint.0.vpc_endpoint.0.network_interface.private_ip_address", resourceName, "endpoint.0.vpc_endpoint.0.network_interface.private_ip_address"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "endpoint.0.vpc_endpoint.0.network_interface.subnet_id", resourceName, "endpoint.0.vpc_endpoint.0.network_interface.subnet_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "enhanced_vpc_routing", resourceName, "enhanced_vpc_routing"),
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "namespace_name", resourceName, "namespace_name"),
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrPubliclyAccessible, resourceName, names.AttrPubliclyAccessible),
+					resource.TestCheckResourceAttrPair(dataSourceName, "publicly_accessible", resourceName, "publicly_accessible"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "security_group_ids.#", resourceName, "security_group_ids.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "subnet_ids.#", resourceName, "subnet_ids.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "workgroup_id", resourceName, "workgroup_id"),

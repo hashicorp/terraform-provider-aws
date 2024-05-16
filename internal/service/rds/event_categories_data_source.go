@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_db_event_categories")
@@ -27,7 +26,7 @@ func DataSourceEventCategories() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrSourceType: {
+			"source_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(rds.SourceType_Values(), false),
@@ -42,7 +41,7 @@ func dataSourceEventCategoriesRead(ctx context.Context, d *schema.ResourceData, 
 
 	input := &rds.DescribeEventCategoriesInput{}
 
-	if v, ok := d.GetOk(names.AttrSourceType); ok {
+	if v, ok := d.GetOk("source_type"); ok {
 		input.SourceType = aws.String(v.(string))
 	}
 

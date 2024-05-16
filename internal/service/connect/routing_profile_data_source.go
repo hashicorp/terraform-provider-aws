@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_connect_routing_profile")
@@ -23,7 +22,7 @@ func DataSourceRoutingProfile() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRoutingProfileRead,
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -31,11 +30,11 @@ func DataSourceRoutingProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrInstanceID: {
+			"instance_id": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
@@ -56,11 +55,11 @@ func DataSourceRoutingProfile() *schema.Resource {
 					},
 				},
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{names.AttrName, "routing_profile_id"},
+				ExactlyOneOf: []string{"name", "routing_profile_id"},
 			},
 			"queue_configs": {
 				Type:     schema.TypeSet,
@@ -75,7 +74,7 @@ func DataSourceRoutingProfile() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						names.AttrPriority: {
+						"priority": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -98,9 +97,9 @@ func DataSourceRoutingProfile() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"routing_profile_id", names.AttrName},
+				ExactlyOneOf: []string{"routing_profile_id", "name"},
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -111,7 +110,7 @@ func dataSourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	instanceID := d.Get(names.AttrInstanceID).(string)
+	instanceID := d.Get("instance_id").(string)
 
 	input := &connect.DescribeRoutingProfileInput{
 		InstanceId: aws.String(instanceID),
@@ -119,7 +118,7 @@ func dataSourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, m
 
 	if v, ok := d.GetOk("routing_profile_id"); ok {
 		input.RoutingProfileId = aws.String(v.(string))
-	} else if v, ok := d.GetOk(names.AttrName); ok {
+	} else if v, ok := d.GetOk("name"); ok {
 		name := v.(string)
 		routingProfileSummary, err := dataSourceGetRoutingProfileSummaryByName(ctx, conn, instanceID, name)
 
@@ -150,11 +149,11 @@ func dataSourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set(names.AttrARN, routingProfile.RoutingProfileArn)
+	d.Set("arn", routingProfile.RoutingProfileArn)
 	d.Set("default_outbound_queue_id", routingProfile.DefaultOutboundQueueId)
-	d.Set(names.AttrDescription, routingProfile.Description)
-	d.Set(names.AttrInstanceID, instanceID)
-	d.Set(names.AttrName, routingProfile.Name)
+	d.Set("description", routingProfile.Description)
+	d.Set("instance_id", instanceID)
+	d.Set("name", routingProfile.Name)
 	d.Set("routing_profile_id", routingProfile.RoutingProfileId)
 
 	// getting the routing profile queues uses a separate API: ListRoutingProfileQueues
@@ -166,7 +165,7 @@ func dataSourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.Set("queue_configs", queueConfigs)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, routingProfile.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, routingProfile.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

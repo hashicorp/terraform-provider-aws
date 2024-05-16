@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_vpc_dhcp_options_association")
@@ -37,7 +36,7 @@ func ResourceVPCDHCPOptionsAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrVPCID: {
+			"vpc_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -51,7 +50,7 @@ func resourceVPCDHCPOptionsAssociationPut(ctx context.Context, d *schema.Resourc
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	dhcpOptionsID := d.Get("dhcp_options_id").(string)
-	vpcID := d.Get(names.AttrVPCID).(string)
+	vpcID := d.Get("vpc_id").(string)
 	id := VPCDHCPOptionsAssociationCreateResourceID(dhcpOptionsID, vpcID)
 	input := &ec2.AssociateDhcpOptionsInput{
 		DhcpOptionsId: aws.String(dhcpOptionsID),
@@ -95,7 +94,7 @@ func resourceVPCDHCPOptionsAssociationRead(ctx context.Context, d *schema.Resour
 	}
 
 	d.Set("dhcp_options_id", dhcpOptionsID)
-	d.Set(names.AttrVPCID, vpcID)
+	d.Set("vpc_id", vpcID)
 
 	return diags
 }
@@ -148,7 +147,7 @@ func resourceVPCDHCPOptionsAssociationImport(ctx context.Context, d *schema.Reso
 
 	d.SetId(VPCDHCPOptionsAssociationCreateResourceID(dhcpOptionsID, vpcID))
 	d.Set("dhcp_options_id", dhcpOptionsID)
-	d.Set(names.AttrVPCID, vpcID)
+	d.Set("vpc_id", vpcID)
 
 	return []*schema.ResourceData{d}, nil
 }

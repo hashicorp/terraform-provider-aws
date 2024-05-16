@@ -12,11 +12,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_fsx_windows_file_system", name="Windows File System")
-func dataSourceWindowsFileSystem() *schema.Resource {
+// @SDKDataSource("aws_fsx_windows_file_system")
+func DataSourceWindowsFileSystem() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceWindowsFileSystemRead,
 
@@ -32,7 +31,7 @@ func dataSourceWindowsFileSystem() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -81,26 +80,26 @@ func dataSourceWindowsFileSystem() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrIOPS: {
+						"iops": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						names.AttrMode: {
+						"mode": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			names.AttrDNSName: {
+			"dns_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrID: {
+			"id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrKMSKeyID: {
+			"kms_key_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -111,7 +110,7 @@ func dataSourceWindowsFileSystem() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			names.AttrOwnerID: {
+			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -123,7 +122,7 @@ func dataSourceWindowsFileSystem() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrSecurityGroupIDs: {
+			"security_group_ids": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -138,23 +137,23 @@ func dataSourceWindowsFileSystem() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			names.AttrStorageType: {
+			"storage_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrSubnetIDs: {
+			"subnet_ids": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 			"throughput_capacity": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			names.AttrVPCID: {
+			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -168,10 +167,13 @@ func dataSourceWindowsFileSystem() *schema.Resource {
 
 func dataSourceWindowsFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	id := d.Get(names.AttrID).(string)
-	filesystem, err := findWindowsFileSystemByID(ctx, conn, id)
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+
+	id := d.Get("id").(string)
+	filesystem, err := FindWindowsFileSystemByID(ctx, conn, id)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading FSx for Windows File Server File System (%s): %s", id, err)
@@ -182,7 +184,7 @@ func dataSourceWindowsFileSystemRead(ctx context.Context, d *schema.ResourceData
 	d.SetId(aws.StringValue(filesystem.FileSystemId))
 	d.Set("active_directory_id", windowsConfig.ActiveDirectoryId)
 	d.Set("aliases", aws.StringValueSlice(expandAliasValues(windowsConfig.Aliases)))
-	d.Set(names.AttrARN, filesystem.ResourceARN)
+	d.Set("arn", filesystem.ResourceARN)
 	if err := d.Set("audit_log_configuration", flattenWindowsAuditLogConfiguration(windowsConfig.AuditLogConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting audit_log_configuration: %s", err)
 	}
@@ -193,21 +195,26 @@ func dataSourceWindowsFileSystemRead(ctx context.Context, d *schema.ResourceData
 	if err := d.Set("disk_iops_configuration", flattenWindowsDiskIopsConfiguration(windowsConfig.DiskIopsConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting disk_iops_configuration: %s", err)
 	}
-	d.Set(names.AttrDNSName, filesystem.DNSName)
-	d.Set(names.AttrID, filesystem.FileSystemId)
-	d.Set(names.AttrKMSKeyID, filesystem.KmsKeyId)
+	d.Set("dns_name", filesystem.DNSName)
+	d.Set("id", filesystem.FileSystemId)
+	d.Set("kms_key_id", filesystem.KmsKeyId)
 	d.Set("network_interface_ids", aws.StringValueSlice(filesystem.NetworkInterfaceIds))
-	d.Set(names.AttrOwnerID, filesystem.OwnerId)
+	d.Set("owner_id", filesystem.OwnerId)
 	d.Set("preferred_file_server_ip", windowsConfig.PreferredFileServerIp)
 	d.Set("preferred_subnet_id", windowsConfig.PreferredSubnetId)
 	d.Set("storage_capacity", filesystem.StorageCapacity)
-	d.Set(names.AttrStorageType, filesystem.StorageType)
-	d.Set(names.AttrSubnetIDs, aws.StringValueSlice(filesystem.SubnetIds))
+	d.Set("storage_type", filesystem.StorageType)
+	d.Set("subnet_ids", aws.StringValueSlice(filesystem.SubnetIds))
 	d.Set("throughput_capacity", windowsConfig.ThroughputCapacity)
-	d.Set(names.AttrVPCID, filesystem.VpcId)
+	d.Set("vpc_id", filesystem.VpcId)
 	d.Set("weekly_maintenance_start_time", windowsConfig.WeeklyMaintenanceStartTime)
 
-	setTagsOut(ctx, filesystem.Tags)
+	tags := KeyValueTags(ctx, filesystem.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
+	}
 
 	return diags
 }

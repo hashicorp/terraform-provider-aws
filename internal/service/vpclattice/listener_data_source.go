@@ -27,15 +27,15 @@ func DataSourceListener() *schema.Resource {
 		ReadWithoutTimeout: dataSourceListenerRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrCreatedAt: {
+			"created_at": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDefaultAction: {
+			"default_action": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -45,7 +45,7 @@ func DataSourceListener() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrStatusCode: {
+									"status_code": {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
@@ -66,7 +66,7 @@ func DataSourceListener() *schema.Resource {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												names.AttrWeight: {
+												"weight": {
 													Type:     schema.TypeInt,
 													Computed: true,
 												},
@@ -91,15 +91,15 @@ func DataSourceListener() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrPort: {
+			"port": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			names.AttrProtocol: {
+			"protocol": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -115,7 +115,7 @@ func DataSourceListener() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -137,18 +137,18 @@ func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	// Set simple arguments
 	d.SetId(aws.ToString(out.Id))
-	d.Set(names.AttrARN, out.Arn)
-	d.Set(names.AttrCreatedAt, aws.ToTime(out.CreatedAt).String())
+	d.Set("arn", out.Arn)
+	d.Set("created_at", aws.ToTime(out.CreatedAt).String())
 	d.Set("last_updated_at", aws.ToTime(out.LastUpdatedAt).String())
 	d.Set("listener_id", out.Id)
-	d.Set(names.AttrName, out.Name)
-	d.Set(names.AttrPort, out.Port)
-	d.Set(names.AttrProtocol, out.Protocol)
+	d.Set("name", out.Name)
+	d.Set("port", out.Port)
+	d.Set("protocol", out.Protocol)
 	d.Set("service_arn", out.ServiceArn)
 	d.Set("service_id", out.ServiceId)
 
 	// Flatten complex default_action attribute - uses flatteners from listener.go
-	if err := d.Set(names.AttrDefaultAction, flattenListenerRuleActionsDataSource(out.DefaultAction)); err != nil {
+	if err := d.Set("default_action", flattenListenerRuleActionsDataSource(out.DefaultAction)); err != nil {
 		return create.DiagError(names.VPCLattice, create.ErrActionSetting, DSNameListener, d.Id(), err)
 	}
 
@@ -161,7 +161,7 @@ func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	//lintignore:AWSR002
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return create.DiagError(names.VPCLattice, create.ErrActionSetting, DSNameListener, d.Id(), err)
 	}
 
@@ -216,7 +216,7 @@ func flattenRuleActionMemberFixedResponseDataSource(response *types.FixedRespons
 	tfMap := map[string]interface{}{}
 
 	if v := response.StatusCode; v != nil {
-		tfMap[names.AttrStatusCode] = aws.ToInt32(v)
+		tfMap["status_code"] = aws.ToInt32(v)
 	}
 
 	return []interface{}{tfMap}
@@ -246,7 +246,7 @@ func flattenDefaultActionForwardTargetGroupsDataSource(groups []types.WeightedTa
 	for _, targetGroup := range groups {
 		m := map[string]interface{}{
 			"target_group_identifier": aws.ToString(targetGroup.TargetGroupIdentifier),
-			names.AttrWeight:          aws.ToInt32(targetGroup.Weight),
+			"weight":                  aws.ToInt32(targetGroup.Weight),
 		}
 		targetGroups = append(targetGroups, m)
 	}

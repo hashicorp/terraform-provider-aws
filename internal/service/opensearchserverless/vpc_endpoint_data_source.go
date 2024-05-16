@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_opensearchserverless_vpc_endpoint")
@@ -23,11 +22,11 @@ func DataSourceVPCEndpoint() *schema.Resource {
 		ReadWithoutTimeout: dataSourceVPCEndpointRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrCreatedDate: {
+			"created_date": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrVPCEndpointID: {
+			"vpc_endpoint_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
@@ -35,21 +34,21 @@ func DataSourceVPCEndpoint() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`^vpce-[0-9a-z]*$`), `must start with "vpce-" and can include any lower case letter or number`),
 				),
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrSecurityGroupIDs: {
+			"security_group_ids": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrSubnetIDs: {
+			"subnet_ids": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrVPCID: {
+			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -61,7 +60,7 @@ func dataSourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchServerlessClient(ctx)
 
-	id := d.Get(names.AttrVPCEndpointID).(string)
+	id := d.Get("vpc_endpoint_id").(string)
 	vpcEndpoint, err := findVPCEndpointByID(ctx, conn, id)
 
 	if err != nil {
@@ -71,12 +70,12 @@ func dataSourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 	d.SetId(aws.ToString(vpcEndpoint.Id))
 
 	createdDate := time.UnixMilli(aws.ToInt64(vpcEndpoint.CreatedDate))
-	d.Set(names.AttrCreatedDate, createdDate.Format(time.RFC3339))
+	d.Set("created_date", createdDate.Format(time.RFC3339))
 
-	d.Set(names.AttrName, vpcEndpoint.Name)
-	d.Set(names.AttrSecurityGroupIDs, vpcEndpoint.SecurityGroupIds)
-	d.Set(names.AttrSubnetIDs, vpcEndpoint.SubnetIds)
-	d.Set(names.AttrVPCID, vpcEndpoint.VpcId)
+	d.Set("name", vpcEndpoint.Name)
+	d.Set("security_group_ids", vpcEndpoint.SecurityGroupIds)
+	d.Set("subnet_ids", vpcEndpoint.SubnetIds)
+	d.Set("vpc_id", vpcEndpoint.VpcId)
 
 	return diags
 }

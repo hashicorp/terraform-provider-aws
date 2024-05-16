@@ -45,9 +45,9 @@ func TestAccTranscribeVocabularyFilter_basic(t *testing.T) {
 				Config: testAccVocabularyFilterConfig_basicFile(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVocabularyFilterExists(ctx, resourceName, &vocabularyFilter),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "download_uri"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrLanguageCode, "en-US"),
+					resource.TestCheckResourceAttr(resourceName, "language_code", "en-US"),
 				),
 			},
 			{
@@ -84,9 +84,9 @@ func TestAccTranscribeVocabularyFilter_basicWords(t *testing.T) {
 				Config: testAccVocabularyFilterConfig_basicWords(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVocabularyFilterExists(ctx, resourceName, &vocabularyFilter),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "download_uri"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrLanguageCode, "en-US"),
+					resource.TestCheckResourceAttr(resourceName, "language_code", "en-US"),
 				),
 			},
 		},
@@ -117,7 +117,7 @@ func TestAccTranscribeVocabularyFilter_update(t *testing.T) {
 				Config: testAccVocabularyFilterConfig_basicFile(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVocabularyFilterExists(ctx, resourceName, &vocabularyFilter),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "download_uri"),
 					resource.TestCheckResourceAttr(resourceName, "vocabulary_filter_file_uri", "s3://"+rName+"/transcribe/test1.txt"),
 				),
@@ -126,9 +126,9 @@ func TestAccTranscribeVocabularyFilter_update(t *testing.T) {
 				Config: testAccVocabularyFilterConfig_basicWords(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVocabularyFilterExists(ctx, resourceName, &vocabularyFilter),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "download_uri"),
-					resource.TestCheckResourceAttr(resourceName, "words.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "words.#", "3"),
 				),
 			},
 		},
@@ -156,28 +156,28 @@ func TestAccTranscribeVocabularyFilter_updateTags(t *testing.T) {
 		CheckDestroy:             testAccCheckVocabularyFilterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVocabularyFilterConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccVocabularyFilterConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVocabularyFilterExists(ctx, resourceName, &vocabularyFilter),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
-				Config: testAccVocabularyFilterConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccVocabularyFilterConfig_tags2(rName, "key1", "value1", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVocabularyFilterExists(ctx, resourceName, &vocabularyFilter),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccVocabularyFilterConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccVocabularyFilterConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVocabularyFilterExists(ctx, resourceName, &vocabularyFilter),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},

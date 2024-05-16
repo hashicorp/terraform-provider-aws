@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_guardduty_detector_feature", name="Detector Feature")
@@ -36,13 +35,13 @@ func ResourceDetectorFeature() *schema.Resource {
 				Type:     schema.TypeList,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrName: {
+						"name": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
 							ValidateFunc: validation.StringInSlice(guardduty.FeatureAdditionalConfiguration_Values(), false),
 						},
-						names.AttrStatus: {
+						"status": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(guardduty.FeatureStatus_Values(), false),
@@ -55,13 +54,13 @@ func ResourceDetectorFeature() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(guardduty.DetectorFeature_Values(), false),
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(guardduty.FeatureStatus_Values(), false),
@@ -74,10 +73,10 @@ func resourceDetectorFeaturePut(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
-	detectorID, name := d.Get("detector_id").(string), d.Get(names.AttrName).(string)
+	detectorID, name := d.Get("detector_id").(string), d.Get("name").(string)
 	feature := &guardduty.DetectorFeatureConfiguration{
 		Name:   aws.String(name),
-		Status: aws.String(d.Get(names.AttrStatus).(string)),
+		Status: aws.String(d.Get("status").(string)),
 	}
 
 	if v, ok := d.GetOk("additional_configuration"); ok && len(v.([]interface{})) > 0 {
@@ -127,8 +126,8 @@ func resourceDetectorFeatureRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "setting additional_configuration: %s", err)
 	}
 	d.Set("detector_id", detectorID)
-	d.Set(names.AttrName, feature.Name)
-	d.Set(names.AttrStatus, feature.Status)
+	d.Set("name", feature.Name)
+	d.Set("status", feature.Status)
 
 	return diags
 }
@@ -171,11 +170,11 @@ func expandDetectorAdditionalConfiguration(tfMap map[string]interface{}) *guardd
 
 	apiObject := &guardduty.DetectorAdditionalConfiguration{}
 
-	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
+	if v, ok := tfMap["name"].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
+	if v, ok := tfMap["status"].(string); ok && v != "" {
 		apiObject.Status = aws.String(v)
 	}
 
@@ -220,11 +219,11 @@ func flattenDetectorFeatureConfigurationResult(apiObject *guardduty.DetectorFeat
 	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap[names.AttrName] = aws.StringValue(v)
+		tfMap["name"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Status; v != nil {
-		tfMap[names.AttrStatus] = aws.StringValue(v)
+		tfMap["status"] = aws.StringValue(v)
 	}
 
 	return tfMap
@@ -256,11 +255,11 @@ func flattenDetectorAdditionalConfigurationResult(apiObject *guardduty.DetectorA
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Name; v != nil {
-		tfMap[names.AttrName] = aws.StringValue(v)
+		tfMap["name"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Status; v != nil {
-		tfMap[names.AttrStatus] = aws.StringValue(v)
+		tfMap["status"] = aws.StringValue(v)
 	}
 
 	return tfMap

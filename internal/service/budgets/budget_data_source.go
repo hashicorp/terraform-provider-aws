@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -26,12 +25,12 @@ func DataSourceBudget() *schema.Resource {
 		ReadWithoutTimeout: dataSourceBudgetRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrAccountID: {
+			"account_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -80,7 +79,7 @@ func DataSourceBudget() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrUnit: {
+						"unit": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -101,7 +100,7 @@ func DataSourceBudget() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									names.AttrUnit: {
+									"unit": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -116,11 +115,11 @@ func DataSourceBudget() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrName: {
+						"name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrValues: {
+						"values": {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Schema{
@@ -182,11 +181,11 @@ func DataSourceBudget() *schema.Resource {
 					},
 				},
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrNamePrefix: {
+			"name_prefix": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -235,18 +234,17 @@ func DataSourceBudget() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrStartTime: {
+						"start_time": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrUnit: {
+						"unit": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
 			"time_period_end": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -273,16 +271,16 @@ const (
 
 func dataSourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).BudgetsClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	budgetName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	budgetName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 
-	accountID := d.Get(names.AttrAccountID).(string)
+	accountID := d.Get("account_id").(string)
 	if accountID == "" {
 		accountID = meta.(*conns.AWSClient).AccountID
 	}
-	d.Set(names.AttrAccountID, accountID)
+	d.Set("account_id", accountID)
 
 	budget, err := FindBudgetByTwoPartKey(ctx, conn, accountID, budgetName)
 	if err != nil {
@@ -297,7 +295,7 @@ func dataSourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta inte
 		AccountID: accountID,
 		Resource:  "budget/" + budgetName,
 	}
-	d.Set(names.AttrARN, arn.String())
+	d.Set("arn", arn.String())
 
 	d.Set("budget_type", budget.BudgetType)
 
@@ -329,18 +327,8 @@ func dataSourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	d.Set(names.AttrName, budget.BudgetName)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(budget.BudgetName)))
-
-	tags, err := listTags(ctx, conn, arn.String())
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Budget (%s): %s", d.Id(), err)
-	}
-
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	d.Set("name", budget.BudgetName)
+	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(budget.BudgetName)))
 
 	return diags
 }
@@ -362,8 +350,8 @@ func flattenSpend(apiObject *awstypes.Spend) []interface{} {
 	}
 
 	attrs := map[string]interface{}{
-		"amount":       aws.ToString(apiObject.Amount),
-		names.AttrUnit: aws.ToString(apiObject.Unit),
+		"amount": aws.ToString(apiObject.Amount),
+		"unit":   aws.ToString(apiObject.Unit),
 	}
 
 	return []interface{}{attrs}

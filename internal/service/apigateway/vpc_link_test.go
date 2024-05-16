@@ -34,10 +34,10 @@ func TestAccAPIGatewayVPCLink_basic(t *testing.T) {
 				Config: testAccVPCLinkConfig_basic(rName, "test"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCLinkExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/vpclinks/.+`)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
-					resource.TestCheckResourceAttr(resourceName, "target_arns.#", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexache.MustCompile(`/vpclinks/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "description", "test"),
+					resource.TestCheckResourceAttr(resourceName, "target_arns.#", "1"),
 				),
 			},
 			{
@@ -49,10 +49,10 @@ func TestAccAPIGatewayVPCLink_basic(t *testing.T) {
 				Config: testAccVPCLinkConfig_basic(rName, "test update"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCLinkExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/vpclinks/.+`)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test update"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "target_arns.#", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexache.MustCompile(`/vpclinks/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "description", "test update"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "target_arns.#", "1"),
 				),
 			},
 		},
@@ -71,11 +71,11 @@ func TestAccAPIGatewayVPCLink_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckVPCLinkDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCLinkConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccVPCLinkConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCLinkExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -84,20 +84,20 @@ func TestAccAPIGatewayVPCLink_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVPCLinkConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccVPCLinkConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCLinkExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccVPCLinkConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccVPCLinkConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCLinkExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},

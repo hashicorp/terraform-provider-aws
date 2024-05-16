@@ -12,6 +12,9 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/google/go-cmp/cmp"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -23,29 +26,31 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestIPProtocol(t *testing.T) {
+func TestNormalizeIPProtocol(t *testing.T) {
 	ctx := acctest.Context(t)
 	t.Parallel()
 
 	type testCase struct {
-		val1, val2 tfec2.IPProtocol
-		equals     bool
+		plannedValue  types.String
+		currentValue  types.String
+		expectedValue types.String
+		expectError   bool
 	}
 	tests := map[string]testCase{
-		"name, number (equivalent)": {
-			val1:   tfec2.IPProtocol{StringValue: types.StringValue("icmp")},
-			val2:   tfec2.IPProtocol{StringValue: types.StringValue(acctest.Ct1)},
-			equals: true,
+		"planned name, current number (equivalent)": {
+			plannedValue:  types.StringValue("icmp"),
+			currentValue:  types.StringValue("1"),
+			expectedValue: types.StringValue("1"),
 		},
-		"number, name (equivalent)": {
-			val1:   tfec2.IPProtocol{StringValue: types.StringValue(acctest.Ct1)},
-			val2:   tfec2.IPProtocol{StringValue: types.StringValue("icmp")},
-			equals: true,
+		"planned number, current name (equivalent)": {
+			plannedValue:  types.StringValue("1"),
+			currentValue:  types.StringValue("icmp"),
+			expectedValue: types.StringValue("icmp"),
 		},
-		"name, number (not equivalent)": {
-			val1:   tfec2.IPProtocol{StringValue: types.StringValue("icmp")},
-			val2:   tfec2.IPProtocol{StringValue: types.StringValue(acctest.Ct2)},
-			equals: false,
+		"planned name, current number (not equivalent)": {
+			plannedValue:  types.StringValue("icmp"),
+			currentValue:  types.StringValue("2"),
+			expectedValue: types.StringValue("icmp"),
 		},
 	}
 
@@ -54,10 +59,26 @@ func TestIPProtocol(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			equals, _ := test.val1.StringSemanticEquals(ctx, test.val2)
+			request := planmodifier.StringRequest{
+				Path:       path.Root("test"),
+				PlanValue:  test.plannedValue,
+				StateValue: test.currentValue,
+			}
+			response := planmodifier.StringResponse{
+				PlanValue: request.PlanValue,
+			}
+			tfec2.NormalizeIPProtocol().PlanModifyString(ctx, request, &response)
 
-			if got, want := equals, test.equals; got != want {
-				t.Errorf("StringSemanticEquals(%q, %q) = %v, want %v", test.val1, test.val2, got, want)
+			if !response.Diagnostics.HasError() && test.expectError {
+				t.Fatal("expected error, got no error")
+			}
+
+			if response.Diagnostics.HasError() && !test.expectError {
+				t.Fatalf("got unexpected error: %s", response.Diagnostics)
+			}
+
+			if diff := cmp.Diff(response.PlanValue, test.expectedValue); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 			}
 		})
 	}
@@ -79,16 +100,16 @@ func TestAccVPCSecurityGroupIngressRule_basic(t *testing.T) {
 				Config: testAccVPCSecurityGroupIngressRuleConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_ipv4", "10.0.0.0/8"),
 					resource.TestCheckNoResourceAttr(resourceName, "cidr_ipv6"),
-					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
+					resource.TestCheckNoResourceAttr(resourceName, "description"),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "ip_protocol", "tcp"),
 					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
 					resource.TestCheckNoResourceAttr(resourceName, "referenced_security_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
-					resource.TestCheckNoResourceAttr(resourceName, names.AttrTags),
+					resource.TestCheckNoResourceAttr(resourceName, "tags"),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "8080"),
 				),
 			},
@@ -138,11 +159,11 @@ func TestAccVPCSecurityGroupIngressRule_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckSecurityGroupIngressRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCSecurityGroupIngressRuleConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccVPCSecurityGroupIngressRuleConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -151,20 +172,20 @@ func TestAccVPCSecurityGroupIngressRule_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVPCSecurityGroupIngressRuleConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccVPCSecurityGroupIngressRuleConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccVPCSecurityGroupIngressRuleConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccVPCSecurityGroupIngressRuleConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -187,7 +208,7 @@ func TestAccVPCSecurityGroupIngressRule_tags_computed(t *testing.T) {
 				Config: testAccVPCSecurityGroupIngressRuleConfig_computed(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "tags.eip"),
 				),
 			},
@@ -209,14 +230,14 @@ func TestAccVPCSecurityGroupIngressRule_DefaultTags_providerOnly(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("providerkey1", acctest.CtProviderValue1),
+					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
 					testAccVPCSecurityGroupIngressRuleConfig_basic(rName),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", acctest.CtProviderValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1"),
 				),
 			},
 			{
@@ -226,27 +247,27 @@ func TestAccVPCSecurityGroupIngressRule_DefaultTags_providerOnly(t *testing.T) {
 			},
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags2("providerkey1", acctest.CtProviderValue1, "providerkey2", "providervalue2"),
+					acctest.ConfigDefaultTags_Tags2("providerkey1", "providervalue1", "providerkey2", "providervalue2"),
 					testAccVPCSecurityGroupIngressRuleConfig_basic(rName),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", acctest.CtProviderValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey2", "providervalue2"),
 				),
 			},
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("providerkey1", acctest.CtValue1),
+					acctest.ConfigDefaultTags_Tags1("providerkey1", "value1"),
 					testAccVPCSecurityGroupIngressRuleConfig_basic(rName),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "value1"),
 				),
 			},
 		},
@@ -266,25 +287,25 @@ func TestAccVPCSecurityGroupIngressRule_DefaultTags_updateToProviderOnly(t *test
 		CheckDestroy:             testAccCheckSecurityGroupIngressRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCSecurityGroupIngressRuleConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccVPCSecurityGroupIngressRuleConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
 				),
 			},
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1(acctest.CtKey1, acctest.CtValue1),
+					acctest.ConfigDefaultTags_Tags1("key1", "value1"),
 					testAccVPCSecurityGroupIngressRuleConfig_basic(rName),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
 				),
 			},
 			{
@@ -310,24 +331,24 @@ func TestAccVPCSecurityGroupIngressRule_DefaultTags_updateToResourceOnly(t *test
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1(acctest.CtKey1, acctest.CtValue1),
+					acctest.ConfigDefaultTags_Tags1("key1", "value1"),
 					testAccVPCSecurityGroupIngressRuleConfig_basic(rName),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
 				),
 			},
 			{
-				Config: testAccVPCSecurityGroupIngressRuleConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccVPCSecurityGroupIngressRuleConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
 				),
 			},
 			{
@@ -353,16 +374,16 @@ func TestAccVPCSecurityGroupIngressRule_DefaultTagsProviderAndResource_nonOverla
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("providerkey1", acctest.CtProviderValue1),
-					testAccVPCSecurityGroupIngressRuleConfig_tags1(rName, "resourcekey1", acctest.CtResourceValue1),
+					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
+					testAccVPCSecurityGroupIngressRuleConfig_tags1(rName, "resourcekey1", "resourcevalue1"),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "tags.resourcekey1", acctest.CtResourceValue1),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", acctest.CtProviderValue1),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.resourcekey1", acctest.CtResourceValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.resourcekey1", "resourcevalue1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.resourcekey1", "resourcevalue1"),
 				),
 			},
 			{
@@ -372,18 +393,18 @@ func TestAccVPCSecurityGroupIngressRule_DefaultTagsProviderAndResource_nonOverla
 			},
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("providerkey1", acctest.CtProviderValue1),
-					testAccVPCSecurityGroupIngressRuleConfig_tags2(rName, "resourcekey1", acctest.CtResourceValue1, "resourcekey2", acctest.CtResourceValue2),
+					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
+					testAccVPCSecurityGroupIngressRuleConfig_tags2(rName, "resourcekey1", "resourcevalue1", "resourcekey2", "resourcevalue2"),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "tags.resourcekey1", acctest.CtResourceValue1),
-					resource.TestCheckResourceAttr(resourceName, "tags.resourcekey2", acctest.CtResourceValue2),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", acctest.CtProviderValue1),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.resourcekey1", acctest.CtResourceValue1),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.resourcekey2", acctest.CtResourceValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.resourcekey1", "resourcevalue1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.resourcekey2", "resourcevalue2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.resourcekey1", "resourcevalue1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.resourcekey2", "resourcevalue2"),
 				),
 			},
 			{
@@ -393,8 +414,8 @@ func TestAccVPCSecurityGroupIngressRule_DefaultTagsProviderAndResource_nonOverla
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.resourcekey3", "resourcevalue3"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey2", "providervalue2"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.resourcekey3", "resourcevalue3"),
@@ -418,14 +439,14 @@ func TestAccVPCSecurityGroupIngressRule_DefaultTagsProviderAndResource_overlappi
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("overlapkey1", acctest.CtProviderValue1),
-					testAccVPCSecurityGroupIngressRuleConfig_tags1(rName, "overlapkey1", acctest.CtResourceValue1),
+					acctest.ConfigDefaultTags_Tags1("overlapkey1", "providervalue1"),
+					testAccVPCSecurityGroupIngressRuleConfig_tags1(rName, "overlapkey1", "resourcevalue1"),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey1", acctest.CtResourceValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey1", "resourcevalue1"),
 				),
 			},
 			{
@@ -435,30 +456,30 @@ func TestAccVPCSecurityGroupIngressRule_DefaultTagsProviderAndResource_overlappi
 			},
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags2("overlapkey1", acctest.CtProviderValue1, "overlapkey2", "providervalue2"),
-					testAccVPCSecurityGroupIngressRuleConfig_tags2(rName, "overlapkey1", acctest.CtResourceValue1, "overlapkey2", acctest.CtResourceValue2),
+					acctest.ConfigDefaultTags_Tags2("overlapkey1", "providervalue1", "overlapkey2", "providervalue2"),
+					testAccVPCSecurityGroupIngressRuleConfig_tags2(rName, "overlapkey1", "resourcevalue1", "overlapkey2", "resourcevalue2"),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey1", acctest.CtResourceValue1),
-					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey2", acctest.CtResourceValue2),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.overlapkey1", acctest.CtResourceValue1),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.overlapkey2", acctest.CtResourceValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey1", "resourcevalue1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey2", "resourcevalue2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.overlapkey1", "resourcevalue1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.overlapkey2", "resourcevalue2"),
 				),
 			},
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("overlapkey1", acctest.CtProviderValue1),
-					testAccVPCSecurityGroupIngressRuleConfig_tags1(rName, "overlapkey1", acctest.CtResourceValue2),
+					acctest.ConfigDefaultTags_Tags1("overlapkey1", "providervalue1"),
+					testAccVPCSecurityGroupIngressRuleConfig_tags1(rName, "overlapkey1", "resourcevalue2"),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey1", acctest.CtResourceValue2),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.overlapkey1", acctest.CtResourceValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey1", "resourcevalue2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.overlapkey1", "resourcevalue2"),
 				),
 			},
 		},
@@ -484,8 +505,8 @@ func TestAccVPCSecurityGroupIngressRule_DefaultTagsProviderAndResource_duplicate
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
 				),
 			},
 		},
@@ -505,19 +526,19 @@ func TestAccVPCSecurityGroupIngressRule_updateTagsKnownAtApply(t *testing.T) {
 		CheckDestroy:             testAccCheckSecurityGroupIngressRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCSecurityGroupIngressRuleConfig_tagsComputedFromDataSource1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccVPCSecurityGroupIngressRuleConfig_tagsComputedFromDataSource1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
 				),
 			},
 			{
-				Config: testAccVPCSecurityGroupIngressRuleConfig_tagsComputedFromDataSource2(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccVPCSecurityGroupIngressRuleConfig_tagsComputedFromDataSource2(rName, "key1", "value1", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
 				),
 			},
 			{
@@ -542,7 +563,7 @@ func TestAccVPCSecurityGroupIngressRule_defaultAndIgnoreTags(t *testing.T) {
 		CheckDestroy:             testAccCheckSecurityGroupIngressRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCSecurityGroupIngressRuleConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccVPCSecurityGroupIngressRuleConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v),
 					testAccCheckSecurityGroupIngressRuleUpdateTags(ctx, &v, nil, map[string]string{"defaultkey1": "defaultvalue1"}),
@@ -552,14 +573,14 @@ func TestAccVPCSecurityGroupIngressRule_defaultAndIgnoreTags(t *testing.T) {
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultAndIgnoreTagsKeyPrefixes1("defaultkey1", "defaultvalue1", "defaultkey"),
-					testAccVPCSecurityGroupIngressRuleConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+					testAccVPCSecurityGroupIngressRuleConfig_tags1(rName, "key1", "value1"),
 				),
 				PlanOnly: true,
 			},
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultAndIgnoreTagsKeys1("defaultkey1", "defaultvalue1"),
-					testAccVPCSecurityGroupIngressRuleConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+					testAccVPCSecurityGroupIngressRuleConfig_tags1(rName, "key1", "value1"),
 				),
 				PlanOnly: true,
 			},
@@ -621,16 +642,16 @@ func TestAccVPCSecurityGroupIngressRule_cidrIPv4(t *testing.T) {
 				Config: testAccVPCSecurityGroupIngressRuleConfig_cidrIPv4(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_ipv4", "0.0.0.0/0"),
 					resource.TestCheckNoResourceAttr(resourceName, "cidr_ipv6"),
-					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
+					resource.TestCheckNoResourceAttr(resourceName, "description"),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "53"),
 					resource.TestCheckResourceAttr(resourceName, "ip_protocol", "udp"),
 					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
 					resource.TestCheckNoResourceAttr(resourceName, "referenced_security_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
-					resource.TestCheckNoResourceAttr(resourceName, names.AttrTags),
+					resource.TestCheckNoResourceAttr(resourceName, "tags"),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "53"),
 				),
 			},
@@ -644,16 +665,16 @@ func TestAccVPCSecurityGroupIngressRule_cidrIPv4(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v2),
 					testAccCheckSecurityGroupRuleNotRecreated(&v2, &v1),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_ipv4", "10.0.0.0/16"),
 					resource.TestCheckNoResourceAttr(resourceName, "cidr_ipv6"),
-					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
+					resource.TestCheckNoResourceAttr(resourceName, "description"),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "-1"),
-					resource.TestCheckResourceAttr(resourceName, "ip_protocol", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ip_protocol", "1"),
 					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
 					resource.TestCheckNoResourceAttr(resourceName, "referenced_security_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
-					resource.TestCheckNoResourceAttr(resourceName, names.AttrTags),
+					resource.TestCheckNoResourceAttr(resourceName, "tags"),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "-1"),
 				),
 			},
@@ -677,16 +698,16 @@ func TestAccVPCSecurityGroupIngressRule_cidrIPv6(t *testing.T) {
 				Config: testAccVPCSecurityGroupIngressRuleConfig_cidrIPv6(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckNoResourceAttr(resourceName, "cidr_ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_ipv6", "2001:db8:85a3::/64"),
-					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
+					resource.TestCheckNoResourceAttr(resourceName, "description"),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "ip_protocol", "tcp"),
 					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
 					resource.TestCheckNoResourceAttr(resourceName, "referenced_security_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
-					resource.TestCheckNoResourceAttr(resourceName, names.AttrTags),
+					resource.TestCheckNoResourceAttr(resourceName, "tags"),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "8080"),
 				),
 			},
@@ -700,16 +721,16 @@ func TestAccVPCSecurityGroupIngressRule_cidrIPv6(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v2),
 					testAccCheckSecurityGroupRuleNotRecreated(&v2, &v1),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckNoResourceAttr(resourceName, "cidr_ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_ipv6", "2001:db8:85a3:2::/64"),
-					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
+					resource.TestCheckNoResourceAttr(resourceName, "description"),
 					resource.TestCheckNoResourceAttr(resourceName, "from_port"),
 					resource.TestCheckResourceAttr(resourceName, "ip_protocol", "icmpv6"),
 					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
 					resource.TestCheckNoResourceAttr(resourceName, "referenced_security_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
-					resource.TestCheckNoResourceAttr(resourceName, names.AttrTags),
+					resource.TestCheckNoResourceAttr(resourceName, "tags"),
 					resource.TestCheckNoResourceAttr(resourceName, "to_port"),
 				),
 			},
@@ -733,7 +754,7 @@ func TestAccVPCSecurityGroupIngressRule_description(t *testing.T) {
 				Config: testAccVPCSecurityGroupIngressRuleConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
+					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
 				),
 			},
 			{
@@ -746,7 +767,7 @@ func TestAccVPCSecurityGroupIngressRule_description(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v2),
 					testAccCheckSecurityGroupRuleNotRecreated(&v2, &v1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
+					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
 				),
 			},
 		},
@@ -771,16 +792,16 @@ func TestAccVPCSecurityGroupIngressRule_prefixListID(t *testing.T) {
 				Config: testAccVPCSecurityGroupIngressRuleConfig_prefixListID(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckNoResourceAttr(resourceName, "cidr_ipv4"),
 					resource.TestCheckNoResourceAttr(resourceName, "cidr_ipv6"),
-					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
+					resource.TestCheckNoResourceAttr(resourceName, "description"),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "ip_protocol", "tcp"),
 					resource.TestCheckResourceAttrPair(resourceName, "prefix_list_id", vpcEndpoint1ResourceName, "prefix_list_id"),
 					resource.TestCheckNoResourceAttr(resourceName, "referenced_security_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
-					resource.TestCheckNoResourceAttr(resourceName, names.AttrTags),
+					resource.TestCheckNoResourceAttr(resourceName, "tags"),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "8080"),
 				),
 			},
@@ -794,16 +815,16 @@ func TestAccVPCSecurityGroupIngressRule_prefixListID(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v2),
 					testAccCheckSecurityGroupRuleNotRecreated(&v2, &v1),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckNoResourceAttr(resourceName, "cidr_ipv4"),
 					resource.TestCheckNoResourceAttr(resourceName, "cidr_ipv6"),
-					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
+					resource.TestCheckNoResourceAttr(resourceName, "description"),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "ip_protocol", "tcp"),
 					resource.TestCheckResourceAttrPair(resourceName, "prefix_list_id", vpcEndpoint2ResourceName, "prefix_list_id"),
 					resource.TestCheckNoResourceAttr(resourceName, "referenced_security_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
-					resource.TestCheckNoResourceAttr(resourceName, names.AttrTags),
+					resource.TestCheckNoResourceAttr(resourceName, "tags"),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "8080"),
 				),
 			},
@@ -829,16 +850,16 @@ func TestAccVPCSecurityGroupIngressRule_referencedSecurityGroupID(t *testing.T) 
 				Config: testAccVPCSecurityGroupIngressRuleConfig_referencedSecurityGroupID(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckNoResourceAttr(resourceName, "cidr_ipv4"),
 					resource.TestCheckNoResourceAttr(resourceName, "cidr_ipv6"),
-					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
+					resource.TestCheckNoResourceAttr(resourceName, "description"),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "ip_protocol", "tcp"),
 					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "referenced_security_group_id", securityGroup1ResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "referenced_security_group_id", securityGroup1ResourceName, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
-					resource.TestCheckNoResourceAttr(resourceName, names.AttrTags),
+					resource.TestCheckNoResourceAttr(resourceName, "tags"),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "8080"),
 				),
 			},
@@ -852,16 +873,16 @@ func TestAccVPCSecurityGroupIngressRule_referencedSecurityGroupID(t *testing.T) 
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v2),
 					testAccCheckSecurityGroupRuleNotRecreated(&v2, &v1),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckNoResourceAttr(resourceName, "cidr_ipv4"),
 					resource.TestCheckNoResourceAttr(resourceName, "cidr_ipv6"),
-					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
+					resource.TestCheckNoResourceAttr(resourceName, "description"),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "ip_protocol", "tcp"),
 					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "referenced_security_group_id", securityGroup2ResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "referenced_security_group_id", securityGroup2ResourceName, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
-					resource.TestCheckNoResourceAttr(resourceName, names.AttrTags),
+					resource.TestCheckNoResourceAttr(resourceName, "tags"),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "8080"),
 				),
 			},
@@ -888,16 +909,16 @@ func TestAccVPCSecurityGroupIngressRule_ReferencedSecurityGroupID_peerVPC(t *tes
 				Config: testAccVPCSecurityGroupIngressRuleConfig_referencedSecurityGroupIDPeerVPC(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckNoResourceAttr(resourceName, "cidr_ipv4"),
 					resource.TestCheckNoResourceAttr(resourceName, "cidr_ipv6"),
-					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
+					resource.TestCheckNoResourceAttr(resourceName, "description"),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "ip_protocol", "tcp"),
 					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
 					resource.TestMatchResourceAttr(resourceName, "referenced_security_group_id", regexache.MustCompile("^[0-9]{12}/sg-[0-9a-z]{17}$")),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
-					resource.TestCheckNoResourceAttr(resourceName, names.AttrTags),
+					resource.TestCheckNoResourceAttr(resourceName, "tags"),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "8080"),
 				),
 			},
@@ -926,16 +947,16 @@ func TestAccVPCSecurityGroupIngressRule_updateSourceType(t *testing.T) {
 				Config: testAccVPCSecurityGroupIngressRuleConfig_cidrIPv4(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_ipv4", "0.0.0.0/0"),
 					resource.TestCheckNoResourceAttr(resourceName, "cidr_ipv6"),
-					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
+					resource.TestCheckNoResourceAttr(resourceName, "description"),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "53"),
 					resource.TestCheckResourceAttr(resourceName, "ip_protocol", "udp"),
 					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
 					resource.TestCheckNoResourceAttr(resourceName, "referenced_security_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
-					resource.TestCheckNoResourceAttr(resourceName, names.AttrTags),
+					resource.TestCheckNoResourceAttr(resourceName, "tags"),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "53"),
 				),
 			},
@@ -949,16 +970,16 @@ func TestAccVPCSecurityGroupIngressRule_updateSourceType(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v2),
 					testAccCheckSecurityGroupRuleRecreated(&v2, &v1),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckNoResourceAttr(resourceName, "cidr_ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_ipv6", "2001:db8:85a3::/64"),
-					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
+					resource.TestCheckNoResourceAttr(resourceName, "description"),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "ip_protocol", "tcp"),
 					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
 					resource.TestCheckNoResourceAttr(resourceName, "referenced_security_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
-					resource.TestCheckNoResourceAttr(resourceName, names.AttrTags),
+					resource.TestCheckNoResourceAttr(resourceName, "tags"),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "8080"),
 				),
 			},

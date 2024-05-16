@@ -47,11 +47,11 @@ func ResourceMultiplex() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrAvailabilityZones: {
+			"availability_zones": {
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
@@ -88,7 +88,7 @@ func ResourceMultiplex() *schema.Resource {
 					},
 				},
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -116,8 +116,8 @@ func resourceMultiplexCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	in := &medialive.CreateMultiplexInput{
 		RequestId:         aws.String(id.UniqueId()),
-		Name:              aws.String(d.Get(names.AttrName).(string)),
-		AvailabilityZones: flex.ExpandStringValueList(d.Get(names.AttrAvailabilityZones).([]interface{})),
+		Name:              aws.String(d.Get("name").(string)),
+		AvailabilityZones: flex.ExpandStringValueList(d.Get("availability_zones").([]interface{})),
 		Tags:              getTagsIn(ctx),
 	}
 
@@ -127,11 +127,11 @@ func resourceMultiplexCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	out, err := conn.CreateMultiplex(ctx, in)
 	if err != nil {
-		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionCreating, ResNameMultiplex, d.Get(names.AttrName).(string), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionCreating, ResNameMultiplex, d.Get("name").(string), err)
 	}
 
 	if out == nil || out.Multiplex == nil {
-		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionCreating, ResNameMultiplex, d.Get(names.AttrName).(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionCreating, ResNameMultiplex, d.Get("name").(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.Multiplex.Id))
@@ -166,9 +166,9 @@ func resourceMultiplexRead(ctx context.Context, d *schema.ResourceData, meta int
 		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionReading, ResNameMultiplex, d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, out.Arn)
-	d.Set(names.AttrAvailabilityZones, out.AvailabilityZones)
-	d.Set(names.AttrName, out.Name)
+	d.Set("arn", out.Arn)
+	d.Set("availability_zones", out.AvailabilityZones)
+	d.Set("name", out.Name)
 
 	if err := d.Set("multiplex_settings", flattenMultiplexSettings(out.MultiplexSettings)); err != nil {
 		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionSetting, ResNameMultiplex, d.Id(), err)
@@ -182,13 +182,13 @@ func resourceMultiplexUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, "start_multiplex") {
+	if d.HasChangesExcept("tags", "tags_all", "start_multiplex") {
 		in := &medialive.UpdateMultiplexInput{
 			MultiplexId: aws.String(d.Id()),
 		}
 
-		if d.HasChange(names.AttrName) {
-			in.Name = aws.String(d.Get(names.AttrName).(string))
+		if d.HasChange("name") {
+			in.Name = aws.String(d.Get("name").(string))
 		}
 		if d.HasChange("multiplex_settings") {
 			in.MultiplexSettings = expandMultiplexSettings(d.Get("multiplex_settings").([]interface{}))

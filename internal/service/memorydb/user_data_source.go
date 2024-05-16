@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_memorydb_user")
@@ -26,7 +25,7 @@ func DataSourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -39,7 +38,7 @@ func DataSourceUser() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						names.AttrType: {
+						"type": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -50,8 +49,8 @@ func DataSourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			names.AttrUserName: {
+			"tags": tftags.TagsSchemaComputed(),
+			"user_name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -65,7 +64,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	userName := d.Get(names.AttrUserName).(string)
+	userName := d.Get("user_name").(string)
 
 	user, err := FindUserByName(ctx, conn, userName)
 
@@ -76,12 +75,12 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.SetId(aws.StringValue(user.Name))
 
 	d.Set("access_string", user.AccessString)
-	d.Set(names.AttrARN, user.ARN)
+	d.Set("arn", user.ARN)
 
 	if v := user.Authentication; v != nil {
 		authenticationMode := map[string]interface{}{
 			"password_count": aws.Int64Value(v.PasswordCount),
-			names.AttrType:   aws.StringValue(v.Type),
+			"type":           aws.StringValue(v.Type),
 		}
 
 		if err := d.Set("authentication_mode", []interface{}{authenticationMode}); err != nil {
@@ -90,15 +89,15 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.Set("minimum_engine_version", user.MinimumEngineVersion)
-	d.Set(names.AttrUserName, user.Name)
+	d.Set("user_name", user.Name)
 
-	tags, err := listTags(ctx, conn, d.Get(names.AttrARN).(string))
+	tags, err := listTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for MemoryDB User (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

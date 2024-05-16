@@ -240,7 +240,7 @@ rules:
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-            - pattern-regex: "(Fsx|Gcm|Gp2|Gp3|Hsm|Hvm|Iam|Iot|Kms|Mfa|Msk|Nfs|Php|Rds|Rfc|Sdk|Sfn|Smb|Sms|Sns|Sql)"
+            - pattern-regex: "(Fsx|Gcm|Gp2|Gp3|Hsm|Hvm|Iam|Iot|Kms|Mfa|Msk|Nfs|Php|Rds|Rfc|Sfn|Smb|Sms|Sns|Sql|Sqs)"
       - focus-metavariable: $NAME
     severity: WARNING
   - id: caps4-in-const-name
@@ -255,7 +255,7 @@ rules:
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-            - pattern-regex: "(Fsx|Gcm|Gp2|Gp3|Hsm|Hvm|Iam|Iot|Kms|Mfa|Msk|Nfs|Php|Rds|Rfc|Sdk|Sfn|Smb|Sms|Sns|Sql)"
+            - pattern-regex: "(Fsx|Gcm|Gp2|Gp3|Hsm|Hvm|Iam|Iot|Kms|Mfa|Msk|Nfs|Php|Rds|Rfc|Sfn|Smb|Sms|Sns|Sql|Sqs)"
     severity: WARNING
   - id: caps4-in-var-name
     languages:
@@ -269,7 +269,7 @@ rules:
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-            - pattern-regex: "(Fsx|Gcm|Gp2|Gp3|Hsm|Hvm|Iam|Iot|Kms|Mfa|Msk|Nfs|Php|Rds|Rfc|Sdk|Sfn|Smb|Sms|Sns|Sql)"
+            - pattern-regex: "(Fsx|Gcm|Gp2|Gp3|Hsm|Hvm|Iam|Iot|Kms|Mfa|Msk|Nfs|Php|Rds|Rfc|Sfn|Smb|Sms|Sns|Sql|Sqs)"
     severity: WARNING
   - id: caps5-in-func-name
     languages:
@@ -283,7 +283,7 @@ rules:
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-            - pattern-regex: "(Sqs|Ssh|Ssl|Ssm|Sso|Sts|Swf|Tcp|Tls|Ttl|Uri|Url|Vgw|Vpc|Vpn|Waf|Xss|Db|Ip)"
+            - pattern-regex: "(Ssh|Ssl|Ssm|Sso|Sts|Swf|Tcp|Tls|Ttl|Uri|Url|Vgw|Vpc|Vpn|Waf|Xss|Db|Ip)"
       - focus-metavariable: $NAME
     severity: WARNING
   - id: caps5-in-const-name
@@ -298,7 +298,7 @@ rules:
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-            - pattern-regex: "(Sqs|Ssh|Ssl|Ssm|Sso|Sts|Swf|Tcp|Tls|Ttl|Uri|Url|Vgw|Vpc|Vpn|Waf|Xss|Db|Ip)"
+            - pattern-regex: "(Ssh|Ssl|Ssm|Sso|Sts|Swf|Tcp|Tls|Ttl|Uri|Url|Vgw|Vpc|Vpn|Waf|Xss|Db|Ip)"
     severity: WARNING
   - id: caps5-in-var-name
     languages:
@@ -312,7 +312,7 @@ rules:
       - metavariable-pattern:
           metavariable: $NAME
           patterns:
-            - pattern-regex: "(Sqs|Ssh|Ssl|Ssm|Sso|Sts|Swf|Tcp|Tls|Ttl|Uri|Url|Vgw|Vpc|Vpn|Waf|Xss|Db|Ip)"
+            - pattern-regex: "(Ssh|Ssl|Ssm|Sso|Sts|Swf|Tcp|Tls|Ttl|Uri|Url|Vgw|Vpc|Vpn|Waf|Xss|Db|Ip)"
     severity: WARNING
   - id: ec2-in-func-name
     languages:

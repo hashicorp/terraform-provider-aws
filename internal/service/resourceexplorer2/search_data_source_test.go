@@ -36,16 +36,9 @@ func testAccSearchDataSource_basic(t *testing.T) {
 			{
 				Config: testAccSearchDataSourceConfig_basic(rName, "LOCAL"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "view_arn", viewResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, "view_arn", viewResourceName, "arn"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "resource_count.#"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "resource_count.0.total_resources"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "resources.0.arn"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "resources.0.last_reported_at"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "resources.0.owning_account_id"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "resources.0.properties.#"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "resources.0.region"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "resources.0.resource_type"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "resources.0.service"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "resources.#"),
 				),
 			},
 		},
@@ -78,16 +71,9 @@ func testAccSearchDataSource_IndexType(t *testing.T) {
 			{
 				Config: testAccSearchDataSourceConfig_basic(rName, "AGGREGATOR"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "view_arn", viewResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, "view_arn", viewResourceName, "arn"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "resource_count.#"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "resource_count.0.total_resources"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "resources.0.arn"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "resources.0.last_reported_at"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "resources.0.owning_account_id"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "resources.0.properties.#"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "resources.0.region"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "resources.0.resource_type"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "resources.0.service"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "resources.#"),
 				),
 			},
 		},
@@ -96,8 +82,6 @@ func testAccSearchDataSource_IndexType(t *testing.T) {
 
 func testAccSearchDataSourceConfig_basic(rName, indexType string) string {
 	return fmt.Sprintf(`
-data "aws_region" "current" {}
-
 resource "aws_resourceexplorer2_index" "test" {
   type = %[2]q
 
@@ -111,16 +95,12 @@ resource "aws_resourceexplorer2_view" "test" {
 
   name         = %[1]q
   default_view = true
-
-  included_property {
-    name = "tags"
-  }
 }
 
 data "aws_resourceexplorer2_search" "test" {
   depends_on = [aws_resourceexplorer2_view.test]
 
-  query_string = "region:${data.aws_region.current.name}"
+  query_string = "region:global"
   view_arn     = aws_resourceexplorer2_view.test.arn
 }
 `, rName, indexType)

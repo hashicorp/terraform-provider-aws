@@ -7,13 +7,12 @@ import (
 	"context"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func resourceTargetV0() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -54,7 +53,7 @@ func resourceTargetV0() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						names.AttrNetworkConfiguration: {
+						"network_configuration": {
 							Type:     schema.TypeList,
 							Optional: true,
 							Elem: &schema.Resource{
@@ -63,12 +62,12 @@ func resourceTargetV0() *schema.Resource {
 										Type:     schema.TypeBool,
 										Optional: true,
 									},
-									names.AttrSecurityGroups: {
+									"security_groups": {
 										Type:     schema.TypeSet,
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
-									names.AttrSubnets: {
+									"subnets": {
 										Type:     schema.TypeSet,
 										Required: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
@@ -128,11 +127,11 @@ func resourceTargetV0() *schema.Resource {
 					},
 				},
 			},
-			names.AttrRoleARN: {
+			"role_arn": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			names.AttrRule: {
+			"rule": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -141,11 +140,11 @@ func resourceTargetV0() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrKey: {
+						"key": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						names.AttrValues: {
+						"values": {
 							Type:     schema.TypeList,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -173,7 +172,7 @@ func resourceTargetV0() *schema.Resource {
 	}
 }
 
-func targetStateUpgradeV0(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func TargetStateUpgradeV0(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
 	if rawState == nil {
 		rawState = map[string]interface{}{}
 	}

@@ -45,7 +45,7 @@ func ResourceAMIFromInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -60,7 +60,7 @@ func ResourceAMIFromInstance() *schema.Resource {
 				DiffSuppressFunc:      verify.SuppressEquivalentRoundedTime(time.RFC3339, time.Minute),
 				DiffSuppressOnRefresh: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -76,19 +76,19 @@ func ResourceAMIFromInstance() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrDeleteOnTermination: {
+						"delete_on_termination": {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						names.AttrDeviceName: {
+						"device_name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrEncrypted: {
+						"encrypted": {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						names.AttrIOPS: {
+						"iops": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -96,7 +96,7 @@ func ResourceAMIFromInstance() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrSnapshotID: {
+						"snapshot_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -104,11 +104,11 @@ func ResourceAMIFromInstance() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						names.AttrVolumeSize: {
+						"volume_size": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						names.AttrVolumeType: {
+						"volume_type": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -117,8 +117,8 @@ func ResourceAMIFromInstance() *schema.Resource {
 				Set: func(v interface{}) int {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrSnapshotID].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m["device_name"].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m["snapshot_id"].(string)))
 					return create.StringHashcode(buf.String())
 				},
 			},
@@ -133,7 +133,7 @@ func ResourceAMIFromInstance() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrDeviceName: {
+						"device_name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -146,7 +146,7 @@ func ResourceAMIFromInstance() *schema.Resource {
 				Set: func(v interface{}) int {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m["device_name"].(string)))
 					buf.WriteString(fmt.Sprintf("%s-", m["virtual_name"].(string)))
 					return create.StringHashcode(buf.String())
 				},
@@ -183,12 +183,12 @@ func ResourceAMIFromInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrOwnerID: {
+			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -255,9 +255,9 @@ func resourceAMIFromInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	instanceID := d.Get("source_instance_id").(string)
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &ec2.CreateImageInput{
-		Description:       aws.String(d.Get(names.AttrDescription).(string)),
+		Description:       aws.String(d.Get("description").(string)),
 		InstanceId:        aws.String(instanceID),
 		Name:              aws.String(name),
 		NoReboot:          aws.Bool(d.Get("snapshot_without_reboot").(bool)),

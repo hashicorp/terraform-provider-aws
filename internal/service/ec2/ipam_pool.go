@@ -66,7 +66,7 @@ func ResourceIPAMPool() *schema.Resource {
 				ValidateFunc: validation.IntBetween(0, 128),
 			},
 			"allocation_resource_tags": tftags.TagsSchema(),
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -81,11 +81,7 @@ func ResourceIPAMPool() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(ec2.IpamPoolAwsService_Values(), false),
 			},
-			"cascade": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -134,7 +130,7 @@ func ResourceIPAMPool() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			names.AttrState: {
+			"state": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -178,7 +174,7 @@ func resourceIPAMPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.AutoImport = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -239,10 +235,10 @@ func resourceIPAMPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.Set("address_family", pool.AddressFamily)
 	d.Set("allocation_resource_tags", KeyValueTags(ctx, tagsFromIPAMAllocationTags(pool.AllocationResourceTags)).Map())
-	d.Set(names.AttrARN, pool.IpamPoolArn)
+	d.Set("arn", pool.IpamPoolArn)
 	d.Set("auto_import", pool.AutoImport)
 	d.Set("aws_service", pool.AwsService)
-	d.Set(names.AttrDescription, pool.Description)
+	d.Set("description", pool.Description)
 	scopeID := strings.Split(aws.StringValue(pool.IpamScopeArn), "/")[1]
 	d.Set("ipam_scope_id", scopeID)
 	d.Set("ipam_scope_type", pool.IpamScopeType)
@@ -251,7 +247,7 @@ func resourceIPAMPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("publicly_advertisable", pool.PubliclyAdvertisable)
 	d.Set("public_ip_source", pool.PublicIpSource)
 	d.Set("source_ipam_pool_id", pool.SourceIpamPoolId)
-	d.Set(names.AttrState, pool.State)
+	d.Set("state", pool.State)
 
 	setTagsOut(ctx, pool.Tags)
 
@@ -262,7 +258,7 @@ func resourceIPAMPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &ec2.ModifyIpamPoolInput{
 			IpamPoolId: aws.String(d.Id()),
 		}
@@ -297,7 +293,7 @@ func resourceIPAMPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			input.AutoImport = aws.Bool(v.(bool))
 		}
 
-		if v, ok := d.GetOk(names.AttrDescription); ok {
+		if v, ok := d.GetOk("description"); ok {
 			input.Description = aws.String(v.(string))
 		}
 
@@ -319,16 +315,10 @@ func resourceIPAMPoolDelete(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	input := &ec2.DeleteIpamPoolInput{
-		IpamPoolId: aws.String(d.Id()),
-	}
-
-	if v, ok := d.GetOk("cascade"); ok {
-		input.Cascade = aws.Bool(v.(bool))
-	}
-
 	log.Printf("[DEBUG] Deleting IPAM Pool: %s", d.Id())
-	_, err := conn.DeleteIpamPoolWithContext(ctx, input)
+	_, err := conn.DeleteIpamPoolWithContext(ctx, &ec2.DeleteIpamPoolInput{
+		IpamPoolId: aws.String(d.Id()),
+	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMPoolIdNotFound) {
 		return diags

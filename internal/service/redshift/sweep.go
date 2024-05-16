@@ -79,15 +79,16 @@ func sweepClusterSnapshots(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
-	err = conn.DescribeClusterSnapshotsPagesWithContext(ctx, &redshift.DescribeClusterSnapshotsInput{}, func(page *redshift.DescribeClusterSnapshotsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	err = conn.DescribeClusterSnapshotsPagesWithContext(ctx, &redshift.DescribeClusterSnapshotsInput{}, func(resp *redshift.DescribeClusterSnapshotsOutput, lastPage bool) bool {
+		if len(resp.Snapshots) == 0 {
+			log.Print("[DEBUG] No Redshift cluster snapshots to sweep")
+			return false
 		}
 
-		for _, v := range page.Snapshots {
-			r := resourceClusterSnapshot()
+		for _, c := range resp.Snapshots {
+			r := ResourceClusterSnapshot()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.SnapshotIdentifier))
+			d.SetId(aws.StringValue(c.SnapshotIdentifier))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -124,16 +125,17 @@ func sweepClusters(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
-	err = conn.DescribeClustersPagesWithContext(ctx, &redshift.DescribeClustersInput{}, func(page *redshift.DescribeClustersOutput, lastPage bool) bool {
-		if page == nil {
+	err = conn.DescribeClustersPagesWithContext(ctx, &redshift.DescribeClustersInput{}, func(resp *redshift.DescribeClustersOutput, lastPage bool) bool {
+		if len(resp.Clusters) == 0 {
+			log.Print("[DEBUG] No Redshift clusters to sweep")
 			return !lastPage
 		}
 
-		for _, v := range page.Clusters {
-			r := resourceCluster()
+		for _, c := range resp.Clusters {
+			r := ResourceCluster()
 			d := r.Data(nil)
 			d.Set("skip_final_snapshot", true)
-			d.SetId(aws.StringValue(v.ClusterIdentifier))
+			d.SetId(aws.StringValue(c.ClusterIdentifier))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -175,10 +177,10 @@ func sweepEventSubscriptions(region string) error {
 			return !lastPage
 		}
 
-		for _, v := range page.EventSubscriptionsList {
-			r := resourceEventSubscription()
+		for _, eventSubscription := range page.EventSubscriptionsList {
+			r := ResourceEventSubscription()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.CustSubscriptionId))
+			d.SetId(aws.StringValue(eventSubscription.CustSubscriptionId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -217,10 +219,10 @@ func sweepScheduledActions(region string) error {
 			return !lastPage
 		}
 
-		for _, v := range page.ScheduledActions {
-			r := resourceScheduledAction()
+		for _, scheduledAction := range page.ScheduledActions {
+			r := ResourceScheduledAction()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.ScheduledActionName))
+			d.SetId(aws.StringValue(scheduledAction.ScheduledActionName))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -266,12 +268,12 @@ func sweepSnapshotSchedules(region string) error {
 			return !lastPage
 		}
 
-		for _, v := range page.SnapshotSchedules {
-			id := aws.StringValue(v.ScheduleIdentifier)
+		for _, snapshotSchedules := range page.SnapshotSchedules {
+			id := aws.StringValue(snapshotSchedules.ScheduleIdentifier)
 
 			for _, prefix := range prefixesToSweep {
 				if strings.HasPrefix(id, prefix) {
-					r := resourceSnapshotSchedule()
+					r := ResourceSnapshotSchedule()
 					d := r.Data(nil)
 					d.SetId(id)
 
@@ -320,18 +322,18 @@ func sweepSubnetGroups(region string) error {
 			return !lastPage
 		}
 
-		for _, v := range page.ClusterSubnetGroups {
-			if v == nil {
+		for _, clusterSubnetGroup := range page.ClusterSubnetGroups {
+			if clusterSubnetGroup == nil {
 				continue
 			}
 
-			name := aws.StringValue(v.ClusterSubnetGroupName)
+			name := aws.StringValue(clusterSubnetGroup.ClusterSubnetGroupName)
 
 			if name == "default" {
 				continue
 			}
 
-			r := resourceSubnetGroup()
+			r := ResourceSubnetGroup()
 			d := r.Data(nil)
 			d.SetId(name)
 
@@ -369,15 +371,16 @@ func sweepHSMClientCertificates(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
-	err = conn.DescribeHsmClientCertificatesPagesWithContext(ctx, &redshift.DescribeHsmClientCertificatesInput{}, func(page *redshift.DescribeHsmClientCertificatesOutput, lastPage bool) bool {
-		if page == nil {
+	err = conn.DescribeHsmClientCertificatesPagesWithContext(ctx, &redshift.DescribeHsmClientCertificatesInput{}, func(resp *redshift.DescribeHsmClientCertificatesOutput, lastPage bool) bool {
+		if len(resp.HsmClientCertificates) == 0 {
+			log.Print("[DEBUG] No Redshift Hsm Client Certificates to sweep")
 			return !lastPage
 		}
 
-		for _, v := range page.HsmClientCertificates {
-			r := resourceHSMClientCertificate()
+		for _, c := range resp.HsmClientCertificates {
+			r := ResourceHSMClientCertificate()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.HsmClientCertificateIdentifier))
+			d.SetId(aws.StringValue(c.HsmClientCertificateIdentifier))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -414,15 +417,16 @@ func sweepHSMConfigurations(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
-	err = conn.DescribeHsmConfigurationsPagesWithContext(ctx, &redshift.DescribeHsmConfigurationsInput{}, func(page *redshift.DescribeHsmConfigurationsOutput, lastPage bool) bool {
-		if page == nil {
+	err = conn.DescribeHsmConfigurationsPagesWithContext(ctx, &redshift.DescribeHsmConfigurationsInput{}, func(resp *redshift.DescribeHsmConfigurationsOutput, lastPage bool) bool {
+		if len(resp.HsmConfigurations) == 0 {
+			log.Print("[DEBUG] No Redshift Hsm Configurations to sweep")
 			return !lastPage
 		}
 
-		for _, v := range page.HsmConfigurations {
-			r := resourceHSMConfiguration()
+		for _, c := range resp.HsmConfigurations {
+			r := ResourceHSMConfiguration()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.HsmConfigurationIdentifier))
+			d.SetId(aws.StringValue(c.HsmConfigurationIdentifier))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -471,10 +475,10 @@ func sweepAuthenticationProfiles(region string) error {
 		// in case work can be done, don't jump out yet
 	}
 
-	for _, v := range output.AuthenticationProfiles {
-		r := resourceAuthenticationProfile()
+	for _, c := range output.AuthenticationProfiles {
+		r := ResourceAuthenticationProfile()
 		d := r.Data(nil)
-		d.SetId(aws.StringValue(v.AuthenticationProfileName))
+		d.SetId(aws.StringValue(c.AuthenticationProfileName))
 
 		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}

@@ -64,8 +64,8 @@ func (r *resourceApplicationAccessScope) Schema(ctx context.Context, req resourc
 					listplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrID: framework.IDAttribute(),
-			names.AttrScope: schema.StringAttribute{
+			"id": framework.IDAttribute(),
+			"scope": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -160,7 +160,7 @@ func (r *resourceApplicationAccessScope) Read(ctx context.Context, req resource.
 		return
 	}
 
-	state.ApplicationARN = fwtypes.ARNValue(parts[0])
+	state.ApplicationARN = fwtypes.ARNValueMust(parts[0])
 	state.AuthorizedTargets = flex.FlattenFrameworkStringValueList(ctx, out.AuthorizedTargets)
 	state.Scope = flex.StringToFramework(ctx, out.Scope)
 
@@ -199,7 +199,7 @@ func (r *resourceApplicationAccessScope) Delete(ctx context.Context, req resourc
 }
 
 func (r *resourceApplicationAccessScope) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func findApplicationAccessScopeByID(ctx context.Context, conn *ssoadmin.Client, id string) (*ssoadmin.GetApplicationAccessScopeOutput, error) {

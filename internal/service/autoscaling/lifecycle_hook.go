@@ -25,7 +25,6 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_autoscaling_lifecycle_hook", name="Lifecycle Hook")
@@ -61,7 +60,7 @@ func resourceLifecycleHook() *schema.Resource {
 				Required:         true,
 				ValidateDiagFunc: enum.Validate[lifecycleHookLifecycleTransition](),
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -80,7 +79,7 @@ func resourceLifecycleHook() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			names.AttrRoleARN: {
+			"role_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
@@ -93,7 +92,7 @@ func resourceLifecycleHookPut(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &autoscaling.PutLifecycleHookInput{
 		AutoScalingGroupName: aws.String(d.Get("autoscaling_group_name").(string)),
 		LifecycleHookName:    aws.String(name),
@@ -119,7 +118,7 @@ func resourceLifecycleHookPut(ctx context.Context, d *schema.ResourceData, meta 
 		input.NotificationTargetARN = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrRoleARN); ok {
+	if v, ok := d.GetOk("role_arn"); ok {
 		input.RoleARN = aws.String(v.(string))
 	}
 
@@ -157,10 +156,10 @@ func resourceLifecycleHookRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("default_result", p.DefaultResult)
 	d.Set("heartbeat_timeout", p.HeartbeatTimeout)
 	d.Set("lifecycle_transition", p.LifecycleTransition)
-	d.Set(names.AttrName, p.LifecycleHookName)
+	d.Set("name", p.LifecycleHookName)
 	d.Set("notification_metadata", p.NotificationMetadata)
 	d.Set("notification_target_arn", p.NotificationTargetARN)
-	d.Set(names.AttrRoleARN, p.RoleARN)
+	d.Set("role_arn", p.RoleARN)
 
 	return diags
 }
@@ -227,7 +226,7 @@ func resourceLifecycleHookImport(ctx context.Context, d *schema.ResourceData, me
 	asgName := idParts[0]
 	lifecycleHookName := idParts[1]
 
-	d.Set(names.AttrName, lifecycleHookName)
+	d.Set("name", lifecycleHookName)
 	d.Set("autoscaling_group_name", asgName)
 	d.SetId(lifecycleHookName)
 

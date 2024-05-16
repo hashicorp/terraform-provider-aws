@@ -40,6 +40,7 @@ import (
 // @Tags(identifierAttribute="arn")
 func newResourceEnvironment(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceEnvironment{}
+	r.SetMigratedFromPluginSDK(true)
 
 	return r, nil
 }
@@ -67,13 +68,13 @@ func (r *resourceEnvironment) Schema(ctx context.Context, request resource.Schem
 					),
 				},
 			},
-			names.AttrARN: schema.StringAttribute{
+			"arn": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrDescription: schema.StringAttribute{
+			"description": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				Default:  stringdefault.StaticString(""), // Needed for backwards compatibility with SDK resource
@@ -84,20 +85,20 @@ func (r *resourceEnvironment) Schema(ctx context.Context, request resource.Schem
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrID: schema.StringAttribute{
+			"id": schema.StringAttribute{
 				Computed:           true,
 				DeprecationMessage: "This attribute is unused and will be removed in a future version of the provider",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrName: schema.StringAttribute{
+			"name": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 64),
 				},
 			},
-			names.AttrState: schema.StringAttribute{
+			"state": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),

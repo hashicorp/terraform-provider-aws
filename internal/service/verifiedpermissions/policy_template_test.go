@@ -43,7 +43,7 @@ func TestAccVerifiedPermissionsPolicyTemplate_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyTemplateExists(ctx, resourceName, &policytemplate),
 					resource.TestCheckResourceAttr(resourceName, "statement", "permit (principal in ?principal, action in PhotoFlash::Action::\"FullPhotoAccess\", resource == ?resource) unless { resource.IsPrivate };"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
 				),
 			},
 			{
@@ -78,7 +78,7 @@ func TestAccVerifiedPermissionsPolicyTemplate_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyTemplateExists(ctx, resourceName, &policytemplate),
 					resource.TestCheckResourceAttr(resourceName, "statement", "permit (principal in ?principal, action in PhotoFlash::Action::\"FullPhotoAccess\", resource == ?resource) unless { resource.IsPrivate };"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
 				),
 			},
 			{
@@ -86,7 +86,7 @@ func TestAccVerifiedPermissionsPolicyTemplate_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyTemplateExists(ctx, resourceName, &policytemplate),
 					resource.TestCheckResourceAttr(resourceName, "statement", "permit (principal in ?principal, action in PhotoFlash::Action::\"FullPhotoAccess\", resource == ?resource);"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
+					resource.TestCheckResourceAttr(resourceName, "description", "test"),
 				),
 			},
 		},

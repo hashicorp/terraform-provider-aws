@@ -37,7 +37,7 @@ func ResourceResourcePolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrPolicy: {
+			"policy": {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateFunc:     validation.StringIsJSON,
@@ -47,7 +47,7 @@ func ResourceResourcePolicy() *schema.Resource {
 					return json
 				},
 			},
-			names.AttrResourceARN: {
+			"resource_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -63,9 +63,9 @@ const (
 
 func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
-	resourceArn := d.Get(names.AttrResourceARN).(string)
+	resourceArn := d.Get("resource_arn").(string)
 
-	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
+	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 
 	if err != nil {
 		return diag.Errorf("policy (%s) is invalid JSON: %s", policy, err)
@@ -79,7 +79,7 @@ func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta
 	_, err = conn.PutResourcePolicy(ctx, in)
 
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameResourcePolicy, d.Get(names.AttrPolicy).(string), err)
+		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameResourcePolicy, d.Get("policy").(string), err)
 	}
 
 	d.SetId(resourceArn)
@@ -107,15 +107,15 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 		return create.DiagError(names.VPCLattice, create.ErrActionReading, ResNameResourcePolicy, d.Id(), err)
 	}
 
-	d.Set(names.AttrResourceARN, resourceArn)
+	d.Set("resource_arn", resourceArn)
 
-	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), aws.ToString(policy.Policy))
+	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.ToString(policy.Policy))
 
 	if err != nil {
 		return diag.Errorf("setting policy %s: %s", aws.ToString(policy.Policy), err)
 	}
 
-	d.Set(names.AttrPolicy, policyToSet)
+	d.Set("policy", policyToSet)
 
 	return nil
 }

@@ -5,10 +5,8 @@ package elasticache
 
 import (
 	"context"
-	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -25,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -48,13 +46,17 @@ func newServerlessCacheResource(context.Context) (resource.ResourceWithConfigure
 	return r, nil
 }
 
+const (
+	ResNameServerlessCache = "Serverless Cache"
+)
+
 type serverlessCacheResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (*serverlessCacheResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+func (r *serverlessCacheResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
 	response.TypeName = "aws_elasticache_serverless_cache"
 }
 
@@ -62,7 +64,7 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrCreateTime: schema.StringAttribute{
+			"create_time": schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 				PlanModifiers: []planmodifier.String{
@@ -76,14 +78,14 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrDescription: schema.StringAttribute{
+			"description": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrEndpoint: schema.ListAttribute{
+			"endpoint": schema.ListAttribute{
 				CustomType:  fwtypes.NewListNestedObjectTypeOf[endpointModel](ctx),
 				ElementType: fwtypes.NewObjectTypeOf[endpointModel](ctx),
 				Computed:    true,
@@ -104,7 +106,7 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 				},
 			},
 			names.AttrID: framework.IDAttribute(),
-			names.AttrKMSKeyID: schema.StringAttribute{
+			"kms_key_id": schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -118,7 +120,7 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrName: schema.StringAttribute{
+			"name": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -132,7 +134,7 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 					listplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrSecurityGroupIDs: schema.SetAttribute{
+			"security_group_ids": schema.SetAttribute{
 				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
 				Optional:    true,
@@ -159,13 +161,13 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 					int64planmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrStatus: schema.StringAttribute{
+			"status": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrSubnetIDs: schema.SetAttribute{
+			"subnet_ids": schema.SetAttribute{
 				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
 				Optional:    true,
@@ -194,18 +196,12 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"maximum": schema.Int64Attribute{
-										Optional: true,
+										Required: true,
 										PlanModifiers: []planmodifier.Int64{
 											int64planmodifier.RequiresReplace(),
 										},
 									},
-									"minimum": schema.Int64Attribute{
-										Optional: true,
-										PlanModifiers: []planmodifier.Int64{
-											int64planmodifier.RequiresReplace(),
-										},
-									},
-									names.AttrUnit: schema.StringAttribute{
+									"unit": schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.DataStorageUnit](),
 										Required:   true,
 									},
@@ -220,16 +216,7 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"maximum": schema.Int64Attribute{
-										Optional: true,
-										Validators: []validator.Int64{
-											int64validator.Between(1000, 15000000),
-										},
-										PlanModifiers: []planmodifier.Int64{
-											int64planmodifier.RequiresReplace(),
-										},
-									},
-									"minimum": schema.Int64Attribute{
-										Optional: true,
+										Required: true,
 										Validators: []validator.Int64{
 											int64validator.Between(1000, 15000000),
 										},
@@ -243,7 +230,7 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 					},
 				},
 			},
-			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+			"timeouts": timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -272,23 +259,28 @@ func (r *serverlessCacheResource) Create(ctx context.Context, request resource.C
 	_, err := conn.CreateServerlessCache(ctx, input)
 
 	if err != nil {
-		response.Diagnostics.AddError("creating ElastiCache Serverless Cache", err.Error())
-
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ElastiCache, create.ErrActionCreating, ResNameServerlessCache, data.ServerlessCacheName.ValueString(), err),
+			err.Error(),
+		)
 		return
 	}
 
 	// Set values for unknowns.
 	data.setID()
 
-	output, err := waitServerlessCacheAvailable(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
+	out, err := waitServerlessCacheAvailable(ctx, conn, data.ID.ValueString(), createTimeout)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for ElastiCache Serverless Cache (%s) create", data.ID.ValueString()), err.Error())
-
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ElastiCache, create.ErrActionWaitingForCreation, ResNameServerlessCache, data.ID.ValueString(), err),
+			err.Error(),
+		)
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, out, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -311,7 +303,7 @@ func (r *serverlessCacheResource) Read(ctx context.Context, request resource.Rea
 
 	conn := r.Meta().ElastiCacheClient(ctx)
 
-	output, err := findServerlessCacheByID(ctx, conn, data.ID.ValueString())
+	out, err := FindServerlessCacheByID(ctx, conn, data.ID.ValueString())
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -321,12 +313,14 @@ func (r *serverlessCacheResource) Read(ctx context.Context, request resource.Rea
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading ElastiCache Serverless Cache (%s)", data.ID.ValueString()), err.Error())
-
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ElastiCache, create.ErrActionSetting, ResNameServerlessCache, data.ID.ValueString(), err),
+			err.Error(),
+		)
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, out, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -357,29 +351,38 @@ func (r *serverlessCacheResource) Update(ctx context.Context, request resource.U
 		_, err := conn.ModifyServerlessCache(ctx, input)
 
 		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("updating ElastiCache Serverless Cache (%s)", new.ID.ValueString()), err.Error())
-
+			response.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.ElastiCache, create.ErrActionUpdating, ResNameServerlessCache, old.ServerlessCacheName.ValueString(), err),
+				err.Error(),
+			)
 			return
 		}
 
-		if _, err := waitServerlessCacheAvailable(ctx, conn, old.ServerlessCacheName.ValueString(), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("waiting for ElastiCache Serverless Cache (%s) update", new.ID.ValueString()), err.Error())
+		updateTimeout := r.UpdateTimeout(ctx, new.Timeouts)
+		_, err = waitServerlessCacheAvailable(ctx, conn, old.ServerlessCacheName.ValueString(), updateTimeout)
 
+		if err != nil {
+			response.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.ElastiCache, create.ErrActionWaitingForUpdate, ResNameServerlessCache, new.ServerlessCacheName.ValueString(), err),
+				err.Error(),
+			)
 			return
 		}
 	}
 
 	// AWS returns null values for certain values that are available on redis only.
 	// always set these values to the state value to avoid unnecessary diff failures on computed values.
-	output, err := findServerlessCacheByID(ctx, conn, old.ID.ValueString())
+	out, err := FindServerlessCacheByID(ctx, conn, old.ID.ValueString())
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading ElastiCache Serverless Cache (%s)", old.ID.ValueString()), err.Error())
-
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ElastiCache, create.ErrActionUpdating, ResNameServerlessCache, old.ServerlessCacheName.ValueString(), err),
+			err.Error(),
+		)
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &new)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, out, &new)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -397,7 +400,7 @@ func (r *serverlessCacheResource) Delete(ctx context.Context, request resource.D
 	conn := r.Meta().ElastiCacheClient(ctx)
 
 	tflog.Debug(ctx, "deleting ElastiCache Serverless Cache", map[string]interface{}{
-		names.AttrID: data.ID.ValueString(),
+		"id": data.ID.ValueString(),
 	})
 
 	input := &elasticache.DeleteServerlessCacheInput{
@@ -407,137 +410,34 @@ func (r *serverlessCacheResource) Delete(ctx context.Context, request resource.D
 
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute, func() (interface{}, error) {
 		return conn.DeleteServerlessCache(ctx, input)
-	}, errCodeDependencyViolation)
+	}, "DependencyViolation")
 
 	if errs.IsA[*awstypes.ServerlessCacheNotFoundFault](err) {
 		return
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting ElastiCache Serverless Cache (%s)", data.ID.ValueString()), err.Error())
-
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ElastiCache, create.ErrActionDeleting, ResNameServerlessCache, data.ID.ValueString(), err),
+			err.Error(),
+		)
 		return
 	}
 
-	if _, err := waitServerlessCacheDeleted(ctx, conn, data.ID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for ElastiCache Serverless Cache (%s) delete", data.ID.ValueString()), err.Error())
+	deleteTimeout := r.DeleteTimeout(ctx, data.Timeouts)
+	_, err = waitServerlessCacheDeleted(ctx, conn, data.ID.ValueString(), deleteTimeout)
 
+	if err != nil {
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ElastiCache, create.ErrActionWaitingForDeletion, ResNameServerlessCache, data.ID.ValueString(), err),
+			err.Error(),
+		)
 		return
 	}
 }
 
 func (r *serverlessCacheResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
 	r.SetTagsAll(ctx, request, response)
-}
-
-func findServerlessCache(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeServerlessCachesInput) (*awstypes.ServerlessCache, error) {
-	output, err := findServerlessCaches(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSingleValueResult(output)
-}
-
-func findServerlessCaches(ctx context.Context, conn *elasticache.Client, input *elasticache.DescribeServerlessCachesInput) ([]awstypes.ServerlessCache, error) {
-	var output []awstypes.ServerlessCache
-
-	pages := elasticache.NewDescribeServerlessCachesPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if errs.IsA[*awstypes.ServerlessCacheNotFoundFault](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
-			}
-		}
-
-		if err != nil {
-			return nil, err
-		}
-
-		output = append(output, page.ServerlessCaches...)
-	}
-
-	return output, nil
-}
-
-func findServerlessCacheByID(ctx context.Context, conn *elasticache.Client, id string) (*awstypes.ServerlessCache, error) {
-	input := &elasticache.DescribeServerlessCachesInput{
-		ServerlessCacheName: aws.String(id),
-	}
-
-	return findServerlessCache(ctx, conn, input)
-}
-
-func statusServerlessCache(ctx context.Context, conn *elasticache.Client, cacheClusterID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := findServerlessCacheByID(ctx, conn, cacheClusterID)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.ToString(output.Status), nil
-	}
-}
-
-const (
-	serverlessCacheStatusAvailable = "available"
-	serverlessCacheStatusCreating  = "creating"
-	serverlessCacheStatusDeleting  = "deleting"
-	serverlessCacheStatusModifying = "modifying"
-)
-
-func waitServerlessCacheAvailable(ctx context.Context, conn *elasticache.Client, cacheClusterID string, timeout time.Duration) (*awstypes.ServerlessCache, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{
-			serverlessCacheStatusCreating,
-			serverlessCacheStatusDeleting,
-			serverlessCacheStatusModifying,
-		},
-		Target:     []string{serverlessCacheStatusAvailable},
-		Refresh:    statusServerlessCache(ctx, conn, cacheClusterID),
-		Timeout:    timeout,
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.ServerlessCache); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitServerlessCacheDeleted(ctx context.Context, conn *elasticache.Client, cacheClusterID string, timeout time.Duration) (*awstypes.ServerlessCache, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{
-			serverlessCacheStatusCreating,
-			serverlessCacheStatusDeleting,
-			serverlessCacheStatusModifying,
-		},
-		Target:     []string{},
-		Refresh:    statusServerlessCache(ctx, conn, cacheClusterID),
-		Timeout:    timeout,
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.ServerlessCache); ok {
-		return output, err
-	}
-
-	return nil, err
 }
 
 type serverlessCacheResourceModel struct {
@@ -582,13 +482,11 @@ type cacheUsageLimitsModel struct {
 
 type dataStorageModel struct {
 	Maximum types.Int64                                  `tfsdk:"maximum"`
-	Minimum types.Int64                                  `tfsdk:"minimum"`
 	Unit    fwtypes.StringEnum[awstypes.DataStorageUnit] `tfsdk:"unit"`
 }
 
 type ecpuPerSecondModel struct {
 	Maximum types.Int64 `tfsdk:"maximum"`
-	Minimum types.Int64 `tfsdk:"minimum"`
 }
 
 type endpointModel struct {

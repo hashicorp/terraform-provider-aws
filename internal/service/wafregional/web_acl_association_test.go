@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/wafregional"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -23,7 +24,7 @@ func TestAccWAFRegionalWebACLAssociation_basic(t *testing.T) {
 	resourceName := "aws_wafregional_web_acl_association.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WAFRegionalEndpointID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, wafregional.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLAssociationDestroy(ctx),
@@ -48,7 +49,7 @@ func TestAccWAFRegionalWebACLAssociation_disappears(t *testing.T) {
 	resourceName := "aws_wafregional_web_acl_association.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WAFRegionalEndpointID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, wafregional.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLAssociationDestroy(ctx),
@@ -70,7 +71,7 @@ func TestAccWAFRegionalWebACLAssociation_multipleAssociations(t *testing.T) {
 	resourceName := "aws_wafregional_web_acl_association.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.WAFRegionalEndpointID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, wafregional.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLAssociationDestroy(ctx),
@@ -99,7 +100,7 @@ func TestAccWAFRegionalWebACLAssociation_ResourceARN_apiGatewayStage(t *testing.
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.WAFRegionalEndpointID)
+			acctest.PreCheckPartitionHasService(t, wafregional.EndpointsID)
 			acctest.PreCheckAPIGatewayTypeEDGE(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
@@ -123,14 +124,14 @@ func TestAccWAFRegionalWebACLAssociation_ResourceARN_apiGatewayStage(t *testing.
 
 func testAccCheckWebACLAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_wafregional_web_acl_association" {
 				continue
 			}
 
-			_, err := tfwafregional.FindWebACLByResourceARN(ctx, conn, rs.Primary.Attributes[names.AttrResourceARN])
+			_, err := tfwafregional.FindWebACLByResourceARN(ctx, conn, rs.Primary.Attributes["resource_arn"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -154,9 +155,9 @@ func testAccCheckWebACLAssociationExists(ctx context.Context, n string) resource
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn(ctx)
 
-		_, err := tfwafregional.FindWebACLByResourceARN(ctx, conn, rs.Primary.Attributes[names.AttrResourceARN])
+		_, err := tfwafregional.FindWebACLByResourceARN(ctx, conn, rs.Primary.Attributes["resource_arn"])
 
 		return err
 	}

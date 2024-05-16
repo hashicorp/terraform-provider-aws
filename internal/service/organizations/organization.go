@@ -9,25 +9,23 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/organizations"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_organizations_organization", name="Organization")
-func resourceOrganization() *schema.Resource {
+// @SDKResource("aws_organizations_organization")
+func ResourceOrganization() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationCreate,
 		ReadWithoutTimeout:   resourceOrganizationRead,
@@ -41,7 +39,7 @@ func resourceOrganization() *schema.Resource {
 		CustomizeDiff: customdiff.Sequence(
 			customdiff.ForceNewIfChange("feature_set", func(_ context.Context, old, new, meta interface{}) bool {
 				// Only changes from ALL to CONSOLIDATED_BILLING for feature_set should force a new resource.
-				return awstypes.OrganizationFeatureSet(old.(string)) == awstypes.OrganizationFeatureSetAll && awstypes.OrganizationFeatureSet(new.(string)) == awstypes.OrganizationFeatureSetConsolidatedBilling
+				return old.(string) == organizations.OrganizationFeatureSetAll && new.(string) == organizations.OrganizationFeatureSetConsolidatedBilling
 			}),
 		),
 
@@ -51,30 +49,30 @@ func resourceOrganization() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrARN: {
+						"arn": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrEmail: {
+						"email": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrID: {
+						"id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrName: {
+						"name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrStatus: {
+						"status": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -87,15 +85,15 @@ func resourceOrganization() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[awstypes.PolicyType](),
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(organizations.PolicyType_Values(), false),
 				},
 			},
 			"feature_set": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.OrganizationFeatureSetAll,
-				ValidateDiagFunc: enum.Validate[awstypes.OrganizationFeatureSet](),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      organizations.OrganizationFeatureSetAll,
+				ValidateFunc: validation.StringInSlice(organizations.OrganizationFeatureSet_Values(), true),
 			},
 			"master_account_arn": {
 				Type:     schema.TypeString,
@@ -109,32 +107,28 @@ func resourceOrganization() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"master_account_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"non_master_accounts": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrARN: {
+						"arn": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrEmail: {
+						"email": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrID: {
+						"id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrName: {
+						"name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrStatus: {
+						"status": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -146,15 +140,15 @@ func resourceOrganization() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrARN: {
+						"arn": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrID: {
+						"id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrName: {
+						"name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -163,11 +157,11 @@ func resourceOrganization() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrStatus: {
+									"status": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									names.AttrType: {
+									"type": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -183,24 +177,30 @@ func resourceOrganization() *schema.Resource {
 
 func resourceOrganizationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	input := &organizations.CreateOrganizationInput{
-		FeatureSet: awstypes.OrganizationFeatureSet(d.Get("feature_set").(string)),
+		FeatureSet: aws.String(d.Get("feature_set").(string)),
 	}
 
-	output, err := conn.CreateOrganization(ctx, input)
+	output, err := conn.CreateOrganizationWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Organizations Organization: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Organization: %s", err)
 	}
 
-	d.SetId(aws.ToString(output.Organization.Id))
+	d.SetId(aws.StringValue(output.Organization.Id))
 
 	if v, ok := d.GetOk("aws_service_access_principals"); ok && v.(*schema.Set).Len() > 0 {
-		for _, v := range flex.ExpandStringValueSet(v.(*schema.Set)) {
-			if err := enableServicePrincipal(ctx, conn, v); err != nil {
-				return sdkdiag.AppendFromErr(diags, err)
+		for _, principal := range flex.ExpandStringValueSet(v.(*schema.Set)) {
+			input := &organizations.EnableAWSServiceAccessInput{
+				ServicePrincipal: aws.String(principal),
+			}
+
+			_, err := conn.EnableAWSServiceAccessWithContext(ctx, input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "enabling AWS Service Access (%s) in Organization (%s): %s", principal, d.Id(), err)
 			}
 		}
 	}
@@ -209,14 +209,23 @@ func resourceOrganizationCreate(ctx context.Context, d *schema.ResourceData, met
 		defaultRoot, err := findDefaultRoot(ctx, conn)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading Organizations Organization (%s) default root: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "reading Organization (%s) default root: %s", d.Id(), err)
 		}
 
-		defaultRootID := aws.ToString(defaultRoot.Id)
+		defaultRootID := aws.StringValue(defaultRoot.Id)
 
-		for _, v := range flex.ExpandStringValueSet(v.(*schema.Set)) {
-			if err := enablePolicyType(ctx, conn, awstypes.PolicyType(v), defaultRootID); err != nil {
-				return sdkdiag.AppendFromErr(diags, err)
+		for _, policyType := range flex.ExpandStringValueSet(v.(*schema.Set)) {
+			input := &organizations.EnablePolicyTypeInput{
+				PolicyType: aws.String(policyType),
+				RootId:     aws.String(defaultRootID),
+			}
+
+			if _, err := conn.EnablePolicyTypeWithContext(ctx, input); err != nil {
+				return sdkdiag.AppendErrorf(diags, "enabling policy type (%s) in Organization (%s) Root (%s): %s", policyType, d.Id(), defaultRootID, err)
+			}
+
+			if err := waitDefaultRootPolicyTypeEnabled(ctx, conn, policyType); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for policy type (%s) in Organization (%s) enable: %s", policyType, d.Id(), err)
 			}
 		}
 	}
@@ -226,52 +235,45 @@ func resourceOrganizationCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceOrganizationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
-	org, err := findOrganization(ctx, conn)
+	org, err := FindOrganization(ctx, conn)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Organizations Organization does not exist, removing from state: %s", d.Id())
+		log.Printf("[WARN] Organization does not exist, removing from state: %s", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Organizations Organization (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Organization: %s", err)
 	}
 
-	accounts, err := findAccounts(ctx, conn, &organizations.ListAccountsInput{})
+	accounts, err := findAccounts(ctx, conn)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Organizations Organization (%s) accounts: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Organization (%s) accounts: %s", d.Id(), err)
 	}
 
-	managementAccountID := aws.ToString(org.MasterAccountId)
-	var managementAccountName *string
-	for _, v := range accounts {
-		if aws.ToString(v.Id) == managementAccountID {
-			managementAccountName = v.Name
-		}
-	}
-	nonManagementAccounts := tfslices.Filter(accounts, func(v awstypes.Account) bool {
-		return aws.ToString(v.Id) != managementAccountID
+	managementAccountID := aws.StringValue(org.MasterAccountId)
+	nonManagementAccounts := tfslices.Filter(accounts, func(v *organizations.Account) bool {
+		return aws.StringValue(v.Id) != managementAccountID
 	})
 
-	roots, err := findRoots(ctx, conn, &organizations.ListRootsInput{})
+	roots, err := findRoots(ctx, conn)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Organizations Organization (%s) roots: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Organization (%s) roots: %s", d.Id(), err)
 	}
 
 	if err := d.Set("accounts", flattenAccounts(accounts)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting accounts: %s", err)
 	}
-	d.Set(names.AttrARN, org.Arn)
+	d.Set("arn", org.Arn)
 	d.Set("feature_set", org.FeatureSet)
 	d.Set("master_account_arn", org.MasterAccountArn)
 	d.Set("master_account_email", org.MasterAccountEmail)
 	d.Set("master_account_id", org.MasterAccountId)
-	d.Set("master_account_name", managementAccountName)
 	if err := d.Set("non_master_accounts", flattenAccounts(nonManagementAccounts)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting non_master_accounts: %s", err)
 	}
@@ -282,21 +284,21 @@ func resourceOrganizationRead(ctx context.Context, d *schema.ResourceData, meta 
 	var awsServiceAccessPrincipals []string
 
 	// ConstraintViolationException: The request failed because the organization does not have all features enabled. Please enable all features in your organization and then retry.
-	if org.FeatureSet == awstypes.OrganizationFeatureSetAll {
-		awsServiceAccessPrincipals, err = findEnabledServicePrincipalNames(ctx, conn)
+	if aws.StringValue(org.FeatureSet) == organizations.OrganizationFeatureSetAll {
+		awsServiceAccessPrincipals, err = FindEnabledServicePrincipalNames(ctx, conn)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading Organizations Organization (%s) service principals: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "reading Organization (%s) service principals: %s", d.Id(), err)
 		}
 	}
 
 	d.Set("aws_service_access_principals", awsServiceAccessPrincipals)
 
-	var enabledPolicyTypes []awstypes.PolicyType
+	var enabledPolicyTypes []string
 
-	for _, v := range roots[0].PolicyTypes {
-		if v.Status == awstypes.PolicyTypeStatusEnabled {
-			enabledPolicyTypes = append(enabledPolicyTypes, v.Type)
+	for _, policyType := range roots[0].PolicyTypes {
+		if aws.StringValue(policyType.Status) == organizations.PolicyTypeStatusEnabled {
+			enabledPolicyTypes = append(enabledPolicyTypes, aws.StringValue(policyType.Type))
 		}
 	}
 
@@ -307,22 +309,28 @@ func resourceOrganizationRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceOrganizationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	if d.HasChange("aws_service_access_principals") {
 		o, n := d.GetChange("aws_service_access_principals")
 		os, ns := o.(*schema.Set), n.(*schema.Set)
 		add, del := flex.ExpandStringValueSet(ns.Difference(os)), flex.ExpandStringValueSet(os.Difference(ns))
 
-		for _, v := range del {
-			if err := disableServicePrincipal(ctx, conn, v); err != nil {
-				return sdkdiag.AppendFromErr(diags, err)
+		for _, principal := range del {
+			if err := DisableServicePrincipal(ctx, conn, principal); err != nil {
+				return sdkdiag.AppendErrorf(diags, "disabling AWS Service Access (%s) in Organization (%s): %s", principal, d.Id(), err)
 			}
 		}
 
-		for _, v := range add {
-			if err := enableServicePrincipal(ctx, conn, v); err != nil {
-				return sdkdiag.AppendFromErr(diags, err)
+		for _, principal := range add {
+			input := &organizations.EnableAWSServiceAccessInput{
+				ServicePrincipal: aws.String(principal),
+			}
+
+			_, err := conn.EnableAWSServiceAccessWithContext(ctx, input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "enabling AWS Service Access (%s) in Organization (%s): %s", principal, d.Id(), err)
 			}
 		}
 	}
@@ -333,26 +341,40 @@ func resourceOrganizationUpdate(ctx context.Context, d *schema.ResourceData, met
 		os, ns := o.(*schema.Set), n.(*schema.Set)
 		add, del := flex.ExpandStringValueSet(ns.Difference(os)), flex.ExpandStringValueSet(os.Difference(ns))
 
-		for _, v := range del {
-			if err := disablePolicyType(ctx, conn, awstypes.PolicyType(v), defaultRootID); err != nil {
-				return sdkdiag.AppendFromErr(diags, err)
+		for _, policyType := range del {
+			input := &organizations.DisablePolicyTypeInput{
+				PolicyType: aws.String(policyType),
+				RootId:     aws.String(defaultRootID),
+			}
+
+			if _, err := conn.DisablePolicyTypeWithContext(ctx, input); err != nil {
+				return sdkdiag.AppendErrorf(diags, "disabling policy type (%s) in Organization (%s) Root (%s): %s", policyType, d.Id(), defaultRootID, err)
+			}
+
+			if err := waitDefaultRootPolicyTypeDisabled(ctx, conn, policyType); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for policy type (%s) in Organization (%s) disable: %s", policyType, d.Id(), err)
 			}
 		}
 
-		for _, v := range add {
-			if err := enablePolicyType(ctx, conn, awstypes.PolicyType(v), defaultRootID); err != nil {
-				return sdkdiag.AppendFromErr(diags, err)
+		for _, policyType := range add {
+			input := &organizations.EnablePolicyTypeInput{
+				PolicyType: aws.String(policyType),
+				RootId:     aws.String(defaultRootID),
+			}
+
+			if _, err := conn.EnablePolicyTypeWithContext(ctx, input); err != nil {
+				return sdkdiag.AppendErrorf(diags, "enabling policy type (%s) in Organization (%s) Root (%s): %s", policyType, d.Id(), defaultRootID, err)
+			}
+
+			if err := waitDefaultRootPolicyTypeEnabled(ctx, conn, policyType); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for policy type (%s) in Organization (%s) enable: %s", policyType, d.Id(), err)
 			}
 		}
 	}
 
 	if d.HasChange("feature_set") {
-		input := &organizations.EnableAllFeaturesInput{}
-
-		_, err := conn.EnableAllFeatures(ctx, input)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "enabling all features in Organizations Organization (%s): %s", d.Id(), err)
+		if _, err := conn.EnableAllFeaturesWithContext(ctx, &organizations.EnableAllFeaturesInput{}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "enabling all features in Organization (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -361,111 +383,46 @@ func resourceOrganizationUpdate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceOrganizationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	log.Printf("[INFO] Deleting Organization: %s", d.Id())
-	_, err := conn.DeleteOrganization(ctx, &organizations.DeleteOrganizationInput{})
+	_, err := conn.DeleteOrganizationWithContext(ctx, &organizations.DeleteOrganizationInput{})
 
-	if errs.IsA[*awstypes.AWSOrganizationsNotInUseException](err) {
+	if tfawserr.ErrCodeEquals(err, organizations.ErrCodeAWSOrganizationsNotInUseException) {
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Organizations Organization (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Organization (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
 func resourceOrganizationImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
-	org, err := findOrganization(ctx, conn)
+	org, err := FindOrganization(ctx, conn)
 
 	if err != nil {
 		return nil, err
 	}
 
 	// Check that any Org ID specified for import matches the current Org ID.
-	if got, want := aws.ToString(org.Id), d.Id(); got != want {
-		return nil, fmt.Errorf("current Organizations Organization ID (%s) does not match (%s)", got, want)
+	if got, want := aws.StringValue(org.Id), d.Id(); got != want {
+		return nil, fmt.Errorf("current Organization ID (%s) does not match (%s)", got, want)
 	}
 
 	return []*schema.ResourceData{d}, nil
 }
 
-func disableServicePrincipal(ctx context.Context, conn *organizations.Client, servicePrincipal string) error {
-	input := &organizations.DisableAWSServiceAccessInput{
-		ServicePrincipal: aws.String(servicePrincipal),
-	}
-
-	_, err := conn.DisableAWSServiceAccess(ctx, input)
-
-	if err != nil {
-		return fmt.Errorf("disabling AWS Service Access (%s) in Organizations Organization: %w", servicePrincipal, err)
-	}
-
-	return nil
-}
-
-func enableServicePrincipal(ctx context.Context, conn *organizations.Client, servicePrincipal string) error {
-	input := &organizations.EnableAWSServiceAccessInput{
-		ServicePrincipal: aws.String(servicePrincipal),
-	}
-
-	_, err := conn.EnableAWSServiceAccess(ctx, input)
-
-	if err != nil {
-		return fmt.Errorf("enabling AWS Service Access (%s) in Organizations Organization: %w", servicePrincipal, err)
-	}
-
-	return nil
-}
-
-func disablePolicyType(ctx context.Context, conn *organizations.Client, policyType awstypes.PolicyType, rootID string) error {
-	input := &organizations.DisablePolicyTypeInput{
-		PolicyType: policyType,
-		RootId:     aws.String(rootID),
-	}
-
-	_, err := conn.DisablePolicyType(ctx, input)
-
-	if err != nil {
-		return fmt.Errorf("disabling policy type (%s) in Organizations Organization root (%s): %w", policyType, rootID, err)
-	}
-
-	if _, err := waitDefaultRootPolicyTypeDisabled(ctx, conn, policyType); err != nil {
-		return fmt.Errorf("waiting for Organizations Organization policy (%s) disable: %w", policyType, err)
-	}
-
-	return nil
-}
-
-func enablePolicyType(ctx context.Context, conn *organizations.Client, policyType awstypes.PolicyType, rootID string) error {
-	input := &organizations.EnablePolicyTypeInput{
-		PolicyType: policyType,
-		RootId:     aws.String(rootID),
-	}
-
-	_, err := conn.EnablePolicyType(ctx, input)
-
-	if err != nil {
-		return fmt.Errorf("enabling policy type (%s) in Organizations Organization root (%s): %w", policyType, rootID, err)
-	}
-
-	if _, err := waitDefaultRootPolicyTypeEnabled(ctx, conn, policyType); err != nil {
-		return fmt.Errorf("waiting for Organizations Organization policy (%s) enable: %w", policyType, err)
-	}
-
-	return nil
-}
-
-func findOrganization(ctx context.Context, conn *organizations.Client) (*awstypes.Organization, error) {
+// FindOrganization is called from the acctest package and so can't be made private and exported as "test-only".
+func FindOrganization(ctx context.Context, conn *organizations.Organizations) (*organizations.Organization, error) {
 	input := &organizations.DescribeOrganizationInput{}
 
-	output, err := conn.DescribeOrganization(ctx, input)
+	output, err := conn.DescribeOrganizationWithContext(ctx, input)
 
-	if errs.IsA[*awstypes.AWSOrganizationsNotInUseException](err) {
+	if tfawserr.ErrCodeEquals(err, organizations.ErrCodeAWSOrganizationsNotInUseException) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -483,140 +440,144 @@ func findOrganization(ctx context.Context, conn *organizations.Client) (*awstype
 	return output.Organization, nil
 }
 
-func findAccounts(ctx context.Context, conn *organizations.Client, input *organizations.ListAccountsInput) ([]awstypes.Account, error) {
-	var output []awstypes.Account
+func findAccounts(ctx context.Context, conn *organizations.Organizations) ([]*organizations.Account, error) {
+	input := &organizations.ListAccountsInput{}
+	var output []*organizations.Account
 
-	pages := organizations.NewListAccountsPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if err != nil {
-			return nil, err
+	err := conn.ListAccountsPagesWithContext(ctx, input, func(page *organizations.ListAccountsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
 		output = append(output, page.Accounts...)
-	}
 
-	return output, nil
-}
-
-func findEnabledServicePrincipalNames(ctx context.Context, conn *organizations.Client) ([]string, error) {
-	input := &organizations.ListAWSServiceAccessForOrganizationInput{}
-
-	output, err := findEnabledServicePrincipals(ctx, conn, input)
+		return !lastPage
+	})
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfslices.ApplyToAll(output, func(v awstypes.EnabledServicePrincipal) string {
-		return aws.ToString(v.ServicePrincipal)
+	return output, nil
+}
+
+// FindEnabledServicePrincipalNames is called from the service/ram package.
+func FindEnabledServicePrincipalNames(ctx context.Context, conn *organizations.Organizations) ([]string, error) {
+	output, err := findEnabledServicePrincipals(ctx, conn)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfslices.ApplyToAll(output, func(v *organizations.EnabledServicePrincipal) string {
+		return aws.StringValue(v.ServicePrincipal)
 	}), nil
 }
 
-func findEnabledServicePrincipals(ctx context.Context, conn *organizations.Client, input *organizations.ListAWSServiceAccessForOrganizationInput) ([]awstypes.EnabledServicePrincipal, error) {
-	var output []awstypes.EnabledServicePrincipal
+func findEnabledServicePrincipals(ctx context.Context, conn *organizations.Organizations) ([]*organizations.EnabledServicePrincipal, error) {
+	input := &organizations.ListAWSServiceAccessForOrganizationInput{}
+	var output []*organizations.EnabledServicePrincipal
 
-	pages := organizations.NewListAWSServiceAccessForOrganizationPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if err != nil {
-			return nil, err
+	err := conn.ListAWSServiceAccessForOrganizationPagesWithContext(ctx, input, func(page *organizations.ListAWSServiceAccessForOrganizationOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
 		output = append(output, page.EnabledServicePrincipals...)
-	}
 
-	return output, nil
-}
-
-func findRoots(ctx context.Context, conn *organizations.Client, input *organizations.ListRootsInput) ([]awstypes.Root, error) {
-	var output []awstypes.Root
-
-	pages := organizations.NewListRootsPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if err != nil {
-			return nil, err
-		}
-
-		output = append(output, page.Roots...)
-	}
-
-	return output, nil
-}
-
-func findDefaultRoot(ctx context.Context, conn *organizations.Client) (*awstypes.Root, error) {
-	input := &organizations.ListRootsInput{}
-
-	output, err := findRoots(ctx, conn, input)
+		return !lastPage
+	})
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertFirstValueResult(output)
+	return output, nil
 }
 
-func flattenAccounts(apiObjects []awstypes.Account) []interface{} {
-	if len(apiObjects) == 0 {
-		return nil
+func findRoots(ctx context.Context, conn *organizations.Organizations) ([]*organizations.Root, error) {
+	input := &organizations.ListRootsInput{}
+	var output []*organizations.Root
+
+	err := conn.ListRootsPagesWithContext(ctx, input, func(page *organizations.ListRootsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.Roots...)
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
 	}
 
-	var tfList []interface{}
+	return output, nil
+}
 
-	for _, apiObject := range apiObjects {
-		tfList = append(tfList, map[string]interface{}{
-			names.AttrARN:    aws.ToString(apiObject.Arn),
-			names.AttrEmail:  aws.ToString(apiObject.Email),
-			names.AttrID:     aws.ToString(apiObject.Id),
-			names.AttrName:   aws.ToString(apiObject.Name),
-			names.AttrStatus: apiObject.Status,
+func findDefaultRoot(ctx context.Context, conn *organizations.Organizations) (*organizations.Root, error) {
+	output, err := findRoots(ctx, conn)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(nil)
+	}
+
+	return output[0], nil
+}
+
+func flattenAccounts(accounts []*organizations.Account) []map[string]interface{} {
+	if len(accounts) == 0 {
+		return nil
+	}
+	var result []map[string]interface{}
+	for _, account := range accounts {
+		result = append(result, map[string]interface{}{
+			"arn":    aws.StringValue(account.Arn),
+			"email":  aws.StringValue(account.Email),
+			"id":     aws.StringValue(account.Id),
+			"name":   aws.StringValue(account.Name),
+			"status": aws.StringValue(account.Status),
 		})
 	}
-
-	return tfList
+	return result
 }
 
-func flattenRoots(apiObjects []awstypes.Root) []interface{} {
-	if len(apiObjects) == 0 {
+func flattenRoots(roots []*organizations.Root) []map[string]interface{} {
+	if len(roots) == 0 {
 		return nil
 	}
-
-	var tfList []interface{}
-
-	for _, r := range apiObjects {
-		tfList = append(tfList, map[string]interface{}{
-			names.AttrID:   aws.ToString(r.Id),
-			names.AttrName: aws.ToString(r.Name),
-			names.AttrARN:  aws.ToString(r.Arn),
+	var result []map[string]interface{}
+	for _, r := range roots {
+		result = append(result, map[string]interface{}{
+			"id":           aws.StringValue(r.Id),
+			"name":         aws.StringValue(r.Name),
+			"arn":          aws.StringValue(r.Arn),
 			"policy_types": flattenRootPolicyTypeSummaries(r.PolicyTypes),
 		})
 	}
-
-	return tfList
+	return result
 }
 
-func flattenRootPolicyTypeSummaries(apiObjects []awstypes.PolicyTypeSummary) []interface{} {
-	if len(apiObjects) == 0 {
+func flattenRootPolicyTypeSummaries(summaries []*organizations.PolicyTypeSummary) []map[string]interface{} {
+	if len(summaries) == 0 {
 		return nil
 	}
-
-	var tfList []interface{}
-
-	for _, apiObject := range apiObjects {
-		tfList = append(tfList, map[string]interface{}{
-			names.AttrStatus: apiObject.Status,
-			names.AttrType:   apiObject.Type,
+	var result []map[string]interface{}
+	for _, s := range summaries {
+		result = append(result, map[string]interface{}{
+			"status": aws.StringValue(s.Status),
+			"type":   aws.StringValue(s.Type),
 		})
 	}
-
-	return tfList
+	return result
 }
 
-func statusDefaultRootPolicyType(ctx context.Context, conn *organizations.Client, policyType awstypes.PolicyType) retry.StateRefreshFunc {
+func statusDefaultRootPolicyType(ctx context.Context, conn *organizations.Organizations, policyType string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		defaultRoot, err := findDefaultRoot(ctx, conn)
 
@@ -625,47 +586,50 @@ func statusDefaultRootPolicyType(ctx context.Context, conn *organizations.Client
 		}
 
 		for _, v := range defaultRoot.PolicyTypes {
-			if v.Type == policyType {
-				return &v, string(v.Status), nil
+			if aws.StringValue(v.Type) == policyType {
+				return v, aws.StringValue(v.Status), nil
 			}
 		}
 
-		return &awstypes.PolicyTypeSummary{}, string(policyTypeStatusDisabled), nil
+		return &organizations.PolicyTypeSummary{}, policyTypeStatusDisabled, nil
 	}
 }
 
-const policyTypeStatusDisabled awstypes.PolicyTypeStatus = "DISABLED"
+const policyTypeStatusDisabled = "DISABLED"
 
-func waitDefaultRootPolicyTypeDisabled(ctx context.Context, conn *organizations.Client, policyType awstypes.PolicyType) (*awstypes.PolicyTypeSummary, error) {
+func waitDefaultRootPolicyTypeDisabled(ctx context.Context, conn *organizations.Organizations, policyType string) error {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.PolicyTypeStatusEnabled, awstypes.PolicyTypeStatusPendingDisable),
-		Target:  enum.Slice(policyTypeStatusDisabled),
+		Pending: []string{organizations.PolicyTypeStatusEnabled, organizations.PolicyTypeStatusPendingDisable},
+		Target:  []string{policyTypeStatusDisabled},
 		Refresh: statusDefaultRootPolicyType(ctx, conn, policyType),
 		Timeout: 5 * time.Minute,
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	_, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*awstypes.PolicyTypeSummary); ok {
-		return output, err
-	}
-
-	return nil, err
+	return err
 }
 
-func waitDefaultRootPolicyTypeEnabled(ctx context.Context, conn *organizations.Client, policyType awstypes.PolicyType) (*awstypes.PolicyTypeSummary, error) {
+func waitDefaultRootPolicyTypeEnabled(ctx context.Context, conn *organizations.Organizations, policyType string) error {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(policyTypeStatusDisabled, awstypes.PolicyTypeStatusPendingEnable),
-		Target:  enum.Slice(awstypes.PolicyTypeStatusEnabled),
+		Pending: []string{policyTypeStatusDisabled, organizations.PolicyTypeStatusPendingEnable},
+		Target:  []string{organizations.PolicyTypeStatusEnabled},
 		Refresh: statusDefaultRootPolicyType(ctx, conn, policyType),
 		Timeout: 5 * time.Minute,
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	_, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*awstypes.PolicyTypeSummary); ok {
-		return output, err
+	return err
+}
+
+// DisableServicePrincipal is called from the service/ram package.
+func DisableServicePrincipal(ctx context.Context, conn *organizations.Organizations, servicePrincipal string) error {
+	input := &organizations.DisableAWSServiceAccessInput{
+		ServicePrincipal: aws.String(servicePrincipal),
 	}
 
-	return nil, err
+	_, err := conn.DisableAWSServiceAccessWithContext(ctx, input)
+
+	return err
 }

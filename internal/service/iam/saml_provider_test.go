@@ -35,18 +35,18 @@ func TestAccIAMSAMLProvider_basic(t *testing.T) {
 				Config: testAccSAMLProviderConfig_basic(rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSAMLProviderExists(ctx, resourceName),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("saml-provider/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("saml-provider/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "saml_metadata_document"),
 					resource.TestCheckResourceAttrSet(resourceName, "valid_until"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
 				Config: testAccSAMLProviderConfig_update(rName, idpEntityIdModified),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSAMLProviderExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "saml_metadata_document"),
 				),
 			},
@@ -72,11 +72,11 @@ func TestAccIAMSAMLProvider_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckSAMLProviderDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSAMLProviderConfig_tags1(rName, idpEntityId, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccSAMLProviderConfig_tags1(rName, idpEntityId, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSAMLProviderExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -85,20 +85,20 @@ func TestAccIAMSAMLProvider_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSAMLProviderConfig_tags2(rName, idpEntityId, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccSAMLProviderConfig_tags2(rName, idpEntityId, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSAMLProviderExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccSAMLProviderConfig_tags1(rName, idpEntityId, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccSAMLProviderConfig_tags1(rName, idpEntityId, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSAMLProviderExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},

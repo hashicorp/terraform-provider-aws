@@ -5,8 +5,6 @@ package ecs
 
 import (
 	"testing"
-
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestValidPlacementConstraint(t *testing.T) {
@@ -29,12 +27,12 @@ func TestValidPlacementConstraint(t *testing.T) {
 		},
 		{
 			constType: "distinctInstance",
-			constExpr: names.AttrExpression,
+			constExpr: "expression",
 			Err:       false,
 		},
 		{
 			constType: "memberOf",
-			constExpr: names.AttrExpression,
+			constExpr: "expression",
 			Err:       false,
 		},
 	}

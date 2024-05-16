@@ -36,7 +36,7 @@ func testAccAdminAccount_basic(t *testing.T) {
 				Config: testAccAdminAccountConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccAdminAccountExists(ctx, resourceName),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
+					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
 				),
 			},
 		},
@@ -62,7 +62,7 @@ func testAccAdminAccount_disappears(t *testing.T) {
 				Config: testAccAdminAccountConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccAdminAccountExists(ctx, resourceName),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
+					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffms.ResourceAdminAccount(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,

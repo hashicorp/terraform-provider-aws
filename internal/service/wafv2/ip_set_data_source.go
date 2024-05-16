@@ -6,20 +6,18 @@ package wafv2
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/wafv2"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_wafv2_ip_set", name="IP Set")
-func dataSourceIPSet() *schema.Resource {
+// @SDKDataSource("aws_wafv2_ip_set")
+func DataSourceIPSet() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceIPSetRead,
 
@@ -30,11 +28,11 @@ func dataSourceIPSet() *schema.Resource {
 					Computed: true,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
-				names.AttrARN: {
+				"arn": {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrDescription: {
+				"description": {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -42,14 +40,14 @@ func dataSourceIPSet() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrName: {
+				"name": {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				names.AttrScope: {
-					Type:             schema.TypeString,
-					Required:         true,
-					ValidateDiagFunc: enum.Validate[awstypes.Scope](),
+				"scope": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringInSlice(wafv2.Scope_Values(), false),
 				},
 			}
 		},
@@ -58,17 +56,17 @@ func dataSourceIPSet() *schema.Resource {
 
 func dataSourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
-	name := d.Get(names.AttrName).(string)
+	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
+	name := d.Get("name").(string)
 
-	var foundIpSet awstypes.IPSetSummary
+	var foundIpSet *wafv2.IPSetSummary
 	input := &wafv2.ListIPSetsInput{
-		Scope: awstypes.Scope(d.Get(names.AttrScope).(string)),
-		Limit: aws.Int32(100),
+		Scope: aws.String(d.Get("scope").(string)),
+		Limit: aws.Int64(100),
 	}
 
 	for {
-		resp, err := conn.ListIPSets(ctx, input)
+		resp, err := conn.ListIPSetsWithContext(ctx, input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading WAFv2 IPSets: %s", err)
 		}
@@ -78,26 +76,26 @@ func dataSourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		for _, ipSet := range resp.IPSets {
-			if aws.ToString(ipSet.Name) == name {
+			if ipSet != nil && aws.StringValue(ipSet.Name) == name {
 				foundIpSet = ipSet
 				break
 			}
 		}
 
-		if resp.NextMarker == nil {
+		if resp.NextMarker == nil || foundIpSet != nil {
 			break
 		}
 		input.NextMarker = resp.NextMarker
 	}
 
-	if foundIpSet.Id == nil {
+	if foundIpSet == nil {
 		return sdkdiag.AppendErrorf(diags, "WAFv2 IPSet not found for name: %s", name)
 	}
 
-	resp, err := conn.GetIPSet(ctx, &wafv2.GetIPSetInput{
+	resp, err := conn.GetIPSetWithContext(ctx, &wafv2.GetIPSetInput{
 		Id:    foundIpSet.Id,
 		Name:  foundIpSet.Name,
-		Scope: awstypes.Scope(d.Get(names.AttrScope).(string)),
+		Scope: aws.String(d.Get("scope").(string)),
 	})
 
 	if err != nil {
@@ -108,12 +106,12 @@ func dataSourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading WAFv2 IPSet")
 	}
 
-	d.SetId(aws.ToString(resp.IPSet.Id))
-	d.Set(names.AttrARN, resp.IPSet.ARN)
-	d.Set(names.AttrDescription, resp.IPSet.Description)
+	d.SetId(aws.StringValue(resp.IPSet.Id))
+	d.Set("arn", resp.IPSet.ARN)
+	d.Set("description", resp.IPSet.Description)
 	d.Set("ip_address_version", resp.IPSet.IPAddressVersion)
 
-	if err := d.Set("addresses", flex.FlattenStringValueList(resp.IPSet.Addresses)); err != nil {
+	if err := d.Set("addresses", flex.FlattenStringList(resp.IPSet.Addresses)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting addresses: %s", err)
 	}
 

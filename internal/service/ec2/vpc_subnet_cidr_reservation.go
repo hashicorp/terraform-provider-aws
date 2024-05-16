@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ec2_subnet_cidr_reservation")
@@ -37,7 +36,7 @@ func ResourceSubnetCIDRReservation() *schema.Resource {
 				subnetID := parts[0]
 				reservationID := parts[1]
 
-				d.Set(names.AttrSubnetID, subnetID)
+				d.Set("subnet_id", subnetID)
 				d.SetId(reservationID)
 				return []*schema.ResourceData{d}, nil
 			},
@@ -51,12 +50,12 @@ func ResourceSubnetCIDRReservation() *schema.Resource {
 				ValidateFunc:     verify.ValidCIDRNetworkAddress,
 				DiffSuppressFunc: suppressEqualCIDRBlockDiffs,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			names.AttrOwnerID: {
+			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -66,7 +65,7 @@ func ResourceSubnetCIDRReservation() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(ec2.SubnetCidrReservationType_Values(), false),
 			},
-			names.AttrSubnetID: {
+			"subnet_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -82,10 +81,10 @@ func resourceSubnetCIDRReservationCreate(ctx context.Context, d *schema.Resource
 	input := &ec2.CreateSubnetCidrReservationInput{
 		Cidr:            aws.String(d.Get("cidr_block").(string)),
 		ReservationType: aws.String(d.Get("reservation_type").(string)),
-		SubnetId:        aws.String(d.Get(names.AttrSubnetID).(string)),
+		SubnetId:        aws.String(d.Get("subnet_id").(string)),
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -105,7 +104,7 @@ func resourceSubnetCIDRReservationRead(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	output, err := FindSubnetCIDRReservationBySubnetIDAndReservationID(ctx, conn, d.Get(names.AttrSubnetID).(string), d.Id())
+	output, err := FindSubnetCIDRReservationBySubnetIDAndReservationID(ctx, conn, d.Get("subnet_id").(string), d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Subnet CIDR Reservation (%s) not found, removing from state", d.Id())
@@ -118,10 +117,10 @@ func resourceSubnetCIDRReservationRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	d.Set("cidr_block", output.Cidr)
-	d.Set(names.AttrDescription, output.Description)
-	d.Set(names.AttrOwnerID, output.OwnerId)
+	d.Set("description", output.Description)
+	d.Set("owner_id", output.OwnerId)
 	d.Set("reservation_type", output.ReservationType)
-	d.Set(names.AttrSubnetID, output.SubnetId)
+	d.Set("subnet_id", output.SubnetId)
 
 	return diags
 }

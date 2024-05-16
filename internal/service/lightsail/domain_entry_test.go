@@ -39,10 +39,10 @@ func TestAccLightsailDomainEntry_basic(t *testing.T) {
 				Config: testAccDomainEntryConfig_basic(domainName, domainEntryName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDomainEntryExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, domainEntryName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrTarget, "127.0.0.1"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, "A"),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
+					resource.TestCheckResourceAttr(resourceName, "name", domainEntryName),
+					resource.TestCheckResourceAttr(resourceName, "target", "127.0.0.1"),
+					resource.TestCheckResourceAttr(resourceName, "type", "A"),
 				),
 			},
 			{
@@ -57,7 +57,7 @@ func TestAccLightsailDomainEntry_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateIdFunc: testAccDomainEntryStateLegacyIdFunc(resourceName),
 				ImportStateVerify: true,
-				Check:             resource.TestCheckResourceAttr(resourceName, names.AttrID, fmt.Sprintf("%s,%s,%s,%s", domainEntryName, domainName, "A", "127.0.0.1")),
+				Check:             resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s,%s,%s,%s", domainEntryName, domainName, "A", "127.0.0.1")),
 			},
 		},
 	})
@@ -79,10 +79,10 @@ func TestAccLightsailDomainEntry_underscore(t *testing.T) {
 				Config: testAccDomainEntryConfig_basic(domainName, domainEntryName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDomainEntryExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, domainEntryName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrTarget, "127.0.0.1"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, "A"),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
+					resource.TestCheckResourceAttr(resourceName, "name", domainEntryName),
+					resource.TestCheckResourceAttr(resourceName, "target", "127.0.0.1"),
+					resource.TestCheckResourceAttr(resourceName, "type", "A"),
 				),
 			},
 			{
@@ -97,7 +97,7 @@ func TestAccLightsailDomainEntry_underscore(t *testing.T) {
 				ImportState:       true,
 				ImportStateIdFunc: testAccDomainEntryStateLegacyIdFunc(resourceName),
 				ImportStateVerify: true,
-				Check:             resource.TestCheckResourceAttr(resourceName, names.AttrID, fmt.Sprintf("%s,%s,%s,%s", domainEntryName, domainName, "A", "127.0.0.1")),
+				Check:             resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s,%s,%s,%s", domainEntryName, domainName, "A", "127.0.0.1")),
 			},
 		},
 	})
@@ -119,10 +119,10 @@ func TestAccLightsailDomainEntry_apex(t *testing.T) {
 				Config: testAccDomainEntryConfig_basic(domainName, domainEntryName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDomainEntryExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, domainEntryName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrTarget, "127.0.0.1"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, "A"),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
+					resource.TestCheckResourceAttr(resourceName, "name", domainEntryName),
+					resource.TestCheckResourceAttr(resourceName, "target", "127.0.0.1"),
+					resource.TestCheckResourceAttr(resourceName, "type", "A"),
 				),
 			},
 			{
@@ -137,7 +137,7 @@ func TestAccLightsailDomainEntry_apex(t *testing.T) {
 				ImportState:       true,
 				ImportStateIdFunc: testAccDomainEntryStateLegacyIdFunc(resourceName),
 				ImportStateVerify: true,
-				Check:             resource.TestCheckResourceAttr(resourceName, names.AttrID, fmt.Sprintf("%s,%s,%s,%s", domainEntryName, domainName, "A", "127.0.0.1")),
+				Check:             resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s,%s,%s,%s", domainEntryName, domainName, "A", "127.0.0.1")),
 			},
 		},
 	})
@@ -183,10 +183,10 @@ func TestAccLightsailDomainEntry_typeAAAA(t *testing.T) {
 				Config: testAccDomainEntryConfig_typeAAAA(domainName, domainEntryName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDomainEntryExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, domainEntryName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrTarget, "::1"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, "AAAA"),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
+					resource.TestCheckResourceAttr(resourceName, "name", domainEntryName),
+					resource.TestCheckResourceAttr(resourceName, "target", "::1"),
+					resource.TestCheckResourceAttr(resourceName, "type", "AAAA"),
 				),
 			},
 			{
@@ -201,7 +201,7 @@ func TestAccLightsailDomainEntry_typeAAAA(t *testing.T) {
 				ImportState:       true,
 				ImportStateIdFunc: testAccDomainEntryStateLegacyIdFunc(resourceName),
 				ImportStateVerify: true,
-				Check:             resource.TestCheckResourceAttr(resourceName, names.AttrID, fmt.Sprintf("%s,%s,%s,%s", domainEntryName, domainName, "AAAA", "::1")),
+				Check:             resource.TestCheckResourceAttr(resourceName, "id", fmt.Sprintf("%s,%s,%s,%s", domainEntryName, domainName, "AAAA", "::1")),
 			},
 		},
 	})
@@ -298,6 +298,6 @@ func testAccDomainEntryStateLegacyIdFunc(resourceName string) resource.ImportSta
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s_%s_%s_%s", rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes[names.AttrType], rs.Primary.Attributes[names.AttrTarget]), nil
+		return fmt.Sprintf("%s_%s_%s_%s", rs.Primary.Attributes["name"], rs.Primary.Attributes["domain_name"], rs.Primary.Attributes["type"], rs.Primary.Attributes["target"]), nil
 	}
 }

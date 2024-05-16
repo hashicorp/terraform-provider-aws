@@ -37,9 +37,9 @@ func TestAccVPCManagedPrefixListEntry_ipv4(t *testing.T) {
 				Config: testAccVPCManagedPrefixListEntryConfig_ipv4(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckManagedPrefixListEntryExists(ctx, resourceName, &entry),
-					resource.TestCheckResourceAttrPair(resourceName, "prefix_list_id", plResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "prefix_list_id", plResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "cidr", "10.0.0.0/8"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
 				),
 			},
 			{
@@ -98,9 +98,9 @@ func TestAccVPCManagedPrefixListEntry_ipv6(t *testing.T) {
 				Config: testAccVPCManagedPrefixListEntryConfig_ipv6(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckManagedPrefixListEntryExists(ctx, resourceName, &entry),
-					resource.TestCheckResourceAttrPair(resourceName, "prefix_list_id", plResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "prefix_list_id", plResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "cidr", "::/0"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
 				),
 			},
 			{
@@ -170,9 +170,9 @@ func TestAccVPCManagedPrefixListEntry_description(t *testing.T) {
 				Config: testAccVPCManagedPrefixListEntryConfig_description(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckManagedPrefixListEntryExists(ctx, resourceName, &entry),
-					resource.TestCheckResourceAttrPair(resourceName, "prefix_list_id", plResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "prefix_list_id", plResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "cidr", "10.0.0.0/8"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
+					resource.TestCheckResourceAttr(resourceName, "description", rName),
 				),
 			},
 			{

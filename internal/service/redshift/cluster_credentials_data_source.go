@@ -15,11 +15,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_redshift_cluster_credentials", name="Cluster Credentials")
-func dataSourceClusterCredentials() *schema.Resource {
+// @SDKDataSource("aws_redshift_cluster_credentials")
+func DataSourceClusterCredentials() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceClusterCredentialsRead,
 
@@ -28,7 +27,7 @@ func dataSourceClusterCredentials() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			names.AttrClusterIdentifier: {
+			"cluster_identifier": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -68,7 +67,7 @@ func dataSourceClusterCredentialsRead(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	clusterID := d.Get(names.AttrClusterIdentifier).(string)
+	clusterID := d.Get("cluster_identifier").(string)
 	input := &redshift.GetClusterCredentialsInput{
 		AutoCreate:        aws.Bool(d.Get("auto_create").(bool)),
 		ClusterIdentifier: aws.String(clusterID),

@@ -45,11 +45,11 @@ func (r *resourceAccountRegistration) Schema(ctx context.Context, req resource.S
 			"deregister_on_destroy": schema.BoolAttribute{
 				Optional: true,
 			},
-			names.AttrKMSKey: schema.StringAttribute{
+			"kms_key": schema.StringAttribute{
 				Optional: true,
 			},
-			names.AttrID: framework.IDAttribute(),
-			names.AttrStatus: schema.StringAttribute{
+			"id": framework.IDAttribute(),
+			"status": schema.StringAttribute{
 				Computed: true,
 			},
 		},
@@ -179,7 +179,7 @@ func (r *resourceAccountRegistration) Delete(ctx context.Context, req resource.D
 }
 
 func (r *resourceAccountRegistration) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 type resourceAccountRegistrationData struct {

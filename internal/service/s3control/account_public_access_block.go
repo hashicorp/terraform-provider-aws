@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_s3_account_public_access_block", name="Account Public Access Block")
@@ -36,7 +35,7 @@ func resourceAccountPublicAccessBlock() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrAccountID: {
+			"account_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -71,7 +70,7 @@ func resourceAccountPublicAccessBlockCreate(ctx context.Context, d *schema.Resou
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	accountID := meta.(*conns.AWSClient).AccountID
-	if v, ok := d.GetOk(names.AttrAccountID); ok {
+	if v, ok := d.GetOk("account_id"); ok {
 		accountID = v.(string)
 	}
 
@@ -119,7 +118,7 @@ func resourceAccountPublicAccessBlockRead(ctx context.Context, d *schema.Resourc
 		return diag.Errorf("reading S3 Account Public Access Block (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrAccountID, d.Id())
+	d.Set("account_id", d.Id())
 	d.Set("block_public_acls", output.BlockPublicAcls)
 	d.Set("block_public_policy", output.BlockPublicPolicy)
 	d.Set("ignore_public_acls", output.IgnorePublicAcls)

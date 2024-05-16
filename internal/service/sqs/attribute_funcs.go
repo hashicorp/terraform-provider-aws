@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type queueAttributeHandler struct {
@@ -83,8 +82,8 @@ func (h *queueAttributeHandler) Read(ctx context.Context, d *schema.ResourceData
 		return diag.FromErr(err)
 	}
 
-	if h.SchemaKey == names.AttrPolicy {
-		newValue, err = verify.PolicyToSet(d.Get(names.AttrPolicy).(string), newValue)
+	if h.SchemaKey == "policy" {
+		newValue, err = verify.PolicyToSet(d.Get("policy").(string), newValue)
 		if err != nil {
 			return diag.FromErr(err)
 		}

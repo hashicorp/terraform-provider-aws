@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_mq_broker_instance_type_offerings", name="Broker Instance Type Offerings")
@@ -28,12 +27,12 @@ func dataSourceBrokerInstanceTypeOfferings() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrAvailabilityZones: {
+						"availability_zones": {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrName: {
+									"name": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -48,7 +47,7 @@ func dataSourceBrokerInstanceTypeOfferings() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrStorageType: {
+						"storage_type": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -74,7 +73,7 @@ func dataSourceBrokerInstanceTypeOfferings() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			names.AttrStorageType: {
+			"storage_type": {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[types.BrokerStorageType](),
@@ -98,7 +97,7 @@ func dataSourceBrokerInstanceTypeOfferingsRead(ctx context.Context, d *schema.Re
 		input.HostInstanceType = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrStorageType); ok {
+	if v, ok := d.GetOk("storage_type"); ok {
 		input.StorageType = aws.String(v.(string))
 	}
 
@@ -137,7 +136,7 @@ func flattenBrokerInstanceOptions(bios []types.BrokerInstanceOption) []interface
 	for _, bio := range bios {
 		tfMap := map[string]interface{}{
 			"engine_type":                bio.EngineType,
-			names.AttrStorageType:        bio.StorageType,
+			"storage_type":               bio.StorageType,
 			"supported_deployment_modes": bio.SupportedDeploymentModes,
 			"supported_engine_versions":  bio.SupportedEngineVersions,
 		}
@@ -147,7 +146,7 @@ func flattenBrokerInstanceOptions(bios []types.BrokerInstanceOption) []interface
 		}
 
 		if bio.AvailabilityZones != nil {
-			tfMap[names.AttrAvailabilityZones] = flattenAvailabilityZones(bio.AvailabilityZones)
+			tfMap["availability_zones"] = flattenAvailabilityZones(bio.AvailabilityZones)
 		}
 
 		tfList = append(tfList, tfMap)
@@ -167,7 +166,7 @@ func flattenAvailabilityZones(azs []types.AvailabilityZone) []interface{} {
 		tfMap := map[string]interface{}{}
 
 		if az.Name != nil {
-			tfMap[names.AttrName] = aws.ToString(az.Name)
+			tfMap["name"] = aws.ToString(az.Name)
 		}
 
 		tfList = append(tfList, tfMap)

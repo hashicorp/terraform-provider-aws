@@ -6,43 +6,48 @@ package lambda
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_lambda_alias", Name="Alias")
-func dataSourceAlias() *schema.Resource {
+// @SDKDataSource("aws_lambda_alias")
+func DataSourceAlias() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAliasRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"function_name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"function_version": {
+
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
 			"invoke_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+
+			"description": {
 				Type:     schema.TypeString,
-				Required: true,
+				Computed: true,
+			},
+
+			"function_version": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 	}
@@ -50,20 +55,29 @@ func dataSourceAlias() *schema.Resource {
 
 func dataSourceAliasRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
-	output, err := findAliasByTwoPartKey(ctx, conn, d.Get("function_name").(string), d.Get(names.AttrName).(string))
+	functionName := d.Get("function_name").(string)
+	name := d.Get("name").(string)
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Lambda Alias: %s", err)
+	params := &lambda.GetAliasInput{
+		FunctionName: aws.String(functionName),
+		Name:         aws.String(name),
 	}
 
-	aliasARN := aws.ToString(output.AliasArn)
-	d.SetId(aliasARN)
-	d.Set(names.AttrARN, aliasARN)
-	d.Set(names.AttrDescription, output.Description)
-	d.Set("function_version", output.FunctionVersion)
-	d.Set("invoke_arn", invokeARN(meta.(*conns.AWSClient), aliasARN))
+	aliasConfiguration, err := conn.GetAliasWithContext(ctx, params)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "getting Lambda alias: %s", err)
+	}
+
+	d.SetId(aws.StringValue(aliasConfiguration.AliasArn))
+
+	d.Set("arn", aliasConfiguration.AliasArn)
+	d.Set("description", aliasConfiguration.Description)
+	d.Set("function_version", aliasConfiguration.FunctionVersion)
+
+	invokeArn := functionInvokeARN(*aliasConfiguration.AliasArn, meta)
+	d.Set("invoke_arn", invokeArn)
 
 	return diags
 }

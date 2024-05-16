@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_opensearch_package_association")
@@ -39,7 +38,7 @@ func ResourcePackageAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrDomainName: {
+			"domain_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -61,7 +60,7 @@ func resourcePackageAssociationCreate(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
-	domainName := d.Get(names.AttrDomainName).(string)
+	domainName := d.Get("domain_name").(string)
 	packageID := d.Get("package_id").(string)
 	id := fmt.Sprintf("%s-%s", domainName, packageID)
 	input := &opensearchservice.AssociatePackageInput{
@@ -88,7 +87,7 @@ func resourcePackageAssociationRead(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
-	domainName := d.Get(names.AttrDomainName).(string)
+	domainName := d.Get("domain_name").(string)
 	packageID := d.Get("package_id").(string)
 	pkgAssociation, err := FindPackageAssociationByTwoPartKey(ctx, conn, domainName, packageID)
 
@@ -102,7 +101,7 @@ func resourcePackageAssociationRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "reading OpenSearch Package Association (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrDomainName, pkgAssociation.DomainName)
+	d.Set("domain_name", pkgAssociation.DomainName)
 	d.Set("package_id", pkgAssociation.PackageID)
 	d.Set("reference_path", pkgAssociation.ReferencePath)
 
@@ -114,7 +113,7 @@ func resourcePackageAssociationDelete(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
 
 	log.Printf("[DEBUG] Deleting OpenSearch Package Association: %s", d.Id())
-	domainName := d.Get(names.AttrDomainName).(string)
+	domainName := d.Get("domain_name").(string)
 	packageID := d.Get("package_id").(string)
 	_, err := conn.DissociatePackageWithContext(ctx, &opensearchservice.DissociatePackageInput{
 		DomainName: aws.String(domainName),

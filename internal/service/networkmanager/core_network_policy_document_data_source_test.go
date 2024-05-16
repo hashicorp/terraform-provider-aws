@@ -24,7 +24,7 @@ func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_basic(t *testing.T
 			{
 				Config: testAccCoreNetworkPolicyDocumentDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_networkmanager_core_network_policy_document.test", names.AttrJSON,
+					resource.TestCheckResourceAttr("data.aws_networkmanager_core_network_policy_document.test", "json",
 						testAccPolicyDocumentExpectedJSON(),
 					),
 				),

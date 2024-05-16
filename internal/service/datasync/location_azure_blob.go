@@ -54,7 +54,7 @@ func resourceLocationAzureBlob() *schema.Resource {
 					ValidateFunc: verify.ValidARN,
 				},
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -104,7 +104,7 @@ func resourceLocationAzureBlob() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrURI: {
+			"uri": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -182,13 +182,13 @@ func resourceLocationAzureBlobRead(ctx context.Context, d *schema.ResourceData, 
 
 	d.Set("access_tier", output.AccessTier)
 	d.Set("agent_arns", output.AgentArns)
-	d.Set(names.AttrARN, output.LocationArn)
+	d.Set("arn", output.LocationArn)
 	d.Set("authentication_type", output.AuthenticationType)
 	d.Set("blob_type", output.BlobType)
 	d.Set("container_url", containerURL)
 	d.Set("sas_configuration", d.Get("sas_configuration"))
 	d.Set("subdirectory", subdirectory[strings.IndexAny(subdirectory[1:], "/")+1:])
-	d.Set(names.AttrURI, uri)
+	d.Set("uri", uri)
 
 	return diags
 }
@@ -197,7 +197,7 @@ func resourceLocationAzureBlobUpdate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &datasync.UpdateLocationAzureBlobInput{
 			LocationArn: aws.String(d.Id()),
 		}

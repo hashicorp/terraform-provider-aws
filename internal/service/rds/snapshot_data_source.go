@@ -30,7 +30,7 @@ func DataSourceSnapshot() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			names.AttrAvailabilityZone: {
+			"availability_zone": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -46,7 +46,7 @@ func DataSourceSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			names.AttrEncrypted: {
+			"encrypted": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -54,7 +54,7 @@ func DataSourceSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrEngineVersion: {
+			"engine_version": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -68,11 +68,11 @@ func DataSourceSnapshot() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			names.AttrIOPS: {
+			"iops": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			names.AttrKMSKeyID: {
+			"kms_key_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -80,7 +80,7 @@ func DataSourceSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrMostRecent: {
+			"most_recent": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -93,7 +93,7 @@ func DataSourceSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrPort: {
+			"port": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -113,16 +113,16 @@ func DataSourceSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrStorageType: {
+			"storage_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
-			names.AttrVPCID: {
+			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -170,7 +170,7 @@ func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	var snapshot *rds.DBSnapshot
 	if len(snapshots) > 1 {
-		if d.Get(names.AttrMostRecent).(bool) {
+		if d.Get("most_recent").(bool) {
 			snapshot = mostRecentDBSnapshot(snapshots)
 		} else {
 			return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more specific search criteria.")
@@ -181,30 +181,30 @@ func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.SetId(aws.StringValue(snapshot.DBSnapshotIdentifier))
 	d.Set("allocated_storage", snapshot.AllocatedStorage)
-	d.Set(names.AttrAvailabilityZone, snapshot.AvailabilityZone)
+	d.Set("availability_zone", snapshot.AvailabilityZone)
 	d.Set("db_instance_identifier", snapshot.DBInstanceIdentifier)
 	d.Set("db_snapshot_arn", snapshot.DBSnapshotArn)
 	d.Set("db_snapshot_identifier", snapshot.DBSnapshotIdentifier)
-	d.Set(names.AttrEncrypted, snapshot.Encrypted)
+	d.Set("encrypted", snapshot.Encrypted)
 	d.Set("engine", snapshot.Engine)
-	d.Set(names.AttrEngineVersion, snapshot.EngineVersion)
-	d.Set(names.AttrIOPS, snapshot.Iops)
-	d.Set(names.AttrKMSKeyID, snapshot.KmsKeyId)
+	d.Set("engine_version", snapshot.EngineVersion)
+	d.Set("iops", snapshot.Iops)
+	d.Set("kms_key_id", snapshot.KmsKeyId)
 	d.Set("license_model", snapshot.LicenseModel)
 	d.Set("option_group_name", snapshot.OptionGroupName)
 	if snapshot.OriginalSnapshotCreateTime != nil {
 		d.Set("original_snapshot_create_time", snapshot.OriginalSnapshotCreateTime.Format(time.RFC3339))
 	}
-	d.Set(names.AttrPort, snapshot.Port)
+	d.Set("port", snapshot.Port)
 	d.Set("source_db_snapshot_identifier", snapshot.SourceDBSnapshotIdentifier)
 	d.Set("source_region", snapshot.SourceRegion)
 	if snapshot.SnapshotCreateTime != nil {
 		d.Set("snapshot_create_time", snapshot.SnapshotCreateTime.Format(time.RFC3339))
 	}
 	d.Set("snapshot_type", snapshot.SnapshotType)
-	d.Set(names.AttrStatus, snapshot.Status)
-	d.Set(names.AttrStorageType, snapshot.StorageType)
-	d.Set(names.AttrVPCID, snapshot.VpcId)
+	d.Set("status", snapshot.Status)
+	d.Set("storage_type", snapshot.StorageType)
+	d.Set("vpc_id", snapshot.VpcId)
 
 	setTagsOut(ctx, snapshot.TagList)
 

@@ -49,11 +49,11 @@ func resourceFargateProfile() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrClusterName: {
+			"cluster_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -84,7 +84,7 @@ func resourceFargateProfile() *schema.Resource {
 							ForceNew: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						names.AttrNamespace: {
+						"namespace": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -93,11 +93,11 @@ func resourceFargateProfile() *schema.Resource {
 					},
 				},
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrSubnetIDs: {
+			"subnet_ids": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
@@ -114,7 +114,7 @@ func resourceFargateProfileCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
-	clusterName := d.Get(names.AttrClusterName).(string)
+	clusterName := d.Get("cluster_name").(string)
 	fargateProfileName := d.Get("fargate_profile_name").(string)
 	profileID := FargateProfileCreateResourceID(clusterName, fargateProfileName)
 	input := &eks.CreateFargateProfileInput{
@@ -123,7 +123,7 @@ func resourceFargateProfileCreate(ctx context.Context, d *schema.ResourceData, m
 		FargateProfileName:  aws.String(fargateProfileName),
 		PodExecutionRoleArn: aws.String(d.Get("pod_execution_role_arn").(string)),
 		Selectors:           expandFargateProfileSelectors(d.Get("selector").(*schema.Set).List()),
-		Subnets:             flex.ExpandStringValueSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
+		Subnets:             flex.ExpandStringValueSet(d.Get("subnet_ids").(*schema.Set)),
 		Tags:                getTagsIn(ctx),
 	}
 
@@ -172,15 +172,15 @@ func resourceFargateProfileRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading EKS Fargate Profile (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, fargateProfile.FargateProfileArn)
-	d.Set(names.AttrClusterName, fargateProfile.ClusterName)
+	d.Set("arn", fargateProfile.FargateProfileArn)
+	d.Set("cluster_name", fargateProfile.ClusterName)
 	d.Set("fargate_profile_name", fargateProfile.FargateProfileName)
 	d.Set("pod_execution_role_arn", fargateProfile.PodExecutionRoleArn)
 	if err := d.Set("selector", flattenFargateProfileSelectors(fargateProfile.Selectors)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting selector: %s", err)
 	}
-	d.Set(names.AttrStatus, fargateProfile.Status)
-	d.Set(names.AttrSubnetIDs, fargateProfile.Subnets)
+	d.Set("status", fargateProfile.Status)
+	d.Set("subnet_ids", fargateProfile.Subnets)
 
 	setTagsOut(ctx, fargateProfile.Tags)
 
@@ -203,7 +203,7 @@ func resourceFargateProfileDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	// mutex lock for creation/deletion serialization
-	mutexKey := fmt.Sprintf("%s-fargate-profiles", d.Get(names.AttrClusterName).(string))
+	mutexKey := fmt.Sprintf("%s-fargate-profiles", d.Get("cluster_name").(string))
 	conns.GlobalMutexKV.Lock(mutexKey)
 	defer conns.GlobalMutexKV.Unlock(mutexKey)
 
@@ -324,7 +324,7 @@ func expandFargateProfileSelectors(l []interface{}) []types.FargateProfileSelect
 			fargateProfileSelector.Labels = flex.ExpandStringValueMap(v)
 		}
 
-		if v, ok := m[names.AttrNamespace].(string); ok && v != "" {
+		if v, ok := m["namespace"].(string); ok && v != "" {
 			fargateProfileSelector.Namespace = aws.String(v)
 		}
 
@@ -343,8 +343,8 @@ func flattenFargateProfileSelectors(fargateProfileSelectors []types.FargateProfi
 
 	for _, fargateProfileSelector := range fargateProfileSelectors {
 		m := map[string]interface{}{
-			"labels":            fargateProfileSelector.Labels,
-			names.AttrNamespace: aws.ToString(fargateProfileSelector.Namespace),
+			"labels":    fargateProfileSelector.Labels,
+			"namespace": aws.ToString(fargateProfileSelector.Namespace),
 		}
 
 		l = append(l, m)

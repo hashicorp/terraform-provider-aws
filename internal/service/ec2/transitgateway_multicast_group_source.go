@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ec2_transit_gateway_multicast_group_source")
@@ -35,7 +34,7 @@ func ResourceTransitGatewayMulticastGroupSource() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidMulticastIPAddress,
 			},
-			names.AttrNetworkInterfaceID: {
+			"network_interface_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -56,7 +55,7 @@ func resourceTransitGatewayMulticastGroupSourceCreate(ctx context.Context, d *sc
 
 	multicastDomainID := d.Get("transit_gateway_multicast_domain_id").(string)
 	groupIPAddress := d.Get("group_ip_address").(string)
-	eniID := d.Get(names.AttrNetworkInterfaceID).(string)
+	eniID := d.Get("network_interface_id").(string)
 	id := TransitGatewayMulticastGroupSourceCreateResourceID(multicastDomainID, groupIPAddress, eniID)
 	input := &ec2.RegisterTransitGatewayMulticastGroupSourcesInput{
 		GroupIpAddress:                  aws.String(groupIPAddress),
@@ -104,7 +103,7 @@ func resourceTransitGatewayMulticastGroupSourceRead(ctx context.Context, d *sche
 	multicastGroup := outputRaw.(*ec2.TransitGatewayMulticastGroup)
 
 	d.Set("group_ip_address", multicastGroup.GroupIpAddress)
-	d.Set(names.AttrNetworkInterfaceID, multicastGroup.NetworkInterfaceId)
+	d.Set("network_interface_id", multicastGroup.NetworkInterfaceId)
 	d.Set("transit_gateway_multicast_domain_id", multicastDomainID)
 
 	return diags

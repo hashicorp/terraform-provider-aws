@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfshield "github.com/hashicorp/terraform-provider-aws/internal/service/shield"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccProactiveEngagement_basic(t *testing.T) {
@@ -41,8 +40,8 @@ func testAccProactiveEngagement_basic(t *testing.T) {
 				Config: testAccProactiveEngagementConfig_basic(rName, address1, address2, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProactiveEngagementAssociationExists(ctx, resourceName, &proactiveengagementassociation),
-					resource.TestCheckResourceAttr(resourceName, "emergency_contact.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, "emergency_contact.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 				),
 			},
 			{
@@ -75,8 +74,8 @@ func testAccProactiveEngagement_disabled(t *testing.T) {
 				Config: testAccProactiveEngagementConfig_basic(rName, address1, address2, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProactiveEngagementAssociationExists(ctx, resourceName, &proactiveengagementassociation),
-					resource.TestCheckResourceAttr(resourceName, "emergency_contact.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
+					resource.TestCheckResourceAttr(resourceName, "emergency_contact.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
 				),
 			},
 		},

@@ -115,11 +115,11 @@ func TestAccRDSGlobalCluster_basic(t *testing.T) {
 				Config: testAccGlobalClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("global-cluster:%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, ""),
+					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "rds", fmt.Sprintf("global-cluster:%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "database_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
 					resource.TestCheckResourceAttr(resourceName, "engine", "aurora-postgresql"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
+					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
 					resource.TestCheckResourceAttr(resourceName, "global_cluster_identifier", rName),
 					resource.TestMatchResourceAttr(resourceName, "global_cluster_resource_id", regexache.MustCompile(`cluster-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
@@ -174,7 +174,7 @@ func TestAccRDSGlobalCluster_databaseName(t *testing.T) {
 				Config: testAccGlobalClusterConfig_databaseName(rName, "database1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, "database1"),
+					resource.TestCheckResourceAttr(resourceName, "database_name", "database1"),
 				),
 			},
 			{
@@ -187,7 +187,7 @@ func TestAccRDSGlobalCluster_databaseName(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster2),
 					testAccCheckGlobalClusterRecreated(&globalCluster1, &globalCluster2),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, "database2"),
+					resource.TestCheckResourceAttr(resourceName, "database_name", "database2"),
 				),
 			},
 		},
@@ -250,7 +250,7 @@ func TestAccRDSGlobalCluster_EngineVersion_updateMinor(t *testing.T) {
 				Config: testAccGlobalClusterConfig_primaryMinorEngineVersionDynamic(rName, tfrds.InstanceEngineAuroraPostgreSQL, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.test", "version_actual"),
+					resource.TestCheckResourceAttrPair(resourceName, "engine_version", "data.aws_rds_engine_version.test", "version_actual"),
 				),
 			},
 			{
@@ -258,7 +258,7 @@ func TestAccRDSGlobalCluster_EngineVersion_updateMinor(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster2),
 					testAccCheckGlobalClusterNotRecreated(&globalCluster1, &globalCluster2),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.upgrade", "version_actual"),
+					resource.TestCheckResourceAttrPair(resourceName, "engine_version", "data.aws_rds_engine_version.upgrade", "version_actual"),
 				),
 			},
 			{
@@ -290,7 +290,7 @@ func TestAccRDSGlobalCluster_EngineVersion_updateMajor(t *testing.T) {
 				Config: testAccGlobalClusterConfig_primaryMajorEngineVersionDynamic(rName, tfrds.InstanceEngineAuroraMySQL, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.test", "version_actual"),
+					resource.TestCheckResourceAttrPair(resourceName, "engine_version", "data.aws_rds_engine_version.test", "version_actual"),
 				),
 			},
 			{
@@ -298,7 +298,7 @@ func TestAccRDSGlobalCluster_EngineVersion_updateMajor(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster2),
 					testAccCheckGlobalClusterNotRecreated(&globalCluster1, &globalCluster2),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.upgrade", "version_actual"),
+					resource.TestCheckResourceAttrPair(resourceName, "engine_version", "data.aws_rds_engine_version.upgrade", "version_actual"),
 				),
 			},
 			{
@@ -336,7 +336,7 @@ func TestAccRDSGlobalCluster_EngineVersion_updateMinorMultiRegion(t *testing.T) 
 				Config: testAccGlobalClusterConfig_engineVersionMinorUpgradeMultiRegionDynamic(rNameGlobal, rNamePrimary, rNameSecondary, tfrds.ClusterEngineAuroraPostgreSQL, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.test", "version_actual"),
+					resource.TestCheckResourceAttrPair(resourceName, "engine_version", "data.aws_rds_engine_version.test", "version_actual"),
 				),
 			},
 			{
@@ -344,7 +344,7 @@ func TestAccRDSGlobalCluster_EngineVersion_updateMinorMultiRegion(t *testing.T) 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster2),
 					testAccCheckGlobalClusterNotRecreated(&globalCluster1, &globalCluster2),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.upgrade", "version_actual"),
+					resource.TestCheckResourceAttrPair(resourceName, "engine_version", "data.aws_rds_engine_version.upgrade", "version_actual"),
 				),
 			},
 		},
@@ -373,7 +373,7 @@ func TestAccRDSGlobalCluster_EngineVersion_updateMajorMultiRegion(t *testing.T) 
 				Config: testAccGlobalClusterConfig_engineVersionMajorUpgradeMultiRegionDynamic(rNameGlobal, rNamePrimary, rNameSecondary, tfrds.InstanceEngineAuroraMySQL, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.test", "version_actual"),
+					resource.TestCheckResourceAttrPair(resourceName, "engine_version", "data.aws_rds_engine_version.test", "version_actual"),
 				),
 			},
 			{
@@ -381,7 +381,7 @@ func TestAccRDSGlobalCluster_EngineVersion_updateMajorMultiRegion(t *testing.T) 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster2),
 					testAccCheckGlobalClusterNotRecreated(&globalCluster1, &globalCluster2),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.upgrade", "version_actual"),
+					resource.TestCheckResourceAttrPair(resourceName, "engine_version", "data.aws_rds_engine_version.upgrade", "version_actual"),
 				),
 			},
 		},
@@ -404,7 +404,7 @@ func TestAccRDSGlobalCluster_EngineVersion_auroraMySQL(t *testing.T) {
 				Config: testAccGlobalClusterConfig_engineVersion(rName, tfrds.InstanceEngineAuroraMySQL),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.default", names.AttrVersion),
+					resource.TestCheckResourceAttrPair(resourceName, "engine_version", "data.aws_rds_engine_version.default", "version"),
 				),
 			},
 			{
@@ -432,7 +432,7 @@ func TestAccRDSGlobalCluster_EngineVersion_auroraPostgreSQL(t *testing.T) {
 				Config: testAccGlobalClusterConfig_engineVersion(rName, "aurora-postgresql"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.default", names.AttrVersion),
+					resource.TestCheckResourceAttrPair(resourceName, "engine_version", "data.aws_rds_engine_version.default", "version"),
 				),
 			},
 			{
@@ -460,7 +460,7 @@ func TestAccRDSGlobalCluster_forceDestroy(t *testing.T) {
 				Config: testAccGlobalClusterConfig_forceDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, "true"),
+					resource.TestCheckResourceAttr(resourceName, "force_destroy", "true"),
 				),
 			},
 		},
@@ -484,14 +484,14 @@ func TestAccRDSGlobalCluster_sourceDBClusterIdentifier(t *testing.T) {
 				Config: testAccGlobalClusterConfig_sourceClusterID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
-					resource.TestCheckResourceAttrPair(resourceName, "source_db_cluster_identifier", clusterResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "source_db_cluster_identifier", clusterResourceName, "arn"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "source_db_cluster_identifier"},
+				ImportStateVerifyIgnore: []string{"force_destroy", "source_db_cluster_identifier"},
 			},
 		},
 	})
@@ -514,14 +514,14 @@ func TestAccRDSGlobalCluster_SourceDBClusterIdentifier_storageEncrypted(t *testi
 				Config: testAccGlobalClusterConfig_sourceClusterIDStorageEncrypted(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
-					resource.TestCheckResourceAttrPair(resourceName, "source_db_cluster_identifier", clusterResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "source_db_cluster_identifier", clusterResourceName, "arn"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "source_db_cluster_identifier"},
+				ImportStateVerifyIgnore: []string{"force_destroy", "source_db_cluster_identifier"},
 			},
 		},
 	})

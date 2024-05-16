@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_iam_group", name="Group")
@@ -36,11 +35,11 @@ func resourceGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.StringMatch(
@@ -48,7 +47,7 @@ func resourceGroup() *schema.Resource {
 					"must only contain alphanumeric characters, hyphens, underscores, commas, periods, @ symbols, plus and equals signs",
 				),
 			},
-			names.AttrPath: {
+			"path": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "/",
@@ -60,8 +59,8 @@ func resourceGroup() *schema.Resource {
 		},
 
 		CustomizeDiff: func(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
-			if d.HasChanges(names.AttrName, names.AttrPath) {
-				return d.SetNewComputed(names.AttrARN)
+			if d.HasChanges("name", "path") {
+				return d.SetNewComputed("arn")
 			}
 
 			return nil
@@ -73,10 +72,10 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &iam.CreateGroupInput{
 		GroupName: aws.String(name),
-		Path:      aws.String(d.Get(names.AttrPath).(string)),
+		Path:      aws.String(d.Get("path").(string)),
 	}
 
 	output, err := conn.CreateGroup(ctx, input)
@@ -114,9 +113,9 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading IAM Group (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, group.Arn)
-	d.Set(names.AttrName, group.GroupName)
-	d.Set(names.AttrPath, group.Path)
+	d.Set("arn", group.Arn)
+	d.Set("name", group.GroupName)
+	d.Set("path", group.Path)
 	d.Set("unique_id", group.GroupId)
 
 	return diags
@@ -126,11 +125,11 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	o, n := d.GetChange(names.AttrName)
+	o, n := d.GetChange("name")
 	input := &iam.UpdateGroupInput{
 		GroupName:    aws.String(o.(string)),
 		NewGroupName: aws.String(n.(string)),
-		NewPath:      aws.String(d.Get(names.AttrPath).(string)),
+		NewPath:      aws.String(d.Get("path").(string)),
 	}
 
 	_, err := conn.UpdateGroup(ctx, input)

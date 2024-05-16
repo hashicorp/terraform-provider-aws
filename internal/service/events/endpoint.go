@@ -10,24 +10,21 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
-	"github.com/aws/aws-sdk-go-v2/service/eventbridge/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/eventbridge"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudwatch_event_endpoint", name="Global Endpoint")
-func resourceEndpoint() *schema.Resource {
+func ResourceEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEndpointCreate,
 		ReadWithoutTimeout:   resourceEndpointRead,
@@ -39,11 +36,11 @@ func resourceEndpoint() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 512),
@@ -67,7 +64,7 @@ func resourceEndpoint() *schema.Resource {
 					},
 				},
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -79,17 +76,17 @@ func resourceEndpoint() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrState: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          types.ReplicationStateEnabled,
-							ValidateDiagFunc: enum.Validate[types.ReplicationState](),
+						"state": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      eventbridge.ReplicationStateEnabled,
+							ValidateFunc: validation.StringInSlice(eventbridge.ReplicationState_Values(), false),
 						},
 					},
 				},
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 			},
-			names.AttrRoleARN: {
+			"role_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
@@ -112,7 +109,7 @@ func resourceEndpoint() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												names.AttrHealthCheck: {
+												"health_check": {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
@@ -145,17 +142,20 @@ func resourceEndpoint() *schema.Resource {
 }
 
 func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	const (
+		timeout = 2 * time.Minute
+	)
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsClient(ctx)
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &eventbridge.CreateEndpointInput{
 		EventBuses:    expandEndpointEventBuses(d.Get("event_bus").([]interface{})),
-		Name:          aws.String(name),
 		RoutingConfig: expandRoutingConfig(d.Get("routing_config").([]interface{})[0].(map[string]interface{})),
+		Name:          aws.String(name),
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -163,13 +163,13 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.ReplicationConfig = expandReplicationConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk(names.AttrRoleARN); ok {
+	if v, ok := d.GetOk("role_arn"); ok {
 		input.RoleArn = aws.String(v.(string))
 	}
 
 	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
-		return conn.CreateEndpoint(ctx, input)
-	}, errCodeValidationException, "cannot be assumed by principal")
+		return conn.CreateEndpointWithContext(ctx, input)
+	}, "ValidationException", "cannot be assumed by principal")
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EventBridge Global Endpoint (%s): %s", name, err)
@@ -177,9 +177,6 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.SetId(name)
 
-	const (
-		timeout = 2 * time.Minute
-	)
 	if _, err := waitEndpointCreated(ctx, conn, d.Id(), timeout); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EventBridge Global Endpoint (%s) create: %s", d.Id(), err)
 	}
@@ -189,9 +186,9 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsClient(ctx)
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
-	output, err := findEndpointByName(ctx, conn, d.Id())
+	output, err := FindEndpointByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EventBridge Global Endpoint (%s) not found, removing from state", d.Id())
@@ -203,13 +200,13 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading EventBridge Global Endpoint (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, output.Arn)
-	d.Set(names.AttrDescription, output.Description)
+	d.Set("arn", output.Arn)
+	d.Set("description", output.Description)
 	d.Set("endpoint_url", output.EndpointUrl)
 	if err := d.Set("event_bus", flattenEndpointEventBuses(output.EventBuses)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting event_bus: %s", err)
 	}
-	d.Set(names.AttrName, output.Name)
+	d.Set("name", output.Name)
 	if output.ReplicationConfig != nil {
 		if err := d.Set("replication_config", []interface{}{flattenReplicationConfig(output.ReplicationConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting replication_config: %s", err)
@@ -217,7 +214,7 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 	} else {
 		d.Set("replication_config", nil)
 	}
-	d.Set(names.AttrRoleARN, output.RoleArn)
+	d.Set("role_arn", output.RoleArn)
 	if output.RoutingConfig != nil {
 		if err := d.Set("routing_config", []interface{}{flattenRoutingConfig(output.RoutingConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting routing_config: %s", err)
@@ -230,15 +227,18 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	const (
+		timeout = 2 * time.Minute
+	)
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsClient(ctx)
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	input := &eventbridge.UpdateEndpointInput{
 		Name: aws.String(d.Id()),
 	}
 
-	if d.HasChange(names.AttrDescription) {
-		input.Description = aws.String(d.Get(names.AttrDescription).(string))
+	if d.HasChange("description") {
+		input.Description = aws.String(d.Get("description").(string))
 	}
 
 	if d.HasChange("event_bus") {
@@ -251,23 +251,20 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
-	if d.HasChange(names.AttrRoleARN) {
-		input.RoleArn = aws.String(d.Get(names.AttrRoleARN).(string))
+	if d.HasChange("role_arn") {
+		input.RoleArn = aws.String(d.Get("role_arn").(string))
 	}
 
 	if d.HasChange("routing_config") {
 		input.RoutingConfig = expandRoutingConfig(d.Get("routing_config").([]interface{})[0].(map[string]interface{}))
 	}
 
-	_, err := conn.UpdateEndpoint(ctx, input)
+	_, err := conn.UpdateEndpointWithContext(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating EventBridge Global Endpoint (%s): %s", d.Id(), err)
 	}
 
-	const (
-		timeout = 2 * time.Minute
-	)
 	if _, err := waitEndpointUpdated(ctx, conn, d.Id(), timeout); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EventBridge Global Endpoint (%s) update: %s", d.Id(), err)
 	}
@@ -276,15 +273,18 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	const (
+		timeout = 2 * time.Minute
+	)
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsClient(ctx)
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	log.Printf("[INFO] Deleting EventBridge Global Endpoint: %s", d.Id())
-	_, err := conn.DeleteEndpoint(ctx, &eventbridge.DeleteEndpointInput{
+	_, err := conn.DeleteEndpointWithContext(ctx, &eventbridge.DeleteEndpointInput{
 		Name: aws.String(d.Id()),
 	})
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
 		return diags
 	}
 
@@ -292,9 +292,6 @@ func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "deleting EventBridge Global Endpoint (%s): %s", d.Id(), err)
 	}
 
-	const (
-		timeout = 2 * time.Minute
-	)
 	if _, err := waitEndpointDeleted(ctx, conn, d.Id(), timeout); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EventBridge Global Endpoint (%s) delete: %s", d.Id(), err)
 	}
@@ -302,14 +299,14 @@ func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func findEndpointByName(ctx context.Context, conn *eventbridge.Client, name string) (*eventbridge.DescribeEndpointOutput, error) {
+func FindEndpointByName(ctx context.Context, conn *eventbridge.EventBridge, name string) (*eventbridge.DescribeEndpointOutput, error) {
 	input := &eventbridge.DescribeEndpointInput{
 		Name: aws.String(name),
 	}
 
-	output, err := conn.DescribeEndpoint(ctx, input)
+	output, err := conn.DescribeEndpointWithContext(ctx, input)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -327,9 +324,9 @@ func findEndpointByName(ctx context.Context, conn *eventbridge.Client, name stri
 	return output, nil
 }
 
-func statusEndpointState(ctx context.Context, conn *eventbridge.Client, name string) retry.StateRefreshFunc {
+func statusEndpointState(ctx context.Context, conn *eventbridge.EventBridge, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findEndpointByName(ctx, conn, name)
+		output, err := FindEndpointByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -339,14 +336,14 @@ func statusEndpointState(ctx context.Context, conn *eventbridge.Client, name str
 			return nil, "", err
 		}
 
-		return output, string(output.State), nil
+		return output, aws.StringValue(output.State), nil
 	}
 }
 
-func waitEndpointCreated(ctx context.Context, conn *eventbridge.Client, name string, timeout time.Duration) (*eventbridge.DescribeEndpointOutput, error) {
+func waitEndpointCreated(ctx context.Context, conn *eventbridge.EventBridge, name string, timeout time.Duration) (*eventbridge.DescribeEndpointOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(types.EndpointStateCreating),
-		Target:  enum.Slice(types.EndpointStateActive),
+		Pending: []string{eventbridge.EndpointStateCreating},
+		Target:  []string{eventbridge.EndpointStateActive},
 		Refresh: statusEndpointState(ctx, conn, name),
 		Timeout: timeout,
 	}
@@ -354,7 +351,7 @@ func waitEndpointCreated(ctx context.Context, conn *eventbridge.Client, name str
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*eventbridge.DescribeEndpointOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StateReason)))
 
 		return output, err
 	}
@@ -362,10 +359,10 @@ func waitEndpointCreated(ctx context.Context, conn *eventbridge.Client, name str
 	return nil, err
 }
 
-func waitEndpointUpdated(ctx context.Context, conn *eventbridge.Client, name string, timeout time.Duration) (*eventbridge.DescribeEndpointOutput, error) {
+func waitEndpointUpdated(ctx context.Context, conn *eventbridge.EventBridge, name string, timeout time.Duration) (*eventbridge.DescribeEndpointOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(types.EndpointStateUpdating),
-		Target:  enum.Slice(types.EndpointStateActive),
+		Pending: []string{eventbridge.EndpointStateUpdating},
+		Target:  []string{eventbridge.EndpointStateActive},
 		Refresh: statusEndpointState(ctx, conn, name),
 		Timeout: timeout,
 	}
@@ -373,7 +370,7 @@ func waitEndpointUpdated(ctx context.Context, conn *eventbridge.Client, name str
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*eventbridge.DescribeEndpointOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StateReason)))
 
 		return output, err
 	}
@@ -381,9 +378,9 @@ func waitEndpointUpdated(ctx context.Context, conn *eventbridge.Client, name str
 	return nil, err
 }
 
-func waitEndpointDeleted(ctx context.Context, conn *eventbridge.Client, name string, timeout time.Duration) (*eventbridge.DescribeEndpointOutput, error) {
+func waitEndpointDeleted(ctx context.Context, conn *eventbridge.EventBridge, name string, timeout time.Duration) (*eventbridge.DescribeEndpointOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(types.EndpointStateDeleting),
+		Pending: []string{eventbridge.EndpointStateDeleting},
 		Target:  []string{},
 		Refresh: statusEndpointState(ctx, conn, name),
 		Timeout: timeout,
@@ -392,7 +389,7 @@ func waitEndpointDeleted(ctx context.Context, conn *eventbridge.Client, name str
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*eventbridge.DescribeEndpointOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateReason)))
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StateReason)))
 
 		return output, err
 	}
@@ -400,12 +397,12 @@ func waitEndpointDeleted(ctx context.Context, conn *eventbridge.Client, name str
 	return nil, err
 }
 
-func expandEndpointEventBus(tfMap map[string]interface{}) *types.EndpointEventBus {
+func expandEndpointEventBus(tfMap map[string]interface{}) *eventbridge.EndpointEventBus {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &types.EndpointEventBus{}
+	apiObject := &eventbridge.EndpointEventBus{}
 
 	if v, ok := tfMap["event_bus_arn"].(string); ok && v != "" {
 		apiObject.EventBusArn = aws.String(v)
@@ -414,12 +411,12 @@ func expandEndpointEventBus(tfMap map[string]interface{}) *types.EndpointEventBu
 	return apiObject
 }
 
-func expandEndpointEventBuses(tfList []interface{}) []types.EndpointEventBus {
+func expandEndpointEventBuses(tfList []interface{}) []*eventbridge.EndpointEventBus {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []types.EndpointEventBus
+	var apiObjects []*eventbridge.EndpointEventBus
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -434,32 +431,32 @@ func expandEndpointEventBuses(tfList []interface{}) []types.EndpointEventBus {
 			continue
 		}
 
-		apiObjects = append(apiObjects, *apiObject)
+		apiObjects = append(apiObjects, apiObject)
 	}
 
 	return apiObjects
 }
 
-func expandReplicationConfig(tfMap map[string]interface{}) *types.ReplicationConfig {
+func expandReplicationConfig(tfMap map[string]interface{}) *eventbridge.ReplicationConfig {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &types.ReplicationConfig{}
+	apiObject := &eventbridge.ReplicationConfig{}
 
-	if v, ok := tfMap[names.AttrState].(string); ok && v != "" {
-		apiObject.State = types.ReplicationState(v)
+	if v, ok := tfMap["state"].(string); ok && v != "" {
+		apiObject.State = aws.String(v)
 	}
 
 	return apiObject
 }
 
-func expandRoutingConfig(tfMap map[string]interface{}) *types.RoutingConfig {
+func expandRoutingConfig(tfMap map[string]interface{}) *eventbridge.RoutingConfig {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &types.RoutingConfig{}
+	apiObject := &eventbridge.RoutingConfig{}
 
 	if v, ok := tfMap["failover_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.FailoverConfig = expandFailoverConfig(v[0].(map[string]interface{}))
@@ -468,12 +465,12 @@ func expandRoutingConfig(tfMap map[string]interface{}) *types.RoutingConfig {
 	return apiObject
 }
 
-func expandFailoverConfig(tfMap map[string]interface{}) *types.FailoverConfig {
+func expandFailoverConfig(tfMap map[string]interface{}) *eventbridge.FailoverConfig {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &types.FailoverConfig{}
+	apiObject := &eventbridge.FailoverConfig{}
 
 	if v, ok := tfMap["primary"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.Primary = expandPrimary(v[0].(map[string]interface{}))
@@ -486,26 +483,26 @@ func expandFailoverConfig(tfMap map[string]interface{}) *types.FailoverConfig {
 	return apiObject
 }
 
-func expandPrimary(tfMap map[string]interface{}) *types.Primary {
+func expandPrimary(tfMap map[string]interface{}) *eventbridge.Primary {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &types.Primary{}
+	apiObject := &eventbridge.Primary{}
 
-	if v, ok := tfMap[names.AttrHealthCheck].(string); ok && v != "" {
+	if v, ok := tfMap["health_check"].(string); ok && v != "" {
 		apiObject.HealthCheck = aws.String(v)
 	}
 
 	return apiObject
 }
 
-func expandSecondary(tfMap map[string]interface{}) *types.Secondary {
+func expandSecondary(tfMap map[string]interface{}) *eventbridge.Secondary {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &types.Secondary{}
+	apiObject := &eventbridge.Secondary{}
 
 	if v, ok := tfMap["route"].(string); ok && v != "" {
 		apiObject.Route = aws.String(v)
@@ -514,7 +511,7 @@ func expandSecondary(tfMap map[string]interface{}) *types.Secondary {
 	return apiObject
 }
 
-func flattenEndpointEventBus(apiObject *types.EndpointEventBus) map[string]interface{} {
+func flattenEndpointEventBus(apiObject *eventbridge.EndpointEventBus) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -522,13 +519,13 @@ func flattenEndpointEventBus(apiObject *types.EndpointEventBus) map[string]inter
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.EventBusArn; v != nil {
-		tfMap["event_bus_arn"] = aws.ToString(v)
+		tfMap["event_bus_arn"] = aws.StringValue(v)
 	}
 
 	return tfMap
 }
 
-func flattenEndpointEventBuses(apiObjects []types.EndpointEventBus) []interface{} {
+func flattenEndpointEventBuses(apiObjects []*eventbridge.EndpointEventBus) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -536,25 +533,31 @@ func flattenEndpointEventBuses(apiObjects []types.EndpointEventBus) []interface{
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		tfList = append(tfList, flattenEndpointEventBus(&apiObject))
+		if apiObject == nil {
+			continue
+		}
+
+		tfList = append(tfList, flattenEndpointEventBus(apiObject))
 	}
 
 	return tfList
 }
 
-func flattenReplicationConfig(apiObject *types.ReplicationConfig) map[string]interface{} {
+func flattenReplicationConfig(apiObject *eventbridge.ReplicationConfig) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
-		names.AttrState: apiObject.State,
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.State; v != nil {
+		tfMap["state"] = aws.StringValue(v)
 	}
 
 	return tfMap
 }
 
-func flattenRoutingConfig(apiObject *types.RoutingConfig) map[string]interface{} {
+func flattenRoutingConfig(apiObject *eventbridge.RoutingConfig) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -568,7 +571,7 @@ func flattenRoutingConfig(apiObject *types.RoutingConfig) map[string]interface{}
 	return tfMap
 }
 
-func flattenFailoverConfig(apiObject *types.FailoverConfig) map[string]interface{} {
+func flattenFailoverConfig(apiObject *eventbridge.FailoverConfig) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -586,7 +589,7 @@ func flattenFailoverConfig(apiObject *types.FailoverConfig) map[string]interface
 	return tfMap
 }
 
-func flattenPrimary(apiObject *types.Primary) map[string]interface{} {
+func flattenPrimary(apiObject *eventbridge.Primary) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -594,13 +597,13 @@ func flattenPrimary(apiObject *types.Primary) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.HealthCheck; v != nil {
-		tfMap[names.AttrHealthCheck] = aws.ToString(v)
+		tfMap["health_check"] = aws.StringValue(v)
 	}
 
 	return tfMap
 }
 
-func flattenSecondary(apiObject *types.Secondary) map[string]interface{} {
+func flattenSecondary(apiObject *eventbridge.Secondary) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -608,7 +611,7 @@ func flattenSecondary(apiObject *types.Secondary) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Route; v != nil {
-		tfMap["route"] = aws.ToString(v)
+		tfMap["route"] = aws.StringValue(v)
 	}
 
 	return tfMap

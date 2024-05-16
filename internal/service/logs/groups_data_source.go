@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_cloudwatch_log_groups")
@@ -22,7 +21,7 @@ func dataSourceGroups() *schema.Resource {
 		ReadWithoutTimeout: dataSourceGroupsRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARNs: {
+			"arns": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -73,7 +72,7 @@ func dataSourceGroupsRead(ctx context.Context, d *schema.ResourceData, meta inte
 		logGroupNames = append(logGroupNames, aws.ToString(r.LogGroupName))
 	}
 
-	d.Set(names.AttrARNs, arns)
+	d.Set("arns", arns)
 	d.Set("log_group_names", logGroupNames)
 
 	return diags

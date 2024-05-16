@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_config_configuration_recorder_status", name="Configuration Recorder Status")
@@ -37,7 +36,7 @@ func resourceConfigurationRecorderStatus() *schema.Resource {
 				Type:     schema.TypeBool,
 				Required: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -49,7 +48,7 @@ func resourceConfigurationRecorderStatusPut(ctx context.Context, d *schema.Resou
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 
 	if d.HasChange("is_enabled") {
 		if d.Get("is_enabled").(bool) {
@@ -97,7 +96,7 @@ func resourceConfigurationRecorderStatusRead(ctx context.Context, d *schema.Reso
 	}
 
 	d.Set("is_enabled", recorderStatus.Recording)
-	d.Set(names.AttrName, d.Id())
+	d.Set("name", d.Id())
 
 	return diags
 }

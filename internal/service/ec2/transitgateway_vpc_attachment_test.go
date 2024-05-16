@@ -46,12 +46,12 @@ func testAccTransitGatewayVPCAttachment_basic(t *testing.T, semaphore tfsync.Sem
 					testAccCheckTransitGatewayVPCAttachmentExists(ctx, resourceName, &transitGatewayVpcAttachment1),
 					resource.TestCheckResourceAttr(resourceName, "dns_support", ec2.DnsSupportValueEnable),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_support", ec2.Ipv6SupportValueDisable),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_association", "true"),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_default_route_table_propagation", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayID, transitGatewayResourceName, names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, vpcResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", transitGatewayResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpcResourceName, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_owner_id"),
 				),
 			},
@@ -265,7 +265,7 @@ func testAccTransitGatewayVPCAttachment_SubnetIDs(t *testing.T, semaphore tfsync
 				Config: testAccTransitGatewayVPCAttachmentConfig_subnetIDs2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayVPCAttachmentExists(ctx, resourceName, &transitGatewayVpcAttachment1),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 				),
 			},
 			{
@@ -278,7 +278,7 @@ func testAccTransitGatewayVPCAttachment_SubnetIDs(t *testing.T, semaphore tfsync
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayVPCAttachmentExists(ctx, resourceName, &transitGatewayVpcAttachment2),
 					testAccCheckTransitGatewayVPCAttachmentNotRecreated(&transitGatewayVpcAttachment1, &transitGatewayVpcAttachment2),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
 				),
 			},
 			{
@@ -286,7 +286,7 @@ func testAccTransitGatewayVPCAttachment_SubnetIDs(t *testing.T, semaphore tfsync
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayVPCAttachmentExists(ctx, resourceName, &transitGatewayVpcAttachment3),
 					testAccCheckTransitGatewayVPCAttachmentNotRecreated(&transitGatewayVpcAttachment2, &transitGatewayVpcAttachment3),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 				),
 			},
 		},
@@ -310,11 +310,11 @@ func testAccTransitGatewayVPCAttachment_tags(t *testing.T, semaphore tfsync.Sema
 		CheckDestroy:             testAccCheckTransitGatewayVPCAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayVPCAttachmentConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccTransitGatewayVPCAttachmentConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayVPCAttachmentExists(ctx, resourceName, &transitGatewayVpcAttachment1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -323,22 +323,22 @@ func testAccTransitGatewayVPCAttachment_tags(t *testing.T, semaphore tfsync.Sema
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTransitGatewayVPCAttachmentConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccTransitGatewayVPCAttachmentConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayVPCAttachmentExists(ctx, resourceName, &transitGatewayVpcAttachment2),
 					testAccCheckTransitGatewayVPCAttachmentNotRecreated(&transitGatewayVpcAttachment1, &transitGatewayVpcAttachment2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccTransitGatewayVPCAttachmentConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccTransitGatewayVPCAttachmentConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayVPCAttachmentExists(ctx, resourceName, &transitGatewayVpcAttachment3),
 					testAccCheckTransitGatewayVPCAttachmentNotRecreated(&transitGatewayVpcAttachment2, &transitGatewayVpcAttachment3),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},

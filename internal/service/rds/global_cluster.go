@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_rds_global_cluster")
@@ -44,11 +43,11 @@ func ResourceGlobalCluster() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDatabaseName: {
+			"database_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -66,7 +65,7 @@ func ResourceGlobalCluster() *schema.Resource {
 				ConflictsWith: []string{"source_db_cluster_identifier"},
 				ValidateFunc:  validation.StringInSlice(GlobalClusterEngine_Values(), false),
 			},
-			names.AttrEngineVersion: {
+			"engine_version": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -75,7 +74,7 @@ func ResourceGlobalCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrForceDestroy: {
+			"force_destroy": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -111,7 +110,7 @@ func ResourceGlobalCluster() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"engine"},
-				RequiredWith:  []string{names.AttrForceDestroy},
+				RequiredWith:  []string{"force_destroy"},
 			},
 			"storage_encrypted": {
 				Type:     schema.TypeBool,
@@ -132,7 +131,7 @@ func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, me
 		GlobalClusterIdentifier: aws.String(globalClusterID),
 	}
 
-	if v, ok := d.GetOk(names.AttrDatabaseName); ok {
+	if v, ok := d.GetOk("database_name"); ok {
 		input.DatabaseName = aws.String(v.(string))
 	}
 
@@ -144,7 +143,7 @@ func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, me
 		input.Engine = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrEngineVersion); ok {
+	if v, ok := d.GetOk("engine_version"); ok {
 		input.EngineVersion = aws.String(v.(string))
 	}
 
@@ -194,8 +193,8 @@ func resourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading RDS Global Cluster (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, globalCluster.GlobalClusterArn)
-	d.Set(names.AttrDatabaseName, globalCluster.DatabaseName)
+	d.Set("arn", globalCluster.GlobalClusterArn)
+	d.Set("database_name", globalCluster.DatabaseName)
 	d.Set("deletion_protection", globalCluster.DeletionProtection)
 	d.Set("engine", globalCluster.Engine)
 	d.Set("global_cluster_identifier", globalCluster.GlobalClusterIdentifier)
@@ -205,7 +204,7 @@ func resourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("global_cluster_resource_id", globalCluster.GlobalClusterResourceId)
 	d.Set("storage_encrypted", globalCluster.StorageEncrypted)
 
-	oldEngineVersion := d.Get(names.AttrEngineVersion).(string)
+	oldEngineVersion := d.Get("engine_version").(string)
 	newEngineVersion := aws.StringValue(globalCluster.EngineVersion)
 
 	// For example a configured engine_version of "5.6.10a" and a returned engine_version of "5.6.global_10a".
@@ -214,10 +213,10 @@ func resourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta
 		oldParts[0] == newParts[0] &&
 		oldParts[1] == newParts[1] &&
 		strings.HasSuffix(newParts[2], oldParts[2]) {
-		d.Set(names.AttrEngineVersion, oldEngineVersion)
+		d.Set("engine_version", oldEngineVersion)
 		d.Set("engine_version_actual", newEngineVersion)
 	} else {
-		d.Set(names.AttrEngineVersion, newEngineVersion)
+		d.Set("engine_version", newEngineVersion)
 		d.Set("engine_version_actual", newEngineVersion)
 	}
 
@@ -233,7 +232,7 @@ func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 		GlobalClusterIdentifier: aws.String(d.Id()),
 	}
 
-	if d.HasChange(names.AttrEngineVersion) {
+	if d.HasChange("engine_version") {
 		if err := globalClusterUpgradeEngineVersion(ctx, d, meta, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating RDS Global Cluster (%s): %s", d.Id(), err)
 		}
@@ -262,7 +261,7 @@ func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 	deadline := tfresource.NewDeadline(d.Timeout(schema.TimeoutDelete))
 
-	if d.Get(names.AttrForceDestroy).(bool) {
+	if d.Get("force_destroy").(bool) {
 		log.Printf("[DEBUG] Removing cluster members from RDS Global Cluster: %s", d.Id())
 
 		// The writer cluster must be removed last
@@ -553,12 +552,12 @@ func waitForGlobalClusterRemoval(ctx context.Context, conn *rds.RDS, dbClusterAR
 // IMPORTANT: Altering the error handling in `globalClusterUpgradeMajorEngineVersion` can disrupt the
 // logic, including the handling of errors that signify the need for a minor version upgrade.
 func globalClusterUpgradeEngineVersion(ctx context.Context, d *schema.ResourceData, meta interface{}, timeout time.Duration) error {
-	log.Printf("[DEBUG] Upgrading RDS Global Cluster (%s) engine version: %s", d.Id(), d.Get(names.AttrEngineVersion))
+	log.Printf("[DEBUG] Upgrading RDS Global Cluster (%s) engine version: %s", d.Id(), d.Get("engine_version"))
 
-	err := globalClusterUpgradeMajorEngineVersion(ctx, meta, d.Id(), d.Get(names.AttrEngineVersion).(string), timeout)
+	err := globalClusterUpgradeMajorEngineVersion(ctx, meta, d.Id(), d.Get("engine_version").(string), timeout)
 
 	if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "only supports Major Version Upgrades") {
-		err = globalClusterUpgradeMinorEngineVersion(ctx, meta, d.Get("global_cluster_members").(*schema.Set), d.Id(), d.Get(names.AttrEngineVersion).(string), timeout)
+		err = globalClusterUpgradeMinorEngineVersion(ctx, meta, d.Get("global_cluster_members").(*schema.Set), d.Id(), d.Get("engine_version").(string), timeout)
 
 		if err != nil {
 			return fmt.Errorf("while upgrading minor version of RDS Global Cluster (%s): %w", d.Id(), err)

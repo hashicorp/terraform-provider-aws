@@ -39,7 +39,7 @@ func ResourceCachediSCSIVolume() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -58,7 +58,7 @@ func ResourceCachediSCSIVolume() *schema.Resource {
 				Computed: true,
 			},
 			// Poor API naming: this accepts the IP address of the network interface
-			names.AttrNetworkInterfaceID: {
+			"network_interface_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -67,7 +67,7 @@ func ResourceCachediSCSIVolume() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			names.AttrSnapshotID: {
+			"snapshot_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -78,7 +78,7 @@ func ResourceCachediSCSIVolume() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			names.AttrTargetARN: {
+			"target_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -107,7 +107,7 @@ func ResourceCachediSCSIVolume() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			names.AttrKMSKey: {
+			"kms_key": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -127,13 +127,13 @@ func resourceCachediSCSIVolumeCreate(ctx context.Context, d *schema.ResourceData
 	input := &storagegateway.CreateCachediSCSIVolumeInput{
 		ClientToken:        aws.String(id.UniqueId()),
 		GatewayARN:         aws.String(d.Get("gateway_arn").(string)),
-		NetworkInterfaceId: aws.String(d.Get(names.AttrNetworkInterfaceID).(string)),
+		NetworkInterfaceId: aws.String(d.Get("network_interface_id").(string)),
 		TargetName:         aws.String(d.Get("target_name").(string)),
 		VolumeSizeInBytes:  aws.Int64(int64(d.Get("volume_size_in_bytes").(int))),
 		Tags:               getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk(names.AttrSnapshotID); ok {
+	if v, ok := d.GetOk("snapshot_id"); ok {
 		input.SnapshotId = aws.String(v.(string))
 	}
 
@@ -141,7 +141,7 @@ func resourceCachediSCSIVolumeCreate(ctx context.Context, d *schema.ResourceData
 		input.SourceVolumeARN = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrKMSKey); ok {
+	if v, ok := d.GetOk("kms_key"); ok {
 		input.KMSKey = aws.String(v.(string))
 	}
 
@@ -189,12 +189,12 @@ func resourceCachediSCSIVolumeRead(ctx context.Context, d *schema.ResourceData, 
 	volume := output.CachediSCSIVolumes[0]
 
 	arn := aws.StringValue(volume.VolumeARN)
-	d.Set(names.AttrARN, arn)
-	d.Set(names.AttrSnapshotID, volume.SourceSnapshotId)
+	d.Set("arn", arn)
+	d.Set("snapshot_id", volume.SourceSnapshotId)
 	d.Set("volume_arn", arn)
 	d.Set("volume_id", volume.VolumeId)
 	d.Set("volume_size_in_bytes", volume.VolumeSizeInBytes)
-	d.Set(names.AttrKMSKey, volume.KMSKey)
+	d.Set("kms_key", volume.KMSKey)
 	if volume.KMSKey != nil {
 		d.Set("kms_encrypted", true)
 	} else {
@@ -204,11 +204,11 @@ func resourceCachediSCSIVolumeRead(ctx context.Context, d *schema.ResourceData, 
 	if volume.VolumeiSCSIAttributes != nil {
 		d.Set("chap_enabled", volume.VolumeiSCSIAttributes.ChapEnabled)
 		d.Set("lun_number", volume.VolumeiSCSIAttributes.LunNumber)
-		d.Set(names.AttrNetworkInterfaceID, volume.VolumeiSCSIAttributes.NetworkInterfaceId)
+		d.Set("network_interface_id", volume.VolumeiSCSIAttributes.NetworkInterfaceId)
 		d.Set("network_interface_port", volume.VolumeiSCSIAttributes.NetworkInterfacePort)
 
 		targetARN := aws.StringValue(volume.VolumeiSCSIAttributes.TargetARN)
-		d.Set(names.AttrTargetARN, targetARN)
+		d.Set("target_arn", targetARN)
 
 		gatewayARN, targetName, err := ParseVolumeGatewayARNAndTargetNameFromARN(targetARN)
 		if err != nil {

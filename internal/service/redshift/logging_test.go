@@ -47,9 +47,9 @@ func TestAccRedshiftLogging_basic(t *testing.T) {
 				Config: testAccLoggingConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingExists(ctx, resourceName, &log),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrClusterIdentifier, clusterResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "cluster_identifier", clusterResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_type", string(types.LogDestinationTypeCloudwatch)),
-					resource.TestCheckResourceAttr(resourceName, "log_exports.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "log_exports.#", "3"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "log_exports.*", string(tfredshift.LogExportsConnectionLog)),
 					resource.TestCheckTypeSetElemAttr(resourceName, "log_exports.*", string(tfredshift.LogExportsUserActivityLog)),
 					resource.TestCheckTypeSetElemAttr(resourceName, "log_exports.*", string(tfredshift.LogExportsUserLog)),
@@ -155,10 +155,10 @@ func TestAccRedshiftLogging_s3(t *testing.T) {
 				Config: testAccLoggingConfig_s3(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingExists(ctx, resourceName, &log),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrClusterIdentifier, clusterResourceName, names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucketName, bucketResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "cluster_identifier", clusterResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "bucket_name", bucketResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_type", string(types.LogDestinationTypeS3)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrS3KeyPrefix, "testprefix/"),
+					resource.TestCheckResourceAttr(resourceName, "s3_key_prefix", "testprefix/"),
 				),
 			},
 			{

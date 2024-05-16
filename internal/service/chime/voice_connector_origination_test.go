@@ -37,10 +37,10 @@ func testAccVoiceConnectorOrigination_basic(t *testing.T) {
 				Config: testAccVoiceConnectorOriginationConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorOriginationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "route.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
-						names.AttrProtocol: "TCP",
-						names.AttrPriority: acctest.Ct1,
+						"protocol": "TCP",
+						"priority": "1",
 					}),
 				),
 			},
@@ -97,22 +97,22 @@ func testAccVoiceConnectorOrigination_update(t *testing.T) {
 				Config: testAccVoiceConnectorOriginationConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorOriginationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "route.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
 				),
 			},
 			{
 				Config: testAccVoiceConnectorOriginationConfig_updated(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorOriginationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "route.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
-						names.AttrProtocol: "TCP",
-						names.AttrPort:     "5060",
-						names.AttrPriority: acctest.Ct1,
+						"protocol": "TCP",
+						"port":     "5060",
+						"priority": "1",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
-						names.AttrProtocol: "UDP",
-						names.AttrPriority: acctest.Ct2,
+						"protocol": "UDP",
+						"priority": "2",
 					}),
 				),
 			},

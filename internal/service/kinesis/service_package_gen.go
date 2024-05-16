@@ -46,7 +46,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_kinesis_stream",
 			Name:     "Stream",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrName,
+				IdentifierAttribute: "name",
 			},
 		},
 		{

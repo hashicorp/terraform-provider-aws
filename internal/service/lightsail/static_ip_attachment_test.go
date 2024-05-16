@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflightsail "github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccLightsailStaticIPAttachment_basic(t *testing.T) {
@@ -37,7 +36,7 @@ func TestAccLightsailStaticIPAttachment_basic(t *testing.T) {
 				Config: testAccStaticIPAttachmentConfig_basic(staticIpName, instanceName, keypairName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStaticIPAttachmentExists(ctx, "aws_lightsail_static_ip_attachment.test"),
-					resource.TestCheckResourceAttrSet("aws_lightsail_static_ip_attachment.test", names.AttrIPAddress),
+					resource.TestCheckResourceAttrSet("aws_lightsail_static_ip_attachment.test", "ip_address"),
 				),
 			},
 		},

@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_worklink_website_certificate_authority_association")
@@ -38,12 +37,12 @@ func ResourceWebsiteCertificateAuthorityAssociation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrCertificate: {
+			"certificate": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrDisplayName: {
+			"display_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -63,10 +62,10 @@ func resourceWebsiteCertificateAuthorityAssociationCreate(ctx context.Context, d
 
 	input := &worklink.AssociateWebsiteCertificateAuthorityInput{
 		FleetArn:    aws.String(d.Get("fleet_arn").(string)),
-		Certificate: aws.String(d.Get(names.AttrCertificate).(string)),
+		Certificate: aws.String(d.Get("certificate").(string)),
 	}
 
-	if v, ok := d.GetOk(names.AttrDisplayName); ok {
+	if v, ok := d.GetOk("display_name"); ok {
 		input.DisplayName = aws.String(v.(string))
 	}
 
@@ -106,8 +105,8 @@ func resourceWebsiteCertificateAuthorityAssociationRead(ctx context.Context, d *
 
 	d.Set("website_ca_id", websiteCaID)
 	d.Set("fleet_arn", fleetArn)
-	d.Set(names.AttrCertificate, resp.Certificate)
-	d.Set(names.AttrDisplayName, resp.DisplayName)
+	d.Set("certificate", resp.Certificate)
+	d.Set("display_name", resp.DisplayName)
 
 	return diags
 }

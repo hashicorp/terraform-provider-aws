@@ -39,10 +39,10 @@ func TestAccServiceDiscoveryPublicDNSNamespace_basic(t *testing.T) {
 				Config: testAccPublicDNSNamespaceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPublicDNSNamespaceExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "servicediscovery", regexache.MustCompile(`namespace/.+`)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "servicediscovery", regexache.MustCompile(`namespace/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "hosted_zone"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -100,14 +100,14 @@ func TestAccServiceDiscoveryPublicDNSNamespace_description(t *testing.T) {
 				Config: testAccPublicDNSNamespaceConfig_description(rName, "desc1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPublicDNSNamespaceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "desc1"),
+					resource.TestCheckResourceAttr(resourceName, "description", "desc1"),
 				),
 			},
 			{
 				Config: testAccPublicDNSNamespaceConfig_description(rName, "desc2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPublicDNSNamespaceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "desc2"),
+					resource.TestCheckResourceAttr(resourceName, "description", "desc2"),
 				),
 			},
 		},
@@ -130,11 +130,11 @@ func TestAccServiceDiscoveryPublicDNSNamespace_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckPublicDNSNamespaceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPublicDNSNamespaceConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccPublicDNSNamespaceConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPublicDNSNamespaceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -143,20 +143,20 @@ func TestAccServiceDiscoveryPublicDNSNamespace_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccPublicDNSNamespaceConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccPublicDNSNamespaceConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPublicDNSNamespaceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccPublicDNSNamespaceConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccPublicDNSNamespaceConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPublicDNSNamespaceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},

@@ -40,7 +40,7 @@ func ResourceNotebookInstance() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ForceNewIfChange(names.AttrVolumeSize, func(_ context.Context, old, new, meta interface{}) bool {
+			customdiff.ForceNewIfChange("volume_size", func(_ context.Context, old, new, meta interface{}) bool {
 				return new.(int) < old.(int)
 			}),
 			verify.SetTagsDiff,
@@ -61,7 +61,7 @@ func ResourceNotebookInstance() *schema.Resource {
 				MaxItems: 3,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -92,12 +92,12 @@ func ResourceNotebookInstance() *schema.Resource {
 					},
 				},
 			},
-			names.AttrInstanceType: {
+			"instance_type": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(sagemaker.InstanceType_Values(), false),
 			},
-			names.AttrKMSKeyID: {
+			"kms_key_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -106,13 +106,13 @@ func ResourceNotebookInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validName,
 			},
-			names.AttrNetworkInterfaceID: {
+			"network_interface_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -123,7 +123,7 @@ func ResourceNotebookInstance() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^(notebook-al1-v1|notebook-al2-v1|notebook-al2-v2)$`), ""),
 			},
-			names.AttrRoleARN: {
+			"role_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -134,7 +134,7 @@ func ResourceNotebookInstance() *schema.Resource {
 				Default:      sagemaker.RootAccessEnabled,
 				ValidateFunc: validation.StringInSlice(sagemaker.RootAccess_Values(), false),
 			},
-			names.AttrSecurityGroups: {
+			"security_groups": {
 				Type:     schema.TypeSet,
 				MinItems: 1,
 				Optional: true,
@@ -142,18 +142,18 @@ func ResourceNotebookInstance() *schema.Resource {
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrSubnetID: {
+			"subnet_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrURL: {
+			"url": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrVolumeSize: {
+			"volume_size": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  5,
@@ -166,13 +166,13 @@ func resourceNotebookInstanceCreate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &sagemaker.CreateNotebookInstanceInput{
 		InstanceMetadataServiceConfiguration: expandNotebookInstanceMetadataServiceConfiguration(d.Get("instance_metadata_service_configuration").([]interface{})),
-		InstanceType:                         aws.String(d.Get(names.AttrInstanceType).(string)),
+		InstanceType:                         aws.String(d.Get("instance_type").(string)),
 		NotebookInstanceName:                 aws.String(name),
-		RoleArn:                              aws.String(d.Get(names.AttrRoleARN).(string)),
-		SecurityGroupIds:                     flex.ExpandStringSet(d.Get(names.AttrSecurityGroups).(*schema.Set)),
+		RoleArn:                              aws.String(d.Get("role_arn").(string)),
+		SecurityGroupIds:                     flex.ExpandStringSet(d.Get("security_groups").(*schema.Set)),
 		Tags:                                 getTagsIn(ctx),
 	}
 
@@ -192,7 +192,7 @@ func resourceNotebookInstanceCreate(ctx context.Context, d *schema.ResourceData,
 		input.DirectInternetAccess = aws.String(v.(string))
 	}
 
-	if k, ok := d.GetOk(names.AttrKMSKeyID); ok {
+	if k, ok := d.GetOk("kms_key_id"); ok {
 		input.KmsKeyId = aws.String(k.(string))
 	}
 
@@ -208,11 +208,11 @@ func resourceNotebookInstanceCreate(ctx context.Context, d *schema.ResourceData,
 		input.RootAccess = aws.String(v.(string))
 	}
 
-	if s, ok := d.GetOk(names.AttrSubnetID); ok {
+	if s, ok := d.GetOk("subnet_id"); ok {
 		input.SubnetId = aws.String(s.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrVolumeSize); ok {
+	if v, ok := d.GetOk("volume_size"); ok {
 		input.VolumeSizeInGB = aws.Int64(int64(v.(int)))
 	}
 
@@ -250,21 +250,21 @@ func resourceNotebookInstanceRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.Set("accelerator_types", aws.StringValueSlice(notebookInstance.AcceleratorTypes))
 	d.Set("additional_code_repositories", aws.StringValueSlice(notebookInstance.AdditionalCodeRepositories))
-	d.Set(names.AttrARN, notebookInstance.NotebookInstanceArn)
+	d.Set("arn", notebookInstance.NotebookInstanceArn)
 	d.Set("default_code_repository", notebookInstance.DefaultCodeRepository)
 	d.Set("direct_internet_access", notebookInstance.DirectInternetAccess)
-	d.Set(names.AttrInstanceType, notebookInstance.InstanceType)
-	d.Set(names.AttrKMSKeyID, notebookInstance.KmsKeyId)
+	d.Set("instance_type", notebookInstance.InstanceType)
+	d.Set("kms_key_id", notebookInstance.KmsKeyId)
 	d.Set("lifecycle_config_name", notebookInstance.NotebookInstanceLifecycleConfigName)
-	d.Set(names.AttrName, notebookInstance.NotebookInstanceName)
-	d.Set(names.AttrNetworkInterfaceID, notebookInstance.NetworkInterfaceId)
+	d.Set("name", notebookInstance.NotebookInstanceName)
+	d.Set("network_interface_id", notebookInstance.NetworkInterfaceId)
 	d.Set("platform_identifier", notebookInstance.PlatformIdentifier)
-	d.Set(names.AttrRoleARN, notebookInstance.RoleArn)
+	d.Set("role_arn", notebookInstance.RoleArn)
 	d.Set("root_access", notebookInstance.RootAccess)
-	d.Set(names.AttrSecurityGroups, aws.StringValueSlice(notebookInstance.SecurityGroups))
-	d.Set(names.AttrSubnetID, notebookInstance.SubnetId)
-	d.Set(names.AttrURL, notebookInstance.Url)
-	d.Set(names.AttrVolumeSize, notebookInstance.VolumeSizeInGB)
+	d.Set("security_groups", aws.StringValueSlice(notebookInstance.SecurityGroups))
+	d.Set("subnet_id", notebookInstance.SubnetId)
+	d.Set("url", notebookInstance.Url)
+	d.Set("volume_size", notebookInstance.VolumeSizeInGB)
 
 	if err := d.Set("instance_metadata_service_configuration", flattenNotebookInstanceMetadataServiceConfiguration(notebookInstance.InstanceMetadataServiceConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting instance_metadata_service_configuration: %s", err)
@@ -277,9 +277,9 @@ func resourceNotebookInstanceUpdate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &sagemaker.UpdateNotebookInstanceInput{
-			NotebookInstanceName: aws.String(d.Get(names.AttrName).(string)),
+			NotebookInstanceName: aws.String(d.Get("name").(string)),
 		}
 
 		if d.HasChange("accelerator_types") {
@@ -310,8 +310,8 @@ func resourceNotebookInstanceUpdate(ctx context.Context, d *schema.ResourceData,
 			input.InstanceMetadataServiceConfiguration = expandNotebookInstanceMetadataServiceConfiguration(d.Get("instance_metadata_service_configuration").([]interface{}))
 		}
 
-		if d.HasChange(names.AttrInstanceType) {
-			input.InstanceType = aws.String(d.Get(names.AttrInstanceType).(string))
+		if d.HasChange("instance_type") {
+			input.InstanceType = aws.String(d.Get("instance_type").(string))
 		}
 
 		if d.HasChange("lifecycle_config_name") {
@@ -322,16 +322,16 @@ func resourceNotebookInstanceUpdate(ctx context.Context, d *schema.ResourceData,
 			}
 		}
 
-		if d.HasChange(names.AttrRoleARN) {
-			input.RoleArn = aws.String(d.Get(names.AttrRoleARN).(string))
+		if d.HasChange("role_arn") {
+			input.RoleArn = aws.String(d.Get("role_arn").(string))
 		}
 
 		if d.HasChange("root_access") {
 			input.RootAccess = aws.String(d.Get("root_access").(string))
 		}
 
-		if d.HasChange(names.AttrVolumeSize) {
-			input.VolumeSizeInGB = aws.Int64(int64(d.Get(names.AttrVolumeSize).(int)))
+		if d.HasChange("volume_size") {
+			input.VolumeSizeInGB = aws.Int64(int64(d.Get("volume_size").(int)))
 		}
 
 		// Stop notebook.

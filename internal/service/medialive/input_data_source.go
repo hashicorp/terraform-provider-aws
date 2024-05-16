@@ -38,7 +38,7 @@ func (d *dataSourceInput) Metadata(_ context.Context, _ datasource.MetadataReque
 func (d *dataSourceInput) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			"arn": framework.ARNAttributeComputedOnly(),
 			"attached_channels": schema.ListAttribute{
 				CustomType: fwtypes.ListOfStringType,
 				Computed:   true,
@@ -47,7 +47,7 @@ func (d *dataSourceInput) Schema(ctx context.Context, req datasource.SchemaReque
 				CustomType: fwtypes.NewListNestedObjectTypeOf[dsDestination](ctx),
 				Computed:   true,
 			},
-			names.AttrID: schema.StringAttribute{
+			"id": schema.StringAttribute{
 				Required: true,
 			},
 			"input_class": schema.StringAttribute{
@@ -70,13 +70,13 @@ func (d *dataSourceInput) Schema(ctx context.Context, req datasource.SchemaReque
 				CustomType: fwtypes.NewListNestedObjectTypeOf[dsMediaConnectFlow](ctx),
 				Computed:   true,
 			},
-			names.AttrName: schema.StringAttribute{
+			"name": schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrRoleARN: schema.StringAttribute{
+			"role_arn": schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrSecurityGroups: schema.ListAttribute{
+			"security_groups": schema.ListAttribute{
 				CustomType: fwtypes.ListOfStringType,
 				Computed:   true,
 			},
@@ -84,12 +84,12 @@ func (d *dataSourceInput) Schema(ctx context.Context, req datasource.SchemaReque
 				CustomType: fwtypes.NewListNestedObjectTypeOf[dsInputSource](ctx),
 				Computed:   true,
 			},
-			names.AttrState: schema.StringAttribute{
+			"state": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.InputState](),
 				Computed:   true,
 			},
 			names.AttrTags: tags.TagsAttributeComputedOnly(),
-			names.AttrType: schema.StringAttribute{
+			"type": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.InputType](),
 				Computed:   true,
 			},

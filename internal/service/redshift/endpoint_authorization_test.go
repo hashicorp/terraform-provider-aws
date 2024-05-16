@@ -38,10 +38,10 @@ func TestAccRedshiftEndpointAuthorization_basic(t *testing.T) {
 				Config: testAccEndpointAuthorizationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointAuthorizationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrClusterIdentifier, "aws_redshift_cluster.test", names.AttrClusterIdentifier),
-					resource.TestCheckResourceAttrPair(resourceName, "account", "data.aws_caller_identity.test", names.AttrAccountID),
+					resource.TestCheckResourceAttrPair(resourceName, "cluster_identifier", "aws_redshift_cluster.test", "cluster_identifier"),
+					resource.TestCheckResourceAttrPair(resourceName, "account", "data.aws_caller_identity.test", "account_id"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_all_vpcs", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "grantee", "data.aws_caller_identity.test", names.AttrAccountID),
+					resource.TestCheckResourceAttrPair(resourceName, "grantee", "data.aws_caller_identity.test", "account_id"),
 					acctest.CheckResourceAttrAccountID(resourceName, "grantor"),
 				),
 			},
@@ -49,7 +49,7 @@ func TestAccRedshiftEndpointAuthorization_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrForceDelete},
+				ImportStateVerifyIgnore: []string{"force_delete"},
 			},
 		},
 	})
@@ -74,7 +74,7 @@ func TestAccRedshiftEndpointAuthorization_vpcs(t *testing.T) {
 				Config: testAccEndpointAuthorizationConfig_vpcs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointAuthorizationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "vpc_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "vpc_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_all_vpcs", "false"),
 				),
 			},
@@ -82,13 +82,13 @@ func TestAccRedshiftEndpointAuthorization_vpcs(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrForceDelete},
+				ImportStateVerifyIgnore: []string{"force_delete"},
 			},
 			{
 				Config: testAccEndpointAuthorizationConfig_vpcsUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointAuthorizationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "vpc_ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "vpc_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_all_vpcs", "false"),
 				),
 			},
@@ -96,7 +96,7 @@ func TestAccRedshiftEndpointAuthorization_vpcs(t *testing.T) {
 				Config: testAccEndpointAuthorizationConfig_vpcs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointAuthorizationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "vpc_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "vpc_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_all_vpcs", "false"),
 				),
 			},
@@ -167,7 +167,7 @@ func testAccCheckEndpointAuthorizationDestroy(ctx context.Context) resource.Test
 				continue
 			}
 
-			_, err := tfredshift.FindEndpointAuthorizationByID(ctx, conn, rs.Primary.ID)
+			_, err := tfredshift.FindEndpointAuthorizationById(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -197,7 +197,7 @@ func testAccCheckEndpointAuthorizationExists(ctx context.Context, n string, v *r
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
 
-		output, err := tfredshift.FindEndpointAuthorizationByID(ctx, conn, rs.Primary.ID)
+		output, err := tfredshift.FindEndpointAuthorizationById(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

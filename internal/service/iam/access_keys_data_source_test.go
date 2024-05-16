@@ -31,10 +31,10 @@ func TestAccIAMAccessKeysDataSource_basic(t *testing.T) {
 			{
 				Config: testAccAccessKeysDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "access_keys.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "access_keys.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "access_keys.0.create_date", resourceName, "create_date"),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "access_keys.0.access_key_id", resourceName, names.AttrID),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "access_keys.0.status", resourceName, names.AttrStatus),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "access_keys.0.access_key_id", resourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "access_keys.0.status", resourceName, "status"),
 				),
 			},
 		},
@@ -60,9 +60,9 @@ func TestAccIAMAccessKeysDataSource_twoKeys(t *testing.T) {
 			{
 				Config: testAccAccessKeysDataSourceConfig_twoKeys(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "access_keys.#", acctest.Ct2),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "access_keys.*.access_key_id", resourceName1, names.AttrID),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "access_keys.*.access_key_id", resourceName2, names.AttrID),
+					resource.TestCheckResourceAttr(dataSourceName, "access_keys.#", "2"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "access_keys.*.access_key_id", resourceName1, "id"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "access_keys.*.access_key_id", resourceName2, "id"),
 				),
 			},
 		},

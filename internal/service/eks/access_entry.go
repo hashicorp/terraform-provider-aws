@@ -52,13 +52,13 @@ func resourceAccessEntry() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrClusterName: {
+			"cluster_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validClusterName,
 			},
-			names.AttrCreatedAt: {
+			"created_at": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -82,14 +82,14 @@ func resourceAccessEntry() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrType: {
+			"type": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				Default:      accessEntryTypeStandard,
 				ValidateFunc: validation.StringInSlice(accessEntryType_Values(), false),
 			},
-			names.AttrUserName: {
+			"user_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 				Optional: true,
@@ -102,21 +102,21 @@ func resourceAccessEntryCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
-	clusterName := d.Get(names.AttrClusterName).(string)
+	clusterName := d.Get("cluster_name").(string)
 	principalARN := d.Get("principal_arn").(string)
 	id := accessEntryCreateResourceID(clusterName, principalARN)
 	input := &eks.CreateAccessEntryInput{
 		ClusterName:  aws.String(clusterName),
 		PrincipalArn: aws.String(principalARN),
 		Tags:         getTagsIn(ctx),
-		Type:         aws.String(d.Get(names.AttrType).(string)),
+		Type:         aws.String(d.Get("type").(string)),
 	}
 
 	if v, ok := d.GetOk("kubernetes_groups"); ok {
 		input.KubernetesGroups = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk(names.AttrUserName); ok {
+	if v, ok := d.GetOk("user_name"); ok {
 		input.Username = aws.String(v.(string))
 	}
 
@@ -155,13 +155,13 @@ func resourceAccessEntryRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.Set("access_entry_arn", output.AccessEntryArn)
-	d.Set(names.AttrClusterName, output.ClusterName)
-	d.Set(names.AttrCreatedAt, aws.ToTime(output.CreatedAt).Format(time.RFC3339))
+	d.Set("cluster_name", output.ClusterName)
+	d.Set("created_at", aws.ToTime(output.CreatedAt).Format(time.RFC3339))
 	d.Set("kubernetes_groups", output.KubernetesGroups)
 	d.Set("modified_at", aws.ToTime(output.ModifiedAt).Format(time.RFC3339))
 	d.Set("principal_arn", output.PrincipalArn)
-	d.Set(names.AttrType, output.Type)
-	d.Set(names.AttrUserName, output.Username)
+	d.Set("type", output.Type)
+	d.Set("user_name", output.Username)
 
 	setTagsOut(ctx, output.Tags)
 
@@ -172,7 +172,7 @@ func resourceAccessEntryUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		clusterName, principalARN, err := accessEntryParseResourceID(d.Id())
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
@@ -184,7 +184,7 @@ func resourceAccessEntryUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		input.KubernetesGroups = flex.ExpandStringValueSet(d.Get("kubernetes_groups").(*schema.Set))
-		input.Username = aws.String(d.Get(names.AttrUserName).(string))
+		input.Username = aws.String(d.Get("user_name").(string))
 
 		_, err = conn.UpdateAccessEntry(ctx, input)
 

@@ -7,23 +7,20 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_fsx_ontap_file_system", name="ONTAP File System")
-// @Tags
-func dataSourceONTAPFileSystem() *schema.Resource {
+// @SDKDataSource("aws_fsx_ontap_file_system", name="Ontap File System")
+func DataSourceONTAPFileSystem() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceONTAPFileSystemRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -44,18 +41,18 @@ func dataSourceONTAPFileSystem() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrIOPS: {
+						"iops": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						names.AttrMode: {
+						"mode": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			names.AttrDNSName: {
+			"dns_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -63,7 +60,7 @@ func dataSourceONTAPFileSystem() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrEndpoints: {
+			"endpoints": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -73,7 +70,7 @@ func dataSourceONTAPFileSystem() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrDNSName: {
+									"dns_name": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -90,7 +87,7 @@ func dataSourceONTAPFileSystem() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrDNSName: {
+									"dns_name": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -109,11 +106,11 @@ func dataSourceONTAPFileSystem() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			names.AttrID: {
+			"id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrKMSKeyID: {
+			"kms_key_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -122,7 +119,7 @@ func dataSourceONTAPFileSystem() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrOwnerID: {
+			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -139,18 +136,18 @@ func dataSourceONTAPFileSystem() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			names.AttrStorageType: {
+			"storage_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrSubnetIDs: {
+			"subnet_ids": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 			"throughput_capacity": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -159,7 +156,7 @@ func dataSourceONTAPFileSystem() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			names.AttrVPCID: {
+			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -171,12 +168,19 @@ func dataSourceONTAPFileSystem() *schema.Resource {
 	}
 }
 
+const (
+	DSNameOntapFileSystem = "Ontap File System Data Source"
+)
+
 func dataSourceONTAPFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	id := d.Get(names.AttrID).(string)
-	filesystem, err := findONTAPFileSystemByID(ctx, conn, id)
+	conn := meta.(*conns.AWSClient).FSxConn(ctx)
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+
+	id := d.Get("id").(string)
+	filesystem, err := FindONTAPFileSystemByID(ctx, conn, id)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading FSx for NetApp ONTAP File System (%s): %s", id, err)
@@ -185,39 +189,44 @@ func dataSourceONTAPFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 	ontapConfig := filesystem.OntapConfiguration
 
 	d.SetId(aws.StringValue(filesystem.FileSystemId))
-	d.Set(names.AttrARN, filesystem.ResourceARN)
+	d.Set("arn", filesystem.ResourceARN)
 	d.Set("automatic_backup_retention_days", ontapConfig.AutomaticBackupRetentionDays)
 	d.Set("daily_automatic_backup_start_time", ontapConfig.DailyAutomaticBackupStartTime)
 	d.Set("deployment_type", ontapConfig.DeploymentType)
 	if err := d.Set("disk_iops_configuration", flattenOntapFileDiskIopsConfiguration(ontapConfig.DiskIopsConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting disk_iops_configuration: %s", err)
 	}
-	d.Set(names.AttrDNSName, filesystem.DNSName)
+	d.Set("dns_name", filesystem.DNSName)
 	d.Set("endpoint_ip_address_range", ontapConfig.EndpointIpAddressRange)
-	if err := d.Set(names.AttrEndpoints, flattenOntapFileSystemEndpoints(ontapConfig.Endpoints)); err != nil {
+	if err := d.Set("endpoints", flattenOntapFileSystemEndpoints(ontapConfig.Endpoints)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoints: %s", err)
 	}
 	haPairs := aws.Int64Value(ontapConfig.HAPairs)
 	d.Set("ha_pairs", haPairs)
-	d.Set(names.AttrKMSKeyID, filesystem.KmsKeyId)
+	d.Set("kms_key_id", filesystem.KmsKeyId)
 	d.Set("network_interface_ids", aws.StringValueSlice(filesystem.NetworkInterfaceIds))
-	d.Set(names.AttrOwnerID, filesystem.OwnerId)
+	d.Set("owner_id", filesystem.OwnerId)
 	d.Set("preferred_subnet_id", ontapConfig.PreferredSubnetId)
 	d.Set("route_table_ids", aws.StringValueSlice(ontapConfig.RouteTableIds))
 	d.Set("storage_capacity", filesystem.StorageCapacity)
-	d.Set(names.AttrStorageType, filesystem.StorageType)
-	d.Set(names.AttrSubnetIDs, aws.StringValueSlice(filesystem.SubnetIds))
-	if aws.StringValue(ontapConfig.DeploymentType) == fsx.OntapDeploymentTypeSingleAz2 {
+	d.Set("storage_type", filesystem.StorageType)
+	d.Set("subnet_ids", aws.StringValueSlice(filesystem.SubnetIds))
+	if haPairs > 1 {
 		d.Set("throughput_capacity", nil)
 		d.Set("throughput_capacity_per_ha_pair", ontapConfig.ThroughputCapacityPerHAPair)
 	} else {
 		d.Set("throughput_capacity", ontapConfig.ThroughputCapacity)
-		d.Set("throughput_capacity_per_ha_pair", ontapConfig.ThroughputCapacityPerHAPair)
+		d.Set("throughput_capacity_per_ha_pair", nil)
 	}
-	d.Set(names.AttrVPCID, filesystem.VpcId)
+	d.Set("vpc_id", filesystem.VpcId)
 	d.Set("weekly_maintenance_start_time", ontapConfig.WeeklyMaintenanceStartTime)
 
-	setTagsOut(ctx, filesystem.Tags)
+	tags := KeyValueTags(ctx, filesystem.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
+	}
 
 	return diags
 }

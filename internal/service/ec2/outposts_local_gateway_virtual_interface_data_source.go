@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ec2_local_gateway_virtual_interface")
@@ -27,8 +26,8 @@ func DataSourceLocalGatewayVirtualInterface() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrFilter: customFiltersSchema(),
-			names.AttrID: {
+			"filter": customFiltersSchema(),
+			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -58,7 +57,7 @@ func DataSourceLocalGatewayVirtualInterface() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 			"vlan": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -74,16 +73,16 @@ func dataSourceLocalGatewayVirtualInterfaceRead(ctx context.Context, d *schema.R
 
 	input := &ec2.DescribeLocalGatewayVirtualInterfacesInput{}
 
-	if v, ok := d.GetOk(names.AttrID); ok {
+	if v, ok := d.GetOk("id"); ok {
 		input.LocalGatewayVirtualInterfaceIds = []*string{aws.String(v.(string))}
 	}
 
 	input.Filters = append(input.Filters, newTagFilterList(
-		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
+		Tags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
 	)...)
 
 	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get(names.AttrFilter).(*schema.Set),
+		d.Get("filter").(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {
@@ -114,7 +113,7 @@ func dataSourceLocalGatewayVirtualInterfaceRead(ctx context.Context, d *schema.R
 	d.Set("peer_address", localGatewayVirtualInterface.PeerAddress)
 	d.Set("peer_bgp_asn", localGatewayVirtualInterface.PeerBgpAsn)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, localGatewayVirtualInterface.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, localGatewayVirtualInterface.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

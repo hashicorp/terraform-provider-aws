@@ -38,7 +38,6 @@ func main() {
 			"mwaa",                // Resolver modifies URL
 			"neptunegraph",        // EndpointParameters has an additional parameter, ApiType
 			"paymentcryptography", // Resolver modifies URL
-			"route53profiles",     // Resolver modifies URL
 			"s3control",           // Resolver modifies URL
 			"timestreamwrite":     // Uses endpoint discovery
 			continue
@@ -60,10 +59,10 @@ func main() {
 			Region:            "us-west-2",
 			APICall:           l.EndpointAPICall(),
 			APICallParams:     l.EndpointAPIParams(),
-			AwsEnvVar:         l.AWSServiceEnvVar(),
-			ConfigParameter:   l.AWSConfigParameter(),
+			AwsEnvVar:         l.AwsServiceEnvVar(),
+			ConfigParameter:   l.AwsConfigParameter(),
 			DeprecatedEnvVar:  l.DeprecatedEnvVar(),
-			TFAWSEnvVar:       l.TFAWSEnvVar(),
+			TfAwsEnvVar:       l.TfAwsEnvVar(),
 			Aliases:           l.Aliases(),
 		}
 		if l.ClientSDKV1() {
@@ -124,7 +123,7 @@ type TemplateData struct {
 	AwsEnvVar                         string
 	ConfigParameter                   string
 	DeprecatedEnvVar                  string
-	TFAWSEnvVar                       string
+	TfAwsEnvVar                       string
 	V1NameResolverNeedsUnknownService bool
 	V1AlternateInputPackage           string
 	Aliases                           []string

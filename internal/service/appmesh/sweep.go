@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -81,7 +80,7 @@ func sweepMeshes(region string) error {
 		}
 
 		for _, v := range page.Meshes {
-			r := resourceMesh()
+			r := ResourceMesh()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.MeshName))
 
@@ -138,11 +137,11 @@ func sweepVirtualGateways(region string) error {
 
 				for _, v := range page.VirtualGateways {
 					virtualGatewayName := aws.StringValue(v.VirtualGatewayName)
-					r := resourceVirtualGateway()
+					r := ResourceVirtualGateway()
 					d := r.Data(nil)
 					d.SetId(fmt.Sprintf("%s/%s", meshName, virtualGatewayName)) // Logged in Delete handler, not used in API call.
 					d.Set("mesh_name", meshName)
-					d.Set(names.AttrName, virtualGatewayName)
+					d.Set("name", virtualGatewayName)
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
@@ -209,11 +208,11 @@ func sweepVirtualNodes(region string) error {
 
 				for _, v := range page.VirtualNodes {
 					virtualNodeName := aws.StringValue(v.VirtualNodeName)
-					r := resourceVirtualNode()
+					r := ResourceVirtualNode()
 					d := r.Data(nil)
 					d.SetId(fmt.Sprintf("%s/%s", meshName, virtualNodeName)) // Logged in Delete handler, not used in API call.
 					d.Set("mesh_name", meshName)
-					d.Set(names.AttrName, virtualNodeName)
+					d.Set("name", virtualNodeName)
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
@@ -280,11 +279,11 @@ func sweepVirtualRouters(region string) error {
 
 				for _, v := range page.VirtualRouters {
 					virtualRouterName := aws.StringValue(v.VirtualRouterName)
-					r := resourceVirtualRouter()
+					r := ResourceVirtualRouter()
 					d := r.Data(nil)
 					d.SetId(fmt.Sprintf("%s/%s", meshName, virtualRouterName)) // Logged in Delete handler, not used in API call.
 					d.Set("mesh_name", meshName)
-					d.Set(names.AttrName, virtualRouterName)
+					d.Set("name", virtualRouterName)
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
@@ -351,11 +350,11 @@ func sweepVirtualServices(region string) error {
 
 				for _, v := range page.VirtualServices {
 					virtualServiceName := aws.StringValue(v.VirtualServiceName)
-					r := resourceVirtualService()
+					r := ResourceVirtualService()
 					d := r.Data(nil)
 					d.SetId(fmt.Sprintf("%s/%s", meshName, virtualServiceName)) // Logged in Delete handler, not used in API call.
 					d.Set("mesh_name", meshName)
-					d.Set(names.AttrName, virtualServiceName)
+					d.Set("name", virtualServiceName)
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
@@ -434,11 +433,11 @@ func sweepGatewayRoutes(region string) error {
 
 						for _, v := range page.GatewayRoutes {
 							gatewayRouteName := aws.StringValue(v.GatewayRouteName)
-							r := resourceGatewayRoute()
+							r := ResourceGatewayRoute()
 							d := r.Data(nil)
 							d.SetId(fmt.Sprintf("%s/%s/%s", meshName, virtualGatewayName, gatewayRouteName)) // Logged in Delete handler, not used in API call.
 							d.Set("mesh_name", meshName)
-							d.Set(names.AttrName, gatewayRouteName)
+							d.Set("name", gatewayRouteName)
 							d.Set("virtual_gateway_name", virtualGatewayName)
 
 							sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
@@ -530,11 +529,11 @@ func sweepRoutes(region string) error {
 
 						for _, v := range page.Routes {
 							routeName := aws.StringValue(v.RouteName)
-							r := resourceRoute()
+							r := ResourceRoute()
 							d := r.Data(nil)
 							d.SetId(fmt.Sprintf("%s/%s/%s", meshName, virtualRouterName, routeName)) // Logged in Delete handler, not used in API call.
 							d.Set("mesh_name", meshName)
-							d.Set(names.AttrName, routeName)
+							d.Set("name", routeName)
 							d.Set("virtual_router_name", virtualRouterName)
 
 							sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))

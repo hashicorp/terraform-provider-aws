@@ -762,8 +762,6 @@ This configuration block supports the following:
     - `min_healthy_percentage` - (Optional) Amount of capacity in the Auto Scaling group that must remain healthy during an instance refresh to allow the operation to continue, as a percentage of the desired capacity of the Auto Scaling group. Defaults to `90`.
     - `skip_matching` - (Optional) Replace instances that already have your desired configuration. Defaults to `false`.
     - `auto_rollback` - (Optional) Automatically rollback if instance refresh fails. Defaults to `false`. This option may only be set to `true` when specifying a `launch_template` or `mixed_instances_policy`.
-    - `alarm_specification` - (Optional) Alarm Specification for Instance Refresh.
-        - `alarms` - (Required) List of Cloudwatch alarms. If any of these alarms goes into ALARM state, Instance Refresh is failed.
     - `scale_in_protected_instances` - (Optional) Behavior when encountering instances protected from scale in are found. Available behaviors are `Refresh`, `Ignore`, and `Wait`. Default is `Ignore`.
     - `standby_instances` - (Optional) Behavior when encountering instances in the `Standby` state in are found. Available behaviors are `Terminate`, `Ignore`, and `Wait`. Default is `Ignore`.
 - `triggers` - (Optional) Set of additional property names that will trigger an Instance Refresh. A refresh will always be triggered by a change in any of `launch_configuration`, `launch_template`, or `mixed_instances_policy`.
@@ -933,4 +931,4 @@ Using `terraform import`, import Auto Scaling Groups using the `name`. For examp
 % terraform import aws_autoscaling_group.web web-asg
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d8221eb8800cc9d4da77a73ffbf6e1b69ce95525c4e2a7a980891635e0256cc8 -->
+<!-- cache-key: cdktf-0.20.1 input-689719c38efafcb124d05d0bca6a585ab474340d733a6c4c62d05dbeee07381e -->

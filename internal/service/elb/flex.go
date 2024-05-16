@@ -10,7 +10,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elb"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Flattens an access log into something that flatmap.Flatten() can handle
@@ -23,19 +22,19 @@ func flattenAccessLog(l *elb.AccessLog) []map[string]interface{} {
 
 	r := make(map[string]interface{})
 	if l.S3BucketName != nil {
-		r[names.AttrBucket] = aws.StringValue(l.S3BucketName)
+		r["bucket"] = aws.StringValue(l.S3BucketName)
 	}
 
 	if l.S3BucketPrefix != nil {
-		r[names.AttrBucketPrefix] = aws.StringValue(l.S3BucketPrefix)
+		r["bucket_prefix"] = aws.StringValue(l.S3BucketPrefix)
 	}
 
 	if l.EmitInterval != nil {
-		r[names.AttrInterval] = aws.Int64Value(l.EmitInterval)
+		r["interval"] = aws.Int64Value(l.EmitInterval)
 	}
 
 	if l.Enabled != nil {
-		r[names.AttrEnabled] = aws.BoolValue(l.Enabled)
+		r["enabled"] = aws.BoolValue(l.Enabled)
 	}
 
 	result = append(result, r)
@@ -63,9 +62,9 @@ func FlattenHealthCheck(check *elb.HealthCheck) []map[string]interface{} {
 	chk := make(map[string]interface{})
 	chk["unhealthy_threshold"] = aws.Int64Value(check.UnhealthyThreshold)
 	chk["healthy_threshold"] = aws.Int64Value(check.HealthyThreshold)
-	chk[names.AttrTarget] = aws.StringValue(check.Target)
-	chk[names.AttrTimeout] = aws.Int64Value(check.Timeout)
-	chk[names.AttrInterval] = aws.Int64Value(check.Interval)
+	chk["target"] = aws.StringValue(check.Target)
+	chk["timeout"] = aws.Int64Value(check.Timeout)
+	chk["interval"] = aws.Int64Value(check.Interval)
 
 	result = append(result, chk)
 
@@ -165,8 +164,8 @@ func ExpandPolicyAttributes(configured []interface{}) []*elb.PolicyAttribute {
 		data := lRaw.(map[string]interface{})
 
 		a := &elb.PolicyAttribute{
-			AttributeName:  aws.String(data[names.AttrName].(string)),
-			AttributeValue: aws.String(data[names.AttrValue].(string)),
+			AttributeName:  aws.String(data["name"].(string)),
+			AttributeValue: aws.String(data["value"].(string)),
 		}
 
 		attributes = append(attributes, a)
@@ -185,8 +184,8 @@ func FlattenPolicyAttributes(list []*elb.PolicyAttributeDescription) []interface
 		}
 
 		attribute := map[string]string{
-			names.AttrName:  aws.StringValue(attrdef.AttributeName),
-			names.AttrValue: aws.StringValue(attrdef.AttributeValue),
+			"name":  aws.StringValue(attrdef.AttributeName),
+			"value": aws.StringValue(attrdef.AttributeValue),
 		}
 
 		attributes = append(attributes, attribute)

@@ -66,7 +66,7 @@ func ResourceLink() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -87,7 +87,7 @@ func ResourceLink() *schema.Resource {
 					},
 				},
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
@@ -97,7 +97,7 @@ func ResourceLink() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrProviderName: {
+			"provider_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 128),
@@ -109,7 +109,7 @@ func ResourceLink() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrType: {
+			"type": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 128),
@@ -134,15 +134,15 @@ func resourceLinkCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		input.Bandwidth = expandBandwidth(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrProviderName); ok {
+	if v, ok := d.GetOk("provider_name"); ok {
 		input.Provider = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrType); ok {
+	if v, ok := d.GetOk("type"); ok {
 		input.Type = aws.String(v.(string))
 	}
 
@@ -180,7 +180,7 @@ func resourceLinkRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return sdkdiag.AppendErrorf(diags, "reading Network Manager Link (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, link.LinkArn)
+	d.Set("arn", link.LinkArn)
 	if link.Bandwidth != nil {
 		if err := d.Set("bandwidth", []interface{}{flattenBandwidth(link.Bandwidth)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting bandwidth: %s", err)
@@ -188,11 +188,11 @@ func resourceLinkRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	} else {
 		d.Set("bandwidth", nil)
 	}
-	d.Set(names.AttrDescription, link.Description)
+	d.Set("description", link.Description)
 	d.Set("global_network_id", link.GlobalNetworkId)
-	d.Set(names.AttrProviderName, link.Provider)
+	d.Set("provider_name", link.Provider)
 	d.Set("site_id", link.SiteId)
-	d.Set(names.AttrType, link.Type)
+	d.Set("type", link.Type)
 
 	setTagsOut(ctx, link.Tags)
 
@@ -204,14 +204,14 @@ func resourceLinkUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		globalNetworkID := d.Get("global_network_id").(string)
 		input := &networkmanager.UpdateLinkInput{
-			Description:     aws.String(d.Get(names.AttrDescription).(string)),
+			Description:     aws.String(d.Get("description").(string)),
 			GlobalNetworkId: aws.String(globalNetworkID),
 			LinkId:          aws.String(d.Id()),
-			Provider:        aws.String(d.Get(names.AttrProviderName).(string)),
-			Type:            aws.String(d.Get(names.AttrType).(string)),
+			Provider:        aws.String(d.Get("provider_name").(string)),
+			Type:            aws.String(d.Get("type").(string)),
 		}
 
 		if v, ok := d.GetOk("bandwidth"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {

@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_kendra_index")
@@ -25,7 +24,7 @@ func DataSourceIndex() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceIndexRead,
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -45,11 +44,11 @@ func DataSourceIndex() *schema.Resource {
 					},
 				},
 			},
-			names.AttrCreatedAt: {
+			"created_at": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -58,7 +57,7 @@ func DataSourceIndex() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrName: {
+						"name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -67,7 +66,7 @@ func DataSourceIndex() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrDuration: {
+									"duration": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -115,7 +114,7 @@ func DataSourceIndex() *schema.Resource {
 								},
 							},
 						},
-						names.AttrType: {
+						"type": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -130,7 +129,7 @@ func DataSourceIndex() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrID: {
+			"id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.StringMatch(
@@ -174,11 +173,11 @@ func DataSourceIndex() *schema.Resource {
 					},
 				},
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrRoleARN: {
+			"role_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -187,14 +186,14 @@ func DataSourceIndex() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrKMSKeyID: {
+						"kms_key_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -252,7 +251,7 @@ func DataSourceIndex() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									names.AttrIssuer: {
+									"issuer": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -264,7 +263,7 @@ func DataSourceIndex() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									names.AttrURL: {
+									"url": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -278,7 +277,7 @@ func DataSourceIndex() *schema.Resource {
 					},
 				},
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -289,7 +288,7 @@ func dataSourceIndexRead(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	id := d.Get(names.AttrID).(string)
+	id := d.Get("id").(string)
 
 	resp, err := findIndexByID(ctx, conn, id)
 
@@ -309,14 +308,14 @@ func dataSourceIndexRead(ctx context.Context, d *schema.ResourceData, meta inter
 		Resource:  fmt.Sprintf("index/%s", id),
 	}.String()
 
-	d.Set(names.AttrARN, arn)
-	d.Set(names.AttrCreatedAt, aws.ToTime(resp.CreatedAt).Format(time.RFC3339))
-	d.Set(names.AttrDescription, resp.Description)
+	d.Set("arn", arn)
+	d.Set("created_at", aws.ToTime(resp.CreatedAt).Format(time.RFC3339))
+	d.Set("description", resp.Description)
 	d.Set("edition", resp.Edition)
 	d.Set("error_message", resp.ErrorMessage)
-	d.Set(names.AttrName, resp.Name)
-	d.Set(names.AttrRoleARN, resp.RoleArn)
-	d.Set(names.AttrStatus, resp.Status)
+	d.Set("name", resp.Name)
+	d.Set("role_arn", resp.RoleArn)
+	d.Set("status", resp.Status)
 	d.Set("updated_at", aws.ToTime(resp.UpdatedAt).Format(time.RFC3339))
 	d.Set("user_context_policy", resp.UserContextPolicy)
 
@@ -350,7 +349,7 @@ func dataSourceIndexRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

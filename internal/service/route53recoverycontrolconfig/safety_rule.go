@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_route53recoverycontrolconfig_safety_rule")
@@ -32,7 +31,7 @@ func ResourceSafetyRule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -65,7 +64,7 @@ func ResourceSafetyRule() *schema.Resource {
 					"gating_controls",
 				},
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -84,7 +83,7 @@ func ResourceSafetyRule() *schema.Resource {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
-						names.AttrType: {
+						"type": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(r53rcc.RuleType_Values(), true),
@@ -92,7 +91,7 @@ func ResourceSafetyRule() *schema.Resource {
 					},
 				},
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -154,10 +153,10 @@ func resourceSafetyRuleRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	if output.AssertionRule != nil {
 		result := output.AssertionRule
-		d.Set(names.AttrARN, result.SafetyRuleArn)
+		d.Set("arn", result.SafetyRuleArn)
 		d.Set("control_panel_arn", result.ControlPanelArn)
-		d.Set(names.AttrName, result.Name)
-		d.Set(names.AttrStatus, result.Status)
+		d.Set("name", result.Name)
+		d.Set("status", result.Status)
 		d.Set("wait_period_ms", result.WaitPeriodMs)
 
 		if err := d.Set("asserted_controls", flex.FlattenStringList(result.AssertedControls)); err != nil {
@@ -175,10 +174,10 @@ func resourceSafetyRuleRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	if output.GatingRule != nil {
 		result := output.GatingRule
-		d.Set(names.AttrARN, result.SafetyRuleArn)
+		d.Set("arn", result.SafetyRuleArn)
 		d.Set("control_panel_arn", result.ControlPanelArn)
-		d.Set(names.AttrName, result.Name)
-		d.Set(names.AttrStatus, result.Status)
+		d.Set("name", result.Name)
+		d.Set("status", result.Status)
 		d.Set("wait_period_ms", result.WaitPeriodMs)
 
 		if err := d.Set("gating_controls", flex.FlattenStringList(result.GatingControls)); err != nil {
@@ -247,7 +246,7 @@ func createAssertionRule(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn(ctx)
 
 	assertionRule := &r53rcc.NewAssertionRule{
-		Name:             aws.String(d.Get(names.AttrName).(string)),
+		Name:             aws.String(d.Get("name").(string)),
 		ControlPanelArn:  aws.String(d.Get("control_panel_arn").(string)),
 		WaitPeriodMs:     aws.Int64(int64(d.Get("wait_period_ms").(int))),
 		RuleConfig:       testAccSafetyRuleConfig_expandRule(d.Get("rule_config").([]interface{})[0].(map[string]interface{})),
@@ -284,7 +283,7 @@ func createGatingRule(ctx context.Context, d *schema.ResourceData, meta interfac
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn(ctx)
 
 	gatingRule := &r53rcc.NewGatingRule{
-		Name:            aws.String(d.Get(names.AttrName).(string)),
+		Name:            aws.String(d.Get("name").(string)),
 		ControlPanelArn: aws.String(d.Get("control_panel_arn").(string)),
 		WaitPeriodMs:    aws.Int64(int64(d.Get("wait_period_ms").(int))),
 		RuleConfig:      testAccSafetyRuleConfig_expandRule(d.Get("rule_config").([]interface{})[0].(map[string]interface{})),
@@ -322,11 +321,11 @@ func updateAssertionRule(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn(ctx)
 
 	assertionRuleUpdate := &r53rcc.AssertionRuleUpdate{
-		SafetyRuleArn: aws.String(d.Get(names.AttrARN).(string)),
+		SafetyRuleArn: aws.String(d.Get("arn").(string)),
 	}
 
-	if d.HasChange(names.AttrName) {
-		assertionRuleUpdate.Name = aws.String(d.Get(names.AttrName).(string))
+	if d.HasChange("name") {
+		assertionRuleUpdate.Name = aws.String(d.Get("name").(string))
 	}
 
 	if d.HasChange("wait_period_ms") {
@@ -351,11 +350,11 @@ func updateGatingRule(ctx context.Context, d *schema.ResourceData, meta interfac
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn(ctx)
 
 	gatingRuleUpdate := &r53rcc.GatingRuleUpdate{
-		SafetyRuleArn: aws.String(d.Get(names.AttrARN).(string)),
+		SafetyRuleArn: aws.String(d.Get("arn").(string)),
 	}
 
-	if d.HasChange(names.AttrName) {
-		gatingRuleUpdate.Name = aws.String(d.Get(names.AttrName).(string))
+	if d.HasChange("name") {
+		gatingRuleUpdate.Name = aws.String(d.Get("name").(string))
 	}
 
 	if d.HasChange("wait_period_ms") {
@@ -390,7 +389,7 @@ func testAccSafetyRuleConfig_expandRule(tfMap map[string]interface{}) *r53rcc.Ru
 		apiObject.Threshold = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
+	if v, ok := tfMap["type"].(string); ok && v != "" {
 		apiObject.Type = aws.String(v)
 	}
 	return apiObject
@@ -412,7 +411,7 @@ func flattenRuleConfig(apiObject *r53rcc.RuleConfig) map[string]interface{} {
 	}
 
 	if v := apiObject.Type; v != nil {
-		tfMap[names.AttrType] = aws.StringValue(v)
+		tfMap["type"] = aws.StringValue(v)
 	}
 
 	return tfMap

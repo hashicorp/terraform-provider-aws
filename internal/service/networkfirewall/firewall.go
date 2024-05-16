@@ -54,7 +54,7 @@ func ResourceFirewall() *schema.Resource {
 		),
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -63,11 +63,11 @@ func ResourceFirewall() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			names.AttrEncryptionConfiguration: encryptionConfigurationSchema(),
+			"encryption_configuration": encryptionConfigurationSchema(),
 			"firewall_policy_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -87,7 +87,7 @@ func ResourceFirewall() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrAvailabilityZone: {
+									"availability_zone": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -100,7 +100,7 @@ func ResourceFirewall() *schema.Resource {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												names.AttrSubnetID: {
+												"subnet_id": {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
@@ -113,7 +113,7 @@ func ResourceFirewall() *schema.Resource {
 					},
 				},
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -127,13 +127,13 @@ func ResourceFirewall() *schema.Resource {
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrIPAddressType: {
+						"ip_address_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
 							ValidateFunc: validation.StringInSlice(networkfirewall.IPAddressType_Values(), false),
 						},
-						names.AttrSubnetID: {
+						"subnet_id": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -146,7 +146,7 @@ func ResourceFirewall() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrVPCID: {
+			"vpc_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -160,24 +160,24 @@ func resourceFirewallCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &networkfirewall.CreateFirewallInput{
 		FirewallName:      aws.String(name),
 		FirewallPolicyArn: aws.String(d.Get("firewall_policy_arn").(string)),
 		SubnetMappings:    expandSubnetMappings(d.Get("subnet_mapping").(*schema.Set).List()),
 		Tags:              getTagsIn(ctx),
-		VpcId:             aws.String(d.Get(names.AttrVPCID).(string)),
+		VpcId:             aws.String(d.Get("vpc_id").(string)),
 	}
 
 	if v, ok := d.GetOk("delete_protection"); ok {
 		input.DeleteProtection = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrEncryptionConfiguration); ok {
+	if v, ok := d.GetOk("encryption_configuration"); ok {
 		input.EncryptionConfiguration = expandEncryptionConfiguration(v.([]interface{}))
 	}
 
@@ -222,10 +222,10 @@ func resourceFirewallRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	firewall := output.Firewall
-	d.Set(names.AttrARN, firewall.FirewallArn)
+	d.Set("arn", firewall.FirewallArn)
 	d.Set("delete_protection", firewall.DeleteProtection)
-	d.Set(names.AttrDescription, firewall.Description)
-	if err := d.Set(names.AttrEncryptionConfiguration, flattenEncryptionConfiguration(firewall.EncryptionConfiguration)); err != nil {
+	d.Set("description", firewall.Description)
+	if err := d.Set("encryption_configuration", flattenEncryptionConfiguration(firewall.EncryptionConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting encryption_configuration: %s", err)
 	}
 	d.Set("firewall_policy_arn", firewall.FirewallPolicyArn)
@@ -233,13 +233,13 @@ func resourceFirewallRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if err := d.Set("firewall_status", flattenFirewallStatus(output.FirewallStatus)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting firewall_status: %s", err)
 	}
-	d.Set(names.AttrName, firewall.FirewallName)
+	d.Set("name", firewall.FirewallName)
 	d.Set("subnet_change_protection", firewall.SubnetChangeProtection)
 	if err := d.Set("subnet_mapping", flattenSubnetMappings(firewall.SubnetMappings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting subnet_mapping: %s", err)
 	}
 	d.Set("update_token", output.UpdateToken)
-	d.Set(names.AttrVPCID, firewall.VpcId)
+	d.Set("vpc_id", firewall.VpcId)
 
 	setTagsOut(ctx, firewall.Tags)
 
@@ -268,9 +268,9 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		updateToken = aws.StringValue(output.UpdateToken)
 	}
 
-	if d.HasChange(names.AttrDescription) {
+	if d.HasChange("description") {
 		input := &networkfirewall.UpdateFirewallDescriptionInput{
-			Description: aws.String(d.Get(names.AttrDescription).(string)),
+			Description: aws.String(d.Get("description").(string)),
 			FirewallArn: aws.String(d.Id()),
 			UpdateToken: aws.String(updateToken),
 		}
@@ -284,9 +284,9 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		updateToken = aws.StringValue(output.UpdateToken)
 	}
 
-	if d.HasChange(names.AttrEncryptionConfiguration) {
+	if d.HasChange("encryption_configuration") {
 		input := &networkfirewall.UpdateFirewallEncryptionConfigurationInput{
-			EncryptionConfiguration: expandEncryptionConfiguration(d.Get(names.AttrEncryptionConfiguration).([]interface{})),
+			EncryptionConfiguration: expandEncryptionConfiguration(d.Get("encryption_configuration").([]interface{})),
 			FirewallArn:             aws.String(d.Id()),
 			UpdateToken:             aws.String(updateToken),
 		}
@@ -528,9 +528,9 @@ func expandSubnetMappings(l []interface{}) []*networkfirewall.SubnetMapping {
 			continue
 		}
 		mapping := &networkfirewall.SubnetMapping{
-			SubnetId: aws.String(tfMap[names.AttrSubnetID].(string)),
+			SubnetId: aws.String(tfMap["subnet_id"].(string)),
 		}
-		if v, ok := tfMap[names.AttrIPAddressType].(string); ok && v != "" {
+		if v, ok := tfMap["ip_address_type"].(string); ok && v != "" {
 			mapping.IPAddressType = aws.String(v)
 		}
 		mappings = append(mappings, mapping)
@@ -546,7 +546,7 @@ func expandSubnetMappingIDs(l []interface{}) []string {
 		if !ok {
 			continue
 		}
-		if id, ok := tfMap[names.AttrSubnetID].(string); ok && id != "" {
+		if id, ok := tfMap["subnet_id"].(string); ok && id != "" {
 			ids = append(ids, id)
 		}
 	}
@@ -574,8 +574,8 @@ func flattenSyncStates(s map[string]*networkfirewall.SyncState) []interface{} {
 	syncStates := make([]interface{}, 0, len(s))
 	for k, v := range s {
 		m := map[string]interface{}{
-			names.AttrAvailabilityZone: k,
-			"attachment":               flattenSyncStateAttachment(v.Attachment),
+			"availability_zone": k,
+			"attachment":        flattenSyncStateAttachment(v.Attachment),
 		}
 		syncStates = append(syncStates, m)
 	}
@@ -589,8 +589,8 @@ func flattenSyncStateAttachment(a *networkfirewall.Attachment) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"endpoint_id":      aws.StringValue(a.EndpointId),
-		names.AttrSubnetID: aws.StringValue(a.SubnetId),
+		"endpoint_id": aws.StringValue(a.EndpointId),
+		"subnet_id":   aws.StringValue(a.SubnetId),
 	}
 
 	return []interface{}{m}
@@ -600,8 +600,8 @@ func flattenSubnetMappings(sm []*networkfirewall.SubnetMapping) []interface{} {
 	mappings := make([]interface{}, 0, len(sm))
 	for _, s := range sm {
 		m := map[string]interface{}{
-			names.AttrSubnetID:      aws.StringValue(s.SubnetId),
-			names.AttrIPAddressType: aws.StringValue(s.IPAddressType),
+			"subnet_id":       aws.StringValue(s.SubnetId),
+			"ip_address_type": aws.StringValue(s.IPAddressType),
 		}
 		mappings = append(mappings, m)
 	}
@@ -616,10 +616,10 @@ func subnetMappingsHash(v interface{}) int {
 	if !ok {
 		return 0
 	}
-	if id, ok := tfMap[names.AttrSubnetID].(string); ok {
+	if id, ok := tfMap["subnet_id"].(string); ok {
 		buf.WriteString(fmt.Sprintf("%s-", id))
 	}
-	if id, ok := tfMap[names.AttrIPAddressType].(string); ok {
+	if id, ok := tfMap["ip_address_type"].(string); ok {
 		buf.WriteString(fmt.Sprintf("%s-", id))
 	}
 

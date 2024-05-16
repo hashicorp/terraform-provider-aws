@@ -19,7 +19,6 @@ import (
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_autoscaling_notification", name="Notification")
@@ -41,7 +40,7 @@ func resourceNotification() *schema.Resource {
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrTopicARN: {
+			"topic_arn": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -54,7 +53,7 @@ func resourceNotificationCreate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
-	topic := d.Get(names.AttrTopicARN).(string)
+	topic := d.Get("topic_arn").(string)
 	if err := addNotificationConfigToGroupsWithTopic(ctx, conn, flex.ExpandStringSet(d.Get("group_names").(*schema.Set)), flex.ExpandStringSet(d.Get("notifications").(*schema.Set)), topic); err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Auto Scaling Notification (%s): %s", topic, err)
 	}
@@ -121,7 +120,7 @@ func resourceNotificationUpdate(ctx context.Context, d *schema.ResourceData, met
 	remove := flex.ExpandStringSet(o.(*schema.Set))
 	add := flex.ExpandStringSet(n.(*schema.Set))
 
-	topic := d.Get(names.AttrTopicARN).(string)
+	topic := d.Get("topic_arn").(string)
 
 	if err := removeNotificationConfigToGroupsWithTopic(ctx, conn, remove, topic); err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Auto Scaling Notification (%s): %s", topic, err)
@@ -145,7 +144,7 @@ func resourceNotificationDelete(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
-	topic := d.Get(names.AttrTopicARN).(string)
+	topic := d.Get("topic_arn").(string)
 	if err := removeNotificationConfigToGroupsWithTopic(ctx, conn, flex.ExpandStringSet(d.Get("group_names").(*schema.Set)), topic); err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Auto Scaling Notification (%s): %s", topic, err)
 	}

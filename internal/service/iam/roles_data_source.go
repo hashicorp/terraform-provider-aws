@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_iam_roles", name="Roles")
@@ -25,7 +24,7 @@ func dataSourceRoles() *schema.Resource {
 		ReadWithoutTimeout: dataSourceRolesRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARNs: {
+			"arns": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -35,7 +34,7 @@ func dataSourceRoles() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringIsValidRegExp,
 			},
-			names.AttrNames: {
+			"names": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -82,18 +81,18 @@ func dataSourceRolesRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 
-	var arns, nms []string
+	var arns, names []string
 
 	for _, r := range results {
 		arns = append(arns, aws.ToString(r.Arn))
-		nms = append(nms, aws.ToString(r.RoleName))
+		names = append(names, aws.ToString(r.RoleName))
 	}
 
-	if err := d.Set(names.AttrARNs, arns); err != nil {
+	if err := d.Set("arns", arns); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting arns: %s", err)
 	}
 
-	if err := d.Set(names.AttrNames, nms); err != nil {
+	if err := d.Set("names", names); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting names: %s", err)
 	}
 

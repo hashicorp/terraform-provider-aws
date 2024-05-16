@@ -45,7 +45,7 @@ func resourceWorkgroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -94,16 +94,16 @@ func resourceWorkgroup() *schema.Resource {
 					},
 				},
 			},
-			names.AttrEndpoint: {
+			"endpoint": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrAddress: {
+						"address": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrPort: {
+						"port": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -117,11 +117,11 @@ func resourceWorkgroup() *schema.Resource {
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												names.AttrAvailabilityZone: {
+												"availability_zone": {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												names.AttrNetworkInterfaceID: {
+												"network_interface_id": {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
@@ -129,18 +129,18 @@ func resourceWorkgroup() *schema.Resource {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												names.AttrSubnetID: {
+												"subnet_id": {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
 											},
 										},
 									},
-									names.AttrVPCEndpointID: {
+									"vpc_endpoint_id": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									names.AttrVPCID: {
+									"vpc_id": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -154,7 +154,7 @@ func resourceWorkgroup() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			names.AttrMaxCapacity: {
+			"max_capacity": {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
@@ -163,16 +163,16 @@ func resourceWorkgroup() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrPort: {
+			"port": {
 				Type:     schema.TypeInt,
 				Computed: true,
 				Optional: true,
 			},
-			names.AttrPubliclyAccessible: {
+			"publicly_accessible": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			names.AttrSecurityGroupIDs: {
+			"security_group_ids": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -180,7 +180,7 @@ func resourceWorkgroup() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			names.AttrSubnetIDs: {
+			"subnet_ids": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -228,23 +228,23 @@ func resourceWorkgroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.EnhancedVpcRouting = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk(names.AttrMaxCapacity); ok {
+	if v, ok := d.GetOk("max_capacity"); ok {
 		input.MaxCapacity = aws.Int64(int64(v.(int)))
 	}
 
-	if v, ok := d.GetOk(names.AttrPort); ok {
+	if v, ok := d.GetOk("port"); ok {
 		input.Port = aws.Int64(int64(v.(int)))
 	}
 
-	if v, ok := d.GetOk(names.AttrPubliclyAccessible); ok {
+	if v, ok := d.GetOk("publicly_accessible"); ok {
 		input.PubliclyAccessible = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk("security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
 		input.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk(names.AttrSubnetIDs); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk("subnet_ids"); ok && v.(*schema.Set).Len() > 0 {
 		input.SubnetIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
@@ -280,21 +280,21 @@ func resourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	arn := aws.StringValue(out.WorkgroupArn)
-	d.Set(names.AttrARN, arn)
+	d.Set("arn", arn)
 	d.Set("base_capacity", out.BaseCapacity)
 	if err := d.Set("config_parameter", flattenConfigParameters(out.ConfigParameters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting config_parameter: %s", err)
 	}
-	if err := d.Set(names.AttrEndpoint, []interface{}{flattenEndpoint(out.Endpoint)}); err != nil {
+	if err := d.Set("endpoint", []interface{}{flattenEndpoint(out.Endpoint)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoint: %s", err)
 	}
 	d.Set("enhanced_vpc_routing", out.EnhancedVpcRouting)
-	d.Set(names.AttrMaxCapacity, out.MaxCapacity)
+	d.Set("max_capacity", out.MaxCapacity)
 	d.Set("namespace_name", out.NamespaceName)
-	d.Set(names.AttrPort, flattenEndpoint(out.Endpoint)[names.AttrPort])
-	d.Set(names.AttrPubliclyAccessible, out.PubliclyAccessible)
-	d.Set(names.AttrSecurityGroupIDs, flex.FlattenStringSet(out.SecurityGroupIds))
-	d.Set(names.AttrSubnetIDs, flex.FlattenStringSet(out.SubnetIds))
+	d.Set("port", flattenEndpoint(out.Endpoint)["port"])
+	d.Set("publicly_accessible", out.PubliclyAccessible)
+	d.Set("security_group_ids", flex.FlattenStringSet(out.SecurityGroupIds))
+	d.Set("subnet_ids", flex.FlattenStringSet(out.SubnetIds))
 	d.Set("workgroup_id", out.WorkgroupId)
 	d.Set("workgroup_name", out.WorkgroupName)
 
@@ -323,7 +323,7 @@ func resourceWorkgroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	// Some validations, such as increasing base_capacity beyond an unchanged max_capacity, are deferred to the AWS API.
 
 	hasBaseCapacityChange, _, newBaseCapacity := checkCapacityChange("base_capacity")
-	hasMaxCapacityChange, oldMaxCapacity, newMaxCapacity := checkCapacityChange(names.AttrMaxCapacity)
+	hasMaxCapacityChange, oldMaxCapacity, newMaxCapacity := checkCapacityChange("max_capacity")
 
 	switch {
 	case hasMaxCapacityChange && newMaxCapacity == 0:
@@ -397,9 +397,9 @@ func resourceWorkgroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 	}
 
-	if d.HasChange(names.AttrPort) {
+	if d.HasChange("port") {
 		input := &redshiftserverless.UpdateWorkgroupInput{
-			Port:          aws.Int64(int64(d.Get(names.AttrPort).(int))),
+			Port:          aws.Int64(int64(d.Get("port").(int))),
 			WorkgroupName: aws.String(d.Id()),
 		}
 
@@ -408,9 +408,9 @@ func resourceWorkgroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 	}
 
-	if d.HasChange(names.AttrPubliclyAccessible) {
+	if d.HasChange("publicly_accessible") {
 		input := &redshiftserverless.UpdateWorkgroupInput{
-			PubliclyAccessible: aws.Bool(d.Get(names.AttrPubliclyAccessible).(bool)),
+			PubliclyAccessible: aws.Bool(d.Get("publicly_accessible").(bool)),
 			WorkgroupName:      aws.String(d.Id()),
 		}
 
@@ -419,9 +419,9 @@ func resourceWorkgroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 	}
 
-	if d.HasChange(names.AttrSecurityGroupIDs) {
+	if d.HasChange("security_group_ids") {
 		input := &redshiftserverless.UpdateWorkgroupInput{
-			SecurityGroupIds: flex.ExpandStringSet(d.Get(names.AttrSecurityGroupIDs).(*schema.Set)),
+			SecurityGroupIds: flex.ExpandStringSet(d.Get("security_group_ids").(*schema.Set)),
 			WorkgroupName:    aws.String(d.Id()),
 		}
 
@@ -430,9 +430,9 @@ func resourceWorkgroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 	}
 
-	if d.HasChange(names.AttrSubnetIDs) {
+	if d.HasChange("subnet_ids") {
 		input := &redshiftserverless.UpdateWorkgroupInput{
-			SubnetIds:     flex.ExpandStringSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
+			SubnetIds:     flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
 			WorkgroupName: aws.String(d.Id()),
 		}
 
@@ -649,11 +649,11 @@ func flattenEndpoint(apiObject *redshiftserverless.Endpoint) map[string]interfac
 
 	tfMap := map[string]interface{}{}
 	if v := apiObject.Address; v != nil {
-		tfMap[names.AttrAddress] = aws.StringValue(v)
+		tfMap["address"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Port; v != nil {
-		tfMap[names.AttrPort] = aws.Int64Value(v)
+		tfMap["port"] = aws.Int64Value(v)
 	}
 
 	if v := apiObject.VpcEndpoints; v != nil {
@@ -689,11 +689,11 @@ func flattenVPCEndpoint(apiObject *redshiftserverless.VpcEndpoint) map[string]in
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.VpcEndpointId; v != nil {
-		tfMap[names.AttrVPCEndpointID] = aws.StringValue(v)
+		tfMap["vpc_endpoint_id"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.VpcId; v != nil {
-		tfMap[names.AttrVPCID] = aws.StringValue(v)
+		tfMap["vpc_id"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.NetworkInterfaces; v != nil {
@@ -728,11 +728,11 @@ func flattenNetworkInterface(apiObject *redshiftserverless.NetworkInterface) map
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.AvailabilityZone; v != nil {
-		tfMap[names.AttrAvailabilityZone] = aws.StringValue(v)
+		tfMap["availability_zone"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.NetworkInterfaceId; v != nil {
-		tfMap[names.AttrNetworkInterfaceID] = aws.StringValue(v)
+		tfMap["network_interface_id"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.PrivateIpAddress; v != nil {
@@ -740,7 +740,7 @@ func flattenNetworkInterface(apiObject *redshiftserverless.NetworkInterface) map
 	}
 
 	if v := apiObject.SubnetId; v != nil {
-		tfMap[names.AttrSubnetID] = aws.StringValue(v)
+		tfMap["subnet_id"] = aws.StringValue(v)
 	}
 	return tfMap
 }

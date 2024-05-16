@@ -5,8 +5,6 @@ package iam
 
 import (
 	"testing"
-
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestValidRoleProfileName(t *testing.T) {
@@ -17,7 +15,7 @@ func TestValidRoleProfileName(t *testing.T) {
 	}
 
 	for _, s := range validNames {
-		_, errors := validRolePolicyName(s, names.AttrName)
+		_, errors := validRolePolicyName(s, "name")
 		if len(errors) > 0 {
 			t.Fatalf("%q should be a valid IAM role policy name: %v", s, errors)
 		}
@@ -29,7 +27,7 @@ func TestValidRoleProfileName(t *testing.T) {
 	}
 
 	for _, s := range invalidNames {
-		_, errors := validRolePolicyName(s, names.AttrName)
+		_, errors := validRolePolicyName(s, "name")
 		if len(errors) == 0 {
 			t.Fatalf("%q should not be a valid IAM role policy name: %v", s, errors)
 		}
@@ -96,7 +94,7 @@ func TestValidOpenIDURL(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		_, errors := validOpenIDURL(tc.Value, names.AttrURL)
+		_, errors := validOpenIDURL(tc.Value, "url")
 
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected %d of OpenID URL validation errors, got %d", tc.ErrCount, len(errors))
@@ -124,7 +122,7 @@ func TestValidRolePolicyRoleName(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		_, errors := validRolePolicyRole(tc.Value, names.AttrRole)
+		_, errors := validRolePolicyRole(tc.Value, "role")
 
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected %d Role Policy role name validation errors, got %d", tc.ErrCount, len(errors))

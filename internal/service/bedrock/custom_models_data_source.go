@@ -40,9 +40,9 @@ func (d *customModelsDataSource) Schema(ctx context.Context, request datasource.
 				Computed:   true,
 				ElementType: types.ObjectType{
 					AttrTypes: map[string]attr.Type{
-						names.AttrCreationTime: timetypes.RFC3339Type{},
-						"model_arn":            types.StringType,
-						"model_name":           types.StringType,
+						"creation_time": timetypes.RFC3339Type{},
+						"model_arn":     types.StringType,
+						"model_name":    types.StringType,
 					},
 				},
 			},

@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func waterfallVisualSchema() *schema.Schema {
@@ -45,9 +44,9 @@ func waterfallVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"breakdowns":     dimensionFieldSchema(dimensionsFieldMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
-													"categories":     dimensionFieldSchema(dimensionsFieldMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
-													names.AttrValues: measureFieldSchema(measureFieldsMaxItems200),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
+													"breakdowns": dimensionFieldSchema(dimensionsFieldMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+													"categories": dimensionFieldSchema(dimensionsFieldMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+													"values":     measureFieldSchema(measureFieldsMaxItems200),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
 												},
 											},
 										},
@@ -213,7 +212,7 @@ func expandWaterfallChartAggregatedFieldWells(tfList []interface{}) *quicksight.
 	if v, ok := tfMap["categories"].([]interface{}); ok && len(v) > 0 {
 		config.Categories = expandDimensionFields(v)
 	}
-	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["values"].([]interface{}); ok && len(v) > 0 {
 		config.Values = expandMeasureFields(v)
 	}
 
@@ -354,7 +353,7 @@ func flattenWaterfallChartAggregatedFieldWells(apiObject *quicksight.WaterfallCh
 		tfMap["categories"] = flattenDimensionFields(apiObject.Categories)
 	}
 	if apiObject.Values != nil {
-		tfMap[names.AttrValues] = flattenMeasureFields(apiObject.Values)
+		tfMap["values"] = flattenMeasureFields(apiObject.Values)
 	}
 
 	return []interface{}{tfMap}

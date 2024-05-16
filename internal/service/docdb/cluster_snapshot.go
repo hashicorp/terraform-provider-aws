@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_docdb_cluster_snapshot")
@@ -36,7 +35,7 @@ func ResourceClusterSnapshot() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrAvailabilityZones: {
+			"availability_zones": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -61,15 +60,15 @@ func ResourceClusterSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrEngineVersion: {
+			"engine_version": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrKMSKeyID: {
+			"kms_key_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrPort: {
+			"port": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -81,7 +80,7 @@ func ResourceClusterSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -89,7 +88,7 @@ func ResourceClusterSnapshot() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			names.AttrVPCID: {
+			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -138,19 +137,19 @@ func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "reading DocumentDB Cluster Snapshot (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrAvailabilityZones, aws.StringValueSlice(snapshot.AvailabilityZones))
+	d.Set("availability_zones", aws.StringValueSlice(snapshot.AvailabilityZones))
 	d.Set("db_cluster_identifier", snapshot.DBClusterIdentifier)
 	d.Set("db_cluster_snapshot_arn", snapshot.DBClusterSnapshotArn)
 	d.Set("db_cluster_snapshot_identifier", snapshot.DBClusterSnapshotIdentifier)
-	d.Set(names.AttrEngineVersion, snapshot.EngineVersion)
+	d.Set("engine_version", snapshot.EngineVersion)
 	d.Set("engine", snapshot.Engine)
-	d.Set(names.AttrKMSKeyID, snapshot.KmsKeyId)
-	d.Set(names.AttrPort, snapshot.Port)
+	d.Set("kms_key_id", snapshot.KmsKeyId)
+	d.Set("port", snapshot.Port)
 	d.Set("snapshot_type", snapshot.SnapshotType)
 	d.Set("source_db_cluster_snapshot_arn", snapshot.SourceDBClusterSnapshotArn)
-	d.Set(names.AttrStatus, snapshot.Status)
+	d.Set("status", snapshot.Status)
 	d.Set("storage_encrypted", snapshot.StorageEncrypted)
-	d.Set(names.AttrVPCID, snapshot.VpcId)
+	d.Set("vpc_id", snapshot.VpcId)
 
 	return diags
 }

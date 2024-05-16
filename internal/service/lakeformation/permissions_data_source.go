@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_lakeformation_permissions")
@@ -29,7 +28,7 @@ func DataSourcePermissions() *schema.Resource {
 		ReadWithoutTimeout: dataSourcePermissionsRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrCatalogID: {
+			"catalog_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidAccountID,
@@ -46,11 +45,11 @@ func DataSourcePermissions() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrDatabaseName: {
+						"database_name": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						names.AttrName: {
+						"name": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -58,7 +57,7 @@ func DataSourcePermissions() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						names.AttrTableName: {
+						"table_name": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -72,12 +71,12 @@ func DataSourcePermissions() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrARN: {
+						"arn": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						names.AttrCatalogID: {
+						"catalog_id": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -86,20 +85,20 @@ func DataSourcePermissions() *schema.Resource {
 					},
 				},
 			},
-			names.AttrDatabase: {
+			"database": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrCatalogID: {
+						"catalog_id": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
 							ValidateFunc: verify.ValidAccountID,
 						},
-						names.AttrName: {
+						"name": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -113,17 +112,17 @@ func DataSourcePermissions() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrCatalogID: {
+						"catalog_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 						},
-						names.AttrKey: {
+						"key": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 128),
 						},
-						names.AttrValues: {
+						"values": {
 							Type:     schema.TypeSet,
 							Required: true,
 							MinItems: 1,
@@ -142,24 +141,24 @@ func DataSourcePermissions() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrCatalogID: {
+						"catalog_id": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
 							ValidateFunc: verify.ValidAccountID,
 						},
-						names.AttrExpression: {
+						"expression": {
 							Type:     schema.TypeSet,
 							Required: true,
 							MinItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrKey: {
+									"key": {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 128),
 									},
-									names.AttrValues: {
+									"values": {
 										Type:     schema.TypeSet,
 										Required: true,
 										MinItems: 1,
@@ -171,7 +170,7 @@ func DataSourcePermissions() *schema.Resource {
 								},
 							},
 						},
-						names.AttrResourceType: {
+						"resource_type": {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.ResourceType](),
@@ -179,7 +178,7 @@ func DataSourcePermissions() *schema.Resource {
 					},
 				},
 			},
-			names.AttrPermissions: {
+			"permissions": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -193,7 +192,7 @@ func DataSourcePermissions() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			names.AttrPrincipal: {
+			"principal": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validPrincipal,
@@ -205,17 +204,17 @@ func DataSourcePermissions() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrCatalogID: {
+						"catalog_id": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
 							ValidateFunc: verify.ValidAccountID,
 						},
-						names.AttrDatabaseName: {
+						"database_name": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						names.AttrName: {
+						"name": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -235,7 +234,7 @@ func DataSourcePermissions() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrCatalogID: {
+						"catalog_id": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -249,7 +248,7 @@ func DataSourcePermissions() *schema.Resource {
 								ValidateFunc: validation.NoZeroValues,
 							},
 						},
-						names.AttrDatabaseName: {
+						"database_name": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -261,7 +260,7 @@ func DataSourcePermissions() *schema.Resource {
 								ValidateFunc: validation.NoZeroValues,
 							},
 						},
-						names.AttrName: {
+						"name": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -282,12 +281,12 @@ func dataSourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta
 
 	input := &lakeformation.ListPermissionsInput{
 		Principal: &awstypes.DataLakePrincipal{
-			DataLakePrincipalIdentifier: aws.String(d.Get(names.AttrPrincipal).(string)),
+			DataLakePrincipalIdentifier: aws.String(d.Get("principal").(string)),
 		},
 		Resource: &awstypes.Resource{},
 	}
 
-	if v, ok := d.GetOk(names.AttrCatalogID); ok {
+	if v, ok := d.GetOk("catalog_id"); ok {
 		input.CatalogId = aws.String(v.(string))
 	}
 
@@ -303,7 +302,7 @@ func dataSourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta
 		input.Resource.DataLocation = ExpandDataLocationResource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk(names.AttrDatabase); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk("database"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Resource.Database = ExpandDatabaseResource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -367,8 +366,8 @@ func dataSourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta
 		log.Printf("[INFO] Resource Lake Formation clean permissions (%d) and all permissions (%d) have different lengths (this is not necessarily a problem): %s", len(cleanPermissions), len(allPermissions), d.Id())
 	}
 
-	d.Set(names.AttrPrincipal, cleanPermissions[0].Principal.DataLakePrincipalIdentifier)
-	d.Set(names.AttrPermissions, flattenResourcePermissions(cleanPermissions))
+	d.Set("principal", cleanPermissions[0].Principal.DataLakePrincipalIdentifier)
+	d.Set("permissions", flattenResourcePermissions(cleanPermissions))
 	d.Set("permissions_with_grant_option", flattenGrantPermissions(cleanPermissions))
 
 	if cleanPermissions[0].Resource.Catalog != nil {
@@ -394,11 +393,11 @@ func dataSourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if cleanPermissions[0].Resource.Database != nil {
-		if err := d.Set(names.AttrDatabase, []interface{}{flattenDatabaseResource(cleanPermissions[0].Resource.Database)}); err != nil {
+		if err := d.Set("database", []interface{}{flattenDatabaseResource(cleanPermissions[0].Resource.Database)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting database: %s", err)
 		}
 	} else {
-		d.Set(names.AttrDatabase, nil)
+		d.Set("database", nil)
 	}
 
 	if cleanPermissions[0].Resource.LFTag != nil {

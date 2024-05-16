@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_vpc_peering_connections")
@@ -27,13 +26,13 @@ func DataSourceVPCPeeringConnections() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrFilter: customFiltersSchema(),
-			names.AttrIDs: {
+			"filter": customFiltersSchema(),
+			"ids": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -45,10 +44,10 @@ func dataSourceVPCPeeringConnectionsRead(ctx context.Context, d *schema.Resource
 	input := &ec2.DescribeVpcPeeringConnectionsInput{}
 
 	input.Filters = append(input.Filters, newTagFilterList(
-		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
+		Tags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
 	)...)
 	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get(names.AttrFilter).(*schema.Set),
+		d.Get("filter").(*schema.Set),
 	)...)
 	if len(input.Filters) == 0 {
 		input.Filters = nil
@@ -67,7 +66,7 @@ func dataSourceVPCPeeringConnectionsRead(ctx context.Context, d *schema.Resource
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set(names.AttrIDs, vpcPeeringConnectionIDs)
+	d.Set("ids", vpcPeeringConnectionIDs)
 
 	return diags
 }

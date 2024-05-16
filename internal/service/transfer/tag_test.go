@@ -26,11 +26,11 @@ func testAccTag_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckTagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTagConfig_basic(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccTagConfig_basic(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrKey, acctest.CtKey1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrValue, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
+					resource.TestCheckResourceAttr(resourceName, "value", "value1"),
 				),
 			},
 			{
@@ -54,7 +54,7 @@ func testAccTag_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckTagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTagConfig_basic(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccTagConfig_basic(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tftransfer.ResourceTag(), resourceName),
@@ -77,11 +77,11 @@ func testAccTag_value(t *testing.T) {
 		CheckDestroy:             testAccCheckTagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTagConfig_basic(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccTagConfig_basic(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrKey, acctest.CtKey1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrValue, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
+					resource.TestCheckResourceAttr(resourceName, "value", "value1"),
 				),
 			},
 			{
@@ -90,11 +90,11 @@ func testAccTag_value(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTagConfig_basic(rName, acctest.CtKey1, acctest.CtValue1Updated),
+				Config: testAccTagConfig_basic(rName, "key1", "value1updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrKey, acctest.CtKey1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrValue, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
+					resource.TestCheckResourceAttr(resourceName, "value", "value1updated"),
 				),
 			},
 		},
@@ -116,8 +116,8 @@ func testAccTag_system(t *testing.T) {
 				Config: testAccTagConfig_basic(rName, "aws:transfer:customHostname", "abc.example.com"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrKey, "aws:transfer:customHostname"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "abc.example.com"),
+					resource.TestCheckResourceAttr(resourceName, "key", "aws:transfer:customHostname"),
+					resource.TestCheckResourceAttr(resourceName, "value", "abc.example.com"),
 				),
 			},
 			{

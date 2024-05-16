@@ -40,10 +40,10 @@ func testAccResourceLFTags_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseLFTagsExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lf_tag.*", map[string]string{
-						names.AttrKey:   rName,
-						names.AttrValue: "copse",
+						"key":   rName,
+						"value": "copse",
 					}),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrCatalogID),
+					acctest.CheckResourceAttrAccountID(resourceName, "catalog_id"),
 				),
 			},
 		},
@@ -90,8 +90,8 @@ func testAccResourceLFTags_database(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseLFTagsExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lf_tag.*", map[string]string{
-						names.AttrKey:   rName,
-						names.AttrValue: "copse",
+						"key":   rName,
+						"value": "copse",
 					}),
 				),
 			},
@@ -100,8 +100,8 @@ func testAccResourceLFTags_database(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseLFTagsExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lf_tag.*", map[string]string{
-						names.AttrKey:   rName,
-						names.AttrValue: "luffield",
+						"key":   rName,
+						"value": "luffield",
 					}),
 				),
 			},
@@ -126,12 +126,12 @@ func testAccResourceLFTags_databaseMultipleTags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseLFTagsExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lf_tag.*", map[string]string{
-						names.AttrKey:   rName,
-						names.AttrValue: "woodcote",
+						"key":   rName,
+						"value": "woodcote",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lf_tag.*", map[string]string{
-						names.AttrKey:   fmt.Sprintf("%s-2", rName),
-						names.AttrValue: "theloop",
+						"key":   fmt.Sprintf("%s-2", rName),
+						"value": "theloop",
 					}),
 				),
 			},
@@ -140,12 +140,12 @@ func testAccResourceLFTags_databaseMultipleTags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseLFTagsExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lf_tag.*", map[string]string{
-						names.AttrKey:   rName,
-						names.AttrValue: "stowe",
+						"key":   rName,
+						"value": "stowe",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lf_tag.*", map[string]string{
-						names.AttrKey:   fmt.Sprintf("%s-2", rName),
-						names.AttrValue: "becketts",
+						"key":   fmt.Sprintf("%s-2", rName),
+						"value": "becketts",
 					}),
 				),
 			},
@@ -179,20 +179,20 @@ func testAccResourceLFTags_hierarchy(t *testing.T) {
 					testAccCheckDatabaseLFTagsExists(ctx, databaseResourceName),
 					testAccCheckDatabaseLFTagsExists(ctx, tableResourceName),
 					testAccCheckDatabaseLFTagsExists(ctx, columnResourceName),
-					resource.TestCheckResourceAttr(databaseResourceName, "lf_tag.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(databaseResourceName, "lf_tag.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(databaseResourceName, "lf_tag.*", map[string]string{
-						names.AttrKey:   rName,
-						names.AttrValue: "woodcote",
+						"key":   rName,
+						"value": "woodcote",
 					}),
-					resource.TestCheckResourceAttr(tableResourceName, "lf_tag.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(tableResourceName, "lf_tag.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(tableResourceName, "lf_tag.*", map[string]string{
-						names.AttrKey:   fmt.Sprintf("%s-2", rName),
-						names.AttrValue: "theloop",
+						"key":   fmt.Sprintf("%s-2", rName),
+						"value": "theloop",
 					}),
-					resource.TestCheckResourceAttr(columnResourceName, "lf_tag.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(columnResourceName, "lf_tag.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(columnResourceName, "lf_tag.*", map[string]string{
-						names.AttrKey:   fmt.Sprintf("%s-3", rName),
-						names.AttrValue: "two",
+						"key":   fmt.Sprintf("%s-3", rName),
+						"value": "two",
 					}),
 				),
 			},
@@ -209,20 +209,20 @@ func testAccResourceLFTags_hierarchy(t *testing.T) {
 					testAccCheckDatabaseLFTagsExists(ctx, databaseResourceName),
 					testAccCheckDatabaseLFTagsExists(ctx, tableResourceName),
 					testAccCheckDatabaseLFTagsExists(ctx, columnResourceName),
-					resource.TestCheckResourceAttr(databaseResourceName, "lf_tag.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(databaseResourceName, "lf_tag.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(databaseResourceName, "lf_tag.*", map[string]string{
-						names.AttrKey:   rName,
-						names.AttrValue: "stowe",
+						"key":   rName,
+						"value": "stowe",
 					}),
-					resource.TestCheckResourceAttr(tableResourceName, "lf_tag.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(tableResourceName, "lf_tag.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(tableResourceName, "lf_tag.*", map[string]string{
-						names.AttrKey:   fmt.Sprintf("%s-2", rName),
-						names.AttrValue: "becketts",
+						"key":   fmt.Sprintf("%s-2", rName),
+						"value": "becketts",
 					}),
-					resource.TestCheckResourceAttr(columnResourceName, "lf_tag.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(columnResourceName, "lf_tag.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(columnResourceName, "lf_tag.*", map[string]string{
-						names.AttrKey:   fmt.Sprintf("%s-3", rName),
-						names.AttrValue: "three",
+						"key":   fmt.Sprintf("%s-3", rName),
+						"value": "three",
 					}),
 				),
 			},
@@ -247,8 +247,8 @@ func testAccResourceLFTags_table(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseLFTagsExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lf_tag.*", map[string]string{
-						names.AttrKey:   rName,
-						names.AttrValue: "abbey",
+						"key":   rName,
+						"value": "abbey",
 					}),
 				),
 			},
@@ -257,8 +257,8 @@ func testAccResourceLFTags_table(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseLFTagsExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lf_tag.*", map[string]string{
-						names.AttrKey:   rName,
-						names.AttrValue: "farm",
+						"key":   rName,
+						"value": "farm",
 					}),
 				),
 			},
@@ -283,12 +283,12 @@ func testAccResourceLFTags_tableWithColumns(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseLFTagsExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lf_tag.*", map[string]string{
-						names.AttrKey:   rName,
-						names.AttrValue: "luffield",
+						"key":   rName,
+						"value": "luffield",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lf_tag.*", map[string]string{
-						names.AttrKey:   fmt.Sprintf("%s-2", rName),
-						names.AttrValue: "vale",
+						"key":   fmt.Sprintf("%s-2", rName),
+						"value": "vale",
 					}),
 				),
 			},
@@ -297,12 +297,12 @@ func testAccResourceLFTags_tableWithColumns(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseLFTagsExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lf_tag.*", map[string]string{
-						names.AttrKey:   rName,
-						names.AttrValue: "copse",
+						"key":   rName,
+						"value": "copse",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lf_tag.*", map[string]string{
-						names.AttrKey:   fmt.Sprintf("%s-2", rName),
-						names.AttrValue: "aintree",
+						"key":   fmt.Sprintf("%s-2", rName),
+						"value": "aintree",
 					}),
 				),
 			},
@@ -324,7 +324,7 @@ func testAccCheckDatabaseLFTagsDestroy(ctx context.Context) resource.TestCheckFu
 				ShowAssignedLFTags: aws.Bool(true),
 			}
 
-			if v, ok := rs.Primary.Attributes[names.AttrCatalogID]; ok {
+			if v, ok := rs.Primary.Attributes["catalog_id"]; ok {
 				input.CatalogId = aws.String(v)
 			}
 
@@ -431,7 +431,7 @@ func testAccCheckDatabaseLFTagsExists(ctx context.Context, resourceName string) 
 			ShowAssignedLFTags: aws.Bool(true),
 		}
 
-		if v, ok := rs.Primary.Attributes[names.AttrCatalogID]; ok {
+		if v, ok := rs.Primary.Attributes["catalog_id"]; ok {
 			input.CatalogId = aws.String(v)
 		}
 

@@ -38,9 +38,9 @@ func TestAccCognitoIDPUserInGroup_basic(t *testing.T) {
 				Config: testAccUserInGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserInGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", userPoolResourceName, names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrGroupName, userGroupResourceName, names.AttrName),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrUsername, userResourceName, names.AttrUsername),
+					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", userPoolResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "group_name", userGroupResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "username", userResourceName, "username"),
 				),
 			},
 		},
@@ -110,9 +110,9 @@ func testAccCheckUserInGroupExists(ctx context.Context, resourceName string) res
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
-		groupName := rs.Primary.Attributes[names.AttrGroupName]
+		groupName := rs.Primary.Attributes["group_name"]
 		userPoolId := rs.Primary.Attributes["user_pool_id"]
-		username := rs.Primary.Attributes[names.AttrUsername]
+		username := rs.Primary.Attributes["username"]
 
 		found, err := tfcognitoidp.FindCognitoUserInGroup(ctx, conn, groupName, userPoolId, username)
 
@@ -137,9 +137,9 @@ func testAccCheckUserInGroupDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			groupName := rs.Primary.Attributes[names.AttrGroupName]
+			groupName := rs.Primary.Attributes["group_name"]
 			userPoolId := rs.Primary.Attributes["user_pool_id"]
-			username := rs.Primary.Attributes[names.AttrUsername]
+			username := rs.Primary.Attributes["username"]
 
 			found, err := tfcognitoidp.FindCognitoUserInGroup(ctx, conn, groupName, userPoolId, username)
 

@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_imagebuilder_image_recipe")
@@ -23,7 +22,7 @@ func DataSourceImageRecipe() *schema.Resource {
 		ReadWithoutTimeout: dataSourceImageRecipeRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -33,7 +32,7 @@ func DataSourceImageRecipe() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrDeviceName: {
+						"device_name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -42,23 +41,23 @@ func DataSourceImageRecipe() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrDeleteOnTermination: {
+									"delete_on_termination": {
 										Type:     schema.TypeBool,
 										Computed: true,
 									},
-									names.AttrEncrypted: {
+									"encrypted": {
 										Type:     schema.TypeBool,
 										Computed: true,
 									},
-									names.AttrIOPS: {
+									"iops": {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									names.AttrKMSKeyID: {
+									"kms_key_id": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									names.AttrSnapshotID: {
+									"snapshot_id": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -66,11 +65,11 @@ func DataSourceImageRecipe() *schema.Resource {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									names.AttrVolumeSize: {
+									"volume_size": {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									names.AttrVolumeType: {
+									"volume_type": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -97,16 +96,16 @@ func DataSourceImageRecipe() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrParameter: {
+						"parameter": {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrName: {
+									"name": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									names.AttrValue: {
+									"value": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -120,15 +119,15 @@ func DataSourceImageRecipe() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrOwner: {
+			"owner": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -140,12 +139,12 @@ func DataSourceImageRecipe() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsSchema(),
+			"tags": tftags.TagsSchema(),
 			"user_data_base64": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrVersion: {
+			"version": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -164,7 +163,7 @@ func dataSourceImageRecipeRead(ctx context.Context, d *schema.ResourceData, meta
 
 	input := &imagebuilder.GetImageRecipeInput{}
 
-	if v, ok := d.GetOk(names.AttrARN); ok {
+	if v, ok := d.GetOk("arn"); ok {
 		input.ImageRecipeArn = aws.String(v.(string))
 	}
 
@@ -181,22 +180,22 @@ func dataSourceImageRecipeRead(ctx context.Context, d *schema.ResourceData, meta
 	imageRecipe := output.ImageRecipe
 
 	d.SetId(aws.StringValue(imageRecipe.Arn))
-	d.Set(names.AttrARN, imageRecipe.Arn)
+	d.Set("arn", imageRecipe.Arn)
 	d.Set("block_device_mapping", flattenInstanceBlockDeviceMappings(imageRecipe.BlockDeviceMappings))
 	d.Set("component", flattenComponentConfigurations(imageRecipe.Components))
 	d.Set("date_created", imageRecipe.DateCreated)
-	d.Set(names.AttrDescription, imageRecipe.Description)
-	d.Set(names.AttrName, imageRecipe.Name)
-	d.Set(names.AttrOwner, imageRecipe.Owner)
+	d.Set("description", imageRecipe.Description)
+	d.Set("name", imageRecipe.Name)
+	d.Set("owner", imageRecipe.Owner)
 	d.Set("parent_image", imageRecipe.ParentImage)
 	d.Set("platform", imageRecipe.Platform)
-	d.Set(names.AttrTags, KeyValueTags(ctx, imageRecipe.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
+	d.Set("tags", KeyValueTags(ctx, imageRecipe.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 
 	if imageRecipe.AdditionalInstanceConfiguration != nil {
 		d.Set("user_data_base64", imageRecipe.AdditionalInstanceConfiguration.UserDataOverride)
 	}
 
-	d.Set(names.AttrVersion, imageRecipe.Version)
+	d.Set("version", imageRecipe.Version)
 	d.Set("working_directory", imageRecipe.WorkingDirectory)
 
 	return diags

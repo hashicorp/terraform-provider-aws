@@ -7,7 +7,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -33,9 +33,9 @@ func DataSourceEBSDefaultKMSKey() *schema.Resource {
 }
 func dataSourceEBSDefaultKMSKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	res, err := conn.GetEbsDefaultKmsKeyId(ctx, &ec2.GetEbsDefaultKmsKeyIdInput{})
+	res, err := conn.GetEbsDefaultKmsKeyIdWithContext(ctx, &ec2.GetEbsDefaultKmsKeyIdInput{})
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EBS default KMS key: %s", err)
 	}

@@ -6,7 +6,10 @@ package ec2
 import (
 	"context"
 	"fmt"
+	"strings"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -15,28 +18,25 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Security Group Rule")
-func newSecurityGroupRuleDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
-	d := &securityGroupRuleDataSource{}
-
-	return d, nil
+// @FrameworkDataSource
+func newDataSourceSecurityGroupRule(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &dataSourceSecurityGroupRule{}, nil
 }
 
-type securityGroupRuleDataSource struct {
+type dataSourceSecurityGroupRule struct {
 	framework.DataSourceWithConfigure
 }
 
-func (*securityGroupRuleDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
+func (d *dataSourceSecurityGroupRule) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
 	response.TypeName = "aws_vpc_security_group_rule"
 }
 
-func (d *securityGroupRuleDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
-	response.Schema = schema.Schema{
+func (d *dataSourceSecurityGroupRule) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: schema.StringAttribute{
+			"arn": schema.StringAttribute{
 				Computed: true,
 			},
 			"cidr_ipv4": schema.StringAttribute{
@@ -45,13 +45,13 @@ func (d *securityGroupRuleDataSource) Schema(ctx context.Context, request dataso
 			"cidr_ipv6": schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrDescription: schema.StringAttribute{
+			"description": schema.StringAttribute{
 				Computed: true,
 			},
 			"from_port": schema.Int64Attribute{
 				Computed: true,
 			},
-			names.AttrID: framework.IDAttribute(),
+			"id": framework.IDAttribute(),
 			"ip_protocol": schema.StringAttribute{
 				Computed: true,
 			},
@@ -71,20 +71,22 @@ func (d *securityGroupRuleDataSource) Schema(ctx context.Context, request dataso
 				Optional: true,
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsAttributeComputedOnly(),
+			"tags": tftags.TagsAttributeComputedOnly(),
 			"to_port": schema.Int64Attribute{
 				Computed: true,
 			},
 		},
 		Blocks: map[string]schema.Block{
-			names.AttrFilter: customFiltersBlock(),
+			"filter": customFiltersBlock(),
 		},
 	}
 }
 
-func (d *securityGroupRuleDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
-	var data securityGroupRuleDataSourceModel
+func (d *dataSourceSecurityGroupRule) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data dataSourceSecurityGroupRuleData
+
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -114,7 +116,7 @@ func (d *securityGroupRuleDataSource) Read(ctx context.Context, request datasour
 	}
 
 	data.ID = flex.StringToFramework(ctx, output.SecurityGroupRuleId)
-	data.ARN = d.securityGroupRuleARN(ctx, data.ID.ValueString())
+	data.ARN = d.arn(ctx, data.ID.ValueString())
 	data.CIDRIPv4 = flex.StringToFramework(ctx, output.CidrIpv4)
 	data.CIDRIPv6 = flex.StringToFramework(ctx, output.CidrIpv6)
 	data.Description = flex.StringToFramework(ctx, output.Description)
@@ -122,7 +124,7 @@ func (d *securityGroupRuleDataSource) Read(ctx context.Context, request datasour
 	data.IPProtocol = flex.StringToFramework(ctx, output.IpProtocol)
 	data.IsEgress = flex.BoolToFramework(ctx, output.IsEgress)
 	data.PrefixListID = flex.StringToFramework(ctx, output.PrefixListId)
-	data.ReferencedSecurityGroupID = flattenReferencedSecurityGroup(ctx, output.ReferencedGroupInfo, d.Meta().AccountID)
+	data.ReferencedSecurityGroupID = d.flattenReferencedSecurityGroup(ctx, output.ReferencedGroupInfo)
 	data.SecurityGroupID = flex.StringToFramework(ctx, output.GroupId)
 	data.SecurityGroupRuleID = flex.StringToFramework(ctx, output.SecurityGroupRuleId)
 	data.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
@@ -131,11 +133,33 @@ func (d *securityGroupRuleDataSource) Read(ctx context.Context, request datasour
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (d *securityGroupRuleDataSource) securityGroupRuleARN(_ context.Context, id string) types.String {
-	return types.StringValue(d.RegionalARN(names.EC2, fmt.Sprintf("security-group-rule/%s", id)))
+func (d *dataSourceSecurityGroupRule) arn(_ context.Context, id string) types.String {
+	// TODO Consider reusing resourceSecurityGroupRule.arn().
+	arn := arn.ARN{
+		Partition: d.Meta().Partition,
+		Service:   ec2.ServiceName,
+		Region:    d.Meta().Region,
+		AccountID: d.Meta().AccountID,
+		Resource:  fmt.Sprintf("security-group-rule/%s", id),
+	}.String()
+	return types.StringValue(arn)
 }
 
-type securityGroupRuleDataSourceModel struct {
+func (d *dataSourceSecurityGroupRule) flattenReferencedSecurityGroup(ctx context.Context, apiObject *ec2.ReferencedSecurityGroup) types.String {
+	// TODO Consider reusing resourceSecurityGroupRule.flattenReferencedSecurityGroup().
+	if apiObject == nil {
+		return types.StringNull()
+	}
+
+	if apiObject.UserId == nil || aws.StringValue(apiObject.UserId) == d.Meta().AccountID {
+		return flex.StringToFramework(ctx, apiObject.GroupId)
+	}
+
+	// [UserID/]GroupID.
+	return types.StringValue(strings.Join([]string{aws.StringValue(apiObject.UserId), aws.StringValue(apiObject.GroupId)}, "/"))
+}
+
+type dataSourceSecurityGroupRuleData struct {
 	ARN                       types.String `tfsdk:"arn"`
 	CIDRIPv4                  types.String `tfsdk:"cidr_ipv4"`
 	CIDRIPv6                  types.String `tfsdk:"cidr_ipv6"`

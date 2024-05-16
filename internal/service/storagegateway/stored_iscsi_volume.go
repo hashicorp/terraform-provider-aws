@@ -35,7 +35,7 @@ func ResourceStorediSCSIVolume() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -65,7 +65,7 @@ func ResourceStorediSCSIVolume() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			names.AttrKMSKey: {
+			"kms_key": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -73,7 +73,7 @@ func ResourceStorediSCSIVolume() *schema.Resource {
 				RequiredWith: []string{"kms_encrypted"},
 			},
 			// Poor API naming: this accepts the IP address of the network interface
-			names.AttrNetworkInterfaceID: {
+			"network_interface_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -82,7 +82,7 @@ func ResourceStorediSCSIVolume() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			names.AttrSnapshotID: {
+			"snapshot_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -95,7 +95,7 @@ func ResourceStorediSCSIVolume() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			names.AttrTargetARN: {
+			"target_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -115,7 +115,7 @@ func ResourceStorediSCSIVolume() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrVolumeType: {
+			"volume_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -134,17 +134,17 @@ func resourceStorediSCSIVolumeCreate(ctx context.Context, d *schema.ResourceData
 	input := &storagegateway.CreateStorediSCSIVolumeInput{
 		DiskId:               aws.String(d.Get("disk_id").(string)),
 		GatewayARN:           aws.String(d.Get("gateway_arn").(string)),
-		NetworkInterfaceId:   aws.String(d.Get(names.AttrNetworkInterfaceID).(string)),
+		NetworkInterfaceId:   aws.String(d.Get("network_interface_id").(string)),
 		TargetName:           aws.String(d.Get("target_name").(string)),
 		PreserveExistingData: aws.Bool(d.Get("preserve_existing_data").(bool)),
 		Tags:                 getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk(names.AttrSnapshotID); ok {
+	if v, ok := d.GetOk("snapshot_id"); ok {
 		input.SnapshotId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrKMSKey); ok {
+	if v, ok := d.GetOk("kms_key"); ok {
 		input.KMSKey = aws.String(v.(string))
 	}
 
@@ -198,26 +198,26 @@ func resourceStorediSCSIVolumeRead(ctx context.Context, d *schema.ResourceData, 
 	volume := output.StorediSCSIVolumes[0]
 
 	arn := aws.StringValue(volume.VolumeARN)
-	d.Set(names.AttrARN, arn)
+	d.Set("arn", arn)
 	d.Set("disk_id", volume.VolumeDiskId)
-	d.Set(names.AttrSnapshotID, volume.SourceSnapshotId)
+	d.Set("snapshot_id", volume.SourceSnapshotId)
 	d.Set("volume_id", volume.VolumeId)
-	d.Set(names.AttrVolumeType, volume.VolumeType)
+	d.Set("volume_type", volume.VolumeType)
 	d.Set("volume_size_in_bytes", volume.VolumeSizeInBytes)
 	d.Set("volume_status", volume.VolumeStatus)
 	d.Set("volume_attachment_status", volume.VolumeAttachmentStatus)
 	d.Set("preserve_existing_data", volume.PreservedExistingData)
-	d.Set(names.AttrKMSKey, volume.KMSKey)
+	d.Set("kms_key", volume.KMSKey)
 	d.Set("kms_encrypted", volume.KMSKey != nil)
 
 	attr := volume.VolumeiSCSIAttributes
 	d.Set("chap_enabled", attr.ChapEnabled)
 	d.Set("lun_number", attr.LunNumber)
-	d.Set(names.AttrNetworkInterfaceID, attr.NetworkInterfaceId)
+	d.Set("network_interface_id", attr.NetworkInterfaceId)
 	d.Set("network_interface_port", attr.NetworkInterfacePort)
 
 	targetARN := aws.StringValue(attr.TargetARN)
-	d.Set(names.AttrTargetARN, targetARN)
+	d.Set("target_arn", targetARN)
 
 	gatewayARN, targetName, err := ParseVolumeGatewayARNAndTargetNameFromARN(targetARN)
 	if err != nil {

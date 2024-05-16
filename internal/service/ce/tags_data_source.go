@@ -6,33 +6,30 @@ package ce
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/costexplorer"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/costexplorer/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/costexplorer"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const (
-	tagRootElementSchemaLevel = 2
-)
-
-// @SDKDataSource("aws_ce_tags", name="Tags")
-func dataSourceTags() *schema.Resource {
+// @SDKDataSource("aws_ce_tags")
+func DataSourceTags() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTagsRead,
-
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
-			names.AttrFilter: {
+			"filter": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
-				Elem:     expressionElem(tagRootElementSchemaLevel),
+				Elem:     schemaCostCategoryRule(),
 			},
 			"search_string": {
 				Type:          schema.TypeString,
@@ -46,15 +43,15 @@ func dataSourceTags() *schema.Resource {
 				ConflictsWith: []string{"search_string"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrKey: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.Metric](),
+						"key": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(costexplorer.Metric_Values(), false),
 						},
 						"sort_order": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.SortOrder](),
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(costexplorer.SortOrder_Values(), false),
 						},
 					},
 				},
@@ -64,7 +61,7 @@ func dataSourceTags() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
-			names.AttrTags: {
+			"tags": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -96,14 +93,15 @@ func dataSourceTags() *schema.Resource {
 
 func dataSourceTagsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CEClient(ctx)
+
+	conn := meta.(*conns.AWSClient).CEConn(ctx)
 
 	input := &costexplorer.GetTagsInput{
 		TimePeriod: expandTagsTimePeriod(d.Get("time_period").([]interface{})[0].(map[string]interface{})),
 	}
 
-	if v, ok := d.GetOk(names.AttrFilter); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Filter = expandExpression(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetOk("filter"); ok {
+		input.Filter = expandCostExpressions(v.([]interface{}))[0]
 	}
 
 	if v, ok := d.GetOk("search_string"); ok {
@@ -118,24 +116,25 @@ func dataSourceTagsRead(ctx context.Context, d *schema.ResourceData, meta interf
 		input.TagKey = aws.String(v.(string))
 	}
 
-	output, err := conn.GetTags(ctx, input)
+	resp, err := conn.GetTagsWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Cost Explorer Tags: %s", err)
+		return create.AppendDiagError(diags, names.CE, create.ErrActionReading, DSNameTags, d.Id(), err)
 	}
 
+	d.Set("tags", flex.FlattenStringList(resp.Tags))
+
 	d.SetId(meta.(*conns.AWSClient).AccountID)
-	d.Set(names.AttrTags, output.Tags)
 
 	return diags
 }
 
-func expandTagsSortBys(tfList []interface{}) []awstypes.SortDefinition {
+func expandTagsSortBys(tfList []interface{}) []*costexplorer.SortDefinition {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []awstypes.SortDefinition
+	var apiObjects []*costexplorer.SortDefinition
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -152,22 +151,26 @@ func expandTagsSortBys(tfList []interface{}) []awstypes.SortDefinition {
 	return apiObjects
 }
 
-func expandTagsSortBy(tfMap map[string]interface{}) awstypes.SortDefinition {
-	apiObject := awstypes.SortDefinition{}
-	apiObject.Key = aws.String(tfMap[names.AttrKey].(string))
+func expandTagsSortBy(tfMap map[string]interface{}) *costexplorer.SortDefinition {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &costexplorer.SortDefinition{}
+	apiObject.Key = aws.String(tfMap["key"].(string))
 	if v, ok := tfMap["sort_order"]; ok {
-		apiObject.SortOrder = awstypes.SortOrder(v.(string))
+		apiObject.SortOrder = aws.String(v.(string))
 	}
 
 	return apiObject
 }
 
-func expandTagsTimePeriod(tfMap map[string]interface{}) *awstypes.DateInterval {
+func expandTagsTimePeriod(tfMap map[string]interface{}) *costexplorer.DateInterval {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &awstypes.DateInterval{}
+	apiObject := &costexplorer.DateInterval{}
 	apiObject.Start = aws.String(tfMap["start"].(string))
 	apiObject.End = aws.String(tfMap["end"].(string))
 

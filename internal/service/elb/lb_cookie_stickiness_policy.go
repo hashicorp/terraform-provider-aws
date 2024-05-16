@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_lb_cookie_stickiness_policy")
@@ -45,7 +44,7 @@ func ResourceCookieStickinessPolicy() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -60,7 +59,7 @@ func resourceCookieStickinessPolicyCreate(ctx context.Context, d *schema.Resourc
 
 	lbName := d.Get("load_balancer").(string)
 	lbPort := d.Get("lb_port").(int)
-	policyName := d.Get(names.AttrName).(string)
+	policyName := d.Get("name").(string)
 	id := LBCookieStickinessPolicyCreateResourceID(lbName, lbPort, policyName)
 	{
 		input := &elb.CreateLBCookieStickinessPolicyInput{
@@ -130,7 +129,7 @@ func resourceCookieStickinessPolicyRead(ctx context.Context, d *schema.ResourceD
 	}
 	d.Set("lb_port", lbPort)
 	d.Set("load_balancer", lbName)
-	d.Set(names.AttrName, policyName)
+	d.Set("name", policyName)
 
 	return diags
 }

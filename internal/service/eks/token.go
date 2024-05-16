@@ -50,7 +50,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/aws/smithy-go/middleware"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Identity is returned on successful Verify() results. It contains a parsed
@@ -134,8 +133,8 @@ func NewSTSError(m string) STSError {
 }
 
 var parameterWhitelist = map[string]bool{
-	names.AttrAction:       true,
-	names.AttrVersion:      true,
+	"action":               true,
+	"version":              true,
 	"x-amz-algorithm":      true,
 	"x-amz-credential":     true,
 	"x-amz-date":           true,
@@ -329,7 +328,7 @@ func (v tokenVerifier) Verify(token string) (*Identity, error) {
 		queryParamsLower.Set(strings.ToLower(key), values[0])
 	}
 
-	if queryParamsLower.Get(names.AttrAction) != "GetCallerIdentity" {
+	if queryParamsLower.Get("action") != "GetCallerIdentity" {
 		return nil, FormatError{"unexpected action parameter in pre-signed URL"}
 	}
 

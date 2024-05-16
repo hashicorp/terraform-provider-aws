@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_dax_subnet_group")
@@ -32,22 +31,22 @@ func ResourceSubnetGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			names.AttrSubnetIDs: {
+			"subnet_ids": {
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			names.AttrVPCID: {
+			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -60,19 +59,19 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).DAXClient(ctx)
 
 	input := &dax.CreateSubnetGroupInput{
-		SubnetGroupName: aws.String(d.Get(names.AttrName).(string)),
-		SubnetIds:       flex.ExpandStringValueSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
+		SubnetGroupName: aws.String(d.Get("name").(string)),
+		SubnetIds:       flex.ExpandStringValueSet(d.Get("subnet_ids").(*schema.Set)),
 	}
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
 	_, err := conn.CreateSubnetGroup(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating DAX Subnet Group (%s): %s", d.Get(names.AttrName).(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating DAX Subnet Group (%s): %s", d.Get("name").(string), err)
 	}
 
-	d.SetId(d.Get(names.AttrName).(string))
+	d.SetId(d.Get("name").(string))
 	return append(diags, resourceSubnetGroupRead(ctx, d, meta)...)
 }
 
@@ -95,14 +94,14 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	sg := resp.SubnetGroups[0]
 
-	d.Set(names.AttrName, sg.SubnetGroupName)
-	d.Set(names.AttrDescription, sg.Description)
+	d.Set("name", sg.SubnetGroupName)
+	d.Set("description", sg.Description)
 	subnetIDs := make([]*string, 0, len(sg.Subnets))
 	for _, v := range sg.Subnets {
 		subnetIDs = append(subnetIDs, v.SubnetIdentifier)
 	}
-	d.Set(names.AttrSubnetIDs, flex.FlattenStringList(subnetIDs))
-	d.Set(names.AttrVPCID, sg.VpcId)
+	d.Set("subnet_ids", flex.FlattenStringList(subnetIDs))
+	d.Set("vpc_id", sg.VpcId)
 
 	return diags
 }
@@ -115,12 +114,12 @@ func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 		SubnetGroupName: aws.String(d.Id()),
 	}
 
-	if d.HasChange(names.AttrDescription) {
-		input.Description = aws.String(d.Get(names.AttrDescription).(string))
+	if d.HasChange("description") {
+		input.Description = aws.String(d.Get("description").(string))
 	}
 
-	if d.HasChange(names.AttrSubnetIDs) {
-		input.SubnetIds = flex.ExpandStringValueSet(d.Get(names.AttrSubnetIDs).(*schema.Set))
+	if d.HasChange("subnet_ids") {
+		input.SubnetIds = flex.ExpandStringValueSet(d.Get("subnet_ids").(*schema.Set))
 	}
 
 	_, err := conn.UpdateSubnetGroup(ctx, input)

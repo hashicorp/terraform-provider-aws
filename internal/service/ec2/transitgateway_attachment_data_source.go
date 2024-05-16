@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ec2_transit_gateway_attachment")
@@ -25,7 +24,7 @@ func DataSourceTransitGatewayAttachment() *schema.Resource {
 		ReadWithoutTimeout: dataSourceTransitGatewayAttachmentRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -37,8 +36,8 @@ func DataSourceTransitGatewayAttachment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrFilter: customFiltersSchema(),
-			names.AttrResourceID: {
+			"filter": customFiltersSchema(),
+			"resource_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -46,21 +45,21 @@ func DataSourceTransitGatewayAttachment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrResourceType: {
+			"resource_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrState: {
+			"state": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			names.AttrTransitGatewayAttachmentID: {
+			"tags": tftags.TagsSchemaComputed(),
+			"transit_gateway_attachment_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			names.AttrTransitGatewayID: {
+			"transit_gateway_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -80,7 +79,7 @@ func dataSourceTransitGatewayAttachmentRead(ctx context.Context, d *schema.Resou
 	input := &ec2.DescribeTransitGatewayAttachmentsInput{}
 
 	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get(names.AttrFilter).(*schema.Set),
+		d.Get("filter").(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {
@@ -88,7 +87,7 @@ func dataSourceTransitGatewayAttachmentRead(ctx context.Context, d *schema.Resou
 		input.Filters = nil
 	}
 
-	if v, ok := d.GetOk(names.AttrTransitGatewayAttachmentID); ok {
+	if v, ok := d.GetOk("transit_gateway_attachment_id"); ok {
 		input.TransitGatewayAttachmentIds = aws.StringSlice([]string{v.(string)})
 	}
 
@@ -109,7 +108,7 @@ func dataSourceTransitGatewayAttachmentRead(ctx context.Context, d *schema.Resou
 		AccountID: resourceOwnerID,
 		Resource:  fmt.Sprintf("transit-gateway-attachment/%s", d.Id()),
 	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set("arn", arn)
 	if v := transitGatewayAttachment.Association; v != nil {
 		d.Set("association_state", v.State)
 		d.Set("association_transit_gateway_route_table_id", v.TransitGatewayRouteTableId)
@@ -117,15 +116,15 @@ func dataSourceTransitGatewayAttachmentRead(ctx context.Context, d *schema.Resou
 		d.Set("association_state", nil)
 		d.Set("association_transit_gateway_route_table_id", nil)
 	}
-	d.Set(names.AttrResourceID, transitGatewayAttachment.ResourceId)
+	d.Set("resource_id", transitGatewayAttachment.ResourceId)
 	d.Set("resource_owner_id", resourceOwnerID)
-	d.Set(names.AttrResourceType, transitGatewayAttachment.ResourceType)
-	d.Set(names.AttrState, transitGatewayAttachment.State)
-	d.Set(names.AttrTransitGatewayAttachmentID, transitGatewayAttachmentID)
-	d.Set(names.AttrTransitGatewayID, transitGatewayAttachment.TransitGatewayId)
+	d.Set("resource_type", transitGatewayAttachment.ResourceType)
+	d.Set("state", transitGatewayAttachment.State)
+	d.Set("transit_gateway_attachment_id", transitGatewayAttachmentID)
+	d.Set("transit_gateway_id", transitGatewayAttachment.TransitGatewayId)
 	d.Set("transit_gateway_owner_id", transitGatewayAttachment.TransitGatewayOwnerId)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, transitGatewayAttachment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, transitGatewayAttachment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

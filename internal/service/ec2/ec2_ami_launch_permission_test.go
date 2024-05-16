@@ -33,7 +33,7 @@ func TestAccEC2AMILaunchPermission_basic(t *testing.T) {
 				Config: testAccAMILaunchPermissionConfig_accountID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMILaunchPermissionExists(ctx, resourceName),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
+					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
 					resource.TestCheckResourceAttr(resourceName, "group", ""),
 					resource.TestCheckResourceAttr(resourceName, "organization_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "organizational_unit_arn", ""),
@@ -110,7 +110,7 @@ func TestAccEC2AMILaunchPermission_group(t *testing.T) {
 				Config: testAccAMILaunchPermissionConfig_group(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMILaunchPermissionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrAccountID, ""),
+					resource.TestCheckResourceAttr(resourceName, "account_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "group", "all"),
 					resource.TestCheckResourceAttr(resourceName, "organization_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "organizational_unit_arn", ""),
@@ -141,7 +141,7 @@ func TestAccEC2AMILaunchPermission_organizationARN(t *testing.T) {
 				Config: testAccAMILaunchPermissionConfig_organizationARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMILaunchPermissionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrAccountID, ""),
+					resource.TestCheckResourceAttr(resourceName, "account_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "group", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "organization_arn"),
 					resource.TestCheckResourceAttr(resourceName, "organizational_unit_arn", ""),
@@ -172,7 +172,7 @@ func TestAccEC2AMILaunchPermission_organizationalUnitARN(t *testing.T) {
 				Config: testAccAMILaunchPermissionConfig_organizationalUnitARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMILaunchPermissionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrAccountID, ""),
+					resource.TestCheckResourceAttr(resourceName, "account_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "group", ""),
 					resource.TestCheckResourceAttr(resourceName, "organization_arn", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "organizational_unit_arn"),
@@ -204,7 +204,7 @@ func testAccAMILaunchPermissionImportStateIdFunc(resourceName string) resource.I
 		} else if v := rs.Primary.Attributes["organizational_unit_arn"]; v != "" {
 			return fmt.Sprintf("%s/%s", v, imageID), nil
 		} else {
-			return fmt.Sprintf("%s/%s", rs.Primary.Attributes[names.AttrAccountID], imageID), nil
+			return fmt.Sprintf("%s/%s", rs.Primary.Attributes["account_id"], imageID), nil
 		}
 	}
 }

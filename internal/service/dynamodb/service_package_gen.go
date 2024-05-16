@@ -5,6 +5,11 @@ package dynamodb
 import (
 	"context"
 
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	dynamodb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	dynamodb_sdkv1 "github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -28,14 +33,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceTable,
+			Factory:  DataSourceTable,
 			TypeName: "aws_dynamodb_table",
-			Name:     "Table",
 		},
 		{
-			Factory:  dataSourceTableItem,
+			Factory:  DataSourceTableItem,
 			TypeName: "aws_dynamodb_table_item",
-			Name:     "Table Item",
 		},
 	}
 }
@@ -43,14 +46,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  resourceContributorInsights,
+			Factory:  ResourceContributorInsights,
 			TypeName: "aws_dynamodb_contributor_insights",
-			Name:     "Contributor Insights",
 		},
 		{
-			Factory:  resourceGlobalTable,
+			Factory:  ResourceGlobalTable,
 			TypeName: "aws_dynamodb_global_table",
-			Name:     "Global Table",
 		},
 		{
 			Factory:  resourceKinesisStreamingDestination,
@@ -58,25 +59,23 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Kinesis Streaming Destination",
 		},
 		{
-			Factory:  resourceTable,
+			Factory:  ResourceTable,
 			TypeName: "aws_dynamodb_table",
 			Name:     "Table",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "arn",
 			},
 		},
 		{
-			Factory:  resourceTableExport,
+			Factory:  ResourceTableExport,
 			TypeName: "aws_dynamodb_table_export",
-			Name:     "Table Export",
 		},
 		{
-			Factory:  resourceTableItem,
+			Factory:  ResourceTableItem,
 			TypeName: "aws_dynamodb_table_item",
-			Name:     "Table Item",
 		},
 		{
-			Factory:  resourceTableReplica,
+			Factory:  ResourceTableReplica,
 			TypeName: "aws_dynamodb_table_replica",
 			Name:     "Table Replica",
 			Tags:     &types.ServicePackageResourceTags{},
@@ -91,6 +90,24 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 
 func (p *servicePackage) ServicePackageName() string {
 	return names.DynamoDB
+}
+
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
+func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*dynamodb_sdkv1.DynamoDB, error) {
+	sess := config["session"].(*session_sdkv1.Session)
+
+	return dynamodb_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+}
+
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*dynamodb_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+
+	return dynamodb_sdkv2.NewFromConfig(cfg, func(o *dynamodb_sdkv2.Options) {
+		if endpoint := config["endpoint"].(string); endpoint != "" {
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
+		}
+	}), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

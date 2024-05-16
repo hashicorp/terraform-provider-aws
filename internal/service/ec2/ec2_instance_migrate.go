@@ -11,7 +11,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func InstanceMigrateState(
@@ -79,11 +78,11 @@ func ReadV0BlockDevices(is *terraform.InstanceState) (map[string]map[string]stri
 
 func WriteV1BlockDevice(
 	is *terraform.InstanceState, oldBd map[string]string) {
-	code := create.StringHashcode(oldBd[names.AttrDeviceName])
+	code := create.StringHashcode(oldBd["device_name"])
 	bdType := "ebs_block_device"
 	if vn, ok := oldBd["virtual_name"]; ok && strings.HasPrefix(vn, "ephemeral") {
 		bdType = "ephemeral_block_device"
-	} else if dn, ok := oldBd[names.AttrDeviceName]; ok && dn == "/dev/sda1" {
+	} else if dn, ok := oldBd["device_name"]; ok && dn == "/dev/sda1" {
 		bdType = "root_block_device"
 	}
 
@@ -92,14 +91,14 @@ func WriteV1BlockDevice(
 		delete(oldBd, "virtual_name")
 	case "root_block_device":
 		delete(oldBd, "virtual_name")
-		delete(oldBd, names.AttrEncrypted)
-		delete(oldBd, names.AttrSnapshotID)
+		delete(oldBd, "encrypted")
+		delete(oldBd, "snapshot_id")
 	case "ephemeral_block_device":
-		delete(oldBd, names.AttrDeleteOnTermination)
-		delete(oldBd, names.AttrEncrypted)
-		delete(oldBd, names.AttrIOPS)
-		delete(oldBd, names.AttrVolumeSize)
-		delete(oldBd, names.AttrVolumeType)
+		delete(oldBd, "delete_on_termination")
+		delete(oldBd, "encrypted")
+		delete(oldBd, "iops")
+		delete(oldBd, "volume_size")
+		delete(oldBd, "volume_type")
 	}
 	for attr, val := range oldBd {
 		attrKey := fmt.Sprintf("%s.%d.%s", bdType, code, attr)

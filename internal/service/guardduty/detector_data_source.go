@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_guardduty_detector")
@@ -30,22 +29,22 @@ func DataSourceDetector() *schema.Resource {
 							Type:     schema.TypeList,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrName: {
+									"name": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									names.AttrStatus: {
+									"status": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
 								},
 							},
 						},
-						names.AttrName: {
+						"name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrStatus: {
+						"status": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -56,16 +55,16 @@ func DataSourceDetector() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrID: {
+			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			names.AttrServiceRoleARN: {
+			"service_role_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -77,7 +76,7 @@ func dataSourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
-	detectorID := d.Get(names.AttrID).(string)
+	detectorID := d.Get("id").(string)
 
 	if detectorID == "" {
 		output, err := FindDetector(ctx, conn)
@@ -104,8 +103,8 @@ func dataSourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta in
 		d.Set("features", nil)
 	}
 	d.Set("finding_publishing_frequency", gdo.FindingPublishingFrequency)
-	d.Set(names.AttrServiceRoleARN, gdo.ServiceRole)
-	d.Set(names.AttrStatus, gdo.Status)
+	d.Set("service_role_arn", gdo.ServiceRole)
+	d.Set("status", gdo.Status)
 
 	return diags
 }

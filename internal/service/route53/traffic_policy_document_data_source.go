@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_route53_traffic_policy_document")
@@ -21,32 +20,32 @@ func DataSourceTrafficPolicyDocument() *schema.Resource {
 		ReadWithoutTimeout: dataSourceTrafficPolicyDocumentRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrEndpoint: {
+			"endpoint": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrID: {
+						"id": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						names.AttrType: {
+						"type": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice(TrafficPolicyDocEndpointType_values(), false),
 						},
-						names.AttrRegion: {
+						"region": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						names.AttrValue: {
+						"value": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
 					},
 				},
 			},
-			names.AttrJSON: {
+			"json": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -54,16 +53,16 @@ func DataSourceTrafficPolicyDocument() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			names.AttrRule: {
+			"rule": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrID: {
+						"id": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						names.AttrType: {
+						"type": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -81,7 +80,7 @@ func DataSourceTrafficPolicyDocument() *schema.Resource {
 										Type:     schema.TypeBool,
 										Optional: true,
 									},
-									names.AttrHealthCheck: {
+									"health_check": {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -106,7 +105,7 @@ func DataSourceTrafficPolicyDocument() *schema.Resource {
 										Type:     schema.TypeBool,
 										Optional: true,
 									},
-									names.AttrHealthCheck: {
+									"health_check": {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -138,7 +137,7 @@ func DataSourceTrafficPolicyDocument() *schema.Resource {
 										Type:     schema.TypeBool,
 										Optional: true,
 									},
-									names.AttrHealthCheck: {
+									"health_check": {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -174,7 +173,7 @@ func DataSourceTrafficPolicyDocument() *schema.Resource {
 										Type:     schema.TypeBool,
 										Optional: true,
 									},
-									names.AttrHealthCheck: {
+									"health_check": {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -186,7 +185,7 @@ func DataSourceTrafficPolicyDocument() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									names.AttrRegion: {
+									"region": {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -197,7 +196,7 @@ func DataSourceTrafficPolicyDocument() *schema.Resource {
 								},
 							},
 						},
-						names.AttrRegion: {
+						"region": {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Resource{
@@ -210,11 +209,11 @@ func DataSourceTrafficPolicyDocument() *schema.Resource {
 										Type:     schema.TypeBool,
 										Optional: true,
 									},
-									names.AttrHealthCheck: {
+									"health_check": {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									names.AttrRegion: {
+									"region": {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -234,7 +233,7 @@ func DataSourceTrafficPolicyDocument() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									names.AttrHealthCheck: {
+									"health_check": {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -252,7 +251,7 @@ func DataSourceTrafficPolicyDocument() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			names.AttrVersion: {
+			"version": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "2015-10-01",
@@ -267,13 +266,13 @@ func DataSourceTrafficPolicyDocument() *schema.Resource {
 func dataSourceTrafficPolicyDocumentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	trafficDoc := &Route53TrafficPolicyDoc{}
 
-	if v, ok := d.GetOk(names.AttrEndpoint); ok {
+	if v, ok := d.GetOk("endpoint"); ok {
 		trafficDoc.Endpoints = expandDataTrafficPolicyEndpointsDoc(v.(*schema.Set).List())
 	}
 	if v, ok := d.GetOk("record_type"); ok {
 		trafficDoc.RecordType = v.(string)
 	}
-	if v, ok := d.GetOk(names.AttrRule); ok {
+	if v, ok := d.GetOk("rule"); ok {
 		trafficDoc.Rules = expandDataTrafficPolicyRulesDoc(v.(*schema.Set).List())
 	}
 	if v, ok := d.GetOk("start_endpoint"); ok {
@@ -282,7 +281,7 @@ func dataSourceTrafficPolicyDocumentRead(ctx context.Context, d *schema.Resource
 	if v, ok := d.GetOk("start_rule"); ok {
 		trafficDoc.StartRule = v.(string)
 	}
-	if v, ok := d.GetOk(names.AttrVersion); ok {
+	if v, ok := d.GetOk("version"); ok {
 		trafficDoc.AWSPolicyFormatVersion = v.(string)
 	}
 
@@ -292,7 +291,7 @@ func dataSourceTrafficPolicyDocumentRead(ctx context.Context, d *schema.Resource
 	}
 	jsonString := string(jsonDoc)
 
-	d.Set(names.AttrJSON, jsonString)
+	d.Set("json", jsonString)
 
 	d.SetId(strconv.Itoa(schema.HashString(jsonString)))
 
@@ -306,13 +305,13 @@ func expandDataTrafficPolicyEndpointDoc(tfMap map[string]interface{}) *TrafficPo
 
 	apiObject := &TrafficPolicyEndpoint{}
 
-	if v, ok := tfMap[names.AttrType]; ok && v.(string) != "" {
+	if v, ok := tfMap["type"]; ok && v.(string) != "" {
 		apiObject.Type = v.(string)
 	}
-	if v, ok := tfMap[names.AttrRegion]; ok && v.(string) != "" {
+	if v, ok := tfMap["region"]; ok && v.(string) != "" {
 		apiObject.Region = v.(string)
 	}
-	if v, ok := tfMap[names.AttrValue]; ok && v.(string) != "" {
+	if v, ok := tfMap["value"]; ok && v.(string) != "" {
 		apiObject.Value = v.(string)
 	}
 
@@ -333,7 +332,7 @@ func expandDataTrafficPolicyEndpointsDoc(tfList []interface{}) map[string]*Traff
 			continue
 		}
 
-		id := tfMap[names.AttrID].(string)
+		id := tfMap["id"].(string)
 
 		apiObject := expandDataTrafficPolicyEndpointDoc(tfMap)
 
@@ -350,7 +349,7 @@ func expandDataTrafficPolicyRuleDoc(tfMap map[string]interface{}) *TrafficPolicy
 
 	apiObject := &TrafficPolicyRule{}
 
-	if v, ok := tfMap[names.AttrType]; ok && v.(string) != "" {
+	if v, ok := tfMap["type"]; ok && v.(string) != "" {
 		apiObject.RuleType = v.(string)
 	}
 	if v, ok := tfMap["primary"]; ok && len(v.([]interface{})) > 0 {
@@ -365,7 +364,7 @@ func expandDataTrafficPolicyRuleDoc(tfMap map[string]interface{}) *TrafficPolicy
 	if v, ok := tfMap["geo_proximity_location"]; ok && len(v.(*schema.Set).List()) > 0 {
 		apiObject.GeoProximityLocations = expandDataTrafficPolicyProximitiesDoc(v.(*schema.Set).List())
 	}
-	if v, ok := tfMap[names.AttrRegion]; ok && len(v.(*schema.Set).List()) > 0 {
+	if v, ok := tfMap["region"]; ok && len(v.(*schema.Set).List()) > 0 {
 		apiObject.Regions = expandDataTrafficPolicyRegionsDoc(v.(*schema.Set).List())
 	}
 	if v, ok := tfMap["items"]; ok && len(v.(*schema.Set).List()) > 0 {
@@ -389,7 +388,7 @@ func expandDataTrafficPolicyRulesDoc(tfList []interface{}) map[string]*TrafficPo
 			continue
 		}
 
-		id := tfMap[names.AttrID].(string)
+		id := tfMap["id"].(string)
 
 		apiObject := expandDataTrafficPolicyRuleDoc(tfMap)
 
@@ -417,7 +416,7 @@ func expandDataTrafficPolicyFailOverDoc(tfList []interface{}) *TrafficPolicyFail
 	if v, ok := tfMap["evaluate_target_health"]; ok && v.(bool) {
 		apiObject.EvaluateTargetHealth = aws.Bool(v.(bool))
 	}
-	if v, ok := tfMap[names.AttrHealthCheck]; ok && v.(string) != "" {
+	if v, ok := tfMap["health_check"]; ok && v.(string) != "" {
 		apiObject.HealthCheck = v.(string)
 	}
 
@@ -452,7 +451,7 @@ func expandDataTrafficPolicyLocationDoc(tfMap map[string]interface{}) *TrafficPo
 	if v, ok := tfMap["evaluate_target_health"]; ok && v.(bool) {
 		apiObject.EvaluateTargetHealth = aws.Bool(v.(bool))
 	}
-	if v, ok := tfMap[names.AttrHealthCheck]; ok && v.(string) != "" {
+	if v, ok := tfMap["health_check"]; ok && v.(string) != "" {
 		apiObject.HealthCheck = v.(string)
 	}
 
@@ -494,7 +493,7 @@ func expandDataTrafficPolicyProximityDoc(tfMap map[string]interface{}) *TrafficP
 	if v, ok := tfMap["rule_reference"]; ok && v.(string) != "" {
 		apiObject.RuleReference = v.(string)
 	}
-	if v, ok := tfMap[names.AttrRegion]; ok && v.(string) != "" {
+	if v, ok := tfMap["region"]; ok && v.(string) != "" {
 		apiObject.Region = v.(string)
 	}
 	if v, ok := tfMap["latitude"]; ok && v.(string) != "" {
@@ -509,7 +508,7 @@ func expandDataTrafficPolicyProximityDoc(tfMap map[string]interface{}) *TrafficP
 	if v, ok := tfMap["evaluate_target_health"]; ok && v.(bool) {
 		apiObject.EvaluateTargetHealth = aws.Bool(v.(bool))
 	}
-	if v, ok := tfMap[names.AttrHealthCheck]; ok && v.(string) != "" {
+	if v, ok := tfMap["health_check"]; ok && v.(string) != "" {
 		apiObject.HealthCheck = v.(string)
 	}
 
@@ -551,13 +550,13 @@ func expandDataTrafficPolicyRegionDoc(tfMap map[string]interface{}) *TrafficPoli
 	if v, ok := tfMap["rule_reference"]; ok && v.(string) != "" {
 		apiObject.RuleReference = v.(string)
 	}
-	if v, ok := tfMap[names.AttrRegion]; ok && v.(string) != "" {
+	if v, ok := tfMap["region"]; ok && v.(string) != "" {
 		apiObject.Region = v.(string)
 	}
 	if v, ok := tfMap["evaluate_target_health"]; ok && v.(bool) {
 		apiObject.EvaluateTargetHealth = aws.Bool(v.(bool))
 	}
-	if v, ok := tfMap[names.AttrHealthCheck]; ok && v.(string) != "" {
+	if v, ok := tfMap["health_check"]; ok && v.(string) != "" {
 		apiObject.HealthCheck = v.(string)
 	}
 
@@ -596,7 +595,7 @@ func expandDataTrafficPolicyItemDoc(tfMap map[string]interface{}) *TrafficPolicy
 	if v, ok := tfMap["endpoint_reference"]; ok && v.(string) != "" {
 		apiObject.EndpointReference = v.(string)
 	}
-	if v, ok := tfMap[names.AttrHealthCheck]; ok && v.(string) != "" {
+	if v, ok := tfMap["health_check"]; ok && v.(string) != "" {
 		apiObject.HealthCheck = v.(string)
 	}
 

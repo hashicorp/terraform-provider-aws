@@ -44,7 +44,7 @@ func ResourceLoggingConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -70,7 +70,7 @@ func ResourceLoggingConfiguration() *schema.Resource {
 							},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrLogGroupName: {
+									"log_group_name": {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_./#-]{1,512}$`), "must contain only lowercase alphanumeric characters, hyphen, dot, underscore, forward slash, or hash sign, and between 1 and 512 characters"),
@@ -116,7 +116,7 @@ func ResourceLoggingConfiguration() *schema.Resource {
 							},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrBucketName: {
+									"bucket_name": {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9a-z.-]{3,63}$`), "must contain only lowercase alphanumeric characters, hyphen, or dot, and between 3 and 63 characters"),
@@ -127,11 +127,11 @@ func ResourceLoggingConfiguration() *schema.Resource {
 					},
 				},
 			},
-			names.AttrState: {
+			"state": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -157,17 +157,17 @@ func resourceLoggingConfigurationCreate(ctx context.Context, d *schema.ResourceD
 		Tags:                     getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk(names.AttrName); ok {
+	if v, ok := d.GetOk("name"); ok {
 		in.Name = aws.String(v.(string))
 	}
 
 	out, err := conn.CreateLoggingConfiguration(ctx, in)
 	if err != nil {
-		return create.AppendDiagError(diags, names.IVSChat, create.ErrActionCreating, ResNameLoggingConfiguration, d.Get(names.AttrName).(string), err)
+		return create.AppendDiagError(diags, names.IVSChat, create.ErrActionCreating, ResNameLoggingConfiguration, d.Get("name").(string), err)
 	}
 
 	if out == nil {
-		return create.AppendDiagError(diags, names.IVSChat, create.ErrActionCreating, ResNameLoggingConfiguration, d.Get(names.AttrName).(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.IVSChat, create.ErrActionCreating, ResNameLoggingConfiguration, d.Get("name").(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.Arn))
@@ -196,14 +196,14 @@ func resourceLoggingConfigurationRead(ctx context.Context, d *schema.ResourceDat
 		return create.AppendDiagError(diags, names.IVSChat, create.ErrActionReading, ResNameLoggingConfiguration, d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, out.Arn)
+	d.Set("arn", out.Arn)
 
 	if err := d.Set("destination_configuration", flattenDestinationConfiguration(out.DestinationConfiguration)); err != nil {
 		return create.AppendDiagError(diags, names.IVSChat, create.ErrActionSetting, ResNameLoggingConfiguration, d.Id(), err)
 	}
 
-	d.Set(names.AttrName, out.Name)
-	d.Set(names.AttrState, out.State)
+	d.Set("name", out.Name)
+	d.Set("state", out.State)
 
 	return diags
 }
@@ -219,8 +219,8 @@ func resourceLoggingConfigurationUpdate(ctx context.Context, d *schema.ResourceD
 		Identifier: aws.String(d.Id()),
 	}
 
-	if d.HasChanges(names.AttrName) {
-		in.Name = aws.String(d.Get(names.AttrName).(string))
+	if d.HasChanges("name") {
+		in.Name = aws.String(d.Get("name").(string))
 		update = true
 	}
 
@@ -304,7 +304,7 @@ func flattenCloudWatchDestinationConfiguration(apiObject types.CloudWatchLogsDes
 	m := map[string]interface{}{}
 
 	if v := apiObject.LogGroupName; v != nil {
-		m[names.AttrLogGroupName] = aws.ToString(v)
+		m["log_group_name"] = aws.ToString(v)
 	}
 
 	return []interface{}{m}
@@ -324,7 +324,7 @@ func flattenS3DestinationConfiguration(apiObject types.S3DestinationConfiguratio
 	m := map[string]interface{}{}
 
 	if v := apiObject.BucketName; v != nil {
-		m[names.AttrBucketName] = aws.ToString(v)
+		m["bucket_name"] = aws.ToString(v)
 	}
 
 	return []interface{}{m}
@@ -363,7 +363,7 @@ func expandCloudWatchLogsDestinationConfiguration(vSettings []interface{}) *type
 
 	tfMap := vSettings[0].(map[string]interface{})
 
-	if v, ok := tfMap[names.AttrLogGroupName].(string); ok && v != "" {
+	if v, ok := tfMap["log_group_name"].(string); ok && v != "" {
 		a.LogGroupName = aws.String(v)
 	}
 
@@ -395,7 +395,7 @@ func expandS3DestinationConfiguration(vSettings []interface{}) *types.S3Destinat
 
 	tfMap := vSettings[0].(map[string]interface{})
 
-	if v, ok := tfMap[names.AttrBucketName].(string); ok && v != "" {
+	if v, ok := tfMap["bucket_name"].(string); ok && v != "" {
 		a.BucketName = aws.String(v)
 	}
 

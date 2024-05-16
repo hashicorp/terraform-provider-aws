@@ -26,7 +26,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource
@@ -47,9 +46,9 @@ func (r *resourceCIDRCollection) Metadata(_ context.Context, request resource.Me
 func (r *resourceCIDRCollection) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrID:  framework.IDAttribute(),
-			names.AttrName: schema.StringAttribute{
+			"arn": framework.ARNAttributeComputedOnly(),
+			"id":  framework.IDAttribute(),
+			"name": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -59,7 +58,7 @@ func (r *resourceCIDRCollection) Schema(ctx context.Context, req resource.Schema
 					stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), `can include letters, digits, underscore (_) and the dash (-) character`),
 				},
 			},
-			names.AttrVersion: schema.Int64Attribute{
+			"version": schema.Int64Attribute{
 				Computed: true,
 			},
 		},
@@ -150,7 +149,7 @@ func (r *resourceCIDRCollection) Delete(ctx context.Context, request resource.De
 	conn := r.Meta().Route53Conn(ctx)
 
 	tflog.Debug(ctx, "deleting Route 53 CIDR Collection", map[string]interface{}{
-		names.AttrID: data.ID.ValueString(),
+		"id": data.ID.ValueString(),
 	})
 
 	_, err := conn.DeleteCidrCollectionWithContext(ctx, &route53.DeleteCidrCollectionInput{
@@ -165,7 +164,7 @@ func (r *resourceCIDRCollection) Delete(ctx context.Context, request resource.De
 }
 
 func (r *resourceCIDRCollection) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), request, response)
 }
 
 type resourceCIDRCollectionData struct {

@@ -6,9 +6,11 @@ package dynamodb_test
 import (
 	"context"
 	"fmt"
+	"log"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -36,7 +38,7 @@ func TestAccDynamoDBContributorInsights_basic(t *testing.T) {
 				Config: testAccContributorInsightsConfig_basic(rName, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckContributorInsightsExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
+					resource.TestCheckResourceAttr(resourceName, "table_name", rName),
 				),
 			},
 			{
@@ -112,27 +114,30 @@ resource "aws_dynamodb_contributor_insights" "test" {
 `, rName, indexName))
 }
 
-func testAccCheckContributorInsightsExists(ctx context.Context, n string, v *dynamodb.DescribeContributorInsightsOutput) resource.TestCheckFunc {
+func testAccCheckContributorInsightsExists(ctx context.Context, n string, ci *dynamodb.DescribeContributorInsightsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", n)
+			return fmt.Errorf("not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBClient(ctx)
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("no DynamodDB Contributor Insights ID is set")
+		}
 
-		tableName, indexName, err := tfdynamodb.ContributorInsightsParseResourceID(rs.Primary.ID)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn(ctx)
+
+		tableName, indexName, err := tfdynamodb.DecodeContributorInsightsID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		output, err := tfdynamodb.FindContributorInsightsByTwoPartKey(ctx, conn, tableName, indexName)
-
+		output, err := tfdynamodb.FindContributorInsights(ctx, conn, tableName, indexName)
 		if err != nil {
 			return err
 		}
 
-		*v = *output
+		ci = output
 
 		return nil
 	}
@@ -140,29 +145,39 @@ func testAccCheckContributorInsightsExists(ctx context.Context, n string, v *dyn
 
 func testAccCheckContributorInsightsDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dynamodb_contributor_insights" {
 				continue
 			}
 
-			tableName, indexName, err := tfdynamodb.ContributorInsightsParseResourceID(rs.Primary.ID)
+			log.Printf("[DEBUG] Checking if DynamoDB Contributor Insights %s exists", rs.Primary.ID)
+
+			tableName, indexName, err := tfdynamodb.DecodeContributorInsightsID(rs.Primary.ID)
 			if err != nil {
 				return err
 			}
 
-			_, err = tfdynamodb.FindContributorInsightsByTwoPartKey(ctx, conn, tableName, indexName)
+			in := &dynamodb.DescribeContributorInsightsInput{
+				TableName: aws.String(tableName),
+			}
 
+			if indexName != "" {
+				in.IndexName = aws.String(indexName)
+			}
+
+			_, err = tfdynamodb.FindContributorInsights(ctx, conn, tableName, indexName)
+			if err == nil {
+				return fmt.Errorf("the DynamoDB Contributor Insights %s still exists. Failing", rs.Primary.ID)
+			}
+
+			// Verify the error is what we want
 			if tfresource.NotFound(err) {
-				continue
+				return nil
 			}
 
-			if err != nil {
-				return err
-			}
-
-			return fmt.Errorf("DynamoDB Contributor Insights %s still exists", rs.Primary.ID)
+			return err
 		}
 
 		return nil

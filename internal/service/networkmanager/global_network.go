@@ -45,11 +45,11 @@ func ResourceGlobalNetwork() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
@@ -69,7 +69,7 @@ func resourceGlobalNetworkCreate(ctx context.Context, d *schema.ResourceData, me
 		Tags: getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -106,8 +106,8 @@ func resourceGlobalNetworkRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading Network Manager Global Network (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, globalNetwork.GlobalNetworkArn)
-	d.Set(names.AttrDescription, globalNetwork.Description)
+	d.Set("arn", globalNetwork.GlobalNetworkArn)
+	d.Set("description", globalNetwork.Description)
 
 	setTagsOut(ctx, globalNetwork.Tags)
 
@@ -119,9 +119,9 @@ func resourceGlobalNetworkUpdate(ctx context.Context, d *schema.ResourceData, me
 
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &networkmanager.UpdateGlobalNetworkInput{
-			Description:     aws.String(d.Get(names.AttrDescription).(string)),
+			Description:     aws.String(d.Get("description").(string)),
 			GlobalNetworkId: aws.String(d.Id()),
 		}
 

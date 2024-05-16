@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -44,7 +43,7 @@ func sweepScalingPlans(region string) error {
 			r := ResourceScalingPlan()
 			d := r.Data(nil)
 			d.SetId("unused")
-			d.Set(names.AttrName, scalingPlanName)
+			d.Set("name", scalingPlanName)
 			d.Set("scaling_plan_version", scalingPlanVersion)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))

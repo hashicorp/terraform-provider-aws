@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ec2_network_insights_path")
@@ -23,15 +22,15 @@ func DataSourceNetworkInsightsPath() *schema.Resource {
 		ReadWithoutTimeout: dataSourceNetworkInsightsPathRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDestination: {
+			"destination": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDestinationARN: {
+			"destination_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -43,17 +42,17 @@ func DataSourceNetworkInsightsPath() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			names.AttrFilter: customFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"network_insights_path_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			names.AttrProtocol: {
+			"protocol": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrSource: {
+			"source": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -65,7 +64,7 @@ func DataSourceNetworkInsightsPath() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -83,7 +82,7 @@ func dataSourceNetworkInsightsPathRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get(names.AttrFilter).(*schema.Set),
+		d.Get("filter").(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {
@@ -99,18 +98,18 @@ func dataSourceNetworkInsightsPathRead(ctx context.Context, d *schema.ResourceDa
 
 	networkInsightsPathID := aws.StringValue(nip.NetworkInsightsPathId)
 	d.SetId(networkInsightsPathID)
-	d.Set(names.AttrARN, nip.NetworkInsightsPathArn)
-	d.Set(names.AttrDestination, nip.Destination)
-	d.Set(names.AttrDestinationARN, nip.DestinationArn)
+	d.Set("arn", nip.NetworkInsightsPathArn)
+	d.Set("destination", nip.Destination)
+	d.Set("destination_arn", nip.DestinationArn)
 	d.Set("destination_ip", nip.DestinationIp)
 	d.Set("destination_port", nip.DestinationPort)
 	d.Set("network_insights_path_id", networkInsightsPathID)
-	d.Set(names.AttrProtocol, nip.Protocol)
-	d.Set(names.AttrSource, nip.Source)
+	d.Set("protocol", nip.Protocol)
+	d.Set("source", nip.Source)
 	d.Set("source_arn", nip.SourceArn)
 	d.Set("source_ip", nip.SourceIp)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, nip.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, nip.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ses_identity_policy")
@@ -39,7 +38,7 @@ func ResourceIdentityPolicy() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -48,7 +47,7 @@ func ResourceIdentityPolicy() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric characters, dashes, and underscores"),
 				),
 			},
-			names.AttrPolicy: {
+			"policy": {
 				Type:                  schema.TypeString,
 				Required:              true,
 				ValidateFunc:          validation.StringIsJSON,
@@ -68,11 +67,11 @@ func resourceIdentityPolicyCreate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	identity := d.Get("identity").(string)
-	policyName := d.Get(names.AttrName).(string)
+	policyName := d.Get("name").(string)
 
-	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
+	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", d.Get(names.AttrPolicy).(string), err)
+		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", d.Get("policy").(string), err)
 	}
 
 	input := &ses.PutIdentityPolicyInput{
@@ -100,9 +99,9 @@ func resourceIdentityPolicyUpdate(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "updating SES Identity Policy (%s): %s", d.Id(), err)
 	}
 
-	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
+	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", d.Get(names.AttrPolicy).(string), err)
+		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", d.Get("policy").(string), err)
 	}
 
 	req := ses.PutIdentityPolicyInput{
@@ -157,14 +156,14 @@ func resourceIdentityPolicyRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.Set("identity", identity)
-	d.Set(names.AttrName, policyName)
+	d.Set("name", policyName)
 
-	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), aws.StringValue(policy))
+	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(policy))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading SES Identity Policy (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrPolicy, policyToSet)
+	d.Set("policy", policyToSet)
 
 	return diags
 }

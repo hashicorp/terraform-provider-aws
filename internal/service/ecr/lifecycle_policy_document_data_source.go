@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource(name="Lifecycle Policy Document")
@@ -37,22 +36,22 @@ func (d *lifecyclePolicyDocumentDataSource) Metadata(_ context.Context, request 
 func (d *lifecyclePolicyDocumentDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrJSON: schema.StringAttribute{
+			"json": schema.StringAttribute{
 				Computed: true,
 			},
 		},
 		Blocks: map[string]schema.Block{
-			names.AttrRule: schema.ListNestedBlock{
+			"rule": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[lifecyclePolicyDocumentRule](ctx),
 				Validators: []validator.List{
 					listvalidator.IsRequired(),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						names.AttrDescription: schema.StringAttribute{
+						"description": schema.StringAttribute{
 							Optional: true,
 						},
-						names.AttrPriority: schema.Int64Attribute{
+						"priority": schema.Int64Attribute{
 							Required: true,
 							Validators: []validator.Int64{
 								int64validator.AtLeast(1),
@@ -60,14 +59,14 @@ func (d *lifecyclePolicyDocumentDataSource) Schema(ctx context.Context, request 
 						},
 					},
 					Blocks: map[string]schema.Block{
-						names.AttrAction: schema.ListNestedBlock{
+						"action": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[lifecyclePolicyDocumentRuleAction](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									names.AttrType: schema.StringAttribute{
+									"type": schema.StringAttribute{
 										Required: true,
 										Validators: []validator.String{
 											stringvalidator.OneOf("expire"),

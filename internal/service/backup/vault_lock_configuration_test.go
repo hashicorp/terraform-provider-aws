@@ -35,7 +35,7 @@ func TestAccBackupVaultLockConfiguration_basic(t *testing.T) {
 				Config: testAccVaultLockConfigurationConfig_all(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultLockConfigurationExists(ctx, resourceName, &vault),
-					resource.TestCheckResourceAttr(resourceName, "changeable_for_days", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "changeable_for_days", "3"),
 					resource.TestCheckResourceAttr(resourceName, "max_retention_days", "1200"),
 					resource.TestCheckResourceAttr(resourceName, "min_retention_days", "7"),
 				),

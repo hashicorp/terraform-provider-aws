@@ -14,26 +14,26 @@ func TestAccS3ControlAccessGrants_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Instance": {
-			acctest.CtBasic:  testAccAccessGrantsInstance_basic,
+			"basic":          testAccAccessGrantsInstance_basic,
 			"disappears":     testAccAccessGrantsInstance_disappears,
 			"tags":           testAccAccessGrantsInstance_tags,
 			"identityCenter": testAccAccessGrantsInstance_identityCenter,
 		},
 		"Location": {
-			acctest.CtBasic: testAccAccessGrantsLocation_basic,
-			"disappears":    testAccAccessGrantsLocation_disappears,
-			"tags":          testAccAccessGrantsLocation_tags,
-			"update":        testAccAccessGrantsLocation_update,
+			"basic":      testAccAccessGrantsLocation_basic,
+			"disappears": testAccAccessGrantsLocation_disappears,
+			"tags":       testAccAccessGrantsLocation_tags,
+			"update":     testAccAccessGrantsLocation_update,
 		},
 		"Grant": {
-			acctest.CtBasic:         testAccAccessGrant_basic,
+			"basic":                 testAccAccessGrant_basic,
 			"disappears":            testAccAccessGrant_disappears,
 			"tags":                  testAccAccessGrant_tags,
 			"locationConfiguration": testAccAccessGrant_locationConfiguration,
 		},
 		"InstanceResourcePolicy": {
-			acctest.CtBasic: testAccAccessGrantsInstanceResourcePolicy_basic,
-			"disappears":    testAccAccessGrantsInstanceResourcePolicy_disappears,
+			"basic":      testAccAccessGrantsInstanceResourcePolicy_basic,
+			"disappears": testAccAccessGrantsInstanceResourcePolicy_disappears,
 		},
 	}
 

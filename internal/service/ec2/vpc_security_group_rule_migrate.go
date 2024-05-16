@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func SecurityGroupRuleMigrateState(
@@ -45,8 +44,8 @@ func migrateSGRuleStateV0toV1(is *terraform.InstanceState) (*terraform.InstanceS
 	}
 
 	log.Printf("[DEBUG] Attributes before migration: %#v", is.Attributes)
-	newID := SecurityGroupRuleCreateID(is.Attributes["security_group_id"], is.Attributes[names.AttrType], perm)
-	is.Attributes[names.AttrID] = newID
+	newID := SecurityGroupRuleCreateID(is.Attributes["security_group_id"], is.Attributes["type"], perm)
+	is.Attributes["id"] = newID
 	is.ID = newID
 	log.Printf("[DEBUG] Attributes after migration: %#v, new id: %s", is.Attributes, newID)
 	return is, nil
@@ -66,7 +65,7 @@ func migrateExpandIPPerm(attrs map[string]string) (*ec2.IpPermission, error) {
 
 	perm.ToPort = aws.Int64(int64(tp))
 	perm.FromPort = aws.Int64(int64(fp))
-	perm.IpProtocol = aws.String(attrs[names.AttrProtocol])
+	perm.IpProtocol = aws.String(attrs["protocol"])
 
 	groups := make(map[string]bool)
 	if attrs["self"] == "true" {

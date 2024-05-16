@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_transfer_ssh_key")
@@ -47,7 +46,7 @@ func ResourceSSHKey() *schema.Resource {
 				ValidateFunc: validServerID,
 			},
 
-			names.AttrUserName: {
+			"user_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -60,7 +59,7 @@ func ResourceSSHKey() *schema.Resource {
 func resourceSSHKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferConn(ctx)
-	userName := d.Get(names.AttrUserName).(string)
+	userName := d.Get("user_name").(string)
 	serverID := d.Get("server_id").(string)
 
 	createOpts := &transfer.ImportSshPublicKeyInput{
@@ -117,7 +116,7 @@ func resourceSSHKeyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.Set("server_id", resp.ServerId)
-	d.Set(names.AttrUserName, resp.User.UserName)
+	d.Set("user_name", resp.User.UserName)
 	d.Set("body", body)
 
 	return diags

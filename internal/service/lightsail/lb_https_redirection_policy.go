@@ -34,7 +34,7 @@ func ResourceLoadBalancerHTTPSRedirectionPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrEnabled: {
+			"enabled": {
 				Type:     schema.TypeBool,
 				Required: true,
 			},
@@ -60,7 +60,7 @@ func resourceLoadBalancerHTTPSRedirectionPolicyCreate(ctx context.Context, d *sc
 	in := lightsail.UpdateLoadBalancerAttributeInput{
 		LoadBalancerName: aws.String(lbName),
 		AttributeName:    types.LoadBalancerAttributeNameHttpsRedirectionEnabled,
-		AttributeValue:   aws.String(fmt.Sprint(d.Get(names.AttrEnabled).(bool))),
+		AttributeValue:   aws.String(fmt.Sprint(d.Get("enabled").(bool))),
 	}
 
 	out, err := conn.UpdateLoadBalancerAttribute(ctx, &in)
@@ -97,7 +97,7 @@ func resourceLoadBalancerHTTPSRedirectionPolicyRead(ctx context.Context, d *sche
 		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionReading, ResLoadBalancerHTTPSRedirectionPolicy, d.Id(), err)
 	}
 
-	d.Set(names.AttrEnabled, out)
+	d.Set("enabled", out)
 	d.Set("lb_name", d.Id())
 
 	return diags
@@ -108,11 +108,11 @@ func resourceLoadBalancerHTTPSRedirectionPolicyUpdate(ctx context.Context, d *sc
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 	lbName := d.Get("lb_name").(string)
-	if d.HasChange(names.AttrEnabled) {
+	if d.HasChange("enabled") {
 		in := lightsail.UpdateLoadBalancerAttributeInput{
 			LoadBalancerName: aws.String(lbName),
 			AttributeName:    types.LoadBalancerAttributeNameHttpsRedirectionEnabled,
-			AttributeValue:   aws.String(fmt.Sprint(d.Get(names.AttrEnabled).(bool))),
+			AttributeValue:   aws.String(fmt.Sprint(d.Get("enabled").(bool))),
 		}
 
 		out, err := conn.UpdateLoadBalancerAttribute(ctx, &in)

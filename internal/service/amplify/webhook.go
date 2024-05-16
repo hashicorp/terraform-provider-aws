@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_amplify_webhook", name="Webhook")
@@ -42,7 +41,7 @@ func resourceWebhook() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -51,11 +50,11 @@ func resourceWebhook() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z/_.-]{1,255}$`), "should be not be more than 255 letters, numbers, and the symbols /_.-"),
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			names.AttrURL: {
+			"url": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -72,7 +71,7 @@ func resourceWebhookCreate(ctx context.Context, d *schema.ResourceData, meta int
 		BranchName: aws.String(d.Get("branch_name").(string)),
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -118,10 +117,10 @@ func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.Set("app_id", parts[1])
-	d.Set(names.AttrARN, webhookArn)
+	d.Set("arn", webhookArn)
 	d.Set("branch_name", webhook.BranchName)
-	d.Set(names.AttrDescription, webhook.Description)
-	d.Set(names.AttrURL, webhook.WebhookUrl)
+	d.Set("description", webhook.Description)
+	d.Set("url", webhook.WebhookUrl)
 
 	return diags
 }
@@ -138,8 +137,8 @@ func resourceWebhookUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		input.BranchName = aws.String(d.Get("branch_name").(string))
 	}
 
-	if d.HasChange(names.AttrDescription) {
-		input.Description = aws.String(d.Get(names.AttrDescription).(string))
+	if d.HasChange("description") {
+		input.Description = aws.String(d.Get("description").(string))
 	}
 
 	_, err := conn.UpdateWebhook(ctx, input)

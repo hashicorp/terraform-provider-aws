@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_db_proxy_default_target_group", name="DB Proxy Default Target Group")
@@ -43,7 +42,7 @@ func resourceProxyDefaultTargetGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -96,7 +95,7 @@ func resourceProxyDefaultTargetGroup() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validIdentifier,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -154,7 +153,7 @@ func resourceProxyDefaultTargetGroupRead(ctx context.Context, d *schema.Resource
 		return sdkdiag.AppendErrorf(diags, "reading RDS DB Proxy Default Target Group (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, tg.TargetGroupArn)
+	d.Set("arn", tg.TargetGroupArn)
 	if tg.ConnectionPoolConfig != nil {
 		if err := d.Set("connection_pool_config", []interface{}{flattenConnectionPoolConfigurationInfo(tg.ConnectionPoolConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting connection_pool_config: %s", err)
@@ -163,7 +162,7 @@ func resourceProxyDefaultTargetGroupRead(ctx context.Context, d *schema.Resource
 		d.Set("connection_pool_config", nil)
 	}
 	d.Set("db_proxy_name", tg.DBProxyName)
-	d.Set(names.AttrName, tg.TargetGroupName)
+	d.Set("name", tg.TargetGroupName)
 
 	return diags
 }

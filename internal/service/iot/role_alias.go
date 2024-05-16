@@ -31,16 +31,16 @@ func ResourceRoleAlias() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrAlias: {
+			"alias": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrRoleARN: {
+			"role_arn": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -62,8 +62,8 @@ func resourceRoleAliasCreate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
-	roleAlias := d.Get(names.AttrAlias).(string)
-	roleArn := d.Get(names.AttrRoleARN).(string)
+	roleAlias := d.Get("alias").(string)
+	roleArn := d.Get("role_arn").(string)
 	credentialDuration := d.Get("credential_duration").(int)
 
 	_, err := conn.CreateRoleAliasWithContext(ctx, &iot.CreateRoleAliasInput{
@@ -115,9 +115,9 @@ func resourceRoleAliasRead(ctx context.Context, d *schema.ResourceData, meta int
 		return diags
 	}
 
-	d.Set(names.AttrARN, roleAliasDescription.RoleAliasArn)
-	d.Set(names.AttrAlias, roleAliasDescription.RoleAlias)
-	d.Set(names.AttrRoleARN, roleAliasDescription.RoleArn)
+	d.Set("arn", roleAliasDescription.RoleAliasArn)
+	d.Set("alias", roleAliasDescription.RoleAlias)
+	d.Set("role_arn", roleAliasDescription.RoleArn)
 	d.Set("credential_duration", roleAliasDescription.CredentialDurationSeconds)
 
 	return diags
@@ -127,7 +127,7 @@ func resourceRoleAliasDelete(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
-	alias := d.Get(names.AttrAlias).(string)
+	alias := d.Get("alias").(string)
 
 	_, err := conn.DeleteRoleAliasWithContext(ctx, &iot.DeleteRoleAliasInput{
 		RoleAlias: aws.String(d.Id()),
@@ -155,10 +155,10 @@ func resourceRoleAliasUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 	}
 
-	if d.HasChange(names.AttrRoleARN) {
+	if d.HasChange("role_arn") {
 		roleAliasInput := &iot.UpdateRoleAliasInput{
 			RoleAlias: aws.String(d.Id()),
-			RoleArn:   aws.String(d.Get(names.AttrRoleARN).(string)),
+			RoleArn:   aws.String(d.Get("role_arn").(string)),
 		}
 		_, err := conn.UpdateRoleAliasWithContext(ctx, roleAliasInput)
 		if err != nil {

@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_chime_voice_connector_termination_credentials")
@@ -41,12 +40,12 @@ func ResourceVoiceConnectorTerminationCredentials() *schema.Resource {
 				MaxItems: 10,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrUsername: {
+						"username": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringIsNotEmpty,
 						},
-						names.AttrPassword: {
+						"password": {
 							Type:         schema.TypeString,
 							Required:     true,
 							Sensitive:    true,
@@ -162,7 +161,7 @@ func expandCredentialsUsernames(data []interface{}) []string {
 
 	for _, rData := range data {
 		item := rData.(map[string]interface{})
-		rawNames = append(rawNames, item[names.AttrUsername].(string))
+		rawNames = append(rawNames, item["username"].(string))
 	}
 
 	return rawNames
@@ -174,8 +173,8 @@ func expandCredentials(data []interface{}) []awstypes.Credential {
 	for _, rItem := range data {
 		item := rItem.(map[string]interface{})
 		credentials = append(credentials, awstypes.Credential{
-			Username: aws.String(item[names.AttrUsername].(string)),
-			Password: aws.String(item[names.AttrPassword].(string)),
+			Username: aws.String(item["username"].(string)),
+			Password: aws.String(item["password"].(string)),
 		})
 	}
 

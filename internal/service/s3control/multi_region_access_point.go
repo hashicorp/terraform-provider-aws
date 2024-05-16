@@ -42,18 +42,18 @@ func resourceMultiRegionAccessPoint() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrAccountID: {
+			"account_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			names.AttrAlias: {
+			"alias": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -65,7 +65,7 @@ func resourceMultiRegionAccessPoint() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrName: {
+						"name": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -107,7 +107,7 @@ func resourceMultiRegionAccessPoint() *schema.Resource {
 								},
 							},
 						},
-						names.AttrRegion: {
+						"region": {
 							Type:     schema.TypeSet,
 							Required: true,
 							ForceNew: true,
@@ -115,7 +115,7 @@ func resourceMultiRegionAccessPoint() *schema.Resource {
 							MaxItems: 20,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrBucket: {
+									"bucket": {
 										Type:         schema.TypeString,
 										Required:     true,
 										ForceNew:     true,
@@ -128,7 +128,7 @@ func resourceMultiRegionAccessPoint() *schema.Resource {
 										ForceNew:     true,
 										ValidateFunc: verify.ValidAccountID,
 									},
-									names.AttrRegion: {
+									"region": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -138,11 +138,11 @@ func resourceMultiRegionAccessPoint() *schema.Resource {
 					},
 				},
 			},
-			names.AttrDomainName: {
+			"domain_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -154,7 +154,7 @@ func resourceMultiRegionAccessPointCreate(ctx context.Context, d *schema.Resourc
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	accountID := meta.(*conns.AWSClient).AccountID
-	if v, ok := d.GetOk(names.AttrAccountID); ok {
+	if v, ok := d.GetOk("account_id"); ok {
 		accountID = v.(string)
 	}
 	input := &s3control.CreateMultiRegionAccessPointInput{
@@ -212,15 +212,15 @@ func resourceMultiRegionAccessPointRead(ctx context.Context, d *schema.ResourceD
 		AccountID: accountID,
 		Resource:  fmt.Sprintf("accesspoint/%s", alias),
 	}.String()
-	d.Set(names.AttrAccountID, accountID)
-	d.Set(names.AttrAlias, alias)
-	d.Set(names.AttrARN, arn)
+	d.Set("account_id", accountID)
+	d.Set("alias", alias)
+	d.Set("arn", arn)
 	if err := d.Set("details", []interface{}{flattenMultiRegionAccessPointReport(accessPoint)}); err != nil {
 		return diag.Errorf("setting details: %s", err)
 	}
 	// https://docs.aws.amazon.com/AmazonS3/latest/userguide//MultiRegionAccessPointRequests.html#MultiRegionAccessPointHostnames.
-	d.Set(names.AttrDomainName, meta.(*conns.AWSClient).PartitionHostname(ctx, alias+".accesspoint.s3-global"))
-	d.Set(names.AttrStatus, accessPoint.Status)
+	d.Set("domain_name", meta.(*conns.AWSClient).PartitionHostname(ctx, alias+".accesspoint.s3-global"))
+	d.Set("status", accessPoint.Status)
 
 	return nil
 }
@@ -388,7 +388,7 @@ func expandCreateMultiRegionAccessPointInput_(tfMap map[string]interface{}) *typ
 
 	apiObject := &types.CreateMultiRegionAccessPointInput{}
 
-	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
+	if v, ok := tfMap["name"].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
@@ -396,7 +396,7 @@ func expandCreateMultiRegionAccessPointInput_(tfMap map[string]interface{}) *typ
 		apiObject.PublicAccessBlock = expandPublicAccessBlockConfiguration(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap[names.AttrRegion].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap["region"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.Regions = expandRegions(v.List())
 	}
 
@@ -436,7 +436,7 @@ func expandRegion(tfMap map[string]interface{}) *types.Region {
 
 	apiObject := &types.Region{}
 
-	if v, ok := tfMap[names.AttrBucket].(string); ok && v != "" {
+	if v, ok := tfMap["bucket"].(string); ok && v != "" {
 		apiObject.Bucket = aws.String(v)
 	}
 
@@ -481,7 +481,7 @@ func flattenMultiRegionAccessPointReport(apiObject *types.MultiRegionAccessPoint
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Name; v != nil {
-		tfMap[names.AttrName] = aws.ToString(v)
+		tfMap["name"] = aws.ToString(v)
 	}
 
 	if v := apiObject.PublicAccessBlock; v != nil {
@@ -489,7 +489,7 @@ func flattenMultiRegionAccessPointReport(apiObject *types.MultiRegionAccessPoint
 	}
 
 	if v := apiObject.Regions; v != nil {
-		tfMap[names.AttrRegion] = flattenRegionReports(v)
+		tfMap["region"] = flattenRegionReports(v)
 	}
 
 	return tfMap
@@ -525,7 +525,7 @@ func flattenRegionReport(apiObject types.RegionReport) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Bucket; v != nil {
-		tfMap[names.AttrBucket] = aws.ToString(v)
+		tfMap["bucket"] = aws.ToString(v)
 	}
 
 	if v := apiObject.BucketAccountId; v != nil {
@@ -533,7 +533,7 @@ func flattenRegionReport(apiObject types.RegionReport) map[string]interface{} {
 	}
 
 	if v := apiObject.Region; v != nil {
-		tfMap[names.AttrRegion] = aws.ToString(v)
+		tfMap["region"] = aws.ToString(v)
 	}
 
 	return tfMap

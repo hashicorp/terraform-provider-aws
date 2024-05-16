@@ -40,7 +40,7 @@ func ResourceACL() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -48,20 +48,20 @@ func ResourceACL() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
+				ConflictsWith: []string{"name_prefix"},
 				ValidateFunc:  validateResourceName(aclNameMaxLength),
 			},
-			names.AttrNamePrefix: {
+			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
+				ConflictsWith: []string{"name"},
 				ValidateFunc:  validateResourceNamePrefix(aclNameMaxLength - id.UniqueIDSuffixLength),
 			},
 			names.AttrTags:    tftags.TagsSchema(),
@@ -83,7 +83,7 @@ func resourceACLCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &memorydb.CreateACLInput{
 		ACLName: aws.String(name),
 		Tags:    getTagsIn(ctx),
@@ -114,7 +114,7 @@ func resourceACLUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &memorydb.UpdateACLInput{
 			ACLName: aws.String(d.Id()),
 		}
@@ -186,10 +186,10 @@ func resourceACLRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return sdkdiag.AppendErrorf(diags, "reading MemoryDB ACL (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, acl.ARN)
+	d.Set("arn", acl.ARN)
 	d.Set("minimum_engine_version", acl.MinimumEngineVersion)
-	d.Set(names.AttrName, acl.Name)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(acl.Name)))
+	d.Set("name", acl.Name)
+	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(acl.Name)))
 	d.Set("user_names", flex.FlattenStringSet(acl.UserNames))
 
 	return diags

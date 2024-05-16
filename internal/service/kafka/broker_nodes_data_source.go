@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_msk_broker_nodes", name="Broker Nodes")
@@ -50,7 +49,7 @@ func dataSourceBrokerNodes() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrEndpoints: {
+						"endpoints": {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -102,7 +101,7 @@ func dataSourceBrokerNodesRead(ctx context.Context, d *schema.ResourceData, meta
 				"broker_id":             aws.ToFloat64(brokerNodeInfo.BrokerId),
 				"client_subnet":         aws.ToString(brokerNodeInfo.ClientSubnet),
 				"client_vpc_ip_address": aws.ToString(brokerNodeInfo.ClientVpcIpAddress),
-				names.AttrEndpoints:     brokerNodeInfo.Endpoints,
+				"endpoints":             brokerNodeInfo.Endpoints,
 				"node_arn":              aws.ToString(apiObject.NodeARN),
 			}
 			tfList = append(tfList, tfMap)

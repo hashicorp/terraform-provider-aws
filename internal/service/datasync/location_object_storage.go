@@ -41,7 +41,7 @@ func resourceLocationObjectStorage() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrAccessKey: {
+			"access_key": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(8, 200),
@@ -54,17 +54,17 @@ func resourceLocationObjectStorage() *schema.Resource {
 					ValidateFunc: verify.ValidARN,
 				},
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrBucketName: {
+			"bucket_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(3, 63),
 			},
-			names.AttrSecretKey: {
+			"secret_key": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Sensitive:    true,
@@ -100,7 +100,7 @@ func resourceLocationObjectStorage() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrURI: {
+			"uri": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -116,17 +116,17 @@ func resourceLocationObjectStorageCreate(ctx context.Context, d *schema.Resource
 
 	input := &datasync.CreateLocationObjectStorageInput{
 		AgentArns:      flex.ExpandStringValueSet(d.Get("agent_arns").(*schema.Set)),
-		BucketName:     aws.String(d.Get(names.AttrBucketName).(string)),
+		BucketName:     aws.String(d.Get("bucket_name").(string)),
 		ServerHostname: aws.String(d.Get("server_hostname").(string)),
 		Subdirectory:   aws.String(d.Get("subdirectory").(string)),
 		Tags:           getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk(names.AttrAccessKey); ok {
+	if v, ok := d.GetOk("access_key"); ok {
 		input.AccessKey = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrSecretKey); ok {
+	if v, ok := d.GetOk("secret_key"); ok {
 		input.SecretKey = aws.String(v.(string))
 	}
 
@@ -175,16 +175,16 @@ func resourceLocationObjectStorageRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set(names.AttrAccessKey, output.AccessKey)
+	d.Set("access_key", output.AccessKey)
 	d.Set("agent_arns", output.AgentArns)
-	d.Set(names.AttrARN, output.LocationArn)
-	d.Set(names.AttrBucketName, bucketName)
+	d.Set("arn", output.LocationArn)
+	d.Set("bucket_name", bucketName)
 	d.Set("server_certificate", string(output.ServerCertificate))
 	d.Set("server_hostname", hostname)
 	d.Set("server_port", output.ServerPort)
 	d.Set("server_protocol", output.ServerProtocol)
 	d.Set("subdirectory", subdirectory)
-	d.Set(names.AttrURI, uri)
+	d.Set("uri", uri)
 
 	return diags
 }
@@ -193,13 +193,13 @@ func resourceLocationObjectStorageUpdate(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &datasync.UpdateLocationObjectStorageInput{
 			LocationArn: aws.String(d.Id()),
 		}
 
-		if d.HasChange(names.AttrAccessKey) {
-			input.AccessKey = aws.String(d.Get(names.AttrAccessKey).(string))
+		if d.HasChange("access_key") {
+			input.AccessKey = aws.String(d.Get("access_key").(string))
 		}
 
 		if d.HasChange("agent_arns") {
@@ -207,19 +207,19 @@ func resourceLocationObjectStorageUpdate(ctx context.Context, d *schema.Resource
 
 			// Access key must be specified when updating agent ARNs
 			input.AccessKey = aws.String("")
-			if v, ok := d.GetOk(names.AttrAccessKey); ok {
+			if v, ok := d.GetOk("access_key"); ok {
 				input.AccessKey = aws.String(v.(string))
 			}
 
 			// Secret key must be specified when updating agent ARNs
 			input.SecretKey = aws.String("")
-			if v, ok := d.GetOk(names.AttrSecretKey); ok {
+			if v, ok := d.GetOk("secret_key"); ok {
 				input.SecretKey = aws.String(v.(string))
 			}
 		}
 
-		if d.HasChange(names.AttrSecretKey) {
-			input.SecretKey = aws.String(d.Get(names.AttrSecretKey).(string))
+		if d.HasChange("secret_key") {
+			input.SecretKey = aws.String(d.Get("secret_key").(string))
 		}
 
 		if d.HasChange("server_certificate") {

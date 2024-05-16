@@ -10,13 +10,12 @@ import (
 	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	route53recoverycontrolconfig_sdkv1 "github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
 func (p *servicePackage) NewConn(ctx context.Context, m map[string]any) (*route53recoverycontrolconfig_sdkv1.Route53RecoveryControlConfig, error) {
-	sess := m[names.AttrSession].(*session_sdkv1.Session)
-	config := &aws_sdkv1.Config{Endpoint: aws_sdkv1.String(m[names.AttrEndpoint].(string))}
+	sess := m["session"].(*session_sdkv1.Session)
+	config := &aws_sdkv1.Config{Endpoint: aws_sdkv1.String(m["endpoint"].(string))}
 
 	// Force "global" services to correct Regions.
 	if m["partition"].(string) == endpoints_sdkv1.AwsPartitionID {

@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_apigatewayv2_route", name="Route")
@@ -102,7 +101,7 @@ func resourceRoute() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			names.AttrTarget: {
+			"target": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
@@ -150,7 +149,7 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.RouteResponseSelectionExpression = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrTarget); ok {
+	if v, ok := d.GetOk("target"); ok {
 		input.Target = aws.String(v.(string))
 	}
 
@@ -193,7 +192,7 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	d.Set("route_key", output.RouteKey)
 	d.Set("route_response_selection_expression", output.RouteResponseSelectionExpression)
-	d.Set(names.AttrTarget, output.Target)
+	d.Set("target", output.Target)
 
 	return diags
 }
@@ -285,8 +284,8 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.RouteResponseSelectionExpression = aws.String(d.Get("route_response_selection_expression").(string))
 		}
 
-		if d.HasChange(names.AttrTarget) {
-			input.Target = aws.String(d.Get(names.AttrTarget).(string))
+		if d.HasChange("target") {
+			input.Target = aws.String(d.Get("target").(string))
 		}
 
 		_, err := conn.UpdateRoute(ctx, input)

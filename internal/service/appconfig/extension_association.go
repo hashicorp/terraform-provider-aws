@@ -38,7 +38,7 @@ func ResourceExtensionAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -47,12 +47,12 @@ func ResourceExtensionAssociation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrParameters: {
+			"parameters": {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrResourceARN: {
+			"resource_arn": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -72,10 +72,10 @@ func resourceExtensionAssociationCreate(ctx context.Context, d *schema.ResourceD
 
 	in := appconfig.CreateExtensionAssociationInput{
 		ExtensionIdentifier: aws.String(d.Get("extension_arn").(string)),
-		ResourceIdentifier:  aws.String(d.Get(names.AttrResourceARN).(string)),
+		ResourceIdentifier:  aws.String(d.Get("resource_arn").(string)),
 	}
 
-	if v, ok := d.GetOk(names.AttrParameters); ok {
+	if v, ok := d.GetOk("parameters"); ok {
 		in.Parameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
 	}
 
@@ -111,10 +111,10 @@ func resourceExtensionAssociationRead(ctx context.Context, d *schema.ResourceDat
 		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionReading, ResExtensionAssociation, d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, out.Arn)
+	d.Set("arn", out.Arn)
 	d.Set("extension_arn", out.ExtensionArn)
-	d.Set(names.AttrParameters, out.Parameters)
-	d.Set(names.AttrResourceARN, out.ResourceArn)
+	d.Set("parameters", out.Parameters)
+	d.Set("resource_arn", out.ResourceArn)
 	d.Set("extension_version", out.ExtensionVersionNumber)
 
 	return diags
@@ -130,8 +130,8 @@ func resourceExtensionAssociationUpdate(ctx context.Context, d *schema.ResourceD
 		ExtensionAssociationId: aws.String(d.Id()),
 	}
 
-	if d.HasChange(names.AttrParameters) {
-		in.Parameters = flex.ExpandStringValueMap(d.Get(names.AttrParameters).(map[string]interface{}))
+	if d.HasChange("parameters") {
+		in.Parameters = flex.ExpandStringValueMap(d.Get("parameters").(map[string]interface{}))
 		requestUpdate = true
 	}
 

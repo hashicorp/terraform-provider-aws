@@ -51,7 +51,7 @@ func resourcePipeline() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -66,11 +66,11 @@ func resourcePipeline() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrID: {
+									"id": {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									names.AttrType: {
+									"type": {
 										Type:             schema.TypeString,
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[types.EncryptionKeyType](),
@@ -82,11 +82,11 @@ func resourcePipeline() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						names.AttrRegion: {
+						"region": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						names.AttrType: {
+						"type": {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[types.ArtifactStoreType](),
@@ -100,7 +100,7 @@ func resourcePipeline() *schema.Resource {
 				Default:          types.ExecutionModeSuperseded,
 				ValidateDiagFunc: enum.Validate[types.ExecutionMode](),
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -115,18 +115,18 @@ func resourcePipeline() *schema.Resource {
 				Default:          types.PipelineTypeV1,
 				ValidateDiagFunc: enum.Validate[types.PipelineType](),
 			},
-			names.AttrRoleARN: {
+			"role_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			names.AttrStage: {
+			"stage": {
 				Type:     schema.TypeList,
 				MinItems: 2,
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrAction: {
+						"action": {
 							Type:     schema.TypeList,
 							Required: true,
 							Elem: &schema.Resource{
@@ -136,7 +136,7 @@ func resourcePipeline() *schema.Resource {
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[types.ActionCategory](),
 									},
-									names.AttrConfiguration: {
+									"configuration": {
 										Type:     schema.TypeMap,
 										Optional: true,
 										ValidateDiagFunc: validation.AllDiag(
@@ -151,7 +151,7 @@ func resourcePipeline() *schema.Resource {
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
-									names.AttrName: {
+									"name": {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.All(
@@ -159,7 +159,7 @@ func resourcePipeline() *schema.Resource {
 											validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.@-]+`), ""),
 										),
 									},
-									names.AttrNamespace: {
+									"namespace": {
 										Type:     schema.TypeString,
 										Optional: true,
 										ValidateFunc: validation.All(
@@ -172,7 +172,7 @@ func resourcePipeline() *schema.Resource {
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
-									names.AttrOwner: {
+									"owner": {
 										Type:             schema.TypeString,
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[types.ActionOwner](),
@@ -182,12 +182,12 @@ func resourcePipeline() *schema.Resource {
 										Required:         true,
 										ValidateDiagFunc: pipelineValidateActionProvider,
 									},
-									names.AttrRegion: {
+									"region": {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
 									},
-									names.AttrRoleARN: {
+									"role_arn": {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: verify.ValidARN,
@@ -198,7 +198,7 @@ func resourcePipeline() *schema.Resource {
 										Computed:     true,
 										ValidateFunc: validation.IntBetween(1, 999),
 									},
-									names.AttrVersion: {
+									"version": {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.All(
@@ -209,7 +209,7 @@ func resourcePipeline() *schema.Resource {
 								},
 							},
 						},
-						names.AttrName: {
+						"name": {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.All(
@@ -377,7 +377,7 @@ func resourcePipeline() *schema.Resource {
 														},
 													},
 												},
-												names.AttrTags: {
+												"tags": {
 													Type:     schema.TypeList,
 													Optional: true,
 													MaxItems: 1,
@@ -433,15 +433,15 @@ func resourcePipeline() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrDefaultValue: {
+						"default_value": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						names.AttrDescription: {
+						"description": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						names.AttrName: {
+						"name": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -464,7 +464,7 @@ func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &codepipeline.CreatePipelineInput{
 		Pipeline: pipeline,
 		Tags:     getTagsIn(ctx),
@@ -503,7 +503,7 @@ func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta inte
 	metadata := output.Metadata
 	pipeline := output.Pipeline
 	arn := aws.ToString(metadata.PipelineArn)
-	d.Set(names.AttrARN, arn)
+	d.Set("arn", arn)
 	if pipeline.ArtifactStore != nil {
 		if err := d.Set("artifact_store", []interface{}{flattenArtifactStore(pipeline.ArtifactStore)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting artifact_store: %s", err)
@@ -514,10 +514,10 @@ func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 	d.Set("execution_mode", pipeline.ExecutionMode)
-	d.Set(names.AttrName, pipeline.Name)
+	d.Set("name", pipeline.Name)
 	d.Set("pipeline_type", pipeline.PipelineType)
-	d.Set(names.AttrRoleARN, pipeline.RoleArn)
-	if err := d.Set(names.AttrStage, flattenStageDeclarations(d, pipeline.Stages)); err != nil {
+	d.Set("role_arn", pipeline.RoleArn)
+	if err := d.Set("stage", flattenStageDeclarations(d, pipeline.Stages)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting stage: %s", err)
 	}
 	if err := d.Set("trigger", flattenTriggerDeclarations(pipeline.Triggers)); err != nil {
@@ -535,7 +535,7 @@ func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 	conn := meta.(*conns.AWSClient).CodePipelineClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		pipeline, err := expandPipelineDeclaration(d)
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
@@ -601,9 +601,7 @@ func findPipelineByName(ctx context.Context, conn *codepipeline.Client, name str
 	return output, nil
 }
 
-func pipelineValidateActionProvider(i interface{}, path cty.Path) diag.Diagnostics {
-	var diags diag.Diagnostics
-
+func pipelineValidateActionProvider(i interface{}, path cty.Path) (diags diag.Diagnostics) {
 	v, ok := i.(string)
 	if !ok {
 		return sdkdiag.AppendErrorf(diags, "expected type to be string")
@@ -681,7 +679,7 @@ func expandPipelineDeclaration(d *schema.ResourceData) (*types.PipelineDeclarati
 		apiObject.ExecutionMode = types.ExecutionMode(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrName); ok {
+	if v, ok := d.GetOk("name"); ok {
 		apiObject.Name = aws.String(v.(string))
 	}
 
@@ -689,11 +687,11 @@ func expandPipelineDeclaration(d *schema.ResourceData) (*types.PipelineDeclarati
 		apiObject.PipelineType = types.PipelineType(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrRoleARN); ok {
+	if v, ok := d.GetOk("role_arn"); ok {
 		apiObject.RoleArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrStage); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk("stage"); ok && len(v.([]interface{})) > 0 {
 		apiObject.Stages = expandStageDeclarations(v.([]interface{}))
 	}
 
@@ -723,7 +721,7 @@ func expandArtifactStore(tfMap map[string]interface{}) *types.ArtifactStore {
 		apiObject.Location = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
+	if v, ok := tfMap["type"].(string); ok && v != "" {
 		apiObject.Type = types.ArtifactStoreType(v)
 	}
 
@@ -752,7 +750,7 @@ func expandArtifactStores(tfList []interface{}) map[string]types.ArtifactStore {
 
 		var region string
 
-		if v, ok := tfMap[names.AttrRegion].(string); ok && v != "" {
+		if v, ok := tfMap["region"].(string); ok && v != "" {
 			region = v
 		}
 
@@ -769,11 +767,11 @@ func expandEncryptionKey(tfMap map[string]interface{}) *types.EncryptionKey {
 
 	apiObject := &types.EncryptionKey{}
 
-	if v, ok := tfMap[names.AttrID].(string); ok && v != "" {
+	if v, ok := tfMap["id"].(string); ok && v != "" {
 		apiObject.Id = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
+	if v, ok := tfMap["type"].(string); ok && v != "" {
 		apiObject.Type = types.EncryptionKeyType(v)
 	}
 
@@ -787,11 +785,11 @@ func expandStageDeclaration(tfMap map[string]interface{}) *types.StageDeclaratio
 
 	apiObject := &types.StageDeclaration{}
 
-	if v, ok := tfMap[names.AttrAction].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["action"].([]interface{}); ok && len(v) > 0 {
 		apiObject.Actions = expandActionDeclarations(v)
 	}
 
-	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
+	if v, ok := tfMap["name"].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
@@ -837,7 +835,7 @@ func expandActionDeclaration(tfMap map[string]interface{}) *types.ActionDeclarat
 		apiObject.ActionTypeId.Category = types.ActionCategory(v)
 	}
 
-	if v, ok := tfMap[names.AttrConfiguration].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["configuration"].(map[string]interface{}); ok && len(v) > 0 {
 		apiObject.Configuration = flex.ExpandStringValueMap(v)
 	}
 
@@ -845,11 +843,11 @@ func expandActionDeclaration(tfMap map[string]interface{}) *types.ActionDeclarat
 		apiObject.InputArtifacts = expandInputArtifacts(v)
 	}
 
-	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
+	if v, ok := tfMap["name"].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrNamespace].(string); ok && v != "" {
+	if v, ok := tfMap["namespace"].(string); ok && v != "" {
 		apiObject.Namespace = aws.String(v)
 	}
 
@@ -857,7 +855,7 @@ func expandActionDeclaration(tfMap map[string]interface{}) *types.ActionDeclarat
 		apiObject.OutputArtifacts = expandOutputArtifacts(v)
 	}
 
-	if v, ok := tfMap[names.AttrOwner].(string); ok && v != "" {
+	if v, ok := tfMap["owner"].(string); ok && v != "" {
 		apiObject.ActionTypeId.Owner = types.ActionOwner(v)
 	}
 
@@ -865,11 +863,11 @@ func expandActionDeclaration(tfMap map[string]interface{}) *types.ActionDeclarat
 		apiObject.ActionTypeId.Provider = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrRegion].(string); ok && v != "" {
+	if v, ok := tfMap["region"].(string); ok && v != "" {
 		apiObject.Region = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrRoleARN].(string); ok && v != "" {
+	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
 		apiObject.RoleArn = aws.String(v)
 	}
 
@@ -877,7 +875,7 @@ func expandActionDeclaration(tfMap map[string]interface{}) *types.ActionDeclarat
 		apiObject.RunOrder = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap[names.AttrVersion].(string); ok && v != "" {
+	if v, ok := tfMap["version"].(string); ok && v != "" {
 		apiObject.ActionTypeId.Version = aws.String(v)
 	}
 
@@ -965,15 +963,15 @@ func expandVariableDeclaration(tfMap map[string]interface{}) *types.PipelineVari
 
 	apiObject := &types.PipelineVariableDeclaration{}
 
-	if v, ok := tfMap[names.AttrDefaultValue].(string); ok && v != "" {
+	if v, ok := tfMap["default_value"].(string); ok && v != "" {
 		apiObject.DefaultValue = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrDescription].(string); ok && v != "" {
+	if v, ok := tfMap["description"].(string); ok && v != "" {
 		apiObject.Description = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
+	if v, ok := tfMap["name"].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
@@ -1150,7 +1148,7 @@ func expandGitPushFilters(tfList []interface{}) []types.GitPushFilter {
 			apiObject.FilePaths = expandGitFilePathFilterCriteria(v[0].(map[string]interface{}))
 		}
 
-		if v, ok := tfMap[names.AttrTags].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		if v, ok := tfMap["tags"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 			apiObject.Tags = expandGitTagFilterCriteria(v[0].(map[string]interface{}))
 		}
 
@@ -1224,7 +1222,7 @@ func expandTriggerDeclarations(tfList []interface{}) []types.PipelineTriggerDecl
 
 func flattenArtifactStore(apiObject *types.ArtifactStore) map[string]interface{} {
 	tfMap := map[string]interface{}{
-		names.AttrType: apiObject.Type,
+		"type": apiObject.Type,
 	}
 
 	if v := apiObject.EncryptionKey; v != nil {
@@ -1247,7 +1245,7 @@ func flattenArtifactStores(apiObjects map[string]types.ArtifactStore) []interfac
 
 	for region, apiObject := range apiObjects {
 		tfMap := flattenArtifactStore(&apiObject)
-		tfMap[names.AttrRegion] = region
+		tfMap["region"] = region
 
 		tfList = append(tfList, tfMap)
 	}
@@ -1261,11 +1259,11 @@ func flattenEncryptionKey(apiObject *types.EncryptionKey) map[string]interface{}
 	}
 
 	tfMap := map[string]interface{}{
-		names.AttrType: apiObject.Type,
+		"type": apiObject.Type,
 	}
 
 	if v := apiObject.Id; v != nil {
-		tfMap[names.AttrID] = aws.ToString(v)
+		tfMap["id"] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -1275,11 +1273,11 @@ func flattenStageDeclaration(d *schema.ResourceData, i int, apiObject types.Stag
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Actions; v != nil {
-		tfMap[names.AttrAction] = flattenActionDeclarations(d, i, v)
+		tfMap["action"] = flattenActionDeclarations(d, i, v)
 	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap[names.AttrName] = aws.ToString(v)
+		tfMap["name"] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -1305,7 +1303,7 @@ func flattenActionDeclaration(d *schema.ResourceData, i, j int, apiObject types.
 
 	if apiObject := apiObject.ActionTypeId; apiObject != nil {
 		tfMap["category"] = apiObject.Category
-		tfMap[names.AttrOwner] = apiObject.Owner
+		tfMap["owner"] = apiObject.Owner
 
 		if v := apiObject.Provider; v != nil {
 			actionProvider = aws.ToString(v)
@@ -1313,7 +1311,7 @@ func flattenActionDeclaration(d *schema.ResourceData, i, j int, apiObject types.
 		}
 
 		if v := apiObject.Version; v != nil {
-			tfMap[names.AttrVersion] = aws.ToString(v)
+			tfMap["version"] = aws.ToString(v)
 		}
 	}
 
@@ -1326,7 +1324,7 @@ func flattenActionDeclaration(d *schema.ResourceData, i, j int, apiObject types.
 			}
 		}
 
-		tfMap[names.AttrConfiguration] = v
+		tfMap["configuration"] = v
 	}
 
 	if v := apiObject.InputArtifacts; len(v) > 0 {
@@ -1334,11 +1332,11 @@ func flattenActionDeclaration(d *schema.ResourceData, i, j int, apiObject types.
 	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap[names.AttrName] = aws.ToString(v)
+		tfMap["name"] = aws.ToString(v)
 	}
 
 	if v := apiObject.Namespace; v != nil {
-		tfMap[names.AttrNamespace] = aws.ToString(v)
+		tfMap["namespace"] = aws.ToString(v)
 	}
 
 	if v := apiObject.OutputArtifacts; len(v) > 0 {
@@ -1346,11 +1344,11 @@ func flattenActionDeclaration(d *schema.ResourceData, i, j int, apiObject types.
 	}
 
 	if v := apiObject.Region; v != nil {
-		tfMap[names.AttrRegion] = aws.ToString(v)
+		tfMap["region"] = aws.ToString(v)
 	}
 
 	if v := apiObject.RoleArn; v != nil {
-		tfMap[names.AttrRoleARN] = aws.ToString(v)
+		tfMap["role_arn"] = aws.ToString(v)
 	}
 
 	if v := apiObject.RunOrder; v != nil {
@@ -1406,15 +1404,15 @@ func flattenVariableDeclaration(apiObject types.PipelineVariableDeclaration) map
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.DefaultValue; v != nil {
-		tfMap[names.AttrDefaultValue] = aws.ToString(v)
+		tfMap["default_value"] = aws.ToString(v)
 	}
 
 	if v := apiObject.Description; v != nil {
-		tfMap[names.AttrDescription] = aws.ToString(v)
+		tfMap["description"] = aws.ToString(v)
 	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap[names.AttrName] = aws.ToString(v)
+		tfMap["name"] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -1554,7 +1552,7 @@ func flattenGitPushFilter(apiObject types.GitPushFilter) map[string]interface{} 
 	}
 
 	if v := apiObject.Tags; v != nil {
-		tfMap[names.AttrTags] = []interface{}{flattenGitTagFilterCriteria(apiObject.Tags)}
+		tfMap["tags"] = []interface{}{flattenGitTagFilterCriteria(apiObject.Tags)}
 	}
 
 	return tfMap

@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_codecommit_trigger", name="Trigger")
@@ -35,7 +34,7 @@ func resourceTrigger() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrRepositoryName: {
+			"repository_name": {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
@@ -58,7 +57,7 @@ func resourceTrigger() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 						},
-						names.AttrDestinationARN: {
+						"destination_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -73,7 +72,7 @@ func resourceTrigger() *schema.Resource {
 								ValidateDiagFunc: enum.Validate[types.RepositoryTriggerEventEnum](),
 							},
 						},
-						names.AttrName: {
+						"name": {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -89,7 +88,7 @@ func resourceTriggerCreate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeCommitClient(ctx)
 
-	repositoryName := d.Get(names.AttrRepositoryName).(string)
+	repositoryName := d.Get("repository_name").(string)
 	input := &codecommit.PutRepositoryTriggersInput{
 		RepositoryName: aws.String(repositoryName),
 		Triggers:       expandRepositoryTriggers(d.Get("trigger").(*schema.Set).List()),
@@ -123,7 +122,7 @@ func resourceTriggerRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.Set("configuration_id", output.ConfigurationId)
-	d.Set(names.AttrRepositoryName, d.Id())
+	d.Set("repository_name", d.Id())
 	if err := d.Set("trigger", flattenRepositoryTriggers(output.Triggers)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting trigger: %s", err)
 	}
@@ -203,7 +202,7 @@ func expandRepositoryTriggers(tfList []interface{}) []types.RepositoryTrigger {
 			apiObject.CustomData = aws.String(v)
 		}
 
-		if v, ok := tfMap[names.AttrDestinationARN].(string); ok && v != "" {
+		if v, ok := tfMap["destination_arn"].(string); ok && v != "" {
 			apiObject.DestinationArn = aws.String(v)
 		}
 
@@ -211,7 +210,7 @@ func expandRepositoryTriggers(tfList []interface{}) []types.RepositoryTrigger {
 			apiObject.Events = flex.ExpandStringyValueList[types.RepositoryTriggerEventEnum](v)
 		}
 
-		if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
+		if v, ok := tfMap["name"].(string); ok && v != "" {
 			apiObject.Name = aws.String(v)
 		}
 
@@ -240,7 +239,7 @@ func flattenRepositoryTriggers(apiObjects []types.RepositoryTrigger) []interface
 		}
 
 		if v := apiObject.DestinationArn; v != nil {
-			tfMap[names.AttrDestinationARN] = aws.ToString(v)
+			tfMap["destination_arn"] = aws.ToString(v)
 		}
 
 		if v := apiObject.Events; v != nil {
@@ -248,7 +247,7 @@ func flattenRepositoryTriggers(apiObjects []types.RepositoryTrigger) []interface
 		}
 
 		if v := apiObject.Name; v != nil {
-			tfMap[names.AttrName] = aws.ToString(v)
+			tfMap["name"] = aws.ToString(v)
 		}
 
 		tfList = append(tfList, tfMap)

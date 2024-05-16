@@ -5,8 +5,9 @@ package events
 import (
 	"context"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	eventbridge_sdkv2 "github.com/aws/aws-sdk-go-v2/service/eventbridge"
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	eventbridge_sdkv1 "github.com/aws/aws-sdk-go/service/eventbridge"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -25,19 +26,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceBus,
+			Factory:  DataSourceBus,
 			TypeName: "aws_cloudwatch_event_bus",
-			Name:     "Event Bus",
 		},
 		{
-			Factory:  dataSourceConnection,
+			Factory:  DataSourceConnection,
 			TypeName: "aws_cloudwatch_event_connection",
-			Name:     "Connection",
 		},
 		{
-			Factory:  dataSourceSource,
+			Factory:  DataSourceSource,
 			TypeName: "aws_cloudwatch_event_source",
-			Name:     "Source",
 		},
 	}
 }
@@ -45,55 +43,49 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  resourceAPIDestination,
+			Factory:  ResourceAPIDestination,
 			TypeName: "aws_cloudwatch_event_api_destination",
-			Name:     "API Destination",
 		},
 		{
-			Factory:  resourceArchive,
+			Factory:  ResourceArchive,
 			TypeName: "aws_cloudwatch_event_archive",
-			Name:     "Archive",
 		},
 		{
-			Factory:  resourceBus,
+			Factory:  ResourceBus,
 			TypeName: "aws_cloudwatch_event_bus",
 			Name:     "Event Bus",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "arn",
 			},
 		},
 		{
-			Factory:  resourceBusPolicy,
+			Factory:  ResourceBusPolicy,
 			TypeName: "aws_cloudwatch_event_bus_policy",
-			Name:     "Event Bus Policy",
 		},
 		{
-			Factory:  resourceConnection,
+			Factory:  ResourceConnection,
 			TypeName: "aws_cloudwatch_event_connection",
-			Name:     "Connection",
 		},
 		{
-			Factory:  resourceEndpoint,
+			Factory:  ResourceEndpoint,
 			TypeName: "aws_cloudwatch_event_endpoint",
 			Name:     "Global Endpoint",
 		},
 		{
-			Factory:  resourcePermission,
+			Factory:  ResourcePermission,
 			TypeName: "aws_cloudwatch_event_permission",
-			Name:     "Permission",
 		},
 		{
-			Factory:  resourceRule,
+			Factory:  ResourceRule,
 			TypeName: "aws_cloudwatch_event_rule",
 			Name:     "Rule",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "arn",
 			},
 		},
 		{
-			Factory:  resourceTarget,
+			Factory:  ResourceTarget,
 			TypeName: "aws_cloudwatch_event_target",
-			Name:     "Target",
 		},
 	}
 }
@@ -102,15 +94,11 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.Events
 }
 
-// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*eventbridge_sdkv2.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
+func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*eventbridge_sdkv1.EventBridge, error) {
+	sess := config["session"].(*session_sdkv1.Session)
 
-	return eventbridge_sdkv2.NewFromConfig(cfg, func(o *eventbridge_sdkv2.Options) {
-		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
-			o.BaseEndpoint = aws_sdkv2.String(endpoint)
-		}
-	}), nil
+	return eventbridge_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

@@ -38,7 +38,7 @@ func TestAccSyntheticsGroupAssociation_basic(t *testing.T) {
 					testAccCheckGroupAssociationExists(ctx, resourceName, &groupSummary),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "canary_arn", "synthetics", regexache.MustCompile(`canary:.+`)),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "group_arn", "synthetics", regexache.MustCompile(`group:.+`)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrGroupName, rName),
+					resource.TestCheckResourceAttr(resourceName, "group_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "group_id"),
 				),
 			},

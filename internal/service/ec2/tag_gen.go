@@ -28,17 +28,17 @@ func resourceTag() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrResourceID: {
+			"resource_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrKey: {
+			"key": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrValue: {
+			"value": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -50,9 +50,9 @@ func resourceTagCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	identifier := d.Get(names.AttrResourceID).(string)
-	key := d.Get(names.AttrKey).(string)
-	value := d.Get(names.AttrValue).(string)
+	identifier := d.Get("resource_id").(string)
+	key := d.Get("key").(string)
+	value := d.Get("value").(string)
 
 	if err := createTagsV2(ctx, conn, identifier, TagsV2(tftags.New(ctx, map[string]string{key: value}))); err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating %s resource (%s) tag (%s): %s", names.EC2, identifier, key, err)
@@ -84,9 +84,9 @@ func resourceTagRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return sdkdiag.AppendErrorf(diags, "reading %s resource (%s) tag (%s): %s", names.EC2, identifier, key, err)
 	}
 
-	d.Set(names.AttrResourceID, identifier)
-	d.Set(names.AttrKey, key)
-	d.Set(names.AttrValue, value)
+	d.Set("resource_id", identifier)
+	d.Set("key", key)
+	d.Set("value", value)
 
 	return diags
 }
@@ -100,7 +100,7 @@ func resourceTagUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if err := updateTagsV2(ctx, conn, identifier, nil, map[string]string{key: d.Get(names.AttrValue).(string)}); err != nil {
+	if err := updateTagsV2(ctx, conn, identifier, nil, map[string]string{key: d.Get("value").(string)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating %s resource (%s) tag (%s): %s", names.EC2, identifier, key, err)
 	}
 
@@ -116,7 +116,7 @@ func resourceTagDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if err := updateTagsV2(ctx, conn, identifier, map[string]string{key: d.Get(names.AttrValue).(string)}, nil); err != nil {
+	if err := updateTagsV2(ctx, conn, identifier, map[string]string{key: d.Get("value").(string)}, nil); err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting %s resource (%s) tag (%s): %s", names.EC2, identifier, key, err)
 	}
 

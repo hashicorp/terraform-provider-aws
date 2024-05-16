@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_s3_access_point")
@@ -38,22 +37,22 @@ func resourceAccessPoint() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrAccountID: {
+			"account_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			names.AttrAlias: {
+			"alias": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrBucket: {
+			"bucket": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -66,11 +65,11 @@ func resourceAccessPoint() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			names.AttrDomainName: {
+			"domain_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrEndpoints: {
+			"endpoints": {
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -79,7 +78,7 @@ func resourceAccessPoint() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -89,7 +88,7 @@ func resourceAccessPoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrPolicy: {
+			"policy": {
 				Type:                  schema.TypeString,
 				Optional:              true,
 				Computed:              true,
@@ -137,7 +136,7 @@ func resourceAccessPoint() *schema.Resource {
 					},
 				},
 			},
-			names.AttrVPCConfiguration: {
+			"vpc_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
@@ -145,7 +144,7 @@ func resourceAccessPoint() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrVPCID: {
+						"vpc_id": {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -161,13 +160,13 @@ func resourceAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	accountID := meta.(*conns.AWSClient).AccountID
-	if v, ok := d.GetOk(names.AttrAccountID); ok {
+	if v, ok := d.GetOk("account_id"); ok {
 		accountID = v.(string)
 	}
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &s3control.CreateAccessPointInput{
 		AccountId: aws.String(accountID),
-		Bucket:    aws.String(d.Get(names.AttrBucket).(string)),
+		Bucket:    aws.String(d.Get("bucket").(string)),
 		Name:      aws.String(name),
 	}
 
@@ -179,7 +178,7 @@ func resourceAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.PublicAccessBlockConfiguration = expandPublicAccessBlockConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk(names.AttrVPCConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk("vpc_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.VpcConfiguration = expandVPCConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -201,7 +200,7 @@ func resourceAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	d.SetId(resourceID)
 
-	if v, ok := d.GetOk(names.AttrPolicy); ok && v.(string) != "" && v.(string) != "{}" {
+	if v, ok := d.GetOk("policy"); ok && v.(string) != "" && v.(string) != "{}" {
 		policy, err := structure.NormalizeJsonString(v.(string))
 		if err != nil {
 			return diag.FromErr(err)
@@ -265,8 +264,8 @@ func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta i
 			),
 		}
 
-		d.Set(names.AttrARN, name)
-		d.Set(names.AttrBucket, bucketARN.String())
+		d.Set("arn", name)
+		d.Set("bucket", bucketARN.String())
 	} else {
 		// https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazons3.html#amazons3-resources-for-iam-policies.
 		accessPointARN := arn.ARN{
@@ -277,16 +276,16 @@ func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta i
 			Resource:  fmt.Sprintf("accesspoint/%s", aws.ToString(output.Name)),
 		}
 
-		d.Set(names.AttrARN, accessPointARN.String())
-		d.Set(names.AttrBucket, output.Bucket)
+		d.Set("arn", accessPointARN.String())
+		d.Set("bucket", output.Bucket)
 	}
 
-	d.Set(names.AttrAccountID, accountID)
-	d.Set(names.AttrAlias, output.Alias)
+	d.Set("account_id", accountID)
+	d.Set("alias", output.Alias)
 	d.Set("bucket_account_id", output.BucketAccountId)
-	d.Set(names.AttrDomainName, meta.(*conns.AWSClient).RegionalHostname(ctx, fmt.Sprintf("%s-%s.s3-accesspoint", aws.ToString(output.Name), accountID)))
-	d.Set(names.AttrEndpoints, output.Endpoints)
-	d.Set(names.AttrName, output.Name)
+	d.Set("domain_name", meta.(*conns.AWSClient).RegionalHostname(ctx, fmt.Sprintf("%s-%s.s3-accesspoint", aws.ToString(output.Name), accountID)))
+	d.Set("endpoints", output.Endpoints)
+	d.Set("name", output.Name)
 	d.Set("network_origin", output.NetworkOrigin)
 	if output.PublicAccessBlockConfiguration != nil {
 		if err := d.Set("public_access_block_configuration", []interface{}{flattenPublicAccessBlockConfiguration(output.PublicAccessBlockConfiguration)}); err != nil {
@@ -296,11 +295,11 @@ func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta i
 		d.Set("public_access_block_configuration", nil)
 	}
 	if output.VpcConfiguration != nil {
-		if err := d.Set(names.AttrVPCConfiguration, []interface{}{flattenVPCConfiguration(output.VpcConfiguration)}); err != nil {
+		if err := d.Set("vpc_configuration", []interface{}{flattenVPCConfiguration(output.VpcConfiguration)}); err != nil {
 			return diag.Errorf("setting vpc_configuration: %s", err)
 		}
 	} else {
-		d.Set(names.AttrVPCConfiguration, nil)
+		d.Set("vpc_configuration", nil)
 	}
 
 	policy, status, err := findAccessPointPolicyAndStatusByTwoPartKey(ctx, conn, accountID, name)
@@ -312,15 +311,15 @@ func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta i
 			d.Set("has_public_access_policy", status.IsPublic)
 		}
 
-		policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), policy)
+		policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), policy)
 		if err != nil {
 			return diag.FromErr(err)
 		}
 
-		d.Set(names.AttrPolicy, policyToSet)
+		d.Set("policy", policyToSet)
 	} else if policy == "" || tfresource.NotFound(err) {
 		d.Set("has_public_access_policy", false)
-		d.Set(names.AttrPolicy, nil)
+		d.Set("policy", nil)
 	} else {
 		return diag.Errorf("reading S3 Access Point (%s) policy: %s", d.Id(), err)
 	}
@@ -336,8 +335,8 @@ func resourceAccessPointUpdate(ctx context.Context, d *schema.ResourceData, meta
 		return diag.FromErr(err)
 	}
 
-	if d.HasChange(names.AttrPolicy) {
-		if v, ok := d.GetOk(names.AttrPolicy); ok && v.(string) != "" && v.(string) != "{}" {
+	if d.HasChange("policy") {
+		if v, ok := d.GetOk("policy"); ok && v.(string) != "" && v.(string) != "{}" {
 			policy, err := structure.NormalizeJsonString(v.(string))
 			if err != nil {
 				return diag.FromErr(err)
@@ -472,7 +471,7 @@ func expandVPCConfiguration(tfMap map[string]interface{}) *types.VpcConfiguratio
 
 	apiObject := &types.VpcConfiguration{}
 
-	if v, ok := tfMap[names.AttrVPCID].(string); ok {
+	if v, ok := tfMap["vpc_id"].(string); ok {
 		apiObject.VpcId = aws.String(v)
 	}
 
@@ -487,7 +486,7 @@ func flattenVPCConfiguration(apiObject *types.VpcConfiguration) map[string]inter
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.VpcId; v != nil {
-		tfMap[names.AttrVPCID] = aws.ToString(v)
+		tfMap["vpc_id"] = aws.ToString(v)
 	}
 
 	return tfMap

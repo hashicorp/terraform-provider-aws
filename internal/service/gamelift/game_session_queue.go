@@ -37,7 +37,7 @@ func ResourceGameSessionQueue() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -51,7 +51,7 @@ func ResourceGameSessionQueue() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -97,7 +97,7 @@ func resourceGameSessionQueueCreate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GameLiftConn(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &gamelift.CreateGameSessionQueueInput{
 		Name:                  aws.String(name),
 		Destinations:          expandGameSessionQueueDestinations(d.Get("destinations").([]interface{})),
@@ -142,9 +142,9 @@ func resourceGameSessionQueueRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	arn := aws.StringValue(sessionQueue.GameSessionQueueArn)
-	d.Set(names.AttrARN, arn)
+	d.Set("arn", arn)
 	d.Set("custom_event_data", sessionQueue.CustomEventData)
-	d.Set(names.AttrName, sessionQueue.Name)
+	d.Set("name", sessionQueue.Name)
 	d.Set("notification_target", sessionQueue.NotificationTarget)
 	d.Set("timeout_in_seconds", sessionQueue.TimeoutInSeconds)
 	if err := d.Set("destinations", flattenGameSessionQueueDestinations(sessionQueue.Destinations)); err != nil {
@@ -161,7 +161,7 @@ func resourceGameSessionQueueUpdate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GameLiftConn(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &gamelift.UpdateGameSessionQueueInput{
 			Name:                  aws.String(d.Id()),
 			Destinations:          expandGameSessionQueueDestinations(d.Get("destinations").([]interface{})),

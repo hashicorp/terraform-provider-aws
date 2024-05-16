@@ -51,12 +51,12 @@ func testAccResourceLFTag_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckResourceLFTagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceLFTagConfig_basic(rName, []string{names.AttrValue}, names.AttrValue),
+				Config: testAccResourceLFTagConfig_basic(rName, []string{"value"}, "value"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceLFTagExists(ctx, resourceName, &resourcelftag),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrCatalogID),
+					acctest.CheckResourceAttrAccountID(resourceName, "catalog_id"),
 					resource.TestCheckResourceAttr(resourceName, "lf_tag.0.key", rName),
-					resource.TestCheckResourceAttr(resourceName, "lf_tag.0.value", names.AttrValue),
+					resource.TestCheckResourceAttr(resourceName, "lf_tag.0.value", "value"),
 				),
 			},
 		},
@@ -83,11 +83,11 @@ func testAccResourceLFTag_table(t *testing.T) {
 		CheckDestroy:             testAccCheckResourceLFTagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceLFTagConfig_table(rName, []string{names.AttrValue}, names.AttrValue),
+				Config: testAccResourceLFTagConfig_table(rName, []string{"value"}, "value"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceLFTagExists(ctx, resourceName, &resourcelftag),
 					resource.TestCheckResourceAttr(resourceName, "lf_tag.0.key", rName),
-					resource.TestCheckResourceAttr(resourceName, "lf_tag.0.value", names.AttrValue),
+					resource.TestCheckResourceAttr(resourceName, "lf_tag.0.value", "value"),
 				),
 			},
 		},
@@ -114,11 +114,11 @@ func testAccResourceLFTag_tableWithColumns(t *testing.T) {
 		CheckDestroy:             testAccCheckResourceLFTagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceLFTagConfig_tableWithColumns(rName, []string{names.AttrValue}, names.AttrValue),
+				Config: testAccResourceLFTagConfig_tableWithColumns(rName, []string{"value"}, "value"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceLFTagExists(ctx, resourceName, &resourcelftag),
 					resource.TestCheckResourceAttr(resourceName, "lf_tag.0.key", rName),
-					resource.TestCheckResourceAttr(resourceName, "lf_tag.0.value", names.AttrValue),
+					resource.TestCheckResourceAttr(resourceName, "lf_tag.0.value", "value"),
 				),
 			},
 		},
@@ -145,7 +145,7 @@ func testAccResourceLFTag_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckResourceLFTagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceLFTagConfig_basic(rName, []string{names.AttrValue}, names.AttrValue),
+				Config: testAccResourceLFTagConfig_basic(rName, []string{"value"}, "value"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceLFTagExists(ctx, resourceName, &resourcelftag),
 					acctest.CheckFrameworkResourceDisappearsWithStateFunc(ctx, acctest.Provider, tflakeformation.ResourceResourceLFTag, resourceName, lfTagsDisappearsStateFunc),
@@ -160,7 +160,7 @@ func lfTagsDisappearsStateFunc(ctx context.Context, state *tfsdk.State, is *terr
 	var lfdata tflakeformation.ResourceResourceLFTagData
 	var lt tflakeformation.LFTag
 
-	if v, ok := is.Attributes[names.AttrCatalogID]; ok {
+	if v, ok := is.Attributes["catalog_id"]; ok {
 		lfdata.CatalogID = fwflex.StringValueToFramework(ctx, v)
 	}
 
@@ -180,11 +180,11 @@ func lfTagsDisappearsStateFunc(ctx context.Context, state *tfsdk.State, is *terr
 
 	lfdata.LFTag = fwtypes.NewListNestedObjectValueOfPtrMust[tflakeformation.LFTag](ctx, &lt)
 
-	if err := fwdiag.DiagnosticsError(state.SetAttribute(ctx, path.Root(names.AttrCatalogID), lfdata.Database)); err != nil {
+	if err := fwdiag.DiagnosticsError(state.SetAttribute(ctx, path.Root("catalog_id"), lfdata.Database)); err != nil {
 		log.Printf("[WARN] %s", err)
 	}
 
-	if err := fwdiag.DiagnosticsError(state.SetAttribute(ctx, path.Root(names.AttrDatabase), lfdata.Database)); err != nil {
+	if err := fwdiag.DiagnosticsError(state.SetAttribute(ctx, path.Root("database"), lfdata.Database)); err != nil {
 		log.Printf("[WARN] %s", err)
 	}
 
@@ -209,7 +209,7 @@ func testAccCheckResourceLFTagDestroy(ctx context.Context) resource.TestCheckFun
 				ShowAssignedLFTags: aws.Bool(true),
 			}
 
-			if v, ok := rs.Primary.Attributes[names.AttrCatalogID]; ok {
+			if v, ok := rs.Primary.Attributes["catalog_id"]; ok {
 				input.CatalogId = aws.String(v)
 			}
 
@@ -318,7 +318,7 @@ func testAccCheckResourceLFTagExists(ctx context.Context, name string, resourcel
 			ShowAssignedLFTags: aws.Bool(true),
 		}
 
-		if v, ok := rs.Primary.Attributes[names.AttrCatalogID]; ok {
+		if v, ok := rs.Primary.Attributes["catalog_id"]; ok {
 			input.CatalogId = aws.String(v)
 		}
 

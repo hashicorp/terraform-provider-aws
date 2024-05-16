@@ -66,12 +66,12 @@ func (r *deploymentResource) Schema(ctx context.Context, request resource.Schema
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrStatus: schema.StringAttribute{
+			"status": schema.StringAttribute{
 				Computed: true,
 			},
 		},
 		Blocks: map[string]schema.Block{
-			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+			"timeouts": timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 			}),
 		},

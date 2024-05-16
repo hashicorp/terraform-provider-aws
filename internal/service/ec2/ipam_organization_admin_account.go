@@ -3,26 +3,23 @@
 
 package ec2
 
-import (
+// ec2 has no action for Describe() to see if IPAM delegated admin has already been assigned
+import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"context"
-	"errors"
 	"log"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_vpc_ipam_organization_admin_account", name="IPAM Organization Admin Account")
-func resourceIPAMOrganizationAdminAccount() *schema.Resource {
+// @SDKResource("aws_vpc_ipam_organization_admin_account")
+func ResourceIPAMOrganizationAdminAccount() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIPAMOrganizationAdminAccountCreate,
 		ReadWithoutTimeout:   resourceIPAMOrganizationAdminAccountRead,
@@ -33,7 +30,7 @@ func resourceIPAMOrganizationAdminAccount() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -43,11 +40,11 @@ func resourceIPAMOrganizationAdminAccount() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			names.AttrEmail: {
+			"email": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -60,25 +57,25 @@ func resourceIPAMOrganizationAdminAccount() *schema.Resource {
 }
 
 const (
-	ipamServicePrincipal = "ipam.amazonaws.com"
+	IPAMServicePrincipal = "ipam.amazonaws.com"
 )
 
 func resourceIPAMOrganizationAdminAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	adminAccountID := d.Get("delegated_admin_account_id").(string)
+
 	input := &ec2.EnableIpamOrganizationAdminAccountInput{
 		DelegatedAdminAccountId: aws.String(adminAccountID),
 	}
 
-	output, err := conn.EnableIpamOrganizationAdminAccount(ctx, input)
-
-	if err == nil && !aws.ToBool(output.Success) {
-		err = errors.New("failed")
-	}
+	output, err := conn.EnableIpamOrganizationAdminAccountWithContext(ctx, input)
 
 	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "enabling IPAM Organization Admin Account (%s): %s", adminAccountID, err)
+	}
+	if !aws.BoolValue(output.Success) {
 		return sdkdiag.AppendErrorf(diags, "enabling IPAM Organization Admin Account (%s): %s", adminAccountID, err)
 	}
 
@@ -89,49 +86,50 @@ func resourceIPAMOrganizationAdminAccountCreate(ctx context.Context, d *schema.R
 
 func resourceIPAMOrganizationAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
+	org_conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
-	account, err := tforganizations.FindDelegatedAdministratorByTwoPartKey(ctx, conn, d.Id(), ipamServicePrincipal)
+	input := &organizations.ListDelegatedAdministratorsInput{
+		ServicePrincipal: aws.String(IPAMServicePrincipal),
+	}
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] IPAM Organization Admin Account (%s) not found, removing from state", d.Id())
+	output, err := org_conn.ListDelegatedAdministratorsWithContext(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "finding IPAM organization delegated account: (%s): %s", d.Id(), err)
+	}
+
+	if output == nil || len(output.DelegatedAdministrators) == 0 || output.DelegatedAdministrators[0] == nil {
+		log.Printf("[WARN] VPC Ipam Organization Admin Account (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading IPAM Organization Admin Account: (%s): %s", d.Id(), err)
-	}
+	admin_account := output.DelegatedAdministrators[0]
 
-	d.Set(names.AttrARN, account.Arn)
-	d.Set("delegated_admin_account_id", account.Id)
-	d.Set(names.AttrEmail, account.Email)
-	d.Set(names.AttrName, account.Name)
-	d.Set("service_principal", ipamServicePrincipal)
+	d.Set("arn", admin_account.Arn)
+	d.Set("delegated_admin_account_id", admin_account.Id)
+	d.Set("email", admin_account.Email)
+	d.Set("name", admin_account.Name)
+	d.Set("service_principal", IPAMServicePrincipal)
 
 	return diags
 }
 
 func resourceIPAMOrganizationAdminAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	log.Printf("[DEBUG] Deleting IPAM Organization Admin Account: %s", d.Id())
-	output, err := conn.DisableIpamOrganizationAdminAccount(ctx, &ec2.DisableIpamOrganizationAdminAccountInput{
+	input := &ec2.DisableIpamOrganizationAdminAccountInput{
 		DelegatedAdminAccountId: aws.String(d.Id()),
-	})
-
-	if tfawserr.ErrCodeEquals(err, errCodeIPAMOrganizationAccountNotRegistered) {
-		return diags
 	}
 
-	if err == nil && !aws.ToBool(output.Success) {
-		err = errors.New("failed")
-	}
+	output, err := conn.DisableIpamOrganizationAdminAccountWithContext(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "disabling IPAM Organization Admin Account (%s): %s", d.Id(), err)
 	}
-
+	if !aws.BoolValue(output.Success) {
+		return sdkdiag.AppendErrorf(diags, "disabling IPAM Organization Admin Account (%s): %s", d.Id(), err)
+	}
 	return diags
 }

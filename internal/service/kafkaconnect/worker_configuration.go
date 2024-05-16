@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_mskconnect_worker_configuration")
@@ -31,11 +30,11 @@ func ResourceWorkerConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -44,7 +43,7 @@ func ResourceWorkerConfiguration() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -71,13 +70,13 @@ func resourceWorkerConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 
 	conn := meta.(*conns.AWSClient).KafkaConnectConn(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &kafkaconnect.CreateWorkerConfigurationInput{
 		Name:                  aws.String(name),
 		PropertiesFileContent: flex.StringValueToBase64String(d.Get("properties_file_content").(string)),
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -110,9 +109,9 @@ func resourceWorkerConfigurationRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading MSK Connect Worker Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, config.WorkerConfigurationArn)
-	d.Set(names.AttrDescription, config.Description)
-	d.Set(names.AttrName, config.Name)
+	d.Set("arn", config.WorkerConfigurationArn)
+	d.Set("description", config.Description)
+	d.Set("name", config.Name)
 
 	if config.LatestRevision != nil {
 		d.Set("latest_revision", config.LatestRevision.Revision)

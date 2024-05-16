@@ -27,8 +27,7 @@ func TestAccEC2EIPDataSource_filter(t *testing.T) {
 			{
 				Config: testAccEIPDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "public_dns", resourceName, "public_dns"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "public_ip", resourceName, "public_ip"),
 				),
@@ -51,7 +50,7 @@ func TestAccEC2EIPDataSource_id(t *testing.T) {
 			{
 				Config: testAccEIPDataSourceConfig_id(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "public_dns", resourceName, "public_dns"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "public_ip", resourceName, "public_ip"),
 				),
@@ -74,10 +73,10 @@ func TestAccEC2EIPDataSource_publicIP(t *testing.T) {
 			{
 				Config: testAccEIPDataSourceConfig_publicIP(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "public_dns", resourceName, "public_dns"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "public_ip", resourceName, "public_ip"),
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDomain, resourceName, names.AttrDomain),
+					resource.TestCheckResourceAttrPair(dataSourceName, "domain", resourceName, "domain"),
 				),
 			},
 		},
@@ -98,7 +97,7 @@ func TestAccEC2EIPDataSource_tags(t *testing.T) {
 			{
 				Config: testAccEIPDataSourceConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "public_dns", resourceName, "public_dns"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "public_ip", resourceName, "public_ip"),
 				),
@@ -121,11 +120,11 @@ func TestAccEC2EIPDataSource_networkInterface(t *testing.T) {
 			{
 				Config: testAccEIPDataSourceConfig_networkInterface(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrNetworkInterfaceID, resourceName, "network_interface"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "network_interface_id", resourceName, "network_interface"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "private_dns", resourceName, "private_dns"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "private_ip", resourceName, "private_ip"),
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDomain, resourceName, names.AttrDomain),
+					resource.TestCheckResourceAttrPair(dataSourceName, "domain", resourceName, "domain"),
 				),
 			},
 		},
@@ -146,8 +145,8 @@ func TestAccEC2EIPDataSource_instance(t *testing.T) {
 			{
 				Config: testAccEIPDataSourceConfig_instance(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrInstanceID, resourceName, "instance"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "instance_id", resourceName, "instance"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "association_id", resourceName, "association_id"),
 				),
 			},

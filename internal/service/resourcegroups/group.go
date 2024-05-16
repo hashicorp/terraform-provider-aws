@@ -44,25 +44,25 @@ func resourceGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrConfiguration: {
+			"configuration": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrParameters: {
+						"parameters": {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrName: {
+									"name": {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									names.AttrValues: {
+									"values": {
 										Type:     schema.TypeList,
 										Required: true,
 										Elem: &schema.Schema{
@@ -72,18 +72,18 @@ func resourceGroup() *schema.Resource {
 								},
 							},
 						},
-						names.AttrType: {
+						"type": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
 					},
 				},
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -99,7 +99,7 @@ func resourceGroup() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						names.AttrType: {
+						"type": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      types.QueryTypeTagFilters10,
@@ -119,15 +119,15 @@ func resourceGroup() *schema.Resource {
 func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ResourceGroupsClient(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &resourcegroups.CreateGroupInput{
-		Description: aws.String(d.Get(names.AttrDescription).(string)),
+		Description: aws.String(d.Get("description").(string)),
 		Name:        aws.String(name),
 		Tags:        getTagsIn(ctx),
 	}
 
 	waitForConfigurationAttached := false
-	if groupCfg, set := d.GetOk(names.AttrConfiguration); set {
+	if groupCfg, set := d.GetOk("configuration"); set {
 		// Only expand and add configuration if its set
 		input.Configuration = expandGroupConfigurationItems(groupCfg.(*schema.Set).List())
 		waitForConfigurationAttached = true
@@ -171,9 +171,9 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	arn := aws.ToString(group.GroupArn)
-	d.Set(names.AttrARN, arn)
-	d.Set(names.AttrDescription, group.Description)
-	d.Set(names.AttrName, group.Name)
+	d.Set("arn", arn)
+	d.Set("description", group.Description)
+	d.Set("name", group.Name)
 
 	q, err := conn.GetGroupQuery(ctx, &resourcegroups.GetGroupQueryInput{
 		GroupName: aws.String(d.Id()),
@@ -204,13 +204,13 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if hasQuery {
 		resultQuery := map[string]interface{}{}
 		resultQuery["query"] = aws.ToString(q.GroupQuery.ResourceQuery.Query)
-		resultQuery[names.AttrType] = q.GroupQuery.ResourceQuery.Type
+		resultQuery["type"] = q.GroupQuery.ResourceQuery.Type
 		if err := d.Set("resource_query", []map[string]interface{}{resultQuery}); err != nil {
 			return diag.Errorf("setting resource_query: %s", err)
 		}
 	}
 	if hasConfiguration {
-		if err := d.Set(names.AttrConfiguration, flattenGroupConfigurationItems(groupCfg.Configuration)); err != nil {
+		if err := d.Set("configuration", flattenGroupConfigurationItems(groupCfg.Configuration)); err != nil {
 			return diag.Errorf("setting configuration: %s", err)
 		}
 	}
@@ -222,13 +222,13 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).ResourceGroupsClient(ctx)
 
 	// Conversion between a resource-query and configuration group is not possible and vice-versa
-	if d.HasChange(names.AttrConfiguration) && d.HasChange("resource_query") {
+	if d.HasChange("configuration") && d.HasChange("resource_query") {
 		return diag.Errorf("conversion between resource-query and configuration group types is not possible")
 	}
 
-	if d.HasChange(names.AttrDescription) {
+	if d.HasChange("description") {
 		input := &resourcegroups.UpdateGroupInput{
-			Description: aws.String(d.Get(names.AttrDescription).(string)),
+			Description: aws.String(d.Get("description").(string)),
 			GroupName:   aws.String(d.Id()),
 		}
 
@@ -252,9 +252,9 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	if d.HasChange(names.AttrConfiguration) {
+	if d.HasChange("configuration") {
 		input := &resourcegroups.PutGroupConfigurationInput{
-			Configuration: expandGroupConfigurationItems(d.Get(names.AttrConfiguration).(*schema.Set).List()),
+			Configuration: expandGroupConfigurationItems(d.Get("configuration").(*schema.Set).List()),
 			Group:         aws.String(d.Id()),
 		}
 
@@ -384,11 +384,11 @@ func expandGroupConfigurationParameters(parameterList []interface{}) []types.Gro
 	for _, param := range parameterList {
 		parameter := param.(map[string]interface{})
 		var values []string
-		for _, val := range parameter[names.AttrValues].([]interface{}) {
+		for _, val := range parameter["values"].([]interface{}) {
 			values = append(values, val.(string))
 		}
 		parameters = append(parameters, types.GroupConfigurationParameter{
-			Name:   aws.String(parameter[names.AttrName].(string)),
+			Name:   aws.String(parameter["name"].(string)),
 			Values: values,
 		})
 	}
@@ -402,8 +402,8 @@ func expandGroupConfigurationItems(configurationItemList []interface{}) []types.
 	for _, configItem := range configurationItemList {
 		configItemMap := configItem.(map[string]interface{})
 		configurationItems = append(configurationItems, types.GroupConfigurationItem{
-			Parameters: expandGroupConfigurationParameters(configItemMap[names.AttrParameters].(*schema.Set).List()),
-			Type:       aws.String(configItemMap[names.AttrType].(string)),
+			Parameters: expandGroupConfigurationParameters(configItemMap["parameters"].(*schema.Set).List()),
+			Type:       aws.String(configItemMap["type"].(string)),
 		})
 	}
 
@@ -415,7 +415,7 @@ func expandResourceQuery(resourceQueryList []interface{}) *types.ResourceQuery {
 
 	return &types.ResourceQuery{
 		Query: aws.String(resourceQuery["query"].(string)),
-		Type:  types.QueryType(resourceQuery[names.AttrType].(string)),
+		Type:  types.QueryType(resourceQuery["type"].(string)),
 	}
 }
 
@@ -423,11 +423,11 @@ func flattenGroupConfigurationParameter(param types.GroupConfigurationParameter)
 	tfMap := map[string]interface{}{}
 
 	if v := param.Name; v != nil {
-		tfMap[names.AttrName] = aws.ToString(param.Name)
+		tfMap["name"] = aws.ToString(param.Name)
 	}
 
 	if v := param.Values; v != nil {
-		tfMap[names.AttrValues] = v
+		tfMap["values"] = v
 	}
 
 	return tfMap
@@ -437,7 +437,7 @@ func flattenGroupConfigurationItem(configuration types.GroupConfigurationItem) m
 	tfMap := map[string]interface{}{}
 
 	if v := configuration.Type; v != nil {
-		tfMap[names.AttrType] = aws.ToString(v)
+		tfMap["type"] = aws.ToString(v)
 	}
 
 	if v := configuration.Parameters; v != nil {
@@ -445,7 +445,7 @@ func flattenGroupConfigurationItem(configuration types.GroupConfigurationItem) m
 		for _, param := range v {
 			params = append(params, flattenGroupConfigurationParameter(param))
 		}
-		tfMap[names.AttrParameters] = params
+		tfMap["parameters"] = params
 	}
 
 	return tfMap

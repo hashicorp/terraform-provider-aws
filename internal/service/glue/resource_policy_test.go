@@ -54,9 +54,9 @@ func testAccResourcePolicy_hybrid(t *testing.T) {
 		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourcePolicyConfig_hybrid("glue:CreateTable", acctest.CtTrueCaps),
+				Config: testAccResourcePolicyConfig_hybrid("glue:CreateTable", "TRUE"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "enable_hybrid", acctest.CtTrueCaps),
+					resource.TestCheckResourceAttr(resourceName, "enable_hybrid", "TRUE"),
 				),
 			},
 			{
@@ -66,15 +66,15 @@ func testAccResourcePolicy_hybrid(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"enable_hybrid"},
 			},
 			{
-				Config: testAccResourcePolicyConfig_hybrid("glue:CreateTable", acctest.CtFalseCaps),
+				Config: testAccResourcePolicyConfig_hybrid("glue:CreateTable", "FALSE"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "enable_hybrid", acctest.CtFalseCaps),
+					resource.TestCheckResourceAttr(resourceName, "enable_hybrid", "FALSE"),
 				),
 			},
 			{
-				Config: testAccResourcePolicyConfig_hybrid("glue:CreateTable", acctest.CtTrueCaps),
+				Config: testAccResourcePolicyConfig_hybrid("glue:CreateTable", "TRUE"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "enable_hybrid", acctest.CtTrueCaps),
+					resource.TestCheckResourceAttr(resourceName, "enable_hybrid", "TRUE"),
 				),
 			},
 		},

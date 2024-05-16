@@ -45,7 +45,7 @@ func ResourceTransitGatewayPeering() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -70,7 +70,7 @@ func ResourceTransitGatewayPeering() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrResourceARN: {
+			"resource_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -143,13 +143,13 @@ func resourceTransitGatewayPeeringRead(ctx context.Context, d *schema.ResourceDa
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("peering/%s", d.Id()),
 	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set("arn", arn)
 	d.Set("core_network_arn", p.CoreNetworkArn)
 	d.Set("core_network_id", p.CoreNetworkId)
 	d.Set("edge_location", p.EdgeLocation)
 	d.Set("owner_account_id", p.OwnerAccountId)
 	d.Set("peering_type", p.PeeringType)
-	d.Set(names.AttrResourceARN, p.ResourceArn)
+	d.Set("resource_arn", p.ResourceArn)
 	d.Set("transit_gateway_arn", transitGatewayPeering.TransitGatewayArn)
 	d.Set("transit_gateway_peering_attachment_id", transitGatewayPeering.TransitGatewayPeeringAttachmentId)
 

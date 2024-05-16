@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ec2_local_gateway_virtual_interface_groups")
@@ -27,8 +26,8 @@ func DataSourceLocalGatewayVirtualInterfaceGroups() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrFilter: customFiltersSchema(),
-			names.AttrIDs: {
+			"filter": customFiltersSchema(),
+			"ids": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -38,7 +37,7 @@ func DataSourceLocalGatewayVirtualInterfaceGroups() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -50,11 +49,11 @@ func dataSourceLocalGatewayVirtualInterfaceGroupsRead(ctx context.Context, d *sc
 	input := &ec2.DescribeLocalGatewayVirtualInterfaceGroupsInput{}
 
 	input.Filters = append(input.Filters, newTagFilterList(
-		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
+		Tags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
 	)...)
 
 	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get(names.AttrFilter).(*schema.Set),
+		d.Get("filter").(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {
@@ -75,7 +74,7 @@ func dataSourceLocalGatewayVirtualInterfaceGroupsRead(ctx context.Context, d *sc
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set(names.AttrIDs, groupIDs)
+	d.Set("ids", groupIDs)
 	d.Set("local_gateway_virtual_interface_ids", interfaceIDs)
 
 	return diags

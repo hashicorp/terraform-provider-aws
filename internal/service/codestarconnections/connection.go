@@ -37,7 +37,7 @@ func resourceConnection() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -52,7 +52,7 @@ func resourceConnection() *schema.Resource {
 				ValidateFunc:  verify.ValidARN,
 				ConflictsWith: []string{"provider_type"},
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -77,7 +77,7 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeStarConnectionsClient(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &codestarconnections.CreateConnectionInput{
 		ConnectionName: aws.String(name),
 		Tags:           getTagsIn(ctx),
@@ -120,10 +120,10 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	arn := aws.ToString(connection.ConnectionArn)
 	d.SetId(arn)
-	d.Set(names.AttrARN, connection.ConnectionArn)
+	d.Set("arn", connection.ConnectionArn)
 	d.Set("connection_status", connection.ConnectionStatus)
 	d.Set("host_arn", connection.HostArn)
-	d.Set(names.AttrName, connection.ConnectionName)
+	d.Set("name", connection.ConnectionName)
 	d.Set("provider_type", connection.ProviderType)
 
 	return diags

@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_vpc_endpoint_policy")
@@ -33,7 +32,7 @@ func ResourceVPCEndpointPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrPolicy: {
+			"policy": {
 				Type:                  schema.TypeString,
 				Optional:              true,
 				Computed:              true,
@@ -45,7 +44,7 @@ func ResourceVPCEndpointPolicy() *schema.Resource {
 					return json
 				},
 			},
-			names.AttrVPCEndpointID: {
+			"vpc_endpoint_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -63,12 +62,12 @@ func resourceVPCEndpointPolicyPut(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	endpointID := d.Get(names.AttrVPCEndpointID).(string)
+	endpointID := d.Get("vpc_endpoint_id").(string)
 	req := &ec2.ModifyVpcEndpointInput{
 		VpcEndpointId: aws.String(endpointID),
 	}
 
-	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy))
+	policy, err := structure.NormalizeJsonString(d.Get("policy"))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "policy contains an invalid JSON: %s", err)
 	}
@@ -110,9 +109,9 @@ func resourceVPCEndpointPolicyRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading VPC Endpoint Policy (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrVPCEndpointID, d.Id())
+	d.Set("vpc_endpoint_id", d.Id())
 
-	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get(names.AttrPolicy).(string), aws.StringValue(vpce.PolicyDocument))
+	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), aws.StringValue(vpce.PolicyDocument))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "while setting policy (%s), encountered: %s", policyToSet, err)
@@ -124,7 +123,7 @@ func resourceVPCEndpointPolicyRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policyToSet, err)
 	}
 
-	d.Set(names.AttrPolicy, policyToSet)
+	d.Set("policy", policyToSet)
 	return diags
 }
 

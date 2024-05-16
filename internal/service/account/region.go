@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_account_region", name="Region")
@@ -37,13 +36,13 @@ func resourceRegion() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrAccountID: {
+			"account_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			names.AttrEnabled: {
+			"enabled": {
 				Type:     schema.TypeBool,
 				Required: true,
 			},
@@ -76,7 +75,7 @@ func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	var id string
 	region := d.Get("region_name").(string)
 	accountID := ""
-	if v, ok := d.GetOk(names.AttrAccountID); ok {
+	if v, ok := d.GetOk("account_id"); ok {
 		accountID = v.(string)
 		id = errs.Must(flex.FlattenResourceId([]string{accountID, region}, regionResourceIDPartCount, false))
 	} else {
@@ -88,7 +87,7 @@ func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		timeout = d.Timeout(schema.TimeoutUpdate)
 	}
 
-	if v := d.Get(names.AttrEnabled).(bool); v {
+	if v := d.Get("enabled").(bool); v {
 		input := &account.EnableRegionInput{
 			RegionName: aws.String(region),
 		}
@@ -154,8 +153,8 @@ func resourceRegionRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading Account Region (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrAccountID, accountID)
-	d.Set(names.AttrEnabled, output.RegionOptStatus == types.RegionOptStatusEnabled || output.RegionOptStatus == types.RegionOptStatusEnabledByDefault)
+	d.Set("account_id", accountID)
+	d.Set("enabled", output.RegionOptStatus == types.RegionOptStatusEnabled || output.RegionOptStatus == types.RegionOptStatusEnabledByDefault)
 	d.Set("opt_status", string(output.RegionOptStatus))
 	d.Set("region_name", output.RegionName)
 

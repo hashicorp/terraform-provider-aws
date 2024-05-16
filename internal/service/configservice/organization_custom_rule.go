@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_config_organization_custom_rule", name="Organization Custom Rule")
@@ -43,11 +42,11 @@ func resourceOrganizationCustomRule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
@@ -81,7 +80,7 @@ func resourceOrganizationCustomRule() *schema.Resource {
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[types.MaximumExecutionFrequency](),
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -129,7 +128,7 @@ func resourceOrganizationCustomRuleCreate(ctx context.Context, d *schema.Resourc
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &configservice.PutOrganizationConfigRuleInput{
 		OrganizationConfigRuleName: aws.String(name),
 		OrganizationCustomRuleMetadata: &types.OrganizationCustomRuleMetadata{
@@ -138,7 +137,7 @@ func resourceOrganizationCustomRuleCreate(ctx context.Context, d *schema.Resourc
 		},
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.OrganizationCustomRuleMetadata.Description = aws.String(v.(string))
 	}
 
@@ -204,13 +203,13 @@ func resourceOrganizationCustomRuleRead(ctx context.Context, d *schema.ResourceD
 	}
 
 	customRule := configRule.OrganizationCustomRuleMetadata
-	d.Set(names.AttrARN, configRule.OrganizationConfigRuleArn)
-	d.Set(names.AttrDescription, customRule.Description)
+	d.Set("arn", configRule.OrganizationConfigRuleArn)
+	d.Set("description", customRule.Description)
 	d.Set("excluded_accounts", configRule.ExcludedAccounts)
 	d.Set("input_parameters", customRule.InputParameters)
 	d.Set("lambda_function_arn", customRule.LambdaFunctionArn)
 	d.Set("maximum_execution_frequency", customRule.MaximumExecutionFrequency)
-	d.Set(names.AttrName, configRule.OrganizationConfigRuleName)
+	d.Set("name", configRule.OrganizationConfigRuleName)
 	d.Set("resource_id_scope", customRule.ResourceIdScope)
 	d.Set("resource_types_scope", customRule.ResourceTypesScope)
 	d.Set("tag_key_scope", customRule.TagKeyScope)
@@ -232,7 +231,7 @@ func resourceOrganizationCustomRuleUpdate(ctx context.Context, d *schema.Resourc
 		},
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.OrganizationCustomRuleMetadata.Description = aws.String(v.(string))
 	}
 

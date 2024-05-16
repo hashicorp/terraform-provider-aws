@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_networkmanager_connection")
@@ -20,7 +19,7 @@ func DataSourceConnection() *schema.Resource {
 		ReadWithoutTimeout: dataSourceConnectionRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -36,7 +35,7 @@ func DataSourceConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -52,7 +51,7 @@ func DataSourceConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -72,16 +71,16 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.SetId(connectionID)
-	d.Set(names.AttrARN, connection.ConnectionArn)
+	d.Set("arn", connection.ConnectionArn)
 	d.Set("connected_device_id", connection.ConnectedDeviceId)
 	d.Set("connected_link_id", connection.ConnectedLinkId)
 	d.Set("connection_id", connection.ConnectionId)
-	d.Set(names.AttrDescription, connection.Description)
+	d.Set("description", connection.Description)
 	d.Set("device_id", connection.DeviceId)
 	d.Set("global_network_id", connection.GlobalNetworkId)
 	d.Set("link_id", connection.LinkId)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, connection.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, connection.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

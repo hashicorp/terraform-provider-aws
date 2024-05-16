@@ -7,23 +7,21 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/appstream"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/appstream/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/appstream"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // FindFleetByName Retrieve a appstream fleet by name
-func FindFleetByName(ctx context.Context, conn *appstream.Client, name string) (*awstypes.Fleet, error) {
+func FindFleetByName(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.Fleet, error) {
 	input := &appstream.DescribeFleetsInput{
-		Names: []string{name},
+		Names: []*string{aws.String(name)},
 	}
 
-	var fleet awstypes.Fleet
-	resp, err := conn.DescribeFleets(ctx, input)
+	var fleet *appstream.Fleet
+	resp, err := conn.DescribeFleetsWithContext(ctx, input)
 
 	if err != nil {
 		return nil, err
@@ -37,12 +35,12 @@ func FindFleetByName(ctx context.Context, conn *appstream.Client, name string) (
 		fleet = resp.Fleets[0]
 	}
 
-	return &fleet, nil
+	return fleet, nil
 }
 
-func FindImageBuilderByName(ctx context.Context, conn *appstream.Client, name string) (*awstypes.ImageBuilder, error) {
+func FindImageBuilderByName(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.ImageBuilder, error) {
 	input := &appstream.DescribeImageBuildersInput{
-		Names: []string{name},
+		Names: aws.StringSlice([]string{name}),
 	}
 
 	output, err := findImageBuilder(ctx, conn, input)
@@ -52,7 +50,7 @@ func FindImageBuilderByName(ctx context.Context, conn *appstream.Client, name st
 	}
 
 	// Eventual consistency check.
-	if aws.ToString(output.Name) != name {
+	if aws.StringValue(output.Name) != name {
 		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
@@ -61,20 +59,24 @@ func FindImageBuilderByName(ctx context.Context, conn *appstream.Client, name st
 	return output, nil
 }
 
-func findImageBuilders(ctx context.Context, conn *appstream.Client, input *appstream.DescribeImageBuildersInput) ([]awstypes.ImageBuilder, error) {
-	var output []awstypes.ImageBuilder
+func findImageBuilders(ctx context.Context, conn *appstream.AppStream, input *appstream.DescribeImageBuildersInput) ([]*appstream.ImageBuilder, error) {
+	var output []*appstream.ImageBuilder
 
 	err := describeImageBuildersPages(ctx, conn, input, func(page *appstream.DescribeImageBuildersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		output = append(output, page.ImageBuilders...)
+		for _, v := range page.ImageBuilders {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
 
 		return !lastPage
 	})
 
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+	if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -88,31 +90,42 @@ func findImageBuilders(ctx context.Context, conn *appstream.Client, input *appst
 	return output, nil
 }
 
-func findImageBuilder(ctx context.Context, conn *appstream.Client, input *appstream.DescribeImageBuildersInput) (*awstypes.ImageBuilder, error) {
+func findImageBuilder(ctx context.Context, conn *appstream.AppStream, input *appstream.DescribeImageBuildersInput) (*appstream.ImageBuilder, error) {
 	output, err := findImageBuilders(ctx, conn, input)
 
 	if err != nil {
-		return &awstypes.ImageBuilder{}, err
+		return nil, err
 	}
 
-	return tfresource.AssertSingleValueResult(output)
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
 }
 
 // FindUserByUserNameAndAuthType Retrieve a appstream fleet by Username and authentication type
-func FindUserByUserNameAndAuthType(ctx context.Context, conn *appstream.Client, username, authType string) (*awstypes.User, error) {
+func FindUserByUserNameAndAuthType(ctx context.Context, conn *appstream.AppStream, username, authType string) (*appstream.User, error) {
 	input := &appstream.DescribeUsersInput{
-		AuthenticationType: awstypes.AuthenticationType(authType),
+		AuthenticationType: aws.String(authType),
 	}
 
-	var result *awstypes.User
+	var result *appstream.User
 
 	err := describeUsersPages(ctx, conn, input, func(page *appstream.DescribeUsersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, user := range tfslices.ToPointers(page.Users) {
-			if aws.ToString(user.UserName) == username {
+		for _, user := range page.Users {
+			if user == nil {
+				continue
+			}
+			if aws.StringValue(user.UserName) == username {
 				result = user
 				return false
 			}
@@ -121,7 +134,7 @@ func FindUserByUserNameAndAuthType(ctx context.Context, conn *appstream.Client, 
 		return !lastPage
 	})
 
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+	if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -142,7 +155,7 @@ func FindUserByUserNameAndAuthType(ctx context.Context, conn *appstream.Client, 
 }
 
 // FindFleetStackAssociation Validates that a fleet has the named associated stack
-func FindFleetStackAssociation(ctx context.Context, conn *appstream.Client, fleetName, stackName string) error {
+func FindFleetStackAssociation(ctx context.Context, conn *appstream.AppStream, fleetName, stackName string) error {
 	input := &appstream.ListAssociatedStacksInput{
 		FleetName: aws.String(fleetName),
 	}
@@ -154,7 +167,7 @@ func FindFleetStackAssociation(ctx context.Context, conn *appstream.Client, flee
 		}
 
 		for _, name := range page.Names {
-			if stackName == name {
+			if stackName == aws.StringValue(name) {
 				found = true
 				return false
 			}
@@ -163,7 +176,7 @@ func FindFleetStackAssociation(ctx context.Context, conn *appstream.Client, flee
 		return !lastPage
 	})
 
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+	if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
 		return &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

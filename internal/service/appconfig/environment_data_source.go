@@ -35,15 +35,15 @@ func DataSourceEnvironment() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[a-z\d]{4,7}`), ""),
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -63,11 +63,11 @@ func DataSourceEnvironment() *schema.Resource {
 					},
 				},
 			},
-			names.AttrState: {
+			"state": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -94,9 +94,9 @@ func dataSourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta
 
 	d.Set("application_id", appID)
 	d.Set("environment_id", envID)
-	d.Set(names.AttrDescription, out.Description)
-	d.Set(names.AttrName, out.Name)
-	d.Set(names.AttrState, out.State)
+	d.Set("description", out.Description)
+	d.Set("name", out.Name)
+	d.Set("state", out.State)
 
 	if err := d.Set("monitor", flattenEnvironmentMonitors(out.Monitors)); err != nil {
 		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionReading, DSNameEnvironment, ID, err)
@@ -104,7 +104,7 @@ func dataSourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta
 
 	arn := environmentARN(meta.(*conns.AWSClient), appID, envID).String()
 
-	d.Set(names.AttrARN, arn)
+	d.Set("arn", arn)
 
 	tags, err := listTags(ctx, conn, arn)
 
@@ -116,7 +116,7 @@ func dataSourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
-	if err := d.Set(names.AttrTags, tags.Map()); err != nil {
+	if err := d.Set("tags", tags.Map()); err != nil {
 		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionSetting, DSNameEnvironment, ID, err)
 	}
 

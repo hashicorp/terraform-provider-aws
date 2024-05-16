@@ -123,7 +123,7 @@ func (r *pipelineResource) Schema(ctx context.Context, request resource.SchemaRe
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						names.AttrKMSKeyARN: schema.StringAttribute{
+						"kms_key_arn": schema.StringAttribute{
 							CustomType: fwtypes.ARNType,
 							Required:   true,
 						},
@@ -161,7 +161,7 @@ func (r *pipelineResource) Schema(ctx context.Context, request resource.SchemaRe
 					},
 				},
 			},
-			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+			"timeouts": timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -176,7 +176,7 @@ func (r *pipelineResource) Schema(ctx context.Context, request resource.SchemaRe
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						names.AttrSecurityGroupIDs: schema.SetAttribute{
+						"security_group_ids": schema.SetAttribute{
 							CustomType:  fwtypes.SetOfStringType,
 							Optional:    true,
 							ElementType: types.StringType,
@@ -187,7 +187,7 @@ func (r *pipelineResource) Schema(ctx context.Context, request resource.SchemaRe
 								setvalidator.SizeBetween(1, 12),
 							},
 						},
-						names.AttrSubnetIDs: schema.SetAttribute{
+						"subnet_ids": schema.SetAttribute{
 							CustomType:  fwtypes.SetOfStringType,
 							Required:    true,
 							ElementType: types.StringType,

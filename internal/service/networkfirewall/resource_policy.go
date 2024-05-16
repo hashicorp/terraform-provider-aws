@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_networkfirewall_resource_policy")
@@ -35,7 +34,7 @@ func ResourceResourcePolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrPolicy: {
+			"policy": {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateFunc:     validation.StringIsJSON,
@@ -45,7 +44,7 @@ func ResourceResourcePolicy() *schema.Resource {
 					return json
 				},
 			},
-			names.AttrResourceARN: {
+			"resource_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -59,9 +58,9 @@ func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
-	resourceArn := d.Get(names.AttrResourceARN).(string)
+	resourceArn := d.Get("resource_arn").(string)
 
-	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
+	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
@@ -106,15 +105,15 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading NetworkFirewall Resource Policy (for resource: %s): empty output", resourceArn)
 	}
 
-	d.Set(names.AttrResourceARN, resourceArn)
+	d.Set("resource_arn", resourceArn)
 
-	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), aws.StringValue(policy))
+	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(policy))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting policy %s: %s", aws.StringValue(policy), err)
 	}
 
-	d.Set(names.AttrPolicy, policyToSet)
+	d.Set("policy", policyToSet)
 
 	return diags
 }

@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_lakeformation_resource")
@@ -26,7 +25,7 @@ func DataSourceResource() *schema.Resource {
 		ReadWithoutTimeout: dataSourceResourceRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -35,7 +34,7 @@ func DataSourceResource() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrRoleARN: {
+			"role_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -49,7 +48,7 @@ func dataSourceResourceRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	input := &lakeformation.DescribeResourceInput{}
 
-	if v, ok := d.GetOk(names.AttrARN); ok {
+	if v, ok := d.GetOk("arn"); ok {
 		input.ResourceArn = aws.String(v.(string))
 	}
 
@@ -71,7 +70,7 @@ func dataSourceResourceRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.SetId(aws.ToString(input.ResourceArn))
 	// d.Set("arn", output.ResourceInfo.ResourceArn) // output not including resource arn currently
-	d.Set(names.AttrRoleARN, output.ResourceInfo.RoleArn)
+	d.Set("role_arn", output.ResourceInfo.RoleArn)
 	if output.ResourceInfo.LastModified != nil { // output not including last modified currently
 		d.Set("last_modified", output.ResourceInfo.LastModified.Format(time.RFC3339))
 	}

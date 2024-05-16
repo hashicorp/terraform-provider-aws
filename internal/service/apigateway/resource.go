@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_api_gateway_resource", name="Resource")
@@ -49,7 +48,7 @@ func resourceResource() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrPath: {
+			"path": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -105,7 +104,7 @@ func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.Set("parent_id", resource.ParentId)
 	d.Set("path_part", resource.PathPart)
-	d.Set(names.AttrPath, resource.Path)
+	d.Set("path", resource.Path)
 
 	return diags
 }

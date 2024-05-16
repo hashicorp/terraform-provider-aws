@@ -15,7 +15,7 @@ import (
 	"text/template"
 
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"github.com/hashicorp/terraform-provider-aws/skaff/convert"
+	"github.com/hashicorp/terraform-provider-aws/skaff/resource"
 )
 
 //go:embed datasource.tmpl
@@ -67,7 +67,7 @@ func Create(dsName, snakeName string, comments, force, v2, pluginFramework, tags
 		return fmt.Errorf("error checking: snake name should be all lower case with underscores, if needed (e.g., db_instance)")
 	}
 
-	snakeName = convert.ToSnakeCase(dsName, snakeName)
+	snakeName = resource.ToSnakeCase(dsName, snakeName)
 
 	s, err := names.ProviderNameUpper(servicePackage)
 	if err != nil {
@@ -97,8 +97,8 @@ func Create(dsName, snakeName string, comments, force, v2, pluginFramework, tags
 		AWSServiceName:       sn,
 		AWSGoSDKV2:           v2,
 		PluginFramework:      pluginFramework,
-		HumanDataSourceName:  convert.ToHumanResName(dsName),
-		ProviderResourceName: convert.ToProviderResourceName(servicePackage, snakeName),
+		HumanDataSourceName:  resource.HumanResName(dsName),
+		ProviderResourceName: resource.ProviderResourceName(servicePackage, snakeName),
 	}
 
 	tmpl := datasourceTmpl

@@ -28,7 +28,7 @@ func TestAccMQBrokerEngineTypesDataSource_basic(t *testing.T) {
 			{
 				Config: testAccBrokerEngineTypesDataSourceConfig_basic("ACTIVEMQ"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "broker_engine_types.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "broker_engine_types.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "broker_engine_types.0.engine_type", "ACTIVEMQ"),
 				),
 			},

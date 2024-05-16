@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_elastic_beanstalk_solution_stack")
@@ -28,13 +27,13 @@ func DataSourceSolutionStack() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringIsValidRegExp,
 			},
-			names.AttrMostRecent: {
+			"most_recent": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
 			// Computed values.
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -75,7 +74,7 @@ func dataSourceSolutionStackRead(ctx context.Context, d *schema.ResourceData, me
 		// Query returned single result.
 		solutionStack = filteredSolutionStacks[0]
 	} else {
-		recent := d.Get(names.AttrMostRecent).(bool)
+		recent := d.Get("most_recent").(bool)
 		log.Printf("[DEBUG] aws_elastic_beanstalk_solution_stack - multiple results found and `most_recent` is set to: %t", recent)
 		if recent {
 			solutionStack = mostRecentSolutionStack(filteredSolutionStacks)
@@ -86,7 +85,7 @@ func dataSourceSolutionStackRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	d.SetId(solutionStack)
-	d.Set(names.AttrName, solutionStack)
+	d.Set("name", solutionStack)
 
 	return diags
 }

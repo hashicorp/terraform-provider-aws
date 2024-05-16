@@ -38,7 +38,7 @@ func (d *userGroupsDataSource) Metadata(_ context.Context, request datasource.Me
 func (d *userGroupsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
+			"id": framework.IDAttribute(),
 			"user_pool_id": schema.StringAttribute{
 				Required: true,
 			},
@@ -48,16 +48,16 @@ func (d *userGroupsDataSource) Schema(ctx context.Context, request datasource.Sc
 				CustomType: fwtypes.NewListNestedObjectTypeOf[dataSourceDataSourceUserGroupsGroups](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						names.AttrDescription: schema.StringAttribute{
+						"description": schema.StringAttribute{
 							Computed: true,
 						},
-						names.AttrGroupName: schema.StringAttribute{
+						"group_name": schema.StringAttribute{
 							Computed: true,
 						},
 						"precedence": schema.Int64Attribute{
 							Computed: true,
 						},
-						names.AttrRoleARN: schema.StringAttribute{
+						"role_arn": schema.StringAttribute{
 							Computed: true,
 						},
 					},

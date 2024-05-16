@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_kendra_faq")
@@ -25,15 +24,15 @@ func DataSourceFaq() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceFaqRead,
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrCreatedAt: {
+			"created_at": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -64,15 +63,15 @@ func DataSourceFaq() *schema.Resource {
 					"Starts with an alphanumeric character. Subsequently, can contain alphanumeric characters and hyphens. Fixed length of 36.",
 				),
 			},
-			names.AttrLanguageCode: {
+			"language_code": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrRoleARN: {
+			"role_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -81,18 +80,18 @@ func DataSourceFaq() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrBucket: {
+						"bucket": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrKey: {
+						"key": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -100,7 +99,7 @@ func DataSourceFaq() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -132,17 +131,17 @@ func dataSourceFaqRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		Resource:  fmt.Sprintf("index/%s/faq/%s", indexId, id),
 	}.String()
 
-	d.Set(names.AttrARN, arn)
-	d.Set(names.AttrCreatedAt, aws.ToTime(resp.CreatedAt).Format(time.RFC3339))
-	d.Set(names.AttrDescription, resp.Description)
+	d.Set("arn", arn)
+	d.Set("created_at", aws.ToTime(resp.CreatedAt).Format(time.RFC3339))
+	d.Set("description", resp.Description)
 	d.Set("error_message", resp.ErrorMessage)
 	d.Set("faq_id", resp.Id)
 	d.Set("file_format", resp.FileFormat)
 	d.Set("index_id", resp.IndexId)
-	d.Set(names.AttrLanguageCode, resp.LanguageCode)
-	d.Set(names.AttrName, resp.Name)
-	d.Set(names.AttrRoleARN, resp.RoleArn)
-	d.Set(names.AttrStatus, resp.Status)
+	d.Set("language_code", resp.LanguageCode)
+	d.Set("name", resp.Name)
+	d.Set("role_arn", resp.RoleArn)
+	d.Set("status", resp.Status)
 	d.Set("updated_at", aws.ToTime(resp.UpdatedAt).Format(time.RFC3339))
 
 	if err := d.Set("s3_path", flattenS3Path(resp.S3Path)); err != nil {
@@ -155,7 +154,7 @@ func dataSourceFaqRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

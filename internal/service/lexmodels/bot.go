@@ -19,9 +19,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // @SDKResource("aws_lex_bot")
@@ -56,7 +55,7 @@ func ResourceBot() *schema.Resource {
 				MaxItems: 1,
 				Elem:     statementResource,
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -80,11 +79,11 @@ func ResourceBot() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			names.AttrCreatedDate: {
+			"created_date": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 200),
@@ -135,7 +134,7 @@ func ResourceBot() *schema.Resource {
 					},
 				},
 			},
-			names.AttrLastUpdatedDate: {
+			"last_updated_date": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -146,7 +145,7 @@ func ResourceBot() *schema.Resource {
 				Default:      lexmodelbuildingservice.LocaleEnUs,
 				ValidateFunc: validation.StringInSlice(lexmodelbuildingservice.Locale_Values(), false),
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -164,11 +163,11 @@ func ResourceBot() *schema.Resource {
 				Default:      lexmodelbuildingservice.ProcessBehaviorSave,
 				ValidateFunc: validation.StringInSlice(lexmodelbuildingservice.ProcessBehavior_Values(), false),
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrVersion: {
+			"version": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -185,14 +184,14 @@ func ResourceBot() *schema.Resource {
 func updateComputedAttributesOnBotCreateVersion(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
 	createVersion := d.Get("create_version").(bool)
 	if createVersion && hasBotConfigChanges(d) {
-		d.SetNewComputed(names.AttrVersion)
+		d.SetNewComputed("version")
 	}
 	return nil
 }
 
-func hasBotConfigChanges(d sdkv2.ResourceDiffer) bool {
+func hasBotConfigChanges(d verify.ResourceDiffer) bool {
 	for _, key := range []string{
-		names.AttrDescription,
+		"description",
 		"child_directed",
 		"detect_sentiment",
 		"enable_model_improvements",
@@ -227,12 +226,12 @@ func resourceBotCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LexModelsConn(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &lexmodelbuildingservice.PutBotInput{
 		AbortStatement:          expandStatement(d.Get("abort_statement")),
 		ChildDirected:           aws.Bool(d.Get("child_directed").(bool)),
 		CreateVersion:           aws.Bool(d.Get("create_version").(bool)),
-		Description:             aws.String(d.Get(names.AttrDescription).(string)),
+		Description:             aws.String(d.Get("description").(string)),
 		EnableModelImprovements: aws.Bool(d.Get("enable_model_improvements").(bool)),
 		IdleSessionTTLInSeconds: aws.Int64(int64(d.Get("idle_session_ttl_in_seconds").(int))),
 		Intents:                 expandIntents(d.Get("intent").(*schema.Set).List()),
@@ -303,7 +302,7 @@ func resourceBotRead(ctx context.Context, d *schema.ResourceData, meta interface
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("bot:%s", d.Id()),
 	}
-	d.Set(names.AttrARN, arn.String())
+	d.Set("arn", arn.String())
 
 	// Process behavior is not returned from the API but is used for create and update.
 	// Manually write to state file to avoid un-expected diffs.
@@ -314,19 +313,19 @@ func resourceBotRead(ctx context.Context, d *schema.ResourceData, meta interface
 
 	d.Set("checksum", output.Checksum)
 	d.Set("child_directed", output.ChildDirected)
-	d.Set(names.AttrCreatedDate, output.CreatedDate.Format(time.RFC3339))
-	d.Set(names.AttrDescription, output.Description)
+	d.Set("created_date", output.CreatedDate.Format(time.RFC3339))
+	d.Set("description", output.Description)
 	d.Set("detect_sentiment", output.DetectSentiment)
 	d.Set("enable_model_improvements", output.EnableModelImprovements)
 	d.Set("failure_reason", output.FailureReason)
 	d.Set("idle_session_ttl_in_seconds", output.IdleSessionTTLInSeconds)
 	d.Set("intent", flattenIntents(output.Intents))
-	d.Set(names.AttrLastUpdatedDate, output.LastUpdatedDate.Format(time.RFC3339))
+	d.Set("last_updated_date", output.LastUpdatedDate.Format(time.RFC3339))
 	d.Set("locale", output.Locale)
-	d.Set(names.AttrName, output.Name)
+	d.Set("name", output.Name)
 	d.Set("nlu_intent_confidence_threshold", output.NluIntentConfidenceThreshold)
 	d.Set("process_behavior", processBehavior)
-	d.Set(names.AttrStatus, output.Status)
+	d.Set("status", output.Status)
 
 	if output.AbortStatement != nil {
 		d.Set("abort_statement", flattenStatement(output.AbortStatement))
@@ -342,7 +341,7 @@ func resourceBotRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return sdkdiag.AppendErrorf(diags, "reading Lex Bot (%s) latest version: %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrVersion, version)
+	d.Set("version", version)
 	d.Set("voice_id", output.VoiceId)
 
 	return diags
@@ -356,7 +355,7 @@ func resourceBotUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 		Checksum:                     aws.String(d.Get("checksum").(string)),
 		ChildDirected:                aws.Bool(d.Get("child_directed").(bool)),
 		CreateVersion:                aws.Bool(d.Get("create_version").(bool)),
-		Description:                  aws.String(d.Get(names.AttrDescription).(string)),
+		Description:                  aws.String(d.Get("description").(string)),
 		DetectSentiment:              aws.Bool(d.Get("detect_sentiment").(bool)),
 		EnableModelImprovements:      aws.Bool(d.Get("enable_model_improvements").(bool)),
 		IdleSessionTTLInSeconds:      aws.Int64(int64(d.Get("idle_session_ttl_in_seconds").(int))),

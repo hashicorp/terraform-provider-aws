@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_lex_bot_alias")
@@ -24,7 +23,7 @@ func DataSourceBotAlias() *schema.Resource {
 		ReadWithoutTimeout: dataSourceBotAliasRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -41,19 +40,19 @@ func DataSourceBotAlias() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrCreatedDate: {
+			"created_date": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrLastUpdatedDate: {
+			"last_updated_date": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validBotAliasName,
@@ -67,7 +66,7 @@ func dataSourceBotAliasRead(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).LexModelsConn(ctx)
 
 	botName := d.Get("bot_name").(string)
-	botAliasName := d.Get(names.AttrName).(string)
+	botAliasName := d.Get("name").(string)
 	d.SetId(fmt.Sprintf("%s:%s", botName, botAliasName))
 
 	resp, err := conn.GetBotAliasWithContext(ctx, &lexmodelbuildingservice.GetBotAliasInput{
@@ -85,15 +84,15 @@ func dataSourceBotAliasRead(ctx context.Context, d *schema.ResourceData, meta in
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("bot:%s", d.Id()),
 	}
-	d.Set(names.AttrARN, arn.String())
+	d.Set("arn", arn.String())
 
 	d.Set("bot_name", resp.BotName)
 	d.Set("bot_version", resp.BotVersion)
 	d.Set("checksum", resp.Checksum)
-	d.Set(names.AttrCreatedDate, resp.CreatedDate.Format(time.RFC3339))
-	d.Set(names.AttrDescription, resp.Description)
-	d.Set(names.AttrLastUpdatedDate, resp.LastUpdatedDate.Format(time.RFC3339))
-	d.Set(names.AttrName, resp.Name)
+	d.Set("created_date", resp.CreatedDate.Format(time.RFC3339))
+	d.Set("description", resp.Description)
+	d.Set("last_updated_date", resp.LastUpdatedDate.Format(time.RFC3339))
+	d.Set("name", resp.Name)
 
 	return diags
 }

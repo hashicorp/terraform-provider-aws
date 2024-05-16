@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_api_gateway_sdk", name="SDK")
@@ -27,7 +26,7 @@ func dataSourceSDK() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrContentType: {
+			"content_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -35,7 +34,7 @@ func dataSourceSDK() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrParameters: {
+			"parameters": {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -70,7 +69,7 @@ func dataSourceSDKRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		StageName: aws.String(stageName),
 	}
 
-	if v, ok := d.GetOk(names.AttrParameters); ok && len(v.(map[string]interface{})) > 0 {
+	if v, ok := d.GetOk("parameters"); ok && len(v.(map[string]interface{})) > 0 {
 		input.Parameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
 	}
 
@@ -85,7 +84,7 @@ func dataSourceSDKRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.SetId(id)
 	d.Set("body", string(sdk.Body))
 	d.Set("content_disposition", sdk.ContentDisposition)
-	d.Set(names.AttrContentType, sdk.ContentType)
+	d.Set("content_type", sdk.ContentType)
 
 	return diags
 }

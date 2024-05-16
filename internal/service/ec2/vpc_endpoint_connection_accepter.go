@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_vpc_endpoint_connection_accepter")
@@ -32,7 +31,7 @@ func ResourceVPCEndpointConnectionAccepter() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrVPCEndpointID: {
+			"vpc_endpoint_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -55,7 +54,7 @@ func resourceVPCEndpointConnectionAccepterCreate(ctx context.Context, d *schema.
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	serviceID := d.Get("vpc_endpoint_service_id").(string)
-	vpcEndpointID := d.Get(names.AttrVPCEndpointID).(string)
+	vpcEndpointID := d.Get("vpc_endpoint_id").(string)
 	id := VPCEndpointConnectionAccepterCreateResourceID(serviceID, vpcEndpointID)
 	input := &ec2.AcceptVpcEndpointConnectionsInput{
 		ServiceId:      aws.String(serviceID),
@@ -101,7 +100,7 @@ func resourceVPCEndpointConnectionAccepterRead(ctx context.Context, d *schema.Re
 		return sdkdiag.AppendErrorf(diags, "reading VPC Endpoint Connection (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrVPCEndpointID, vpcEndpointConnection.VpcEndpointId)
+	d.Set("vpc_endpoint_id", vpcEndpointConnection.VpcEndpointId)
 	d.Set("vpc_endpoint_service_id", vpcEndpointConnection.ServiceId)
 	d.Set("vpc_endpoint_state", vpcEndpointConnection.VpcEndpointState)
 

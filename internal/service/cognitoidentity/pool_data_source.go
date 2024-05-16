@@ -34,7 +34,7 @@ func dataSourcePool() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -43,11 +43,11 @@ func dataSourcePool() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrClientID: {
+						"client_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrProviderName: {
+						"provider_name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -88,7 +88,7 @@ func dataSourcePool() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -118,7 +118,7 @@ func dataSourcePoolRead(ctx context.Context, d *schema.ResourceData, meta interf
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("identitypool/%s", d.Id()),
 	}
-	d.Set(names.AttrARN, arn.String())
+	d.Set("arn", arn.String())
 	d.Set("identity_pool_name", ip.IdentityPoolName)
 	d.Set("allow_unauthenticated_identities", ip.AllowUnauthenticatedIdentities)
 	d.Set("allow_classic_flow", ip.AllowClassicFlow)

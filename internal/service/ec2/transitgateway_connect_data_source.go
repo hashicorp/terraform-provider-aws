@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ec2_transit_gateway_connect")
@@ -28,18 +27,18 @@ func DataSourceTransitGatewayConnect() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrFilter: customFiltersSchema(),
-			names.AttrProtocol: {
+			"filter": customFiltersSchema(),
+			"protocol": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 			"transit_gateway_connect_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			names.AttrTransitGatewayID: {
+			"transit_gateway_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -64,7 +63,7 @@ func dataSourceTransitGatewayConnectRead(ctx context.Context, d *schema.Resource
 	}
 
 	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get(names.AttrFilter).(*schema.Set),
+		d.Get("filter").(*schema.Set),
 	)...)
 
 	transitGatewayConnect, err := FindTransitGatewayConnect(ctx, conn, input)
@@ -74,12 +73,12 @@ func dataSourceTransitGatewayConnectRead(ctx context.Context, d *schema.Resource
 	}
 
 	d.SetId(aws.StringValue(transitGatewayConnect.TransitGatewayAttachmentId))
-	d.Set(names.AttrProtocol, transitGatewayConnect.Options.Protocol)
+	d.Set("protocol", transitGatewayConnect.Options.Protocol)
 	d.Set("transit_gateway_connect_id", transitGatewayConnect.TransitGatewayAttachmentId)
-	d.Set(names.AttrTransitGatewayID, transitGatewayConnect.TransitGatewayId)
+	d.Set("transit_gateway_id", transitGatewayConnect.TransitGatewayId)
 	d.Set("transport_attachment_id", transitGatewayConnect.TransportTransitGatewayAttachmentId)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, transitGatewayConnect.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, transitGatewayConnect.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

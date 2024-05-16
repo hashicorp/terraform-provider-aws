@@ -38,18 +38,18 @@ func (d *dataSourcePolicyStore) Metadata(_ context.Context, req datasource.Metad
 func (d *dataSourcePolicyStore) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrCreatedDate: schema.StringAttribute{
+			"arn": framework.ARNAttributeComputedOnly(),
+			"created_date": schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 			},
-			names.AttrDescription: schema.StringAttribute{
+			"description": schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrID: schema.StringAttribute{
+			"id": schema.StringAttribute{
 				Required: true,
 			},
-			names.AttrLastUpdatedDate: schema.StringAttribute{
+			"last_updated_date": schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 			},

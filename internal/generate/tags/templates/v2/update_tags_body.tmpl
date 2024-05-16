@@ -39,11 +39,7 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 		{{ .TagInIDElem }}:   aws.String(identifier),
 		{{- end }}
 		{{- if .TagResTypeElem }}
-		{{- if .TagResTypeElemType }}
-		{{ .TagResTypeElem }}:      awstypes.{{ .TagResTypeElemType }}(resourceType),
-		{{- else }}
 		{{ .TagResTypeElem }}:      aws.String(resourceType),
-		{{- end }}
 		{{- end }}
 		{{- end }}
 	}
@@ -90,11 +86,7 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 			{{ .TagInIDElem }}:   aws.String(identifier),
 			{{- end }}
 			{{- if .TagResTypeElem }}
-		    {{- if .TagResTypeElemType }}
-			{{ .TagResTypeElem }}: awstypes.{{ .TagResTypeElemType }}(resourceType),
-		    {{- else }}
 			{{ .TagResTypeElem }}: aws.String(resourceType),
-			{{- end }}
 			{{- end }}
 			{{- end }}
 			{{- if .UntagInNeedTagType }}
@@ -136,11 +128,7 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 			{{ .TagInIDElem }}: aws.String(identifier),
 			{{- end }}
 			{{- if .TagResTypeElem }}
-		    {{- if .TagResTypeElemType }}
-			{{ .TagResTypeElem }}:    awstypes.{{ .TagResTypeElemType }}(resourceType),
-		    {{- else }}
 			{{ .TagResTypeElem }}:    aws.String(resourceType),
-			{{- end }}
 			{{- end }}
 			{{- end }}
 			{{- if .TagInCustomVal }}

@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ssoadmin_instance_access_control_attributes")
@@ -41,16 +40,16 @@ func ResourceAccessControlAttributes() *schema.Resource {
 				MinItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrKey: {
+						"key": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						names.AttrValue: {
+						"value": {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrSource: {
+									"source": {
 										Type:     schema.TypeSet,
 										Required: true,
 										MinItems: 1,
@@ -68,11 +67,11 @@ func ResourceAccessControlAttributes() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrStatusReason: {
+			"status_reason": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -123,8 +122,8 @@ func resourceAccessControlAttributesRead(ctx context.Context, d *schema.Resource
 	if err := d.Set("attribute", flattenAccessControlAttributes(output.InstanceAccessControlAttributeConfiguration.AccessControlAttributes)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting attribute: %s", err)
 	}
-	d.Set(names.AttrStatus, output.Status)
-	d.Set(names.AttrStatusReason, output.StatusReason)
+	d.Set("status", output.Status)
+	d.Set("status_reason", output.StatusReason)
 
 	return diags
 }
@@ -196,11 +195,11 @@ func expandAccessControlAttributes(d *schema.ResourceData) []awstypes.AccessCont
 	for _, attrMap := range attInterface {
 		attr := attrMap.(map[string]interface{})
 		var attribute awstypes.AccessControlAttribute
-		if key, ok := attr[names.AttrKey].(string); ok {
+		if key, ok := attr["key"].(string); ok {
 			attribute.Key = aws.String(key)
 		}
-		val := attr[names.AttrValue].(*schema.Set).List()[0].(map[string]interface{})
-		if v, ok := val[names.AttrSource].(*schema.Set); ok && len(v.List()) > 0 {
+		val := attr["value"].(*schema.Set).List()[0].(map[string]interface{})
+		if v, ok := val["source"].(*schema.Set); ok && len(v.List()) > 0 {
 			attribute.Value = &awstypes.AccessControlAttributeValue{
 				Source: flex.ExpandStringValueSet(v),
 			}
@@ -220,11 +219,11 @@ func flattenAccessControlAttributes(attributes []awstypes.AccessControlAttribute
 	for _, attr := range attributes {
 		var val []interface{}
 		val = append(val, map[string]interface{}{
-			names.AttrSource: flex.FlattenStringValueSet(attr.Value.Source),
+			"source": flex.FlattenStringValueSet(attr.Value.Source),
 		})
 		results = append(results, map[string]interface{}{
-			names.AttrKey:   aws.ToString(attr.Key),
-			names.AttrValue: val,
+			"key":   aws.ToString(attr.Key),
+			"value": val,
 		})
 	}
 

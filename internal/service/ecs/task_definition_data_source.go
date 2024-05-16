@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ecs_task_definition")
@@ -26,7 +25,7 @@ func DataSourceTaskDefinition() *schema.Resource {
 				Required: true,
 			},
 			// Computed values.
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -34,11 +33,11 @@ func DataSourceTaskDefinition() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrExecutionRoleARN: {
+			"execution_role_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrFamily: {
+			"family": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -50,7 +49,7 @@ func DataSourceTaskDefinition() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -79,13 +78,13 @@ func dataSourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, m
 
 	taskDefinition := output.TaskDefinition
 	d.SetId(aws.StringValue(taskDefinition.TaskDefinitionArn))
-	d.Set(names.AttrARN, taskDefinition.TaskDefinitionArn)
+	d.Set("arn", taskDefinition.TaskDefinitionArn)
 	d.Set("arn_without_revision", StripRevision(aws.StringValue(taskDefinition.TaskDefinitionArn)))
-	d.Set(names.AttrExecutionRoleARN, taskDefinition.ExecutionRoleArn)
-	d.Set(names.AttrFamily, taskDefinition.Family)
+	d.Set("execution_role_arn", taskDefinition.ExecutionRoleArn)
+	d.Set("family", taskDefinition.Family)
 	d.Set("network_mode", taskDefinition.NetworkMode)
 	d.Set("revision", taskDefinition.Revision)
-	d.Set(names.AttrStatus, taskDefinition.Status)
+	d.Set("status", taskDefinition.Status)
 	d.Set("task_role_arn", taskDefinition.TaskRoleArn)
 
 	return diags

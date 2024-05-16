@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ec2_transit_gateway_policy_table_association")
@@ -33,15 +32,15 @@ func ResourceTransitGatewayPolicyTableAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrResourceID: {
+			"resource_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrResourceType: {
+			"resource_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTransitGatewayAttachmentID: {
+			"transit_gateway_attachment_id": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -63,7 +62,7 @@ func resourceTransitGatewayPolicyTableAssociationCreate(ctx context.Context, d *
 
 	// If the TGW attachment is already associated with a TGW route table, disassociate it to prevent errors like
 	// "IncorrectState: Cannot have both PolicyTableAssociation and RouteTableAssociation on the same TransitGateway Attachment".
-	transitGatewayAttachmentID := d.Get(names.AttrTransitGatewayAttachmentID).(string)
+	transitGatewayAttachmentID := d.Get("transit_gateway_attachment_id").(string)
 	transitGatewayAttachment, err := FindTransitGatewayAttachmentByID(ctx, conn, transitGatewayAttachmentID)
 
 	if err != nil {
@@ -132,9 +131,9 @@ func resourceTransitGatewayPolicyTableAssociationRead(ctx context.Context, d *sc
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway Policy Table Association (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrResourceID, transitGatewayPolicyTableAssociation.ResourceId)
-	d.Set(names.AttrResourceType, transitGatewayPolicyTableAssociation.ResourceType)
-	d.Set(names.AttrTransitGatewayAttachmentID, transitGatewayPolicyTableAssociation.TransitGatewayAttachmentId)
+	d.Set("resource_id", transitGatewayPolicyTableAssociation.ResourceId)
+	d.Set("resource_type", transitGatewayPolicyTableAssociation.ResourceType)
+	d.Set("transit_gateway_attachment_id", transitGatewayPolicyTableAssociation.TransitGatewayAttachmentId)
 	d.Set("transit_gateway_policy_table_id", transitGatewayPolicyTableAssociation.TransitGatewayPolicyTableId)
 
 	return diags

@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_servicecatalog_constraint")
@@ -31,20 +30,20 @@ func DataSourceConstraint() *schema.Resource {
 				Default:      AcceptLanguageEnglish,
 				ValidateFunc: validation.StringInSlice(AcceptLanguage_Values(), false),
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			names.AttrID: {
+			"id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrOwner: {
+			"owner": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrParameters: {
+			"parameters": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -56,11 +55,11 @@ func DataSourceConstraint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrType: {
+			"type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -72,7 +71,7 @@ func dataSourceConstraintRead(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
-	output, err := WaitConstraintReady(ctx, conn, d.Get("accept_language").(string), d.Get(names.AttrID).(string), d.Timeout(schema.TimeoutRead))
+	output, err := WaitConstraintReady(ctx, conn, d.Get("accept_language").(string), d.Get("id").(string), d.Timeout(schema.TimeoutRead))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "describing Service Catalog Constraint: %s", err)
@@ -90,16 +89,16 @@ func dataSourceConstraintRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	d.Set("accept_language", acceptLanguage)
 
-	d.Set(names.AttrParameters, output.ConstraintParameters)
-	d.Set(names.AttrStatus, output.Status)
+	d.Set("parameters", output.ConstraintParameters)
+	d.Set("status", output.Status)
 
 	detail := output.ConstraintDetail
 
-	d.Set(names.AttrDescription, detail.Description)
-	d.Set(names.AttrOwner, detail.Owner)
+	d.Set("description", detail.Description)
+	d.Set("owner", detail.Owner)
 	d.Set("portfolio_id", detail.PortfolioId)
 	d.Set("product_id", detail.ProductId)
-	d.Set(names.AttrType, detail.Type)
+	d.Set("type", detail.Type)
 
 	d.SetId(aws.StringValue(detail.ConstraintId))
 

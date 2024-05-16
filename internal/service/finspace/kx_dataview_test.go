@@ -44,8 +44,8 @@ func TestAccFinSpaceKxDataview_basic(t *testing.T) {
 				Config: testAccKxDataviewConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxDataviewExists(ctx, resourceName, &dataview),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxDataviewStatusActive)),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxDataviewStatusActive)),
 				),
 			},
 			{
@@ -111,7 +111,7 @@ func TestAccFinSpaceKxDataview_readWrite(t *testing.T) {
 				Config: testAccKxDataviewConfig_readWrite(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxDataviewExists(ctx, resourceName, &dataview),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
 		},
@@ -141,7 +141,7 @@ func TestAccFinSpaceKxDataview_onDemand(t *testing.T) {
 				Config: testAccKxDataviewConfig_onDemand(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxDataviewExists(ctx, resourceName, &dataview),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
 		},
@@ -168,12 +168,12 @@ func TestAccFinSpaceKxDataview_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckKxDataviewDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKxDataviewConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccKxDataviewConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxDataviewExists(ctx, resourceName, &dataview),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 
@@ -183,22 +183,22 @@ func TestAccFinSpaceKxDataview_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccKxDataviewConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccKxDataviewConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxDataviewExists(ctx, resourceName, &dataview),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccKxDataviewConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccKxDataviewConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxDataviewExists(ctx, resourceName, &dataview),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -228,8 +228,8 @@ func TestAccFinSpaceKxDataview_withKxVolume(t *testing.T) {
 				Config: testAccKxDataviewConfig_withKxVolume(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxDataviewExists(ctx, resourceName, &dataview),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxDataviewStatusActive)),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxDataviewStatusActive)),
 				),
 			},
 		},

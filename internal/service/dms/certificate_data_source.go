@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_dms_certificate")
@@ -24,7 +23,7 @@ func DataSourceCertificate() *schema.Resource {
 		ReadWithoutTimeout: dataSourceCertificateRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrCertificateARN: {
+			"certificate_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -64,7 +63,7 @@ func DataSourceCertificate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 			"valid_from_date": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -92,7 +91,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 
 	d.SetId(aws.StringValue(out.CertificateIdentifier))
 	arn := aws.StringValue(out.CertificateArn)
-	d.Set(names.AttrCertificateARN, arn)
+	d.Set("certificate_arn", arn)
 	d.Set("certificate_id", out.CertificateIdentifier)
 	d.Set("certificate_pem", out.CertificatePem)
 	if len(out.CertificateWallet) != 0 {
@@ -111,7 +110,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
-	if err := d.Set(names.AttrTags, tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

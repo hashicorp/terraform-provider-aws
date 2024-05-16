@@ -35,15 +35,14 @@ func TestAccVPCDHCPOptions_basic(t *testing.T) {
 				Config: testAccVPCDHCPOptionsConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDHCPOptionsExists(ctx, resourceName, &d),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`dhcp-options/dopt-.+`)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, ""),
-					resource.TestCheckResourceAttr(resourceName, "domain_name_servers.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "ipv6_address_preferred_lease_time", ""),
-					resource.TestCheckResourceAttr(resourceName, "netbios_name_servers.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "netbios_node_type", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ntp_servers.#", acctest.Ct0),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`dhcp-options/dopt-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "domain_name_servers.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "netbios_name_servers.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "netbios_node_type", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ntp_servers.#", "0"),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -72,19 +71,18 @@ func TestAccVPCDHCPOptions_full(t *testing.T) {
 				Config: testAccVPCDHCPOptionsConfig_full(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDHCPOptionsExists(ctx, resourceName, &d),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`dhcp-options/dopt-.+`)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
-					resource.TestCheckResourceAttr(resourceName, "domain_name_servers.#", acctest.Ct2),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`dhcp-options/dopt-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
+					resource.TestCheckResourceAttr(resourceName, "domain_name_servers.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_servers.0", "127.0.0.1"),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_servers.1", "10.0.0.2"),
-					resource.TestCheckResourceAttr(resourceName, "ipv6_address_preferred_lease_time", "1440"),
-					resource.TestCheckResourceAttr(resourceName, "netbios_name_servers.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "netbios_name_servers.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "netbios_name_servers.0", "127.0.0.1"),
-					resource.TestCheckResourceAttr(resourceName, "netbios_node_type", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "ntp_servers.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "netbios_node_type", "2"),
+					resource.TestCheckResourceAttr(resourceName, "ntp_servers.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ntp_servers.0", "127.0.0.1"),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -109,11 +107,11 @@ func TestAccVPCDHCPOptions_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckDHCPOptionsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCDHCPOptionsConfig_tags1(acctest.CtKey1, acctest.CtValue1),
+				Config: testAccVPCDHCPOptionsConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDHCPOptionsExists(ctx, resourceName, &d),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -122,20 +120,20 @@ func TestAccVPCDHCPOptions_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVPCDHCPOptionsConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccVPCDHCPOptionsConfig_tags2("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDHCPOptionsExists(ctx, resourceName, &d),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccVPCDHCPOptionsConfig_tags1(acctest.CtKey2, acctest.CtValue2),
+				Config: testAccVPCDHCPOptionsConfig_tags1("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDHCPOptionsExists(ctx, resourceName, &d),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -225,12 +223,11 @@ resource "aws_vpc_dhcp_options" "test" {
 func testAccVPCDHCPOptionsConfig_full(rName, domainName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc_dhcp_options" "test" {
-  domain_name                       = %[2]q
-  domain_name_servers               = ["127.0.0.1", "10.0.0.2"]
-  ipv6_address_preferred_lease_time = 1440
-  ntp_servers                       = ["127.0.0.1"]
-  netbios_name_servers              = ["127.0.0.1"]
-  netbios_node_type                 = "2"
+  domain_name          = %[2]q
+  domain_name_servers  = ["127.0.0.1", "10.0.0.2"]
+  ntp_servers          = ["127.0.0.1"]
+  netbios_name_servers = ["127.0.0.1"]
+  netbios_node_type    = "2"
 
   tags = {
     Name = %[1]q

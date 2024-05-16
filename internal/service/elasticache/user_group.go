@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -29,7 +28,7 @@ import (
 
 // @SDKResource("aws_elasticache_user_group", name="User Group")
 // @Tags(identifierAttribute="arn")
-func resourceUserGroup() *schema.Resource {
+func ResourceUserGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserGroupCreate,
 		ReadWithoutTimeout:   resourceUserGroupRead,
@@ -43,7 +42,7 @@ func resourceUserGroup() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -127,7 +126,7 @@ func resourceUserGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
-	userGroup, err := findUserGroupByID(ctx, conn, d.Id())
+	userGroup, err := FindUserGroupByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ElastiCache User Group (%s) not found, removing from state", d.Id())
@@ -139,7 +138,7 @@ func resourceUserGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "reading ElastiCache User Group (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, userGroup.ARN)
+	d.Set("arn", userGroup.ARN)
 	d.Set("engine", userGroup.Engine)
 	d.Set("user_ids", aws.StringValueSlice(userGroup.UserIds))
 	d.Set("user_group_id", userGroup.UserGroupId)
@@ -151,7 +150,7 @@ func resourceUserGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &elasticache.ModifyUserGroupInput{
 			UserGroupId: aws.String(d.Get("user_group_id").(string)),
 		}
@@ -207,40 +206,12 @@ func resourceUserGroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func findUserGroupByID(ctx context.Context, conn *elasticache.ElastiCache, id string) (*elasticache.UserGroup, error) {
+func FindUserGroupByID(ctx context.Context, conn *elasticache.ElastiCache, id string) (*elasticache.UserGroup, error) {
 	input := &elasticache.DescribeUserGroupsInput{
 		UserGroupId: aws.String(id),
 	}
 
-	return findUserGroup(ctx, conn, input, tfslices.PredicateTrue[*elasticache.UserGroup]())
-}
-
-func findUserGroup(ctx context.Context, conn *elasticache.ElastiCache, input *elasticache.DescribeUserGroupsInput, filter tfslices.Predicate[*elasticache.UserGroup]) (*elasticache.UserGroup, error) {
-	output, err := findUserGroups(ctx, conn, input, filter)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSinglePtrResult(output)
-}
-
-func findUserGroups(ctx context.Context, conn *elasticache.ElastiCache, input *elasticache.DescribeUserGroupsInput, filter tfslices.Predicate[*elasticache.UserGroup]) ([]*elasticache.UserGroup, error) {
-	var output []*elasticache.UserGroup
-
-	err := conn.DescribeUserGroupsPagesWithContext(ctx, input, func(page *elasticache.DescribeUserGroupsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, v := range page.UserGroups {
-			if v != nil && filter(v) {
-				output = append(output, v)
-			}
-		}
-
-		return !lastPage
-	})
+	output, err := conn.DescribeUserGroupsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeUserGroupNotFoundFault) {
 		return nil, &retry.NotFoundError{
@@ -253,12 +224,20 @@ func findUserGroups(ctx context.Context, conn *elasticache.ElastiCache, input *e
 		return nil, err
 	}
 
-	return output, nil
+	if output == nil || len(output.UserGroups) == 0 || output.UserGroups[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.UserGroups); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output.UserGroups[0], nil
 }
 
 func statusUserGroup(ctx context.Context, conn *elasticache.ElastiCache, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findUserGroupByID(ctx, conn, id)
+		output, err := FindUserGroupByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

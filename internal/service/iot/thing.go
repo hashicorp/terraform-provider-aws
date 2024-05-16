@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_iot_thing")
@@ -33,11 +32,11 @@ func ResourceThing() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrAttributes: {
+			"attributes": {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -46,7 +45,7 @@ func ResourceThing() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -57,7 +56,7 @@ func ResourceThing() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
-			names.AttrVersion: {
+			"version": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -69,12 +68,12 @@ func resourceThingCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &iot.CreateThingInput{
 		ThingName: aws.String(name),
 	}
 
-	if v, ok := d.GetOk(names.AttrAttributes); ok && len(v.(map[string]interface{})) > 0 {
+	if v, ok := d.GetOk("attributes"); ok && len(v.(map[string]interface{})) > 0 {
 		input.AttributePayload = &iot.AttributePayload{
 			Attributes: flex.ExpandStringMap(v.(map[string]interface{})),
 		}
@@ -112,12 +111,12 @@ func resourceThingRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading IoT Thing (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, output.ThingArn)
+	d.Set("arn", output.ThingArn)
 	d.Set("default_client_id", output.DefaultClientId)
-	d.Set(names.AttrName, output.ThingName)
-	d.Set(names.AttrAttributes, aws.StringValueMap(output.Attributes))
+	d.Set("name", output.ThingName)
+	d.Set("attributes", aws.StringValueMap(output.Attributes))
 	d.Set("thing_type_name", output.ThingTypeName)
-	d.Set(names.AttrVersion, output.Version)
+	d.Set("version", output.Version)
 
 	return diags
 }
@@ -127,13 +126,13 @@ func resourceThingUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	input := &iot.UpdateThingInput{
-		ThingName: aws.String(d.Get(names.AttrName).(string)),
+		ThingName: aws.String(d.Get("name").(string)),
 	}
 
-	if d.HasChange(names.AttrAttributes) {
+	if d.HasChange("attributes") {
 		attributes := map[string]*string{}
 
-		if v, ok := d.GetOk(names.AttrAttributes); ok && len(v.(map[string]interface{})) > 0 {
+		if v, ok := d.GetOk("attributes"); ok && len(v.(map[string]interface{})) > 0 {
 			attributes = flex.ExpandStringMap(v.(map[string]interface{}))
 		}
 

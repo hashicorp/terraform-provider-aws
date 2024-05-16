@@ -12,7 +12,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fms/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
@@ -20,7 +19,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
 	return fms.NewFromConfig(cfg, func(o *fms.Options) {
-		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
+		if endpoint := config["endpoint"].(string); endpoint != "" {
 			o.BaseEndpoint = aws.String(endpoint)
 		}
 

@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/opensearchservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func expandCognitoOptions(c []interface{}) *opensearchservice.CognitoOptions {
@@ -21,7 +20,7 @@ func expandCognitoOptions(c []interface{}) *opensearchservice.CognitoOptions {
 
 	m := c[0].(map[string]interface{})
 
-	if cognitoEnabled, ok := m[names.AttrEnabled]; ok {
+	if cognitoEnabled, ok := m["enabled"]; ok {
 		options.Enabled = aws.Bool(cognitoEnabled.(bool))
 
 		if cognitoEnabled.(bool) {
@@ -31,7 +30,7 @@ func expandCognitoOptions(c []interface{}) *opensearchservice.CognitoOptions {
 			if v, ok := m["identity_pool_id"]; ok && v.(string) != "" {
 				options.IdentityPoolId = aws.String(v.(string))
 			}
-			if v, ok := m[names.AttrRoleARN]; ok && v.(string) != "" {
+			if v, ok := m["role_arn"]; ok && v.(string) != "" {
 				options.RoleArn = aws.String(v.(string))
 			}
 		}
@@ -80,16 +79,16 @@ func expandEBSOptions(m map[string]interface{}) *opensearchservice.EBSOptions {
 		options.EBSEnabled = aws.Bool(ebsEnabled.(bool))
 
 		if ebsEnabled.(bool) {
-			if v, ok := m[names.AttrVolumeSize]; ok && v.(int) > 0 {
+			if v, ok := m["volume_size"]; ok && v.(int) > 0 {
 				options.VolumeSize = aws.Int64(int64(v.(int)))
 			}
 			var volumeType string
-			if v, ok := m[names.AttrVolumeType]; ok && v.(string) != "" {
+			if v, ok := m["volume_type"]; ok && v.(string) != "" {
 				volumeType = v.(string)
 				options.VolumeType = aws.String(volumeType)
 			}
 
-			if v, ok := m[names.AttrIOPS]; ok && v.(int) > 0 && EBSVolumeTypePermitsIopsInput(volumeType) {
+			if v, ok := m["iops"]; ok && v.(int) > 0 && EBSVolumeTypePermitsIopsInput(volumeType) {
 				options.Iops = aws.Int64(int64(v.(int)))
 			}
 			if v, ok := m["throughput"]; ok && v.(int) > 0 && EBSVolumeTypePermitsThroughputInput(volumeType) {
@@ -104,10 +103,10 @@ func expandEBSOptions(m map[string]interface{}) *opensearchservice.EBSOptions {
 func expandEncryptAtRestOptions(m map[string]interface{}) *opensearchservice.EncryptionAtRestOptions {
 	options := opensearchservice.EncryptionAtRestOptions{}
 
-	if v, ok := m[names.AttrEnabled]; ok {
+	if v, ok := m["enabled"]; ok {
 		options.Enabled = aws.Bool(v.(bool))
 	}
-	if v, ok := m[names.AttrKMSKeyID]; ok && v.(string) != "" {
+	if v, ok := m["kms_key_id"]; ok && v.(string) != "" {
 		options.KmsKeyId = aws.String(v.(string))
 	}
 
@@ -117,12 +116,12 @@ func expandEncryptAtRestOptions(m map[string]interface{}) *opensearchservice.Enc
 func flattenCognitoOptions(c *opensearchservice.CognitoOptions) []map[string]interface{} {
 	m := map[string]interface{}{}
 
-	m[names.AttrEnabled] = aws.BoolValue(c.Enabled)
+	m["enabled"] = aws.BoolValue(c.Enabled)
 
 	if aws.BoolValue(c.Enabled) {
 		m["identity_pool_id"] = aws.StringValue(c.IdentityPoolId)
 		m["user_pool_id"] = aws.StringValue(c.UserPoolId)
-		m[names.AttrRoleARN] = aws.StringValue(c.RoleArn)
+		m["role_arn"] = aws.StringValue(c.RoleArn)
 	}
 
 	return []map[string]interface{}{m}
@@ -159,16 +158,16 @@ func flattenEBSOptions(o *opensearchservice.EBSOptions) []map[string]interface{}
 
 	if aws.BoolValue(o.EBSEnabled) {
 		if o.Iops != nil {
-			m[names.AttrIOPS] = aws.Int64Value(o.Iops)
+			m["iops"] = aws.Int64Value(o.Iops)
 		}
 		if o.Throughput != nil {
 			m["throughput"] = aws.Int64Value(o.Throughput)
 		}
 		if o.VolumeSize != nil {
-			m[names.AttrVolumeSize] = aws.Int64Value(o.VolumeSize)
+			m["volume_size"] = aws.Int64Value(o.VolumeSize)
 		}
 		if o.VolumeType != nil {
-			m[names.AttrVolumeType] = aws.StringValue(o.VolumeType)
+			m["volume_type"] = aws.StringValue(o.VolumeType)
 		}
 	}
 
@@ -183,10 +182,10 @@ func flattenEncryptAtRestOptions(o *opensearchservice.EncryptionAtRestOptions) [
 	m := map[string]interface{}{}
 
 	if o.Enabled != nil {
-		m[names.AttrEnabled] = aws.BoolValue(o.Enabled)
+		m["enabled"] = aws.BoolValue(o.Enabled)
 	}
 	if o.KmsKeyId != nil {
-		m[names.AttrKMSKeyID] = aws.StringValue(o.KmsKeyId)
+		m["kms_key_id"] = aws.StringValue(o.KmsKeyId)
 	}
 
 	return []map[string]interface{}{m}
@@ -238,11 +237,11 @@ func expandVPCOptions(tfMap map[string]interface{}) *opensearchservice.VPCOption
 
 	apiObject := &opensearchservice.VPCOptions{}
 
-	if v, ok := tfMap[names.AttrSecurityGroupIDs].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SecurityGroupIds = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := tfMap[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap["subnet_ids"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SubnetIds = flex.ExpandStringSet(v)
 	}
 
@@ -257,19 +256,19 @@ func flattenVPCDerivedInfo(apiObject *opensearchservice.VPCDerivedInfo) map[stri
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.AvailabilityZones; v != nil {
-		tfMap[names.AttrAvailabilityZones] = aws.StringValueSlice(v)
+		tfMap["availability_zones"] = aws.StringValueSlice(v)
 	}
 
 	if v := apiObject.SecurityGroupIds; v != nil {
-		tfMap[names.AttrSecurityGroupIDs] = aws.StringValueSlice(v)
+		tfMap["security_group_ids"] = aws.StringValueSlice(v)
 	}
 
 	if v := apiObject.SubnetIds; v != nil {
-		tfMap[names.AttrSubnetIDs] = aws.StringValueSlice(v)
+		tfMap["subnet_ids"] = aws.StringValueSlice(v)
 	}
 
 	if v := apiObject.VPCId; v != nil {
-		tfMap[names.AttrVPCID] = aws.StringValue(v)
+		tfMap["vpc_id"] = aws.StringValue(v)
 	}
 
 	return tfMap

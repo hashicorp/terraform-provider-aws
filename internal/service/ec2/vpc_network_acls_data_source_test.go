@@ -48,7 +48,7 @@ func TestAccVPCNetworkACLsDataSource_filter(t *testing.T) {
 			{
 				Config: testAccVPCNetworkACLsDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "1"),
 				),
 			},
 		},
@@ -69,7 +69,7 @@ func TestAccVPCNetworkACLsDataSource_tags(t *testing.T) {
 			{
 				Config: testAccVPCNetworkACLsDataSourceConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "2"),
 				),
 			},
 		},
@@ -91,7 +91,7 @@ func TestAccVPCNetworkACLsDataSource_vpcID(t *testing.T) {
 				Config: testAccVPCNetworkACLsDataSourceConfig_id(rName),
 				Check: resource.ComposeTestCheckFunc(
 					// The VPC will have a default network ACL
-					resource.TestCheckResourceAttr(dataSourceName, "ids.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "3"),
 				),
 			},
 		},
@@ -112,7 +112,7 @@ func TestAccVPCNetworkACLsDataSource_empty(t *testing.T) {
 			{
 				Config: testAccVPCNetworkACLsDataSourceConfig_empty(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "ids.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "0"),
 				),
 			},
 		},

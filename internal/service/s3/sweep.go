@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -307,7 +306,7 @@ func sweepDirectoryBuckets(region string) error {
 			}
 
 			sweepResources = append(sweepResources, framework.NewSweepResource(newDirectoryBucketResource, client,
-				framework.NewAttribute(names.AttrID, aws.ToString(v.Name)),
+				framework.NewAttribute("id", aws.ToString(v.Name)),
 			))
 		}
 	}

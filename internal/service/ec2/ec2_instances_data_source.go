@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_instances")
@@ -29,8 +28,8 @@ func DataSourceInstances() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrFilter: customFiltersSchema(),
-			names.AttrIDs: {
+			"filter": customFiltersSchema(),
+			"ids": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -86,7 +85,7 @@ func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta i
 	)...)
 
 	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get(names.AttrFilter).(*schema.Set),
+		d.Get("filter").(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {
@@ -115,7 +114,7 @@ func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set(names.AttrIDs, instanceIDs)
+	d.Set("ids", instanceIDs)
 	d.Set("ipv6_addresses", ipv6Addresses)
 	d.Set("private_ips", privateIPs)
 	d.Set("public_ips", publicIPs)

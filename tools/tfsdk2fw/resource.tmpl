@@ -28,7 +28,7 @@ import (
 	{{- end}}
 )
 
-// @FrameworkResource("{{ .TFTypeName }}")
+// @FrameworkResource
 func newResource{{ .Name }}(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resource{{ .Name }}{}
 	r.SetMigratedFromPluginSDK(true)

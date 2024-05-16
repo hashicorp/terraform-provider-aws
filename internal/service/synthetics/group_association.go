@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_synthetics_group_association", name="Group Association")
@@ -46,7 +45,7 @@ func ResourceGroupAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrGroupName: {
+			"group_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -60,7 +59,7 @@ func resourceGroupAssociationCreate(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).SyntheticsClient(ctx)
 
 	canaryArn := d.Get("canary_arn").(string)
-	groupName := d.Get(names.AttrGroupName).(string)
+	groupName := d.Get("group_name").(string)
 
 	in := &synthetics.AssociateResourceInput{
 		ResourceArn:     aws.String(canaryArn),
@@ -107,7 +106,7 @@ func resourceGroupAssociationRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("canary_arn", canaryArn)
 	d.Set("group_arn", group.Arn)
 	d.Set("group_id", group.Id)
-	d.Set(names.AttrGroupName, group.Name)
+	d.Set("group_name", group.Name)
 
 	return diags
 }

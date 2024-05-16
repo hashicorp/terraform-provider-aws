@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -30,7 +29,7 @@ import (
 
 // @SDKResource("aws_fsx_ontap_storage_virtual_machine", name="ONTAP Storage Virtual Machine")
 // @Tags(identifierAttribute="arn")
-func resourceONTAPStorageVirtualMachine() *schema.Resource {
+func ResourceONTAPStorageVirtualMachine() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceONTAPStorageVirtualMachineCreate,
 		ReadWithoutTimeout:   resourceONTAPStorageVirtualMachineRead,
@@ -50,8 +49,8 @@ func resourceONTAPStorageVirtualMachine() *schema.Resource {
 		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{
 			{
-				Type:    resourceONTAPStorageVirtualMachineV0().CoreConfigSchema().ImpliedType(),
-				Upgrade: resourceONTAPStorageVirtualMachineStateUpgradeV0,
+				Type:    ResourceONTAPStorageVirtualMachineV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: ResourceONTAPStorageVirtualMachineStateUpgradeV0,
 				Version: 0,
 			},
 		},
@@ -66,7 +65,7 @@ func resourceONTAPStorageVirtualMachine() *schema.Resource {
 						"netbios_name": {
 							Type:             schema.TypeString,
 							Optional:         true,
-							DiffSuppressFunc: sdkv2.SuppressEquivalentStringCaseInsensitive,
+							DiffSuppressFunc: verify.SuppressEquivalentStringCaseInsensitive,
 							ValidateFunc:     validation.StringLenBetween(1, 15),
 						},
 						"self_managed_active_directory_configuration": {
@@ -85,7 +84,7 @@ func resourceONTAPStorageVirtualMachine() *schema.Resource {
 											ValidateFunc: validation.IsIPAddress,
 										},
 									},
-									names.AttrDomainName: {
+									"domain_name": {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 255),
@@ -100,13 +99,13 @@ func resourceONTAPStorageVirtualMachine() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(1, 2000),
 									},
-									names.AttrPassword: {
+									"password": {
 										Type:         schema.TypeString,
 										Sensitive:    true,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 256),
 									},
-									names.AttrUsername: {
+									"username": {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 256),
@@ -117,11 +116,11 @@ func resourceONTAPStorageVirtualMachine() *schema.Resource {
 					},
 				},
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrEndpoints: {
+			"endpoints": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -131,7 +130,7 @@ func resourceONTAPStorageVirtualMachine() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrDNSName: {
+									"dns_name": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -148,7 +147,7 @@ func resourceONTAPStorageVirtualMachine() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrDNSName: {
+									"dns_name": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -165,7 +164,7 @@ func resourceONTAPStorageVirtualMachine() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrDNSName: {
+									"dns_name": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -182,7 +181,7 @@ func resourceONTAPStorageVirtualMachine() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrDNSName: {
+									"dns_name": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -197,13 +196,13 @@ func resourceONTAPStorageVirtualMachine() *schema.Resource {
 					},
 				},
 			},
-			names.AttrFileSystemID: {
+			"file_system_id": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(11, 21),
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -241,9 +240,9 @@ func resourceONTAPStorageVirtualMachineCreate(ctx context.Context, d *schema.Res
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &fsx.CreateStorageVirtualMachineInput{
-		FileSystemId: aws.String(d.Get(names.AttrFileSystemID).(string)),
+		FileSystemId: aws.String(d.Get("file_system_id").(string)),
 		Name:         aws.String(name),
 		Tags:         getTagsIn(ctx),
 	}
@@ -279,7 +278,7 @@ func resourceONTAPStorageVirtualMachineRead(ctx context.Context, d *schema.Resou
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	storageVirtualMachine, err := findStorageVirtualMachineByID(ctx, conn, d.Id())
+	storageVirtualMachine, err := FindStorageVirtualMachineByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FSx ONTAP Storage Virtual Machine (%s) not found, removing from state", d.Id())
@@ -292,22 +291,19 @@ func resourceONTAPStorageVirtualMachineRead(ctx context.Context, d *schema.Resou
 	}
 
 	if err := d.Set("active_directory_configuration", flattenSvmActiveDirectoryConfiguration(d, storageVirtualMachine.ActiveDirectoryConfiguration)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting active_directory_configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting svm_active_directory: %s", err)
 	}
-	d.Set(names.AttrARN, storageVirtualMachine.ResourceARN)
-	if err := d.Set(names.AttrEndpoints, flattenSvmEndpoints(storageVirtualMachine.Endpoints)); err != nil {
+	d.Set("arn", storageVirtualMachine.ResourceARN)
+	if err := d.Set("endpoints", flattenSvmEndpoints(storageVirtualMachine.Endpoints)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoints: %s", err)
 	}
-	d.Set(names.AttrFileSystemID, storageVirtualMachine.FileSystemId)
-	d.Set(names.AttrName, storageVirtualMachine.Name)
+	d.Set("file_system_id", storageVirtualMachine.FileSystemId)
+	d.Set("name", storageVirtualMachine.Name)
 	// RootVolumeSecurityStyle and SVMAdminPassword are write only properties so they don't get returned from the describe API so we just store the original setting to state
 	d.Set("root_volume_security_style", d.Get("root_volume_security_style").(string))
 	d.Set("subtype", storageVirtualMachine.Subtype)
 	d.Set("svm_admin_password", d.Get("svm_admin_password").(string))
 	d.Set("uuid", storageVirtualMachine.UUID)
-
-	// SVM tags aren't set in the Describe response.
-	// setTagsOut(ctx, storageVirtualMachine.Tags)
 
 	return diags
 }
@@ -316,7 +312,7 @@ func resourceONTAPStorageVirtualMachineUpdate(ctx context.Context, d *schema.Res
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &fsx.UpdateStorageVirtualMachineInput{
 			ClientRequestToken:      aws.String(id.UniqueId()),
 			StorageVirtualMachineId: aws.String(d.Id()),
@@ -401,7 +397,7 @@ func expandSelfManagedActiveDirectoryConfiguration(cfg []interface{}) *fsx.SelfM
 		out.DnsIps = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := conf[names.AttrDomainName].(string); ok && len(v) > 0 {
+	if v, ok := conf["domain_name"].(string); ok && len(v) > 0 {
 		out.DomainName = aws.String(v)
 	}
 
@@ -413,11 +409,11 @@ func expandSelfManagedActiveDirectoryConfiguration(cfg []interface{}) *fsx.SelfM
 		out.OrganizationalUnitDistinguishedName = aws.String(v)
 	}
 
-	if v, ok := conf[names.AttrPassword].(string); ok && len(v) > 0 {
+	if v, ok := conf["password"].(string); ok && len(v) > 0 {
 		out.Password = aws.String(v)
 	}
 
-	if v, ok := conf[names.AttrUsername].(string); ok && len(v) > 0 {
+	if v, ok := conf["username"].(string); ok && len(v) > 0 {
 		out.UserName = aws.String(v)
 	}
 
@@ -457,7 +453,7 @@ func expandSelfManagedActiveDirectoryConfigurationUpdates(cfg []interface{}) *fs
 		out.DnsIps = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := conf[names.AttrDomainName].(string); ok && len(v) > 0 {
+	if v, ok := conf["domain_name"].(string); ok && len(v) > 0 {
 		out.DomainName = aws.String(v)
 	}
 
@@ -469,11 +465,11 @@ func expandSelfManagedActiveDirectoryConfigurationUpdates(cfg []interface{}) *fs
 		out.OrganizationalUnitDistinguishedName = aws.String(v)
 	}
 
-	if v, ok := conf[names.AttrPassword].(string); ok && len(v) > 0 {
+	if v, ok := conf["password"].(string); ok && len(v) > 0 {
 		out.Password = aws.String(v)
 	}
 
-	if v, ok := conf[names.AttrUsername].(string); ok && len(v) > 0 {
+	if v, ok := conf["username"].(string); ok && len(v) > 0 {
 		out.UserName = aws.String(v)
 	}
 
@@ -508,7 +504,7 @@ func flattenSelfManagedActiveDirectoryAttributes(d *schema.ResourceData, rs *fsx
 	}
 
 	if rs.DomainName != nil {
-		m[names.AttrDomainName] = aws.StringValue(rs.DomainName)
+		m["domain_name"] = aws.StringValue(rs.DomainName)
 	}
 
 	if rs.OrganizationalUnitDistinguishedName != nil {
@@ -518,7 +514,7 @@ func flattenSelfManagedActiveDirectoryAttributes(d *schema.ResourceData, rs *fsx
 	}
 
 	if rs.UserName != nil {
-		m[names.AttrUsername] = aws.StringValue(rs.UserName)
+		m["username"] = aws.StringValue(rs.UserName)
 	}
 
 	// Since we are in a configuration block and the FSx API does not return
@@ -530,7 +526,7 @@ func flattenSelfManagedActiveDirectoryAttributes(d *schema.ResourceData, rs *fsx
 		m["file_system_administrators_group"] = v.(string)
 	}
 	if v, ok := d.GetOk("active_directory_configuration.0.self_managed_active_directory_configuration.0.password"); ok {
-		m[names.AttrPassword] = v.(string)
+		m["password"] = v.(string)
 	}
 
 	return []interface{}{m}
@@ -564,7 +560,7 @@ func flattenSvmEndpoint(rs *fsx.SvmEndpoint) []interface{} {
 
 	m := make(map[string]interface{})
 	if rs.DNSName != nil {
-		m[names.AttrDNSName] = aws.StringValue(rs.DNSName)
+		m["dns_name"] = aws.StringValue(rs.DNSName)
 	}
 	if rs.IpAddresses != nil {
 		m["ip_addresses"] = flex.FlattenStringSet(rs.IpAddresses)
@@ -573,7 +569,7 @@ func flattenSvmEndpoint(rs *fsx.SvmEndpoint) []interface{} {
 	return []interface{}{m}
 }
 
-func findStorageVirtualMachineByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.StorageVirtualMachine, error) {
+func FindStorageVirtualMachineByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.StorageVirtualMachine, error) {
 	input := &fsx.DescribeStorageVirtualMachinesInput{
 		StorageVirtualMachineIds: []*string{aws.String(id)},
 	}
@@ -624,7 +620,7 @@ func findStorageVirtualMachines(ctx context.Context, conn *fsx.FSx, input *fsx.D
 
 func statusStorageVirtualMachine(ctx context.Context, conn *fsx.FSx, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findStorageVirtualMachineByID(ctx, conn, id)
+		output, err := FindStorageVirtualMachineByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

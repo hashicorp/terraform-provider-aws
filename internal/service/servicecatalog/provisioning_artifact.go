@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_servicecatalog_provisioning_artifact")
@@ -52,11 +51,11 @@ func ResourceProvisioningArtifact() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
-			names.AttrCreatedTime: {
+			"created_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -73,7 +72,7 @@ func ResourceProvisioningArtifact() *schema.Resource {
 				Default:      servicecatalog.ProvisioningArtifactGuidanceDefault,
 				ValidateFunc: validation.StringInSlice(servicecatalog.ProvisioningArtifactGuidance_Values(), false),
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -104,7 +103,7 @@ func ResourceProvisioningArtifact() *schema.Resource {
 					"template_physical_id",
 				},
 			},
-			names.AttrType: {
+			"type": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -119,12 +118,12 @@ func resourceProvisioningArtifactCreate(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 	parameters := make(map[string]interface{})
-	parameters[names.AttrDescription] = d.Get(names.AttrDescription)
+	parameters["description"] = d.Get("description")
 	parameters["disable_template_validation"] = d.Get("disable_template_validation")
-	parameters[names.AttrName] = d.Get(names.AttrName)
+	parameters["name"] = d.Get("name")
 	parameters["template_physical_id"] = d.Get("template_physical_id")
 	parameters["template_url"] = d.Get("template_url")
-	parameters[names.AttrType] = d.Get(names.AttrType)
+	parameters["type"] = d.Get("type")
 
 	input := &servicecatalog.CreateProvisioningArtifactInput{
 		IdempotencyToken: aws.String(id.UniqueId()),
@@ -211,14 +210,14 @@ func resourceProvisioningArtifactRead(ctx context.Context, d *schema.ResourceDat
 
 	d.Set("active", pad.Active)
 	if pad.CreatedTime != nil {
-		d.Set(names.AttrCreatedTime, pad.CreatedTime.Format(time.RFC3339))
+		d.Set("created_time", pad.CreatedTime.Format(time.RFC3339))
 	}
-	d.Set(names.AttrDescription, pad.Description)
+	d.Set("description", pad.Description)
 	d.Set("guidance", pad.Guidance)
-	d.Set(names.AttrName, pad.Name)
+	d.Set("name", pad.Name)
 	d.Set("product_id", productID)
 	d.Set("provisioning_artifact_id", artifactID)
-	d.Set(names.AttrType, pad.Type)
+	d.Set("type", pad.Type)
 
 	return diags
 }
@@ -227,7 +226,7 @@ func resourceProvisioningArtifactUpdate(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
-	if d.HasChanges("accept_language", "active", names.AttrDescription, "guidance", names.AttrName, "product_id") {
+	if d.HasChanges("accept_language", "active", "description", "guidance", "name", "product_id") {
 		artifactID, productID, err := ProvisioningArtifactParseID(d.Id())
 
 		if err != nil {
@@ -244,7 +243,7 @@ func resourceProvisioningArtifactUpdate(ctx context.Context, d *schema.ResourceD
 			input.AcceptLanguage = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk(names.AttrDescription); ok {
+		if v, ok := d.GetOk("description"); ok {
 			input.Description = aws.String(v.(string))
 		}
 
@@ -252,7 +251,7 @@ func resourceProvisioningArtifactUpdate(ctx context.Context, d *schema.ResourceD
 			input.Guidance = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk(names.AttrName); ok {
+		if v, ok := d.GetOk("name"); ok {
 			input.Name = aws.String(v.(string))
 		}
 

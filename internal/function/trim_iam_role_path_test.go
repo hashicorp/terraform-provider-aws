@@ -32,7 +32,7 @@ func TestTrimIAMRolePathFunction_valid(t *testing.T) {
 	resource.UnitTest(t, resource.TestCase{
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(version.Must(version.NewVersion("1.8.0"))),
+			tfversion.SkipBelow(version.Must(version.NewVersion("1.8.0-beta1"))),
 		},
 		Steps: []resource.TestStep{
 			{
@@ -53,7 +53,7 @@ func TestTrimIAMRolePathFunction_validWithPath(t *testing.T) {
 	resource.UnitTest(t, resource.TestCase{
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(version.Must(version.NewVersion("1.8.0"))),
+			tfversion.SkipBelow(version.Must(version.NewVersion("1.8.0-beta1"))),
 		},
 		Steps: []resource.TestStep{
 			{
@@ -73,7 +73,7 @@ func TestTrimIAMRolePathFunction_invalidARN(t *testing.T) {
 	resource.UnitTest(t, resource.TestCase{
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(version.Must(version.NewVersion("1.8.0"))),
+			tfversion.SkipBelow(version.Must(version.NewVersion("1.8.0-beta1"))),
 		},
 		Steps: []resource.TestStep{
 			{
@@ -91,7 +91,7 @@ func TestTrimIAMRolePathFunction_invalidService(t *testing.T) {
 	resource.UnitTest(t, resource.TestCase{
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(version.Must(version.NewVersion("1.8.0"))),
+			tfversion.SkipBelow(version.Must(version.NewVersion("1.8.0-beta1"))),
 		},
 		Steps: []resource.TestStep{
 			{
@@ -109,7 +109,7 @@ func TestTrimIAMRolePathFunction_invalidRegion(t *testing.T) {
 	resource.UnitTest(t, resource.TestCase{
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(version.Must(version.NewVersion("1.8.0"))),
+			tfversion.SkipBelow(version.Must(version.NewVersion("1.8.0-beta1"))),
 		},
 		Steps: []resource.TestStep{
 			{
@@ -127,7 +127,7 @@ func TestTrimIAMRolePathFunction_invalidResource(t *testing.T) {
 	resource.UnitTest(t, resource.TestCase{
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(version.Must(version.NewVersion("1.8.0"))),
+			tfversion.SkipBelow(version.Must(version.NewVersion("1.8.0-beta1"))),
 		},
 		Steps: []resource.TestStep{
 			{

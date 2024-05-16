@@ -53,7 +53,7 @@ func (r *awsLogSourceResource) Schema(ctx context.Context, request resource.Sche
 			names.AttrID: framework.IDAttribute(),
 		},
 		Blocks: map[string]schema.Block{
-			names.AttrSource: schema.ListNestedBlock{
+			"source": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[awsLogSourceSourceModel](ctx),
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.RequiresReplace(),
@@ -117,9 +117,7 @@ func (r *awsLogSourceResource) Create(ctx context.Context, request resource.Crea
 		return
 	}
 
-	_, err := retryDataLakeConflictWithMutex(ctx, func() (*securitylake.CreateAwsLogSourceOutput, error) {
-		return conn.CreateAwsLogSource(ctx, input)
-	})
+	_, err := conn.CreateAwsLogSource(ctx, input)
 
 	if err != nil {
 		response.Diagnostics.AddError("creating Security Lake AWS Log Source", err.Error())
@@ -146,7 +144,6 @@ func (r *awsLogSourceResource) Create(ctx context.Context, request resource.Crea
 
 	sourceData.Accounts.SetValue = fwflex.FlattenFrameworkStringValueSet(ctx, logSource.Accounts)
 	sourceData.SourceVersion = fwflex.StringToFramework(ctx, logSource.SourceVersion)
-	data.Source = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, sourceData)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -215,9 +212,7 @@ func (r *awsLogSourceResource) Delete(ctx context.Context, request resource.Dele
 		input.Sources = []awstypes.AwsLogSourceConfiguration{*logSource}
 	}
 
-	_, err := retryDataLakeConflictWithMutex(ctx, func() (*securitylake.DeleteAwsLogSourceOutput, error) {
-		return conn.DeleteAwsLogSource(ctx, input)
-	})
+	_, err := conn.DeleteAwsLogSource(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return

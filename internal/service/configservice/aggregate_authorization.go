@@ -37,17 +37,17 @@ func resourceAggregateAuthorization() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrAccountID: {
+			"account_id": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrRegion: {
+			"region": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -64,7 +64,7 @@ func resourceAggregateAuthorizationCreate(ctx context.Context, d *schema.Resourc
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
-	accountID, region := d.Get(names.AttrAccountID).(string), d.Get(names.AttrRegion).(string)
+	accountID, region := d.Get("account_id").(string), d.Get("region").(string)
 	id := aggregateAuthorizationCreateResourceID(accountID, region)
 	input := &configservice.PutAggregationAuthorizationInput{
 		AuthorizedAccountId: aws.String(accountID),
@@ -104,9 +104,9 @@ func resourceAggregateAuthorizationRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "reading ConfigService Aggregate Authorization (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrAccountID, aggregationAuthorization.AuthorizedAccountId)
-	d.Set(names.AttrARN, aggregationAuthorization.AggregationAuthorizationArn)
-	d.Set(names.AttrRegion, aggregationAuthorization.AuthorizedAwsRegion)
+	d.Set("account_id", aggregationAuthorization.AuthorizedAccountId)
+	d.Set("arn", aggregationAuthorization.AggregationAuthorizationArn)
+	d.Set("region", aggregationAuthorization.AuthorizedAwsRegion)
 
 	return diags
 }

@@ -116,7 +116,7 @@ func (r *managedUserPoolClientResource) Schema(ctx context.Context, request reso
 					setplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrClientSecret: schema.StringAttribute{
+			"client_secret": schema.StringAttribute{
 				Computed:  true,
 				Sensitive: true,
 				PlanModifiers: []planmodifier.String{
@@ -158,7 +158,7 @@ func (r *managedUserPoolClientResource) Schema(ctx context.Context, request reso
 					setplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrID: framework.IDAttribute(),
+			"id": framework.IDAttribute(),
 			"id_token_validity": schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
@@ -180,7 +180,7 @@ func (r *managedUserPoolClientResource) Schema(ctx context.Context, request reso
 					setplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrName: schema.StringAttribute{
+			"name": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -192,12 +192,12 @@ func (r *managedUserPoolClientResource) Schema(ctx context.Context, request reso
 				Validators: append(
 					userPoolClientNameValidator,
 					stringvalidator.ExactlyOneOf(
-						path.MatchRelative().AtParent().AtName(names.AttrNamePrefix),
+						path.MatchRelative().AtParent().AtName("name_prefix"),
 						path.MatchRelative().AtParent().AtName("name_pattern"),
 					),
 				),
 			},
-			names.AttrNamePrefix: schema.StringAttribute{
+			"name_prefix": schema.StringAttribute{
 				Optional:   true,
 				Validators: userPoolClientNameValidator,
 			},
@@ -270,8 +270,8 @@ func (r *managedUserPoolClientResource) Schema(ctx context.Context, request reso
 									path.MatchRelative().AtParent().AtName("application_id"),
 								),
 								stringvalidator.ConflictsWith(
-									path.MatchRelative().AtParent().AtName(names.AttrExternalID),
-									path.MatchRelative().AtParent().AtName(names.AttrRoleARN),
+									path.MatchRelative().AtParent().AtName("external_id"),
+									path.MatchRelative().AtParent().AtName("role_arn"),
 								),
 							},
 						},
@@ -279,15 +279,15 @@ func (r *managedUserPoolClientResource) Schema(ctx context.Context, request reso
 							Optional: true,
 							Validators: []validator.String{
 								stringvalidator.AlsoRequires(
-									path.MatchRelative().AtParent().AtName(names.AttrExternalID),
-									path.MatchRelative().AtParent().AtName(names.AttrRoleARN),
+									path.MatchRelative().AtParent().AtName("external_id"),
+									path.MatchRelative().AtParent().AtName("role_arn"),
 								),
 							},
 						},
-						names.AttrExternalID: schema.StringAttribute{
+						"external_id": schema.StringAttribute{
 							Optional: true,
 						},
-						names.AttrRoleARN: schema.StringAttribute{
+						"role_arn": schema.StringAttribute{
 							CustomType: fwtypes.ARNType,
 							Optional:   true,
 							Computed:   true,
@@ -692,7 +692,7 @@ func (r *managedUserPoolClientResource) ImportState(ctx context.Context, request
 	}
 	userPoolId := parts[0]
 	clientId := parts[1]
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), clientId)...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("id"), clientId)...)
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("user_pool_id"), userPoolId)...)
 }
 

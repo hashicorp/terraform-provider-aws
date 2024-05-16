@@ -54,31 +54,25 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceCluster,
+			Factory:  DataSourceCluster,
 			TypeName: "aws_redshift_cluster",
 			Name:     "Cluster",
-			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  dataSourceClusterCredentials,
+			Factory:  DataSourceClusterCredentials,
 			TypeName: "aws_redshift_cluster_credentials",
-			Name:     "Cluster Credentials",
 		},
 		{
-			Factory:  dataSourceOrderableCluster,
+			Factory:  DataSourceOrderableCluster,
 			TypeName: "aws_redshift_orderable_cluster",
-			Name:     "Orderable Cluster Options",
 		},
 		{
-			Factory:  dataSourceServiceAccount,
+			Factory:  DataSourceServiceAccount,
 			TypeName: "aws_redshift_service_account",
-			Name:     "Service Account",
 		},
 		{
-			Factory:  dataSourceSubnetGroup,
+			Factory:  DataSourceSubnetGroup,
 			TypeName: "aws_redshift_subnet_group",
-			Name:     "Subnet Group",
-			Tags:     &types.ServicePackageResourceTags{},
 		},
 	}
 }
@@ -86,123 +80,115 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  resourceAuthenticationProfile,
+			Factory:  ResourceAuthenticationProfile,
 			TypeName: "aws_redshift_authentication_profile",
-			Name:     "Authentication Profile",
 		},
 		{
-			Factory:  resourceCluster,
+			Factory:  ResourceCluster,
 			TypeName: "aws_redshift_cluster",
 			Name:     "Cluster",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "arn",
 			},
 		},
 		{
-			Factory:  resourceClusterIAMRoles,
+			Factory:  ResourceClusterIAMRoles,
 			TypeName: "aws_redshift_cluster_iam_roles",
-			Name:     "Cluster IAM Roles",
 		},
 		{
-			Factory:  resourceClusterSnapshot,
+			Factory:  ResourceClusterSnapshot,
 			TypeName: "aws_redshift_cluster_snapshot",
 			Name:     "Cluster Snapshot",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "arn",
 			},
 		},
 		{
-			Factory:  resourceEndpointAccess,
+			Factory:  ResourceEndpointAccess,
 			TypeName: "aws_redshift_endpoint_access",
-			Name:     "Endpoint Access",
 		},
 		{
-			Factory:  resourceEndpointAuthorization,
+			Factory:  ResourceEndpointAuthorization,
 			TypeName: "aws_redshift_endpoint_authorization",
-			Name:     "Endpoint Authorization",
 		},
 		{
-			Factory:  resourceEventSubscription,
+			Factory:  ResourceEventSubscription,
 			TypeName: "aws_redshift_event_subscription",
 			Name:     "Event Subscription",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "arn",
 			},
 		},
 		{
-			Factory:  resourceHSMClientCertificate,
+			Factory:  ResourceHSMClientCertificate,
 			TypeName: "aws_redshift_hsm_client_certificate",
 			Name:     "HSM Client Certificate",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "arn",
 			},
 		},
 		{
-			Factory:  resourceHSMConfiguration,
+			Factory:  ResourceHSMConfiguration,
 			TypeName: "aws_redshift_hsm_configuration",
 			Name:     "HSM Configuration",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "arn",
 			},
 		},
 		{
-			Factory:  resourceParameterGroup,
+			Factory:  ResourceParameterGroup,
 			TypeName: "aws_redshift_parameter_group",
 			Name:     "Parameter Group",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "arn",
 			},
 		},
 		{
-			Factory:  resourcePartner,
+			Factory:  ResourcePartner,
 			TypeName: "aws_redshift_partner",
-			Name:     "Partner",
 		},
 		{
-			Factory:  resourceResourcePolicy,
+			Factory:  ResourceResourcePolicy,
 			TypeName: "aws_redshift_resource_policy",
-			Name:     "Resource Policy",
 		},
 		{
-			Factory:  resourceScheduledAction,
+			Factory:  ResourceScheduledAction,
 			TypeName: "aws_redshift_scheduled_action",
-			Name:     "Scheduled Action",
 		},
 		{
-			Factory:  resourceSnapshotCopyGrant,
+			Factory:  ResourceSnapshotCopyGrant,
 			TypeName: "aws_redshift_snapshot_copy_grant",
 			Name:     "Snapshot Copy Grant",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "arn",
 			},
 		},
 		{
-			Factory:  resourceSnapshotSchedule,
+			Factory:  ResourceSnapshotSchedule,
 			TypeName: "aws_redshift_snapshot_schedule",
 			Name:     "Snapshot Schedule",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "arn",
 			},
 		},
 		{
-			Factory:  resourceSnapshotScheduleAssociation,
+			Factory:  ResourceSnapshotScheduleAssociation,
 			TypeName: "aws_redshift_snapshot_schedule_association",
-			Name:     "Snapshot Schedule Association",
 		},
 		{
-			Factory:  resourceSubnetGroup,
+			Factory:  ResourceSubnetGroup,
 			TypeName: "aws_redshift_subnet_group",
 			Name:     "Subnet Group",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "arn",
 			},
 		},
 		{
-			Factory:  resourceUsageLimit,
+			Factory:  ResourceUsageLimit,
 			TypeName: "aws_redshift_usage_limit",
 			Name:     "Usage Limit",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "arn",
 			},
 		},
 	}
@@ -214,9 +200,9 @@ func (p *servicePackage) ServicePackageName() string {
 
 // NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
 func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*redshift_sdkv1.Redshift, error) {
-	sess := config[names.AttrSession].(*session_sdkv1.Session)
+	sess := config["session"].(*session_sdkv1.Session)
 
-	return redshift_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config[names.AttrEndpoint].(string))})), nil
+	return redshift_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
 }
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
@@ -224,7 +210,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
 	return redshift_sdkv2.NewFromConfig(cfg, func(o *redshift_sdkv2.Options) {
-		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
+		if endpoint := config["endpoint"].(string); endpoint != "" {
 			o.BaseEndpoint = aws_sdkv2.String(endpoint)
 		}
 	}), nil

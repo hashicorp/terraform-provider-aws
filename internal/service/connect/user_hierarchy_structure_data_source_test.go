@@ -27,7 +27,7 @@ func testAccUserHierarchyStructureDataSource_instanceID(t *testing.T) {
 			{
 				Config: testAccUserHierarchyStructureDataSourceConfig_instanceID(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceID, resourceName, names.AttrInstanceID),
+					resource.TestCheckResourceAttrPair(datasourceName, "instance_id", resourceName, "instance_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "hierarchy_structure.#", resourceName, "hierarchy_structure.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "hierarchy_structure.0.level_one.#", resourceName, "hierarchy_structure.0.level_one.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "hierarchy_structure.0.level_one.0.name", resourceName, "hierarchy_structure.0.level_one.0.name"),

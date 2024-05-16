@@ -43,7 +43,7 @@ func ResourceTransitGatewayMulticastDomain() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -61,7 +61,7 @@ func ResourceTransitGatewayMulticastDomain() *schema.Resource {
 				Default:      ec2.Igmpv2SupportValueDisable,
 				ValidateFunc: validation.StringInSlice(ec2.Igmpv2SupportValue_Values(), false),
 			},
-			names.AttrOwnerID: {
+			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -74,7 +74,7 @@ func ResourceTransitGatewayMulticastDomain() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrTransitGatewayID: {
+			"transit_gateway_id": {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
@@ -95,7 +95,7 @@ func resourceTransitGatewayMulticastDomainCreate(ctx context.Context, d *schema.
 			StaticSourcesSupport:         aws.String(d.Get("static_sources_support").(string)),
 		},
 		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeTransitGatewayMulticastDomain),
-		TransitGatewayId:  aws.String(d.Get(names.AttrTransitGatewayID).(string)),
+		TransitGatewayId:  aws.String(d.Get("transit_gateway_id").(string)),
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Transit Gateway Multicast Domain: %s", input)
@@ -131,12 +131,12 @@ func resourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.Re
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway Multicast Domain (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, multicastDomain.TransitGatewayMulticastDomainArn)
+	d.Set("arn", multicastDomain.TransitGatewayMulticastDomainArn)
 	d.Set("auto_accept_shared_associations", multicastDomain.Options.AutoAcceptSharedAssociations)
 	d.Set("igmpv2_support", multicastDomain.Options.Igmpv2Support)
-	d.Set(names.AttrOwnerID, multicastDomain.OwnerId)
+	d.Set("owner_id", multicastDomain.OwnerId)
 	d.Set("static_sources_support", multicastDomain.Options.StaticSourcesSupport)
-	d.Set(names.AttrTransitGatewayID, multicastDomain.TransitGatewayId)
+	d.Set("transit_gateway_id", multicastDomain.TransitGatewayId)
 
 	setTagsOut(ctx, multicastDomain.Tags)
 

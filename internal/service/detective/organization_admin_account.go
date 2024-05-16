@@ -19,7 +19,6 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_detective_organization_admin_account")
@@ -34,7 +33,7 @@ func ResourceOrganizationAdminAccount() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrAccountID: {
+			"account_id": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -49,7 +48,7 @@ func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.Resou
 
 	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
-	accountID := d.Get(names.AttrAccountID).(string)
+	accountID := d.Get("account_id").(string)
 	input := &detective.EnableOrganizationAdminAccountInput{
 		AccountId: aws.String(accountID),
 	}
@@ -90,7 +89,7 @@ func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.Resourc
 		return sdkdiag.AppendErrorf(diags, "reading Detective Organization Admin Account (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrAccountID, administrator.AccountId)
+	d.Set("account_id", administrator.AccountId)
 
 	return diags
 }

@@ -7,32 +7,37 @@ import (
 	"context"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
-func TestOnceAWeekWindowValidateAttribute(t *testing.T) {
+func TestOnceAWeekWindowTypeValidate(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
-		val         fwtypes.OnceAWeekWindow
+		val         tftypes.Value
 		expectError bool
 	}
 	tests := map[string]testCase{
-		"unknown": {
-			val: fwtypes.OnceAWeekWindowUnknown(),
+		"not a string": {
+			val:         tftypes.NewValue(tftypes.Bool, true),
+			expectError: true,
 		},
-		"null": {
-			val: fwtypes.OnceAWeekWindowNull(),
+		"unknown string": {
+			val: tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
 		},
-		"valid lowercase": {
-			val: fwtypes.OnceAWeekWindowValue("thu:07:44-thu:09:44"),
+		"null string": {
+			val: tftypes.NewValue(tftypes.String, nil),
 		},
-		"valid uppercase": {
-			val: fwtypes.OnceAWeekWindowValue("THU:07:44-THU:09:44"),
+		"valid string lowercase": {
+			val: tftypes.NewValue(tftypes.String, "thu:07:44-thu:09:44"),
 		},
-		"invalid": {
-			val:         fwtypes.OnceAWeekWindowValue("thu:25:44-zat:09:88"),
+		"valid string uppercase": {
+			val: tftypes.NewValue(tftypes.String, "THU:07:44-THU:09:44"),
+		},
+		"invalid string": {
+			val:         tftypes.NewValue(tftypes.String, "thu:25:44-zat:09:88"),
 			expectError: true,
 		},
 	}
@@ -44,12 +49,14 @@ func TestOnceAWeekWindowValidateAttribute(t *testing.T) {
 
 			ctx := context.Background()
 
-			req := xattr.ValidateAttributeRequest{}
-			resp := xattr.ValidateAttributeResponse{}
+			diags := fwtypes.OnceAWeekWindowType.Validate(ctx, test.val, path.Root("test"))
 
-			test.val.ValidateAttribute(ctx, req, &resp)
-			if resp.Diagnostics.HasError() != test.expectError {
-				t.Errorf("resp.Diagnostics.HasError() = %t, want = %t", resp.Diagnostics.HasError(), test.expectError)
+			if !diags.HasError() && test.expectError {
+				t.Fatal("expected error, got no error")
+			}
+
+			if diags.HasError() && !test.expectError {
+				t.Fatalf("got unexpected error: %#v", diags)
 			}
 		})
 	}

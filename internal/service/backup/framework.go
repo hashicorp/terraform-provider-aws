@@ -41,7 +41,7 @@ func ResourceFramework() *schema.Resource {
 			Delete: schema.DefaultTimeout(2 * time.Minute),
 		},
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -56,23 +56,23 @@ func ResourceFramework() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrName: {
+									"name": {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									names.AttrValue: {
+									"value": {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
 								},
 							},
 						},
-						names.AttrName: {
+						"name": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 256),
 						},
-						names.AttrScope: {
+						"scope": {
 							// The control scope can include
 							// one or more resource types,
 							// a combination of a tag key and value,
@@ -100,14 +100,14 @@ func ResourceFramework() *schema.Resource {
 									},
 									// A maximum of one key-value pair can be provided.
 									// The tag value is optional, but it cannot be an empty string
-									names.AttrTags: tftags.TagsSchema(),
+									"tags": tftags.TagsSchema(),
 								},
 							},
 						},
 					},
 				},
 			},
-			names.AttrCreationTime: {
+			"creation_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -115,18 +115,18 @@ func ResourceFramework() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validFrameworkName,
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -141,7 +141,7 @@ func resourceFrameworkCreate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &backup.CreateFrameworkInput{
 		IdempotencyToken:  aws.String(id.UniqueId()),
 		FrameworkControls: expandFrameworkControls(ctx, d.Get("control").(*schema.Set).List()),
@@ -149,7 +149,7 @@ func resourceFrameworkCreate(ctx context.Context, d *schema.ResourceData, meta i
 		FrameworkTags:     getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.FrameworkDescription = aws.String(v.(string))
 	}
 
@@ -186,13 +186,13 @@ func resourceFrameworkRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "reading Backup Framework (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, resp.FrameworkArn)
+	d.Set("arn", resp.FrameworkArn)
 	d.Set("deployment_status", resp.DeploymentStatus)
-	d.Set(names.AttrDescription, resp.FrameworkDescription)
-	d.Set(names.AttrName, resp.FrameworkName)
-	d.Set(names.AttrStatus, resp.FrameworkStatus)
+	d.Set("description", resp.FrameworkDescription)
+	d.Set("name", resp.FrameworkName)
+	d.Set("status", resp.FrameworkStatus)
 
-	if err := d.Set(names.AttrCreationTime, resp.CreationTime.Format(time.RFC3339)); err != nil {
+	if err := d.Set("creation_time", resp.CreationTime.Format(time.RFC3339)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting creation_time: %s", err)
 	}
 
@@ -207,11 +207,11 @@ func resourceFrameworkUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
-	if d.HasChanges(names.AttrDescription, "control") {
+	if d.HasChanges("description", "control") {
 		input := &backup.UpdateFrameworkInput{
 			IdempotencyToken:     aws.String(id.UniqueId()),
 			FrameworkControls:    expandFrameworkControls(ctx, d.Get("control").(*schema.Set).List()),
-			FrameworkDescription: aws.String(d.Get(names.AttrDescription).(string)),
+			FrameworkDescription: aws.String(d.Get("description").(string)),
 			FrameworkName:        aws.String(d.Id()),
 		}
 
@@ -269,13 +269,13 @@ func expandFrameworkControls(ctx context.Context, controls []interface{}) []*bac
 		// on some updates, there is an { ControlName: "" } element in Framework Controls.
 		// this element must be skipped to avoid the "A control name is required." error
 		// this happens for Step 7/7 for TestAccBackupFramework_updateControlScope
-		if v, ok := tfMap[names.AttrName].(string); ok && v == "" {
+		if v, ok := tfMap["name"].(string); ok && v == "" {
 			continue
 		}
 
 		frameworkControl := &backup.FrameworkControl{
-			ControlName:  aws.String(tfMap[names.AttrName].(string)),
-			ControlScope: expandControlScope(ctx, tfMap[names.AttrScope].([]interface{})),
+			ControlName:  aws.String(tfMap["name"].(string)),
+			ControlScope: expandControlScope(ctx, tfMap["scope"].([]interface{})),
 		}
 
 		if v, ok := tfMap["input_parameter"]; ok && v.(*schema.Set).Len() > 0 {
@@ -299,11 +299,11 @@ func expandInputParmaeters(inputParams []interface{}) []*backup.ControlInputPara
 		tfMap := inputParam.(map[string]interface{})
 		controlInputParameter := &backup.ControlInputParameter{}
 
-		if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
+		if v, ok := tfMap["name"].(string); ok && v != "" {
 			controlInputParameter.ParameterName = aws.String(v)
 		}
 
-		if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
+		if v, ok := tfMap["value"].(string); ok && v != "" {
 			controlInputParameter.ParameterValue = aws.String(v)
 		}
 
@@ -335,7 +335,7 @@ func expandControlScope(ctx context.Context, scope []interface{}) *backup.Contro
 
 	// A maximum of one key-value pair can be provided.
 	// The tag value is optional, but it cannot be an empty string
-	if v, ok := tfMap[names.AttrTags].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["tags"].(map[string]interface{}); ok && len(v) > 0 {
 		controlScope.Tags = Tags(tftags.New(ctx, v).IgnoreAWS())
 	}
 
@@ -351,8 +351,8 @@ func flattenFrameworkControls(ctx context.Context, controls []*backup.FrameworkC
 	for _, control := range controls {
 		values := map[string]interface{}{}
 		values["input_parameter"] = flattenInputParameters(control.ControlInputParameters)
-		values[names.AttrName] = aws.StringValue(control.ControlName)
-		values[names.AttrScope] = flattenScope(ctx, control.ControlScope)
+		values["name"] = aws.StringValue(control.ControlName)
+		values["scope"] = flattenScope(ctx, control.ControlScope)
 		frameworkControls = append(frameworkControls, values)
 	}
 	return frameworkControls
@@ -366,8 +366,8 @@ func flattenInputParameters(inputParams []*backup.ControlInputParameter) []inter
 	controlInputParameters := []interface{}{}
 	for _, inputParam := range inputParams {
 		values := map[string]interface{}{}
-		values[names.AttrName] = aws.StringValue(inputParam.ParameterName)
-		values[names.AttrValue] = aws.StringValue(inputParam.ParameterValue)
+		values["name"] = aws.StringValue(inputParam.ParameterName)
+		values["value"] = aws.StringValue(inputParam.ParameterValue)
 		controlInputParameters = append(controlInputParameters, values)
 	}
 	return controlInputParameters
@@ -384,7 +384,7 @@ func flattenScope(ctx context.Context, scope *backup.ControlScope) []interface{}
 	}
 
 	if v := scope.Tags; v != nil {
-		controlScope[names.AttrTags] = KeyValueTags(ctx, v).IgnoreAWS().Map()
+		controlScope["tags"] = KeyValueTags(ctx, v).IgnoreAWS().Map()
 	}
 
 	return []interface{}{controlScope}

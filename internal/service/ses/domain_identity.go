@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ses_domain_identity")
@@ -31,11 +30,11 @@ func ResourceDomainIdentity() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDomain: {
+			"domain": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -53,7 +52,7 @@ func resourceDomainIdentityCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
-	domainName := d.Get(names.AttrDomain).(string)
+	domainName := d.Get("domain").(string)
 
 	createOpts := &ses.VerifyDomainIdentityInput{
 		Domain: aws.String(domainName),
@@ -74,7 +73,7 @@ func resourceDomainIdentityRead(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	domainName := d.Id()
-	d.Set(names.AttrDomain, domainName)
+	d.Set("domain", domainName)
 
 	readOpts := &ses.GetIdentityVerificationAttributesInput{
 		Identities: []*string{
@@ -101,7 +100,7 @@ func resourceDomainIdentityRead(ctx context.Context, d *schema.ResourceData, met
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("identity/%s", d.Id()),
 	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set("arn", arn)
 	d.Set("verification_token", verificationAttrs.VerificationToken)
 	return diags
 }
@@ -110,7 +109,7 @@ func resourceDomainIdentityDelete(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
-	domainName := d.Get(names.AttrDomain).(string)
+	domainName := d.Get("domain").(string)
 
 	deleteOpts := &ses.DeleteIdentityInput{
 		Identity: aws.String(domainName),

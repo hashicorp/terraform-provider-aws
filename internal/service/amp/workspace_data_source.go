@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_prometheus_workspace", name="Workspace")
@@ -21,19 +20,19 @@ func dataSourceWorkspace() *schema.Resource {
 		ReadWithoutTimeout: dataSourceWorkspaceRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrAlias: {
+			"alias": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrCreatedDate: {
+			"created_date": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrKMSKeyARN: {
+			"kms_key_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -41,11 +40,11 @@ func dataSourceWorkspace() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 			"workspace_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -67,14 +66,14 @@ func dataSourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.SetId(workspaceID)
-	d.Set(names.AttrAlias, workspace.Alias)
-	d.Set(names.AttrARN, workspace.Arn)
-	d.Set(names.AttrCreatedDate, workspace.CreatedAt.Format(time.RFC3339))
-	d.Set(names.AttrKMSKeyARN, workspace.KmsKeyArn)
+	d.Set("alias", workspace.Alias)
+	d.Set("arn", workspace.Arn)
+	d.Set("created_date", workspace.CreatedAt.Format(time.RFC3339))
+	d.Set("kms_key_arn", workspace.KmsKeyArn)
 	d.Set("prometheus_endpoint", workspace.PrometheusEndpoint)
-	d.Set(names.AttrStatus, workspace.Status.StatusCode)
+	d.Set("status", workspace.Status.StatusCode)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, workspace.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, workspace.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

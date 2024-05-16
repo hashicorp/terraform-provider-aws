@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_lb_trust_store", name="Trust Store")
@@ -22,12 +21,12 @@ func DataSourceTrustStore() *schema.Resource {
 		ReadWithoutTimeout: dataSourceTrustStoreRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -42,9 +41,9 @@ func dataSourceTrustStoreRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	input := &elbv2.DescribeTrustStoresInput{}
 
-	if v, ok := d.GetOk(names.AttrARN); ok {
+	if v, ok := d.GetOk("arn"); ok {
 		input.TrustStoreArns = aws.StringSlice([]string{v.(string)})
-	} else if v, ok := d.GetOk(names.AttrName); ok {
+	} else if v, ok := d.GetOk("name"); ok {
 		input.Names = aws.StringSlice([]string{v.(string)})
 	}
 
@@ -55,8 +54,8 @@ func dataSourceTrustStoreRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.SetId(aws.StringValue(trustStore.TrustStoreArn))
-	d.Set(names.AttrARN, trustStore.TrustStoreArn)
-	d.Set(names.AttrName, trustStore.Name)
+	d.Set("arn", trustStore.TrustStoreArn)
+	d.Set("name", trustStore.Name)
 
 	return diags
 }

@@ -42,7 +42,7 @@ func resourceRiskConfiguration() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validUserPoolID,
 			},
-			names.AttrClientID: {
+			"client_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -300,7 +300,7 @@ func resourceRiskConfigurationPut(ctx context.Context, d *schema.ResourceData, m
 		UserPoolId: aws.String(userPoolId),
 	}
 
-	if v, ok := d.GetOk(names.AttrClientID); ok {
+	if v, ok := d.GetOk("client_id"); ok {
 		input.ClientId = aws.String(v.(string))
 		id = fmt.Sprintf("%s:%s", userPoolId, v.(string))
 	}
@@ -351,7 +351,7 @@ func resourceRiskConfigurationRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("user_pool_id", userPoolId)
 
 	if clientId != "" {
-		d.Set(names.AttrClientID, clientId)
+		d.Set("client_id", clientId)
 	}
 
 	if riskConfig.RiskExceptionConfiguration != nil {

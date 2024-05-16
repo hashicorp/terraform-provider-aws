@@ -21,10 +21,7 @@ resource "aws_auditmanager_framework" "test" {
   control_sets {
     name = "example"
     controls {
-      id = aws_auditmanager_control.test_1.id
-    }
-    controls {
-      id = aws_auditmanager_control.test_2.id
+      id = aws_auditmanager_control.test.id
     }
   }
 }
@@ -35,7 +32,7 @@ resource "aws_auditmanager_framework" "test" {
 The following arguments are required:
 
 * `name` - (Required) Name of the framework.
-* `control_sets` - (Required) Configuration block(s) for the control sets that are associated with the framework. See [`control_sets` Block](#control_sets-block) below for details.
+* `control_sets` - (Required) Control sets that are associated with the framework. See [`control_sets`](#control_sets) below.
 
 The following arguments are optional:
 
@@ -43,16 +40,12 @@ The following arguments are optional:
 * `description` - (Optional) Description of the framework.
 * `tags` - (Optional) A map of tags to assign to the framework. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### `control_sets` Block
-
-The `control_sets` configuration block supports the following arguments:
+### control_sets
 
 * `name` - (Required) Name of the control set.
-* `controls` - (Required) Configuration block(s) for the controls within the control set. See [`controls` Block](#controls-block) below for details.
+* `controls` - (Required) List of controls within the control set. See [`controls`](#controls) below.
 
-### `controls` Block
-
-The `controls` configuration block supports the following arguments:
+### controls
 
 * `id` - (Required) Unique identifier of the control.
 

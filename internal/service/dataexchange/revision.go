@@ -36,11 +36,11 @@ func ResourceRevision() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrComment: {
+			"comment": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 16348),
@@ -67,7 +67,7 @@ func resourceRevisionCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	input := &dataexchange.CreateRevisionInput{
 		DataSetId: aws.String(d.Get("data_set_id").(string)),
-		Comment:   aws.String(d.Get(names.AttrComment).(string)),
+		Comment:   aws.String(d.Get("comment").(string)),
 		Tags:      getTagsIn(ctx),
 	}
 
@@ -103,8 +103,8 @@ func resourceRevisionRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.Set("data_set_id", revision.DataSetId)
-	d.Set(names.AttrComment, revision.Comment)
-	d.Set(names.AttrARN, revision.Arn)
+	d.Set("comment", revision.Comment)
+	d.Set("arn", revision.Arn)
 	d.Set("revision_id", revision.Id)
 
 	setTagsOut(ctx, revision.Tags)
@@ -116,14 +116,14 @@ func resourceRevisionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataExchangeConn(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &dataexchange.UpdateRevisionInput{
 			RevisionId: aws.String(d.Get("revision_id").(string)),
 			DataSetId:  aws.String(d.Get("data_set_id").(string)),
 		}
 
-		if d.HasChange(names.AttrComment) {
-			input.Comment = aws.String(d.Get(names.AttrComment).(string))
+		if d.HasChange("comment") {
+			input.Comment = aws.String(d.Get("comment").(string))
 		}
 
 		log.Printf("[DEBUG] Updating DataExchange Revision: %s", d.Id())

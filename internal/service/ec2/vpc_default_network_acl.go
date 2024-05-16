@@ -32,7 +32,7 @@ func resourceDefaultNetworkACL() *schema.Resource {
 		CreateWithoutTimeout: resourceDefaultNetworkACLCreate,
 		ReadWithoutTimeout:   resourceNetworkACLRead,
 		UpdateWithoutTimeout: resourceDefaultNetworkACLUpdate,
-		DeleteWithoutTimeout: schema.NoopContext,
+		DeleteWithoutTimeout: resourceDefaultNetworkACLDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
@@ -58,7 +58,7 @@ func resourceDefaultNetworkACL() *schema.Resource {
 			}
 
 			return map[string]*schema.Schema{
-				names.AttrARN: {
+				"arn": {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -72,7 +72,7 @@ func resourceDefaultNetworkACL() *schema.Resource {
 				// rules
 				"egress":  networkACLRuleSetNestedBlock(),
 				"ingress": networkACLRuleSetNestedBlock(),
-				names.AttrOwnerID: {
+				"owner_id": {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -82,14 +82,14 @@ func resourceDefaultNetworkACL() *schema.Resource {
 				// can't actually remove them, this will be a continual plan until the
 				// Subnets are themselves destroyed or reassigned to a different Network
 				// ACL
-				names.AttrSubnetIDs: {
+				"subnet_ids": {
 					Type:     schema.TypeSet,
 					Optional: true,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
-				names.AttrVPCID: {
+				"vpc_id": {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -157,4 +157,8 @@ func resourceDefaultNetworkACLUpdate(ctx context.Context, d *schema.ResourceData
 	}
 
 	return append(diags, resourceNetworkACLRead(ctx, d, meta)...)
+}
+
+func resourceDefaultNetworkACLDelete(_ context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
+	return sdkdiag.AppendWarningf(diags, "EC2 Default Network ACL (%s) not deleted, removing from state", d.Id())
 }

@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_lex_intent")
@@ -26,7 +25,7 @@ func DataSourceIntent() *schema.Resource {
 		ReadWithoutTimeout: dataSourceIntentRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -34,19 +33,19 @@ func DataSourceIntent() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrCreatedDate: {
+			"created_date": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrLastUpdatedDate: {
+			"last_updated_date": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
@@ -58,7 +57,7 @@ func DataSourceIntent() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrVersion: {
+			"version": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  IntentVersionLatest,
@@ -75,10 +74,10 @@ func dataSourceIntentRead(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LexModelsConn(ctx)
 
-	intentName := d.Get(names.AttrName).(string)
+	intentName := d.Get("name").(string)
 	resp, err := conn.GetIntentWithContext(ctx, &lexmodelbuildingservice.GetIntentInput{
 		Name:    aws.String(intentName),
-		Version: aws.String(d.Get(names.AttrVersion).(string)),
+		Version: aws.String(d.Get("version").(string)),
 	})
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting intent %s: %s", intentName, err)
@@ -89,17 +88,17 @@ func dataSourceIntentRead(ctx context.Context, d *schema.ResourceData, meta inte
 		Region:    meta.(*conns.AWSClient).Region,
 		Service:   "lex",
 		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("intent:%s", d.Get(names.AttrName).(string)),
+		Resource:  fmt.Sprintf("intent:%s", d.Get("name").(string)),
 	}
-	d.Set(names.AttrARN, arn.String())
+	d.Set("arn", arn.String())
 
 	d.Set("checksum", resp.Checksum)
-	d.Set(names.AttrCreatedDate, resp.CreatedDate.Format(time.RFC3339))
-	d.Set(names.AttrDescription, resp.Description)
-	d.Set(names.AttrLastUpdatedDate, resp.LastUpdatedDate.Format(time.RFC3339))
-	d.Set(names.AttrName, resp.Name)
+	d.Set("created_date", resp.CreatedDate.Format(time.RFC3339))
+	d.Set("description", resp.Description)
+	d.Set("last_updated_date", resp.LastUpdatedDate.Format(time.RFC3339))
+	d.Set("name", resp.Name)
 	d.Set("parent_intent_signature", resp.ParentIntentSignature)
-	d.Set(names.AttrVersion, resp.Version)
+	d.Set("version", resp.Version)
 
 	d.SetId(intentName)
 

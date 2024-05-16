@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_sagemaker_image_version")
@@ -28,7 +27,7 @@ func ResourceImageVersion() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -50,7 +49,7 @@ func ResourceImageVersion() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrVersion: {
+			"version": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -96,11 +95,11 @@ func resourceImageVersionRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading SageMaker Image Version (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, image.ImageVersionArn)
+	d.Set("arn", image.ImageVersionArn)
 	d.Set("base_image", image.BaseImage)
 	d.Set("image_arn", image.ImageArn)
 	d.Set("container_image", image.ContainerImage)
-	d.Set(names.AttrVersion, image.Version)
+	d.Set("version", image.Version)
 	d.Set("image_name", d.Id())
 
 	return diags
@@ -112,7 +111,7 @@ func resourceImageVersionDelete(ctx context.Context, d *schema.ResourceData, met
 
 	input := &sagemaker.DeleteImageVersionInput{
 		ImageName: aws.String(d.Id()),
-		Version:   aws.Int64(int64(d.Get(names.AttrVersion).(int))),
+		Version:   aws.Int64(int64(d.Get("version").(int))),
 	}
 
 	if _, err := conn.DeleteImageVersionWithContext(ctx, input); err != nil {

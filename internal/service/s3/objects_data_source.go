@@ -26,7 +26,7 @@ func dataSourceObjects() *schema.Resource {
 		ReadWithoutTimeout: dataSourceObjectsRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrBucket: {
+			"bucket": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -63,7 +63,7 @@ func dataSourceObjects() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrPrefix: {
+			"prefix": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -89,7 +89,7 @@ func dataSourceObjectsRead(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 	var optFns []func(*s3.Options)
 
-	bucket := d.Get(names.AttrBucket).(string)
+	bucket := d.Get("bucket").(string)
 	if isDirectoryBucket(bucket) {
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
@@ -121,7 +121,7 @@ func dataSourceObjectsRead(ctx context.Context, d *schema.ResourceData, meta int
 		input.MaxKeys = aws.Int32(int32(maxKeys))
 	}
 
-	if v, ok := d.GetOk(names.AttrPrefix); ok {
+	if v, ok := d.GetOk("prefix"); ok {
 		input.Prefix = aws.String(v.(string))
 	}
 

@@ -26,7 +26,7 @@ func TestAccOrganizations_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Organization": {
-			acctest.CtBasic:                     testAccOrganization_basic,
+			"basic":                             testAccOrganization_basic,
 			"disappears":                        testAccOrganization_disappears,
 			"AwsServiceAccessPrincipals":        testAccOrganization_serviceAccessPrincipals,
 			"EnabledPolicyTypes":                testAccOrganization_EnabledPolicyTypes,
@@ -38,14 +38,14 @@ func TestAccOrganizations_serial(t *testing.T) {
 			"DataSource_delegatedAdministrator": testAccOrganizationDataSource_delegatedAdministrator,
 		},
 		"Account": {
-			acctest.CtBasic:   testAccAccount_basic,
+			"basic":           testAccAccount_basic,
 			"CloseOnDeletion": testAccAccount_CloseOnDeletion,
 			"ParentId":        testAccAccount_ParentID,
 			"Tags":            testAccAccount_Tags,
 			"GovCloud":        testAccAccount_govCloud,
 		},
 		"OrganizationalUnit": {
-			acctest.CtBasic:                      testAccOrganizationalUnit_basic,
+			"basic":                              testAccOrganizationalUnit_basic,
 			"disappears":                         testAccOrganizationalUnit_disappears,
 			"update":                             testAccOrganizationalUnit_update,
 			"tags":                               testAccOrganizationalUnit_tags,
@@ -55,7 +55,7 @@ func TestAccOrganizations_serial(t *testing.T) {
 			"PluralDataSource_basic":             testAccOrganizationalUnitsDataSource_basic,
 		},
 		"Policy": {
-			acctest.CtBasic:          testAccPolicy_basic,
+			"basic":                  testAccPolicy_basic,
 			"concurrent":             testAccPolicy_concurrent,
 			"Description":            testAccPolicy_description,
 			"Tags":                   testAccPolicy_tags,
@@ -78,23 +78,23 @@ func TestAccOrganizations_serial(t *testing.T) {
 			"UnattachedPolicy": testAccPolicyDataSource_UnattachedPolicy,
 		},
 		"ResourcePolicy": {
-			acctest.CtBasic: testAccResourcePolicy_basic,
-			"disappears":    testAccResourcePolicy_disappears,
-			"tags":          testAccResourcePolicy_tags,
+			"basic":      testAccResourcePolicy_basic,
+			"disappears": testAccResourcePolicy_disappears,
+			"tags":       testAccResourcePolicy_tags,
 		},
 		"DelegatedAdministrator": {
-			acctest.CtBasic: testAccDelegatedAdministrator_basic,
-			"disappears":    testAccDelegatedAdministrator_disappears,
+			"basic":      testAccDelegatedAdministrator_basic,
+			"disappears": testAccDelegatedAdministrator_disappears,
 		},
 		"DelegatedAdministrators": {
-			acctest.CtBasic: testAccDelegatedAdministratorsDataSource_basic,
+			"basic": testAccDelegatedAdministratorsDataSource_basic,
 		},
 		"DelegatedServices": {
-			acctest.CtBasic: testAccDelegatedServicesDataSource_basic,
-			"multiple":      testAccDelegatedServicesDataSource_multiple,
+			"basic":    testAccDelegatedServicesDataSource_basic,
+			"multiple": testAccDelegatedServicesDataSource_multiple,
 		},
 		"ResourceTags": {
-			acctest.CtBasic: testAccResourceTagsDataSource_basic,
+			"basic": testAccResourceTagsDataSource_basic,
 		},
 	}
 

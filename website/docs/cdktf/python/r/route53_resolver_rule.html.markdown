@@ -79,8 +79,7 @@ This argument should only be specified for `FORWARD` type rules.
 The `target_ip` object supports the following:
 
 * `ip` - (Required) One IP address that you want to forward DNS queries to. You can specify only IPv4 addresses.
-* `port` - (Optional) The port at `ip` that you want to forward DNS queries to. Default value is `53`.
-* `protocol` - (Optional) The protocol for the resolver endpoint. Valid values can be found in the [AWS documentation](https://docs.aws.amazon.com/Route53/latest/APIReference/API_route53resolver_TargetAddress.html). Default value is `Do53`.
+* `port` - (Optional) The port at `ip` that you want to forward DNS queries to. Default value is `53`
 
 ## Attribute Reference
 
@@ -118,4 +117,4 @@ Using `terraform import`, import Route53 Resolver rules using the `id`. For exam
 % terraform import aws_route53_resolver_rule.sys rslvr-rr-0123456789abcdef0
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-266df04e2e4454c7e13a1eb3fa1fd0df1a40cbc6a25ea4275ec62977b6dabbfd -->
+<!-- cache-key: cdktf-0.20.1 input-e232908c083dc3536781f9aa9a4349eb098e85ae4ceb668269e5774249391222 -->

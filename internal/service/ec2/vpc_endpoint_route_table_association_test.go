@@ -77,7 +77,7 @@ func testAccCheckVPCEndpointRouteTableAssociationDestroy(ctx context.Context) re
 				continue
 			}
 
-			err := tfec2.FindVPCEndpointRouteTableAssociationExists(ctx, conn, rs.Primary.Attributes[names.AttrVPCEndpointID], rs.Primary.Attributes["route_table_id"])
+			err := tfec2.FindVPCEndpointRouteTableAssociationExists(ctx, conn, rs.Primary.Attributes["vpc_endpoint_id"], rs.Primary.Attributes["route_table_id"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -107,7 +107,7 @@ func testAccCheckVPCEndpointRouteTableAssociationExists(ctx context.Context, n s
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
-		return tfec2.FindVPCEndpointRouteTableAssociationExists(ctx, conn, rs.Primary.Attributes[names.AttrVPCEndpointID], rs.Primary.Attributes["route_table_id"])
+		return tfec2.FindVPCEndpointRouteTableAssociationExists(ctx, conn, rs.Primary.Attributes["vpc_endpoint_id"], rs.Primary.Attributes["route_table_id"])
 	}
 }
 
@@ -118,7 +118,7 @@ func testAccVPCEndpointRouteTableAssociationImportStateIdFunc(n string) resource
 			return "", fmt.Errorf("Not found: %s", n)
 		}
 
-		id := fmt.Sprintf("%s/%s", rs.Primary.Attributes[names.AttrVPCEndpointID], rs.Primary.Attributes["route_table_id"])
+		id := fmt.Sprintf("%s/%s", rs.Primary.Attributes["vpc_endpoint_id"], rs.Primary.Attributes["route_table_id"])
 		return id, nil
 	}
 }

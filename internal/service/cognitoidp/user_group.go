@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cognito_user_group", name="User Group")
@@ -38,12 +37,12 @@ func resourceUserGroup() *schema.Resource {
 
 		// https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_CreateGroup.html
 		Schema: map[string]*schema.Schema{
-			names.AttrDescription: {
+			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 2048),
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -53,7 +52,7 @@ func resourceUserGroup() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
-			names.AttrRoleARN: {
+			"role_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
@@ -72,13 +71,13 @@ func resourceUserGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &cognitoidentityprovider.CreateGroupInput{
 		GroupName:  aws.String(name),
 		UserPoolId: aws.String(d.Get("user_pool_id").(string)),
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -86,7 +85,7 @@ func resourceUserGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.Precedence = aws.Int64(int64(v.(int)))
 	}
 
-	if v, ok := d.GetOk(names.AttrRoleARN); ok {
+	if v, ok := d.GetOk("role_arn"); ok {
 		input.RoleArn = aws.String(v.(string))
 	}
 
@@ -122,9 +121,9 @@ func resourceUserGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "reading Cognito User Group (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrDescription, group.Description)
+	d.Set("description", group.Description)
 	d.Set("precedence", group.Precedence)
-	d.Set(names.AttrRoleARN, group.RoleArn)
+	d.Set("role_arn", group.RoleArn)
 
 	return diags
 }
@@ -143,16 +142,16 @@ func resourceUserGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		UserPoolId: aws.String(userPoolID),
 	}
 
-	if d.HasChange(names.AttrDescription) {
-		input.Description = aws.String(d.Get(names.AttrDescription).(string))
+	if d.HasChange("description") {
+		input.Description = aws.String(d.Get("description").(string))
 	}
 
 	if d.HasChange("precedence") {
 		input.Precedence = aws.Int64(int64(d.Get("precedence").(int)))
 	}
 
-	if d.HasChange(names.AttrRoleARN) {
-		input.RoleArn = aws.String(d.Get(names.AttrRoleARN).(string))
+	if d.HasChange("role_arn") {
+		input.RoleArn = aws.String(d.Get("role_arn").(string))
 	}
 
 	_, err = conn.UpdateGroupWithContext(ctx, input)
@@ -197,7 +196,7 @@ func resourceUserGroupImport(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.Set("user_pool_id", parts[0])
-	d.Set(names.AttrName, parts[1])
+	d.Set("name", parts[1])
 
 	return []*schema.ResourceData{d}, nil
 }

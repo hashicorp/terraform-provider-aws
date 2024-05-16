@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource
 func newDataSourceService(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceService{}
+	d.SetMigratedFromPluginSDK(true)
 
 	return d, nil
 }
@@ -38,18 +38,18 @@ func (d *dataSourceService) Metadata(_ context.Context, request datasource.Metad
 func (d *dataSourceService) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrDNSName: schema.StringAttribute{
+			"dns_name": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
-			names.AttrID: schema.StringAttribute{
+			"id": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
 			"partition": schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrRegion: schema.StringAttribute{
+			"region": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},

@@ -36,11 +36,11 @@ func ResourceVerifiedAccessInstance() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrCreationTime: {
+			"creation_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -58,7 +58,7 @@ func ResourceVerifiedAccessInstance() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrDescription: {
+						"description": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -98,7 +98,7 @@ func resourceVerifiedAccessInstanceCreate(ctx context.Context, d *schema.Resourc
 		TagSpecifications: getTagSpecificationsInV2(ctx, types.ResourceTypeVerifiedAccessInstance),
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -133,8 +133,8 @@ func resourceVerifiedAccessInstanceRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "reading Verified Access Instance (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrCreationTime, output.CreationTime)
-	d.Set(names.AttrDescription, output.Description)
+	d.Set("creation_time", output.CreationTime)
+	d.Set("description", output.Description)
 	d.Set("fips_enabled", output.FipsEnabled)
 	d.Set("last_updated_time", output.LastUpdatedTime)
 
@@ -155,14 +155,14 @@ func resourceVerifiedAccessInstanceUpdate(ctx context.Context, d *schema.Resourc
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &ec2.ModifyVerifiedAccessInstanceInput{
 			ClientToken:              aws.String(id.UniqueId()),
 			VerifiedAccessInstanceId: aws.String(d.Id()),
 		}
 
-		if d.HasChange(names.AttrDescription) {
-			input.Description = aws.String(d.Get(names.AttrDescription).(string))
+		if d.HasChange("description") {
+			input.Description = aws.String(d.Get("description").(string))
 		}
 
 		_, err := conn.ModifyVerifiedAccessInstance(ctx, input)
@@ -222,7 +222,7 @@ func flattenVerifiedAccessTrustProvider(apiObject types.VerifiedAccessTrustProvi
 	}
 
 	if v := apiObject.Description; v != nil {
-		tfMap[names.AttrDescription] = aws.ToString(v)
+		tfMap["description"] = aws.ToString(v)
 	}
 
 	if v := apiObject.VerifiedAccessTrustProviderId; v != nil {

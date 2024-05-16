@@ -38,11 +38,11 @@ func ResourceMonitoringSchedule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -72,7 +72,7 @@ func ResourceMonitoringSchedule() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrScheduleExpression: {
+									"schedule_expression": {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.All(
@@ -98,7 +98,7 @@ func resourceMonitoringScheduleCreate(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	var name string
-	if v, ok := d.GetOk(names.AttrName); ok {
+	if v, ok := d.GetOk("name"); ok {
 		name = v.(string)
 	} else {
 		name = id.UniqueId()
@@ -139,8 +139,8 @@ func resourceMonitoringScheduleRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "reading SageMaker Monitoring Schedule (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, monitoringSchedule.MonitoringScheduleArn)
-	d.Set(names.AttrName, monitoringSchedule.MonitoringScheduleName)
+	d.Set("arn", monitoringSchedule.MonitoringScheduleArn)
+	d.Set("name", monitoringSchedule.MonitoringScheduleName)
 
 	if err := d.Set("monitoring_schedule_config", flattenMonitoringScheduleConfig(monitoringSchedule.MonitoringScheduleConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting monitoring_schedule_config for SageMaker Monitoring Schedule (%s): %s", d.Id(), err)
@@ -259,7 +259,7 @@ func expandScheduleConfig(configured []interface{}) *sagemaker.ScheduleConfig {
 
 	c := &sagemaker.ScheduleConfig{}
 
-	if v, ok := m[names.AttrScheduleExpression].(string); ok && v != "" {
+	if v, ok := m["schedule_expression"].(string); ok && v != "" {
 		c.ScheduleExpression = aws.String(v)
 	}
 
@@ -296,7 +296,7 @@ func flattenScheduleConfig(config *sagemaker.ScheduleConfig) []map[string]interf
 	m := map[string]interface{}{}
 
 	if config.ScheduleExpression != nil {
-		m[names.AttrScheduleExpression] = aws.StringValue(config.ScheduleExpression)
+		m["schedule_expression"] = aws.StringValue(config.ScheduleExpression)
 	}
 
 	return []map[string]interface{}{m}

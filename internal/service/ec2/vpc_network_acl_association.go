@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_network_acl_association")
@@ -35,7 +34,7 @@ func ResourceNetworkACLAssociation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrSubnetID: {
+			"subnet_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -48,7 +47,7 @@ func resourceNetworkACLAssociationCreate(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	associationID, err := networkACLAssociationCreate(ctx, conn, d.Get("network_acl_id").(string), d.Get(names.AttrSubnetID).(string))
+	associationID, err := networkACLAssociationCreate(ctx, conn, d.Get("network_acl_id").(string), d.Get("subnet_id").(string))
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -80,7 +79,7 @@ func resourceNetworkACLAssociationRead(ctx context.Context, d *schema.ResourceDa
 	association := outputRaw.(*ec2.NetworkAclAssociation)
 
 	d.Set("network_acl_id", association.NetworkAclId)
-	d.Set(names.AttrSubnetID, association.SubnetId)
+	d.Set("subnet_id", association.SubnetId)
 
 	return diags
 }

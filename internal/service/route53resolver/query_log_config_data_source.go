@@ -24,21 +24,21 @@ func DataSourceQueryLogConfig() *schema.Resource {
 		ReadWithoutTimeout: dataSourceQueryLogConfigRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDestinationARN: {
+			"destination_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrFilter: namevaluesfilters.Schema(),
-			names.AttrName: {
+			"filter": namevaluesfilters.Schema(),
+			"name": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validResolverName,
 			},
-			names.AttrOwnerID: {
+			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -50,7 +50,7 @@ func DataSourceQueryLogConfig() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -66,7 +66,7 @@ func dataSourceQueryLogConfigRead(ctx context.Context, d *schema.ResourceData, m
 
 	input := &route53resolver.ListResolverQueryLogConfigsInput{}
 
-	if v, ok := d.GetOk(names.AttrFilter); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk("filter"); ok && v.(*schema.Set).Len() > 0 {
 		input.Filters = namevaluesfilters.New(v.(*schema.Set)).Route53resolverFilters()
 	}
 
@@ -106,10 +106,10 @@ func dataSourceQueryLogConfigRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId(aws.StringValue(config.Id))
 	arn := aws.StringValue(config.Arn)
-	d.Set(names.AttrARN, arn)
-	d.Set(names.AttrDestinationARN, config.DestinationArn)
-	d.Set(names.AttrName, config.Name)
-	d.Set(names.AttrOwnerID, config.OwnerId)
+	d.Set("arn", arn)
+	d.Set("destination_arn", config.DestinationArn)
+	d.Set("name", config.Name)
+	d.Set("owner_id", config.OwnerId)
 	d.Set("resolver_query_log_config_id", config.Id)
 
 	shareStatus := aws.StringValue(config.ShareStatus)
@@ -126,7 +126,7 @@ func dataSourceQueryLogConfigRead(ctx context.Context, d *schema.ResourceData, m
 		tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 		//lintignore:AWSR002
-		if err := d.Set(names.AttrTags, tags.Map()); err != nil {
+		if err := d.Set("tags", tags.Map()); err != nil {
 			return create.DiagError(names.AppConfig, create.ErrActionSetting, DSNameQueryLogConfig, configID, err)
 		}
 	}

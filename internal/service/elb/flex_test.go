@@ -10,7 +10,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elb"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestExpandListeners(t *testing.T) {
@@ -97,9 +96,9 @@ func TestFlattenHealthCheck(t *testing.T) {
 				{
 					"unhealthy_threshold": int64(10),
 					"healthy_threshold":   int64(10),
-					names.AttrTarget:      "HTTP:80/",
-					names.AttrTimeout:     int64(30),
-					names.AttrInterval:    int64(30),
+					"target":              "HTTP:80/",
+					"timeout":             int64(30),
+					"interval":            int64(30),
 				},
 			},
 		},
@@ -138,16 +137,16 @@ func TestExpandPolicyAttributes(t *testing.T) {
 
 	expanded := []interface{}{
 		map[string]interface{}{
-			names.AttrName:  "Protocol-TLSv1",
-			names.AttrValue: "false",
+			"name":  "Protocol-TLSv1",
+			"value": "false",
 		},
 		map[string]interface{}{
-			names.AttrName:  "Protocol-TLSv1.1",
-			names.AttrValue: "false",
+			"name":  "Protocol-TLSv1.1",
+			"value": "false",
 		},
 		map[string]interface{}{
-			names.AttrName:  "Protocol-TLSv1.2",
-			names.AttrValue: "true",
+			"name":  "Protocol-TLSv1.2",
+			"value": "true",
 		},
 	}
 	attributes := ExpandPolicyAttributes(expanded)
@@ -186,8 +185,8 @@ func TestExpandPolicyAttributes_invalid(t *testing.T) {
 
 	expanded := []interface{}{
 		map[string]interface{}{
-			names.AttrName:  "Protocol-TLSv1.2",
-			names.AttrValue: "true",
+			"name":  "Protocol-TLSv1.2",
+			"value": "true",
 		},
 	}
 	attributes := ExpandPolicyAttributes(expanded)
@@ -221,8 +220,8 @@ func TestFlattenPolicyAttributes(t *testing.T) {
 			},
 			Output: []interface{}{
 				map[string]string{
-					names.AttrName:  "Protocol-TLSv1.2",
-					names.AttrValue: "true",
+					"name":  "Protocol-TLSv1.2",
+					"value": "true",
 				},
 			},
 		},

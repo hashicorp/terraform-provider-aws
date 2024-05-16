@@ -26,7 +26,6 @@ import (
 
 // @SDKResource("aws_servicecatalog_portfolio", name="Portfolio")
 // @Tags
-// @Testing(existsType="github.com/aws/aws-sdk-go/service/servicecatalog;servicecatalog.DescribePortfolioOutput", generator="github.com/hashicorp/terraform-plugin-testing/helper/acctest;sdkacctest;sdkacctest.RandString(5)", skipEmptyTags=true)
 func ResourcePortfolio() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePortfolioCreate,
@@ -46,26 +45,26 @@ func ResourcePortfolio() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrCreatedTime: {
+			"created_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.StringLenBetween(0, 2000),
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
-			names.AttrProviderName: {
+			"provider_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 50),
@@ -81,7 +80,7 @@ func resourcePortfolioCreate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &servicecatalog.CreatePortfolioInput{
 		AcceptLanguage:   aws.String(AcceptLanguageEnglish),
 		DisplayName:      aws.String(name),
@@ -89,11 +88,11 @@ func resourcePortfolioCreate(ctx context.Context, d *schema.ResourceData, meta i
 		Tags:             getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrProviderName); ok {
+	if v, ok := d.GetOk("provider_name"); ok {
 		input.ProviderName = aws.String(v.(string))
 	}
 
@@ -125,11 +124,11 @@ func resourcePortfolioRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	portfolioDetail := output.PortfolioDetail
-	d.Set(names.AttrARN, portfolioDetail.ARN)
-	d.Set(names.AttrCreatedTime, portfolioDetail.CreatedTime.Format(time.RFC3339))
-	d.Set(names.AttrDescription, portfolioDetail.Description)
-	d.Set(names.AttrName, portfolioDetail.DisplayName)
-	d.Set(names.AttrProviderName, portfolioDetail.ProviderName)
+	d.Set("arn", portfolioDetail.ARN)
+	d.Set("created_time", portfolioDetail.CreatedTime.Format(time.RFC3339))
+	d.Set("description", portfolioDetail.Description)
+	d.Set("name", portfolioDetail.DisplayName)
+	d.Set("provider_name", portfolioDetail.ProviderName)
 
 	setTagsOut(ctx, output.Tags)
 
@@ -149,20 +148,20 @@ func resourcePortfolioUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		input.AcceptLanguage = aws.String(d.Get("accept_language").(string))
 	}
 
-	if d.HasChange(names.AttrDescription) {
-		input.Description = aws.String(d.Get(names.AttrDescription).(string))
+	if d.HasChange("description") {
+		input.Description = aws.String(d.Get("description").(string))
 	}
 
-	if d.HasChange(names.AttrName) {
-		input.DisplayName = aws.String(d.Get(names.AttrName).(string))
+	if d.HasChange("name") {
+		input.DisplayName = aws.String(d.Get("name").(string))
 	}
 
-	if d.HasChange(names.AttrProviderName) {
-		input.ProviderName = aws.String(d.Get(names.AttrProviderName).(string))
+	if d.HasChange("provider_name") {
+		input.ProviderName = aws.String(d.Get("provider_name").(string))
 	}
 
-	if d.HasChange(names.AttrTagsAll) {
-		o, n := d.GetChange(names.AttrTagsAll)
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
 
 		input.AddTags = Tags(tftags.New(ctx, n).IgnoreAWS())
 		input.RemoveTags = aws.StringSlice(tftags.New(ctx, o).IgnoreAWS().Keys())
@@ -185,10 +184,6 @@ func resourcePortfolioDelete(ctx context.Context, d *schema.ResourceData, meta i
 	_, err := conn.DeletePortfolioWithContext(ctx, &servicecatalog.DeletePortfolioInput{
 		Id: aws.String(d.Id()),
 	})
-
-	if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
-		return diags
-	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Service Catalog Portfolio (%s): %s", d.Id(), err)

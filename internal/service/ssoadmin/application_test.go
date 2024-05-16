@@ -47,7 +47,7 @@ func TestAccSSOAdminApplication_basic(t *testing.T) {
 				Config: testAccApplicationConfig_basic(rName, testAccApplicationProviderARN),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "application_provider_arn", testAccApplicationProviderARN),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "application_arn", "sso", regexache.MustCompile(`application/+.`)),
 				),
@@ -109,8 +109,8 @@ func TestAccSSOAdminApplication_description(t *testing.T) {
 				Config: testAccApplicationConfig_description(rName, testAccApplicationProviderARN, "text1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "text1"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "description", "text1"),
 				),
 			},
 			{
@@ -122,8 +122,8 @@ func TestAccSSOAdminApplication_description(t *testing.T) {
 				Config: testAccApplicationConfig_description(rName, testAccApplicationProviderARN, "text2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "text2"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "description", "text2"),
 				),
 			},
 		},
@@ -152,9 +152,9 @@ func TestAccSSOAdminApplication_portalOptions(t *testing.T) {
 				Config: testAccApplicationConfig_portalOptions(rName, testAccApplicationProviderARN, applicationURL1, string(types.SignInOriginApplication)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "portal_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "portal_options.0.sign_in_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "portal_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "portal_options.0.sign_in_options.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "portal_options.0.sign_in_options.*", map[string]string{
 						"application_url": applicationURL1,
 						"origin":          string(types.SignInOriginApplication),
@@ -170,9 +170,9 @@ func TestAccSSOAdminApplication_portalOptions(t *testing.T) {
 				Config: testAccApplicationConfig_portalOptions(rName, testAccApplicationProviderARN, applicationURL2, string(types.SignInOriginApplication)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "portal_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "portal_options.0.sign_in_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "portal_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "portal_options.0.sign_in_options.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "portal_options.0.sign_in_options.*", map[string]string{
 						"application_url": applicationURL2,
 						"origin":          string(types.SignInOriginApplication),
@@ -203,8 +203,8 @@ func TestAccSSOAdminApplication_status(t *testing.T) {
 				Config: testAccApplicationConfig_status(rName, testAccApplicationProviderARN, string(types.ApplicationStatusEnabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.ApplicationStatusEnabled)),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "status", string(types.ApplicationStatusEnabled)),
 				),
 			},
 			{
@@ -216,16 +216,16 @@ func TestAccSSOAdminApplication_status(t *testing.T) {
 				Config: testAccApplicationConfig_status(rName, testAccApplicationProviderARN, string(types.ApplicationStatusDisabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.ApplicationStatusDisabled)),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "status", string(types.ApplicationStatusDisabled)),
 				),
 			},
 			{
 				Config: testAccApplicationConfig_status(rName, testAccApplicationProviderARN, string(types.ApplicationStatusEnabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.ApplicationStatusEnabled)),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "status", string(types.ApplicationStatusEnabled)),
 				),
 			},
 		},
@@ -249,12 +249,12 @@ func TestAccSSOAdminApplication_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccApplicationConfig_tags1(rName, testAccApplicationProviderARN, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccApplicationConfig_tags1(rName, testAccApplicationProviderARN, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -263,22 +263,22 @@ func TestAccSSOAdminApplication_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccApplicationConfig_tags2(rName, testAccApplicationProviderARN, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccApplicationConfig_tags2(rName, testAccApplicationProviderARN, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccApplicationConfig_tags1(rName, testAccApplicationProviderARN, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccApplicationConfig_tags1(rName, testAccApplicationProviderARN, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},

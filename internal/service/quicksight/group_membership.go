@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_quicksight_group_membership", name="Group Membership")
@@ -33,7 +32,7 @@ func ResourceGroupMembership() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
-				names.AttrARN: {
+				"arn": {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -43,7 +42,7 @@ func ResourceGroupMembership() *schema.Resource {
 					Computed: true,
 					ForceNew: true,
 				},
-				names.AttrGroupName: {
+				"group_name": {
 					Type:     schema.TypeString,
 					Required: true,
 					ForceNew: true,
@@ -53,7 +52,7 @@ func ResourceGroupMembership() *schema.Resource {
 					Required: true,
 					ForceNew: true,
 				},
-				names.AttrNamespace: {
+				"namespace": {
 					Type:     schema.TypeString,
 					Optional: true,
 					ForceNew: true,
@@ -72,8 +71,8 @@ func resourceGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountID := meta.(*conns.AWSClient).AccountID
-	namespace := d.Get(names.AttrNamespace).(string)
-	groupName := d.Get(names.AttrGroupName).(string)
+	namespace := d.Get("namespace").(string)
+	groupName := d.Get("group_name").(string)
 	memberName := d.Get("member_name").(string)
 
 	if v, ok := d.GetOk("aws_account_id"); ok {
@@ -123,9 +122,9 @@ func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	d.Set("aws_account_id", awsAccountID)
-	d.Set(names.AttrNamespace, namespace)
+	d.Set("namespace", namespace)
 	d.Set("member_name", userName)
-	d.Set(names.AttrGroupName, groupName)
+	d.Set("group_name", groupName)
 
 	return nil
 }

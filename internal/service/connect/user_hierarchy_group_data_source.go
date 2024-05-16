@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_connect_user_hierarchy_group")
@@ -23,7 +22,7 @@ func DataSourceUserHierarchyGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceUserHierarchyGroupRead,
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -31,7 +30,7 @@ func DataSourceUserHierarchyGroup() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"hierarchy_group_id", names.AttrName},
+				ExactlyOneOf: []string{"hierarchy_group_id", "name"},
 			},
 			"hierarchy_path": {
 				Type:     schema.TypeList,
@@ -61,7 +60,7 @@ func DataSourceUserHierarchyGroup() *schema.Resource {
 					},
 				},
 			},
-			names.AttrInstanceID: {
+			"instance_id": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
@@ -70,18 +69,18 @@ func DataSourceUserHierarchyGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{names.AttrName, "hierarchy_group_id"},
+				ExactlyOneOf: []string{"name", "hierarchy_group_id"},
 			},
 			// parent_group_id is not returned by DescribeUserHierarchyGroup
 			// "parent_group_id": {
 			// 	Type:     schema.TypeString,
 			// 	Computed: true,
 			// },
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -92,7 +91,7 @@ func dataSourceUserHierarchyGroupRead(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	instanceID := d.Get(names.AttrInstanceID).(string)
+	instanceID := d.Get("instance_id").(string)
 
 	input := &connect.DescribeUserHierarchyGroupInput{
 		InstanceId: aws.String(instanceID),
@@ -100,7 +99,7 @@ func dataSourceUserHierarchyGroupRead(ctx context.Context, d *schema.ResourceDat
 
 	if v, ok := d.GetOk("hierarchy_group_id"); ok {
 		input.HierarchyGroupId = aws.String(v.(string))
-	} else if v, ok := d.GetOk(names.AttrName); ok {
+	} else if v, ok := d.GetOk("name"); ok {
 		name := v.(string)
 		hierarchyGroupSummary, err := userHierarchyGroupSummaryByName(ctx, conn, instanceID, name)
 
@@ -127,17 +126,17 @@ func dataSourceUserHierarchyGroupRead(ctx context.Context, d *schema.ResourceDat
 
 	hierarchyGroup := resp.HierarchyGroup
 
-	d.Set(names.AttrARN, hierarchyGroup.Arn)
+	d.Set("arn", hierarchyGroup.Arn)
 	d.Set("hierarchy_group_id", hierarchyGroup.Id)
-	d.Set(names.AttrInstanceID, instanceID)
+	d.Set("instance_id", instanceID)
 	d.Set("level_id", hierarchyGroup.LevelId)
-	d.Set(names.AttrName, hierarchyGroup.Name)
+	d.Set("name", hierarchyGroup.Name)
 
 	if err := d.Set("hierarchy_path", flattenUserHierarchyPath(hierarchyGroup.HierarchyPath)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting Connect User Hierarchy Group hierarchy_path (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, hierarchyGroup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, hierarchyGroup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

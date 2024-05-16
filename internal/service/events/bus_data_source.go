@@ -6,24 +6,25 @@ package events
 import (
 	"context"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/eventbridge"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_cloudwatch_event_bus", name="Event Bus")
-func dataSourceBus() *schema.Resource {
+// @SDKDataSource("aws_cloudwatch_event_bus")
+func DataSourceBus() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceBusRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -33,18 +34,23 @@ func dataSourceBus() *schema.Resource {
 
 func dataSourceBusRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsClient(ctx)
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
-	eventBusName := d.Get(names.AttrName).(string)
-	output, err := findEventBusByName(ctx, conn, eventBusName)
+	name := d.Get("name").(string)
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EventBridge Event Bus (%s): %s", eventBusName, err)
+	input := &eventbridge.DescribeEventBusInput{
+		Name: aws.String(name),
 	}
 
-	d.SetId(eventBusName)
-	d.Set(names.AttrARN, output.Arn)
-	d.Set(names.AttrName, output.Name)
+	output, err := conn.DescribeEventBusWithContext(ctx, input)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading EventBridge Bus (%s): %s", name, err)
+	}
+
+	d.Set("arn", output.Arn)
+	d.Set("name", output.Name)
+
+	d.SetId(name)
 
 	return diags
 }

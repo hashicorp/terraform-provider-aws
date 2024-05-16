@@ -40,8 +40,8 @@ func (d *dataSourceTemplates) Metadata(_ context.Context, req datasource.Metadat
 func (d *dataSourceTemplates) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
-			names.AttrRegion: schema.StringAttribute{
+			"id": framework.IDAttribute(),
+			"region": schema.StringAttribute{
 				Required: true,
 			},
 		},
@@ -58,19 +58,19 @@ func (d *dataSourceTemplates) Schema(ctx context.Context, req datasource.SchemaR
 						"quota_name": schema.StringAttribute{
 							Computed: true,
 						},
-						names.AttrRegion: schema.StringAttribute{
+						"region": schema.StringAttribute{
 							Computed: true,
 						},
 						"service_code": schema.StringAttribute{
 							Computed: true,
 						},
-						names.AttrServiceName: schema.StringAttribute{
+						"service_name": schema.StringAttribute{
 							Computed: true,
 						},
-						names.AttrUnit: schema.StringAttribute{
+						"unit": schema.StringAttribute{
 							Computed: true,
 						},
-						names.AttrValue: schema.Float64Attribute{
+						"value": schema.Float64Attribute{
 							Computed: true,
 						},
 					},
@@ -111,14 +111,14 @@ func (d *dataSourceTemplates) Read(ctx context.Context, req datasource.ReadReque
 }
 
 var templatesSourceAttrTypes = map[string]attr.Type{
-	"global_quota":        types.BoolType,
-	"quota_code":          types.StringType,
-	"quota_name":          types.StringType,
-	names.AttrRegion:      types.StringType,
-	"service_code":        types.StringType,
-	names.AttrServiceName: types.StringType,
-	names.AttrUnit:        types.StringType,
-	names.AttrValue:       types.Float64Type,
+	"global_quota": types.BoolType,
+	"quota_code":   types.StringType,
+	"quota_name":   types.StringType,
+	"region":       types.StringType,
+	"service_code": types.StringType,
+	"service_name": types.StringType,
+	"unit":         types.StringType,
+	"value":        types.Float64Type,
 }
 
 type dataSourceTemplatesData struct {
@@ -134,14 +134,14 @@ func flattenTemplates(ctx context.Context, apiObject []awstypes.ServiceQuotaIncr
 	elems := []attr.Value{}
 	for _, t := range apiObject {
 		obj := map[string]attr.Value{
-			"global_quota":        types.BoolValue(t.GlobalQuota),
-			"quota_code":          flex.StringToFramework(ctx, t.QuotaCode),
-			"quota_name":          flex.StringToFramework(ctx, t.QuotaName),
-			names.AttrRegion:      flex.StringToFramework(ctx, t.AwsRegion),
-			"service_code":        flex.StringToFramework(ctx, t.ServiceCode),
-			names.AttrServiceName: flex.StringToFramework(ctx, t.ServiceName),
-			names.AttrUnit:        flex.StringToFramework(ctx, t.Unit),
-			names.AttrValue:       flex.Float64ToFramework(ctx, t.DesiredValue),
+			"global_quota": types.BoolValue(t.GlobalQuota),
+			"quota_code":   flex.StringToFramework(ctx, t.QuotaCode),
+			"quota_name":   flex.StringToFramework(ctx, t.QuotaName),
+			"region":       flex.StringToFramework(ctx, t.AwsRegion),
+			"service_code": flex.StringToFramework(ctx, t.ServiceCode),
+			"service_name": flex.StringToFramework(ctx, t.ServiceName),
+			"unit":         flex.StringToFramework(ctx, t.Unit),
+			"value":        flex.Float64ToFramework(ctx, t.DesiredValue),
 		}
 		objVal, d := types.ObjectValue(templatesSourceAttrTypes, obj)
 		diags.Append(d...)

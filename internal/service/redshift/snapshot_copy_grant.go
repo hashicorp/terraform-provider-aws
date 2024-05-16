@@ -26,7 +26,7 @@ import (
 
 // @SDKResource("aws_redshift_snapshot_copy_grant", name="Snapshot Copy Grant")
 // @Tags(identifierAttribute="arn")
-func resourceSnapshotCopyGrant() *schema.Resource {
+func ResourceSnapshotCopyGrant() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSnapshotCopyGrantCreate,
 		ReadWithoutTimeout:   resourceSnapshotCopyGrantRead,
@@ -38,11 +38,11 @@ func resourceSnapshotCopyGrant() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrKMSKeyID: {
+			"kms_key_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -71,7 +71,7 @@ func resourceSnapshotCopyGrantCreate(ctx context.Context, d *schema.ResourceData
 		Tags:                  getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
+	if v, ok := d.GetOk("kms_key_id"); ok {
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
@@ -84,7 +84,7 @@ func resourceSnapshotCopyGrantCreate(ctx context.Context, d *schema.ResourceData
 	d.SetId(name)
 
 	_, err = tfresource.RetryWhenNotFound(ctx, 3*time.Minute, func() (any, error) {
-		return findSnapshotCopyGrantByName(ctx, conn, d.Id())
+		return FindSnapshotCopyGrantByName(ctx, conn, d.Id())
 	})
 
 	if err != nil {
@@ -98,7 +98,7 @@ func resourceSnapshotCopyGrantRead(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	grant, err := findSnapshotCopyGrantByName(ctx, conn, d.Id())
+	grant, err := FindSnapshotCopyGrantByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Snapshot Copy Grant (%s) not found, removing from state", d.Id())
@@ -117,8 +117,8 @@ func resourceSnapshotCopyGrantRead(ctx context.Context, d *schema.ResourceData, 
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("snapshotcopygrant:%s", d.Id()),
 	}.String()
-	d.Set(names.AttrARN, arn)
-	d.Set(names.AttrKMSKeyID, grant.KmsKeyId)
+	d.Set("arn", arn)
+	d.Set("kms_key_id", grant.KmsKeyId)
 	d.Set("snapshot_copy_grant_name", grant.SnapshotCopyGrantName)
 
 	setTagsOut(ctx, grant.Tags)
@@ -152,7 +152,7 @@ func resourceSnapshotCopyGrantDelete(ctx context.Context, d *schema.ResourceData
 	}
 
 	_, err = tfresource.RetryUntilNotFound(ctx, 3*time.Minute, func() (any, error) {
-		return findSnapshotCopyGrantByName(ctx, conn, d.Id())
+		return FindSnapshotCopyGrantByName(ctx, conn, d.Id())
 	})
 
 	if err != nil {
@@ -162,7 +162,7 @@ func resourceSnapshotCopyGrantDelete(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func findSnapshotCopyGrantByName(ctx context.Context, conn *redshift.Redshift, name string) (*redshift.SnapshotCopyGrant, error) {
+func FindSnapshotCopyGrantByName(ctx context.Context, conn *redshift.Redshift, name string) (*redshift.SnapshotCopyGrant, error) {
 	input := &redshift.DescribeSnapshotCopyGrantsInput{
 		SnapshotCopyGrantName: aws.String(name),
 	}

@@ -55,11 +55,11 @@ func resourceLocationFSxONTAPFileSystem() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrCreationTime: {
+			"creation_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -67,7 +67,7 @@ func resourceLocationFSxONTAPFileSystem() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrProtocol: {
+			"protocol": {
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
@@ -89,7 +89,7 @@ func resourceLocationFSxONTAPFileSystem() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												names.AttrVersion: {
+												"version": {
 													Type:         schema.TypeString,
 													Default:      awstypes.NfsVersionNfs3,
 													Optional:     true,
@@ -110,7 +110,7 @@ func resourceLocationFSxONTAPFileSystem() *schema.Resource {
 							ExactlyOneOf: []string{"protocol.0.nfs", "protocol.0.smb"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrDomain: {
+									"domain": {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ForceNew:     true,
@@ -123,7 +123,7 @@ func resourceLocationFSxONTAPFileSystem() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												names.AttrVersion: {
+												"version": {
 													Type:     schema.TypeString,
 													Default:  awstypes.SmbVersionAutomatic,
 													Optional: true,
@@ -138,7 +138,7 @@ func resourceLocationFSxONTAPFileSystem() *schema.Resource {
 											},
 										},
 									},
-									names.AttrPassword: {
+									"password": {
 										Type:         schema.TypeString,
 										Required:     true,
 										ForceNew:     true,
@@ -183,7 +183,7 @@ func resourceLocationFSxONTAPFileSystem() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrURI: {
+			"uri": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -198,7 +198,7 @@ func resourceLocationFSxONTAPFileSystemCreate(ctx context.Context, d *schema.Res
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
 	input := &datasync.CreateLocationFsxOntapInput{
-		Protocol:                 expandProtocol(d.Get(names.AttrProtocol).([]interface{})),
+		Protocol:                 expandProtocol(d.Get("protocol").([]interface{})),
 		SecurityGroupArns:        flex.ExpandStringValueSet(d.Get("security_group_arns").(*schema.Set)),
 		StorageVirtualMachineArn: aws.String(d.Get("storage_virtual_machine_arn").(string)),
 		Tags:                     getTagsIn(ctx),
@@ -241,8 +241,8 @@ func resourceLocationFSxONTAPFileSystemRead(ctx context.Context, d *schema.Resou
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set(names.AttrARN, output.LocationArn)
-	d.Set(names.AttrCreationTime, output.CreationTime.Format(time.RFC3339))
+	d.Set("arn", output.LocationArn)
+	d.Set("creation_time", output.CreationTime.Format(time.RFC3339))
 	d.Set("fsx_filesystem_arn", output.FsxFilesystemArn)
 	// SMB Password is not returned from the API.
 	if output.Protocol != nil && output.Protocol.SMB != nil && aws.ToString(output.Protocol.SMB.Password) == "" {
@@ -250,13 +250,13 @@ func resourceLocationFSxONTAPFileSystemRead(ctx context.Context, d *schema.Resou
 			output.Protocol.SMB.Password = aws.String(smbPassword)
 		}
 	}
-	if err := d.Set(names.AttrProtocol, flattenProtocol(output.Protocol)); err != nil {
+	if err := d.Set("protocol", flattenProtocol(output.Protocol)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting protocol: %s", err)
 	}
 	d.Set("security_group_arns", output.SecurityGroupArns)
 	d.Set("storage_virtual_machine_arn", output.StorageVirtualMachineArn)
 	d.Set("subdirectory", subdirectory)
-	d.Set(names.AttrURI, uri)
+	d.Set("uri", uri)
 
 	return diags
 }

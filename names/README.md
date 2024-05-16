@@ -43,7 +43,7 @@ The columns of `data/names_data.csv` are as follows:
 | 21 | **EndpointOnly** | Code | If **NotImplemented** is non-blank, whether the service endpoint should be included in the provider `endpoints` configuration |
 | 22 | **AllowedSubcategory** | Code | If **Exclude** is non-blank, whether to include **HumanFriendly** in `website/allowed-subcategories.txt` anyway. In other words, if non-blank, overrides **Exclude** in some situations. Some excluded pseudo-services (_e.g._, VPC is part of EC2) are still subcategories. Only applies if **Exclude** is non-blank. |
 | 23 | **DeprecatedEnvVar** | Code | Deprecated `AWS_<service>_ENDPOINT` envvar defined for some services |
-| 24 | **TFAWSEnvVar** | Code | `TF_AWS_<service>_ENDPOINT` envvar defined for some services |
+| 24 | **TfAwsEnvVar** | Code | `TF_AWS_<service>_ENDPOINT` envvar defined for some services |
 | 25 | **Note** | Reference | Very brief note usually to explain why excluded |
 
 For more information about service naming, see [the Naming Guide](https://hashicorp.github.io/terraform-provider-aws/naming/#service-identifier).

@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_connect_hours_of_operation")
@@ -24,7 +23,7 @@ func DataSourceHoursOfOperation() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceHoursOfOperationRead,
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -53,7 +52,7 @@ func DataSourceHoursOfOperation() *schema.Resource {
 								},
 							},
 						},
-						names.AttrStartTime: {
+						"start_time": {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
@@ -76,11 +75,11 @@ func DataSourceHoursOfOperation() *schema.Resource {
 					m := v.(map[string]interface{})
 					buf.WriteString(m["day"].(string))
 					buf.WriteString(fmt.Sprintf("%+v", m["end_time"].([]interface{})))
-					buf.WriteString(fmt.Sprintf("%+v", m[names.AttrStartTime].([]interface{})))
+					buf.WriteString(fmt.Sprintf("%+v", m["start_time"].([]interface{})))
 					return create.StringHashcode(buf.String())
 				},
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -88,19 +87,19 @@ func DataSourceHoursOfOperation() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"hours_of_operation_id", names.AttrName},
+				ExactlyOneOf: []string{"hours_of_operation_id", "name"},
 			},
-			names.AttrInstanceID: {
+			"instance_id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{names.AttrName, "hours_of_operation_id"},
+				ExactlyOneOf: []string{"name", "hours_of_operation_id"},
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 			"time_zone": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -115,7 +114,7 @@ func dataSourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	instanceID := d.Get(names.AttrInstanceID).(string)
+	instanceID := d.Get("instance_id").(string)
 
 	input := &connect.DescribeHoursOfOperationInput{
 		InstanceId: aws.String(instanceID),
@@ -123,7 +122,7 @@ func dataSourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData,
 
 	if v, ok := d.GetOk("hours_of_operation_id"); ok {
 		input.HoursOfOperationId = aws.String(v.(string))
-	} else if v, ok := d.GetOk(names.AttrName); ok {
+	} else if v, ok := d.GetOk("name"); ok {
 		name := v.(string)
 		hoursOfOperationSummary, err := dataSourceGetHoursOfOperationSummaryByName(ctx, conn, instanceID, name)
 
@@ -150,18 +149,18 @@ func dataSourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData,
 
 	hoursOfOperation := resp.HoursOfOperation
 
-	d.Set(names.AttrARN, hoursOfOperation.HoursOfOperationArn)
+	d.Set("arn", hoursOfOperation.HoursOfOperationArn)
 	d.Set("hours_of_operation_id", hoursOfOperation.HoursOfOperationId)
-	d.Set(names.AttrInstanceID, instanceID)
-	d.Set(names.AttrDescription, hoursOfOperation.Description)
-	d.Set(names.AttrName, hoursOfOperation.Name)
+	d.Set("instance_id", instanceID)
+	d.Set("description", hoursOfOperation.Description)
+	d.Set("name", hoursOfOperation.Name)
 	d.Set("time_zone", hoursOfOperation.TimeZone)
 
 	if err := d.Set("config", flattenConfigs(hoursOfOperation.Config)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting config: %s", err)
 	}
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, hoursOfOperation.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, hoursOfOperation.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

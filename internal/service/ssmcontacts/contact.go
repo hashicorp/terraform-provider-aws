@@ -35,20 +35,20 @@ func ResourceContact() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrAlias: {
+			"alias": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrDisplayName: {
+			"display_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			names.AttrType: {
+			"type": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -69,20 +69,20 @@ func resourceContactCreate(ctx context.Context, d *schema.ResourceData, meta int
 	client := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 
 	input := &ssmcontacts.CreateContactInput{
-		Alias:       aws.String(d.Get(names.AttrAlias).(string)),
-		DisplayName: aws.String(d.Get(names.AttrDisplayName).(string)),
+		Alias:       aws.String(d.Get("alias").(string)),
+		DisplayName: aws.String(d.Get("display_name").(string)),
 		Plan:        &types.Plan{Stages: []types.Stage{}},
 		Tags:        getTagsIn(ctx),
-		Type:        types.ContactType(d.Get(names.AttrType).(string)),
+		Type:        types.ContactType(d.Get("type").(string)),
 	}
 
 	output, err := client.CreateContact(ctx, input)
 	if err != nil {
-		return create.DiagError(names.SSMContacts, create.ErrActionCreating, ResNameContact, d.Get(names.AttrAlias).(string), err)
+		return create.DiagError(names.SSMContacts, create.ErrActionCreating, ResNameContact, d.Get("alias").(string), err)
 	}
 
 	if output == nil {
-		return create.DiagError(names.SSMContacts, create.ErrActionCreating, ResNameContact, d.Get(names.AttrAlias).(string), errors.New("empty output"))
+		return create.DiagError(names.SSMContacts, create.ErrActionCreating, ResNameContact, d.Get("alias").(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(output.ContactArn))
@@ -115,10 +115,10 @@ func resourceContactRead(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceContactUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 
-	if d.HasChanges(names.AttrDisplayName) {
+	if d.HasChanges("display_name") {
 		in := &ssmcontacts.UpdateContactInput{
 			ContactId:   aws.String(d.Id()),
-			DisplayName: aws.String(d.Get(names.AttrDisplayName).(string)),
+			DisplayName: aws.String(d.Get("display_name").(string)),
 		}
 
 		_, err := conn.UpdateContact(ctx, in)

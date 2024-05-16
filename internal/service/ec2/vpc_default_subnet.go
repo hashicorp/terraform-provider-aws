@@ -58,7 +58,7 @@ func ResourceDefaultSubnet() *schema.Resource {
 		//   - existing_default_subnet Computed-only, set in resourceDefaultSubnetCreate
 		//   - force_destroy Optional
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -67,7 +67,7 @@ func ResourceDefaultSubnet() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			names.AttrAvailabilityZone: {
+			"availability_zone": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -108,7 +108,7 @@ func ResourceDefaultSubnet() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			names.AttrForceDestroy: {
+			"force_destroy": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -143,7 +143,7 @@ func ResourceDefaultSubnet() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrOwnerID: {
+			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -155,7 +155,7 @@ func ResourceDefaultSubnet() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVPCID: {
+			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -167,7 +167,7 @@ func resourceDefaultSubnetCreate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	availabilityZone := d.Get(names.AttrAvailabilityZone).(string)
+	availabilityZone := d.Get("availability_zone").(string)
 	input := &ec2.DescribeSubnetsInput{
 		Filters: newAttributeFilterList(
 			map[string]string{
@@ -255,7 +255,7 @@ func resourceDefaultSubnetCreate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceDefaultSubnetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	if d.Get(names.AttrForceDestroy).(bool) {
+	if d.Get("force_destroy").(bool) {
 		return append(diags, resourceSubnetDelete(ctx, d, meta)...)
 	}
 

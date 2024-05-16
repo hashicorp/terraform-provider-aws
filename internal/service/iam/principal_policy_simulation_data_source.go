@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_iam_principal_policy_simulation", name="Principal Policy Simulation")
@@ -45,17 +44,17 @@ func dataSourcePrincipalPolicySimulation() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrKey: {
+						"key": {
 							Type:        schema.TypeString,
 							Required:    true,
 							Description: `The key name of the context entry, such as "aws:CurrentTime".`,
 						},
-						names.AttrType: {
+						"type": {
 							Type:        schema.TypeString,
 							Required:    true,
 							Description: `The type that the simulator should use to interpret the strings given in argument "values".`,
 						},
-						names.AttrValues: {
+						"values": {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem: &schema.Schema{
@@ -152,7 +151,7 @@ func dataSourcePrincipalPolicySimulation() *schema.Resource {
 							},
 							Description: `A mapping of various additional details that are relevant to the decision, exactly as returned by the policy simulator.`,
 						},
-						names.AttrResourceARN: {
+						"resource_arn": {
 							Type:        schema.TypeString,
 							Computed:    true,
 							Description: `ARN of the resource that the action was tested against.`,
@@ -200,7 +199,7 @@ func dataSourcePrincipalPolicySimulation() *schema.Resource {
 					},
 				},
 			},
-			names.AttrID: {
+			"id": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: `Do not use`,
@@ -231,9 +230,9 @@ func dataSourcePrincipalPolicySimulationRead(ctx context.Context, d *schema.Reso
 	for _, entryRaw := range d.Get("context").(*schema.Set).List() {
 		entryRaw := entryRaw.(map[string]interface{})
 		entry := awstypes.ContextEntry{
-			ContextKeyName:   aws.String(entryRaw[names.AttrKey].(string)),
-			ContextKeyType:   awstypes.ContextKeyTypeEnum(entryRaw[names.AttrType].(string)),
-			ContextKeyValues: setAsAWSStringSlice(entryRaw[names.AttrValues]),
+			ContextKeyName:   aws.String(entryRaw["key"].(string)),
+			ContextKeyType:   awstypes.ContextKeyTypeEnum(entryRaw["type"].(string)),
+			ContextKeyValues: setAsAWSStringSlice(entryRaw["values"]),
 		}
 		input.ContextEntries = append(input.ContextEntries, entry)
 	}
@@ -295,7 +294,7 @@ func dataSourcePrincipalPolicySimulationRead(ctx context.Context, d *schema.Reso
 			deniedCount++
 		}
 		if result.EvalResourceName != nil {
-			rawResult[names.AttrResourceARN] = aws.ToString(result.EvalResourceName)
+			rawResult["resource_arn"] = aws.ToString(result.EvalResourceName)
 		}
 
 		var missingContextKeys []string

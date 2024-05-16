@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_vpc_ipam_pools")
@@ -23,7 +22,7 @@ func DataSourceIPAMPools() *schema.Resource {
 		ReadWithoutTimeout: dataSourceIPAMPoolsRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrFilter: customFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"ipam_pools": {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -46,7 +45,7 @@ func DataSourceIPAMPools() *schema.Resource {
 							Computed: true,
 						},
 						"allocation_resource_tags": tftags.TagsSchemaComputed(),
-						names.AttrARN: {
+						"arn": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -58,11 +57,11 @@ func DataSourceIPAMPools() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrDescription: {
+						"description": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrID: {
+						"id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -90,11 +89,11 @@ func DataSourceIPAMPools() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrState: {
+						"state": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrTags: tftags.TagsSchemaComputed(),
+						"tags": tftags.TagsSchemaComputed(),
 					},
 				},
 			},
@@ -110,7 +109,7 @@ func dataSourceIPAMPoolsRead(ctx context.Context, d *schema.ResourceData, meta i
 	input := &ec2.DescribeIpamPoolsInput{}
 
 	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get(names.AttrFilter).(*schema.Set),
+		d.Get("filter").(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {
@@ -145,20 +144,20 @@ func flattenIPAMPool(ctx context.Context, p *ec2.IpamPool, ignoreTagsConfig *tft
 	pool["allocation_max_netmask_length"] = aws.Int64Value(p.AllocationMaxNetmaskLength)
 	pool["allocation_min_netmask_length"] = aws.Int64Value(p.AllocationMinNetmaskLength)
 	pool["allocation_resource_tags"] = KeyValueTags(ctx, tagsFromIPAMAllocationTags(p.AllocationResourceTags)).Map()
-	pool[names.AttrARN] = aws.StringValue(p.IpamPoolArn)
+	pool["arn"] = aws.StringValue(p.IpamPoolArn)
 	pool["auto_import"] = aws.BoolValue(p.AutoImport)
 	pool["aws_service"] = aws.StringValue(p.AwsService)
-	pool[names.AttrDescription] = aws.StringValue(p.Description)
-	pool[names.AttrID] = aws.StringValue(p.IpamPoolId)
+	pool["description"] = aws.StringValue(p.Description)
+	pool["id"] = aws.StringValue(p.IpamPoolId)
 	pool["ipam_scope_id"] = strings.Split(aws.StringValue(p.IpamScopeArn), "/")[1]
 	pool["ipam_scope_type"] = aws.StringValue(p.IpamScopeType)
 	pool["locale"] = aws.StringValue(p.Locale)
 	pool["pool_depth"] = aws.Int64Value(p.PoolDepth)
 	pool["publicly_advertisable"] = aws.BoolValue(p.PubliclyAdvertisable)
 	pool["source_ipam_pool_id"] = aws.StringValue(p.SourceIpamPoolId)
-	pool[names.AttrState] = aws.StringValue(p.State)
+	pool["state"] = aws.StringValue(p.State)
 	if v := p.Tags; v != nil {
-		pool[names.AttrTags] = KeyValueTags(ctx, v).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()
+		pool["tags"] = KeyValueTags(ctx, v).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()
 	}
 
 	return pool

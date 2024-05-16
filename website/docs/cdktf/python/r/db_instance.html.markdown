@@ -69,9 +69,9 @@ class MyConvertedCode(TerraformStack):
             allocated_storage=10,
             db_name="mydb",
             engine="mysql",
-            engine_version="8.0",
+            engine_version="5.7",
             instance_class="db.t3.micro",
-            parameter_group_name="default.mysql8.0",
+            parameter_group_name="default.mysql5.7",
             password="foobarbaz",
             skip_final_snapshot=True,
             username="foo"
@@ -303,10 +303,10 @@ class MyConvertedCode(TerraformStack):
             allocated_storage=10,
             db_name="mydb",
             engine="mysql",
-            engine_version="8.0",
+            engine_version="5.7",
             instance_class="db.t3.micro",
             manage_master_user_password=True,
-            parameter_group_name="default.mysql8.0",
+            parameter_group_name="default.mysql5.7",
             username="foo"
         )
 ```
@@ -337,11 +337,11 @@ class MyConvertedCode(TerraformStack):
             allocated_storage=10,
             db_name="mydb",
             engine="mysql",
-            engine_version="8.0",
+            engine_version="5.7",
             instance_class="db.t3.micro",
             manage_master_user_password=True,
             master_user_secret_kms_key_id=example.key_id,
-            parameter_group_name="default.mysql8.0",
+            parameter_group_name="default.mysql5.7",
             username="foo"
         )
 ```
@@ -392,7 +392,6 @@ with read replicas, it should be specified only if the source database
 specifies an instance in another AWS Region. See [DBSubnetGroupName in API
 action CreateDBInstanceReadReplica](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstanceReadReplica.html)
 for additional read replica constraints.
-* `dedicated_log_volume` - (Optional, boolean) Use a dedicated log volume (DLV) for the DB instance. Requires Provisioned IOPS. See the [AWS documentation](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_PIOPS.StorageTypes.html#USER_PIOPS.dlv) for more details.
 * `delete_automated_backups` - (Optional) Specifies whether to remove automated backups immediately after the DB instance is deleted. Default is `true`.
 * `deletion_protection` - (Optional) If the DB instance should have deletion protection enabled. The database can't be deleted when this value is set to `true`. The default is `false`.
 * `domain` - (Optional) The ID of the Directory Service Active Directory domain to create the instance in. Conflicts with `domain_fqdn`, `domain_ou`, `domain_auth_secret_arn` and a `domain_dns_ips`.
@@ -403,7 +402,7 @@ for additional read replica constraints.
 * `domain_ou` - (Optional, but required if domain_fqdn is provided) The self managed Active Directory organizational unit for your DB instance to join. Conflicts with `domain` and `domain_iam_role_name`.
 * `enabled_cloudwatch_logs_exports` - (Optional) Set of log types to enable for exporting to CloudWatch logs. If omitted, no logs will be exported. For supported values, see the EnableCloudwatchLogsExports.member.N parameter in [API action CreateDBInstance](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html).
 * `engine` - (Required unless a `snapshot_identifier` or `replicate_source_db` is provided) The database engine to use. For supported values, see the Engine parameter in [API action CreateDBInstance](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html). Note that for Amazon Aurora instances the engine must match the [DB cluster](/docs/providers/aws/r/rds_cluster.html)'s engine'. For information on the difference between the available Aurora MySQL engines see [Comparison between Aurora MySQL 1 and Aurora MySQL 2](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/AuroraMySQL.Updates.20180206.html) in the Amazon RDS User Guide.
-* `engine_version` - (Optional) The engine version to use. If `auto_minor_version_upgrade` is enabled, you can provide a prefix of the version such as `8.0` (for `8.0.36`). The actual engine version used is returned in the attribute `engine_version_actual`, see [Attribute Reference](#attribute-reference) below. For supported values, see the EngineVersion parameter in [API action CreateDBInstance](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html). Note that for Amazon Aurora instances the engine version must match the [DB cluster](/docs/providers/aws/r/rds_cluster.html)'s engine version'.
+* `engine_version` - (Optional) The engine version to use. If `auto_minor_version_upgrade` is enabled, you can provide a prefix of the version such as `5.7` (for `5.7.10`). The actual engine version used is returned in the attribute `engine_version_actual`, see [Attribute Reference](#attribute-reference) below. For supported values, see the EngineVersion parameter in [API action CreateDBInstance](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html). Note that for Amazon Aurora instances the engine version must match the [DB cluster](/docs/providers/aws/r/rds_cluster.html)'s engine version'.
 * `final_snapshot_identifier` - (Optional) The name of your final DB snapshot
 when this DB instance is deleted. Must be provided if `skip_final_snapshot` is
 set to `false`. The value must begin with a letter, only contain alphanumeric characters and hyphens, and not end with a hyphen or contain two consecutive hyphens. Must not be provided when deleting a read replica.
@@ -653,4 +652,4 @@ Using `terraform import`, import DB Instances using the `identifier`. For exampl
 % terraform import aws_db_instance.default mydb-rds-instance
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b3cc09d8138c80aec20a1609f61064943c765d24c949d975ce7e0ed3c5858a0e -->
+<!-- cache-key: cdktf-0.20.1 input-df8f242aeea065498582e4e359a4e91c1fec1c20f81d99d461ba5a2ab17dc596 -->

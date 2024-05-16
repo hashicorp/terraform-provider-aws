@@ -35,14 +35,14 @@ func (d *dataSourceApplication) Metadata(_ context.Context, req datasource.Metad
 func (d *dataSourceApplication) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrDescription: schema.StringAttribute{
+			"arn": framework.ARNAttributeComputedOnly(),
+			"description": schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrID: schema.StringAttribute{
+			"id": schema.StringAttribute{
 				Required: true,
 			},
-			names.AttrName: schema.StringAttribute{
+			"name": schema.StringAttribute{
 				Computed: true,
 			},
 			"application_tag": schema.MapAttribute{

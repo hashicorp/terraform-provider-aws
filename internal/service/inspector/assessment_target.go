@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_inspector_assessment_target")
@@ -32,12 +31,12 @@ func ResourceAssessmentTarget() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -54,7 +53,7 @@ func resourceAssessmentTargetCreate(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).InspectorConn(ctx)
 
 	input := &inspector.CreateAssessmentTargetInput{
-		AssessmentTargetName: aws.String(d.Get(names.AttrName).(string)),
+		AssessmentTargetName: aws.String(d.Get("name").(string)),
 	}
 
 	if v, ok := d.GetOk("resource_group_arn"); ok {
@@ -87,8 +86,8 @@ func resourceAssessmentTargetRead(ctx context.Context, d *schema.ResourceData, m
 		return diags
 	}
 
-	d.Set(names.AttrARN, assessmentTarget.Arn)
-	d.Set(names.AttrName, assessmentTarget.Name)
+	d.Set("arn", assessmentTarget.Arn)
+	d.Set("name", assessmentTarget.Name)
 	d.Set("resource_group_arn", assessmentTarget.ResourceGroupArn)
 
 	return diags
@@ -100,7 +99,7 @@ func resourceAssessmentTargetUpdate(ctx context.Context, d *schema.ResourceData,
 
 	input := inspector.UpdateAssessmentTargetInput{
 		AssessmentTargetArn:  aws.String(d.Id()),
-		AssessmentTargetName: aws.String(d.Get(names.AttrName).(string)),
+		AssessmentTargetName: aws.String(d.Get("name").(string)),
 	}
 
 	if v, ok := d.GetOk("resource_group_arn"); ok {

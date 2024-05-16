@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_s3_bucket_object_lock_configuration", name="Bucket Object Lock Configuration")
@@ -36,7 +35,7 @@ func resourceBucketObjectLockConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrBucket: {
+			"bucket": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -55,7 +54,7 @@ func resourceBucketObjectLockConfiguration() *schema.Resource {
 				Default:          types.ObjectLockEnabledEnabled,
 				ValidateDiagFunc: enum.Validate[types.ObjectLockEnabled](),
 			},
-			names.AttrRule: {
+			"rule": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -72,7 +71,7 @@ func resourceBucketObjectLockConfiguration() *schema.Resource {
 										Optional:      true,
 										ConflictsWith: []string{"rule.0.default_retention.0.years"},
 									},
-									names.AttrMode: {
+									"mode": {
 										Type:             schema.TypeString,
 										Optional:         true,
 										ValidateDiagFunc: enum.Validate[types.ObjectLockRetentionMode](),
@@ -100,7 +99,7 @@ func resourceBucketObjectLockConfiguration() *schema.Resource {
 func resourceBucketObjectLockConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket := d.Get(names.AttrBucket).(string)
+	bucket := d.Get("bucket").(string)
 	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
 	input := &s3.PutObjectLockConfigurationInput{
 		Bucket: aws.String(bucket),
@@ -108,7 +107,7 @@ func resourceBucketObjectLockConfigurationCreate(ctx context.Context, d *schema.
 			// ObjectLockEnabled is required by the API, even if configured directly on the S3 bucket
 			// during creation, else a MalformedXML error will be returned.
 			ObjectLockEnabled: types.ObjectLockEnabled(d.Get("object_lock_enabled").(string)),
-			Rule:              expandObjectLockRule(d.Get(names.AttrRule).([]interface{})),
+			Rule:              expandObjectLockRule(d.Get("rule").([]interface{})),
 		},
 	}
 	if expectedBucketOwner != "" {
@@ -168,10 +167,10 @@ func resourceBucketObjectLockConfigurationRead(ctx context.Context, d *schema.Re
 		return diag.Errorf("reading S3 Bucket Object Lock Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrBucket, bucket)
+	d.Set("bucket", bucket)
 	d.Set("expected_bucket_owner", expectedBucketOwner)
 	d.Set("object_lock_enabled", objLockConfig.ObjectLockEnabled)
-	if err := d.Set(names.AttrRule, flattenObjectLockRule(objLockConfig.Rule)); err != nil {
+	if err := d.Set("rule", flattenObjectLockRule(objLockConfig.Rule)); err != nil {
 		return diag.Errorf("setting rule: %s", err)
 	}
 
@@ -192,7 +191,7 @@ func resourceBucketObjectLockConfigurationUpdate(ctx context.Context, d *schema.
 			// ObjectLockEnabled is required by the API, even if configured directly on the S3 bucket
 			// during creation, else a MalformedXML error will be returned.
 			ObjectLockEnabled: types.ObjectLockEnabled(d.Get("object_lock_enabled").(string)),
-			Rule:              expandObjectLockRule(d.Get(names.AttrRule).([]interface{})),
+			Rule:              expandObjectLockRule(d.Get("rule").([]interface{})),
 		},
 	}
 	if expectedBucketOwner != "" {
@@ -318,7 +317,7 @@ func expandDefaultRetention(l []interface{}) *types.DefaultRetention {
 		dr.Days = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap[names.AttrMode].(string); ok && v != "" {
+	if v, ok := tfMap["mode"].(string); ok && v != "" {
 		dr.Mode = types.ObjectLockRetentionMode(v)
 	}
 
@@ -349,9 +348,9 @@ func flattenDefaultRetention(dr *types.DefaultRetention) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"days":         dr.Days,
-		names.AttrMode: dr.Mode,
-		"years":        dr.Years,
+		"days":  dr.Days,
+		"mode":  dr.Mode,
+		"years": dr.Years,
 	}
 
 	return []interface{}{m}

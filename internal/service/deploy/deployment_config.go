@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_codedeploy_deployment_config", name="Deployment Config")
@@ -34,7 +33,7 @@ func resourceDeploymentConfig() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -61,13 +60,13 @@ func resourceDeploymentConfig() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrType: {
+						"type": {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ForceNew:         true,
 							ValidateDiagFunc: enum.Validate[types.MinimumHealthyHostsType](),
 						},
-						names.AttrValue: {
+						"value": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							ForceNew: true,
@@ -90,7 +89,7 @@ func resourceDeploymentConfig() *schema.Resource {
 							ConflictsWith: []string{"traffic_routing_config.0.time_based_linear"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrInterval: {
+									"interval": {
 										Type:     schema.TypeInt,
 										Optional: true,
 										ForceNew: true,
@@ -111,7 +110,7 @@ func resourceDeploymentConfig() *schema.Resource {
 							ConflictsWith: []string{"traffic_routing_config.0.time_based_canary"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrInterval: {
+									"interval": {
 										Type:     schema.TypeInt,
 										Optional: true,
 										ForceNew: true,
@@ -124,7 +123,7 @@ func resourceDeploymentConfig() *schema.Resource {
 								},
 							},
 						},
-						names.AttrType: {
+						"type": {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ForceNew:         true,
@@ -185,7 +184,7 @@ func resourceDeploymentConfigRead(ctx context.Context, d *schema.ResourceData, m
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  "deploymentconfig:" + deploymentConfigName,
 	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set("arn", arn)
 	d.Set("compute_platform", deploymentConfig.ComputePlatform)
 	d.Set("deployment_config_id", deploymentConfig.DeploymentConfigId)
 	d.Set("deployment_config_name", deploymentConfigName)
@@ -248,8 +247,8 @@ func expandMinimumHealthyHosts(d *schema.ResourceData) *types.MinimumHealthyHost
 	host := hosts.([]interface{})[0].(map[string]interface{})
 
 	minimumHealthyHost := types.MinimumHealthyHosts{
-		Type:  types.MinimumHealthyHostsType(host[names.AttrType].(string)),
-		Value: int32(host[names.AttrValue].(int)),
+		Type:  types.MinimumHealthyHostsType(host["type"].(string)),
+		Value: int32(host["value"].(int)),
 	}
 
 	return &minimumHealthyHost
@@ -263,7 +262,7 @@ func expandTrafficRoutingConfig(d *schema.ResourceData) *types.TrafficRoutingCon
 	config := block.([]interface{})[0].(map[string]interface{})
 	trafficRoutingConfig := types.TrafficRoutingConfig{}
 
-	if trafficType, ok := config[names.AttrType]; ok {
+	if trafficType, ok := config["type"]; ok {
 		trafficRoutingConfig.Type = types.TrafficRoutingType(trafficType.(string))
 	}
 	if canary, ok := config["time_based_canary"]; ok && len(canary.([]interface{})) > 0 {
@@ -280,7 +279,7 @@ func expandTrafficRoutingConfig(d *schema.ResourceData) *types.TrafficRoutingCon
 
 func expandTimeBasedCanary(config map[string]interface{}) *types.TimeBasedCanary {
 	canary := types.TimeBasedCanary{}
-	if interval, ok := config[names.AttrInterval]; ok {
+	if interval, ok := config["interval"]; ok {
 		canary.CanaryInterval = int32(interval.(int))
 	}
 	if percentage, ok := config["percentage"]; ok {
@@ -291,7 +290,7 @@ func expandTimeBasedCanary(config map[string]interface{}) *types.TimeBasedCanary
 
 func expandTimeBasedLinear(config map[string]interface{}) *types.TimeBasedLinear {
 	linear := types.TimeBasedLinear{}
-	if interval, ok := config[names.AttrInterval]; ok {
+	if interval, ok := config["interval"]; ok {
 		linear.LinearInterval = int32(interval.(int))
 	}
 	if percentage, ok := config["percentage"]; ok {
@@ -308,8 +307,8 @@ func flattenMinimumHealthHosts(hosts *types.MinimumHealthyHosts) []map[string]in
 
 	item := make(map[string]interface{})
 
-	item[names.AttrType] = string(hosts.Type)
-	item[names.AttrValue] = hosts.Value
+	item["type"] = string(hosts.Type)
+	item["value"] = hosts.Value
 
 	return append(result, item)
 }
@@ -322,7 +321,7 @@ func flattenTrafficRoutingConfig(config *types.TrafficRoutingConfig) []map[strin
 
 	item := make(map[string]interface{})
 
-	item[names.AttrType] = string(config.Type)
+	item["type"] = string(config.Type)
 	item["time_based_canary"] = flattenTimeBasedCanary(config.TimeBasedCanary)
 	item["time_based_linear"] = flattenTimeBasedLinear(config.TimeBasedLinear)
 
@@ -336,7 +335,7 @@ func flattenTimeBasedCanary(canary *types.TimeBasedCanary) []map[string]interfac
 	}
 
 	item := make(map[string]interface{})
-	item[names.AttrInterval] = canary.CanaryInterval
+	item["interval"] = canary.CanaryInterval
 	item["percentage"] = canary.CanaryPercentage
 
 	return append(result, item)
@@ -349,7 +348,7 @@ func flattenTimeBasedLinear(linear *types.TimeBasedLinear) []map[string]interfac
 	}
 
 	item := make(map[string]interface{})
-	item[names.AttrInterval] = linear.LinearInterval
+	item["interval"] = linear.LinearInterval
 	item["percentage"] = linear.LinearPercentage
 
 	return append(result, item)

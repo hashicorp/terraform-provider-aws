@@ -49,11 +49,11 @@ func ResourceCustomDBEngineVersion() *schema.Resource {
 			Delete: schema.DefaultTimeout(60 * time.Minute),
 		},
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrCreateTime: {
+			"create_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -73,7 +73,7 @@ func ResourceCustomDBEngineVersion() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1000),
@@ -87,7 +87,7 @@ func ResourceCustomDBEngineVersion() *schema.Resource {
 					validation.StringLenBetween(1, 35),
 				),
 			},
-			names.AttrEngineVersion: {
+			"engine_version": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -104,7 +104,7 @@ func ResourceCustomDBEngineVersion() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrKMSKeyID: {
+			"kms_key_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -139,7 +139,7 @@ func ResourceCustomDBEngineVersion() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -170,7 +170,7 @@ func resourceCustomDBEngineVersionCreate(ctx context.Context, d *schema.Resource
 
 	input := rds.CreateCustomDBEngineVersionInput{
 		Engine:        aws.String(d.Get("engine").(string)),
-		EngineVersion: aws.String(d.Get(names.AttrEngineVersion).(string)),
+		EngineVersion: aws.String(d.Get("engine_version").(string)),
 		Tags:          getTagsIn(ctx),
 	}
 
@@ -182,7 +182,7 @@ func resourceCustomDBEngineVersionCreate(ctx context.Context, d *schema.Resource
 		input.DatabaseInstallationFilesS3Prefix = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -190,7 +190,7 @@ func resourceCustomDBEngineVersionCreate(ctx context.Context, d *schema.Resource
 		input.ImageId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
+	if v, ok := d.GetOk("kms_key_id"); ok {
 		input.KMSKeyId = aws.String(v.(string))
 	}
 
@@ -239,21 +239,21 @@ func resourceCustomDBEngineVersionRead(ctx context.Context, d *schema.ResourceDa
 		return append(diags, create.DiagError(names.RDS, create.ErrActionReading, ResNameCustomDBEngineVersion, d.Id(), err)...)
 	}
 
-	d.Set(names.AttrARN, out.DBEngineVersionArn)
+	d.Set("arn", out.DBEngineVersionArn)
 	if out.CreateTime != nil {
-		d.Set(names.AttrCreateTime, out.CreateTime.Format(time.RFC3339))
+		d.Set("create_time", out.CreateTime.Format(time.RFC3339))
 	}
 	d.Set("database_installation_files_s3_bucket_name", out.DatabaseInstallationFilesS3BucketName)
 	d.Set("database_installation_files_s3_prefix", out.DatabaseInstallationFilesS3Prefix)
 	d.Set("db_parameter_group_family", out.DBParameterGroupFamily)
-	d.Set(names.AttrDescription, out.DBEngineVersionDescription)
+	d.Set("description", out.DBEngineVersionDescription)
 	d.Set("engine", out.Engine)
-	d.Set(names.AttrEngineVersion, out.EngineVersion)
+	d.Set("engine_version", out.EngineVersion)
 	d.Set("image_id", out.Image.ImageId)
-	d.Set(names.AttrKMSKeyID, out.KMSKeyId)
+	d.Set("kms_key_id", out.KMSKeyId)
 	d.Set("major_engine_version", out.MajorEngineVersion)
 	d.Set("manifest_computed", out.CustomDBEngineVersionManifest)
-	d.Set(names.AttrStatus, out.Status)
+	d.Set("status", out.Status)
 
 	setTagsOut(ctx, out.TagList)
 
@@ -264,7 +264,7 @@ func resourceCustomDBEngineVersionUpdate(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
-	if d.HasChangesExcept(names.AttrDescription, names.AttrStatus) {
+	if d.HasChangesExcept("description", "status") {
 		return append(diags, create.DiagError(names.RDS, create.ErrActionUpdating, ResNameCustomDBEngineVersion, d.Id(), errors.New("only description and status can be updated"))...)
 	}
 
@@ -278,12 +278,12 @@ func resourceCustomDBEngineVersionUpdate(ctx context.Context, d *schema.Resource
 		EngineVersion: aws.String(engineVersion),
 	}
 
-	if d.HasChanges(names.AttrDescription) {
-		input.Description = aws.String(d.Get(names.AttrDescription).(string))
+	if d.HasChanges("description") {
+		input.Description = aws.String(d.Get("description").(string))
 		update = true
 	}
-	if d.HasChanges(names.AttrStatus) {
-		input.Status = aws.String(d.Get(names.AttrStatus).(string))
+	if d.HasChanges("status") {
+		input.Status = aws.String(d.Get("status").(string))
 		update = true
 	}
 

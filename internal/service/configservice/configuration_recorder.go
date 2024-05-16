@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_config_configuration_recorder", name="Configuration Recorder")
@@ -40,7 +39,7 @@ func resourceConfigurationRecorder() *schema.Resource {
 		CustomizeDiff: resourceConfigurationRecorderCustomizeDiff,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -120,7 +119,7 @@ func resourceConfigurationRecorder() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrDescription: {
+									"description": {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -141,7 +140,7 @@ func resourceConfigurationRecorder() *schema.Resource {
 					},
 				},
 			},
-			names.AttrRoleARN: {
+			"role_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -154,11 +153,11 @@ func resourceConfigurationRecorderPut(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &configservice.PutConfigurationRecorderInput{
 		ConfigurationRecorder: &types.ConfigurationRecorder{
 			Name:    aws.String(name),
-			RoleARN: aws.String(d.Get(names.AttrRoleARN).(string)),
+			RoleARN: aws.String(d.Get("role_arn").(string)),
 		},
 	}
 
@@ -199,7 +198,7 @@ func resourceConfigurationRecorderRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "reading ConfigService Configuration Recorder (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrName, recorder.Name)
+	d.Set("name", recorder.Name)
 	if recorder.RecordingGroup != nil {
 		if err := d.Set("recording_group", flattenRecordingGroup(recorder.RecordingGroup)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting recording_group: %s", err)
@@ -210,7 +209,7 @@ func resourceConfigurationRecorderRead(ctx context.Context, d *schema.ResourceDa
 			return sdkdiag.AppendErrorf(diags, "setting recording_mode: %s", err)
 		}
 	}
-	d.Set(names.AttrRoleARN, recorder.RoleARN)
+	d.Set("role_arn", recorder.RoleARN)
 
 	return diags
 }
@@ -431,7 +430,7 @@ func expandRecordingModeOverride(tfList []interface{}) []types.RecordingModeOver
 
 		apiObject := types.RecordingModeOverride{}
 
-		if v, ok := tfMap[names.AttrDescription].(string); ok && v != "" {
+		if v, ok := tfMap["description"].(string); ok && v != "" {
 			apiObject.Description = aws.String(v)
 		}
 
@@ -525,7 +524,7 @@ func flattenRecordingModeOverrides(apiObjects []types.RecordingModeOverride) []i
 
 	for _, apiObject := range apiObjects {
 		m := map[string]interface{}{
-			names.AttrDescription: aws.ToString(apiObject.Description),
+			"description":         aws.ToString(apiObject.Description),
 			"recording_frequency": apiObject.RecordingFrequency,
 			"resource_types":      apiObject.ResourceTypes,
 		}

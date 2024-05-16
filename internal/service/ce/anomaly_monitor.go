@@ -6,20 +6,17 @@ package ce
 import (
 	"context"
 	"encoding/json"
-	"log"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/costexplorer"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/costexplorer/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/costexplorer"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -29,50 +26,46 @@ import (
 
 // @SDKResource("aws_ce_anomaly_monitor", name="Anomaly Monitor")
 // @Tags(identifierAttribute="id")
-func resourceAnomalyMonitor() *schema.Resource {
+func ResourceAnomalyMonitor() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAnomalyMonitorCreate,
 		ReadWithoutTimeout:   resourceAnomalyMonitorRead,
 		UpdateWithoutTimeout: resourceAnomalyMonitorUpdate,
 		DeleteWithoutTimeout: resourceAnomalyMonitorDelete,
-
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"monitor_dimension": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				ConflictsWith:    []string{"monitor_specification"},
-				ValidateDiagFunc: enum.Validate[awstypes.MonitorDimension](),
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"monitor_specification"},
+				ValidateFunc:  validation.StringInSlice(costexplorer.MonitorDimension_Values(), false),
 			},
-			"monitor_specification": {
-				Type:                  schema.TypeString,
-				Optional:              true,
-				ForceNew:              true,
-				ValidateFunc:          validation.StringIsJSON,
-				DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
-				DiffSuppressOnRefresh: true,
-				ConflictsWith:         []string{"monitor_dimension"},
-			},
-			"monitor_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.MonitorType](),
-			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 1024),
 					validation.StringMatch(regexache.MustCompile(`[\\S\\s]*`), "Must be a valid Anomaly Monitor Name matching expression: [\\S\\s]*")),
+			},
+			"monitor_specification": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				ValidateFunc:     validation.StringIsJSON,
+				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+				ConflictsWith:    []string{"monitor_dimension"},
+			},
+			"monitor_type": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(costexplorer.MonitorType_Values(), false),
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -84,45 +77,48 @@ func resourceAnomalyMonitor() *schema.Resource {
 
 func resourceAnomalyMonitorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CEClient(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	conn := meta.(*conns.AWSClient).CEConn(ctx)
+
 	input := &costexplorer.CreateAnomalyMonitorInput{
-		AnomalyMonitor: &awstypes.AnomalyMonitor{
-			MonitorName: aws.String(name),
-			MonitorType: awstypes.MonitorType(d.Get("monitor_type").(string)),
+		AnomalyMonitor: &costexplorer.AnomalyMonitor{
+			MonitorName: aws.String(d.Get("name").(string)),
+			MonitorType: aws.String(d.Get("monitor_type").(string)),
 		},
 		ResourceTags: getTagsIn(ctx),
 	}
-
-	switch awstypes.MonitorType(d.Get("monitor_type").(string)) {
-	case awstypes.MonitorTypeDimensional:
+	switch d.Get("monitor_type").(string) {
+	case costexplorer.MonitorTypeDimensional:
 		if v, ok := d.GetOk("monitor_dimension"); ok {
-			input.AnomalyMonitor.MonitorDimension = awstypes.MonitorDimension(v.(string))
+			input.AnomalyMonitor.MonitorDimension = aws.String(v.(string))
 		} else {
-			return sdkdiag.AppendErrorf(diags, "If Monitor Type is %s, dimension attrribute is required", awstypes.MonitorTypeDimensional)
+			return sdkdiag.AppendErrorf(diags, "If Monitor Type is %s, dimension attrribute is required", costexplorer.MonitorTypeDimensional)
 		}
-	case awstypes.MonitorTypeCustom:
+	case costexplorer.MonitorTypeCustom:
 		if v, ok := d.GetOk("monitor_specification"); ok {
-			expression := &awstypes.Expression{}
+			expression := costexplorer.Expression{}
 
-			if err := json.Unmarshal([]byte(v.(string)), expression); err != nil {
-				return sdkdiag.AppendFromErr(diags, err)
+			if err := json.Unmarshal([]byte(v.(string)), &expression); err != nil {
+				return sdkdiag.AppendErrorf(diags, "parsing specification: %s", err)
 			}
 
-			input.AnomalyMonitor.MonitorSpecification = expression
+			input.AnomalyMonitor.MonitorSpecification = &expression
 		} else {
-			return sdkdiag.AppendErrorf(diags, "If Monitor Type is %s, dimension attrribute is required", awstypes.MonitorTypeCustom)
+			return sdkdiag.AppendErrorf(diags, "If Monitor Type is %s, dimension attrribute is required", costexplorer.MonitorTypeCustom)
 		}
 	}
 
-	output, err := conn.CreateAnomalyMonitor(ctx, input)
+	resp, err := conn.CreateAnomalyMonitorWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Cost Explorer Anomaly Monitor (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Anomaly Monitor: %s", err)
 	}
 
-	d.SetId(aws.ToString(output.MonitorArn))
+	if resp == nil || resp.MonitorArn == nil {
+		return sdkdiag.AppendErrorf(diags, "creating Cost Explorer Anomaly Monitor resource (%s): empty output", d.Get("name").(string))
+	}
+
+	d.SetId(aws.StringValue(resp.MonitorArn))
 
 	return append(diags, resourceAnomalyMonitorRead(ctx, d, meta)...)
 }
@@ -130,39 +126,37 @@ func resourceAnomalyMonitorCreate(ctx context.Context, d *schema.ResourceData, m
 func resourceAnomalyMonitorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).CEClient(ctx)
+	conn := meta.(*conns.AWSClient).CEConn(ctx)
 
-	monitor, err := findAnomalyMonitorByARN(ctx, conn, d.Id())
+	monitor, err := FindAnomalyMonitorByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Cost Explorer Anomaly Monitor (%s) not found, removing from state", d.Id())
+		create.LogNotFoundRemoveState(names.CE, create.ErrActionReading, ResNameAnomalyMonitor, d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Cost Explorer Anomaly Monitor (%s): %s", d.Id(), err)
+		return create.AppendDiagError(diags, names.CE, create.ErrActionReading, ResNameAnomalyMonitor, d.Id(), err)
 	}
 
 	if monitor.MonitorSpecification != nil {
 		specificationToJson, err := json.Marshal(monitor.MonitorSpecification)
-
 		if err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
+			return sdkdiag.AppendErrorf(diags, "parsing specification response: %s", err)
 		}
-
 		specificationToSet, err := structure.NormalizeJsonString(string(specificationToJson))
 
 		if err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
+			return sdkdiag.AppendErrorf(diags, "Specification (%s) is invalid JSON: %s", specificationToSet, err)
 		}
 
 		d.Set("monitor_specification", specificationToSet)
 	}
 
-	d.Set(names.AttrARN, monitor.MonitorArn)
+	d.Set("arn", monitor.MonitorArn)
 	d.Set("monitor_dimension", monitor.MonitorDimension)
-	d.Set(names.AttrName, monitor.MonitorName)
+	d.Set("name", monitor.MonitorName)
 	d.Set("monitor_type", monitor.MonitorType)
 
 	return diags
@@ -170,21 +164,24 @@ func resourceAnomalyMonitorRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceAnomalyMonitorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CEClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &costexplorer.UpdateAnomalyMonitorInput{
-			MonitorArn: aws.String(d.Id()),
-		}
+	conn := meta.(*conns.AWSClient).CEConn(ctx)
+	requestUpdate := false
 
-		if d.HasChange(names.AttrName) {
-			input.MonitorName = aws.String(d.Get(names.AttrName).(string))
-		}
+	input := &costexplorer.UpdateAnomalyMonitorInput{
+		MonitorArn: aws.String(d.Id()),
+	}
 
-		_, err := conn.UpdateAnomalyMonitor(ctx, input)
+	if d.HasChange("name") {
+		input.MonitorName = aws.String(d.Get("name").(string))
+		requestUpdate = true
+	}
+
+	if requestUpdate {
+		_, err := conn.UpdateAnomalyMonitorWithContext(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Cost Explorer Anomaly Monitor (%s): %s", d.Id(), err)
+			return create.AppendDiagError(diags, names.CE, create.ErrActionUpdating, ResNameAnomalyMonitor, d.Id(), err)
 		}
 	}
 
@@ -194,46 +191,17 @@ func resourceAnomalyMonitorUpdate(ctx context.Context, d *schema.ResourceData, m
 func resourceAnomalyMonitorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).CEClient(ctx)
+	conn := meta.(*conns.AWSClient).CEConn(ctx)
 
-	log.Printf("[DEBUG] Deleting Cost Explorer Anomaly Monitor: %s", d.Id())
-	_, err := conn.DeleteAnomalyMonitor(ctx, &costexplorer.DeleteAnomalyMonitorInput{
-		MonitorArn: aws.String(d.Id()),
-	})
+	_, err := conn.DeleteAnomalyMonitorWithContext(ctx, &costexplorer.DeleteAnomalyMonitorInput{MonitorArn: aws.String(d.Id())})
 
-	if err != nil && errs.IsA[*awstypes.UnknownMonitorException](err) {
+	if err != nil && tfawserr.ErrCodeEquals(err, costexplorer.ErrCodeUnknownMonitorException) {
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Cost Explorer Anomaly Monitor (%s): %s", d.Id(), err)
+		return create.AppendDiagError(diags, names.CE, create.ErrActionDeleting, ResNameAnomalyMonitor, d.Id(), err)
 	}
 
 	return diags
-}
-
-func findAnomalyMonitorByARN(ctx context.Context, conn *costexplorer.Client, arn string) (*awstypes.AnomalyMonitor, error) {
-	input := &costexplorer.GetAnomalyMonitorsInput{
-		MonitorArnList: []string{arn},
-		MaxResults:     aws.Int32(1),
-	}
-
-	output, err := conn.GetAnomalyMonitors(ctx, input)
-
-	if errs.IsA[*awstypes.UnknownMonitorException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || len(output.AnomalyMonitors) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return &output.AnomalyMonitors[0], nil
 }

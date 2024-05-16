@@ -36,7 +36,7 @@ func ResourceResponsePlan() *schema.Resource {
 		DeleteWithoutTimeout: resourceResponsePlanDelete,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrAction: {
+			"action": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -51,7 +51,7 @@ func ResourceResponsePlan() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									names.AttrRoleARN: {
+									"role_arn": {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -63,16 +63,16 @@ func ResourceResponsePlan() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									names.AttrParameter: {
+									"parameter": {
 										Type:     schema.TypeSet,
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												names.AttrName: {
+												"name": {
 													Type:     schema.TypeString,
 													Required: true,
 												},
-												names.AttrValues: {
+												"values": {
 													Type:     schema.TypeSet,
 													Required: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
@@ -91,7 +91,7 @@ func ResourceResponsePlan() *schema.Resource {
 					},
 				},
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -101,7 +101,7 @@ func ResourceResponsePlan() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			names.AttrDisplayName: {
+			"display_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -135,7 +135,7 @@ func ResourceResponsePlan() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrSNSTopicARN: {
+									"sns_topic_arn": {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -160,7 +160,7 @@ func ResourceResponsePlan() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrName: {
+									"name": {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -178,7 +178,7 @@ func ResourceResponsePlan() *schema.Resource {
 					},
 				},
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -197,24 +197,24 @@ func resourceResponsePlanCreate(ctx context.Context, d *schema.ResourceData, met
 	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
 	input := &ssmincidents.CreateResponsePlanInput{
-		Actions:          expandAction(d.Get(names.AttrAction).([]interface{})),
+		Actions:          expandAction(d.Get("action").([]interface{})),
 		ChatChannel:      expandChatChannel(d.Get("chat_channel").(*schema.Set)),
-		DisplayName:      aws.String(d.Get(names.AttrDisplayName).(string)),
+		DisplayName:      aws.String(d.Get("display_name").(string)),
 		Engagements:      flex.ExpandStringValueSet(d.Get("engagements").(*schema.Set)),
 		IncidentTemplate: expandIncidentTemplate(d.Get("incident_template").([]interface{})),
 		Integrations:     expandIntegration(d.Get("integration").([]interface{})),
-		Name:             aws.String(d.Get(names.AttrName).(string)),
+		Name:             aws.String(d.Get("name").(string)),
 		Tags:             getTagsIn(ctx),
 	}
 
 	output, err := client.CreateResponsePlan(ctx, input)
 
 	if err != nil {
-		return create.DiagError(names.SSMIncidents, create.ErrActionCreating, ResNameResponsePlan, d.Get(names.AttrName).(string), err)
+		return create.DiagError(names.SSMIncidents, create.ErrActionCreating, ResNameResponsePlan, d.Get("name").(string), err)
 	}
 
 	if output == nil {
-		return create.DiagError(names.SSMIncidents, create.ErrActionCreating, ResNameResponsePlan, d.Get(names.AttrName).(string), errors.New("empty output"))
+		return create.DiagError(names.SSMIncidents, create.ErrActionCreating, ResNameResponsePlan, d.Get("name").(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(output.Arn))
@@ -247,21 +247,21 @@ func resourceResponsePlanRead(ctx context.Context, d *schema.ResourceData, meta 
 func resourceResponsePlanUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &ssmincidents.UpdateResponsePlanInput{
 			Arn: aws.String(d.Id()),
 		}
 
-		if d.HasChanges(names.AttrAction) {
-			input.Actions = expandAction(d.Get(names.AttrAction).([]interface{}))
+		if d.HasChanges("action") {
+			input.Actions = expandAction(d.Get("action").([]interface{}))
 		}
 
 		if d.HasChanges("chat_channel") {
 			input.ChatChannel = expandChatChannel(d.Get("chat_channel").(*schema.Set))
 		}
 
-		if d.HasChanges(names.AttrDisplayName) {
-			input.DisplayName = aws.String(d.Get(names.AttrDisplayName).(string))
+		if d.HasChanges("display_name") {
+			input.DisplayName = aws.String(d.Get("display_name").(string))
 		}
 
 		if d.HasChanges("engagements") {

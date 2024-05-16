@@ -28,15 +28,15 @@ func TestAccELBV2TrustStoreDataSource_basic(t *testing.T) {
 			{
 				Config: testAccTrustStoreDataSourceConfig_withName(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceNameByName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(datasourceNameByName, names.AttrARN),
+					resource.TestCheckResourceAttr(datasourceNameByName, "name", rName),
+					resource.TestCheckResourceAttrSet(datasourceNameByName, "arn"),
 				),
 			},
 			{
 				Config: testAccTrustStoreDataSourceConfig_withARN(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceNameByArn, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(datasourceNameByArn, names.AttrARN),
+					resource.TestCheckResourceAttr(datasourceNameByArn, "name", rName),
+					resource.TestCheckResourceAttrSet(datasourceNameByArn, "arn"),
 				),
 			},
 		},

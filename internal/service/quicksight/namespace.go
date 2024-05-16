@@ -56,7 +56,7 @@ func (r *resourceNamespace) Metadata(_ context.Context, request resource.Metadat
 func (r *resourceNamespace) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			"arn": framework.ARNAttributeComputedOnly(),
 			"aws_account_id": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
@@ -77,7 +77,7 @@ func (r *resourceNamespace) Schema(ctx context.Context, req resource.SchemaReque
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrID: framework.IDAttribute(),
+			"id": framework.IDAttribute(),
 			"identity_store": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
@@ -86,7 +86,7 @@ func (r *resourceNamespace) Schema(ctx context.Context, req resource.SchemaReque
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrNamespace: schema.StringAttribute{
+			"namespace": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -96,7 +96,7 @@ func (r *resourceNamespace) Schema(ctx context.Context, req resource.SchemaReque
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+			"timeouts": timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Delete: true,
 			}),
@@ -249,7 +249,7 @@ func (r *resourceNamespace) Delete(ctx context.Context, req resource.DeleteReque
 }
 
 func (r *resourceNamespace) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *resourceNamespace) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {

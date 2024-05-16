@@ -46,7 +46,7 @@ class MyConvertedCode extends TerraformStack {
     const awsLightsailInstanceTest = new LightsailInstance(this, "test_2", {
       availabilityZone: Token.asString(Fn.lookupNested(available.names, ["0"])),
       blueprintId: "amazon_linux_2",
-      bundleId: "nano_3_0",
+      bundleId: "nano_1_0",
       name: "test-instance",
     });
     /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
@@ -113,4 +113,4 @@ Using `terraform import`, import `aws_lightsail_disk` using the id attribute. Fo
 % terraform import aws_lightsail_disk_attachment.test test-disk,test-instance
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-f4c8690ac6e9a344cc00a64f8a07fe7e738075a90746cd306adc53390ff7b39c -->
+<!-- cache-key: cdktf-0.20.1 input-8aa776f81865acd643ae2da7cb03aaafbc8afae9bb63c07ef0a52959cc6fe723 -->

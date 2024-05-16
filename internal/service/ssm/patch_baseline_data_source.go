@@ -6,25 +6,21 @@ package ssm
 import (
 	"context"
 	"encoding/json"
+	"log"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/ssm"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ssm_patch_baseline", name="Patch Baseline")
-func dataSourcePatchBaseline() *schema.Resource {
+// @SDKDataSource("aws_ssm_patch_baseline")
+func DataSourcePatchBaseline() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataPatchBaselineRead,
-
 		Schema: map[string]*schema.Schema{
 			"approved_patches": {
 				Type:     schema.TypeList,
@@ -65,11 +61,11 @@ func dataSourcePatchBaseline() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrKey: {
+									"key": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									names.AttrValues: {
+									"values": {
 										Type:     schema.TypeList,
 										Computed: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
@@ -84,7 +80,7 @@ func dataSourcePatchBaseline() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -93,11 +89,11 @@ func dataSourcePatchBaseline() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrKey: {
+						"key": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrValues: {
+						"values": {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -105,25 +101,25 @@ func dataSourcePatchBaseline() *schema.Resource {
 					},
 				},
 			},
-			names.AttrJSON: {
+			"json": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrNamePrefix: {
+			"name_prefix": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 255),
 			},
 			"operating_system": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.OperatingSystem](),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(ssm.OperatingSystem_Values(), false),
 			},
-			names.AttrOwner: {
+			"owner": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
@@ -137,16 +133,16 @@ func dataSourcePatchBaseline() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrSource: {
+			"source": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrName: {
+						"name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrConfiguration: {
+						"configuration": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -164,91 +160,97 @@ func dataSourcePatchBaseline() *schema.Resource {
 
 func dataPatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMClient(ctx)
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
-	filters := []awstypes.PatchOrchestratorFilter{
+	filters := []*ssm.PatchOrchestratorFilter{
 		{
-			Key:    aws.String("OWNER"),
-			Values: []string{d.Get(names.AttrOwner).(string)},
+			Key: aws.String("OWNER"),
+			Values: []*string{
+				aws.String(d.Get("owner").(string)),
+			},
 		},
 	}
 
-	if v, ok := d.GetOk(names.AttrNamePrefix); ok {
-		filters = append(filters, awstypes.PatchOrchestratorFilter{
-			Key:    aws.String("NAME_PREFIX"),
-			Values: []string{v.(string)},
+	if v, ok := d.GetOk("name_prefix"); ok {
+		filters = append(filters, &ssm.PatchOrchestratorFilter{
+			Key: aws.String("NAME_PREFIX"),
+			Values: []*string{
+				aws.String(v.(string)),
+			},
 		})
 	}
 
-	input := &ssm.DescribePatchBaselinesInput{
+	params := &ssm.DescribePatchBaselinesInput{
 		Filters: filters,
 	}
-	var baselines []awstypes.PatchBaselineIdentity
 
-	pages := ssm.NewDescribePatchBaselinesPaginator(conn, input)
-Baselines:
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
+	log.Printf("[DEBUG] Reading DescribePatchBaselines: %s", params)
 
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading SSM Patch Baselines: %s", err)
-		}
+	resp, err := conn.DescribePatchBaselinesWithContext(ctx, params)
 
-		for _, baseline := range page.BaselineIdentities {
-			if v, ok := d.GetOk("operating_system"); ok {
-				if awstypes.OperatingSystem(v.(string)) == baseline.OperatingSystem {
-					baselines = append(baselines, baseline)
-				}
-			}
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "describing SSM PatchBaselines: %s", err)
+	}
 
-			if v, ok := d.GetOk("default_baseline"); ok {
-				if v.(bool) == baseline.DefaultBaseline {
-					baselines = []awstypes.PatchBaselineIdentity{baseline}
-					break Baselines
-				}
+	var filteredBaselines []*ssm.PatchBaselineIdentity
+	if v, ok := d.GetOk("operating_system"); ok {
+		for _, baseline := range resp.BaselineIdentities {
+			if v.(string) == aws.StringValue(baseline.OperatingSystem) {
+				filteredBaselines = append(filteredBaselines, baseline)
 			}
 		}
 	}
 
-	baseline, err := tfresource.AssertSingleValueResult(baselines)
-
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("SSM Patch Baseline", err))
+	if v, ok := d.GetOk("default_baseline"); ok {
+		for _, baseline := range filteredBaselines {
+			if v.(bool) == aws.BoolValue(baseline.DefaultBaseline) {
+				filteredBaselines = []*ssm.PatchBaselineIdentity{baseline}
+				break
+			}
+		}
 	}
 
-	id := aws.ToString(baseline.BaselineId)
-	output, err := findPatchBaselineByID(ctx, conn, id)
+	if len(filteredBaselines) < 1 || filteredBaselines[0] == nil {
+		return sdkdiag.AppendErrorf(diags, "Your query returned no results. Please change your search criteria and try again.")
+	}
+
+	if len(filteredBaselines) > 1 {
+		return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more specific search criteria")
+	}
+
+	baseline := filteredBaselines[0]
+
+	input := &ssm.GetPatchBaselineInput{
+		BaselineId: baseline.BaselineId,
+	}
+
+	output, err := conn.GetPatchBaselineWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SSM Patch Baseline (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "getting SSM PatchBaseline: %s", err)
 	}
 
 	jsonDoc, err := json.MarshalIndent(output, "", "  ")
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+		// should never happen if the above code is correct
+		return sdkdiag.AppendErrorf(diags, "Formatting json representation: formatting JSON: %s", err)
 	}
 	jsonString := string(jsonDoc)
 
-	d.SetId(id)
-	d.Set("approved_patches", output.ApprovedPatches)
+	d.SetId(aws.StringValue(baseline.BaselineId))
+	d.Set("approved_patches", aws.StringValueSlice(output.ApprovedPatches))
 	d.Set("approved_patches_compliance_level", output.ApprovedPatchesComplianceLevel)
 	d.Set("approved_patches_enable_non_security", output.ApprovedPatchesEnableNonSecurity)
-	if err := d.Set("approval_rule", flattenPatchRuleGroup(output.ApprovalRules)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting approval_rule: %s", err)
-	}
+	d.Set("approval_rule", flattenPatchRuleGroup(output.ApprovalRules))
 	d.Set("default_baseline", baseline.DefaultBaseline)
-	d.Set(names.AttrDescription, baseline.BaselineDescription)
-	if err := d.Set("global_filter", flattenPatchFilterGroup(output.GlobalFilters)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting global_filter: %s", err)
-	}
-	d.Set(names.AttrJSON, jsonString)
-	d.Set(names.AttrName, baseline.BaselineName)
+	d.Set("description", baseline.BaselineDescription)
+	d.Set("global_filter", flattenPatchFilterGroup(output.GlobalFilters))
+	d.Set("json", jsonString)
+	d.Set("name", baseline.BaselineName)
 	d.Set("operating_system", baseline.OperatingSystem)
-	d.Set("rejected_patches", output.RejectedPatches)
+	d.Set("rejected_patches", aws.StringValueSlice(output.RejectedPatches))
 	d.Set("rejected_patches_action", output.RejectedPatchesAction)
-	if err := d.Set(names.AttrSource, flattenPatchSource(output.Sources)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting source: %s", err)
-	}
+	d.Set("source", flattenPatchSource(output.Sources))
 
 	return diags
 }

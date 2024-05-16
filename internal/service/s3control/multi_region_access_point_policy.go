@@ -41,7 +41,7 @@ func resourceMultiRegionAccessPointPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrAccountID: {
+			"account_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -55,13 +55,13 @@ func resourceMultiRegionAccessPointPolicy() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrName: {
+						"name": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
 							ValidateFunc: validateS3MultiRegionAccessPointName,
 						},
-						names.AttrPolicy: {
+						"policy": {
 							Type:                  schema.TypeString,
 							Required:              true,
 							ValidateFunc:          validation.StringIsJSON,
@@ -91,7 +91,7 @@ func resourceMultiRegionAccessPointPolicyCreate(ctx context.Context, d *schema.R
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	accountID := meta.(*conns.AWSClient).AccountID
-	if v, ok := d.GetOk(names.AttrAccountID); ok {
+	if v, ok := d.GetOk("account_id"); ok {
 		accountID = v.(string)
 	}
 	input := &s3control.PutMultiRegionAccessPointPolicyInput{
@@ -142,7 +142,7 @@ func resourceMultiRegionAccessPointPolicyRead(ctx context.Context, d *schema.Res
 		return diag.Errorf("reading S3 Multi-Region Access Point Policy (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrAccountID, accountID)
+	d.Set("account_id", accountID)
 	if policyDocument != nil {
 		var oldDetails map[string]interface{}
 		if v, ok := d.GetOk("details"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -237,11 +237,11 @@ func expandPutMultiRegionAccessPointPolicyInput_(tfMap map[string]interface{}) *
 
 	apiObject := &types.PutMultiRegionAccessPointPolicyInput{}
 
-	if v, ok := tfMap[names.AttrName].(string); ok {
+	if v, ok := tfMap["name"].(string); ok {
 		apiObject.Name = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrPolicy].(string); ok {
+	if v, ok := tfMap["policy"].(string); ok {
 		policy, err := structure.NormalizeJsonString(v)
 		if err != nil {
 			policy = v
@@ -260,13 +260,13 @@ func flattenMultiRegionAccessPointPolicyDocument(name string, apiObject *types.M
 
 	tfMap := map[string]interface{}{}
 
-	tfMap[names.AttrName] = name
+	tfMap["name"] = name
 
 	if v := apiObject.Proposed; v != nil {
 		if v := v.Policy; v != nil {
 			policyToSet := aws.ToString(v)
 			if old != nil {
-				if w, ok := old[names.AttrPolicy].(string); ok {
+				if w, ok := old["policy"].(string); ok {
 					var err error
 					policyToSet, err = verify.PolicyToSet(w, aws.ToString(v))
 
@@ -275,7 +275,7 @@ func flattenMultiRegionAccessPointPolicyDocument(name string, apiObject *types.M
 					}
 				}
 			}
-			tfMap[names.AttrPolicy] = policyToSet
+			tfMap["policy"] = policyToSet
 		}
 	}
 

@@ -60,7 +60,7 @@ func (r *accessGrantsInstanceResource) Schema(ctx context.Context, request resou
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrAccountID: schema.StringAttribute{
+			"account_id": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{

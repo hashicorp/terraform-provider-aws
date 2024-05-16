@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_api_gateway_resource", name="Resource")
@@ -30,7 +29,7 @@ func dataSourceResource() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrPath: {
+			"path": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -50,7 +49,7 @@ func dataSourceResourceRead(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	path := d.Get(names.AttrPath).(string)
+	path := d.Get("path").(string)
 	input := &apigateway.GetResourcesInput{
 		RestApiId: aws.String(d.Get("rest_api_id").(string)),
 	}

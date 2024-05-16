@@ -12,54 +12,51 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_appmesh_route", name="Route")
-func dataSourceRoute() *schema.Resource {
+// @SDKDataSource("aws_appmesh_route")
+func DataSourceRoute() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRouteRead,
 
-		SchemaFunc: func() map[string]*schema.Schema {
-			return map[string]*schema.Schema{
-				names.AttrARN: {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				names.AttrCreatedDate: {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				names.AttrLastUpdatedDate: {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				"mesh_name": {
-					Type:     schema.TypeString,
-					Required: true,
-				},
-				"mesh_owner": {
-					Type:     schema.TypeString,
-					Optional: true,
-					Computed: true,
-				},
-				names.AttrName: {
-					Type:     schema.TypeString,
-					Required: true,
-				},
-				"resource_owner": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				"spec":         sdkv2.DataSourcePropertyFromResourceProperty(resourceRouteSpecSchema()),
-				names.AttrTags: tftags.TagsSchemaComputed(),
-				"virtual_router_name": {
-					Type:     schema.TypeString,
-					Required: true,
-				},
-			}
+		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"created_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"last_updated_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"mesh_name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"mesh_owner": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"resource_owner": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"spec":         dataSourcePropertyFromResourceProperty(resourceRouteSpecSchema()),
+			names.AttrTags: tftags.TagsSchemaComputed(),
+			"virtual_router_name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 		},
 	}
 }
@@ -69,8 +66,8 @@ func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	routeName := d.Get(names.AttrName).(string)
-	route, err := findRouteByFourPartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get("virtual_router_name").(string), routeName)
+	routeName := d.Get("name").(string)
+	route, err := FindRouteByFourPartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get("virtual_router_name").(string), routeName)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading App Mesh Route (%s): %s", routeName, err)
@@ -78,13 +75,13 @@ func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(aws.StringValue(route.RouteName))
 	arn := aws.StringValue(route.Metadata.Arn)
-	d.Set(names.AttrARN, arn)
-	d.Set(names.AttrCreatedDate, route.Metadata.CreatedAt.Format(time.RFC3339))
-	d.Set(names.AttrLastUpdatedDate, route.Metadata.LastUpdatedAt.Format(time.RFC3339))
+	d.Set("arn", arn)
+	d.Set("created_date", route.Metadata.CreatedAt.Format(time.RFC3339))
+	d.Set("last_updated_date", route.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_name", route.MeshName)
 	meshOwner := aws.StringValue(route.Metadata.MeshOwner)
 	d.Set("mesh_owner", meshOwner)
-	d.Set(names.AttrName, route.RouteName)
+	d.Set("name", route.RouteName)
 	d.Set("resource_owner", route.Metadata.ResourceOwner)
 	if err := d.Set("spec", flattenRouteSpec(route.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
@@ -104,7 +101,7 @@ func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

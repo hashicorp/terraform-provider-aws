@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 )
 
 var (
@@ -155,15 +156,60 @@ func NullOutObjectPtrFields[T any](ctx context.Context, t *T) diag.Diagnostics {
 			continue
 		}
 
-		attrValue, err := NullValueOf(ctx, val.Interface())
+		var attrType attr.Type
+		var tfType tftypes.Type
 
+		switch v := val.Interface().(type) {
+		case basetypes.BoolValuable:
+			attrType = v.Type(ctx)
+			tfType = tftypes.Bool
+		case basetypes.Float64Valuable:
+			attrType = v.Type(ctx)
+			tfType = tftypes.Number
+		case basetypes.Int64Valuable:
+			attrType = v.Type(ctx)
+			tfType = tftypes.Number
+		case basetypes.StringValuable:
+			attrType = v.Type(ctx)
+			tfType = tftypes.String
+		case basetypes.ListValuable:
+			attrType = v.Type(ctx)
+			if v, ok := attrType.(attr.TypeWithElementType); ok {
+				tfType = tftypes.List{ElementType: v.ElementType().TerraformType(ctx)}
+			} else {
+				tfType = tftypes.List{}
+			}
+		case basetypes.SetValuable:
+			attrType = v.Type(ctx)
+			if v, ok := attrType.(attr.TypeWithElementType); ok {
+				tfType = tftypes.Set{ElementType: v.ElementType().TerraformType(ctx)}
+			} else {
+				tfType = tftypes.Set{}
+			}
+		case basetypes.MapValuable:
+			attrType = v.Type(ctx)
+			if v, ok := attrType.(attr.TypeWithElementType); ok {
+				tfType = tftypes.Map{ElementType: v.ElementType().TerraformType(ctx)}
+			} else {
+				tfType = tftypes.Map{}
+			}
+		case basetypes.ObjectValuable:
+			attrType = v.Type(ctx)
+			if v, ok := attrType.(attr.TypeWithAttributeTypes); ok {
+				tfType = tftypes.Object{AttributeTypes: tfmaps.ApplyToAllValues(v.AttributeTypes(), func(attrType attr.Type) tftypes.Type {
+					return attrType.TerraformType(ctx)
+				})}
+			} else {
+				tfType = tftypes.Object{}
+			}
+		default:
+			continue
+		}
+
+		attrValue, err := attrType.ValueFromTerraform(ctx, tftypes.NewValue(tfType, nil))
 		if err != nil {
 			diags.Append(diag.NewErrorDiagnostic("attr.Type.ValueFromTerraform", err.Error()))
 			return diags
-		}
-
-		if attrValue == nil {
-			continue
 		}
 
 		val.Set(reflect.ValueOf(attrValue))

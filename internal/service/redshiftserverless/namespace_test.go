@@ -34,12 +34,12 @@ func TestAccRedshiftServerlessNamespace_basic(t *testing.T) {
 				Config: testAccNamespaceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNamespaceExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "redshift-serverless", regexache.MustCompile("namespace/.+$")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "redshift-serverless", regexache.MustCompile("namespace/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "namespace_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "namespace_id"),
-					resource.TestCheckResourceAttr(resourceName, "log_exports.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "log_exports.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -51,14 +51,14 @@ func TestAccRedshiftServerlessNamespace_basic(t *testing.T) {
 				Config: testAccNamespaceConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNamespaceExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "redshift-serverless", regexache.MustCompile("namespace/.+$")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "redshift-serverless", regexache.MustCompile("namespace/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "namespace_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "namespace_id"),
-					resource.TestCheckResourceAttr(resourceName, "log_exports.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", acctest.Ct2),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "iam_roles.*", "aws_iam_role.test.0", names.AttrARN),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "iam_roles.*", "aws_iam_role.test.1", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "log_exports.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", "2"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "iam_roles.*", "aws_iam_role.test.0", "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "iam_roles.*", "aws_iam_role.test.1", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 		},
@@ -81,7 +81,7 @@ func TestAccRedshiftServerlessNamespace_defaultIAMRole(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNamespaceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "namespace_name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "default_iam_role_arn", "aws_iam_role.test.0", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "default_iam_role_arn", "aws_iam_role.test.0", "arn"),
 				),
 			},
 			{
@@ -138,11 +138,11 @@ func TestAccRedshiftServerlessNamespace_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckNamespaceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNamespaceConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccNamespaceConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNamespaceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -151,19 +151,19 @@ func TestAccRedshiftServerlessNamespace_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccNamespaceConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccNamespaceConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccNamespaceConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccNamespaceConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNamespaceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},

@@ -44,7 +44,7 @@ func (r *retentionConfigurationResource) Schema(ctx context.Context, request res
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
-			names.AttrName: schema.StringAttribute{
+			"name": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),

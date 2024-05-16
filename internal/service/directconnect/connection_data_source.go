@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_dx_connection")
@@ -24,7 +23,7 @@ func DataSourceConnection() *schema.Resource {
 		ReadWithoutTimeout: dataSourceConnectionRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -40,7 +39,7 @@ func DataSourceConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -52,11 +51,11 @@ func DataSourceConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrProviderName: {
+			"provider_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 			"vlan_id": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -72,7 +71,7 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	var connections []*directconnect.Connection
 	input := &directconnect.DescribeConnectionsInput{}
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 
 	// DescribeConnections is not paginated.
 	output, err := conn.DescribeConnectionsWithContext(ctx, input)
@@ -106,14 +105,14 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 		AccountID: aws.StringValue(connection.OwnerAccount),
 		Resource:  fmt.Sprintf("dxcon/%s", d.Id()),
 	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set("arn", arn)
 	d.Set("aws_device", connection.AwsDeviceV2)
 	d.Set("bandwidth", connection.Bandwidth)
 	d.Set("location", connection.Location)
-	d.Set(names.AttrName, connection.ConnectionName)
+	d.Set("name", connection.ConnectionName)
 	d.Set("owner_account_id", connection.OwnerAccount)
 	d.Set("partner_name", connection.PartnerName)
-	d.Set(names.AttrProviderName, connection.ProviderName)
+	d.Set("provider_name", connection.ProviderName)
 	d.Set("vlan_id", connection.Vlan)
 
 	tags, err := listTags(ctx, conn, arn)
@@ -122,7 +121,7 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "listing tags for Direct Connect Connection (%s): %s", arn, err)
 	}
 
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

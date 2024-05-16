@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_servicecatalog_budget_resource_association")
@@ -41,7 +40,7 @@ func ResourceBudgetResourceAssociation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrResourceID: {
+			"resource_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -56,7 +55,7 @@ func resourceBudgetResourceAssociationCreate(ctx context.Context, d *schema.Reso
 
 	input := &servicecatalog.AssociateBudgetWithResourceInput{
 		BudgetName: aws.String(d.Get("budget_name").(string)),
-		ResourceId: aws.String(d.Get(names.AttrResourceID).(string)),
+		ResourceId: aws.String(d.Get("resource_id").(string)),
 	}
 
 	var output *servicecatalog.AssociateBudgetWithResourceOutput
@@ -88,7 +87,7 @@ func resourceBudgetResourceAssociationCreate(ctx context.Context, d *schema.Reso
 		return sdkdiag.AppendErrorf(diags, "creating Service Catalog Budget Resource Association: empty response")
 	}
 
-	d.SetId(BudgetResourceAssociationID(d.Get("budget_name").(string), d.Get(names.AttrResourceID).(string)))
+	d.SetId(BudgetResourceAssociationID(d.Get("budget_name").(string), d.Get("resource_id").(string)))
 
 	return append(diags, resourceBudgetResourceAssociationRead(ctx, d, meta)...)
 }
@@ -119,7 +118,7 @@ func resourceBudgetResourceAssociationRead(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendErrorf(diags, "getting Service Catalog Budget Resource Association (%s): empty response", d.Id())
 	}
 
-	d.Set(names.AttrResourceID, resourceID)
+	d.Set("resource_id", resourceID)
 	d.Set("budget_name", output.BudgetName)
 
 	return diags

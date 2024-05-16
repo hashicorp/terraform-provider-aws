@@ -6,77 +6,62 @@ package organizations
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/organizations"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_organizations_resource_tags", name="Resource Tags")
-func dataSourceResourceTags() *schema.Resource {
+// @SDKDataSource("aws_organizations_resource_tags")
+func DataSourceResourceTags() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceResourceTagsRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrResourceID: {
+			"resource_id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func dataSourceResourceTagsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
-	resourceID := d.Get(names.AttrResourceID).(string)
-	tags, err := findResourceTagsByID(ctx, conn, resourceID)
+	resource_id := d.Get("resource_id").(string)
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Resource (%s) tags: %s", resourceID, err)
+	params := &organizations.ListTagsForResourceInput{
+		ResourceId: aws.String(resource_id),
 	}
 
-	d.SetId(resourceID)
+	var tags []*organizations.Tag
+
+	err := conn.ListTagsForResourcePagesWithContext(ctx, params,
+		func(page *organizations.ListTagsForResourceOutput, lastPage bool) bool {
+			tags = append(tags, page.Tags...)
+
+			return !lastPage
+		})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "listing tags for resource (%s): %s", resource_id, err)
+	}
+
+	d.SetId(resource_id)
 
 	if tags != nil {
-		if err := d.Set(names.AttrTags, KeyValueTags(ctx, tags).Map()); err != nil {
+		if err := d.Set("tags", KeyValueTags(ctx, tags).Map()); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 		}
 	} else {
-		d.Set(names.AttrTags, nil)
+		d.Set("tags", nil)
 	}
 
 	return diags
-}
-
-func findResourceTagsByID(ctx context.Context, conn *organizations.Client, id string) ([]awstypes.Tag, error) {
-	input := &organizations.ListTagsForResourceInput{
-		ResourceId: aws.String(id),
-	}
-
-	return findResourceTags(ctx, conn, input)
-}
-
-func findResourceTags(ctx context.Context, conn *organizations.Client, input *organizations.ListTagsForResourceInput) ([]awstypes.Tag, error) {
-	var output []awstypes.Tag
-
-	pages := organizations.NewListTagsForResourcePaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if err != nil {
-			return nil, err
-		}
-
-		output = append(output, page.Tags...)
-	}
-
-	return output, nil
 }

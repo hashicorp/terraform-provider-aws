@@ -5,8 +5,9 @@ package ram
 import (
 	"context"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	ram_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ram"
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	ram_sdkv1 "github.com/aws/aws-sdk-go/service/ram"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -27,7 +28,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceResourceShare,
 			TypeName: "aws_ram_resource_share",
-			Name:     "Resource Share",
+			Name:     "Resource Shared",
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 	}
@@ -50,7 +51,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_ram_resource_share",
 			Name:     "Resource Share",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
+				IdentifierAttribute: "id",
 			},
 		},
 		{
@@ -70,15 +71,11 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.RAM
 }
 
-// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*ram_sdkv2.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
+func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*ram_sdkv1.RAM, error) {
+	sess := config["session"].(*session_sdkv1.Session)
 
-	return ram_sdkv2.NewFromConfig(cfg, func(o *ram_sdkv2.Options) {
-		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
-			o.BaseEndpoint = aws_sdkv2.String(endpoint)
-		}
-	}), nil
+	return ram_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

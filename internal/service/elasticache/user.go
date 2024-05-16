@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -29,7 +28,7 @@ import (
 
 // @SDKResource("aws_elasticache_user", name="User")
 // @Tags(identifierAttribute="arn")
-func resourceUser() *schema.Resource {
+func ResourceUser() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserCreate,
 		ReadWithoutTimeout:   resourceUserRead,
@@ -54,7 +53,7 @@ func resourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -78,7 +77,7 @@ func resourceUser() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						names.AttrType: {
+						"type": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(elasticache.InputAuthenticationType_Values(), false),
@@ -117,7 +116,7 @@ func resourceUser() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrUserName: {
+			"user_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -137,7 +136,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		NoPasswordRequired: aws.Bool(d.Get("no_password_required").(bool)),
 		Tags:               getTagsIn(ctx),
 		UserId:             aws.String(userID),
-		UserName:           aws.String(d.Get(names.AttrUserName).(string)),
+		UserName:           aws.String(d.Get("user_name").(string)),
 	}
 
 	if v, ok := d.GetOk("authentication_mode"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -203,15 +202,15 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	d.Set("access_string", user.AccessString)
-	d.Set(names.AttrARN, user.ARN)
+	d.Set("arn", user.ARN)
 	if v := user.Authentication; v != nil {
-		tfMap := map[string]interface{}{
-			"password_count": aws.Int64Value(v.PasswordCount),
+		authenticationMode := map[string]interface{}{
 			"passwords":      d.Get("authentication_mode.0.passwords"),
-			names.AttrType:   aws.StringValue(v.Type),
+			"password_count": aws.Int64Value(v.PasswordCount),
+			"type":           aws.StringValue(v.Type),
 		}
 
-		if err := d.Set("authentication_mode", []interface{}{tfMap}); err != nil {
+		if err := d.Set("authentication_mode", []interface{}{authenticationMode}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting authentication_mode: %s", err)
 		}
 	} else {
@@ -219,7 +218,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 	d.Set("engine", user.Engine)
 	d.Set("user_id", user.UserId)
-	d.Set(names.AttrUserName, user.UserName)
+	d.Set("user_name", user.UserName)
 
 	return diags
 }
@@ -228,7 +227,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &elasticache.ModifyUserInput{
 			UserId: aws.String(d.Id()),
 		}
@@ -289,40 +288,12 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func findUserByID(ctx context.Context, conn *elasticache.ElastiCache, id string) (*elasticache.User, error) {
+func FindUserByID(ctx context.Context, conn *elasticache.ElastiCache, id string) (*elasticache.User, error) {
 	input := &elasticache.DescribeUsersInput{
 		UserId: aws.String(id),
 	}
 
-	return findUser(ctx, conn, input, tfslices.PredicateTrue[*elasticache.User]())
-}
-
-func findUser(ctx context.Context, conn *elasticache.ElastiCache, input *elasticache.DescribeUsersInput, filter tfslices.Predicate[*elasticache.User]) (*elasticache.User, error) {
-	output, err := findUsers(ctx, conn, input, filter)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSinglePtrResult(output)
-}
-
-func findUsers(ctx context.Context, conn *elasticache.ElastiCache, input *elasticache.DescribeUsersInput, filter tfslices.Predicate[*elasticache.User]) ([]*elasticache.User, error) {
-	var output []*elasticache.User
-
-	err := conn.DescribeUsersPagesWithContext(ctx, input, func(page *elasticache.DescribeUsersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, v := range page.Users {
-			if v != nil && filter(v) {
-				output = append(output, v)
-			}
-		}
-
-		return !lastPage
-	})
+	output, err := conn.DescribeUsersWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeUserNotFoundFault) {
 		return nil, &retry.NotFoundError{
@@ -335,12 +306,20 @@ func findUsers(ctx context.Context, conn *elasticache.ElastiCache, input *elasti
 		return nil, err
 	}
 
-	return output, nil
+	if output == nil || len(output.Users) == 0 || output.Users[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.Users); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output.Users[0], nil
 }
 
 func statusUser(ctx context.Context, conn *elasticache.ElastiCache, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findUserByID(ctx, conn, id)
+		output, err := FindUserByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -423,7 +402,7 @@ func expandAuthenticationMode(tfMap map[string]interface{}) *elasticache.Authent
 		apiObject.Passwords = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
+	if v, ok := tfMap["type"].(string); ok && v != "" {
 		apiObject.Type = aws.String(v)
 	}
 

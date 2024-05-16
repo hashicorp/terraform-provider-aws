@@ -27,7 +27,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -63,7 +62,7 @@ var (
 				return json
 			},
 		},
-		names.AttrARN: {
+		"arn": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
@@ -87,7 +86,7 @@ var (
 				return json
 			},
 		},
-		names.AttrDisplayName: {
+		"display_name": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
@@ -146,25 +145,25 @@ var (
 			Optional:     true,
 			ValidateFunc: validation.IntBetween(0, 100),
 		},
-		names.AttrName: {
+		"name": {
 			Type:          schema.TypeString,
 			Optional:      true,
 			Computed:      true,
 			ForceNew:      true,
-			ConflictsWith: []string{names.AttrNamePrefix},
+			ConflictsWith: []string{"name_prefix"},
 		},
-		names.AttrNamePrefix: {
+		"name_prefix": {
 			Type:          schema.TypeString,
 			Optional:      true,
 			Computed:      true,
 			ForceNew:      true,
-			ConflictsWith: []string{names.AttrName},
+			ConflictsWith: []string{"name"},
 		},
-		names.AttrOwner: {
+		"owner": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		names.AttrPolicy: {
+		"policy": {
 			Type:                  schema.TypeString,
 			Optional:              true,
 			Computed:              true,
@@ -212,11 +211,11 @@ var (
 		"application_success_feedback_role_arn":    topicAttributeNameApplicationSuccessFeedbackRoleARN,
 		"application_success_feedback_sample_rate": topicAttributeNameApplicationSuccessFeedbackSampleRate,
 		"archive_policy":                           topicAttributeNameArchivePolicy,
-		names.AttrARN:                              topicAttributeNameTopicARN,
+		"arn":                                      topicAttributeNameTopicARN,
 		"beginning_archive_time":                   topicAttributeNameBeginningArchiveTime,
 		"content_based_deduplication":              topicAttributeNameContentBasedDeduplication,
 		"delivery_policy":                          topicAttributeNameDeliveryPolicy,
-		names.AttrDisplayName:                      topicAttributeNameDisplayName,
+		"display_name":                             topicAttributeNameDisplayName,
 		"fifo_topic":                               topicAttributeNameFIFOTopic,
 		"firehose_failure_feedback_role_arn":       topicAttributeNameFirehoseFailureFeedbackRoleARN,
 		"firehose_success_feedback_role_arn":       topicAttributeNameFirehoseSuccessFeedbackRoleARN,
@@ -228,14 +227,14 @@ var (
 		"lambda_failure_feedback_role_arn":         topicAttributeNameLambdaFailureFeedbackRoleARN,
 		"lambda_success_feedback_role_arn":         topicAttributeNameLambdaSuccessFeedbackRoleARN,
 		"lambda_success_feedback_sample_rate":      topicAttributeNameLambdaSuccessFeedbackSampleRate,
-		names.AttrOwner:                            topicAttributeNameOwner,
-		names.AttrPolicy:                           topicAttributeNamePolicy,
+		"owner":                                    topicAttributeNameOwner,
+		"policy":                                   topicAttributeNamePolicy,
 		"signature_version":                        topicAttributeNameSignatureVersion,
 		"sqs_failure_feedback_role_arn":            topicAttributeNameSQSFailureFeedbackRoleARN,
 		"sqs_success_feedback_role_arn":            topicAttributeNameSQSSuccessFeedbackRoleARN,
 		"sqs_success_feedback_sample_rate":         topicAttributeNameSQSSuccessFeedbackSampleRate,
 		"tracing_config":                           topicAttributeNameTracingConfig,
-	}, topicSchema).WithIAMPolicyAttribute(names.AttrPolicy).WithMissingSetToNil("*")
+	}, topicSchema).WithIAMPolicyAttribute("policy").WithMissingSetToNil("*")
 )
 
 // @SDKResource("aws_sns_topic", name="Topic")
@@ -353,11 +352,11 @@ func resourceTopicRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	}
 
 	name := arn.Resource
-	d.Set(names.AttrName, name)
+	d.Set("name", name)
 	if d.Get("fifo_topic").(bool) {
-		d.Set(names.AttrNamePrefix, create.NamePrefixFromNameWithSuffix(name, fifoTopicNameSuffix))
+		d.Set("name_prefix", create.NamePrefixFromNameWithSuffix(name, fifoTopicNameSuffix))
 	} else {
-		d.Set(names.AttrNamePrefix, create.NamePrefixFromName(name))
+		d.Set("name_prefix", create.NamePrefixFromName(name))
 	}
 
 	return nil
@@ -366,7 +365,7 @@ func resourceTopicRead(ctx context.Context, d *schema.ResourceData, meta any) di
 func resourceTopicUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		attributes, err := topicAttributeMap.ResourceDataToAPIAttributesUpdate(d)
 		if err != nil {
 			return diag.FromErr(err)
@@ -471,8 +470,8 @@ func putTopicAttribute(ctx context.Context, conn *sns.Client, arn string, name, 
 	return nil
 }
 
-func topicName(d sdkv2.ResourceDiffer) string {
-	optFns := []create.NameGeneratorOptionsFunc{create.WithConfiguredName(d.Get(names.AttrName).(string)), create.WithConfiguredPrefix(d.Get(names.AttrNamePrefix).(string))}
+func topicName(d verify.ResourceDiffer) string {
+	optFns := []create.NameGeneratorOptionsFunc{create.WithConfiguredName(d.Get("name").(string)), create.WithConfiguredPrefix(d.Get("name_prefix").(string))}
 	if d.Get("fifo_topic").(bool) {
 		optFns = append(optFns, create.WithSuffix(fifoTopicNameSuffix))
 	}

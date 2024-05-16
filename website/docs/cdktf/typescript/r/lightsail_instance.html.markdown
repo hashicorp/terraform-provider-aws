@@ -35,7 +35,7 @@ class MyConvertedCode extends TerraformStack {
     new LightsailInstance(this, "gitlab_test", {
       availabilityZone: "us-east-1b",
       blueprintId: "amazon_linux_2",
-      bundleId: "nano_3_0",
+      bundleId: "nano_1_0",
       keyPairName: "some_key_name",
       name: "custom_gitlab",
       tags: {
@@ -66,7 +66,7 @@ class MyConvertedCode extends TerraformStack {
     new LightsailInstance(this, "custom", {
       availabilityZone: "us-east-1b",
       blueprintId: "amazon_linux_2",
-      bundleId: "nano_3_0",
+      bundleId: "nano_1_0",
       name: "custom",
       userData:
         "sudo yum install -y httpd && sudo systemctl start httpd && sudo systemctl enable httpd && echo '<h1>Deployed via Terraform</h1>' | sudo tee /var/www/html/index.html",
@@ -98,7 +98,7 @@ class MyConvertedCode extends TerraformStack {
       },
       availabilityZone: "us-east-1b",
       blueprintId: "amazon_linux_2",
-      bundleId: "nano_3_0",
+      bundleId: "nano_1_0",
       name: "custom_instance",
       tags: {
         foo: "bar",
@@ -186,4 +186,4 @@ Using `terraform import`, import Lightsail Instances using their name. For examp
 % terraform import aws_lightsail_instance.gitlab_test 'custom_gitlab'
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ef6246029fb47439878b12b68e78f6d0a13e30690e470c6653c3c4d65c83bfd2 -->
+<!-- cache-key: cdktf-0.20.1 input-77fe9fa06f699581eb79b3fcee665c9bc3aa66f0f2be7b60ff159f3a07617d83 -->

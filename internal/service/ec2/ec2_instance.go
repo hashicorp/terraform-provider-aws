@@ -69,9 +69,9 @@ func ResourceInstance() *schema.Resource {
 				ForceNew:     true,
 				Computed:     true,
 				Optional:     true,
-				AtLeastOneOf: []string{"ami", names.AttrLaunchTemplate},
+				AtLeastOneOf: []string{"ami", "launch_template"},
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -81,7 +81,7 @@ func ResourceInstance() *schema.Resource {
 				Computed: true,
 				Optional: true,
 			},
-			names.AttrAvailabilityZone: {
+			"availability_zone": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -230,37 +230,37 @@ func ResourceInstance() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrDeleteOnTermination: {
+						"delete_on_termination": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  true,
 							ForceNew: true,
 						},
-						names.AttrDeviceName: {
+						"device_name": {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
 						},
-						names.AttrEncrypted: {
+						"encrypted": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
-						names.AttrIOPS: {
+						"iops": {
 							Type:             schema.TypeInt,
 							Optional:         true,
 							Computed:         true,
 							ForceNew:         true,
 							DiffSuppressFunc: iopsDiffSuppressFunc,
 						},
-						names.AttrKMSKeyID: {
+						"kms_key_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
-						names.AttrSnapshotID: {
+						"snapshot_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -279,13 +279,13 @@ func ResourceInstance() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrVolumeSize: {
+						"volume_size": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
-						names.AttrVolumeType: {
+						"volume_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -297,8 +297,8 @@ func ResourceInstance() *schema.Resource {
 				Set: func(v interface{}) int {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrSnapshotID].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m["device_name"].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m["snapshot_id"].(string)))
 					return create.StringHashcode(buf.String())
 				},
 			},
@@ -315,7 +315,7 @@ func ResourceInstance() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
+						"enabled": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
@@ -331,7 +331,7 @@ func ResourceInstance() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrDeviceName: {
+						"device_name": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -348,7 +348,7 @@ func ResourceInstance() *schema.Resource {
 				Set: func(v interface{}) int {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m["device_name"].(string)))
 					buf.WriteString(fmt.Sprintf("%s-", m["virtual_name"].(string)))
 					if v, ok := m["no_device"].(bool); ok && v {
 						buf.WriteString(fmt.Sprintf("%t-", v))
@@ -458,11 +458,11 @@ func ResourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrInstanceType: {
+			"instance_type": {
 				Type:         schema.TypeString,
 				Computed:     true,
 				Optional:     true,
-				AtLeastOneOf: []string{names.AttrInstanceType, names.AttrLaunchTemplate},
+				AtLeastOneOf: []string{"instance_type", "launch_template"},
 			},
 			"ipv6_address_count": {
 				Type:          schema.TypeInt,
@@ -487,15 +487,15 @@ func ResourceInstance() *schema.Resource {
 				ForceNew: true,
 				Computed: true,
 			},
-			names.AttrLaunchTemplate: {
+			"launch_template": {
 				Type:         schema.TypeList,
 				MaxItems:     1,
 				Optional:     true,
 				ForceNew:     true,
-				AtLeastOneOf: []string{"ami", names.AttrInstanceType, names.AttrLaunchTemplate},
+				AtLeastOneOf: []string{"ami", "instance_type", "launch_template"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrID: {
+						"id": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -503,7 +503,7 @@ func ResourceInstance() *schema.Resource {
 							ExactlyOneOf: []string{"launch_template.0.name", "launch_template.0.id"},
 							ValidateFunc: verify.ValidLaunchTemplateID,
 						},
-						names.AttrName: {
+						"name": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -511,7 +511,7 @@ func ResourceInstance() *schema.Resource {
 							ExactlyOneOf: []string{"launch_template.0.name", "launch_template.0.id"},
 							ValidateFunc: verify.ValidLaunchTemplateName,
 						},
-						names.AttrVersion: {
+						"version": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
@@ -582,13 +582,13 @@ func ResourceInstance() *schema.Resource {
 				Computed: true,
 			},
 			"network_interface": {
-				ConflictsWith: []string{"associate_public_ip_address", names.AttrSubnetID, "private_ip", "secondary_private_ips", names.AttrVPCSecurityGroupIDs, names.AttrSecurityGroups, "ipv6_addresses", "ipv6_address_count", "source_dest_check"},
+				ConflictsWith: []string{"associate_public_ip_address", "subnet_id", "private_ip", "secondary_private_ips", "vpc_security_group_ids", "security_groups", "ipv6_addresses", "ipv6_address_count", "source_dest_check"},
 				Type:          schema.TypeSet,
 				Optional:      true,
 				Computed:      true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrDeleteOnTermination: {
+						"delete_on_termination": {
 							Type:     schema.TypeBool,
 							Default:  false,
 							Optional: true,
@@ -605,7 +605,7 @@ func ResourceInstance() *schema.Resource {
 							ForceNew: true,
 							Default:  0,
 						},
-						names.AttrNetworkInterfaceID: {
+						"network_interface_id": {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -693,28 +693,28 @@ func ResourceInstance() *schema.Resource {
 					// "For the root volume, you can only modify the following: volume size, volume type, and the Delete on Termination flag."
 					// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/block-device-mapping-concepts.html
 					Schema: map[string]*schema.Schema{
-						names.AttrDeleteOnTermination: {
+						"delete_on_termination": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  true,
 						},
-						names.AttrDeviceName: {
+						"device_name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrEncrypted: {
+						"encrypted": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
-						names.AttrIOPS: {
+						"iops": {
 							Type:             schema.TypeInt,
 							Optional:         true,
 							Computed:         true,
 							DiffSuppressFunc: iopsDiffSuppressFunc,
 						},
-						names.AttrKMSKeyID: {
+						"kms_key_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -732,12 +732,12 @@ func ResourceInstance() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrVolumeSize: {
+						"volume_size": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 						},
-						names.AttrVolumeType: {
+						"volume_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -755,7 +755,7 @@ func ResourceInstance() *schema.Resource {
 					ValidateFunc: validation.IsIPv4Address,
 				},
 			},
-			names.AttrSecurityGroups: {
+			"security_groups": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -777,7 +777,7 @@ func ResourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrSubnetID: {
+			"subnet_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -829,7 +829,7 @@ func ResourceInstance() *schema.Resource {
 				Default:  false,
 			},
 			"volume_tags": tftags.TagsSchema(),
-			names.AttrVPCSecurityGroupIDs: {
+			"vpc_security_group_ids": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -841,7 +841,7 @@ func ResourceInstance() *schema.Resource {
 		CustomizeDiff: customdiff.All(
 			verify.SetTagsDiff,
 			func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
-				_, ok := diff.GetOk(names.AttrLaunchTemplate)
+				_, ok := diff.GetOk("launch_template")
 
 				if diff.Id() != "" && diff.HasChange("launch_template.0.version") && ok {
 					conn := meta.(*conns.AWSClient).EC2Conn(ctx)
@@ -901,16 +901,16 @@ func ResourceInstance() *schema.Resource {
 			customdiff.ForceNewIf("user_data_base64", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 				return diff.Get("user_data_replace_on_change").(bool)
 			}),
-			customdiff.ForceNewIf(names.AttrInstanceType, func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ForceNewIf("instance_type", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 				conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-				_, ok := diff.GetOk(names.AttrInstanceType)
+				_, ok := diff.GetOk("instance_type")
 
-				if diff.Id() == "" || !diff.HasChange(names.AttrInstanceType) || !ok {
+				if diff.Id() == "" || !diff.HasChange("instance_type") || !ok {
 					return false
 				}
 
-				o, n := diff.GetChange(names.AttrInstanceType)
+				o, n := diff.GetChange("instance_type")
 				it1, err := FindInstanceTypeByName(ctx, conn, o.(string))
 				if err != nil {
 					return false
@@ -942,7 +942,7 @@ func ResourceInstance() *schema.Resource {
 func iopsDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool {
 	// Suppress diff if volume_type is not io1, io2, or gp3 and iops is unset or configured as 0
 	i := strings.LastIndexByte(k, '.')
-	vt := k[:i+1] + names.AttrVolumeType
+	vt := k[:i+1] + "volume_type"
 	v := d.Get(vt).(string)
 	return (strings.ToLower(v) != ec2.VolumeTypeIo1 && strings.ToLower(v) != ec2.VolumeTypeIo2 && strings.ToLower(v) != ec2.VolumeTypeGp3) && new == "0"
 }
@@ -950,7 +950,7 @@ func iopsDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool {
 func throughputDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool {
 	// Suppress diff if volume_type is not gp3 and throughput is unset or configured as 0
 	i := strings.LastIndexByte(k, '.')
-	vt := k[:i+1] + names.AttrVolumeType
+	vt := k[:i+1] + "volume_type"
 	v := d.Get(vt).(string)
 	return strings.ToLower(v) != ec2.VolumeTypeGp3 && new == "0"
 }
@@ -1051,13 +1051,13 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	// Initialize the connection info
 	if instance.PublicIpAddress != nil {
 		d.SetConnInfo(map[string]string{
-			names.AttrType: "ssh",
-			"host":         aws.StringValue(instance.PublicIpAddress),
+			"type": "ssh",
+			"host": aws.StringValue(instance.PublicIpAddress),
 		})
 	} else if instance.PrivateIpAddress != nil {
 		d.SetConnInfo(map[string]string{
-			names.AttrType: "ssh",
-			"host":         aws.StringValue(instance.PrivateIpAddress),
+			"type": "ssh",
+			"host": aws.StringValue(instance.PrivateIpAddress),
 		})
 	}
 
@@ -1068,7 +1068,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		for _, v := range vL {
 			bd := v.(map[string]interface{})
 
-			blockDeviceTags, ok := bd[names.AttrTags].(map[string]interface{})
+			blockDeviceTags, ok := bd["tags"].(map[string]interface{})
 			if !ok || len(blockDeviceTags) == 0 {
 				continue
 			}
@@ -1087,12 +1087,12 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		for _, v := range vL {
 			bd := v.(map[string]interface{})
 
-			blockDeviceTags, ok := bd[names.AttrTags].(map[string]interface{})
+			blockDeviceTags, ok := bd["tags"].(map[string]interface{})
 			if !ok || len(blockDeviceTags) == 0 {
 				continue
 			}
 
-			volID := getVolIDByDeviceName(instance, bd[names.AttrDeviceName].(string))
+			volID := getVolIDByDeviceName(instance, bd["device_name"].(string))
 			if volID == "" {
 				continue
 			}
@@ -1137,7 +1137,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("instance_state", instance.State.Name)
 
 	if v := instance.Placement; v != nil {
-		d.Set(names.AttrAvailabilityZone, v.AvailabilityZone)
+		d.Set("availability_zone", v.AvailabilityZone)
 
 		d.Set("placement_group", v.GroupName)
 
@@ -1191,7 +1191,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.Set("ami", instance.ImageId)
-	d.Set(names.AttrInstanceType, instanceType)
+	d.Set("instance_type", instanceType)
 	d.Set("key_name", instance.KeyName)
 	d.Set("public_dns", instance.PublicDnsName)
 	d.Set("public_ip", instance.PublicIpAddress)
@@ -1218,7 +1218,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 			return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s) launch template: %s", d.Id(), err)
 		}
 
-		if err := d.Set(names.AttrLaunchTemplate, launchTemplate); err != nil {
+		if err := d.Set("launch_template", launchTemplate); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting launch_template: %s", err)
 		}
 	}
@@ -1252,8 +1252,8 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 				if index == int(aws.Int64Value(iNi.Attachment.DeviceIndex)) {
 					ni["device_index"] = aws.Int64Value(iNi.Attachment.DeviceIndex)
 					ni["network_card_index"] = aws.Int64Value(iNi.Attachment.NetworkCardIndex)
-					ni[names.AttrNetworkInterfaceID] = aws.StringValue(iNi.NetworkInterfaceId)
-					ni[names.AttrDeleteOnTermination] = aws.BoolValue(iNi.Attachment.DeleteOnTermination)
+					ni["network_interface_id"] = aws.StringValue(iNi.NetworkInterfaceId)
+					ni["delete_on_termination"] = aws.BoolValue(iNi.Attachment.DeleteOnTermination)
 				}
 			}
 			// Don't add empty network interfaces to schema
@@ -1271,7 +1271,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		// need to protect against nil pointer dereferences
 		if primaryNetworkInterface != nil {
 			if primaryNetworkInterface.SubnetId != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
-				d.Set(names.AttrSubnetID, primaryNetworkInterface.SubnetId)
+				d.Set("subnet_id", primaryNetworkInterface.SubnetId)
 			}
 			if primaryNetworkInterface.NetworkInterfaceId != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
 				d.Set("primary_network_interface_id", primaryNetworkInterface.NetworkInterfaceId)
@@ -1297,7 +1297,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("associate_public_ip_address", instance.PublicIpAddress != nil)
 		d.Set("ipv6_address_count", 0)
 		d.Set("primary_network_interface_id", "")
-		d.Set(names.AttrSubnetID, instance.SubnetId)
+		d.Set("subnet_id", instance.SubnetId)
 	}
 
 	if err := d.Set("secondary_private_ips", secondaryPrivateIPs); err != nil {
@@ -1361,7 +1361,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("instance/%s", d.Id()),
 	}
-	d.Set(names.AttrARN, arn.String())
+	d.Set("arn", arn.String())
 
 	// Instance attributes
 	{
@@ -1685,7 +1685,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
-	if d.HasChanges("secondary_private_ips", names.AttrVPCSecurityGroupIDs) && !d.IsNewResource() {
+	if d.HasChanges("secondary_private_ips", "vpc_security_group_ids") && !d.IsNewResource() {
 		instance, err := FindInstanceByID(ctx, conn, d.Id())
 
 		if err != nil {
@@ -1744,13 +1744,13 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 		}
 
-		if d.HasChange(names.AttrVPCSecurityGroupIDs) {
+		if d.HasChange("vpc_security_group_ids") {
 			if primaryInterface.NetworkInterfaceId == nil {
 				return sdkdiag.AppendErrorf(diags, "Failed to update vpc_security_group_ids on %q, which does not contain a primary network interface",
 					d.Id())
 			}
 			var groups []*string
-			if v := d.Get(names.AttrVPCSecurityGroupIDs).(*schema.Set); v.Len() > 0 {
+			if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
 				for _, v := range v.List() {
 					groups = append(groups, aws.String(v.(string)))
 				}
@@ -1774,14 +1774,14 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
-	if d.HasChanges(names.AttrInstanceType, "user_data", "user_data_base64") && !d.IsNewResource() {
+	if d.HasChanges("instance_type", "user_data", "user_data_base64") && !d.IsNewResource() {
 		// For each argument change, we start and stop the instance
 		// to account for behaviors occurring outside terraform.
 		// Only one attribute can be modified at a time, else we get
 		// "InvalidParameterCombination: Fields for multiple attribute types specified"
-		if d.HasChange(names.AttrInstanceType) {
+		if d.HasChange("instance_type") {
 			if !d.HasChange("capacity_reservation_specification.0.capacity_reservation_target.0.capacity_reservation_id") {
-				instanceType := d.Get(names.AttrInstanceType).(string)
+				instanceType := d.Get("instance_type").(string)
 				input := &ec2.ModifyInstanceAttributeInput{
 					InstanceId: aws.String(d.Id()),
 					InstanceType: &ec2.AttributeValue{
@@ -2066,8 +2066,8 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 					return sdkdiag.AppendFromErr(diags, err)
 				}
 
-				if d.HasChange("capacity_reservation_specification.0.capacity_reservation_target.0.capacity_reservation_id") && d.HasChange(names.AttrInstanceType) {
-					instanceType := d.Get(names.AttrInstanceType).(string)
+				if d.HasChange("capacity_reservation_specification.0.capacity_reservation_target.0.capacity_reservation_id") && d.HasChange("instance_type") {
+					instanceType := d.Get("instance_type").(string)
 					input := &ec2.ModifyInstanceAttributeInput{
 						InstanceId: aws.String(d.Id()),
 						InstanceType: &ec2.AttributeValue{
@@ -2257,8 +2257,8 @@ func readBlockDevices(ctx context.Context, d *schema.ResourceData, meta interfac
 						m[k] = v
 					}
 
-					if snapshotID, ok := ibds[names.AttrSnapshotID].(string); ok {
-						m[names.AttrSnapshotID] = snapshotID
+					if snapshotID, ok := ibds["snapshot_id"].(string); ok {
+						m["snapshot_id"] = snapshotID
 					}
 
 					ibds["ebs"] = []interface{}{m}
@@ -2330,28 +2330,28 @@ func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, m
 		bd["volume_id"] = aws.StringValue(vol.VolumeId)
 
 		if instanceBd.Ebs != nil && instanceBd.Ebs.DeleteOnTermination != nil {
-			bd[names.AttrDeleteOnTermination] = aws.BoolValue(instanceBd.Ebs.DeleteOnTermination)
+			bd["delete_on_termination"] = aws.BoolValue(instanceBd.Ebs.DeleteOnTermination)
 		}
 		if vol.Size != nil {
-			bd[names.AttrVolumeSize] = aws.Int64Value(vol.Size)
+			bd["volume_size"] = aws.Int64Value(vol.Size)
 		}
 		if vol.VolumeType != nil {
-			bd[names.AttrVolumeType] = aws.StringValue(vol.VolumeType)
+			bd["volume_type"] = aws.StringValue(vol.VolumeType)
 		}
 		if vol.Iops != nil {
-			bd[names.AttrIOPS] = aws.Int64Value(vol.Iops)
+			bd["iops"] = aws.Int64Value(vol.Iops)
 		}
 		if vol.Encrypted != nil {
-			bd[names.AttrEncrypted] = aws.BoolValue(vol.Encrypted)
+			bd["encrypted"] = aws.BoolValue(vol.Encrypted)
 		}
 		if vol.KmsKeyId != nil {
-			bd[names.AttrKMSKeyID] = aws.StringValue(vol.KmsKeyId)
+			bd["kms_key_id"] = aws.StringValue(vol.KmsKeyId)
 		}
 		if vol.Throughput != nil {
 			bd["throughput"] = aws.Int64Value(vol.Throughput)
 		}
 		if instanceBd.DeviceName != nil {
-			bd[names.AttrDeviceName] = aws.StringValue(instanceBd.DeviceName)
+			bd["device_name"] = aws.StringValue(instanceBd.DeviceName)
 		}
 		if v, ok := d.GetOk("volume_tags"); !ok || v == nil || len(v.(map[string]interface{})) == 0 {
 			if ds {
@@ -2367,7 +2367,7 @@ func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, m
 			blockDevices["root"] = bd
 		} else {
 			if vol.SnapshotId != nil {
-				bd[names.AttrSnapshotID] = aws.StringValue(vol.SnapshotId)
+				bd["snapshot_id"] = aws.StringValue(vol.SnapshotId)
 			}
 
 			blockDevices["ebs"] = append(blockDevices["ebs"].([]map[string]interface{}), bd)
@@ -2378,7 +2378,7 @@ func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, m
 	// we'll need to set the ebs_block_device as a clone of the root device
 	// with the snapshot_id populated; thus, we store the ID for safe-keeping
 	if blockDevices["root"] != nil && len(blockDevices["ebs"].([]map[string]interface{})) == 0 {
-		blockDevices[names.AttrSnapshotID] = volResp.Volumes[0].SnapshotId
+		blockDevices["snapshot_id"] = volResp.Volumes[0].SnapshotId
 	}
 
 	return blockDevices, nil
@@ -2476,7 +2476,7 @@ func FetchRootDeviceName(ctx context.Context, conn *ec2.EC2, amiID string) (*str
 func buildNetworkInterfaceOpts(d *schema.ResourceData, groups []*string, nInterfaces interface{}) []*ec2.InstanceNetworkInterfaceSpecification {
 	networkInterfaces := []*ec2.InstanceNetworkInterfaceSpecification{}
 	// Get necessary items
-	subnet, hasSubnet := d.GetOk(names.AttrSubnetID)
+	subnet, hasSubnet := d.GetOk("subnet_id")
 
 	if hasSubnet {
 		// If we have a non-default VPC / Subnet specified, we can flag
@@ -2519,7 +2519,7 @@ func buildNetworkInterfaceOpts(d *schema.ResourceData, groups []*string, nInterf
 			ni.Ipv6Addresses = ipv6Addresses
 		}
 
-		if v := d.Get(names.AttrVPCSecurityGroupIDs).(*schema.Set); v.Len() > 0 {
+		if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
 			for _, v := range v.List() {
 				ni.Groups = append(ni.Groups, aws.String(v.(string)))
 			}
@@ -2534,8 +2534,8 @@ func buildNetworkInterfaceOpts(d *schema.ResourceData, groups []*string, nInterf
 			ni := &ec2.InstanceNetworkInterfaceSpecification{
 				DeviceIndex:         aws.Int64(int64(ini["device_index"].(int))),
 				NetworkCardIndex:    aws.Int64(int64(ini["network_card_index"].(int))),
-				NetworkInterfaceId:  aws.String(ini[names.AttrNetworkInterfaceID].(string)),
-				DeleteOnTermination: aws.Bool(ini[names.AttrDeleteOnTermination].(bool)),
+				NetworkInterfaceId:  aws.String(ini["network_interface_id"].(string)),
+				DeleteOnTermination: aws.Bool(ini["delete_on_termination"].(bool)),
 			}
 			networkInterfaces = append(networkInterfaces, ni)
 		}
@@ -2552,28 +2552,28 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 		for _, v := range vL {
 			bd := v.(map[string]interface{})
 			ebs := &ec2.EbsBlockDevice{
-				DeleteOnTermination: aws.Bool(bd[names.AttrDeleteOnTermination].(bool)),
+				DeleteOnTermination: aws.Bool(bd["delete_on_termination"].(bool)),
 			}
 
-			if v, ok := bd[names.AttrSnapshotID].(string); ok && v != "" {
+			if v, ok := bd["snapshot_id"].(string); ok && v != "" {
 				ebs.SnapshotId = aws.String(v)
 			}
 
-			if v, ok := bd[names.AttrEncrypted].(bool); ok && v {
+			if v, ok := bd["encrypted"].(bool); ok && v {
 				ebs.Encrypted = aws.Bool(v)
 			}
 
-			if v, ok := bd[names.AttrKMSKeyID].(string); ok && v != "" {
+			if v, ok := bd["kms_key_id"].(string); ok && v != "" {
 				ebs.KmsKeyId = aws.String(v)
 			}
 
-			if v, ok := bd[names.AttrVolumeSize].(int); ok && v != 0 {
+			if v, ok := bd["volume_size"].(int); ok && v != 0 {
 				ebs.VolumeSize = aws.Int64(int64(v))
 			}
 
-			if v, ok := bd[names.AttrVolumeType].(string); ok && v != "" {
+			if v, ok := bd["volume_type"].(string); ok && v != "" {
 				ebs.VolumeType = aws.String(v)
-				if iops, ok := bd[names.AttrIOPS].(int); ok && iops > 0 {
+				if iops, ok := bd["iops"].(int); ok && iops > 0 {
 					if ec2.VolumeTypeIo1 == strings.ToLower(v) || ec2.VolumeTypeIo2 == strings.ToLower(v) || ec2.VolumeTypeGp3 == strings.ToLower(v) {
 						// Condition: This parameter is required for requests to create io1 or io2
 						// volumes and optional for gp3; it is not used in requests to create gp2, st1, sc1, or
@@ -2597,7 +2597,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 			}
 
 			blockDevices = append(blockDevices, &ec2.BlockDeviceMapping{
-				DeviceName: aws.String(bd[names.AttrDeviceName].(string)),
+				DeviceName: aws.String(bd["device_name"].(string)),
 				Ebs:        ebs,
 			})
 		}
@@ -2608,7 +2608,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 		for _, v := range vL {
 			bd := v.(map[string]interface{})
 			bdm := &ec2.BlockDeviceMapping{
-				DeviceName:  aws.String(bd[names.AttrDeviceName].(string)),
+				DeviceName:  aws.String(bd["device_name"].(string)),
 				VirtualName: aws.String(bd["virtual_name"].(string)),
 			}
 			if v, ok := bd["no_device"].(bool); ok && v {
@@ -2630,24 +2630,24 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 		for _, v := range vL {
 			bd := v.(map[string]interface{})
 			ebs := &ec2.EbsBlockDevice{
-				DeleteOnTermination: aws.Bool(bd[names.AttrDeleteOnTermination].(bool)),
+				DeleteOnTermination: aws.Bool(bd["delete_on_termination"].(bool)),
 			}
 
-			if v, ok := bd[names.AttrEncrypted].(bool); ok && v {
+			if v, ok := bd["encrypted"].(bool); ok && v {
 				ebs.Encrypted = aws.Bool(v)
 			}
 
-			if v, ok := bd[names.AttrKMSKeyID].(string); ok && v != "" {
-				ebs.KmsKeyId = aws.String(bd[names.AttrKMSKeyID].(string))
+			if v, ok := bd["kms_key_id"].(string); ok && v != "" {
+				ebs.KmsKeyId = aws.String(bd["kms_key_id"].(string))
 			}
 
-			if v, ok := bd[names.AttrVolumeSize].(int); ok && v != 0 {
+			if v, ok := bd["volume_size"].(int); ok && v != 0 {
 				ebs.VolumeSize = aws.Int64(int64(v))
 			}
 
-			if v, ok := bd[names.AttrVolumeType].(string); ok && v != "" {
+			if v, ok := bd["volume_type"].(string); ok && v != "" {
 				ebs.VolumeType = aws.String(v)
-				if iops, ok := bd[names.AttrIOPS].(int); ok && iops > 0 {
+				if iops, ok := bd["iops"].(int); ok && iops > 0 {
 					if ec2.VolumeTypeIo1 == strings.ToLower(v) || ec2.VolumeTypeIo2 == strings.ToLower(v) || ec2.VolumeTypeGp3 == strings.ToLower(v) {
 						// Only set the iops attribute if the volume type is io1, io2, or gp3. Setting otherwise
 						// can trigger a refresh/plan loop based on the computed value that is given
@@ -2674,7 +2674,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 
 			var amiID string
 
-			if v, ok := d.GetOk(names.AttrLaunchTemplate); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			if v, ok := d.GetOk("launch_template"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				launchTemplateData, err := findLaunchTemplateData(ctx, conn, expandLaunchTemplateSpecification(v.([]interface{})[0].(map[string]interface{})))
 
 				if err != nil {
@@ -2760,11 +2760,11 @@ func readSecurityGroups(ctx context.Context, d *schema.ResourceData, instance *e
 			sgs = append(sgs, aws.StringValue(sg.GroupId))
 		}
 		log.Printf("[DEBUG] Setting Security Group IDs: %#v", sgs)
-		if err := d.Set(names.AttrVPCSecurityGroupIDs, sgs); err != nil {
+		if err := d.Set("vpc_security_group_ids", sgs); err != nil {
 			return err // nosemgrep:ci.bare-error-returns
 		}
 	} else {
-		if err := d.Set(names.AttrVPCSecurityGroupIDs, []string{}); err != nil {
+		if err := d.Set("vpc_security_group_ids", []string{}); err != nil {
 			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
@@ -2774,11 +2774,11 @@ func readSecurityGroups(ctx context.Context, d *schema.ResourceData, instance *e
 			sgs = append(sgs, aws.StringValue(sg.GroupName))
 		}
 		log.Printf("[DEBUG] Setting Security Group Names: %#v", sgs)
-		if err := d.Set(names.AttrSecurityGroups, sgs); err != nil {
+		if err := d.Set("security_groups", sgs); err != nil {
 			return err // nosemgrep:ci.bare-error-returns
 		}
 	} else {
-		if err := d.Set(names.AttrSecurityGroups, []string{}); err != nil {
+		if err := d.Set("security_groups", []string{}); err != nil {
 			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
@@ -2895,13 +2895,13 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 		opts.ImageID = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrInstanceType); ok {
+	if v, ok := d.GetOk("instance_type"); ok {
 		opts.InstanceType = aws.String(v.(string))
 	}
 
 	var instanceInterruptionBehavior string
 
-	if v, ok := d.GetOk(names.AttrLaunchTemplate); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk("launch_template"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		launchTemplateSpecification := expandLaunchTemplateSpecification(v.([]interface{})[0].(map[string]interface{}))
 		launchTemplateData, err := findLaunchTemplateData(ctx, conn, launchTemplateSpecification)
 
@@ -2916,7 +2916,7 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 	}
 
-	instanceType := d.Get(names.AttrInstanceType).(string)
+	instanceType := d.Get("instance_type").(string)
 
 	// Set default cpu_credits as Unlimited for T3/T3a instance type
 	if strings.HasPrefix(instanceType, "t3") {
@@ -2969,13 +2969,13 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	// check for non-default Subnet, and cast it to a String
-	subnet, hasSubnet := d.GetOk(names.AttrSubnetID)
+	subnet, hasSubnet := d.GetOk("subnet_id")
 	subnetID := subnet.(string)
 
 	// Placement is used for aws_instance; SpotPlacement is used for
 	// aws_spot_instance_request. They represent the same data. :-|
 	opts.Placement = &ec2.Placement{
-		AvailabilityZone: aws.String(d.Get(names.AttrAvailabilityZone).(string)),
+		AvailabilityZone: aws.String(d.Get("availability_zone").(string)),
 	}
 
 	if v, ok := d.GetOk("placement_partition_number"); ok {
@@ -2983,7 +2983,7 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	opts.SpotPlacement = &ec2.SpotPlacement{
-		AvailabilityZone: aws.String(d.Get(names.AttrAvailabilityZone).(string)),
+		AvailabilityZone: aws.String(d.Get("availability_zone").(string)),
 	}
 
 	if v, ok := d.GetOk("placement_group"); ok && (instanceInterruptionBehavior == "" || instanceInterruptionBehavior == ec2.InstanceInterruptionBehaviorTerminate) {
@@ -3023,7 +3023,7 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	var groups []*string
-	if v := d.Get(names.AttrSecurityGroups); v != nil {
+	if v := d.Get("security_groups"); v != nil {
 		// Security group names.
 		// For a nondefault VPC, you must use security group IDs instead.
 		// See http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_RunInstances.html
@@ -3077,7 +3077,7 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 			opts.Ipv6Addresses = ipv6Addresses
 		}
 
-		if v := d.Get(names.AttrVPCSecurityGroupIDs).(*schema.Set); v.Len() > 0 {
+		if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
 			for _, v := range v.List() {
 				opts.SecurityGroupIDs = append(opts.SecurityGroupIDs, aws.String(v.(string)))
 			}
@@ -3469,7 +3469,7 @@ func expandEnclaveOptions(l []interface{}) *ec2.EnclaveOptionsRequest {
 	m := l[0].(map[string]interface{})
 
 	opts := &ec2.EnclaveOptionsRequest{
-		Enabled: aws.Bool(m[names.AttrEnabled].(bool)),
+		Enabled: aws.Bool(m["enabled"].(bool)),
 	}
 
 	return opts
@@ -3532,7 +3532,7 @@ func flattenEnclaveOptions(opts *ec2.EnclaveOptions) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		names.AttrEnabled: aws.BoolValue(opts.Enabled),
+		"enabled": aws.BoolValue(opts.Enabled),
 	}
 
 	return []interface{}{m}
@@ -3811,13 +3811,13 @@ func expandLaunchTemplateSpecification(tfMap map[string]interface{}) *ec2.Launch
 
 	// DescribeLaunchTemplates returns both name and id but LaunchTemplateSpecification
 	// allows only one of them to be set.
-	if v, ok := tfMap[names.AttrID]; ok && v != "" {
+	if v, ok := tfMap["id"]; ok && v != "" {
 		apiObject.LaunchTemplateId = aws.String(v.(string))
-	} else if v, ok := tfMap[names.AttrName]; ok && v != "" {
+	} else if v, ok := tfMap["name"]; ok && v != "" {
 		apiObject.LaunchTemplateName = aws.String(v.(string))
 	}
 
-	if v, ok := tfMap[names.AttrVersion].(string); ok && v != "" {
+	if v, ok := tfMap["version"].(string); ok && v != "" {
 		apiObject.Version = aws.String(v)
 	}
 
@@ -3846,8 +3846,8 @@ func flattenInstanceLaunchTemplate(ctx context.Context, conn *ec2.EC2, instanceI
 	}
 
 	tfMap := map[string]interface{}{
-		names.AttrID:   launchTemplateID,
-		names.AttrName: name,
+		"id":   launchTemplateID,
+		"name": name,
 	}
 
 	currentLaunchTemplateVersion, err := findInstanceLaunchTemplateVersion(ctx, conn, instanceID)
@@ -3869,18 +3869,18 @@ func flattenInstanceLaunchTemplate(ctx context.Context, conn *ec2.EC2, instanceI
 	switch previousLaunchTemplateVersion {
 	case LaunchTemplateVersionDefault:
 		if currentLaunchTemplateVersion == defaultVersion {
-			tfMap[names.AttrVersion] = LaunchTemplateVersionDefault
+			tfMap["version"] = LaunchTemplateVersionDefault
 		} else {
-			tfMap[names.AttrVersion] = currentLaunchTemplateVersion
+			tfMap["version"] = currentLaunchTemplateVersion
 		}
 	case LaunchTemplateVersionLatest:
 		if currentLaunchTemplateVersion == latestVersion {
-			tfMap[names.AttrVersion] = LaunchTemplateVersionLatest
+			tfMap["version"] = LaunchTemplateVersionLatest
 		} else {
-			tfMap[names.AttrVersion] = currentLaunchTemplateVersion
+			tfMap["version"] = currentLaunchTemplateVersion
 		}
 	default:
-		tfMap[names.AttrVersion] = currentLaunchTemplateVersion
+		tfMap["version"] = currentLaunchTemplateVersion
 	}
 
 	return []interface{}{tfMap}, nil
@@ -3958,7 +3958,7 @@ func findInstanceTagValue(ctx context.Context, conn *ec2.EC2, instanceID, tagKey
 	input := &ec2.DescribeTagsInput{
 		Filters: newAttributeFilterList(map[string]string{
 			"resource-id": instanceID,
-			names.AttrKey: tagKey,
+			"key":         tagKey,
 		}),
 	}
 

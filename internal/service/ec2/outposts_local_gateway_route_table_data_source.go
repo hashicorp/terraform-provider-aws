@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ec2_local_gateway_route_table")
@@ -46,15 +45,15 @@ func DataSourceLocalGatewayRouteTable() *schema.Resource {
 				Computed: true,
 			},
 
-			names.AttrState: {
+			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
 
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 
-			names.AttrFilter: customFiltersSchema(),
+			"filter": customFiltersSchema(),
 		},
 	}
 }
@@ -74,16 +73,16 @@ func dataSourceLocalGatewayRouteTableRead(ctx context.Context, d *schema.Resourc
 		map[string]string{
 			"local-gateway-id": d.Get("local_gateway_id").(string),
 			"outpost-arn":      d.Get("outpost_arn").(string),
-			names.AttrState:    d.Get(names.AttrState).(string),
+			"state":            d.Get("state").(string),
 		},
 	)
 
 	req.Filters = append(req.Filters, newTagFilterList(
-		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
+		Tags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
 	)...)
 
 	req.Filters = append(req.Filters, newCustomFilterList(
-		d.Get(names.AttrFilter).(*schema.Set),
+		d.Get("filter").(*schema.Set),
 	)...)
 	if len(req.Filters) == 0 {
 		// Don't send an empty filters list; the EC2 API won't accept it.
@@ -108,9 +107,9 @@ func dataSourceLocalGatewayRouteTableRead(ctx context.Context, d *schema.Resourc
 	d.Set("local_gateway_id", localgatewayroutetable.LocalGatewayId)
 	d.Set("local_gateway_route_table_id", localgatewayroutetable.LocalGatewayRouteTableId)
 	d.Set("outpost_arn", localgatewayroutetable.OutpostArn)
-	d.Set(names.AttrState, localgatewayroutetable.State)
+	d.Set("state", localgatewayroutetable.State)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, localgatewayroutetable.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, localgatewayroutetable.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

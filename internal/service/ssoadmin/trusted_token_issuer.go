@@ -57,14 +57,14 @@ func (r *resourceTrustedTokenIssuer) Metadata(_ context.Context, req resource.Me
 func (r *resourceTrustedTokenIssuer) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			"arn": framework.ARNAttributeComputedOnly(),
 			"client_token": schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrID: framework.IDAttribute(),
+			"id": framework.IDAttribute(),
 			"instance_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
@@ -72,7 +72,7 @@ func (r *resourceTrustedTokenIssuer) Schema(ctx context.Context, req resource.Sc
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrName: schema.StringAttribute{
+			"name": schema.StringAttribute{
 				Required: true,
 			},
 			"trusted_token_issuer_type": schema.StringAttribute{
@@ -331,7 +331,7 @@ func (r *resourceTrustedTokenIssuer) Delete(ctx context.Context, req resource.De
 }
 
 func (r *resourceTrustedTokenIssuer) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *resourceTrustedTokenIssuer) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {

@@ -42,7 +42,7 @@ func resourceConfiguration() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-				if diff.HasChange(names.AttrDescription) {
+				if diff.HasChange("description") {
 					return diff.SetNewComputed("latest_revision")
 				}
 				if diff.HasChange("data") {
@@ -59,7 +59,7 @@ func resourceConfiguration() *schema.Resource {
 		),
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -75,7 +75,7 @@ func resourceConfiguration() *schema.Resource {
 				DiffSuppressFunc:      suppressXMLEquivalentConfig,
 				DiffSuppressOnRefresh: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -85,7 +85,7 @@ func resourceConfiguration() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: enum.ValidateIgnoreCase[types.EngineType](),
 			},
-			names.AttrEngineVersion: {
+			"engine_version": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -94,7 +94,7 @@ func resourceConfiguration() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -110,10 +110,10 @@ func resourceConfigurationCreate(ctx context.Context, d *schema.ResourceData, me
 
 	conn := meta.(*conns.AWSClient).MQClient(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &mq.CreateConfigurationInput{
 		EngineType:    types.EngineType(d.Get("engine_type").(string)),
-		EngineVersion: aws.String(d.Get(names.AttrEngineVersion).(string)),
+		EngineVersion: aws.String(d.Get("engine_version").(string)),
 		Name:          aws.String(name),
 		Tags:          getTagsIn(ctx),
 	}
@@ -136,7 +136,7 @@ func resourceConfigurationCreate(ctx context.Context, d *schema.ResourceData, me
 			Data:            flex.StringValueToBase64String(v.(string)),
 		}
 
-		if v, ok := d.GetOk(names.AttrDescription); ok {
+		if v, ok := d.GetOk("description"); ok {
 			input.Description = aws.String(v.(string))
 		}
 
@@ -167,13 +167,13 @@ func resourceConfigurationRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading MQ Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, configuration.Arn)
+	d.Set("arn", configuration.Arn)
 	d.Set("authentication_strategy", configuration.AuthenticationStrategy)
-	d.Set(names.AttrDescription, configuration.LatestRevision.Description)
+	d.Set("description", configuration.LatestRevision.Description)
 	d.Set("engine_type", configuration.EngineType)
-	d.Set(names.AttrEngineVersion, configuration.EngineVersion)
+	d.Set("engine_version", configuration.EngineVersion)
 	d.Set("latest_revision", configuration.LatestRevision.Revision)
-	d.Set(names.AttrName, configuration.Name)
+	d.Set("name", configuration.Name)
 
 	revision := strconv.FormatInt(int64(aws.ToInt32(configuration.LatestRevision.Revision)), 10)
 	configurationRevision, err := conn.DescribeConfigurationRevision(ctx, &mq.DescribeConfigurationRevisionInput{
@@ -203,13 +203,13 @@ func resourceConfigurationUpdate(ctx context.Context, d *schema.ResourceData, me
 
 	conn := meta.(*conns.AWSClient).MQClient(ctx)
 
-	if d.HasChanges("data", names.AttrDescription) {
+	if d.HasChanges("data", "description") {
 		input := &mq.UpdateConfigurationInput{
 			ConfigurationId: aws.String(d.Id()),
 			Data:            aws.String(base64.StdEncoding.EncodeToString([]byte(d.Get("data").(string)))),
 		}
 
-		if v, ok := d.GetOk(names.AttrDescription); ok {
+		if v, ok := d.GetOk("description"); ok {
 			input.Description = aws.String(v.(string))
 		}
 

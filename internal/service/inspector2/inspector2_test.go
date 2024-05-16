@@ -14,7 +14,7 @@ func TestAccInspector2_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Enabler": {
-			acctest.CtBasic:                      testAccEnabler_basic,
+			"basic":                              testAccEnabler_basic,
 			"accountID":                          testAccEnabler_accountID,
 			"disappears":                         testAccEnabler_disappears,
 			"lambda":                             testAccEnabler_lambda,
@@ -27,19 +27,19 @@ func TestAccInspector2_serial(t *testing.T) {
 			"memberAccount_disappearsMemberAssociation":      testAccEnabler_memberAccount_disappearsMemberAssociation,
 		},
 		"DelegatedAdminAccount": {
-			acctest.CtBasic: testAccDelegatedAdminAccount_basic,
-			"disappears":    testAccDelegatedAdminAccount_disappears,
+			"basic":      testAccDelegatedAdminAccount_basic,
+			"disappears": testAccDelegatedAdminAccount_disappears,
 		},
 		"MemberAssociation": {
-			acctest.CtBasic: testAccMemberAssociation_basic,
-			"disappears":    testAccMemberAssociation_disappears,
+			"basic":      testAccMemberAssociation_basic,
+			"disappears": testAccMemberAssociation_disappears,
 		},
 		"OrganizationConfiguration": {
-			acctest.CtBasic: testAccOrganizationConfiguration_basic,
-			"disappears":    testAccOrganizationConfiguration_disappears,
-			"ec2ECR":        testAccOrganizationConfiguration_ec2ECR,
-			"lambda":        testAccOrganizationConfiguration_lambda,
-			"lambdaCode":    testAccOrganizationConfiguration_lambdaCode,
+			"basic":      testAccOrganizationConfiguration_basic,
+			"disappears": testAccOrganizationConfiguration_disappears,
+			"ec2ECR":     testAccOrganizationConfiguration_ec2ECR,
+			"lambda":     testAccOrganizationConfiguration_lambda,
+			"lambdaCode": testAccOrganizationConfiguration_lambdaCode,
 		},
 	}
 

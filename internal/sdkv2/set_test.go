@@ -23,17 +23,6 @@ func TestStringCaseInsensitiveSetFunc(t *testing.T) {
 	}
 }
 
-func TestSimpleSchemaSetFuncNil(t *testing.T) {
-	t.Parallel()
-
-	var v interface{}
-	f := SimpleSchemaSetFunc("key1", "key3", "key4")
-
-	if got, want := f(v), 0; got != want {
-		t.Errorf("SimpleSchemaSetFunc(%q) err %q, want %q", v, got, want)
-	}
-}
-
 func TestSimpleSchemaSetFunc(t *testing.T) {
 	t.Parallel()
 

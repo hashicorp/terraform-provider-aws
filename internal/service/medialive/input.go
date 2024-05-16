@@ -48,7 +48,7 @@ func ResourceInput() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -79,7 +79,7 @@ func ResourceInput() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrID: {
+						"id": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -114,11 +114,11 @@ func ResourceInput() *schema.Resource {
 					},
 				},
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrRoleARN: {
+			"role_arn": {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
@@ -134,18 +134,18 @@ func ResourceInput() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						names.AttrURL: {
+						"url": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						names.AttrUsername: {
+						"username": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
 					},
 				},
 			},
-			names.AttrType: {
+			"type": {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
@@ -157,13 +157,13 @@ func ResourceInput() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrSubnetIDs: {
+						"subnet_ids": {
 							Type:     schema.TypeList,
 							Required: true,
 							MinItems: 2,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						names.AttrSecurityGroupIDs: {
+						"security_group_ids": {
 							Type:     schema.TypeList,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -192,9 +192,9 @@ func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	in := &medialive.CreateInputInput{
 		RequestId: aws.String(id.UniqueId()),
-		Name:      aws.String(d.Get(names.AttrName).(string)),
+		Name:      aws.String(d.Get("name").(string)),
 		Tags:      getTagsIn(ctx),
-		Type:      types.InputType(d.Get(names.AttrType).(string)),
+		Type:      types.InputType(d.Get("type").(string)),
 	}
 
 	if v, ok := d.GetOk("destinations"); ok && v.(*schema.Set).Len() > 0 {
@@ -213,7 +213,7 @@ func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		in.MediaConnectFlows = expandMediaConnectFlows(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk(names.AttrRoleARN); ok {
+	if v, ok := d.GetOk("role_arn"); ok {
 		in.RoleArn = aws.String(v.(string))
 	}
 
@@ -240,11 +240,11 @@ func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	)
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionCreating, ResNameInput, d.Get(names.AttrName).(string), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionCreating, ResNameInput, d.Get("name").(string), err)
 	}
 
 	if outputRaw == nil || outputRaw.(*medialive.CreateInputOutput).Input == nil {
-		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionCreating, ResNameInput, d.Get(names.AttrName).(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionCreating, ResNameInput, d.Get("name").(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(outputRaw.(*medialive.CreateInputOutput).Input.Id))
@@ -273,18 +273,18 @@ func resourceInputRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionReading, ResNameInput, d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, out.Arn)
+	d.Set("arn", out.Arn)
 	d.Set("attached_channels", out.AttachedChannels)
 	d.Set("media_connect_flows", flattenMediaConnectFlows(out.MediaConnectFlows))
-	d.Set(names.AttrName, out.Name)
+	d.Set("name", out.Name)
 	d.Set("input_class", out.InputClass)
 	d.Set("input_devices", flattenInputDevices(out.InputDevices))
 	d.Set("input_partner_ids", out.InputPartnerIds)
 	d.Set("input_security_groups", out.SecurityGroups)
 	d.Set("input_source_type", out.InputSourceType)
-	d.Set(names.AttrRoleARN, out.RoleArn)
+	d.Set("role_arn", out.RoleArn)
 	d.Set("sources", flattenSources(out.Sources))
-	d.Set(names.AttrType, out.Type)
+	d.Set("type", out.Type)
 
 	return diags
 }
@@ -294,7 +294,7 @@ func resourceInputUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		in := &medialive.UpdateInputInput{
 			InputId: aws.String(d.Id()),
 		}
@@ -311,12 +311,12 @@ func resourceInputUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			in.MediaConnectFlows = expandMediaConnectFlows(d.Get("media_connect_flows").(*schema.Set).List())
 		}
 
-		if d.HasChange(names.AttrName) {
-			in.Name = aws.String(d.Get(names.AttrName).(string))
+		if d.HasChange("name") {
+			in.Name = aws.String(d.Get("name").(string))
 		}
 
-		if d.HasChange(names.AttrRoleARN) {
-			in.RoleArn = aws.String(d.Get(names.AttrRoleARN).(string))
+		if d.HasChange("role_arn") {
+			in.RoleArn = aws.String(d.Get("role_arn").(string))
 		}
 
 		if d.HasChange("sources") {
@@ -509,7 +509,7 @@ func flattenInputDevice(apiObject types.InputDeviceSettings) map[string]interfac
 	m := map[string]interface{}{}
 
 	if v := apiObject.Id; v != nil {
-		m[names.AttrID] = aws.ToString(v)
+		m["id"] = aws.ToString(v)
 	}
 
 	return m
@@ -541,13 +541,13 @@ func flattenSource(apiObject types.InputSource) map[string]interface{} {
 	m := map[string]interface{}{}
 
 	if v := apiObject.Url; v != nil {
-		m[names.AttrURL] = aws.ToString(v)
+		m["url"] = aws.ToString(v)
 	}
 	if v := apiObject.PasswordParam; v != nil {
 		m["password_param"] = aws.ToString(v)
 	}
 	if v := apiObject.Username; v != nil {
-		m[names.AttrUsername] = aws.ToString(v)
+		m["username"] = aws.ToString(v)
 	}
 	return m
 }
@@ -610,7 +610,7 @@ func (i inputDevices) expandToDeviceSettings() []types.InputDeviceSettings {
 		}
 
 		var id types.InputDeviceSettings
-		if val, ok := m[names.AttrID]; ok {
+		if val, ok := m["id"]; ok {
 			id.Id = aws.String(val.(string))
 			s = append(s, id)
 		}
@@ -633,7 +633,7 @@ func (i inputDevices) expandToDeviceRequest() []types.InputDeviceRequest {
 		}
 
 		var id types.InputDeviceRequest
-		if val, ok := m[names.AttrID]; ok {
+		if val, ok := m["id"]; ok {
 			id.Id = aws.String(val.(string))
 			s = append(s, id)
 		}
@@ -682,10 +682,10 @@ func expandSources(tfList []interface{}) []types.InputSourceRequest {
 		if val, ok := m["password_param"]; ok {
 			id.PasswordParam = aws.String(val.(string))
 		}
-		if val, ok := m[names.AttrURL]; ok {
+		if val, ok := m["url"]; ok {
 			id.Url = aws.String(val.(string))
 		}
-		if val, ok := m[names.AttrUsername]; ok {
+		if val, ok := m["username"]; ok {
 			id.Username = aws.String(val.(string))
 		}
 		s = append(s, id)
@@ -701,10 +701,10 @@ func expandVPC(tfList []interface{}) *types.InputVpcRequest {
 	var s types.InputVpcRequest
 	vpc := tfList[0].(map[string]interface{})
 
-	if val, ok := vpc[names.AttrSubnetIDs]; ok {
+	if val, ok := vpc["subnet_ids"]; ok {
 		s.SubnetIds = flex.ExpandStringValueList(val.([]interface{}))
 	}
-	if val, ok := vpc[names.AttrSecurityGroupIDs]; ok {
+	if val, ok := vpc["security_group_ids"]; ok {
 		s.SecurityGroupIds = flex.ExpandStringValueList(val.([]interface{}))
 	}
 

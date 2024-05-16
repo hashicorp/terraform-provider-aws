@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_networkfirewall_firewall_policy")
@@ -24,13 +23,13 @@ func DataSourceFirewallPolicy() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceFirewallPolicyRead,
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:         schema.TypeString,
-				AtLeastOneOf: []string{names.AttrARN, names.AttrName},
+				AtLeastOneOf: []string{"arn", "name"},
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -70,18 +69,18 @@ func DataSourceFirewallPolicy() *schema.Resource {
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												names.AttrAction: {
+												"action": {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
 											},
 										},
 									},
-									names.AttrPriority: {
+									"priority": {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									names.AttrResourceARN: {
+									"resource_arn": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -104,11 +103,11 @@ func DataSourceFirewallPolicy() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrPriority: {
+									"priority": {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									names.AttrResourceARN: {
+									"resource_arn": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -122,13 +121,13 @@ func DataSourceFirewallPolicy() *schema.Resource {
 					},
 				},
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				AtLeastOneOf: []string{names.AttrARN, names.AttrName},
+				AtLeastOneOf: []string{"arn", "name"},
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]{1,128}$`), "Must have 1-128 valid characters: a-z, A-Z, 0-9 and -(hyphen)"),
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 			"update_token": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -143,8 +142,8 @@ func dataSourceFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	arn := d.Get(names.AttrARN).(string)
-	name := d.Get(names.AttrName).(string)
+	arn := d.Get("arn").(string)
+	name := d.Get("name").(string)
 
 	log.Printf("[DEBUG] Reading NetworkFirewall Firewall Policy %s %s", arn, name)
 
@@ -166,9 +165,9 @@ func dataSourceFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId(aws.StringValue(resp.FirewallPolicyArn))
 
-	d.Set(names.AttrARN, resp.FirewallPolicyArn)
-	d.Set(names.AttrDescription, resp.Description)
-	d.Set(names.AttrName, resp.FirewallPolicyName)
+	d.Set("arn", resp.FirewallPolicyArn)
+	d.Set("description", resp.Description)
+	d.Set("name", resp.FirewallPolicyName)
 	d.Set("update_token", output.UpdateToken)
 
 	if err := d.Set("firewall_policy", flattenFirewallPolicy(policy)); err != nil {
@@ -177,7 +176,7 @@ func dataSourceFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, m
 
 	tags := KeyValueTags(ctx, resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	if err := d.Set(names.AttrTags, tags.Map()); err != nil {
+	if err := d.Set("tags", tags.Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

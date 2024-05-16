@@ -8,31 +8,29 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
-	"github.com/aws/aws-sdk-go-v2/service/lambda"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_lambda_function_event_invoke_config", name="Function Event Invoke Config")
-func resourceFunctionEventInvokeConfig() *schema.Resource {
+// @SDKResource("aws_lambda_function_event_invoke_config")
+func ResourceFunctionEventInvokeConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFunctionEventInvokeConfigCreate,
 		ReadWithoutTimeout:   resourceFunctionEventInvokeConfigRead,
 		UpdateWithoutTimeout: resourceFunctionEventInvokeConfigUpdate,
 		DeleteWithoutTimeout: resourceFunctionEventInvokeConfigDelete,
-
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -50,7 +48,7 @@ func resourceFunctionEventInvokeConfig() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrDestination: {
+									"destination": {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
@@ -64,7 +62,7 @@ func resourceFunctionEventInvokeConfig() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrDestination: {
+									"destination": {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
@@ -104,18 +102,20 @@ func resourceFunctionEventInvokeConfig() *schema.Resource {
 
 func resourceFunctionEventInvokeConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
-
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 	functionName := d.Get("function_name").(string)
 	qualifier := d.Get("qualifier").(string)
+
 	id := functionName
+
 	if qualifier != "" {
 		id = fmt.Sprintf("%s:%s", functionName, qualifier)
 	}
+
 	input := &lambda.PutFunctionEventInvokeConfigInput{
 		DestinationConfig:    expandFunctionEventInvokeConfigDestinationConfig(d.Get("destination_config").([]interface{})),
 		FunctionName:         aws.String(functionName),
-		MaximumRetryAttempts: aws.Int32(int32(d.Get("maximum_retry_attempts").(int))),
+		MaximumRetryAttempts: aws.Int64(int64(d.Get("maximum_retry_attempts").(int))),
 	}
 
 	if qualifier != "" {
@@ -123,28 +123,33 @@ func resourceFunctionEventInvokeConfigCreate(ctx context.Context, d *schema.Reso
 	}
 
 	if v, ok := d.GetOk("maximum_event_age_in_seconds"); ok {
-		input.MaximumEventAgeInSeconds = aws.Int32(int32(v.(int)))
+		input.MaximumEventAgeInSeconds = aws.Int64(int64(v.(int)))
 	}
 
-	// Retry for destination validation eventual consistency errors.
-	_, err := tfresource.RetryWhen(ctx, iamPropagationTimeout,
-		func() (interface{}, error) {
-			return conn.PutFunctionEventInvokeConfig(ctx, input)
-		},
-		func(err error) (bool, error) {
-			// InvalidParameterValueException: The destination ARN arn:PARTITION:SERVICE:REGION:ACCOUNT:RESOURCE is invalid.
-			if errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "destination ARN") {
-				return true, err
-			}
+	// Retry for destination validation eventual consistency errors
+	err := retry.RetryContext(ctx, 2*time.Minute, func() *retry.RetryError {
+		_, err := conn.PutFunctionEventInvokeConfigWithContext(ctx, input)
 
-			// InvalidParameterValueException: The function's execution role does not have permissions to call Publish on arn:...
-			if errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "does not have permissions") {
-				return true, err
-			}
+		// InvalidParameterValueException: The destination ARN arn:PARTITION:SERVICE:REGION:ACCOUNT:RESOURCE is invalid.
+		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "destination ARN") {
+			return retry.RetryableError(err)
+		}
 
-			return false, err
-		},
-	)
+		// InvalidParameterValueException: The function's execution role does not have permissions to call Publish on arn:...
+		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "does not have permissions") {
+			return retry.RetryableError(err)
+		}
+
+		if err != nil {
+			return retry.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		_, err = conn.PutFunctionEventInvokeConfigWithContext(ctx, input)
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Lambda Function Event Invoke Config (%s): %s", id, err)
@@ -157,16 +162,25 @@ func resourceFunctionEventInvokeConfigCreate(ctx context.Context, d *schema.Reso
 
 func resourceFunctionEventInvokeConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
-	functionName, qualifier, err := functionEventInvokeConfigParseResourceID(d.Id())
+	functionName, qualifier, err := FunctionEventInvokeConfigParseID(d.Id())
+
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+		return sdkdiag.AppendErrorf(diags, "reading Lambda Function Event Invoke Config (%s): %s", d.Id(), err)
 	}
 
-	output, err := findFunctionEventInvokeConfigByTwoPartKey(ctx, conn, functionName, qualifier)
+	input := &lambda.GetFunctionEventInvokeConfigInput{
+		FunctionName: aws.String(functionName),
+	}
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if qualifier != "" {
+		input.Qualifier = aws.String(qualifier)
+	}
+
+	output, err := conn.GetFunctionEventInvokeConfigWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Lambda Function Event Invoke Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -179,6 +193,7 @@ func resourceFunctionEventInvokeConfigRead(ctx context.Context, d *schema.Resour
 	if err := d.Set("destination_config", flattenFunctionEventInvokeConfigDestinationConfig(output.DestinationConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting destination_config: %s", err)
 	}
+
 	d.Set("function_name", functionName)
 	d.Set("maximum_event_age_in_seconds", output.MaximumEventAgeInSeconds)
 	d.Set("maximum_retry_attempts", output.MaximumRetryAttempts)
@@ -189,17 +204,18 @@ func resourceFunctionEventInvokeConfigRead(ctx context.Context, d *schema.Resour
 
 func resourceFunctionEventInvokeConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
-	functionName, qualifier, err := functionEventInvokeConfigParseResourceID(d.Id())
+	functionName, qualifier, err := FunctionEventInvokeConfigParseID(d.Id())
+
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+		return sdkdiag.AppendErrorf(diags, "updating Lambda Function Event Invoke Config (%s): %s", d.Id(), err)
 	}
 
 	input := &lambda.PutFunctionEventInvokeConfigInput{
 		DestinationConfig:    expandFunctionEventInvokeConfigDestinationConfig(d.Get("destination_config").([]interface{})),
 		FunctionName:         aws.String(functionName),
-		MaximumRetryAttempts: aws.Int32(int32(d.Get("maximum_retry_attempts").(int))),
+		MaximumRetryAttempts: aws.Int64(int64(d.Get("maximum_retry_attempts").(int))),
 	}
 
 	if qualifier != "" {
@@ -207,28 +223,33 @@ func resourceFunctionEventInvokeConfigUpdate(ctx context.Context, d *schema.Reso
 	}
 
 	if v, ok := d.GetOk("maximum_event_age_in_seconds"); ok {
-		input.MaximumEventAgeInSeconds = aws.Int32(int32(v.(int)))
+		input.MaximumEventAgeInSeconds = aws.Int64(int64(v.(int)))
 	}
 
-	// Retry for destination validation eventual consistency errors.
-	_, err = tfresource.RetryWhen(ctx, iamPropagationTimeout,
-		func() (interface{}, error) {
-			return conn.PutFunctionEventInvokeConfig(ctx, input)
-		},
-		func(err error) (bool, error) {
-			// InvalidParameterValueException: The destination ARN arn:PARTITION:SERVICE:REGION:ACCOUNT:RESOURCE is invalid.
-			if errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "destination ARN") {
-				return true, err
-			}
+	// Retry for destination validation eventual consistency errors
+	err = retry.RetryContext(ctx, 2*time.Minute, func() *retry.RetryError {
+		_, err := conn.PutFunctionEventInvokeConfigWithContext(ctx, input)
 
-			// InvalidParameterValueException: The function's execution role does not have permissions to call Publish on arn:...
-			if errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "does not have permissions") {
-				return true, err
-			}
+		// InvalidParameterValueException: The destination ARN arn:PARTITION:SERVICE:REGION:ACCOUNT:RESOURCE is invalid.
+		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "destination ARN") {
+			return retry.RetryableError(err)
+		}
 
-			return false, err
-		},
-	)
+		// InvalidParameterValueException: The function's execution role does not have permissions to call Publish on arn:...
+		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "does not have permissions") {
+			return retry.RetryableError(err)
+		}
+
+		if err != nil {
+			return retry.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		_, err = conn.PutFunctionEventInvokeConfigWithContext(ctx, input)
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Lambda Function Event Invoke Config (%s): %s", d.Id(), err)
@@ -239,11 +260,12 @@ func resourceFunctionEventInvokeConfigUpdate(ctx context.Context, d *schema.Reso
 
 func resourceFunctionEventInvokeConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
+	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
 
-	functionName, qualifier, err := functionEventInvokeConfigParseResourceID(d.Id())
+	functionName, qualifier, err := FunctionEventInvokeConfigParseID(d.Id())
+
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+		return sdkdiag.AppendErrorf(diags, "deleting Lambda Function Event Invoke Config (%s): %s", d.Id(), err)
 	}
 
 	input := &lambda.DeleteFunctionEventInvokeConfigInput{
@@ -254,10 +276,9 @@ func resourceFunctionEventInvokeConfigDelete(ctx context.Context, d *schema.Reso
 		input.Qualifier = aws.String(qualifier)
 	}
 
-	log.Printf("[INFO] Deleting Lambda Function Event Invoke Config: %s", d.Id())
-	_, err = conn.DeleteFunctionEventInvokeConfig(ctx, input)
+	_, err = conn.DeleteFunctionEventInvokeConfigWithContext(ctx, input)
 
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+	if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
 		return diags
 	}
 
@@ -268,7 +289,7 @@ func resourceFunctionEventInvokeConfigDelete(ctx context.Context, d *schema.Reso
 	return diags
 }
 
-func functionEventInvokeConfigParseResourceID(id string) (string, string, error) {
+func FunctionEventInvokeConfigParseID(id string) (string, string, error) {
 	if arn.IsARN(id) {
 		parsedARN, err := arn.Parse(id)
 
@@ -309,142 +330,110 @@ func functionEventInvokeConfigParseResourceID(id string) (string, string, error)
 	return idParts[0], idParts[1], nil
 }
 
-func findFunctionEventInvokeConfig(ctx context.Context, conn *lambda.Client, input *lambda.GetFunctionEventInvokeConfigInput) (*lambda.GetFunctionEventInvokeConfigOutput, error) {
-	output, err := conn.GetFunctionEventInvokeConfig(ctx, input)
-
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
-}
-
-func findFunctionEventInvokeConfigByTwoPartKey(ctx context.Context, conn *lambda.Client, functionName, qualifier string) (*lambda.GetFunctionEventInvokeConfigOutput, error) {
-	input := &lambda.GetFunctionEventInvokeConfigInput{
-		FunctionName: aws.String(functionName),
-	}
-	if qualifier != "" {
-		input.Qualifier = aws.String(qualifier)
-	}
-
-	return findFunctionEventInvokeConfig(ctx, conn, input)
-}
-
-func expandFunctionEventInvokeConfigDestinationConfig(tfList []interface{}) *awstypes.DestinationConfig {
-	if len(tfList) == 0 || tfList[0] == nil {
+func expandFunctionEventInvokeConfigDestinationConfig(l []interface{}) *lambda.DestinationConfig {
+	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	m := l[0].(map[string]interface{})
 
-	destinationConfig := &awstypes.DestinationConfig{}
+	destinationConfig := &lambda.DestinationConfig{}
 
-	if v, ok := tfMap["on_failure"].([]interface{}); ok {
+	if v, ok := m["on_failure"].([]interface{}); ok {
 		destinationConfig.OnFailure = expandFunctionEventInvokeConfigDestinationConfigOnFailure(v)
 	}
 
-	if v, ok := tfMap["on_success"].([]interface{}); ok {
+	if v, ok := m["on_success"].([]interface{}); ok {
 		destinationConfig.OnSuccess = expandFunctionEventInvokeConfigDestinationConfigOnSuccess(v)
 	}
 
 	return destinationConfig
 }
 
-func expandFunctionEventInvokeConfigDestinationConfigOnFailure(tfList []interface{}) *awstypes.OnFailure {
-	if len(tfList) == 0 || tfList[0] == nil {
+func expandFunctionEventInvokeConfigDestinationConfigOnFailure(l []interface{}) *lambda.OnFailure {
+	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	m := l[0].(map[string]interface{})
 
-	onFailure := &awstypes.OnFailure{}
+	onFailure := &lambda.OnFailure{}
 
-	if v, ok := tfMap[names.AttrDestination].(string); ok {
+	if v, ok := m["destination"].(string); ok {
 		onFailure.Destination = aws.String(v)
 	}
 
 	return onFailure
 }
 
-func expandFunctionEventInvokeConfigDestinationConfigOnSuccess(tfList []interface{}) *awstypes.OnSuccess {
-	if len(tfList) == 0 || tfList[0] == nil {
+func expandFunctionEventInvokeConfigDestinationConfigOnSuccess(l []interface{}) *lambda.OnSuccess {
+	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
+	m := l[0].(map[string]interface{})
 
-	onSuccess := &awstypes.OnSuccess{}
+	onSuccess := &lambda.OnSuccess{}
 
-	if v, ok := tfMap[names.AttrDestination].(string); ok {
+	if v, ok := m["destination"].(string); ok {
 		onSuccess.Destination = aws.String(v)
 	}
 
 	return onSuccess
 }
 
-func flattenFunctionEventInvokeConfigDestinationConfig(apiObject *awstypes.DestinationConfig) []interface{} {
+func flattenFunctionEventInvokeConfigDestinationConfig(destinationConfig *lambda.DestinationConfig) []interface{} {
 	// The API will respond with empty OnFailure and OnSuccess destinations when unconfigured:
 	// "DestinationConfig":{"OnFailure":{"Destination":null},"OnSuccess":{"Destination":null}}
 	// Return no destination configuration to prevent Terraform state difference
 
-	if apiObject == nil {
+	if destinationConfig == nil {
 		return []interface{}{}
 	}
 
-	if apiObject.OnFailure == nil && apiObject.OnSuccess == nil {
+	if destinationConfig.OnFailure == nil && destinationConfig.OnSuccess == nil {
 		return []interface{}{}
 	}
 
-	if (apiObject.OnFailure != nil && apiObject.OnFailure.Destination == nil) && (apiObject.OnSuccess != nil && apiObject.OnSuccess.Destination == nil) {
-		return []interface{}{}
-	}
-
-	tfMap := map[string]interface{}{
-		"on_failure": flattenFunctionEventInvokeConfigDestinationConfigOnFailure(apiObject.OnFailure),
-		"on_success": flattenFunctionEventInvokeConfigDestinationConfigOnSuccess(apiObject.OnSuccess),
-	}
-
-	return []interface{}{tfMap}
-}
-
-func flattenFunctionEventInvokeConfigDestinationConfigOnFailure(apiObject *awstypes.OnFailure) []interface{} {
-	// The API will respond with empty OnFailure destination when unconfigured:
-	// "DestinationConfig":{"OnFailure":{"Destination":null},"OnSuccess":{"Destination":null}}
-	// Return no on failure configuration to prevent Terraform state difference
-
-	if apiObject == nil || apiObject.Destination == nil {
-		return []interface{}{}
-	}
-
-	tfMap := map[string]interface{}{
-		names.AttrDestination: aws.ToString(apiObject.Destination),
-	}
-
-	return []interface{}{tfMap}
-}
-
-func flattenFunctionEventInvokeConfigDestinationConfigOnSuccess(apiObject *awstypes.OnSuccess) []interface{} {
-	// The API will respond with empty OnSuccess destination when unconfigured:
-	// "DestinationConfig":{"OnFailure":{"Destination":null},"OnSuccess":{"Destination":null}}
-	// Return no on success configuration to prevent Terraform state difference
-
-	if apiObject == nil || apiObject.Destination == nil {
+	if (destinationConfig.OnFailure != nil && destinationConfig.OnFailure.Destination == nil) && (destinationConfig.OnSuccess != nil && destinationConfig.OnSuccess.Destination == nil) {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		names.AttrDestination: aws.ToString(apiObject.Destination),
+		"on_failure": flattenFunctionEventInvokeConfigDestinationConfigOnFailure(destinationConfig.OnFailure),
+		"on_success": flattenFunctionEventInvokeConfigDestinationConfigOnSuccess(destinationConfig.OnSuccess),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenFunctionEventInvokeConfigDestinationConfigOnFailure(onFailure *lambda.OnFailure) []interface{} {
+	// The API will respond with empty OnFailure destination when unconfigured:
+	// "DestinationConfig":{"OnFailure":{"Destination":null},"OnSuccess":{"Destination":null}}
+	// Return no on failure configuration to prevent Terraform state difference
+
+	if onFailure == nil || onFailure.Destination == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"destination": aws.StringValue(onFailure.Destination),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenFunctionEventInvokeConfigDestinationConfigOnSuccess(onSuccess *lambda.OnSuccess) []interface{} {
+	// The API will respond with empty OnSuccess destination when unconfigured:
+	// "DestinationConfig":{"OnFailure":{"Destination":null},"OnSuccess":{"Destination":null}}
+	// Return no on success configuration to prevent Terraform state difference
+
+	if onSuccess == nil || onSuccess.Destination == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"destination": aws.StringValue(onSuccess.Destination),
 	}
 
 	return []interface{}{m}

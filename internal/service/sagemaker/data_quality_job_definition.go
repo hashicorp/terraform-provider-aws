@@ -39,7 +39,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -50,7 +50,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrEnvironment: {
+						"environment": {
 							Type:         schema.TypeMap,
 							Optional:     true,
 							ForceNew:     true,
@@ -169,7 +169,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 													ForceNew: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															names.AttrHeader: {
+															"header": {
 																Type:     schema.TypeBool,
 																Optional: true,
 																ForceNew: true,
@@ -177,7 +177,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 														},
 													},
 												},
-												names.AttrJSON: {
+												"json": {
 													Type:     schema.TypeList,
 													MaxItems: 1,
 													Optional: true,
@@ -272,7 +272,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrKMSKeyID: {
+						"kms_key_id": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
@@ -341,13 +341,13 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrInstanceCount: {
+									"instance_count": {
 										Type:         schema.TypeInt,
 										Required:     true,
 										ForceNew:     true,
 										ValidateFunc: validation.IntAtLeast(1),
 									},
-									names.AttrInstanceType: {
+									"instance_type": {
 										Type:         schema.TypeString,
 										Required:     true,
 										ForceNew:     true,
@@ -371,7 +371,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 					},
 				},
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -395,14 +395,14 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 						},
-						names.AttrVPCConfig: {
+						"vpc_config": {
 							Type:     schema.TypeList,
 							MaxItems: 1,
 							Optional: true,
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrSecurityGroupIDs: {
+									"security_group_ids": {
 										Type:     schema.TypeSet,
 										MinItems: 1,
 										MaxItems: 5,
@@ -410,7 +410,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 										ForceNew: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
-									names.AttrSubnets: {
+									"subnets": {
 										Type:     schema.TypeSet,
 										MinItems: 1,
 										MaxItems: 16,
@@ -424,7 +424,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 					},
 				},
 			},
-			names.AttrRoleARN: {
+			"role_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -460,14 +460,14 @@ func resourceDataQualityJobDefinitionCreate(ctx context.Context, d *schema.Resou
 	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	var name string
-	if v, ok := d.GetOk(names.AttrName); ok {
+	if v, ok := d.GetOk("name"); ok {
 		name = v.(string)
 	} else {
 		name = id.UniqueId()
 	}
 
 	var roleArn string
-	if v, ok := d.GetOk(names.AttrRoleARN); ok {
+	if v, ok := d.GetOk("role_arn"); ok {
 		roleArn = v.(string)
 	}
 
@@ -520,9 +520,9 @@ func resourceDataQualityJobDefinitionRead(ctx context.Context, d *schema.Resourc
 		return sdkdiag.AppendErrorf(diags, "reading SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, jobDefinition.JobDefinitionArn)
-	d.Set(names.AttrName, jobDefinition.JobDefinitionName)
-	d.Set(names.AttrRoleARN, jobDefinition.RoleArn)
+	d.Set("arn", jobDefinition.JobDefinitionArn)
+	d.Set("name", jobDefinition.JobDefinitionName)
+	d.Set("role_arn", jobDefinition.RoleArn)
 
 	if err := d.Set("data_quality_app_specification", flattenDataQualityAppSpecification(jobDefinition.DataQualityAppSpecification)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting data_quality_app_specification for SageMaker Data Quality Job Definition (%s): %s", d.Id(), err)
@@ -620,7 +620,7 @@ func flattenDataQualityAppSpecification(config *sagemaker.DataQualityAppSpecific
 	}
 
 	if config.Environment != nil {
-		m[names.AttrEnvironment] = aws.StringValueMap(config.Environment)
+		m["environment"] = aws.StringValueMap(config.Environment)
 	}
 
 	if config.PostAnalyticsProcessorSourceUri != nil {
@@ -740,7 +740,7 @@ func flattenMonitoringDatasetFormat(config *sagemaker.MonitoringDatasetFormat) [
 	}
 
 	if config.Json != nil {
-		m[names.AttrJSON] = flattenMonitoringJSONDatasetFormat(config.Json)
+		m["json"] = flattenMonitoringJSONDatasetFormat(config.Json)
 	}
 
 	return []map[string]interface{}{m}
@@ -754,7 +754,7 @@ func flattenMonitoringCSVDatasetFormat(config *sagemaker.MonitoringCsvDatasetFor
 	m := map[string]interface{}{}
 
 	if config.Header != nil {
-		m[names.AttrHeader] = aws.BoolValue(config.Header)
+		m["header"] = aws.BoolValue(config.Header)
 	}
 
 	return []map[string]interface{}{m}
@@ -808,7 +808,7 @@ func flattenMonitoringOutputConfig(config *sagemaker.MonitoringOutputConfig) []m
 	m := map[string]interface{}{}
 
 	if config.KmsKeyId != nil {
-		m[names.AttrKMSKeyID] = aws.StringValue(config.KmsKeyId)
+		m["kms_key_id"] = aws.StringValue(config.KmsKeyId)
 	}
 
 	if config.MonitoringOutputs != nil {
@@ -874,11 +874,11 @@ func flattenMonitoringClusterConfig(config *sagemaker.MonitoringClusterConfig) [
 	m := map[string]interface{}{}
 
 	if config.InstanceCount != nil {
-		m[names.AttrInstanceCount] = aws.Int64Value(config.InstanceCount)
+		m["instance_count"] = aws.Int64Value(config.InstanceCount)
 	}
 
 	if config.InstanceType != nil {
-		m[names.AttrInstanceType] = aws.StringValue(config.InstanceType)
+		m["instance_type"] = aws.StringValue(config.InstanceType)
 	}
 
 	if config.VolumeKmsKeyId != nil {
@@ -908,7 +908,7 @@ func flattenMonitoringNetworkConfig(config *sagemaker.MonitoringNetworkConfig) [
 	}
 
 	if config.VpcConfig != nil {
-		m[names.AttrVPCConfig] = flattenVPCConfig(config.VpcConfig)
+		m["vpc_config"] = flattenVPCConfig(config.VpcConfig)
 	}
 
 	return []map[string]interface{}{m}
@@ -922,11 +922,11 @@ func flattenVPCConfig(config *sagemaker.VpcConfig) []map[string]interface{} {
 	m := map[string]interface{}{}
 
 	if config.SecurityGroupIds != nil {
-		m[names.AttrSecurityGroupIDs] = flex.FlattenStringSet(config.SecurityGroupIds)
+		m["security_group_ids"] = flex.FlattenStringSet(config.SecurityGroupIds)
 	}
 
 	if config.Subnets != nil {
-		m[names.AttrSubnets] = flex.FlattenStringSet(config.Subnets)
+		m["subnets"] = flex.FlattenStringSet(config.Subnets)
 	}
 
 	return []map[string]interface{}{m}
@@ -959,7 +959,7 @@ func expandDataQualityAppSpecification(configured []interface{}) *sagemaker.Data
 		c.ImageUri = aws.String(v)
 	}
 
-	if v, ok := m[names.AttrEnvironment].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := m["environment"].(map[string]interface{}); ok && len(v) > 0 {
 		c.Environment = flex.ExpandStringMap(v)
 	}
 
@@ -1119,7 +1119,7 @@ func expandMonitoringDatasetFormat(configured []interface{}) *sagemaker.Monitori
 		c.Csv = expandMonitoringCSVDatasetFormat(v)
 	}
 
-	if v, ok := m[names.AttrJSON].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["json"].([]interface{}); ok && len(v) > 0 {
 		c.Json = expandMonitoringJSONDatasetFormat(v)
 	}
 
@@ -1157,7 +1157,7 @@ func expandMonitoringCSVDatasetFormat(configured []interface{}) *sagemaker.Monit
 	}
 
 	m := configured[0].(map[string]interface{})
-	if v, ok := m[names.AttrHeader]; ok {
+	if v, ok := m["header"]; ok {
 		c.Header = aws.Bool(v.(bool))
 	}
 
@@ -1173,7 +1173,7 @@ func expandMonitoringOutputConfig(configured []interface{}) *sagemaker.Monitorin
 
 	c := &sagemaker.MonitoringOutputConfig{}
 
-	if v, ok := m[names.AttrKMSKeyID].(string); ok && v != "" {
+	if v, ok := m["kms_key_id"].(string); ok && v != "" {
 		c.KmsKeyId = aws.String(v)
 	}
 
@@ -1248,11 +1248,11 @@ func expandMonitoringClusterConfig(configured []interface{}) *sagemaker.Monitori
 
 	c := &sagemaker.MonitoringClusterConfig{}
 
-	if v, ok := m[names.AttrInstanceCount].(int); ok && v > 0 {
+	if v, ok := m["instance_count"].(int); ok && v > 0 {
 		c.InstanceCount = aws.Int64(int64(v))
 	}
 
-	if v, ok := m[names.AttrInstanceType].(string); ok && v != "" {
+	if v, ok := m["instance_type"].(string); ok && v != "" {
 		c.InstanceType = aws.String(v)
 	}
 
@@ -1284,7 +1284,7 @@ func expandMonitoringNetworkConfig(configured []interface{}) *sagemaker.Monitori
 		c.EnableNetworkIsolation = aws.Bool(v.(bool))
 	}
 
-	if v, ok := m[names.AttrVPCConfig].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["vpc_config"].([]interface{}); ok && len(v) > 0 {
 		c.VpcConfig = expandVPCConfig(v)
 	}
 
@@ -1300,11 +1300,11 @@ func expandVPCConfig(configured []interface{}) *sagemaker.VpcConfig {
 
 	c := &sagemaker.VpcConfig{}
 
-	if v, ok := m[names.AttrSecurityGroupIDs].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := m["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
 		c.SecurityGroupIds = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := m[names.AttrSubnets].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := m["subnets"].(*schema.Set); ok && v.Len() > 0 {
 		c.Subnets = flex.ExpandStringSet(v)
 	}
 

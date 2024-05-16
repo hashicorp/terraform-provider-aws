@@ -35,20 +35,20 @@ func ResourceTrustAnchor() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrEnabled: {
+			"enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrSource: {
+			"source": {
 				Type:     schema.TypeList,
 				Required: true,
 				MinItems: 1,
@@ -74,7 +74,7 @@ func ResourceTrustAnchor() *schema.Resource {
 								},
 							},
 						},
-						names.AttrSourceType: {
+						"source_type": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(trustAnchorTypeValues(types.TrustAnchorType("").Values()...), false),
@@ -93,11 +93,11 @@ func ResourceTrustAnchor() *schema.Resource {
 func resourceTrustAnchorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &rolesanywhere.CreateTrustAnchorInput{
-		Enabled: aws.Bool(d.Get(names.AttrEnabled).(bool)),
+		Enabled: aws.Bool(d.Get("enabled").(bool)),
 		Name:    aws.String(name),
-		Source:  expandSource(d.Get(names.AttrSource).([]interface{})),
+		Source:  expandSource(d.Get("source").([]interface{})),
 		Tags:    getTagsIn(ctx),
 	}
 
@@ -128,11 +128,11 @@ func resourceTrustAnchorRead(ctx context.Context, d *schema.ResourceData, meta i
 		return diag.Errorf("reading RolesAnywhere Trust Anchor (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, trustAnchor.TrustAnchorArn)
-	d.Set(names.AttrEnabled, trustAnchor.Enabled)
-	d.Set(names.AttrName, trustAnchor.Name)
+	d.Set("arn", trustAnchor.TrustAnchorArn)
+	d.Set("enabled", trustAnchor.Enabled)
+	d.Set("name", trustAnchor.Name)
 
-	if err := d.Set(names.AttrSource, flattenSource(trustAnchor.Source)); err != nil {
+	if err := d.Set("source", flattenSource(trustAnchor.Source)); err != nil {
 		return diag.Errorf("setting source: %s", err)
 	}
 
@@ -142,11 +142,11 @@ func resourceTrustAnchorRead(ctx context.Context, d *schema.ResourceData, meta i
 func resourceTrustAnchorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &rolesanywhere.UpdateTrustAnchorInput{
 			TrustAnchorId: aws.String(d.Id()),
-			Name:          aws.String(d.Get(names.AttrName).(string)),
-			Source:        expandSource(d.Get(names.AttrSource).([]interface{})),
+			Name:          aws.String(d.Get("name").(string)),
+			Source:        expandSource(d.Get("source").([]interface{})),
 		}
 
 		log.Printf("[DEBUG] Updating RolesAnywhere Trust Anchor (%s): %#v", d.Id(), input)
@@ -156,8 +156,8 @@ func resourceTrustAnchorUpdate(ctx context.Context, d *schema.ResourceData, meta
 			return diag.Errorf("updating RolesAnywhere Trust Anchor (%s): %s", d.Id(), err)
 		}
 
-		if d.HasChange(names.AttrEnabled) {
-			_, n := d.GetChange(names.AttrEnabled)
+		if d.HasChange("enabled") {
+			_, n := d.GetChange("enabled")
 			if n == true {
 				if err := enableTrustAnchor(ctx, d.Id(), meta); err != nil {
 					diag.Errorf("enabling RolesAnywhere Trust Anchor (%s): %s", d.Id(), err)
@@ -200,7 +200,7 @@ func flattenSource(apiObject *types.Source) []interface{} {
 
 	m := map[string]interface{}{}
 
-	m[names.AttrSourceType] = apiObject.SourceType
+	m["source_type"] = apiObject.SourceType
 	m["source_data"] = flattenSourceData(apiObject.SourceData)
 
 	return []interface{}{m}
@@ -239,7 +239,7 @@ func expandSource(tfList []interface{}) *types.Source {
 
 	result := &types.Source{}
 
-	if v, ok := tfMap[names.AttrSourceType].(string); ok && v != "" {
+	if v, ok := tfMap["source_type"].(string); ok && v != "" {
 		result.SourceType = types.TrustAnchorType(v)
 	}
 

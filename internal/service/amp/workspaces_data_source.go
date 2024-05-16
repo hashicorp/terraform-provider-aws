@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_prometheus_workspaces", name="Workspaces")
@@ -31,7 +30,7 @@ func dataSourceWorkspaces() *schema.Resource { // nosemgrep:ci.caps0-in-func-nam
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrARNs: {
+			"arns": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -65,7 +64,7 @@ func dataSourceWorkspacesRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set("aliases", aliases)
-	d.Set(names.AttrARNs, arns)
+	d.Set("arns", arns)
 	d.Set("workspace_ids", workspaceIDs)
 
 	return diags

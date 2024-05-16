@@ -8,12 +8,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -21,7 +22,7 @@ import (
 
 func TestAccSSMServiceSetting_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var setting awstypes.ServiceSetting
+	var setting ssm.ServiceSetting
 	resourceName := "aws_ssm_service_setting.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -55,14 +56,14 @@ func TestAccSSMServiceSetting_basic(t *testing.T) {
 
 func testAccCheckServiceSettingDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ssm_service_setting" {
 				continue
 			}
 
-			output, err := tfssm.FindServiceSettingByID(ctx, conn, rs.Primary.ID)
+			output, err := tfssm.FindServiceSettingByID(ctx, conn, rs.Primary.Attributes["setting_id"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -72,30 +73,34 @@ func testAccCheckServiceSettingDestroy(ctx context.Context) resource.TestCheckFu
 				return err
 			}
 
-			if aws.ToString(output.Status) == "Default" {
+			if aws.StringValue(output.Status) == "Default" {
 				continue
 			}
 
-			return fmt.Errorf("SSM Service Setting %s still exists", rs.Primary.ID)
+			return create.Error(names.SSM, create.ErrActionCheckingDestroyed, tfssm.ResNameServiceSetting, rs.Primary.Attributes["setting_id"], err)
 		}
 
 		return nil
 	}
 }
 
-func testAccServiceSettingExists(ctx context.Context, n string, v *awstypes.ServiceSetting) resource.TestCheckFunc {
+func testAccServiceSettingExists(ctx context.Context, n string, v *ssm.ServiceSetting) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient(ctx)
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No SSM Service Setting ID is set")
+		}
 
-		output, err := tfssm.FindServiceSettingByID(ctx, conn, rs.Primary.ID)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn(ctx)
+
+		output, err := tfssm.FindServiceSettingByID(ctx, conn, rs.Primary.Attributes["setting_id"])
 
 		if err != nil {
-			return err
+			return create.Error(names.SSM, create.ErrActionReading, tfssm.ResNameServiceSetting, rs.Primary.Attributes["setting_id"], err)
 		}
 
 		*v = *output

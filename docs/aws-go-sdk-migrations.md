@@ -43,16 +43,8 @@ PKG=ec2 make awssdkpatch-apply
 You may also optionally generate the patch and use [`gopatch`](https://github.com/uber-go/gopatch) to preview differences before modfiying any files.
 
 ```console
-make awssdkpatch-gen PKG=ec2
+PKG=ec2 make awssdkpatch-gen
 gopatch -d -p awssdk.patch ./internal/service/ec2/...
-```
-
-#### Custom options
-
-To set additional `awssdkpatch` flags during patch generation, use the `AWSSDKPATCH_OPTS` environment variable.
-
-```console
-make awssdkpatch-gen PKG=ec2 AWSSDKPATCH_OPTS="-multiclient"
 ```
 
 ## Imports
@@ -70,18 +62,16 @@ github.com/aws-sdk-go-v2/service/<service>
 awstypes github.com/aws-sdk-go-v2/service/<service>/types
 ```
 
-If the `aws` or `arn` packages are used, these should also be upgraded.
+If the `aws` package is used, this should also be upgraded.
 
 ```
 // Remove
 github.com/aws-sdk-go/aws
-github.com/aws-sdk-go/aws/arn
 ```
 
 ```
 // Add
 github.com/aws-sdk-go-v2/aws
-github.com/aws-sdk-go-v2/aws/arn
 ```
 
 ## Client
@@ -257,31 +247,31 @@ ValidateFunc: validation.StringInSlice(<service>.Thing_Values(), false),
 ValidateDiagFunc: enum.Validate[awstypes.Thing](),
 ```
 
-## Acceptance Testing `PreCheckPartitionHasService`
+## Acceptance Testing `ErrorCheck`
 
 With V1, this check relies on the endpoint ID constant included in the SDK.
-These are not included in the V2 SDK, but can be replaced with a constant from the `names` package.
+These are not included in the V2 SDK, but can be replaced with a generated constant from the `names` package.
 
 ```go
 // Remove
-acctest.PreCheckPartitionHasService(t, <service>.EndpointsID),
+ErrorCheck: acctest.ErrorCheck(t, <service>.EndpointsID),
 ```
 
 ```go
 // Add
-acctest.PreCheckPartitionHasService(t, names.<Service>EndpointID),
+ErrorCheck: acctest.ErrorCheck(t, names.<service>ServiceID),
 ```
 
 For example,
 
 ```
-acctest.PreCheckPartitionHasService(t, ssoadmin.EndpointsID),
+ErrorCheck: acctest.ErrorCheck(t, ssoadmin.EndpointsID),
 ```
 
 becomes:
 
 ```go
-acctest.PreCheckPartitionHasService(t, names.SSOAdminEndpointID),
+ErrorCheck: acctest.ErrorCheck(t, names.SSOAdminServiceID),
 ```
 
 ## Pagination

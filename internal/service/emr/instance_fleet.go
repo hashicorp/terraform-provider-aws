@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_emr_instance_fleet", name="Instance Fleet")
@@ -79,7 +78,7 @@ func resourceInstanceFleet() *schema.Resource {
 										Optional: true,
 										ForceNew: true,
 									},
-									names.AttrProperties: {
+									"properties": {
 										Type:     schema.TypeMap,
 										Optional: true,
 										ForceNew: true,
@@ -95,17 +94,17 @@ func resourceInstanceFleet() *schema.Resource {
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrIOPS: {
+									"iops": {
 										Type:     schema.TypeInt,
 										Optional: true,
 										ForceNew: true,
 									},
-									names.AttrSize: {
+									"size": {
 										Type:     schema.TypeInt,
 										Required: true,
 										ForceNew: true,
 									},
-									names.AttrType: {
+									"type": {
 										Type:         schema.TypeString,
 										Required:     true,
 										ForceNew:     true,
@@ -121,7 +120,7 @@ func resourceInstanceFleet() *schema.Resource {
 							},
 							Set: resourceClusterEBSHashConfig,
 						},
-						names.AttrInstanceType: {
+						"instance_type": {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -195,7 +194,7 @@ func resourceInstanceFleet() *schema.Resource {
 					},
 				},
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -227,7 +226,7 @@ func resourceInstanceFleetCreate(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	taskFleet := map[string]interface{}{
-		names.AttrName:              d.Get(names.AttrName),
+		"name":                      d.Get("name"),
 		"target_on_demand_capacity": d.Get("target_on_demand_capacity"),
 		"target_spot_capacity":      d.Get("target_spot_capacity"),
 		"instance_type_configs":     d.Get("instance_type_configs"),
@@ -271,7 +270,7 @@ func resourceInstanceFleetRead(ctx context.Context, d *schema.ResourceData, meta
 	if err := d.Set("launch_specifications", flattenLaunchSpecifications(fleet.LaunchSpecifications)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting launch_specifications: %s", err)
 	}
-	d.Set(names.AttrName, fleet.Name)
+	d.Set("name", fleet.Name)
 	d.Set("provisioned_on_demand_capacity", fleet.ProvisionedOnDemandCapacity)
 	d.Set("provisioned_spot_capacity", fleet.ProvisionedSpotCapacity)
 	d.Set("target_on_demand_capacity", fleet.TargetOnDemandCapacity)

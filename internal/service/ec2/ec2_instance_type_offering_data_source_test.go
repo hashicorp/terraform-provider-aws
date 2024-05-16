@@ -24,7 +24,7 @@ func TestAccEC2InstanceTypeOfferingDataSource_filter(t *testing.T) {
 			{
 				Config: testAccInstanceTypeOfferingDataSourceConfig_filter(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrInstanceType),
+					resource.TestCheckResourceAttrSet(dataSourceName, "instance_type"),
 				),
 			},
 		},
@@ -44,7 +44,7 @@ func TestAccEC2InstanceTypeOfferingDataSource_locationType(t *testing.T) {
 			{
 				Config: testAccInstanceTypeOfferingDataSourceConfig_location(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrInstanceType),
+					resource.TestCheckResourceAttrSet(dataSourceName, "instance_type"),
 				),
 			},
 		},
@@ -64,7 +64,7 @@ func TestAccEC2InstanceTypeOfferingDataSource_preferredInstanceTypes(t *testing.
 			{
 				Config: testAccInstanceTypeOfferingDataSourceConfig_preferreds(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrInstanceType, "t3.micro"),
+					resource.TestCheckResourceAttr(dataSourceName, "instance_type", "t3.micro"),
 				),
 			},
 		},

@@ -21,7 +21,6 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_detective_member")
@@ -36,7 +35,7 @@ func ResourceMember() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrAccountID: {
+			"account_id": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -70,12 +69,12 @@ func ResourceMember() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrMessage: {
+			"message": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -96,7 +95,7 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
-	accountID := d.Get(names.AttrAccountID).(string)
+	accountID := d.Get("account_id").(string)
 	graphARN := d.Get("graph_arn").(string)
 	id := memberCreateResourceID(graphARN, accountID)
 	input := &detective.CreateMembersInput{
@@ -111,7 +110,7 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.DisableEmailNotification = aws.Bool(v)
 	}
 
-	if v, ok := d.GetOk(names.AttrMessage); ok {
+	if v, ok := d.GetOk("message"); ok {
 		input.Message = aws.String(v.(string))
 	}
 
@@ -154,13 +153,13 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading Detective Member (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrAccountID, member.AccountId)
+	d.Set("account_id", member.AccountId)
 	d.Set("administrator_id", member.AdministratorId)
 	d.Set("disabled_reason", member.DisabledReason)
 	d.Set("email_address", member.EmailAddress)
 	d.Set("graph_arn", member.GraphArn)
 	d.Set("invited_time", aws.TimeValue(member.InvitedTime).Format(time.RFC3339))
-	d.Set(names.AttrStatus, member.Status)
+	d.Set("status", member.Status)
 	d.Set("updated_time", aws.TimeValue(member.UpdatedTime).Format(time.RFC3339))
 	d.Set("volume_usage_in_bytes", member.VolumeUsageInBytes)
 

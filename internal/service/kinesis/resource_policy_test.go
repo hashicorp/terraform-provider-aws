@@ -33,14 +33,14 @@ func TestAccKinesisResourcePolicy_basic(t *testing.T) {
 				Config: testAccResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourcePolicyExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
+					resource.TestCheckResourceAttrSet(resourceName, "policy"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrPolicy}, // TODO terraform-plugin-testing
+				ImportStateVerifyIgnore: []string{"policy"}, // TODO terraform-plugin-testing
 			},
 		},
 	})

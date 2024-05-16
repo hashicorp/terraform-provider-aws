@@ -24,8 +24,8 @@ func TestAccEC2SpotDatafeedSubscription_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic: testAccSpotDatafeedSubscription_basic,
-		"disappears":    testAccSpotDatafeedSubscription_disappears,
+		"basic":      testAccSpotDatafeedSubscription_basic,
+		"disappears": testAccSpotDatafeedSubscription_disappears,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)

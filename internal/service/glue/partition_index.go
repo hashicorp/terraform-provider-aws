@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_glue_partition_index")
@@ -32,19 +31,19 @@ func ResourcePartitionIndex() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrCatalogID: {
+			"catalog_id": {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
 				Computed: true,
 			},
-			names.AttrDatabaseName: {
+			"database_name": {
 				Type:         schema.TypeString,
 				ForceNew:     true,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
-			names.AttrTableName: {
+			"table_name": {
 				Type:         schema.TypeString,
 				ForceNew:     true,
 				Required:     true,
@@ -88,8 +87,8 @@ func resourcePartitionIndexCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
-	dbName := d.Get(names.AttrDatabaseName).(string)
-	tableName := d.Get(names.AttrTableName).(string)
+	dbName := d.Get("database_name").(string)
+	tableName := d.Get("table_name").(string)
 
 	input := &glue.CreatePartitionIndexInput{
 		CatalogId:      aws.String(catalogID),
@@ -134,9 +133,9 @@ func resourcePartitionIndexRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading Glue Partition Index (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrTableName, tableName)
-	d.Set(names.AttrCatalogID, catalogID)
-	d.Set(names.AttrDatabaseName, dbName)
+	d.Set("table_name", tableName)
+	d.Set("catalog_id", catalogID)
+	d.Set("database_name", dbName)
 
 	if err := d.Set("partition_index", []map[string]interface{}{flattenPartitionIndex(partition)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting partition_index: %s", err)

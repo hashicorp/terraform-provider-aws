@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ses_receipt_filter")
@@ -31,11 +30,11 @@ func ResourceReceiptFilter() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -57,7 +56,7 @@ func ResourceReceiptFilter() *schema.Resource {
 				),
 			},
 
-			names.AttrPolicy: {
+			"policy": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -74,14 +73,14 @@ func resourceReceiptFilterCreate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 
 	createOpts := &ses.CreateReceiptFilterInput{
 		Filter: &ses.ReceiptFilter{
 			Name: aws.String(name),
 			IpFilter: &ses.ReceiptIpFilter{
 				Cidr:   aws.String(d.Get("cidr").(string)),
-				Policy: aws.String(d.Get(names.AttrPolicy).(string)),
+				Policy: aws.String(d.Get("policy").(string)),
 			},
 		},
 	}
@@ -123,8 +122,8 @@ func resourceReceiptFilterRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	d.Set("cidr", filter.IpFilter.Cidr)
-	d.Set(names.AttrPolicy, filter.IpFilter.Policy)
-	d.Set(names.AttrName, filter.Name)
+	d.Set("policy", filter.IpFilter.Policy)
+	d.Set("name", filter.Name)
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
@@ -133,7 +132,7 @@ func resourceReceiptFilterRead(ctx context.Context, d *schema.ResourceData, meta
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("receipt-filter/%s", d.Id()),
 	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set("arn", arn)
 
 	return diags
 }

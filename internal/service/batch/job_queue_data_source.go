@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_batch_job_queue")
@@ -23,12 +22,12 @@ func DataSourceJobQueue() *schema.Resource {
 		ReadWithoutTimeout: dataSourceJobQueueRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
 
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -38,24 +37,24 @@ func DataSourceJobQueue() *schema.Resource {
 				Computed: true,
 			},
 
-			names.AttrStatus: {
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			names.AttrStatusReason: {
+			"status_reason": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			names.AttrState: {
+			"state": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 
-			names.AttrPriority: {
+			"priority": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -86,30 +85,30 @@ func dataSourceJobQueueRead(ctx context.Context, d *schema.ResourceData, meta in
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	params := &batch.DescribeJobQueuesInput{
-		JobQueues: []*string{aws.String(d.Get(names.AttrName).(string))},
+		JobQueues: []*string{aws.String(d.Get("name").(string))},
 	}
 	log.Printf("[DEBUG] Reading Batch Job Queue: %s", params)
 	desc, err := conn.DescribeJobQueuesWithContext(ctx, params)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Batch Job Queue (%s): %s", d.Get(names.AttrName).(string), err)
+		return sdkdiag.AppendErrorf(diags, "reading Batch Job Queue (%s): %s", d.Get("name").(string), err)
 	}
 
 	if l := len(desc.JobQueues); l == 0 {
-		return sdkdiag.AppendErrorf(diags, "reading Batch Job Queue (%s): empty response", d.Get(names.AttrName).(string))
+		return sdkdiag.AppendErrorf(diags, "reading Batch Job Queue (%s): empty response", d.Get("name").(string))
 	} else if l > 1 {
-		return sdkdiag.AppendErrorf(diags, "reading Batch Job Queue (%s): too many results: wanted 1, got %d", d.Get(names.AttrName).(string), l)
+		return sdkdiag.AppendErrorf(diags, "reading Batch Job Queue (%s): too many results: wanted 1, got %d", d.Get("name").(string), l)
 	}
 
 	jobQueue := desc.JobQueues[0]
 	d.SetId(aws.StringValue(jobQueue.JobQueueArn))
-	d.Set(names.AttrARN, jobQueue.JobQueueArn)
-	d.Set(names.AttrName, jobQueue.JobQueueName)
+	d.Set("arn", jobQueue.JobQueueArn)
+	d.Set("name", jobQueue.JobQueueName)
 	d.Set("scheduling_policy_arn", jobQueue.SchedulingPolicyArn)
-	d.Set(names.AttrStatus, jobQueue.Status)
-	d.Set(names.AttrStatusReason, jobQueue.StatusReason)
-	d.Set(names.AttrState, jobQueue.State)
-	d.Set(names.AttrPriority, jobQueue.Priority)
+	d.Set("status", jobQueue.Status)
+	d.Set("status_reason", jobQueue.StatusReason)
+	d.Set("state", jobQueue.State)
+	d.Set("priority", jobQueue.Priority)
 
 	ceos := make([]map[string]interface{}, 0)
 	for _, v := range jobQueue.ComputeEnvironmentOrder {
@@ -122,7 +121,7 @@ func dataSourceJobQueueRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "setting compute_environment_order: %s", err)
 	}
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, jobQueue.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, jobQueue.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_chimesdkvoice_sip_rule", name="Sip Rule")
@@ -39,7 +38,7 @@ func ResourceSipRule() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 256),
@@ -56,7 +55,7 @@ func ResourceSipRule() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
-						names.AttrPriority: {
+						"priority": {
 							Type:         schema.TypeInt,
 							Required:     true,
 							ValidateFunc: validation.IntAtLeast(1),
@@ -87,7 +86,7 @@ func resourceSipRuleCreate(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
 	input := &chimesdkvoice.CreateSipRuleInput{
-		Name:               aws.String(d.Get(names.AttrName).(string)),
+		Name:               aws.String(d.Get("name").(string)),
 		TriggerType:        awstypes.SipRuleTriggerType(d.Get("trigger_type").(string)),
 		TriggerValue:       aws.String(d.Get("trigger_value").(string)),
 		TargetApplications: expandSipRuleTargetApplications(d.Get("target_applications").(*schema.Set).List()),
@@ -122,7 +121,7 @@ func resourceSipRuleRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diags
 	}
 
-	d.Set(names.AttrName, resp.Name)
+	d.Set("name", resp.Name)
 	d.Set("disabled", resp.Disabled)
 	d.Set("trigger_type", resp.TriggerType)
 	d.Set("trigger_value", resp.TriggerValue)
@@ -136,7 +135,7 @@ func resourceSipRuleUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 	updateInput := &chimesdkvoice.UpdateSipRuleInput{
 		SipRuleId: aws.String(d.Id()),
-		Name:      aws.String(d.Get(names.AttrName).(string)),
+		Name:      aws.String(d.Get("name").(string)),
 	}
 
 	if d.HasChanges("target_applications") {
@@ -180,7 +179,7 @@ func expandSipRuleTargetApplications(data []interface{}) []awstypes.SipRuleTarge
 		item := rItem.(map[string]interface{})
 		application := awstypes.SipRuleTargetApplication{
 			SipMediaApplicationId: aws.String(item["sip_media_application_id"].(string)),
-			Priority:              aws.Int32(int32(item[names.AttrPriority].(int))),
+			Priority:              aws.Int32(int32(item["priority"].(int))),
 			AwsRegion:             aws.String(item["aws_region"].(string)),
 		}
 
@@ -196,7 +195,7 @@ func flattenSipRuleTargetApplications(apiObject []awstypes.SipRuleTargetApplicat
 	for _, e := range apiObject {
 		rawTargetApplication := map[string]interface{}{
 			"sip_media_application_id": aws.ToString(e.SipMediaApplicationId),
-			names.AttrPriority:         e.Priority,
+			"priority":                 e.Priority,
 			"aws_region":               aws.ToString(e.AwsRegion),
 		}
 

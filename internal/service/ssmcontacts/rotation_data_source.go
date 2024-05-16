@@ -37,7 +37,7 @@ func (d *dataSourceRotation) Metadata(_ context.Context, request datasource.Meta
 func (d *dataSourceRotation) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: schema.StringAttribute{
+			"arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 			},
@@ -46,8 +46,8 @@ func (d *dataSourceRotation) Schema(ctx context.Context, request datasource.Sche
 				ElementType: types.StringType,
 				Computed:    true,
 			},
-			names.AttrID: framework.IDAttribute(),
-			names.AttrName: schema.StringAttribute{
+			"id": framework.IDAttribute(),
+			"name": schema.StringAttribute{
 				Computed: true,
 			},
 			"recurrence": schema.ListAttribute{
@@ -55,11 +55,11 @@ func (d *dataSourceRotation) Schema(ctx context.Context, request datasource.Sche
 				ElementType: fwtypes.NewObjectTypeOf[dsRecurrenceData](ctx),
 				Computed:    true,
 			},
-			names.AttrStartTime: schema.StringAttribute{
+			"start_time": schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 			},
-			names.AttrTags: tftags.TagsAttributeComputedOnly(),
+			"tags": tftags.TagsAttributeComputedOnly(),
 			"time_zone_id": schema.StringAttribute{
 				Computed: true,
 			},

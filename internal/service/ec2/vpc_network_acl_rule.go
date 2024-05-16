@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_network_acl_rule", name="Network ACL Rule")
@@ -74,7 +73,7 @@ func resourceNetworkACLRule() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrProtocol: {
+			"protocol": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -125,7 +124,7 @@ func resourceNetworkACLRuleCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	protocol := d.Get(names.AttrProtocol).(string)
+	protocol := d.Get("protocol").(string)
 	protocolNumber, err := networkACLProtocolNumber(protocol)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Network ACL Rule: %s", err)
@@ -233,9 +232,9 @@ func resourceNetworkACLRuleRead(ctx context.Context, d *schema.ResourceData, met
 			return sdkdiag.AppendErrorf(diags, "reading EC2 Network ACL Rule (%s): %s", d.Id(), err)
 		}
 
-		d.Set(names.AttrProtocol, strconv.Itoa(protocolNumber))
+		d.Set("protocol", strconv.Itoa(protocolNumber))
 	} else {
-		d.Set(names.AttrProtocol, nil)
+		d.Set("protocol", nil)
 	}
 
 	return diags

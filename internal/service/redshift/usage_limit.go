@@ -25,7 +25,7 @@ import (
 
 // @SDKResource("aws_redshift_usage_limit", name="Usage Limit")
 // @Tags(identifierAttribute="arn")
-func resourceUsageLimit() *schema.Resource {
+func ResourceUsageLimit() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUsageLimitCreate,
 		ReadWithoutTimeout:   resourceUsageLimitRead,
@@ -41,7 +41,7 @@ func resourceUsageLimit() *schema.Resource {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -51,7 +51,7 @@ func resourceUsageLimit() *schema.Resource {
 				Default:      redshift.UsageLimitBreachActionLog,
 				ValidateFunc: validation.StringInSlice(redshift.UsageLimitBreachAction_Values(), false),
 			},
-			names.AttrClusterIdentifier: {
+			"cluster_identifier": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -87,7 +87,7 @@ func resourceUsageLimitCreate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	clusterId := d.Get(names.AttrClusterIdentifier).(string)
+	clusterId := d.Get("cluster_identifier").(string)
 	input := redshift.CreateUsageLimitInput{
 		Amount:            aws.Int64(int64(d.Get("amount").(int))),
 		ClusterIdentifier: aws.String(clusterId),
@@ -119,8 +119,7 @@ func resourceUsageLimitRead(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	out, err := findUsageLimitByID(ctx, conn, d.Id())
-
+	out, err := FindUsageLimitByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Usage Limit (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -139,13 +138,13 @@ func resourceUsageLimitRead(ctx context.Context, d *schema.ResourceData, meta in
 		Resource:  fmt.Sprintf("usagelimit:%s", d.Id()),
 	}.String()
 
-	d.Set(names.AttrARN, arn)
+	d.Set("arn", arn)
 	d.Set("amount", out.Amount)
 	d.Set("period", out.Period)
 	d.Set("limit_type", out.LimitType)
 	d.Set("feature_type", out.FeatureType)
 	d.Set("breach_action", out.BreachAction)
-	d.Set(names.AttrClusterIdentifier, out.ClusterIdentifier)
+	d.Set("cluster_identifier", out.ClusterIdentifier)
 
 	setTagsOut(ctx, out.Tags)
 
@@ -156,7 +155,7 @@ func resourceUsageLimitUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &redshift.ModifyUsageLimitInput{
 			UsageLimitId: aws.String(d.Id()),
 		}

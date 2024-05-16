@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_neptune_engine_version")
@@ -46,7 +45,7 @@ func DataSourceEngineVersion() *schema.Resource {
 				Type:          schema.TypeList,
 				Optional:      true,
 				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{names.AttrVersion},
+				ConflictsWith: []string{"version"},
 			},
 			"supported_timezones": {
 				Type:     schema.TypeSet,
@@ -66,7 +65,7 @@ func DataSourceEngineVersion() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrVersion: {
+			"version": {
 				Type:          schema.TypeString,
 				Computed:      true,
 				Optional:      true,
@@ -94,7 +93,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 		input.DBParameterGroupFamily = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrVersion); ok {
+	if v, ok := d.GetOk("version"); ok {
 		input.EngineVersion = aws.String(v.(string))
 	} else if _, ok := d.GetOk("preferred_versions"); !ok {
 		input.DefaultOnly = aws.Bool(true)
@@ -145,7 +144,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 		return aws.StringValue(v.EngineVersion)
 	}))
 
-	d.Set(names.AttrVersion, engineVersion.EngineVersion)
+	d.Set("version", engineVersion.EngineVersion)
 	d.Set("version_description", engineVersion.DBEngineVersionDescription)
 
 	return diags

@@ -49,11 +49,11 @@ func TestAccLightsailDatabase_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bundle_id", "micro_1_0"),
 					resource.TestCheckResourceAttr(resourceName, "master_database_name", "testdatabasename"),
 					resource.TestCheckResourceAttr(resourceName, "master_username", "test"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
+					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
+					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
 					resource.TestCheckResourceAttrSet(resourceName, "cpu_count"),
 					resource.TestCheckResourceAttrSet(resourceName, "ram_size"),
 					resource.TestCheckResourceAttrSet(resourceName, "disk_size"),
@@ -67,7 +67,7 @@ func TestAccLightsailDatabase_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrApplyImmediately,
+					"apply_immediately",
 					"master_password",
 					"skip_final_snapshot",
 					"final_snapshot_name",
@@ -129,7 +129,7 @@ func TestAccLightsailDatabase_relationalDatabaseName(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrApplyImmediately,
+					"apply_immediately",
 					"master_password",
 					"skip_final_snapshot",
 					"final_snapshot_name",
@@ -188,7 +188,7 @@ func TestAccLightsailDatabase_masterDatabaseName(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrApplyImmediately,
+					"apply_immediately",
 					"master_password",
 					"skip_final_snapshot",
 					"final_snapshot_name",
@@ -259,7 +259,7 @@ func TestAccLightsailDatabase_masterUsername(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrApplyImmediately,
+					"apply_immediately",
 					"master_password",
 					"skip_final_snapshot",
 					"final_snapshot_name",
@@ -362,7 +362,7 @@ func TestAccLightsailDatabase_preferredBackupWindow(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrApplyImmediately,
+					"apply_immediately",
 					"master_password",
 					"skip_final_snapshot",
 					"final_snapshot_name",
@@ -413,7 +413,7 @@ func TestAccLightsailDatabase_preferredMaintenanceWindow(t *testing.T) {
 				Config: testAccDatabaseConfig_preferredMaintenanceWindow(rName, "tue:04:30-tue:05:00"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPreferredMaintenanceWindow, "tue:04:30-tue:05:00"),
+					resource.TestCheckResourceAttr(resourceName, "preferred_maintenance_window", "tue:04:30-tue:05:00"),
 				),
 			},
 			{
@@ -421,7 +421,7 @@ func TestAccLightsailDatabase_preferredMaintenanceWindow(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrApplyImmediately,
+					"apply_immediately",
 					"master_password",
 					"skip_final_snapshot",
 					"final_snapshot_name",
@@ -431,7 +431,7 @@ func TestAccLightsailDatabase_preferredMaintenanceWindow(t *testing.T) {
 				Config: testAccDatabaseConfig_preferredMaintenanceWindow(rName, "wed:06:00-wed:07:30"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPreferredMaintenanceWindow, "wed:06:00-wed:07:30"),
+					resource.TestCheckResourceAttr(resourceName, "preferred_maintenance_window", "wed:06:00-wed:07:30"),
 				),
 			},
 		},
@@ -457,7 +457,7 @@ func TestAccLightsailDatabase_publiclyAccessible(t *testing.T) {
 				Config: testAccDatabaseConfig_publiclyAccessible(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, "true"),
+					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "true"),
 				),
 			},
 			{
@@ -465,7 +465,7 @@ func TestAccLightsailDatabase_publiclyAccessible(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrApplyImmediately,
+					"apply_immediately",
 					"master_password",
 					"skip_final_snapshot",
 					"final_snapshot_name",
@@ -475,7 +475,7 @@ func TestAccLightsailDatabase_publiclyAccessible(t *testing.T) {
 				Config: testAccDatabaseConfig_publiclyAccessible(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, "false"),
+					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
 				),
 			},
 		},
@@ -509,7 +509,7 @@ func TestAccLightsailDatabase_backupRetentionEnabled(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrApplyImmediately,
+					"apply_immediately",
 					"master_password",
 					"skip_final_snapshot",
 					"final_snapshot_name",
@@ -573,7 +573,7 @@ func TestAccLightsailDatabase_finalSnapshotName(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrApplyImmediately,
+					"apply_immediately",
 					"master_password",
 					"skip_final_snapshot",
 					"final_snapshot_name",
@@ -599,11 +599,11 @@ func TestAccLightsailDatabase_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckDatabaseDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatabaseConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccDatabaseConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -611,27 +611,27 @@ func TestAccLightsailDatabase_tags(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrApplyImmediately,
+					"apply_immediately",
 					"master_password",
 					"skip_final_snapshot",
 					"final_snapshot_name",
 				},
 			},
 			{
-				Config: testAccDatabaseConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccDatabaseConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccDatabaseConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccDatabaseConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -659,7 +659,7 @@ func TestAccLightsailDatabase_ha(t *testing.T) {
 					testAccCheckDatabaseExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "relational_database_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "bundle_id", "micro_ha_1_0"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
+					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
 				),
 			},
 			{
@@ -667,7 +667,7 @@ func TestAccLightsailDatabase_ha(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					names.AttrApplyImmediately,
+					"apply_immediately",
 					"master_password",
 					"skip_final_snapshot",
 					"final_snapshot_name",

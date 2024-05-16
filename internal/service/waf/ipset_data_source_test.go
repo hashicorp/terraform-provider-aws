@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go/service/waf"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -21,19 +22,19 @@ func TestAccWAFIPSetDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_waf_ipset.ipset"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, waf.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccIPSetDataSourceConfig_nonExistent,
-				ExpectError: regexache.MustCompile(`no matching WAF IPSet found`),
+				ExpectError: regexache.MustCompile(`WAF IP Set not found`),
 			},
 			{
 				Config: testAccIPSetDataSourceConfig_name(name),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, names.AttrID, resourceName, names.AttrID),
-					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
 				),
 			},
 		},

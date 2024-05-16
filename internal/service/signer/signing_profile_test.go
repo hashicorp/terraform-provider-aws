@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsigner "github.com/hashicorp/terraform-provider-aws/internal/service/signer"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSignerSigningProfile_basic(t *testing.T) {
@@ -40,17 +39,17 @@ func TestAccSignerSigningProfile_basic(t *testing.T) {
 				Config: testAccSigningProfileConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSigningProfileExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "platform_display_name"),
 					resource.TestCheckResourceAttr(resourceName, "platform_id", "AWSLambda-SHA384-ECDSA"),
-					resource.TestCheckResourceAttr(resourceName, "revocation_record.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "signature_validity_period.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "revocation_record.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "signature_validity_period.#", "1"),
 					resource.TestCheckNoResourceAttr(resourceName, "signing_material"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Active"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
+					resource.TestCheckResourceAttr(resourceName, "status", "Active"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "version"),
 					resource.TestCheckResourceAttrSet(resourceName, "version_arn"),
 				),
 			},
@@ -109,8 +108,8 @@ func TestAccSignerSigningProfile_nameGenerated(t *testing.T) {
 				Config: testAccSigningProfileConfig_nameGenerated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningProfileExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrNameGeneratedWithPrefix(resourceName, names.AttrName, "terraform_"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform_"),
+					acctest.CheckResourceAttrNameGeneratedWithPrefix(resourceName, "name", "terraform_"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform_"),
 				),
 			},
 			{
@@ -140,8 +139,8 @@ func TestAccSignerSigningProfile_namePrefix(t *testing.T) {
 				Config: testAccSigningProfileConfig_namePrefix("tf_acc_test_prefix_"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningProfileExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf_acc_test_prefix_"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf_acc_test_prefix_"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf_acc_test_prefix_"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf_acc_test_prefix_"),
 				),
 			},
 			{
@@ -169,11 +168,11 @@ func TestAccSignerSigningProfile_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckSigningProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSigningProfileConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccSigningProfileConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningProfileExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -182,20 +181,20 @@ func TestAccSignerSigningProfile_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSigningProfileConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccSigningProfileConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningProfileExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccSigningProfileConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccSigningProfileConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningProfileExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -221,9 +220,9 @@ func TestAccSignerSigningProfile_signatureValidityPeriod(t *testing.T) {
 				Config: testAccSigningProfileConfig_svp(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningProfileExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "signature_validity_period.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "signature_validity_period.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "signature_validity_period.0.type", "DAYS"),
-					resource.TestCheckResourceAttr(resourceName, "signature_validity_period.0.value", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "signature_validity_period.0.value", "10"),
 				),
 			},
 		},

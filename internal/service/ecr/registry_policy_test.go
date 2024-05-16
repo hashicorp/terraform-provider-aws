@@ -23,8 +23,8 @@ func TestAccECRRegistryPolicy_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic: testAccRegistryPolicy_basic,
-		"disappears":    testAccRegistryPolicy_disappears,
+		"basic":      testAccRegistryPolicy_basic,
+		"disappears": testAccRegistryPolicy_disappears,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -45,7 +45,7 @@ func testAccRegistryPolicy_basic(t *testing.T) {
 				Config: testAccRegistryPolicyConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegistryPolicyExists(ctx, resourceName, &v),
-					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`"ecr:ReplicateImage".+`)),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(`"ecr:ReplicateImage".+`)),
 					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
 				),
 			},
@@ -58,8 +58,8 @@ func testAccRegistryPolicy_basic(t *testing.T) {
 				Config: testAccRegistryPolicyConfig_updated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegistryPolicyExists(ctx, resourceName, &v),
-					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`"ecr:ReplicateImage".+`)),
-					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`"ecr:CreateRepository".+`)),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(`"ecr:ReplicateImage".+`)),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(`"ecr:CreateRepository".+`)),
 					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
 				),
 			},

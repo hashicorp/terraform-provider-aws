@@ -5,18 +5,19 @@ package cloudfront_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
+	"github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -27,8 +28,8 @@ const (
 func TestAccCloudFrontContinuousDeploymentPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var policy cloudfront.GetContinuousDeploymentPolicyOutput
-	var stagingDistribution awstypes.Distribution
-	var productionDistribution awstypes.Distribution
+	var stagingDistribution cloudfront.Distribution
+	var productionDistribution cloudfront.Distribution
 	resourceName := "aws_cloudfront_continuous_deployment_policy.test"
 	stagingDistributionResourceName := "aws_cloudfront_distribution.staging"
 	productionDistributionResourceName := "aws_cloudfront_distribution.test"
@@ -36,7 +37,7 @@ func TestAccCloudFrontContinuousDeploymentPolicy_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
+			acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -54,19 +55,19 @@ func TestAccCloudFrontContinuousDeploymentPolicy_basic(t *testing.T) {
 				Config: testAccContinuousDeploymentPolicyConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContinuousDeploymentPolicyExists(ctx, resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
-					resource.TestCheckResourceAttr(resourceName, "staging_distribution_dns_names.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "staging_distribution_dns_names.0.quantity", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "staging_distribution_dns_names.0.items.#", acctest.Ct1),
-					resource.TestCheckResourceAttrPair(resourceName, "staging_distribution_dns_names.0.items.0", stagingDistributionResourceName, names.AttrDomainName),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "staging_distribution_dns_names.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "staging_distribution_dns_names.0.quantity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "staging_distribution_dns_names.0.items.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "staging_distribution_dns_names.0.items.0", stagingDistributionResourceName, "domain_name"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "traffic_config.*", map[string]string{
-						names.AttrType:                  "SingleWeight",
-						"single_weight_config.#":        acctest.Ct1,
+						"type":                          "SingleWeight",
+						"single_weight_config.#":        "1",
 						"single_weight_config.0.weight": "0.01",
 					}),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_time"),
-					resource.TestCheckResourceAttrPair(productionDistributionResourceName, "continuous_deployment_policy_id", resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(productionDistributionResourceName, "continuous_deployment_policy_id", resourceName, "id"),
 				),
 			},
 			{
@@ -81,8 +82,8 @@ func TestAccCloudFrontContinuousDeploymentPolicy_basic(t *testing.T) {
 func TestAccCloudFrontContinuousDeploymentPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var policy cloudfront.GetContinuousDeploymentPolicyOutput
-	var stagingDistribution awstypes.Distribution
-	var productionDistribution awstypes.Distribution
+	var stagingDistribution cloudfront.Distribution
+	var productionDistribution cloudfront.Distribution
 	resourceName := "aws_cloudfront_continuous_deployment_policy.test"
 	stagingDistributionResourceName := "aws_cloudfront_distribution.staging"
 	productionDistributionResourceName := "aws_cloudfront_distribution.test"
@@ -90,7 +91,7 @@ func TestAccCloudFrontContinuousDeploymentPolicy_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
+			acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -113,8 +114,8 @@ func TestAccCloudFrontContinuousDeploymentPolicy_disappears(t *testing.T) {
 func TestAccCloudFrontContinuousDeploymentPolicy_trafficConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	var policy cloudfront.GetContinuousDeploymentPolicyOutput
-	var stagingDistribution awstypes.Distribution
-	var productionDistribution awstypes.Distribution
+	var stagingDistribution cloudfront.Distribution
+	var productionDistribution cloudfront.Distribution
 	resourceName := "aws_cloudfront_continuous_deployment_policy.test"
 	stagingDistributionResourceName := "aws_cloudfront_distribution.staging"
 	productionDistributionResourceName := "aws_cloudfront_distribution.test"
@@ -122,7 +123,7 @@ func TestAccCloudFrontContinuousDeploymentPolicy_trafficConfig(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
+			acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -140,12 +141,12 @@ func TestAccCloudFrontContinuousDeploymentPolicy_trafficConfig(t *testing.T) {
 				Config: testAccContinuousDeploymentPolicyConfig_TrafficConfig_singleWeight(false, "0.01", 300, 600, defaultDomain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContinuousDeploymentPolicyExists(ctx, resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "traffic_config.*", map[string]string{
-						names.AttrType:                                                   "SingleWeight",
-						"single_weight_config.#":                                         acctest.Ct1,
-						"single_weight_config.0.weight":                                  "0.01",
-						"single_weight_config.0.session_stickiness_config.#":             acctest.Ct1,
+						"type":                          "SingleWeight",
+						"single_weight_config.#":        "1",
+						"single_weight_config.0.weight": "0.01",
+						"single_weight_config.0.session_stickiness_config.#":             "1",
 						"single_weight_config.0.session_stickiness_config.0.idle_ttl":    "300",
 						"single_weight_config.0.session_stickiness_config.0.maximum_ttl": "600",
 					}),
@@ -160,12 +161,12 @@ func TestAccCloudFrontContinuousDeploymentPolicy_trafficConfig(t *testing.T) {
 				Config: testAccContinuousDeploymentPolicyConfig_TrafficConfig_singleWeight(true, "0.02", 600, 1200, defaultDomain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContinuousDeploymentPolicyExists(ctx, resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "traffic_config.*", map[string]string{
-						names.AttrType:                                                   "SingleWeight",
-						"single_weight_config.#":                                         acctest.Ct1,
-						"single_weight_config.0.weight":                                  "0.02",
-						"single_weight_config.0.session_stickiness_config.#":             acctest.Ct1,
+						"type":                          "SingleWeight",
+						"single_weight_config.#":        "1",
+						"single_weight_config.0.weight": "0.02",
+						"single_weight_config.0.session_stickiness_config.#":             "1",
 						"single_weight_config.0.session_stickiness_config.0.idle_ttl":    "600",
 						"single_weight_config.0.session_stickiness_config.0.maximum_ttl": "1200",
 					}),
@@ -175,10 +176,10 @@ func TestAccCloudFrontContinuousDeploymentPolicy_trafficConfig(t *testing.T) {
 				Config: testAccContinuousDeploymentPolicyConfig_TrafficConfig_singleHeader(false, "aws-cf-cd-test", "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContinuousDeploymentPolicyExists(ctx, resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "traffic_config.*", map[string]string{
-						names.AttrType:                  "SingleHeader",
-						"single_header_config.#":        acctest.Ct1,
+						"type":                          "SingleHeader",
+						"single_header_config.#":        "1",
 						"single_header_config.0.header": "aws-cf-cd-test",
 						"single_header_config.0.value":  "test",
 					}),
@@ -193,10 +194,10 @@ func TestAccCloudFrontContinuousDeploymentPolicy_trafficConfig(t *testing.T) {
 				Config: testAccContinuousDeploymentPolicyConfig_TrafficConfig_singleHeader(true, "aws-cf-cd-test2", "test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContinuousDeploymentPolicyExists(ctx, resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "traffic_config.*", map[string]string{
-						names.AttrType:                  "SingleHeader",
-						"single_header_config.#":        acctest.Ct1,
+						"type":                          "SingleHeader",
+						"single_header_config.#":        "1",
 						"single_header_config.0.header": "aws-cf-cd-test2",
 						"single_header_config.0.value":  "test2",
 					}),
@@ -210,8 +211,8 @@ func TestAccCloudFrontContinuousDeploymentPolicy_trafficConfig(t *testing.T) {
 func TestAccCloudFrontContinuousDeploymentPolicy_domainChange(t *testing.T) {
 	ctx := acctest.Context(t)
 	var policy cloudfront.GetContinuousDeploymentPolicyOutput
-	var stagingDistribution awstypes.Distribution
-	var productionDistribution awstypes.Distribution
+	var stagingDistribution cloudfront.Distribution
+	var productionDistribution cloudfront.Distribution
 	resourceName := "aws_cloudfront_continuous_deployment_policy.test"
 	stagingDistributionResourceName := "aws_cloudfront_distribution.staging"
 	productionDistributionResourceName := "aws_cloudfront_distribution.test"
@@ -221,7 +222,7 @@ func TestAccCloudFrontContinuousDeploymentPolicy_domainChange(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
+			acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -239,20 +240,20 @@ func TestAccCloudFrontContinuousDeploymentPolicy_domainChange(t *testing.T) {
 				Config: testAccContinuousDeploymentPolicyConfig_TrafficConfig_singleWeight(true, "0.01", 300, 600, domain1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContinuousDeploymentPolicyExists(ctx, resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "traffic_config.*", map[string]string{
-						names.AttrType:                                                   "SingleWeight",
-						"single_weight_config.#":                                         acctest.Ct1,
-						"single_weight_config.0.weight":                                  "0.01",
-						"single_weight_config.0.session_stickiness_config.#":             acctest.Ct1,
+						"type":                          "SingleWeight",
+						"single_weight_config.#":        "1",
+						"single_weight_config.0.weight": "0.01",
+						"single_weight_config.0.session_stickiness_config.#":             "1",
 						"single_weight_config.0.session_stickiness_config.0.idle_ttl":    "300",
 						"single_weight_config.0.session_stickiness_config.0.maximum_ttl": "600",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(stagingDistributionResourceName, "origin.*", map[string]string{
-						names.AttrDomainName: domain1,
+						"domain_name": domain1,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(productionDistributionResourceName, "origin.*", map[string]string{
-						names.AttrDomainName: domain1,
+						"domain_name": domain1,
 					}),
 				),
 			},
@@ -260,20 +261,20 @@ func TestAccCloudFrontContinuousDeploymentPolicy_domainChange(t *testing.T) {
 				Config: testAccContinuousDeploymentPolicyConfig_TrafficConfig_singleWeight(true, "0.01", 300, 600, domain2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContinuousDeploymentPolicyExists(ctx, resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "traffic_config.*", map[string]string{
-						names.AttrType:                                                   "SingleWeight",
-						"single_weight_config.#":                                         acctest.Ct1,
-						"single_weight_config.0.weight":                                  "0.01",
-						"single_weight_config.0.session_stickiness_config.#":             acctest.Ct1,
+						"type":                          "SingleWeight",
+						"single_weight_config.#":        "1",
+						"single_weight_config.0.weight": "0.01",
+						"single_weight_config.0.session_stickiness_config.#":             "1",
 						"single_weight_config.0.session_stickiness_config.0.idle_ttl":    "300",
 						"single_weight_config.0.session_stickiness_config.0.maximum_ttl": "600",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(stagingDistributionResourceName, "origin.*", map[string]string{
-						names.AttrDomainName: domain2,
+						"domain_name": domain2,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(productionDistributionResourceName, "origin.*", map[string]string{
-						names.AttrDomainName: domain2,
+						"domain_name": domain2,
 					}),
 				),
 			},
@@ -283,7 +284,7 @@ func TestAccCloudFrontContinuousDeploymentPolicy_domainChange(t *testing.T) {
 
 func testAccCheckContinuousDeploymentPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudfront_continuous_deployment_policy" {
@@ -291,38 +292,38 @@ func testAccCheckContinuousDeploymentPolicyDestroy(ctx context.Context) resource
 			}
 
 			_, err := tfcloudfront.FindContinuousDeploymentPolicyByID(ctx, conn, rs.Primary.ID)
-
-			if tfresource.NotFound(err) {
-				continue
+			if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchContinuousDeploymentPolicy) {
+				return nil
 			}
-
 			if err != nil {
 				return err
 			}
 
-			return fmt.Errorf("CloudFront Continuous Deployment Policy %s still exists", rs.Primary.ID)
+			return create.Error(names.CloudFront, create.ErrActionCheckingDestroyed, tfcloudfront.ResNameContinuousDeploymentPolicy, rs.Primary.ID, errors.New("not destroyed"))
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckContinuousDeploymentPolicyExists(ctx context.Context, n string, v *cloudfront.GetContinuousDeploymentPolicyOutput) resource.TestCheckFunc {
+func testAccCheckContinuousDeploymentPolicyExists(ctx context.Context, name string, policy *cloudfront.GetContinuousDeploymentPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
+		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return fmt.Errorf("Not found: %s", n)
+			return create.Error(names.CloudFront, create.ErrActionCheckingExistence, tfcloudfront.ResNameContinuousDeploymentPolicy, name, errors.New("not found"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
+		if rs.Primary.ID == "" {
+			return create.Error(names.CloudFront, create.ErrActionCheckingExistence, tfcloudfront.ResNameContinuousDeploymentPolicy, name, errors.New("not set"))
+		}
 
-		output, err := tfcloudfront.FindContinuousDeploymentPolicyByID(ctx, conn, rs.Primary.ID)
-
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn(ctx)
+		resp, err := tfcloudfront.FindContinuousDeploymentPolicyByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
-			return err
+			return create.Error(names.CloudFront, create.ErrActionCheckingExistence, tfcloudfront.ResNameContinuousDeploymentPolicy, rs.Primary.ID, err)
 		}
 
-		*v = *output
+		*policy = *resp
 
 		return nil
 	}

@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflightsail "github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccLightsailContainerService_basic(t *testing.T) {
@@ -41,19 +40,19 @@ func TestAccLightsailContainerService_basic(t *testing.T) {
 				Config: testAccContainerServiceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "power", string(types.ContainerServicePowerNameNano)),
-					resource.TestCheckResourceAttr(resourceName, "scale", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scale", "1"),
 					resource.TestCheckResourceAttr(resourceName, "is_disabled", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
 					resource.TestCheckResourceAttrSet(resourceName, "power_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "principal_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "private_domain_name"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrResourceType, "ContainerService"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrState, "READY"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrURL),
+					resource.TestCheckResourceAttr(resourceName, "resource_type", "ContainerService"),
+					resource.TestCheckResourceAttr(resourceName, "state", "READY"),
+					resource.TestCheckResourceAttrSet(resourceName, "url"),
 				),
 			},
 			{
@@ -65,7 +64,7 @@ func TestAccLightsailContainerService_basic(t *testing.T) {
 				Config: testAccContainerServiceConfig_scale(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "scale", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "scale", "2"),
 				),
 			},
 		},
@@ -119,14 +118,14 @@ func TestAccLightsailContainerService_name(t *testing.T) {
 				Config: testAccContainerServiceConfig_basic(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
+					resource.TestCheckResourceAttr(resourceName, "name", rName1),
 				),
 			},
 			{
 				Config: testAccContainerServiceConfig_basic(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
+					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 				),
 			},
 		},
@@ -240,8 +239,8 @@ func TestAccLightsailContainerService_privateRegistryAccess(t *testing.T) {
 				Config: testAccContainerServiceConfig_privateRegistryAccess(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "private_registry_access.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "private_registry_access.0.ecr_image_puller_role.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "private_registry_access.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "private_registry_access.0.ecr_image_puller_role.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "private_registry_access.0.ecr_image_puller_role.0.is_active", "true"),
 					resource.TestCheckResourceAttrSet(resourceName, "private_registry_access.0.ecr_image_puller_role.0.principal_arn"),
 				),
@@ -269,14 +268,14 @@ func TestAccLightsailContainerService_scale(t *testing.T) {
 				Config: testAccContainerServiceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "scale", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scale", "1"),
 				),
 			},
 			{
 				Config: testAccContainerServiceConfig_scale(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "scale", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "scale", "2"),
 				),
 			},
 		},
@@ -299,11 +298,11 @@ func TestAccLightsailContainerService_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckContainerServiceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContainerServiceConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccContainerServiceConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckContainerServiceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -312,20 +311,20 @@ func TestAccLightsailContainerService_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccContainerServiceConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccContainerServiceConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckContainerServiceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccContainerServiceConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccContainerServiceConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckContainerServiceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},

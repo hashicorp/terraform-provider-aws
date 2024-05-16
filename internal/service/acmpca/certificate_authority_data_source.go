@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_acmpca_certificate_authority", name="Certificate Authority")
@@ -27,15 +26,15 @@ func dataSourceCertificateAuthority() *schema.Resource {
 		ReadWithoutTimeout: dataSourceCertificateAuthorityRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrCertificate: {
+			"certificate": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrCertificateChain: {
+			"certificate_chain": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -71,7 +70,7 @@ func dataSourceCertificateAuthority() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									names.AttrEnabled: {
+									"enabled": {
 										Type:     schema.TypeBool,
 										Computed: true,
 									},
@@ -79,7 +78,7 @@ func dataSourceCertificateAuthority() *schema.Resource {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									names.AttrS3BucketName: {
+									"s3_bucket_name": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -96,7 +95,7 @@ func dataSourceCertificateAuthority() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrEnabled: {
+									"enabled": {
 										Type:     schema.TypeBool,
 										Computed: true,
 									},
@@ -114,12 +113,12 @@ func dataSourceCertificateAuthority() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			names.AttrType: {
+			"tags": tftags.TagsSchemaComputed(),
+			"type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -135,7 +134,7 @@ func dataSourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
-	certificateAuthorityARN := d.Get(names.AttrARN).(string)
+	certificateAuthorityARN := d.Get("arn").(string)
 	input := &acmpca.DescribeCertificateAuthorityInput{
 		CertificateAuthorityArn: aws.String(certificateAuthorityARN),
 	}
@@ -147,7 +146,7 @@ func dataSourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceD
 	}
 
 	d.SetId(certificateAuthorityARN)
-	d.Set(names.AttrARN, certificateAuthority.Arn)
+	d.Set("arn", certificateAuthority.Arn)
 	d.Set("key_storage_security_standard", certificateAuthority.KeyStorageSecurityStandard)
 	d.Set("not_after", aws.ToTime(certificateAuthority.NotAfter).Format(time.RFC3339))
 	d.Set("not_before", aws.ToTime(certificateAuthority.NotBefore).Format(time.RFC3339))
@@ -155,8 +154,8 @@ func dataSourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "setting revocation_configuration: %s", err)
 	}
 	d.Set("serial", certificateAuthority.Serial)
-	d.Set(names.AttrStatus, certificateAuthority.Status)
-	d.Set(names.AttrType, certificateAuthority.Type)
+	d.Set("status", certificateAuthority.Status)
+	d.Set("type", certificateAuthority.Type)
 	d.Set("usage_mode", certificateAuthority.UsageMode)
 
 	outputGCACert, err := conn.GetCertificateAuthorityCertificate(ctx, &acmpca.GetCertificateAuthorityCertificateInput{
@@ -169,11 +168,11 @@ func dataSourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "reading ACM PCA Certificate Authority (%s) Certificate: %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrCertificate, "")
-	d.Set(names.AttrCertificateChain, "")
+	d.Set("certificate", "")
+	d.Set("certificate_chain", "")
 	if outputGCACert != nil {
-		d.Set(names.AttrCertificate, outputGCACert.Certificate)
-		d.Set(names.AttrCertificateChain, outputGCACert.CertificateChain)
+		d.Set("certificate", outputGCACert.Certificate)
+		d.Set("certificate_chain", outputGCACert.CertificateChain)
 	}
 
 	outputGCACsr, err := conn.GetCertificateAuthorityCsr(ctx, &acmpca.GetCertificateAuthorityCsrInput{

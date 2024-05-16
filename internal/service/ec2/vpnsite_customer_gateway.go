@@ -38,7 +38,7 @@ func resourceCustomerGateway() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -48,19 +48,19 @@ func resourceCustomerGateway() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.Valid4ByteASN,
 			},
-			names.AttrCertificateARN: {
+			"certificate_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			names.AttrDeviceName: {
+			"device_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
-			names.AttrIPAddress: {
+			"ip_address": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -68,7 +68,7 @@ func resourceCustomerGateway() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrType: {
+			"type": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -87,7 +87,7 @@ func resourceCustomerGatewayCreate(ctx context.Context, d *schema.ResourceData, 
 
 	input := &ec2.CreateCustomerGatewayInput{
 		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeCustomerGateway),
-		Type:              aws.String(d.Get(names.AttrType).(string)),
+		Type:              aws.String(d.Get("type").(string)),
 	}
 
 	if v, ok := d.GetOk("bgp_asn"); ok {
@@ -100,15 +100,15 @@ func resourceCustomerGatewayCreate(ctx context.Context, d *schema.ResourceData, 
 		input.BgpAsn = aws.Int64(v)
 	}
 
-	if v, ok := d.GetOk(names.AttrCertificateARN); ok {
+	if v, ok := d.GetOk("certificate_arn"); ok {
 		input.CertificateArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrDeviceName); ok {
+	if v, ok := d.GetOk("device_name"); ok {
 		input.DeviceName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrIPAddress); ok {
+	if v, ok := d.GetOk("ip_address"); ok {
 		input.IpAddress = aws.String(v.(string))
 	}
 
@@ -151,12 +151,12 @@ func resourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, me
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("customer-gateway/%s", d.Id()),
 	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set("arn", arn)
 	d.Set("bgp_asn", customerGateway.BgpAsn)
-	d.Set(names.AttrCertificateARN, customerGateway.CertificateArn)
-	d.Set(names.AttrDeviceName, customerGateway.DeviceName)
-	d.Set(names.AttrIPAddress, customerGateway.IpAddress)
-	d.Set(names.AttrType, customerGateway.Type)
+	d.Set("certificate_arn", customerGateway.CertificateArn)
+	d.Set("device_name", customerGateway.DeviceName)
+	d.Set("ip_address", customerGateway.IpAddress)
+	d.Set("type", customerGateway.Type)
 
 	setTagsOut(ctx, customerGateway.Tags)
 

@@ -38,20 +38,20 @@ func TestAccEC2CapacityReservation_basic(t *testing.T) {
 				Config: testAccCapacityReservationConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCapacityReservationExists(ctx, resourceName, &cr),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`capacity-reservation/cr-.+`)),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrAvailabilityZone, availabilityZonesDataSourceName, "names.0"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`capacity-reservation/cr-.+`)),
+					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", availabilityZonesDataSourceName, "names.0"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "false"),
 					resource.TestCheckResourceAttr(resourceName, "end_date", ""),
 					resource.TestCheckResourceAttr(resourceName, "end_date_type", "unlimited"),
 					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage", "false"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceCount, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "instance_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "instance_match_criteria", "open"),
 					resource.TestCheckResourceAttr(resourceName, "instance_platform", "Linux/UNIX"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "t2.micro"),
+					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.micro"),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "placement_group_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tenancy", "default"),
 				),
 			},
@@ -242,7 +242,7 @@ func TestAccEC2CapacityReservation_instanceCount(t *testing.T) {
 				Config: testAccCapacityReservationConfig_instanceCount(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCapacityReservationExists(ctx, resourceName, &cr),
-					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceCount, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "instance_count", "1"),
 				),
 			},
 			{
@@ -254,7 +254,7 @@ func TestAccEC2CapacityReservation_instanceCount(t *testing.T) {
 				Config: testAccCapacityReservationConfig_instanceCount(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCapacityReservationExists(ctx, resourceName, &cr),
-					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceCount, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "instance_count", "2"),
 				),
 			},
 		},
@@ -305,7 +305,7 @@ func TestAccEC2CapacityReservation_instanceType(t *testing.T) {
 				Config: testAccCapacityReservationConfig_instanceType(rName, "t2.micro"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCapacityReservationExists(ctx, resourceName, &cr),
-					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "t2.micro"),
+					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.micro"),
 				),
 			},
 			{
@@ -317,7 +317,7 @@ func TestAccEC2CapacityReservation_instanceType(t *testing.T) {
 				Config: testAccCapacityReservationConfig_instanceType(rName, "t2.small"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCapacityReservationExists(ctx, resourceName, &cr),
-					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "t2.small"),
+					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.small"),
 				),
 			},
 		},
@@ -336,11 +336,11 @@ func TestAccEC2CapacityReservation_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckCapacityReservationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCapacityReservationConfig_tags1(acctest.CtKey1, acctest.CtValue1),
+				Config: testAccCapacityReservationConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCapacityReservationExists(ctx, resourceName, &cr),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -349,20 +349,20 @@ func TestAccEC2CapacityReservation_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCapacityReservationConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccCapacityReservationConfig_tags2("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCapacityReservationExists(ctx, resourceName, &cr),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccCapacityReservationConfig_tags1(acctest.CtKey2, acctest.CtValue2),
+				Config: testAccCapacityReservationConfig_tags1("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCapacityReservationExists(ctx, resourceName, &cr),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},

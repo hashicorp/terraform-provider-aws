@@ -25,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -33,42 +33,40 @@ import (
 
 // @FrameworkResource(name="Instance Connect Endpoint")
 // @Tags(identifierAttribute="id")
-func newInstanceConnectEndpointResource(context.Context) (resource.ResourceWithConfigure, error) {
-	r := &instanceConnectEndpointResource{}
-
+func newResourceInstanceConnectEndpoint(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &resourceInstanceConnectEndpoint{}
 	r.SetDefaultCreateTimeout(10 * time.Minute)
 	r.SetDefaultDeleteTimeout(10 * time.Minute)
 
 	return r, nil
 }
 
-type instanceConnectEndpointResource struct {
+type resourceInstanceConnectEndpoint struct {
 	framework.ResourceWithConfigure
-	framework.WithNoOpUpdate[instanceConnectEndpointResourceModel]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *instanceConnectEndpointResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+func (r *resourceInstanceConnectEndpoint) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
 	response.TypeName = "aws_ec2_instance_connect_endpoint"
 }
 
-func (r *instanceConnectEndpointResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *resourceInstanceConnectEndpoint) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: schema.StringAttribute{
+			"arn": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrAvailabilityZone: schema.StringAttribute{
+			"availability_zone": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrDNSName: schema.StringAttribute{
+			"dns_name": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -88,7 +86,7 @@ func (r *instanceConnectEndpointResource) Schema(ctx context.Context, req resour
 					listplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrOwnerID: schema.StringAttribute{
+			"owner_id": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -102,7 +100,7 @@ func (r *instanceConnectEndpointResource) Schema(ctx context.Context, req resour
 					boolplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrSecurityGroupIDs: schema.SetAttribute{
+			"security_group_ids": schema.SetAttribute{
 				Optional:    true,
 				Computed:    true,
 				ElementType: types.StringType,
@@ -110,7 +108,7 @@ func (r *instanceConnectEndpointResource) Schema(ctx context.Context, req resour
 					setplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrSubnetID: schema.StringAttribute{
+			"subnet_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -118,7 +116,7 @@ func (r *instanceConnectEndpointResource) Schema(ctx context.Context, req resour
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
-			names.AttrVPCID: schema.StringAttribute{
+			"vpc_id": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -134,24 +132,27 @@ func (r *instanceConnectEndpointResource) Schema(ctx context.Context, req resour
 	}
 }
 
-func (r *instanceConnectEndpointResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	var data instanceConnectEndpointResourceModel
+func (r *resourceInstanceConnectEndpoint) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data resourceInstanceConnectEndpointData
+
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	conn := r.Meta().EC2Client(ctx)
 
-	input := &ec2.CreateInstanceConnectEndpointInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, &data, input)...)
+	input := &ec2.CreateInstanceConnectEndpointInput{
+		ClientToken:       aws.String(id.UniqueId()),
+		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeInstanceConnectEndpoint),
+	}
+
+	response.Diagnostics.Append(flex.Expand(ctx, &data, input)...)
+
 	if response.Diagnostics.HasError() {
 		return
 	}
-
-	// Additional fields.
-	input.ClientToken = aws.String(id.UniqueId())
-	input.TagSpecifications = getTagSpecificationsInV2(ctx, awstypes.ResourceTypeInstanceConnectEndpoint)
 
 	output, err := conn.CreateInstanceConnectEndpoint(ctx, input)
 
@@ -164,8 +165,8 @@ func (r *instanceConnectEndpointResource) Create(ctx context.Context, request re
 	data.InstanceConnectEndpointId = types.StringPointerValue(output.InstanceConnectEndpoint.InstanceConnectEndpointId)
 	id := data.InstanceConnectEndpointId.ValueString()
 
-	instanceConnectEndpoint, err := WaitInstanceConnectEndpointCreated(ctx, conn, id, r.CreateTimeout(ctx, data.Timeouts))
-
+	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
+	instanceConnectEndpoint, err := WaitInstanceConnectEndpointCreated(ctx, conn, id, createTimeout)
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for EC2 Instance Connect Endpoint (%s) create", id), err.Error())
 
@@ -173,7 +174,8 @@ func (r *instanceConnectEndpointResource) Create(ctx context.Context, request re
 	}
 
 	// Set values for unknowns.
-	response.Diagnostics.Append(fwflex.Flatten(ctx, instanceConnectEndpoint, &data)...)
+	response.Diagnostics.Append(flex.Flatten(ctx, instanceConnectEndpoint, &data)...)
+
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -181,9 +183,11 @@ func (r *instanceConnectEndpointResource) Create(ctx context.Context, request re
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *instanceConnectEndpointResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var data instanceConnectEndpointResourceModel
+func (r *resourceInstanceConnectEndpoint) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data resourceInstanceConnectEndpointData
+
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -206,7 +210,8 @@ func (r *instanceConnectEndpointResource) Read(ctx context.Context, request reso
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, instanceConnectEndpoint, &data)...)
+	response.Diagnostics.Append(flex.Flatten(ctx, instanceConnectEndpoint, &data)...)
+
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -216,9 +221,15 @@ func (r *instanceConnectEndpointResource) Read(ctx context.Context, request reso
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *instanceConnectEndpointResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	var data instanceConnectEndpointResourceModel
+func (r *resourceInstanceConnectEndpoint) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	// Tags only.
+}
+
+func (r *resourceInstanceConnectEndpoint) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data resourceInstanceConnectEndpointData
+
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -226,7 +237,7 @@ func (r *instanceConnectEndpointResource) Delete(ctx context.Context, request re
 	conn := r.Meta().EC2Client(ctx)
 
 	_, err := conn.DeleteInstanceConnectEndpoint(ctx, &ec2.DeleteInstanceConnectEndpointInput{
-		InstanceConnectEndpointId: fwflex.StringFromFramework(ctx, data.InstanceConnectEndpointId),
+		InstanceConnectEndpointId: flex.StringFromFramework(ctx, data.InstanceConnectEndpointId),
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidInstanceConnectEndpointIdNotFound) {
@@ -241,19 +252,20 @@ func (r *instanceConnectEndpointResource) Delete(ctx context.Context, request re
 		return
 	}
 
-	if _, err := WaitInstanceConnectEndpointDeleted(ctx, conn, id, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+	deleteTimeout := r.DeleteTimeout(ctx, data.Timeouts)
+	if _, err := WaitInstanceConnectEndpointDeleted(ctx, conn, id, deleteTimeout); err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for EC2 Instance Connect Endpoint (%s) delete", id), err.Error())
 
 		return
 	}
 }
 
-func (r *instanceConnectEndpointResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+func (r *resourceInstanceConnectEndpoint) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
 	r.SetTagsAll(ctx, request, response)
 }
 
 // See https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_Ec2InstanceConnectEndpoint.html.
-type instanceConnectEndpointResourceModel struct {
+type resourceInstanceConnectEndpointData struct {
 	InstanceConnectEndpointArn types.String   `tfsdk:"arn"`
 	AvailabilityZone           types.String   `tfsdk:"availability_zone"`
 	DnsName                    types.String   `tfsdk:"dns_name"`

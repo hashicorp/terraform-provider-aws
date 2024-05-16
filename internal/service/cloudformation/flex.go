@@ -4,14 +4,14 @@
 package cloudformation
 
 import (
-	"github.com/aws/aws-sdk-go-v2/aws"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/cloudformation"
 )
 
-func expandParameters(params map[string]interface{}) []awstypes.Parameter {
-	var cfParams []awstypes.Parameter
+func expandParameters(params map[string]interface{}) []*cloudformation.Parameter {
+	var cfParams []*cloudformation.Parameter
 	for k, v := range params {
-		cfParams = append(cfParams, awstypes.Parameter{
+		cfParams = append(cfParams, &cloudformation.Parameter{
 			ParameterKey:   aws.String(k),
 			ParameterValue: aws.String(v.(string)),
 		})
@@ -20,18 +20,18 @@ func expandParameters(params map[string]interface{}) []awstypes.Parameter {
 	return cfParams
 }
 
-func flattenAllParameters(cfParams []awstypes.Parameter) map[string]interface{} {
+func flattenAllParameters(cfParams []*cloudformation.Parameter) map[string]interface{} {
 	params := make(map[string]interface{}, len(cfParams))
 	for _, p := range cfParams {
-		params[aws.ToString(p.ParameterKey)] = aws.ToString(p.ParameterValue)
+		params[aws.StringValue(p.ParameterKey)] = aws.StringValue(p.ParameterValue)
 	}
 	return params
 }
 
-func flattenOutputs(cfOutputs []awstypes.Output) map[string]string {
+func flattenOutputs(cfOutputs []*cloudformation.Output) map[string]string {
 	outputs := make(map[string]string, len(cfOutputs))
 	for _, o := range cfOutputs {
-		outputs[aws.ToString(o.OutputKey)] = aws.ToString(o.OutputValue)
+		outputs[aws.StringValue(o.OutputKey)] = aws.StringValue(o.OutputValue)
 	}
 	return outputs
 }
@@ -39,13 +39,13 @@ func flattenOutputs(cfOutputs []awstypes.Output) map[string]string {
 // flattenParameters is flattening list of
 // *cloudformation.Parameters and only returning existing
 // parameters to avoid clash with default values
-func flattenParameters(cfParams []awstypes.Parameter,
+func flattenParameters(cfParams []*cloudformation.Parameter,
 	originalParams map[string]interface{}) map[string]interface{} {
 	params := make(map[string]interface{}, len(cfParams))
 	for _, p := range cfParams {
-		_, isConfigured := originalParams[aws.ToString(p.ParameterKey)]
+		_, isConfigured := originalParams[aws.StringValue(p.ParameterKey)]
 		if isConfigured {
-			params[aws.ToString(p.ParameterKey)] = aws.ToString(p.ParameterValue)
+			params[aws.StringValue(p.ParameterKey)] = aws.StringValue(p.ParameterValue)
 		}
 	}
 	return params

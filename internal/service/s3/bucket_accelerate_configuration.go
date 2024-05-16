@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_s3_bucket_accelerate_configuration", name="Bucket Accelerate Configuration")
@@ -35,7 +34,7 @@ func resourceBucketAccelerateConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrBucket: {
+			"bucket": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -47,7 +46,7 @@ func resourceBucketAccelerateConfiguration() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateDiagFunc: enum.Validate[types.BucketAccelerateStatus](),
@@ -59,12 +58,12 @@ func resourceBucketAccelerateConfiguration() *schema.Resource {
 func resourceBucketAccelerateConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket := d.Get(names.AttrBucket).(string)
+	bucket := d.Get("bucket").(string)
 	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
 	input := &s3.PutBucketAccelerateConfigurationInput{
 		Bucket: aws.String(bucket),
 		AccelerateConfiguration: &types.AccelerateConfiguration{
-			Status: types.BucketAccelerateStatus(d.Get(names.AttrStatus).(string)),
+			Status: types.BucketAccelerateStatus(d.Get("status").(string)),
 		},
 	}
 	if expectedBucketOwner != "" {
@@ -116,9 +115,9 @@ func resourceBucketAccelerateConfigurationRead(ctx context.Context, d *schema.Re
 		return diag.Errorf("reading S3 Bucket Accelerate Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrBucket, bucket)
+	d.Set("bucket", bucket)
 	d.Set("expected_bucket_owner", expectedBucketOwner)
-	d.Set(names.AttrStatus, output.Status)
+	d.Set("status", output.Status)
 
 	return nil
 }
@@ -134,7 +133,7 @@ func resourceBucketAccelerateConfigurationUpdate(ctx context.Context, d *schema.
 	input := &s3.PutBucketAccelerateConfigurationInput{
 		Bucket: aws.String(bucket),
 		AccelerateConfiguration: &types.AccelerateConfiguration{
-			Status: types.BucketAccelerateStatus(d.Get(names.AttrStatus).(string)),
+			Status: types.BucketAccelerateStatus(d.Get("status").(string)),
 		},
 	}
 	if expectedBucketOwner != "" {

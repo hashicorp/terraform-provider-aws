@@ -8,7 +8,6 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -52,11 +51,11 @@ func (r *resourcePolicyResource) Schema(ctx context.Context, request resource.Sc
 				Default:  booldefault.StaticBool(false),
 			},
 			names.AttrID: framework.IDAttribute(),
-			names.AttrPolicy: schema.StringAttribute{
+			"policy": schema.StringAttribute{
 				CustomType: fwtypes.IAMPolicyType,
 				Required:   true,
 			},
-			names.AttrResourceARN: schema.StringAttribute{
+			"resource_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 				PlanModifiers: []planmodifier.String{
@@ -240,12 +239,12 @@ type resourcePolicyResourceModel struct {
 }
 
 func (data *resourcePolicyResourceModel) InitFromID() error {
-	_, err := arn.Parse(data.ID.ValueString())
+	v, err := fwdiag.AsError(fwtypes.ARNValue(data.ID.ValueString()))
 	if err != nil {
 		return err
 	}
 
-	data.ResourceARN = fwtypes.ARNValue(data.ID.ValueString())
+	data.ResourceARN = v
 
 	return nil
 }

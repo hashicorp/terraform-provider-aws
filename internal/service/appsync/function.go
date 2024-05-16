@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_appsync_function")
@@ -40,7 +39,7 @@ func ResourceFunction() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -54,7 +53,7 @@ func ResourceFunction() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -75,7 +74,7 @@ func ResourceFunction() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(0, 2000),
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[A-Za-z_][0-9A-Za-z_]*`), "must match [A-Za-z_][0-9A-Za-z_]*"),
@@ -95,7 +94,7 @@ func ResourceFunction() *schema.Resource {
 				RequiredWith: []string{"code"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrName: {
+						"name": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(appsync.RuntimeName_Values(), false),
@@ -154,14 +153,14 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 		ApiId:           aws.String(apiID),
 		DataSourceName:  aws.String(d.Get("data_source").(string)),
 		FunctionVersion: aws.String(d.Get("function_version").(string)),
-		Name:            aws.String(d.Get(names.AttrName).(string)),
+		Name:            aws.String(d.Get("name").(string)),
 	}
 
 	if v, ok := d.GetOk("code"); ok {
 		input.Code = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -224,10 +223,10 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("api_id", apiID)
 	d.Set("function_id", functionID)
 	d.Set("data_source", function.DataSourceName)
-	d.Set(names.AttrDescription, function.Description)
-	d.Set(names.AttrARN, function.FunctionArn)
+	d.Set("description", function.Description)
+	d.Set("arn", function.FunctionArn)
 	d.Set("function_version", function.FunctionVersion)
-	d.Set(names.AttrName, function.Name)
+	d.Set("name", function.Name)
 	d.Set("request_mapping_template", function.RequestMappingTemplate)
 	d.Set("response_mapping_template", function.ResponseMappingTemplate)
 	d.Set("max_batch_size", function.MaxBatchSize)
@@ -258,10 +257,10 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		DataSourceName:  aws.String(d.Get("data_source").(string)),
 		FunctionId:      aws.String(functionID),
 		FunctionVersion: aws.String(d.Get("function_version").(string)),
-		Name:            aws.String(d.Get(names.AttrName).(string)),
+		Name:            aws.String(d.Get("name").(string)),
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -339,7 +338,7 @@ func expandRuntime(l []interface{}) *appsync.AppSyncRuntime {
 
 	result := &appsync.AppSyncRuntime{}
 
-	if v, ok := configured[names.AttrName].(string); ok {
+	if v, ok := configured["name"].(string); ok {
 		result.Name = aws.String(v)
 	}
 
@@ -356,7 +355,7 @@ func flattenRuntime(config *appsync.AppSyncRuntime) []map[string]interface{} {
 	}
 
 	result := map[string]interface{}{
-		names.AttrName:    aws.StringValue(config.Name),
+		"name":            aws.StringValue(config.Name),
 		"runtime_version": aws.StringValue(config.RuntimeVersion),
 	}
 

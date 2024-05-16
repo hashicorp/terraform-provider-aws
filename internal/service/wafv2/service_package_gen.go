@@ -5,8 +5,9 @@ package wafv2
 import (
 	"context"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	wafv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/wafv2"
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	wafv2_sdkv1 "github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -25,24 +26,20 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceIPSet,
+			Factory:  DataSourceIPSet,
 			TypeName: "aws_wafv2_ip_set",
-			Name:     "IP Set",
 		},
 		{
-			Factory:  dataSourceRegexPatternSet,
+			Factory:  DataSourceRegexPatternSet,
 			TypeName: "aws_wafv2_regex_pattern_set",
-			Name:     "Regex Pattern Set",
 		},
 		{
-			Factory:  dataSourceRuleGroup,
+			Factory:  DataSourceRuleGroup,
 			TypeName: "aws_wafv2_rule_group",
-			Name:     "Rule Group",
 		},
 		{
-			Factory:  dataSourceWebACL,
+			Factory:  DataSourceWebACL,
 			TypeName: "aws_wafv2_web_acl",
-			Name:     "Web ACL",
 		},
 	}
 }
@@ -50,46 +47,44 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  resourceIPSet,
+			Factory:  ResourceIPSet,
 			TypeName: "aws_wafv2_ip_set",
 			Name:     "IP Set",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "arn",
 			},
 		},
 		{
-			Factory:  resourceRegexPatternSet,
+			Factory:  ResourceRegexPatternSet,
 			TypeName: "aws_wafv2_regex_pattern_set",
 			Name:     "Regex Pattern Set",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "arn",
 			},
 		},
 		{
-			Factory:  resourceRuleGroup,
+			Factory:  ResourceRuleGroup,
 			TypeName: "aws_wafv2_rule_group",
 			Name:     "Rule Group",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "arn",
 			},
 		},
 		{
-			Factory:  resourceWebACL,
+			Factory:  ResourceWebACL,
 			TypeName: "aws_wafv2_web_acl",
 			Name:     "Web ACL",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "arn",
 			},
 		},
 		{
-			Factory:  resourceWebACLAssociation,
+			Factory:  ResourceWebACLAssociation,
 			TypeName: "aws_wafv2_web_acl_association",
-			Name:     "Web ACL Association",
 		},
 		{
-			Factory:  resourceWebACLLoggingConfiguration,
+			Factory:  ResourceWebACLLoggingConfiguration,
 			TypeName: "aws_wafv2_web_acl_logging_configuration",
-			Name:     "Web ACL Logging Configuration",
 		},
 	}
 }
@@ -98,15 +93,11 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.WAFV2
 }
 
-// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*wafv2_sdkv2.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
+func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*wafv2_sdkv1.WAFV2, error) {
+	sess := config["session"].(*session_sdkv1.Session)
 
-	return wafv2_sdkv2.NewFromConfig(cfg, func(o *wafv2_sdkv2.Options) {
-		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
-			o.BaseEndpoint = aws_sdkv2.String(endpoint)
-		}
-	}), nil
+	return wafv2_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

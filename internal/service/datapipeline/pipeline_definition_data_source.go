@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_datapipeline_pipeline_definition")
@@ -32,7 +31,7 @@ func DataSourcePipelineDefinition() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrKey: {
+									"key": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -43,7 +42,7 @@ func DataSourcePipelineDefinition() *schema.Resource {
 								},
 							},
 						},
-						names.AttrID: {
+						"id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -56,7 +55,7 @@ func DataSourcePipelineDefinition() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrID: {
+						"id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -77,13 +76,13 @@ func DataSourcePipelineDefinition() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrField: {
+						"field": {
 							Type:     schema.TypeSet,
 							Optional: true,
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrKey: {
+									"key": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -98,11 +97,11 @@ func DataSourcePipelineDefinition() *schema.Resource {
 								},
 							},
 						},
-						names.AttrID: {
+						"id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrName: {
+						"name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

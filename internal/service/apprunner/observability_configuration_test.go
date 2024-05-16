@@ -35,10 +35,10 @@ func TestAccAppRunnerObservabilityConfiguration_basic(t *testing.T) {
 				Config: testAccObservabilityConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObservabilityConfigurationExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "apprunner", regexache.MustCompile(fmt.Sprintf(`observabilityconfiguration/%s/1/.+`, rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexache.MustCompile(fmt.Sprintf(`observabilityconfiguration/%s/1/.+`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "observability_configuration_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "observability_configuration_revision", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.ObservabilityConfigurationStatusActive)),
+					resource.TestCheckResourceAttr(resourceName, "observability_configuration_revision", "1"),
+					resource.TestCheckResourceAttr(resourceName, "status", string(types.ObservabilityConfigurationStatusActive)),
 				),
 			},
 			{
@@ -65,11 +65,11 @@ func TestAccAppRunnerObservabilityConfiguration_traceConfiguration(t *testing.T)
 				Config: testAccObservabilityConfigurationConfig_traceConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObservabilityConfigurationExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "apprunner", regexache.MustCompile(fmt.Sprintf(`observabilityconfiguration/%s/1/.+`, rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexache.MustCompile(fmt.Sprintf(`observabilityconfiguration/%s/1/.+`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "observability_configuration_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "observability_configuration_revision", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.ObservabilityConfigurationStatusActive)),
-					resource.TestCheckResourceAttr(resourceName, "trace_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "observability_configuration_revision", "1"),
+					resource.TestCheckResourceAttr(resourceName, "status", string(types.ObservabilityConfigurationStatusActive)),
+					resource.TestCheckResourceAttr(resourceName, "trace_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "trace_configuration.0.vendor", "AWSXRAY"),
 				),
 			},
@@ -117,11 +117,11 @@ func TestAccAppRunnerObservabilityConfiguration_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckObservabilityConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObservabilityConfigurationConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccObservabilityConfigurationConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObservabilityConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -130,20 +130,20 @@ func TestAccAppRunnerObservabilityConfiguration_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccObservabilityConfigurationConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccObservabilityConfigurationConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObservabilityConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccObservabilityConfigurationConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccObservabilityConfigurationConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObservabilityConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},

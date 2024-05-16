@@ -31,10 +31,9 @@ class MyConvertedCode(TerraformStack):
         SagemakerAppImageConfig(self, "test",
             app_image_config_name="example",
             kernel_gateway_image_config=SagemakerAppImageConfigKernelGatewayImageConfig(
-                kernel_spec=[SagemakerAppImageConfigKernelGatewayImageConfigKernelSpec(
+                kernel_spec=SagemakerAppImageConfigKernelGatewayImageConfigKernelSpec(
                     name="example"
                 )
-                ]
             )
         )
 ```
@@ -57,10 +56,9 @@ class MyConvertedCode(TerraformStack):
             app_image_config_name="example",
             kernel_gateway_image_config=SagemakerAppImageConfigKernelGatewayImageConfig(
                 file_system_config=SagemakerAppImageConfigKernelGatewayImageConfigFileSystemConfig(),
-                kernel_spec=[SagemakerAppImageConfigKernelGatewayImageConfigKernelSpec(
+                kernel_spec=SagemakerAppImageConfigKernelGatewayImageConfigKernelSpec(
                     name="example"
                 )
-                ]
             )
         )
 ```
@@ -70,20 +68,13 @@ class MyConvertedCode(TerraformStack):
 This resource supports the following arguments:
 
 * `app_image_config_name` - (Required) The name of the App Image Config.
-* `code_editor_app_image_config` - (Optional) The CodeEditorAppImageConfig. You can only specify one image kernel in the AppImageConfig API. This kernel is shown to users before the image starts. After the image runs, all kernels are visible in Code Editor. See [Code Editor App Image Config](#code-editor-app-image-config) details below.
-* `jupyter_lab_image_config` - (Optional) The JupyterLabAppImageConfig. You can only specify one image kernel in the AppImageConfig API. This kernel is shown to users before the image starts. After the image runs, all kernels are visible in JupyterLab. See [Jupyter Lab Image Config](#jupyter-lab-image-config) details below.
+* `kernel_gateway_image_config` - (Optional) The JupyterLabAppImageConfig. You can only specify one image kernel in the AppImageConfig API. This kernel is shown to users before the image starts. After the image runs, all kernels are visible in JupyterLab. See [Jupyte rLab Image Config](#jupyter-lab-image-config) details below.
 * `kernel_gateway_image_config` - (Optional) The configuration for the file system and kernels in a SageMaker image running as a KernelGateway app. See [Kernel Gateway Image Config](#kernel-gateway-image-config) details below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-
-### Code Editor App Image Config
-
-* `container_config` - (Optional) The configuration used to run the application image container. See [Container Config](#container-config) details below.
-* `file_system_config` - (Optional) The URL where the Git repository is located. See [File System Config](#file-system-config) details below.
 
 ### Jupyter Lab Image Config
 
 * `container_config` - (Optional) The configuration used to run the application image container. See [Container Config](#container-config) details below.
-* `file_system_config` - (Optional) The URL where the Git repository is located. See [File System Config](#file-system-config) details below.
 
 #### Container Config
 
@@ -142,4 +133,4 @@ Using `terraform import`, import SageMaker App Image Configs using the `name`. F
 % terraform import aws_sagemaker_app_image_config.example example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-9429a9cc03d7ec0fcf7b8aa8c2f67d848723638aac59ec4cbe96a3aad3ce1f5c -->
+<!-- cache-key: cdktf-0.20.1 input-c4f7fa57320a494471a34831a6600e0fdc61d584e5958386e851370ceb41f88c -->

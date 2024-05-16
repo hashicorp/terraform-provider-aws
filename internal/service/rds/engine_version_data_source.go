@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_rds_engine_version")
@@ -52,7 +51,7 @@ func DataSourceEngineVersion() *schema.Resource {
 				Set:      schema.HashString,
 			},
 
-			names.AttrFilter: namevaluesfilters.Schema(),
+			"filter": namevaluesfilters.Schema(),
 
 			"has_major_target": {
 				Type:     schema.TypeBool,
@@ -98,7 +97,7 @@ func DataSourceEngineVersion() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
-			names.AttrStatus: {
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -172,7 +171,7 @@ func DataSourceEngineVersion() *schema.Resource {
 				Set:      schema.HashString,
 			},
 
-			names.AttrVersion: {
+			"version": {
 				Type:     schema.TypeString,
 				Computed: true,
 				Optional: true,
@@ -204,7 +203,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 		input.Engine = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrFilter); ok {
+	if v, ok := d.GetOk("filter"); ok {
 		input.Filters = namevaluesfilters.New(v.(*schema.Set)).RDSFilters()
 	}
 
@@ -212,7 +211,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 		input.DBParameterGroupFamily = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrVersion); ok {
+	if v, ok := d.GetOk("version"); ok {
 		input.EngineVersion = aws.String(v.(string))
 	}
 
@@ -226,7 +225,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 
 	// Make sure any optional arguments in the schema are in this list except for "default_only"
 	if _, ok := d.GetOk("default_only"); !ok && !criteriaSet(d, []string{
-		names.AttrFilter,
+		"filter",
 		"has_major_target",
 		"has_minor_target",
 		"include_all",
@@ -234,7 +233,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 		"preferred_major_targets",
 		"preferred_upgrade_targets",
 		"preferred_versions",
-		names.AttrVersion,
+		"version",
 	}) {
 		input.DefaultOnly = aws.Bool(true)
 	}
@@ -419,7 +418,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("engine_description", found.DBEngineDescription)
 	d.Set("exportable_log_types", found.ExportableLogTypes)
 	d.Set("parameter_group_family", found.DBParameterGroupFamily)
-	d.Set(names.AttrStatus, found.Status)
+	d.Set("status", found.Status)
 
 	var characterSets []string
 	for _, cs := range found.SupportedCharacterSets {
@@ -458,7 +457,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("valid_minor_targets", minorTargets)
 	d.Set("valid_major_targets", majorTargets)
 
-	d.Set(names.AttrVersion, found.EngineVersion)
+	d.Set("version", found.EngineVersion)
 	d.Set("version_actual", found.EngineVersion)
 	d.Set("version_description", found.DBEngineVersionDescription)
 

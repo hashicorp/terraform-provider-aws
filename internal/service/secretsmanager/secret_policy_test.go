@@ -37,7 +37,7 @@ func TestAccSecretsManagerSecretPolicy_basic(t *testing.T) {
 				Config: testAccSecretPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretPolicyExists(ctx, resourceName, &policy),
-					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy,
+					resource.TestMatchResourceAttr(resourceName, "policy",
 						regexache.MustCompile(`{"Action":"secretsmanager:GetSecretValue".+`)),
 				),
 			},
@@ -51,7 +51,7 @@ func TestAccSecretsManagerSecretPolicy_basic(t *testing.T) {
 				Config: testAccSecretPolicyConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretPolicyExists(ctx, resourceName, &policy),
-					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy,
+					resource.TestMatchResourceAttr(resourceName, "policy",
 						regexache.MustCompile(`{"Action":"secretsmanager:\*".+`)),
 				),
 			},

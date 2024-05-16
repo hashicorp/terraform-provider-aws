@@ -16,7 +16,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
 	return route53domains.NewFromConfig(cfg, func(o *route53domains.Options) {
-		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
+		if endpoint := config["endpoint"].(string); endpoint != "" {
 			o.BaseEndpoint = aws.String(endpoint)
 		} else if config["partition"].(string) == names.StandardPartitionID {
 			// Route 53 Domains is only available in AWS Commercial us-east-1 Region.

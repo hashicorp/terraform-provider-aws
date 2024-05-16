@@ -13,45 +13,43 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Security Group Rules")
-func newSecurityGroupRulesDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
-	d := &securityGroupRulesDataSource{}
-
-	return d, nil
+// @FrameworkDataSource
+func newDataSourceSecurityGroupRules(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &dataSourceSecurityGroupRules{}, nil
 }
 
-type securityGroupRulesDataSource struct {
+type dataSourceSecurityGroupRules struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *securityGroupRulesDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
+func (d *dataSourceSecurityGroupRules) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
 	response.TypeName = "aws_vpc_security_group_rules"
 }
 
-func (d *securityGroupRulesDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
-	response.Schema = schema.Schema{
+func (d *dataSourceSecurityGroupRules) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
-			names.AttrIDs: schema.ListAttribute{
+			"id": framework.IDAttribute(),
+			"ids": schema.ListAttribute{
 				ElementType: types.StringType,
 				Computed:    true,
 			},
-			names.AttrTags: tftags.TagsAttribute(),
+			"tags": tftags.TagsAttribute(),
 		},
 		Blocks: map[string]schema.Block{
-			names.AttrFilter: customFiltersBlock(),
+			"filter": customFiltersBlock(),
 		},
 	}
 }
 
-func (d *securityGroupRulesDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
-	var data securityGroupRulesDataSourceModel
+func (d *dataSourceSecurityGroupRules) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data dataSourceSecurityGroupRulesData
+
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -75,15 +73,18 @@ func (d *securityGroupRulesDataSource) Read(ctx context.Context, request datasou
 		return
 	}
 
+	var securityGroupRuleIDs []string
+	for _, v := range output {
+		securityGroupRuleIDs = append(securityGroupRuleIDs, aws.StringValue(v.SecurityGroupRuleId))
+	}
+
 	data.ID = types.StringValue(d.Meta().Region)
-	data.IDs = flex.FlattenFrameworkStringValueList(ctx, tfslices.ApplyToAll(output, func(v *ec2.SecurityGroupRule) string {
-		return aws.StringValue(v.SecurityGroupRuleId)
-	}))
+	data.IDs = flex.FlattenFrameworkStringValueList(ctx, securityGroupRuleIDs)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-type securityGroupRulesDataSourceModel struct {
+type dataSourceSecurityGroupRulesData struct {
 	Filters types.Set    `tfsdk:"filter"`
 	ID      types.String `tfsdk:"id"`
 	IDs     types.List   `tfsdk:"ids"`

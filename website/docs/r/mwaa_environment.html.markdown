@@ -179,13 +179,11 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - The ARN of the MWAA Environment
 * `created_at` - The Created At date of the MWAA Environment
-* `database_vpc_endpoint_service` - The VPC endpoint for the environment's Amazon RDS database
 * `logging_configuration[0].<LOG_CONFIGURATION_TYPE>[0].cloud_watch_log_group_arn` - Provides the ARN for the CloudWatch group where the logs will be published
 * `service_role_arn` - The Service Role ARN of the Amazon MWAA Environment
 * `status` - The status of the Amazon MWAA Environment
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `webserver_url` - The webserver URL of the MWAA Environment
-* `webserver_vpc_endpoint_service` - The VPC endpoint for the environment's web server
 
 ## Timeouts
 

@@ -44,7 +44,7 @@ func (r *proactiveEngagementResource) Metadata(_ context.Context, request resour
 func (r *proactiveEngagementResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrEnabled: schema.BoolAttribute{
+			"enabled": schema.BoolAttribute{
 				Required: true,
 			},
 			names.AttrID: framework.IDAttribute(),

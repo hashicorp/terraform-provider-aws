@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_iam_service_specific_credential", name="Service Specific Credential")
@@ -35,18 +34,18 @@ func resourceServiceSpecificCredential() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrServiceName: {
+			"service_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrUserName: {
+			"user_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 64),
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Default:          awstypes.StatusTypeActive,
@@ -74,8 +73,8 @@ func resourceServiceSpecificCredentialCreate(ctx context.Context, d *schema.Reso
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	input := &iam.CreateServiceSpecificCredentialInput{
-		ServiceName: aws.String(d.Get(names.AttrServiceName).(string)),
-		UserName:    aws.String(d.Get(names.AttrUserName).(string)),
+		ServiceName: aws.String(d.Get("service_name").(string)),
+		UserName:    aws.String(d.Get("user_name").(string)),
 	}
 
 	out, err := conn.CreateServiceSpecificCredential(ctx, input)
@@ -88,7 +87,7 @@ func resourceServiceSpecificCredentialCreate(ctx context.Context, d *schema.Reso
 	d.SetId(fmt.Sprintf("%s:%s:%s", aws.ToString(cred.ServiceName), aws.ToString(cred.UserName), aws.ToString(cred.ServiceSpecificCredentialId)))
 	d.Set("service_password", cred.ServicePassword)
 
-	if v, ok := d.GetOk(names.AttrStatus); ok && v.(string) != string(awstypes.StatusTypeActive) {
+	if v, ok := d.GetOk("status"); ok && v.(string) != string(awstypes.StatusTypeActive) {
 		updateInput := &iam.UpdateServiceSpecificCredentialInput{
 			ServiceSpecificCredentialId: cred.ServiceSpecificCredentialId,
 			UserName:                    cred.UserName,
@@ -131,9 +130,9 @@ func resourceServiceSpecificCredentialRead(ctx context.Context, d *schema.Resour
 
 	d.Set("service_specific_credential_id", cred.ServiceSpecificCredentialId)
 	d.Set("service_user_name", cred.ServiceUserName)
-	d.Set(names.AttrServiceName, cred.ServiceName)
-	d.Set(names.AttrUserName, cred.UserName)
-	d.Set(names.AttrStatus, cred.Status)
+	d.Set("service_name", cred.ServiceName)
+	d.Set("user_name", cred.UserName)
+	d.Set("status", cred.Status)
 
 	return diags
 }
@@ -144,8 +143,8 @@ func resourceServiceSpecificCredentialUpdate(ctx context.Context, d *schema.Reso
 
 	request := &iam.UpdateServiceSpecificCredentialInput{
 		ServiceSpecificCredentialId: aws.String(d.Get("service_specific_credential_id").(string)),
-		UserName:                    aws.String(d.Get(names.AttrUserName).(string)),
-		Status:                      awstypes.StatusType(d.Get(names.AttrStatus).(string)),
+		UserName:                    aws.String(d.Get("user_name").(string)),
+		Status:                      awstypes.StatusType(d.Get("status").(string)),
 	}
 	_, err := conn.UpdateServiceSpecificCredential(ctx, request)
 	if err != nil {
@@ -161,7 +160,7 @@ func resourceServiceSpecificCredentialDelete(ctx context.Context, d *schema.Reso
 
 	request := &iam.DeleteServiceSpecificCredentialInput{
 		ServiceSpecificCredentialId: aws.String(d.Get("service_specific_credential_id").(string)),
-		UserName:                    aws.String(d.Get(names.AttrUserName).(string)),
+		UserName:                    aws.String(d.Get("user_name").(string)),
 	}
 
 	if _, err := conn.DeleteServiceSpecificCredential(ctx, request); err != nil {

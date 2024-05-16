@@ -43,13 +43,13 @@ func testAccDomainAssociation_basic(t *testing.T) {
 				Config: testAccDomainAssociationConfig_basic(rName, domainName, false, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainAssociationExists(ctx, resourceName, &domain),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "amplify", regexache.MustCompile(`apps/.+/domains/.+`)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "amplify", regexache.MustCompile(`apps/.+/domains/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
 					resource.TestCheckResourceAttr(resourceName, "enable_auto_sub_domain", "false"),
-					resource.TestCheckResourceAttr(resourceName, "sub_domain.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "sub_domain.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sub_domain.*", map[string]string{
-						"branch_name":    rName,
-						names.AttrPrefix: "",
+						"branch_name": rName,
+						"prefix":      "",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "wait_for_verification", "false"),
 				),
@@ -116,13 +116,13 @@ func testAccDomainAssociation_update(t *testing.T) {
 				Config: testAccDomainAssociationConfig_basic(rName, domainName, false, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainAssociationExists(ctx, resourceName, &domain),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "amplify", regexache.MustCompile(`apps/.+/domains/.+`)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "amplify", regexache.MustCompile(`apps/.+/domains/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
 					resource.TestCheckResourceAttr(resourceName, "enable_auto_sub_domain", "false"),
-					resource.TestCheckResourceAttr(resourceName, "sub_domain.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "sub_domain.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sub_domain.*", map[string]string{
-						"branch_name":    rName,
-						names.AttrPrefix: "",
+						"branch_name": rName,
+						"prefix":      "",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "wait_for_verification", "true"),
 				),
@@ -137,17 +137,17 @@ func testAccDomainAssociation_update(t *testing.T) {
 				Config: testAccDomainAssociationConfig_updated(rName, domainName, true, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainAssociationExists(ctx, resourceName, &domain),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "amplify", regexache.MustCompile(`apps/.+/domains/.+`)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "amplify", regexache.MustCompile(`apps/.+/domains/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
 					resource.TestCheckResourceAttr(resourceName, "enable_auto_sub_domain", "true"),
-					resource.TestCheckResourceAttr(resourceName, "sub_domain.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "sub_domain.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sub_domain.*", map[string]string{
-						"branch_name":    rName,
-						names.AttrPrefix: "",
+						"branch_name": rName,
+						"prefix":      "",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sub_domain.*", map[string]string{
-						"branch_name":    fmt.Sprintf("%s-2", rName),
-						names.AttrPrefix: "www",
+						"branch_name": fmt.Sprintf("%s-2", rName),
+						"prefix":      "www",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "wait_for_verification", "true"),
 				),
@@ -165,7 +165,7 @@ func testAccCheckDomainAssociationExists(ctx context.Context, n string, v *types
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyClient(ctx)
 
-		output, err := tfamplify.FindDomainAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["app_id"], rs.Primary.Attributes[names.AttrDomainName])
+		output, err := tfamplify.FindDomainAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["app_id"], rs.Primary.Attributes["domain_name"])
 
 		if err != nil {
 			return err
@@ -186,7 +186,7 @@ func testAccCheckDomainAssociationDestroy(ctx context.Context) resource.TestChec
 				continue
 			}
 
-			_, err := tfamplify.FindDomainAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["app_id"], rs.Primary.Attributes[names.AttrDomainName])
+			_, err := tfamplify.FindDomainAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["app_id"], rs.Primary.Attributes["domain_name"])
 
 			if tfresource.NotFound(err) {
 				continue

@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_resourcegroupstaggingapi_resources")
@@ -51,11 +50,11 @@ func dataSourceResources() *schema.Resource {
 				MaxItems: 50,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrKey: {
+						"key": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						names.AttrValues: {
+						"values": {
 							Type:     schema.TypeSet,
 							Optional: true,
 							MaxItems: 20,
@@ -69,7 +68,7 @@ func dataSourceResources() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrResourceARN: {
+						"resource_arn": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -95,7 +94,7 @@ func dataSourceResources() *schema.Resource {
 								},
 							},
 						},
-						names.AttrTags: tftags.TagsSchemaComputed(),
+						"tags": tftags.TagsSchemaComputed(),
 					},
 				},
 			},
@@ -158,10 +157,10 @@ func expandTagFilters(filters []interface{}) []types.TagFilter {
 		m := filter.(map[string]interface{})
 
 		result[i] = types.TagFilter{
-			Key: aws.String(m[names.AttrKey].(string)),
+			Key: aws.String(m["key"].(string)),
 		}
 
-		if v, ok := m[names.AttrValues]; ok && v.(*schema.Set).Len() > 0 {
+		if v, ok := m["values"]; ok && v.(*schema.Set).Len() > 0 {
 			result[i].Values = flex.ExpandStringValueSet(v.(*schema.Set))
 		}
 	}
@@ -174,8 +173,8 @@ func flattenResourceTagMappings(ctx context.Context, list []types.ResourceTagMap
 
 	for _, i := range list {
 		l := map[string]interface{}{
-			names.AttrResourceARN: aws.ToString(i.ResourceARN),
-			names.AttrTags:        KeyValueTags(ctx, i.Tags).Map(),
+			"resource_arn": aws.ToString(i.ResourceARN),
+			"tags":         KeyValueTags(ctx, i.Tags).Map(),
 		}
 
 		if i.ComplianceDetails != nil {

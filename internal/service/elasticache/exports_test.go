@@ -5,39 +5,8 @@ package elasticache
 
 // Exports for use in tests only.
 var (
-	ResourceCluster                = resourceCluster
-	ResourceGlobalReplicationGroup = resourceGlobalReplicationGroup
-	ResourceParameterGroup         = resourceParameterGroup
-	ResourceReplicationGroup       = resourceReplicationGroup
-	ResourceServerlessCache        = newServerlessCacheResource
-	ResourceSubnetGroup            = resourceSubnetGroup
-	ResourceUser                   = resourceUser
-	ResourceUserGroup              = resourceUserGroup
-	ResourceUserGroupAssociation   = resourceUserGroupAssociation
+	ResourceServerlessCache = newServerlessCacheResource
+	ResourceSubnetGroup     = resourceSubnetGroup
 
-	FindCacheClusterByID                 = findCacheClusterByID
-	FindCacheParameterGroup              = findCacheParameterGroup
-	FindCacheParameterGroupByName        = findCacheParameterGroupByName
-	FindCacheSubnetGroupByName           = findCacheSubnetGroupByName
-	FindGlobalReplicationGroupByID       = findGlobalReplicationGroupByID
-	FindReplicationGroupByID             = findReplicationGroupByID
-	FindServerlessCacheByID              = findServerlessCacheByID
-	FindUserByID                         = findUserByID
-	FindUserGroupByID                    = findUserGroupByID
-	FindUserGroupAssociationByTwoPartKey = findUserGroupAssociationByTwoPartKey
-	ParameterChanges                     = parameterChanges
-	ParameterHash                        = parameterHash
-	WaitCacheClusterDeleted              = waitCacheClusterDeleted
-	WaitReplicationGroupAvailable        = waitReplicationGroupAvailable
-
-	DiffVersion                               = diffVersion
-	EngineMemcached                           = engineMemcached
-	EngineRedis                               = engineRedis
-	EngineVersionForceNewOnDowngrade          = engineVersionForceNewOnDowngrade
-	EngineVersionIsDowngrade                  = engineVersionIsDowngrade
-	NormalizeEngineVersion                    = normalizeEngineVersion
-	ParamGroupNameRequiresMajorVersionUpgrade = paramGroupNameRequiresMajorVersionUpgrade
-	ValidateClusterEngineVersion              = validateClusterEngineVersion
-	ValidMemcachedVersionString               = validMemcachedVersionString
-	ValidRedisVersionString                   = validRedisVersionString
+	FindCacheSubnetGroupByName = findCacheSubnetGroupByName
 )

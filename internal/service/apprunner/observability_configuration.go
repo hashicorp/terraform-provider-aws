@@ -38,7 +38,7 @@ func resourceObservabilityConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -55,7 +55,7 @@ func resourceObservabilityConfiguration() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -128,11 +128,11 @@ func resourceObservabilityConfigurationRead(ctx context.Context, d *schema.Resou
 		return sdkdiag.AppendErrorf(diags, "reading App Runner Observability Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, config.ObservabilityConfigurationArn)
+	d.Set("arn", config.ObservabilityConfigurationArn)
 	d.Set("latest", config.Latest)
 	d.Set("observability_configuration_name", config.ObservabilityConfigurationName)
 	d.Set("observability_configuration_revision", config.ObservabilityConfigurationRevision)
-	d.Set(names.AttrStatus, config.Status)
+	d.Set("status", config.Status)
 	if err := d.Set("trace_configuration", flattenTraceConfiguration(config.TraceConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting trace_configuration: %s", err)
 	}

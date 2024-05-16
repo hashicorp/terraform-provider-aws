@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_lightsail_container_service_deployment_version")
@@ -67,7 +66,7 @@ func ResourceContainerServiceDeploymentVersion() *schema.Resource {
 								Type: schema.TypeString,
 							},
 						},
-						names.AttrEnvironment: {
+						"environment": {
 							Type:     schema.TypeMap,
 							Optional: true,
 							ForceNew: true,
@@ -84,7 +83,7 @@ func ResourceContainerServiceDeploymentVersion() *schema.Resource {
 					},
 				},
 			},
-			names.AttrCreatedAt: {
+			"created_at": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -105,7 +104,7 @@ func ResourceContainerServiceDeploymentVersion() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
-						names.AttrHealthCheck: {
+						"health_check": {
 							Type:     schema.TypeList,
 							Required: true,
 							ForceNew: true,
@@ -125,7 +124,7 @@ func ResourceContainerServiceDeploymentVersion() *schema.Resource {
 										Default:      5,
 										ValidateFunc: validation.IntBetween(5, 300),
 									},
-									names.AttrPath: {
+									"path": {
 										Type:     schema.TypeString,
 										Optional: true,
 										ForceNew: true,
@@ -156,16 +155,16 @@ func ResourceContainerServiceDeploymentVersion() *schema.Resource {
 					},
 				},
 			},
-			names.AttrServiceName: {
+			"service_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrState: {
+			"state": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrVersion: {
+			"version": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -177,7 +176,7 @@ func resourceContainerServiceDeploymentVersionCreate(ctx context.Context, d *sch
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
-	serviceName := d.Get(names.AttrServiceName).(string)
+	serviceName := d.Get("service_name").(string)
 
 	input := lightsail.CreateContainerServiceDeploymentInput{
 		ServiceName: aws.String(serviceName),
@@ -233,10 +232,10 @@ func resourceContainerServiceDeploymentVersionRead(ctx context.Context, d *schem
 		return sdkdiag.AppendErrorf(diags, "reading Lightsail Container Service (%s) Deployment Version (%d): %s", serviceName, version, err)
 	}
 
-	d.Set(names.AttrCreatedAt, aws.ToTime(deployment.CreatedAt).Format(time.RFC3339))
-	d.Set(names.AttrServiceName, serviceName)
-	d.Set(names.AttrState, deployment.State)
-	d.Set(names.AttrVersion, deployment.Version)
+	d.Set("created_at", aws.ToTime(deployment.CreatedAt).Format(time.RFC3339))
+	d.Set("service_name", serviceName)
+	d.Set("state", deployment.State)
+	d.Set("version", deployment.Version)
 
 	if err := d.Set("container", flattenContainerServiceDeploymentContainers(deployment.Containers)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting container for Lightsail Container Service (%s) Deployment Version (%d): %s", serviceName, version, err)
@@ -292,7 +291,7 @@ func expandContainerServiceDeploymentContainers(tfList []interface{}) map[string
 			container.Command = aws.ToStringSlice(flex.ExpandStringList(v))
 		}
 
-		if v, ok := tfMap[names.AttrEnvironment].(map[string]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap["environment"].(map[string]interface{}); ok && len(v) > 0 {
 			container.Environment = aws.ToStringMap(flex.ExpandStringMap(v))
 		}
 
@@ -344,7 +343,7 @@ func expandContainerServiceDeploymentPublicEndpoint(tfList []interface{}) *types
 		ContainerPort: aws.Int32(int32(tfMap["container_port"].(int))),
 	}
 
-	if v, ok := tfMap[names.AttrHealthCheck].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["health_check"].([]interface{}); ok && len(v) > 0 {
 		endpoint.HealthCheck = expandContainerServiceDeploymentPublicEndpointHealthCheck(v)
 	}
 
@@ -364,7 +363,7 @@ func expandContainerServiceDeploymentPublicEndpointHealthCheck(tfList []interfac
 	healthCheck := &types.ContainerServiceHealthCheckConfig{
 		HealthyThreshold:   aws.Int32(int32(tfMap["healthy_threshold"].(int))),
 		IntervalSeconds:    aws.Int32(int32(tfMap["interval_seconds"].(int))),
-		Path:               aws.String(tfMap[names.AttrPath].(string)),
+		Path:               aws.String(tfMap["path"].(string)),
 		SuccessCodes:       aws.String(tfMap["success_codes"].(string)),
 		TimeoutSeconds:     aws.Int32(int32(tfMap["timeout_seconds"].(int))),
 		UnhealthyThreshold: aws.Int32(int32(tfMap["unhealthy_threshold"].(int))),
@@ -381,11 +380,11 @@ func flattenContainerServiceDeploymentContainers(containers map[string]types.Con
 	var rawContainers []interface{}
 	for containerName, container := range containers {
 		rawContainer := map[string]interface{}{
-			"container_name":      containerName,
-			"image":               aws.ToString(container.Image),
-			"command":             container.Command,
-			names.AttrEnvironment: container.Environment,
-			"ports":               container.Ports,
+			"container_name": containerName,
+			"image":          aws.ToString(container.Image),
+			"command":        container.Command,
+			"environment":    container.Environment,
+			"ports":          container.Ports,
 		}
 
 		rawContainers = append(rawContainers, rawContainer)
@@ -401,9 +400,9 @@ func flattenContainerServiceDeploymentPublicEndpoint(endpoint *types.ContainerSe
 
 	return []interface{}{
 		map[string]interface{}{
-			"container_name":      aws.ToString(endpoint.ContainerName),
-			"container_port":      int(aws.ToInt32(endpoint.ContainerPort)),
-			names.AttrHealthCheck: flattenContainerServiceDeploymentPublicEndpointHealthCheck(endpoint.HealthCheck),
+			"container_name": aws.ToString(endpoint.ContainerName),
+			"container_port": int(aws.ToInt32(endpoint.ContainerPort)),
+			"health_check":   flattenContainerServiceDeploymentPublicEndpointHealthCheck(endpoint.HealthCheck),
 		},
 	}
 }
@@ -417,7 +416,7 @@ func flattenContainerServiceDeploymentPublicEndpointHealthCheck(healthCheck *typ
 		map[string]interface{}{
 			"healthy_threshold":   int(aws.ToInt32(healthCheck.HealthyThreshold)),
 			"interval_seconds":    int(aws.ToInt32(healthCheck.IntervalSeconds)),
-			names.AttrPath:        aws.ToString(healthCheck.Path),
+			"path":                aws.ToString(healthCheck.Path),
 			"success_codes":       aws.ToString(healthCheck.SuccessCodes),
 			"timeout_seconds":     int(aws.ToInt32(healthCheck.TimeoutSeconds)),
 			"unhealthy_threshold": int(aws.ToInt32(healthCheck.UnhealthyThreshold)),

@@ -60,7 +60,7 @@ func ResourceGrantAccepter() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 				Description:  "Amazon Resource Name (ARN) of the grant.",
 			},
-			names.AttrName: {
+			"name": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Name of the grant.",
@@ -70,17 +70,17 @@ func ResourceGrantAccepter() *schema.Resource {
 				Computed:    true,
 				Description: "Parent ARN.",
 			},
-			names.AttrPrincipal: {
+			"principal": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "The grantee principal ARN.",
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "GrantAccepter status.",
 			},
-			names.AttrVersion: {
+			"version": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "GrantAccepter version.",
@@ -130,11 +130,11 @@ func resourceGrantAccepterRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("grant_arn", out.GrantArn)
 	d.Set("home_region", out.HomeRegion)
 	d.Set("license_arn", out.LicenseArn)
-	d.Set(names.AttrName, out.GrantName)
+	d.Set("name", out.GrantName)
 	d.Set("parent_arn", out.ParentArn)
-	d.Set(names.AttrPrincipal, out.GranteePrincipalArn)
-	d.Set(names.AttrStatus, out.GrantStatus)
-	d.Set(names.AttrVersion, out.Version)
+	d.Set("principal", out.GranteePrincipalArn)
+	d.Set("status", out.GrantStatus)
+	d.Set("version", out.Version)
 
 	return diags
 }

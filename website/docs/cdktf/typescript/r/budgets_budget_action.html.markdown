@@ -107,10 +107,6 @@ class MyConvertedCode extends TerraformStack {
             subscriptionType: "EMAIL",
           },
         ],
-        tags: {
-          Tag1: "Value1",
-          Tag2: "Value2",
-        },
       }
     );
     /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
@@ -133,7 +129,6 @@ This resource supports the following arguments:
 * `executionRoleArn` - (Required) The role passed for action execution and reversion. Roles and actions must be in the same account.
 * `notificationType` - (Required) The type of a notification. Valid values are `ACTUAL` or `FORECASTED`.
 * `subscriber` - (Required) A list of subscribers. See [Subscriber](#subscriber).
-* `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Action Threshold
 
@@ -177,7 +172,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - ID of resource.
 * `arn` - The ARN of the budget action.
 * `status` - The status of the budget action.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -218,4 +212,4 @@ Using `terraform import`, import budget actions using `AccountID:ActionID:Budget
 % terraform import aws_budgets_budget_action.myBudget 123456789012:some-id:myBudget
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-c9d3539dce458a1f85471112fa94f680d4969a1d7317d9898a66654455ae6407 -->
+<!-- cache-key: cdktf-0.20.1 input-a8daba74b839303b60ec0ca7332cc6e8fa6dbb5c1bd3883e6e008d98d91f359b -->

@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -175,8 +174,8 @@ func sweepPolicyAttachments(region string) error {
 					r := ResourcePolicyAttachment()
 					d := r.Data(nil)
 					d.SetId(fmt.Sprintf("%s|%s", policyName, aws.StringValue(v)))
-					d.Set(names.AttrPolicy, policyName)
-					d.Set(names.AttrTarget, v)
+					d.Set("policy", policyName)
+					d.Set("target", v)
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
@@ -333,7 +332,7 @@ func sweepThingPrincipalAttachments(region string) error {
 					r := ResourceThingPrincipalAttachment()
 					d := r.Data(nil)
 					d.SetId(fmt.Sprintf("%s|%s", thingName, aws.StringValue(v)))
-					d.Set(names.AttrPrincipal, v)
+					d.Set("principal", v)
 					d.Set("thing", thingName)
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
@@ -611,7 +610,7 @@ func sweepAuthorizers(region string) error {
 			r := ResourceAuthorizer()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.AuthorizerName))
-			d.Set(names.AttrStatus, iot.AuthorizerStatusActive)
+			d.Set("status", iot.AuthorizerStatusActive)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -678,7 +677,7 @@ func sweepDomainConfigurations(region string) error {
 			r := ResourceDomainConfiguration()
 			d := r.Data(nil)
 			d.SetId(name)
-			d.Set(names.AttrStatus, output.DomainConfigurationStatus)
+			d.Set("status", output.DomainConfigurationStatus)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

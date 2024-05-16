@@ -39,32 +39,32 @@ func ResourceSubnetGroup() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "Managed by Terraform",
 			},
-			names.AttrName: {
+			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
+				ConflictsWith: []string{"name_prefix"},
 				ValidateFunc:  validateResourceName(subnetGroupNameMaxLength),
 			},
-			names.AttrNamePrefix: {
+			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
+				ConflictsWith: []string{"name"},
 				ValidateFunc:  validateResourceNamePrefix(subnetGroupNameMaxLength - id.UniqueIDSuffixLength),
 			},
-			names.AttrSubnetIDs: {
+			"subnet_ids": {
 				Type:     schema.TypeSet,
 				Required: true,
 				MinItems: 1,
@@ -72,7 +72,7 @@ func ResourceSubnetGroup() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVPCID: {
+			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -85,11 +85,11 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &memorydb.CreateSubnetGroupInput{
-		Description:     aws.String(d.Get(names.AttrDescription).(string)),
+		Description:     aws.String(d.Get("description").(string)),
 		SubnetGroupName: aws.String(name),
-		SubnetIds:       flex.ExpandStringSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
+		SubnetIds:       flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
 		Tags:            getTagsIn(ctx),
 	}
 
@@ -110,11 +110,11 @@ func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &memorydb.UpdateSubnetGroupInput{
-			Description:     aws.String(d.Get(names.AttrDescription).(string)),
+			Description:     aws.String(d.Get("description").(string)),
 			SubnetGroupName: aws.String(d.Id()),
-			SubnetIds:       flex.ExpandStringSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
+			SubnetIds:       flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
 		}
 
 		log.Printf("[DEBUG] Updating MemoryDB Subnet Group: %s", input)
@@ -150,12 +150,12 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 		subnetIds = append(subnetIds, subnet.Identifier)
 	}
 
-	d.Set(names.AttrARN, group.ARN)
-	d.Set(names.AttrDescription, group.Description)
-	d.Set(names.AttrSubnetIDs, flex.FlattenStringSet(subnetIds))
-	d.Set(names.AttrName, group.Name)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(group.Name)))
-	d.Set(names.AttrVPCID, group.VpcId)
+	d.Set("arn", group.ARN)
+	d.Set("description", group.Description)
+	d.Set("subnet_ids", flex.FlattenStringSet(subnetIds))
+	d.Set("name", group.Name)
+	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(group.Name)))
+	d.Set("vpc_id", group.VpcId)
 
 	return diags
 }

@@ -40,18 +40,18 @@ func ResourceCertificate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrCertificate: {
+			"certificate": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				Sensitive:    true,
 				ValidateFunc: validation.StringLenBetween(0, 16384),
 			},
-			names.AttrCertificateChain: {
+			"certificate_chain": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -62,7 +62,7 @@ func ResourceCertificate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 200),
@@ -71,7 +71,7 @@ func ResourceCertificate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrPrivateKey: {
+			"private_key": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -98,20 +98,20 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
 	input := &transfer.ImportCertificateInput{
-		Certificate: aws.String(d.Get(names.AttrCertificate).(string)),
+		Certificate: aws.String(d.Get("certificate").(string)),
 		Tags:        getTagsIn(ctx),
 		Usage:       aws.String(d.Get("usage").(string)),
 	}
 
-	if v, ok := d.GetOk(names.AttrCertificateChain); ok {
+	if v, ok := d.GetOk("certificate_chain"); ok {
 		input.CertificateChain = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrPrivateKey); ok {
+	if v, ok := d.GetOk("private_key"); ok {
 		input.PrivateKey = aws.String(v.(string))
 	}
 
@@ -143,11 +143,11 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.Set("active_date", aws.ToTime(output.ActiveDate).Format(time.RFC3339))
-	d.Set(names.AttrARN, output.Arn)
-	d.Set(names.AttrCertificate, output.Certificate)
-	d.Set(names.AttrCertificateChain, output.CertificateChain)
+	d.Set("arn", output.Arn)
+	d.Set("certificate", output.Certificate)
+	d.Set("certificate_chain", output.CertificateChain)
 	d.Set("certificate_id", output.CertificateId)
-	d.Set(names.AttrDescription, output.Description)
+	d.Set("description", output.Description)
 	d.Set("inactive_date", aws.ToTime(output.InactiveDate).Format(time.RFC3339))
 	d.Set("usage", output.Usage)
 	setTagsOut(ctx, output.Tags)
@@ -159,10 +159,10 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
-	if d.HasChange(names.AttrDescription) {
+	if d.HasChange("description") {
 		input := &transfer.UpdateCertificateInput{
 			CertificateId: aws.String(d.Id()),
-			Description:   aws.String(d.Get(names.AttrDescription).(string)),
+			Description:   aws.String(d.Get("description").(string)),
 		}
 
 		_, err := conn.UpdateCertificateWithContext(ctx, input)

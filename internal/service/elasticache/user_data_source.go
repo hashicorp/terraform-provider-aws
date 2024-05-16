@@ -12,11 +12,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_elasticache_user", name="User")
-func dataSourceUser() *schema.Resource {
+// @SDKDataSource("aws_elasticache_user")
+func DataSourceUser() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceUserRead,
 
@@ -34,7 +33,7 @@ func dataSourceUser() *schema.Resource {
 							Optional: true,
 							Type:     schema.TypeInt,
 						},
-						names.AttrType: {
+						"type": {
 							Optional: true,
 							Type:     schema.TypeString,
 						},
@@ -60,7 +59,7 @@ func dataSourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrUserName: {
+			"user_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -72,27 +71,32 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
-	user, err := findUserByID(ctx, conn, d.Get("user_id").(string))
-
+	user, err := FindUserByID(ctx, conn, d.Get("user_id").(string))
+	if tfresource.NotFound(err) {
+		return sdkdiag.AppendErrorf(diags, "reading ElastiCache Cache Cluster (%s): Not found. Please change your search criteria and try again: %s", d.Get("user_id").(string), err)
+	}
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("ElastiCache User", err))
+		return sdkdiag.AppendErrorf(diags, "reading ElastiCache Cache Cluster (%s): %s", d.Get("user_id").(string), err)
 	}
 
 	d.SetId(aws.StringValue(user.UserId))
+
 	d.Set("access_string", user.AccessString)
+
 	if v := user.Authentication; v != nil {
-		tfMap := map[string]interface{}{
+		authenticationMode := map[string]interface{}{
 			"password_count": aws.Int64Value(v.PasswordCount),
-			names.AttrType:   aws.StringValue(v.Type),
+			"type":           aws.StringValue(v.Type),
 		}
 
-		if err := d.Set("authentication_mode", []interface{}{tfMap}); err != nil {
+		if err := d.Set("authentication_mode", []interface{}{authenticationMode}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting authentication_mode: %s", err)
 		}
 	}
+
 	d.Set("engine", user.Engine)
 	d.Set("user_id", user.UserId)
-	d.Set(names.AttrUserName, user.UserName)
+	d.Set("user_name", user.UserName)
 
 	return diags
 }

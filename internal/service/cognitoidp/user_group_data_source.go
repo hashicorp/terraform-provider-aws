@@ -38,17 +38,17 @@ func (d *userGroupDataSource) Metadata(_ context.Context, request datasource.Met
 func (d *userGroupDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrDescription: schema.StringAttribute{
+			"description": schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrID: framework.IDAttribute(),
-			names.AttrName: schema.StringAttribute{
+			"id": framework.IDAttribute(),
+			"name": schema.StringAttribute{
 				Required: true,
 			},
 			"precedence": schema.Int64Attribute{
 				Computed: true,
 			},
-			names.AttrRoleARN: schema.StringAttribute{
+			"role_arn": schema.StringAttribute{
 				Computed: true,
 			},
 			"user_pool_id": schema.StringAttribute{

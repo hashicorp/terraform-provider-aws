@@ -54,15 +54,15 @@ func resourceLocationFSxWindowsFileSystem() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrCreationTime: {
+			"creation_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDomain: {
+			"domain": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -74,7 +74,7 @@ func resourceLocationFSxWindowsFileSystem() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			names.AttrPassword: {
+			"password": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -101,7 +101,7 @@ func resourceLocationFSxWindowsFileSystem() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrURI: {
+			"uri": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -123,13 +123,13 @@ func resourceLocationFSxWindowsFileSystemCreate(ctx context.Context, d *schema.R
 
 	input := &datasync.CreateLocationFsxWindowsInput{
 		FsxFilesystemArn:  aws.String(d.Get("fsx_filesystem_arn").(string)),
-		Password:          aws.String(d.Get(names.AttrPassword).(string)),
+		Password:          aws.String(d.Get("password").(string)),
 		SecurityGroupArns: flex.ExpandStringValueSet(d.Get("security_group_arns").(*schema.Set)),
 		Tags:              getTagsIn(ctx),
 		User:              aws.String(d.Get("user").(string)),
 	}
 
-	if v, ok := d.GetOk(names.AttrDomain); ok {
+	if v, ok := d.GetOk("domain"); ok {
 		input.Domain = aws.String(v.(string))
 	}
 
@@ -170,13 +170,13 @@ func resourceLocationFSxWindowsFileSystemRead(ctx context.Context, d *schema.Res
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set(names.AttrARN, output.LocationArn)
-	d.Set(names.AttrCreationTime, output.CreationTime.Format(time.RFC3339))
-	d.Set(names.AttrDomain, output.Domain)
+	d.Set("arn", output.LocationArn)
+	d.Set("creation_time", output.CreationTime.Format(time.RFC3339))
+	d.Set("domain", output.Domain)
 	d.Set("fsx_filesystem_arn", d.Get("fsx_filesystem_arn"))
 	d.Set("security_group_arns", output.SecurityGroupArns)
 	d.Set("subdirectory", subdirectory)
-	d.Set(names.AttrURI, uri)
+	d.Set("uri", uri)
 	d.Set("user", output.User)
 
 	return diags

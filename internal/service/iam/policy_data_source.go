@@ -16,7 +16,6 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_iam_policy", name="Policy")
@@ -25,37 +24,33 @@ func dataSourcePolicy() *schema.Resource {
 		ReadWithoutTimeout: dataSourcePolicyRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ValidateFunc:  verify.ValidARN,
-				ConflictsWith: []string{names.AttrName, "path_prefix"},
+				ConflictsWith: []string{"name", "path_prefix"},
 			},
-			"attachment_count": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
-				ConflictsWith: []string{names.AttrARN},
+				ConflictsWith: []string{"arn"},
 			},
-			names.AttrPath: {
+			"path": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"path_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{names.AttrARN},
+				ConflictsWith: []string{"arn"},
 			},
-			names.AttrPolicy: {
+			"policy": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -63,7 +58,7 @@ func dataSourcePolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -73,8 +68,8 @@ func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	arn := d.Get(names.AttrARN).(string)
-	name := d.Get(names.AttrName).(string)
+	arn := d.Get("arn").(string)
+	name := d.Get("name").(string)
 	pathPrefix := d.Get("path_prefix").(string)
 
 	if arn == "" {
@@ -101,14 +96,13 @@ func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta inte
 	arn = aws.ToString(policy.Arn)
 
 	d.SetId(arn)
-	d.Set(names.AttrARN, arn)
-	d.Set("attachment_count", policy.AttachmentCount)
-	d.Set(names.AttrDescription, policy.Description)
-	d.Set(names.AttrName, policy.PolicyName)
-	d.Set(names.AttrPath, policy.Path)
+	d.Set("arn", arn)
+	d.Set("description", policy.Description)
+	d.Set("name", policy.PolicyName)
+	d.Set("path", policy.Path)
 	d.Set("policy_id", policy.PolicyId)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, policy.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, policy.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
@@ -127,7 +121,7 @@ func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "parsing IAM Policy (%s) document: %s", arn, err)
 	}
 
-	d.Set(names.AttrPolicy, policyDocument)
+	d.Set("policy", policyDocument)
 
 	return diags
 }

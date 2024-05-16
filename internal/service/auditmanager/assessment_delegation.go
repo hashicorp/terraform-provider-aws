@@ -53,7 +53,7 @@ func (r *resourceAssessmentDelegation) Schema(ctx context.Context, req resource.
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrComment: schema.StringAttribute{
+			"comment": schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -75,8 +75,8 @@ func (r *resourceAssessmentDelegation) Schema(ctx context.Context, req resource.
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrID: framework.IDAttribute(),
-			names.AttrRoleARN: schema.StringAttribute{
+			"id": framework.IDAttribute(),
+			"role_arn": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -91,7 +91,7 @@ func (r *resourceAssessmentDelegation) Schema(ctx context.Context, req resource.
 					enum.FrameworkValidate[awstypes.RoleType](),
 				},
 			},
-			names.AttrStatus: schema.StringAttribute{
+			"status": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -240,7 +240,7 @@ func (r *resourceAssessmentDelegation) Delete(ctx context.Context, req resource.
 }
 
 func (r *resourceAssessmentDelegation) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func FindAssessmentDelegationByID(ctx context.Context, conn *auditmanager.Client, id string) (*awstypes.DelegationMetadata, error) {

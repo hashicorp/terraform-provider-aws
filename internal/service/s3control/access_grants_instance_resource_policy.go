@@ -46,7 +46,7 @@ func (r *accessGrantsInstanceResourcePolicyResource) Metadata(_ context.Context,
 func (r *accessGrantsInstanceResourcePolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrAccountID: schema.StringAttribute{
+			"account_id": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -57,7 +57,7 @@ func (r *accessGrantsInstanceResourcePolicyResource) Schema(ctx context.Context,
 				},
 			},
 			names.AttrID: framework.IDAttribute(),
-			names.AttrPolicy: schema.StringAttribute{
+			"policy": schema.StringAttribute{
 				CustomType: fwtypes.IAMPolicyType,
 				Required:   true,
 			},

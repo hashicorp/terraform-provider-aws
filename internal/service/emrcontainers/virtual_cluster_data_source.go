@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_emrcontainers_virtual_cluster")
@@ -21,7 +20,7 @@ func DataSourceVirtualCluster() *schema.Resource {
 		ReadWithoutTimeout: dataSourceVirtualClusterRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -30,7 +29,7 @@ func DataSourceVirtualCluster() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrID: {
+						"id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -44,7 +43,7 @@ func DataSourceVirtualCluster() *schema.Resource {
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												names.AttrNamespace: {
+												"namespace": {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
@@ -54,26 +53,26 @@ func DataSourceVirtualCluster() *schema.Resource {
 								},
 							},
 						},
-						names.AttrType: {
+						"type": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			names.AttrCreatedAt: {
+			"created_at": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrState: {
+			"state": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 			"virtual_cluster_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -96,7 +95,7 @@ func dataSourceVirtualClusterRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	d.SetId(aws.StringValue(vc.Id))
-	d.Set(names.AttrARN, vc.Arn)
+	d.Set("arn", vc.Arn)
 	if vc.ContainerProvider != nil {
 		if err := d.Set("container_provider", []interface{}{flattenContainerProvider(vc.ContainerProvider)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting container_provider: %s", err)
@@ -104,12 +103,12 @@ func dataSourceVirtualClusterRead(ctx context.Context, d *schema.ResourceData, m
 	} else {
 		d.Set("container_provider", nil)
 	}
-	d.Set(names.AttrCreatedAt, aws.TimeValue(vc.CreatedAt).String())
-	d.Set(names.AttrName, vc.Name)
-	d.Set(names.AttrState, vc.State)
+	d.Set("created_at", aws.TimeValue(vc.CreatedAt).String())
+	d.Set("name", vc.Name)
+	d.Set("state", vc.State)
 	d.Set("virtual_cluster_id", vc.Id)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, vc.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, vc.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

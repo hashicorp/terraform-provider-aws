@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -82,15 +81,9 @@ func RegisterSweepers() {
 	resource.AddTestSweepers("aws_eip", &resource.Sweeper{
 		Name: "aws_eip",
 		Dependencies: []string{
-			"aws_eip_domain_name",
 			"aws_vpc",
 		},
 		F: sweepEIPs,
-	})
-
-	resource.AddTestSweepers("aws_eip_domain_name", &resource.Sweeper{
-		Name: "aws_eip_domain_name",
-		F:    sweepEIPDomainNames,
 	})
 
 	resource.AddTestSweepers("aws_flow_log", &resource.Sweeper{
@@ -851,13 +844,15 @@ func sweepEgressOnlyInternetGateways(region string) error {
 func sweepEIPs(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
+
+	conn := client.EC2Conn(ctx)
+
 	// There is currently no paginator or Marker/NextToken
 	input := &ec2.DescribeAddressesInput{}
-	conn := client.EC2Conn(ctx)
-	sweepResources := make([]sweep.Sweepable, 0)
 
 	output, err := conn.DescribeAddressesWithContext(ctx, input)
 
@@ -870,76 +865,43 @@ func sweepEIPs(region string) error {
 		return fmt.Errorf("error describing EC2 EIPs: %s", err)
 	}
 
-	for _, v := range output.Addresses {
-		publicIP := aws.StringValue(v.PublicIp)
+	if output == nil || len(output.Addresses) == 0 {
+		log.Print("[DEBUG] No EC2 EIPs to sweep")
+		return nil
+	}
 
-		if v.AssociationId != nil {
-			log.Printf("[INFO] Skipping EC2 EIP (%s) with association: %s", publicIP, aws.StringValue(v.AssociationId))
+	sweepResources := make([]sweep.Sweepable, 0)
+	var errs *multierror.Error
+
+	for _, address := range output.Addresses {
+		publicIP := aws.StringValue(address.PublicIp)
+
+		if address.AssociationId != nil {
+			log.Printf("[INFO] Skipping EC2 EIP (%s) with association: %s", publicIP, aws.StringValue(address.AssociationId))
 			continue
 		}
 
-		r := resourceEIP()
+		r := ResourceEIP()
 		d := r.Data(nil)
-		if v.AllocationId != nil {
-			d.SetId(aws.StringValue(v.AllocationId))
+		if address.AllocationId != nil {
+			d.SetId(aws.StringValue(address.AllocationId))
 		} else {
-			d.SetId(aws.StringValue(v.PublicIp))
+			d.SetId(aws.StringValue(address.PublicIp))
 		}
 
 		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping EC2 EIPs (%s): %w", region, err)
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping EC2 EIPs for %s: %w", region, err))
 	}
 
-	return nil
-}
-
-func sweepEIPDomainNames(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.EC2Conn(ctx)
-	input := &ec2.DescribeAddressesAttributeInput{
-		Attribute: aws.String(ec2.AddressAttributeNameDomainName),
-	}
-	sweepResources := make([]sweep.Sweepable, 0)
-
-	err = conn.DescribeAddressesAttributePagesWithContext(ctx, input, func(page *ec2.DescribeAddressesAttributeOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, v := range page.Addresses {
-			sweepResources = append(sweepResources, framework.NewSweepResource(newEIPDomainNameResource, client,
-				framework.NewAttribute(names.AttrID, aws.StringValue(v.AllocationId)),
-			))
-		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EIP Domain Name sweep for %s: %s", region, err)
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping EC2 EIP sweep for %s: %s", region, errs)
 		return nil
 	}
 
-	if err != nil {
-		return fmt.Errorf("error listing EIP Domain Names (%s): %w", region, err)
-	}
-
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping EIP Domain Names (%s): %w", region, err)
-	}
-
-	return nil
+	return errs.ErrorOrNil()
 }
 
 func sweepFlowLogs(region string) error {
@@ -1147,7 +1109,7 @@ func sweepInternetGateways(region string) error {
 			d := r.Data(nil)
 			d.SetId(internetGatewayID)
 			if len(internetGateway.Attachments) > 0 {
-				d.Set(names.AttrVPCID, internetGateway.Attachments[0].VpcId)
+				d.Set("vpc_id", internetGateway.Attachments[0].VpcId)
 			}
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
@@ -1196,7 +1158,7 @@ func sweepKeyPairs(region string) error {
 	}
 
 	for _, v := range output.KeyPairs {
-		r := resourceKeyPair()
+		r := ResourceKeyPair()
 		d := r.Data(nil)
 		d.SetId(aws.StringValue(v.KeyName))
 
@@ -1328,9 +1290,9 @@ func sweepNetworkACLs(region string) error {
 			for _, v := range v.Associations {
 				subnetIDs = append(subnetIDs, aws.StringValue(v.SubnetId))
 			}
-			d.Set(names.AttrSubnetIDs, subnetIDs)
+			d.Set("subnet_ids", subnetIDs)
 
-			d.Set(names.AttrVPCID, v.VpcId)
+			d.Set("vpc_id", v.VpcId)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -1379,7 +1341,7 @@ func sweepNetworkInterfaces(region string) error {
 				continue
 			}
 
-			r := resourceNetworkInterface()
+			r := ResourceNetworkInterface()
 			d := r.Data(nil)
 			d.SetId(id)
 
@@ -2295,7 +2257,7 @@ func sweepVPCDHCPOptions(region string) error {
 						continue
 					}
 
-					if aws.StringValue(v.Values[0].Value) == client.EC2RegionalPrivateDNSSuffix(ctx) {
+					if aws.StringValue(v.Values[0].Value) == RegionalPrivateDNSSuffix(region) {
 						defaultDomainNameFound = true
 					}
 				} else if aws.StringValue(v.Key) == "domain-name-servers" {
@@ -2661,7 +2623,7 @@ func sweepVPNGateways(region string) error {
 
 		for _, v := range v.VpcAttachments {
 			if aws.StringValue(v.State) != ec2.AttachmentStatusDetached {
-				d.Set(names.AttrVPCID, v.VpcId)
+				d.Set("vpc_id", v.VpcId)
 
 				break
 			}
@@ -2924,8 +2886,8 @@ func sweepInstanceConnectEndpoints(region string) error {
 				continue
 			}
 
-			sweepResources = append(sweepResources, framework.NewSweepResource(newInstanceConnectEndpointResource, client,
-				framework.NewAttribute(names.AttrID, aws.StringValue(v.InstanceConnectEndpointId)),
+			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceInstanceConnectEndpoint, client,
+				framework.NewAttribute("id", aws.StringValue(v.InstanceConnectEndpointId)),
 			))
 		}
 

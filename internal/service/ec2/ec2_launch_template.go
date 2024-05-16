@@ -23,9 +23,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -44,7 +44,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -53,7 +53,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrDeviceName: {
+						"device_name": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -63,29 +63,29 @@ func ResourceLaunchTemplate() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrDeleteOnTermination: {
+									"delete_on_termination": {
 										Type:             nullable.TypeNullableBool,
 										Optional:         true,
 										DiffSuppressFunc: nullable.DiffSuppressNullableBool,
 										ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 									},
-									names.AttrEncrypted: {
+									"encrypted": {
 										Type:             nullable.TypeNullableBool,
 										Optional:         true,
 										DiffSuppressFunc: nullable.DiffSuppressNullableBool,
 										ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 									},
-									names.AttrIOPS: {
+									"iops": {
 										Type:     schema.TypeInt,
 										Computed: true,
 										Optional: true,
 									},
-									names.AttrKMSKeyID: {
+									"kms_key_id": {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: verify.ValidARN,
 									},
-									names.AttrSnapshotID: {
+									"snapshot_id": {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -95,12 +95,12 @@ func ResourceLaunchTemplate() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: validation.IntBetween(125, 1000),
 									},
-									names.AttrVolumeSize: {
+									"volume_size": {
 										Type:     schema.TypeInt,
 										Optional: true,
 										Computed: true,
 									},
-									names.AttrVolumeType: {
+									"volume_type": {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Computed:     true,
@@ -197,7 +197,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 				ConflictsWith: []string{"update_default_version"},
 				ValidateFunc:  validation.IntAtLeast(1),
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 255),
@@ -221,7 +221,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrType: {
+						"type": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -234,7 +234,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrType: {
+						"type": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -247,7 +247,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
+						"enabled": {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
@@ -273,13 +273,13 @@ func ResourceLaunchTemplate() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrARN: {
+						"arn": {
 							Type:          schema.TypeString,
 							Optional:      true,
 							ConflictsWith: []string{"iam_instance_profile.0.name"},
 							ValidateFunc:  verify.ValidARN,
 						},
-						names.AttrName: {
+						"name": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -355,12 +355,12 @@ func ResourceLaunchTemplate() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrMax: {
+									"max": {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										ValidateFunc: validation.IntAtLeast(0),
 									},
-									names.AttrMin: {
+									"min": {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										ValidateFunc: validation.IntAtLeast(1),
@@ -390,12 +390,12 @@ func ResourceLaunchTemplate() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrMax: {
+									"max": {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										ValidateFunc: validation.IntAtLeast(1),
 									},
-									names.AttrMin: {
+									"min": {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										ValidateFunc: validation.IntAtLeast(1),
@@ -429,12 +429,12 @@ func ResourceLaunchTemplate() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrMax: {
+									"max": {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										ValidateFunc: validation.IntAtLeast(1),
 									},
-									names.AttrMin: {
+									"min": {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										ValidateFunc: validation.IntAtLeast(1),
@@ -489,12 +489,12 @@ func ResourceLaunchTemplate() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrMax: {
+									"max": {
 										Type:         schema.TypeFloat,
 										Optional:     true,
 										ValidateFunc: verify.FloatGreaterThan(0.0),
 									},
-									names.AttrMin: {
+									"min": {
 										Type:         schema.TypeFloat,
 										Optional:     true,
 										ValidateFunc: verify.FloatGreaterThan(0.0),
@@ -508,12 +508,12 @@ func ResourceLaunchTemplate() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrMax: {
+									"max": {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										ValidateFunc: validation.IntAtLeast(1),
 									},
-									names.AttrMin: {
+									"min": {
 										Type:         schema.TypeInt,
 										Required:     true,
 										ValidateFunc: validation.IntAtLeast(1),
@@ -527,12 +527,12 @@ func ResourceLaunchTemplate() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrMax: {
+									"max": {
 										Type:         schema.TypeFloat,
 										Optional:     true,
 										ValidateFunc: verify.FloatGreaterThan(0.0),
 									},
-									names.AttrMin: {
+									"min": {
 										Type:         schema.TypeFloat,
 										Optional:     true,
 										ValidateFunc: verify.FloatGreaterThan(0.0),
@@ -546,12 +546,12 @@ func ResourceLaunchTemplate() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrMax: {
+									"max": {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										ValidateFunc: validation.IntAtLeast(1),
 									},
-									names.AttrMin: {
+									"min": {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										ValidateFunc: validation.IntAtLeast(1),
@@ -579,12 +579,12 @@ func ResourceLaunchTemplate() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrMax: {
+									"max": {
 										Type:         schema.TypeFloat,
 										Optional:     true,
 										ValidateFunc: verify.FloatGreaterThan(0.0),
 									},
-									names.AttrMin: {
+									"min": {
 										Type:         schema.TypeFloat,
 										Optional:     true,
 										ValidateFunc: verify.FloatGreaterThan(0.0),
@@ -598,12 +598,12 @@ func ResourceLaunchTemplate() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrMax: {
+									"max": {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										ValidateFunc: validation.IntAtLeast(1),
 									},
-									names.AttrMin: {
+									"min": {
 										Type:         schema.TypeInt,
 										Required:     true,
 										ValidateFunc: validation.IntAtLeast(1),
@@ -613,9 +613,9 @@ func ResourceLaunchTemplate() *schema.Resource {
 						},
 					},
 				},
-				ConflictsWith: []string{names.AttrInstanceType},
+				ConflictsWith: []string{"instance_type"},
 			},
-			names.AttrInstanceType: {
+			"instance_type": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"instance_requirements"},
@@ -705,27 +705,27 @@ func ResourceLaunchTemplate() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
+						"enabled": {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
 					},
 				},
 			},
-			names.AttrName: {
+			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
+				ConflictsWith: []string{"name_prefix"},
 				ValidateFunc:  verify.ValidLaunchTemplateName,
 			},
-			names.AttrNamePrefix: {
+			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
+				ConflictsWith: []string{"name"},
 				ValidateFunc:  verify.ValidLaunchTemplateName,
 			},
 			"network_interfaces": {
@@ -745,13 +745,13 @@ func ResourceLaunchTemplate() *schema.Resource {
 							DiffSuppressFunc: nullable.DiffSuppressNullableBool,
 							ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 						},
-						names.AttrDeleteOnTermination: {
+						"delete_on_termination": {
 							Type:             nullable.TypeNullableBool,
 							Optional:         true,
 							DiffSuppressFunc: nullable.DiffSuppressNullableBool,
 							ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 						},
-						names.AttrDescription: {
+						"description": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -816,7 +816,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
-						names.AttrNetworkInterfaceID: {
+						"network_interface_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -825,12 +825,12 @@ func ResourceLaunchTemplate() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.IsIPv4Address,
 						},
-						names.AttrSecurityGroups: {
+						"security_groups": {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						names.AttrSubnetID: {
+						"subnet_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -847,11 +847,11 @@ func ResourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						names.AttrAvailabilityZone: {
+						"availability_zone": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						names.AttrGroupName: {
+						"group_name": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -911,19 +911,19 @@ func ResourceLaunchTemplate() *schema.Resource {
 				Type:          schema.TypeSet,
 				Optional:      true,
 				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{names.AttrVPCSecurityGroupIDs},
+				ConflictsWith: []string{"vpc_security_group_ids"},
 			},
 			"tag_specifications": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrResourceType: {
+						"resource_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice(ec2.ResourceType_Values(), false),
 						},
-						names.AttrTags: tftags.TagsSchema(),
+						"tags": tftags.TagsSchema(),
 					},
 				},
 			},
@@ -938,7 +938,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			names.AttrVPCSecurityGroupIDs: {
+			"vpc_security_group_ids": {
 				Type:          schema.TypeSet,
 				Optional:      true,
 				Elem:          &schema.Schema{Type: schema.TypeString},
@@ -980,14 +980,14 @@ func resourceLaunchTemplateCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &ec2.CreateLaunchTemplateInput{
 		ClientToken:        aws.String(id.UniqueId()),
 		LaunchTemplateName: aws.String(name),
 		TagSpecifications:  getTagSpecificationsIn(ctx, ec2.ResourceTypeLaunchTemplate),
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.VersionDescription = aws.String(v.(string))
 	}
 
@@ -1038,12 +1038,12 @@ func resourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, met
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("launch-template/%s", d.Id()),
 	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set("arn", arn)
 	d.Set("default_version", lt.DefaultVersionNumber)
-	d.Set(names.AttrDescription, ltv.VersionDescription)
+	d.Set("description", ltv.VersionDescription)
 	d.Set("latest_version", lt.LatestVersionNumber)
-	d.Set(names.AttrName, lt.LaunchTemplateName)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(lt.LaunchTemplateName)))
+	d.Set("name", lt.LaunchTemplateName)
+	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(lt.LaunchTemplateName)))
 
 	if err := flattenResponseLaunchTemplateData(ctx, conn, d, ltv.LaunchTemplateData); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -1063,7 +1063,7 @@ func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, m
 		"capacity_reservation_specification",
 		"cpu_options",
 		"credit_specification",
-		names.AttrDescription,
+		"description",
 		"disable_api_stop",
 		"disable_api_termination",
 		"ebs_optimized",
@@ -1076,7 +1076,7 @@ func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, m
 		"instance_initiated_shutdown_behavior",
 		"instance_market_options",
 		"instance_requirements",
-		names.AttrInstanceType,
+		"instance_type",
 		"kernel_id",
 		"key_name",
 		"license_specification",
@@ -1089,7 +1089,7 @@ func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, m
 		"security_group_names",
 		"tag_specifications",
 		"user_data",
-		names.AttrVPCSecurityGroupIDs,
+		"vpc_security_group_ids",
 	}
 	latestVersion := int64(d.Get("latest_version").(int))
 
@@ -1099,7 +1099,7 @@ func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, m
 			LaunchTemplateId: aws.String(d.Id()),
 		}
 
-		if v, ok := d.GetOk(names.AttrDescription); ok {
+		if v, ok := d.GetOk("description"); ok {
 			input.VersionDescription = aws.String(v.(string))
 		}
 
@@ -1166,7 +1166,7 @@ func expandRequestLaunchTemplateData(ctx context.Context, conn *ec2.EC2, d *sche
 	}
 
 	var instanceType string
-	if v, ok := d.GetOk(names.AttrInstanceType); ok {
+	if v, ok := d.GetOk("instance_type"); ok {
 		v := v.(string)
 
 		instanceType = v
@@ -1207,7 +1207,7 @@ func expandRequestLaunchTemplateData(ctx context.Context, conn *ec2.EC2, d *sche
 		apiObject.DisableApiTermination = aws.Bool(v.(bool))
 	}
 
-	if v, null, _ := nullable.Bool(d.Get("ebs_optimized").(string)).ValueBool(); !null {
+	if v, null, _ := nullable.Bool(d.Get("ebs_optimized").(string)).Value(); !null {
 		apiObject.EbsOptimized = aws.Bool(v)
 	}
 
@@ -1223,7 +1223,7 @@ func expandRequestLaunchTemplateData(ctx context.Context, conn *ec2.EC2, d *sche
 		tfMap := v.([]interface{})[0].(map[string]interface{})
 
 		apiObject.EnclaveOptions = &ec2.LaunchTemplateEnclaveOptionsRequest{
-			Enabled: aws.Bool(tfMap[names.AttrEnabled].(bool)),
+			Enabled: aws.Bool(tfMap["enabled"].(bool)),
 		}
 	}
 
@@ -1279,7 +1279,7 @@ func expandRequestLaunchTemplateData(ctx context.Context, conn *ec2.EC2, d *sche
 		tfMap := v.([]interface{})[0].(map[string]interface{})
 
 		apiObject.Monitoring = &ec2.LaunchTemplatesMonitoringRequest{
-			Enabled: aws.Bool(tfMap[names.AttrEnabled].(bool)),
+			Enabled: aws.Bool(tfMap["enabled"].(bool)),
 		}
 	}
 
@@ -1307,7 +1307,7 @@ func expandRequestLaunchTemplateData(ctx context.Context, conn *ec2.EC2, d *sche
 		apiObject.TagSpecifications = expandLaunchTemplateTagSpecificationRequests(ctx, v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk("vpc_security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
 		apiObject.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
@@ -1325,7 +1325,7 @@ func expandLaunchTemplateBlockDeviceMappingRequest(tfMap map[string]interface{})
 		apiObject.Ebs = expandLaunchTemplateEBSBlockDeviceRequest(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap[names.AttrDeviceName].(string); ok && v != "" {
+	if v, ok := tfMap["device_name"].(string); ok && v != "" {
 		apiObject.DeviceName = aws.String(v)
 	}
 
@@ -1373,23 +1373,23 @@ func expandLaunchTemplateEBSBlockDeviceRequest(tfMap map[string]interface{}) *ec
 
 	apiObject := &ec2.LaunchTemplateEbsBlockDeviceRequest{}
 
-	if v, null, _ := nullable.Bool(tfMap[names.AttrDeleteOnTermination].(string)).ValueBool(); !null {
+	if v, null, _ := nullable.Bool(tfMap["delete_on_termination"].(string)).Value(); !null {
 		apiObject.DeleteOnTermination = aws.Bool(v)
 	}
 
-	if v, null, _ := nullable.Bool(tfMap[names.AttrEncrypted].(string)).ValueBool(); !null {
+	if v, null, _ := nullable.Bool(tfMap["encrypted"].(string)).Value(); !null {
 		apiObject.Encrypted = aws.Bool(v)
 	}
 
-	if v, ok := tfMap[names.AttrIOPS].(int); ok && v != 0 {
+	if v, ok := tfMap["iops"].(int); ok && v != 0 {
 		apiObject.Iops = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap[names.AttrKMSKeyID].(string); ok && v != "" {
+	if v, ok := tfMap["kms_key_id"].(string); ok && v != "" {
 		apiObject.KmsKeyId = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrSnapshotID].(string); ok && v != "" {
+	if v, ok := tfMap["snapshot_id"].(string); ok && v != "" {
 		apiObject.SnapshotId = aws.String(v)
 	}
 
@@ -1397,11 +1397,11 @@ func expandLaunchTemplateEBSBlockDeviceRequest(tfMap map[string]interface{}) *ec
 		apiObject.Throughput = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap[names.AttrVolumeSize].(int); ok && v != 0 {
+	if v, ok := tfMap["volume_size"].(int); ok && v != 0 {
 		apiObject.VolumeSize = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap[names.AttrVolumeType].(string); ok && v != "" {
+	if v, ok := tfMap["volume_type"].(string); ok && v != "" {
 		apiObject.VolumeType = aws.String(v)
 	}
 
@@ -1455,7 +1455,7 @@ func expandElasticGpuSpecification(tfMap map[string]interface{}) *ec2.ElasticGpu
 
 	apiObject := &ec2.ElasticGpuSpecification{}
 
-	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
+	if v, ok := tfMap["type"].(string); ok && v != "" {
 		apiObject.Type = aws.String(v)
 	}
 
@@ -1495,7 +1495,7 @@ func expandLaunchTemplateElasticInferenceAccelerator(tfMap map[string]interface{
 
 	apiObject := &ec2.LaunchTemplateElasticInferenceAccelerator{}
 
-	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
+	if v, ok := tfMap["type"].(string); ok && v != "" {
 		apiObject.Type = aws.String(v)
 	}
 
@@ -1535,11 +1535,11 @@ func expandLaunchTemplateIAMInstanceProfileSpecificationRequest(tfMap map[string
 
 	apiObject := &ec2.LaunchTemplateIamInstanceProfileSpecificationRequest{}
 
-	if v, ok := tfMap[names.AttrARN].(string); ok && v != "" {
+	if v, ok := tfMap["arn"].(string); ok && v != "" {
 		apiObject.Arn = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
+	if v, ok := tfMap["name"].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
@@ -1674,12 +1674,12 @@ func expandAcceleratorCountRequest(tfMap map[string]interface{}) *ec2.Accelerato
 	apiObject := &ec2.AcceleratorCountRequest{}
 
 	var min int
-	if v, ok := tfMap[names.AttrMin].(int); ok {
+	if v, ok := tfMap["min"].(int); ok {
 		min = v
 		apiObject.Min = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap[names.AttrMax].(int); ok && v >= min {
+	if v, ok := tfMap["max"].(int); ok && v >= min {
 		apiObject.Max = aws.Int64(int64(v))
 	}
 
@@ -1694,12 +1694,12 @@ func expandAcceleratorTotalMemoryMiBRequest(tfMap map[string]interface{}) *ec2.A
 	apiObject := &ec2.AcceleratorTotalMemoryMiBRequest{}
 
 	var min int
-	if v, ok := tfMap[names.AttrMin].(int); ok {
+	if v, ok := tfMap["min"].(int); ok {
 		min = v
 		apiObject.Min = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap[names.AttrMax].(int); ok && v >= min {
+	if v, ok := tfMap["max"].(int); ok && v >= min {
 		apiObject.Max = aws.Int64(int64(v))
 	}
 
@@ -1714,12 +1714,12 @@ func expandBaselineEBSBandwidthMbpsRequest(tfMap map[string]interface{}) *ec2.Ba
 	apiObject := &ec2.BaselineEbsBandwidthMbpsRequest{}
 
 	var min int
-	if v, ok := tfMap[names.AttrMin].(int); ok {
+	if v, ok := tfMap["min"].(int); ok {
 		min = v
 		apiObject.Min = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap[names.AttrMax].(int); ok && v >= min {
+	if v, ok := tfMap["max"].(int); ok && v >= min {
 		apiObject.Max = aws.Int64(int64(v))
 	}
 
@@ -1734,12 +1734,12 @@ func expandMemoryGiBPerVCPURequest(tfMap map[string]interface{}) *ec2.MemoryGiBP
 	apiObject := &ec2.MemoryGiBPerVCpuRequest{}
 
 	var min float64
-	if v, ok := tfMap[names.AttrMin].(float64); ok {
+	if v, ok := tfMap["min"].(float64); ok {
 		min = v
 		apiObject.Min = aws.Float64(v)
 	}
 
-	if v, ok := tfMap[names.AttrMax].(float64); ok && v >= min {
+	if v, ok := tfMap["max"].(float64); ok && v >= min {
 		apiObject.Max = aws.Float64(v)
 	}
 
@@ -1754,12 +1754,12 @@ func expandMemoryMiBRequest(tfMap map[string]interface{}) *ec2.MemoryMiBRequest 
 	apiObject := &ec2.MemoryMiBRequest{}
 
 	var min int
-	if v, ok := tfMap[names.AttrMin].(int); ok {
+	if v, ok := tfMap["min"].(int); ok {
 		min = v
 		apiObject.Min = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap[names.AttrMax].(int); ok && v >= min {
+	if v, ok := tfMap["max"].(int); ok && v >= min {
 		apiObject.Max = aws.Int64(int64(v))
 	}
 
@@ -1774,12 +1774,12 @@ func expandNetworkBandwidthGbpsRequest(tfMap map[string]interface{}) *ec2.Networ
 	apiObject := &ec2.NetworkBandwidthGbpsRequest{}
 
 	var min float64
-	if v, ok := tfMap[names.AttrMin].(float64); ok {
+	if v, ok := tfMap["min"].(float64); ok {
 		min = v
 		apiObject.Min = aws.Float64(v)
 	}
 
-	if v, ok := tfMap[names.AttrMax].(float64); ok && v >= min {
+	if v, ok := tfMap["max"].(float64); ok && v >= min {
 		apiObject.Max = aws.Float64(v)
 	}
 
@@ -1794,12 +1794,12 @@ func expandNetworkInterfaceCountRequest(tfMap map[string]interface{}) *ec2.Netwo
 	apiObject := &ec2.NetworkInterfaceCountRequest{}
 
 	var min int
-	if v, ok := tfMap[names.AttrMin].(int); ok {
+	if v, ok := tfMap["min"].(int); ok {
 		min = v
 		apiObject.Min = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap[names.AttrMax].(int); ok && v >= min {
+	if v, ok := tfMap["max"].(int); ok && v >= min {
 		apiObject.Max = aws.Int64(int64(v))
 	}
 
@@ -1814,12 +1814,12 @@ func expandTotalLocalStorageGBRequest(tfMap map[string]interface{}) *ec2.TotalLo
 	apiObject := &ec2.TotalLocalStorageGBRequest{}
 
 	var min float64
-	if v, ok := tfMap[names.AttrMin].(float64); ok {
+	if v, ok := tfMap["min"].(float64); ok {
 		min = v
 		apiObject.Min = aws.Float64(v)
 	}
 
-	if v, ok := tfMap[names.AttrMax].(float64); ok && v >= min {
+	if v, ok := tfMap["max"].(float64); ok && v >= min {
 		apiObject.Max = aws.Float64(v)
 	}
 
@@ -1834,12 +1834,12 @@ func expandVCPUCountRangeRequest(tfMap map[string]interface{}) *ec2.VCpuCountRan
 	apiObject := &ec2.VCpuCountRangeRequest{}
 
 	min := 0
-	if v, ok := tfMap[names.AttrMin].(int); ok {
+	if v, ok := tfMap["min"].(int); ok {
 		min = v
 		apiObject.Min = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap[names.AttrMax].(int); ok && v >= min {
+	if v, ok := tfMap["max"].(int); ok && v >= min {
 		apiObject.Max = aws.Int64(int64(v))
 	}
 
@@ -1969,19 +1969,19 @@ func expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequest(tfMap map[
 
 	apiObject := &ec2.LaunchTemplateInstanceNetworkInterfaceSpecificationRequest{}
 
-	if v, null, _ := nullable.Bool(tfMap["associate_carrier_ip_address"].(string)).ValueBool(); !null {
+	if v, null, _ := nullable.Bool(tfMap["associate_carrier_ip_address"].(string)).Value(); !null {
 		apiObject.AssociateCarrierIpAddress = aws.Bool(v)
 	}
 
-	if v, null, _ := nullable.Bool(tfMap["associate_public_ip_address"].(string)).ValueBool(); !null {
+	if v, null, _ := nullable.Bool(tfMap["associate_public_ip_address"].(string)).Value(); !null {
 		apiObject.AssociatePublicIpAddress = aws.Bool(v)
 	}
 
-	if v, null, _ := nullable.Bool(tfMap[names.AttrDeleteOnTermination].(string)).ValueBool(); !null {
+	if v, null, _ := nullable.Bool(tfMap["delete_on_termination"].(string)).Value(); !null {
 		apiObject.DeleteOnTermination = aws.Bool(v)
 	}
 
-	if v, ok := tfMap[names.AttrDescription].(string); ok && v != "" {
+	if v, ok := tfMap["description"].(string); ok && v != "" {
 		apiObject.Description = aws.String(v)
 	}
 
@@ -2018,7 +2018,7 @@ func expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequest(tfMap map[
 	}
 
 	if v, ok := tfMap["ipv4_prefixes"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.Ipv4Prefixes = expandLaunchTemplateIPv4PrefixSpecificationRequests(v.List())
+		apiObject.Ipv4Prefixes = expandIPv4PrefixSpecificationRequests(v.List())
 	}
 
 	if v, ok := tfMap["ipv6_address_count"].(int); ok && v != 0 {
@@ -2038,24 +2038,24 @@ func expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequest(tfMap map[
 	}
 
 	if v, ok := tfMap["ipv6_prefixes"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.Ipv6Prefixes = expandLaunchTemplateIPv6PrefixSpecificationRequests(v.List())
+		apiObject.Ipv6Prefixes = expandIPv6PrefixSpecificationRequests(v.List())
 	}
 
 	if v, ok := tfMap["network_card_index"].(int); ok {
 		apiObject.NetworkCardIndex = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap[names.AttrNetworkInterfaceID].(string); ok && v != "" {
+	if v, ok := tfMap["network_interface_id"].(string); ok && v != "" {
 		apiObject.NetworkInterfaceId = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrSecurityGroups].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap["security_groups"].(*schema.Set); ok && v.Len() > 0 {
 		for _, v := range v.List() {
 			apiObject.Groups = append(apiObject.Groups, aws.String(v.(string)))
 		}
 	}
 
-	if v, ok := tfMap[names.AttrSubnetID].(string); ok && v != "" {
+	if v, ok := tfMap["subnet_id"].(string); ok && v != "" {
 		apiObject.SubnetId = aws.String(v)
 	}
 
@@ -2099,11 +2099,11 @@ func expandLaunchTemplatePlacementRequest(tfMap map[string]interface{}) *ec2.Lau
 		apiObject.Affinity = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrAvailabilityZone].(string); ok && v != "" {
+	if v, ok := tfMap["availability_zone"].(string); ok && v != "" {
 		apiObject.AvailabilityZone = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrGroupName].(string); ok && v != "" {
+	if v, ok := tfMap["group_name"].(string); ok && v != "" {
 		apiObject.GroupName = aws.String(v)
 	}
 
@@ -2154,11 +2154,11 @@ func expandLaunchTemplateTagSpecificationRequest(ctx context.Context, tfMap map[
 
 	apiObject := &ec2.LaunchTemplateTagSpecificationRequest{}
 
-	if v, ok := tfMap[names.AttrResourceType].(string); ok && v != "" {
+	if v, ok := tfMap["resource_type"].(string); ok && v != "" {
 		apiObject.ResourceType = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrTags].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["tags"].(map[string]interface{}); ok && len(v) > 0 {
 		if v := tftags.New(ctx, v).IgnoreAWS(); len(v) > 0 {
 			apiObject.Tags = Tags(v)
 		}
@@ -2241,7 +2241,7 @@ func flattenResponseLaunchTemplateData(ctx context.Context, conn *ec2.EC2, d *sc
 	}
 	if apiObject.EnclaveOptions != nil {
 		tfMap := map[string]interface{}{
-			names.AttrEnabled: aws.BoolValue(apiObject.EnclaveOptions.Enabled),
+			"enabled": aws.BoolValue(apiObject.EnclaveOptions.Enabled),
 		}
 
 		if err := d.Set("enclave_options", []interface{}{tfMap}); err != nil {
@@ -2284,7 +2284,7 @@ func flattenResponseLaunchTemplateData(ctx context.Context, conn *ec2.EC2, d *sc
 	} else {
 		d.Set("instance_requirements", nil)
 	}
-	d.Set(names.AttrInstanceType, instanceType)
+	d.Set("instance_type", instanceType)
 	d.Set("kernel_id", apiObject.KernelId)
 	d.Set("key_name", apiObject.KeyName)
 	if err := d.Set("license_specification", flattenLaunchTemplateLicenseConfigurations(apiObject.LicenseSpecifications)); err != nil {
@@ -2306,7 +2306,7 @@ func flattenResponseLaunchTemplateData(ctx context.Context, conn *ec2.EC2, d *sc
 	}
 	if apiObject.Monitoring != nil {
 		tfMap := map[string]interface{}{
-			names.AttrEnabled: aws.BoolValue(apiObject.Monitoring.Enabled),
+			"enabled": aws.BoolValue(apiObject.Monitoring.Enabled),
 		}
 
 		if err := d.Set("monitoring", []interface{}{tfMap}); err != nil {
@@ -2338,7 +2338,7 @@ func flattenResponseLaunchTemplateData(ctx context.Context, conn *ec2.EC2, d *sc
 		return fmt.Errorf("setting tag_specifications: %w", err)
 	}
 	d.Set("user_data", apiObject.UserData)
-	d.Set(names.AttrVPCSecurityGroupIDs, aws.StringValueSlice(apiObject.SecurityGroupIds))
+	d.Set("vpc_security_group_ids", aws.StringValueSlice(apiObject.SecurityGroupIds))
 
 	return nil
 }
@@ -2351,7 +2351,7 @@ func flattenLaunchTemplateBlockDeviceMapping(apiObject *ec2.LaunchTemplateBlockD
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.DeviceName; v != nil {
-		tfMap[names.AttrDeviceName] = aws.StringValue(v)
+		tfMap["device_name"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Ebs; v != nil {
@@ -2395,23 +2395,23 @@ func flattenLaunchTemplateEBSBlockDevice(apiObject *ec2.LaunchTemplateEbsBlockDe
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.DeleteOnTermination; v != nil {
-		tfMap[names.AttrDeleteOnTermination] = strconv.FormatBool(aws.BoolValue(v))
+		tfMap["delete_on_termination"] = strconv.FormatBool(aws.BoolValue(v))
 	}
 
 	if v := apiObject.Encrypted; v != nil {
-		tfMap[names.AttrEncrypted] = strconv.FormatBool(aws.BoolValue(v))
+		tfMap["encrypted"] = strconv.FormatBool(aws.BoolValue(v))
 	}
 
 	if v := apiObject.Iops; v != nil {
-		tfMap[names.AttrIOPS] = aws.Int64Value(v)
+		tfMap["iops"] = aws.Int64Value(v)
 	}
 
 	if v := apiObject.KmsKeyId; v != nil {
-		tfMap[names.AttrKMSKeyID] = aws.StringValue(v)
+		tfMap["kms_key_id"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.SnapshotId; v != nil {
-		tfMap[names.AttrSnapshotID] = aws.StringValue(v)
+		tfMap["snapshot_id"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Throughput; v != nil {
@@ -2419,11 +2419,11 @@ func flattenLaunchTemplateEBSBlockDevice(apiObject *ec2.LaunchTemplateEbsBlockDe
 	}
 
 	if v := apiObject.VolumeSize; v != nil {
-		tfMap[names.AttrVolumeSize] = aws.Int64Value(v)
+		tfMap["volume_size"] = aws.Int64Value(v)
 	}
 
 	if v := apiObject.VolumeType; v != nil {
-		tfMap[names.AttrVolumeType] = aws.StringValue(v)
+		tfMap["volume_type"] = aws.StringValue(v)
 	}
 
 	return tfMap
@@ -2491,7 +2491,7 @@ func flattenElasticGpuSpecificationResponse(apiObject *ec2.ElasticGpuSpecificati
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Type; v != nil {
-		tfMap[names.AttrType] = aws.StringValue(v)
+		tfMap["type"] = aws.StringValue(v)
 	}
 
 	return tfMap
@@ -2523,7 +2523,7 @@ func flattenLaunchTemplateElasticInferenceAcceleratorResponse(apiObject *ec2.Lau
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Type; v != nil {
-		tfMap[names.AttrType] = aws.StringValue(v)
+		tfMap["type"] = aws.StringValue(v)
 	}
 
 	return tfMap
@@ -2555,11 +2555,11 @@ func flattenLaunchTemplateIAMInstanceProfileSpecification(apiObject *ec2.LaunchT
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Arn; v != nil {
-		tfMap[names.AttrARN] = aws.StringValue(v)
+		tfMap["arn"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap[names.AttrName] = aws.StringValue(v)
+		tfMap["name"] = aws.StringValue(v)
 	}
 
 	return tfMap
@@ -2693,11 +2693,11 @@ func flattenAcceleratorCount(apiObject *ec2.AcceleratorCount) map[string]interfa
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Max; v != nil {
-		tfMap[names.AttrMax] = aws.Int64Value(v)
+		tfMap["max"] = aws.Int64Value(v)
 	}
 
 	if v := apiObject.Min; v != nil {
-		tfMap[names.AttrMin] = aws.Int64Value(v)
+		tfMap["min"] = aws.Int64Value(v)
 	}
 
 	return tfMap
@@ -2711,11 +2711,11 @@ func flattenAcceleratorTotalMemoryMiB(apiObject *ec2.AcceleratorTotalMemoryMiB) 
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Max; v != nil {
-		tfMap[names.AttrMax] = aws.Int64Value(v)
+		tfMap["max"] = aws.Int64Value(v)
 	}
 
 	if v := apiObject.Min; v != nil {
-		tfMap[names.AttrMin] = aws.Int64Value(v)
+		tfMap["min"] = aws.Int64Value(v)
 	}
 
 	return tfMap
@@ -2729,11 +2729,11 @@ func flattenBaselineEBSBandwidthMbps(apiObject *ec2.BaselineEbsBandwidthMbps) ma
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Max; v != nil {
-		tfMap[names.AttrMax] = aws.Int64Value(v)
+		tfMap["max"] = aws.Int64Value(v)
 	}
 
 	if v := apiObject.Min; v != nil {
-		tfMap[names.AttrMin] = aws.Int64Value(v)
+		tfMap["min"] = aws.Int64Value(v)
 	}
 
 	return tfMap
@@ -2747,11 +2747,11 @@ func flattenMemoryGiBPerVCPU(apiObject *ec2.MemoryGiBPerVCpu) map[string]interfa
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Max; v != nil {
-		tfMap[names.AttrMax] = aws.Float64Value(v)
+		tfMap["max"] = aws.Float64Value(v)
 	}
 
 	if v := apiObject.Min; v != nil {
-		tfMap[names.AttrMin] = aws.Float64Value(v)
+		tfMap["min"] = aws.Float64Value(v)
 	}
 
 	return tfMap
@@ -2765,11 +2765,11 @@ func flattenMemoryMiB(apiObject *ec2.MemoryMiB) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Max; v != nil {
-		tfMap[names.AttrMax] = aws.Int64Value(v)
+		tfMap["max"] = aws.Int64Value(v)
 	}
 
 	if v := apiObject.Min; v != nil {
-		tfMap[names.AttrMin] = aws.Int64Value(v)
+		tfMap["min"] = aws.Int64Value(v)
 	}
 
 	return tfMap
@@ -2783,11 +2783,11 @@ func flattenNetworkBandwidthGbps(apiObject *ec2.NetworkBandwidthGbps) map[string
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Max; v != nil {
-		tfMap[names.AttrMax] = aws.Float64Value(v)
+		tfMap["max"] = aws.Float64Value(v)
 	}
 
 	if v := apiObject.Min; v != nil {
-		tfMap[names.AttrMin] = aws.Float64Value(v)
+		tfMap["min"] = aws.Float64Value(v)
 	}
 
 	return tfMap
@@ -2801,11 +2801,11 @@ func flattenNetworkInterfaceCount(apiObject *ec2.NetworkInterfaceCount) map[stri
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Max; v != nil {
-		tfMap[names.AttrMax] = aws.Int64Value(v)
+		tfMap["max"] = aws.Int64Value(v)
 	}
 
 	if v := apiObject.Min; v != nil {
-		tfMap[names.AttrMin] = aws.Int64Value(v)
+		tfMap["min"] = aws.Int64Value(v)
 	}
 
 	return tfMap
@@ -2819,11 +2819,11 @@ func flattenTotalLocalStorageGB(apiObject *ec2.TotalLocalStorageGB) map[string]i
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Max; v != nil {
-		tfMap[names.AttrMax] = aws.Float64Value(v)
+		tfMap["max"] = aws.Float64Value(v)
 	}
 
 	if v := apiObject.Min; v != nil {
-		tfMap[names.AttrMin] = aws.Float64Value(v)
+		tfMap["min"] = aws.Float64Value(v)
 	}
 
 	return tfMap
@@ -2837,11 +2837,11 @@ func flattenVCPUCountRange(apiObject *ec2.VCpuCountRange) map[string]interface{}
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Max; v != nil {
-		tfMap[names.AttrMax] = aws.Int64Value(v)
+		tfMap["max"] = aws.Int64Value(v)
 	}
 
 	if v := apiObject.Min; v != nil {
-		tfMap[names.AttrMin] = aws.Int64Value(v)
+		tfMap["min"] = aws.Int64Value(v)
 	}
 
 	return tfMap
@@ -2969,11 +2969,11 @@ func flattenLaunchTemplateInstanceNetworkInterfaceSpecification(apiObject *ec2.L
 	}
 
 	if v := apiObject.DeleteOnTermination; v != nil {
-		tfMap[names.AttrDeleteOnTermination] = strconv.FormatBool(aws.BoolValue(v))
+		tfMap["delete_on_termination"] = strconv.FormatBool(aws.BoolValue(v))
 	}
 
 	if v := apiObject.Description; v != nil {
-		tfMap[names.AttrDescription] = aws.StringValue(v)
+		tfMap["description"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.DeviceIndex; v != nil {
@@ -3045,7 +3045,7 @@ func flattenLaunchTemplateInstanceNetworkInterfaceSpecification(apiObject *ec2.L
 	}
 
 	if v := apiObject.NetworkInterfaceId; v != nil {
-		tfMap[names.AttrNetworkInterfaceID] = aws.StringValue(v)
+		tfMap["network_interface_id"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.PrivateIpAddress; v != nil {
@@ -3053,11 +3053,11 @@ func flattenLaunchTemplateInstanceNetworkInterfaceSpecification(apiObject *ec2.L
 	}
 
 	if v := apiObject.Groups; v != nil {
-		tfMap[names.AttrSecurityGroups] = aws.StringValueSlice(v)
+		tfMap["security_groups"] = aws.StringValueSlice(v)
 	}
 
 	if v := apiObject.SubnetId; v != nil {
-		tfMap[names.AttrSubnetID] = aws.StringValue(v)
+		tfMap["subnet_id"] = aws.StringValue(v)
 	}
 
 	return tfMap
@@ -3093,11 +3093,11 @@ func flattenLaunchTemplatePlacement(apiObject *ec2.LaunchTemplatePlacement) map[
 	}
 
 	if v := apiObject.AvailabilityZone; v != nil {
-		tfMap[names.AttrAvailabilityZone] = aws.StringValue(v)
+		tfMap["availability_zone"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.GroupName; v != nil {
-		tfMap[names.AttrGroupName] = aws.StringValue(v)
+		tfMap["group_name"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.HostId; v != nil {
@@ -3148,11 +3148,11 @@ func flattenLaunchTemplateTagSpecification(ctx context.Context, apiObject *ec2.L
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.ResourceType; v != nil {
-		tfMap[names.AttrResourceType] = aws.StringValue(v)
+		tfMap["resource_type"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Tags; len(v) > 0 {
-		tfMap[names.AttrTags] = KeyValueTags(ctx, v).IgnoreAWS().Map()
+		tfMap["tags"] = KeyValueTags(ctx, v).IgnoreAWS().Map()
 	}
 
 	return tfMap
@@ -3174,80 +3174,4 @@ func flattenLaunchTemplateTagSpecifications(ctx context.Context, apiObjects []*e
 	}
 
 	return tfList
-}
-
-func expandLaunchTemplateIPv4PrefixSpecificationRequest(tfString string) *ec2.Ipv4PrefixSpecificationRequest {
-	if tfString == "" {
-		return nil
-	}
-
-	apiObject := &ec2.Ipv4PrefixSpecificationRequest{
-		Ipv4Prefix: aws.String(tfString),
-	}
-
-	return apiObject
-}
-
-func expandLaunchTemplateIPv4PrefixSpecificationRequests(tfList []interface{}) []*ec2.Ipv4PrefixSpecificationRequest {
-	if len(tfList) == 0 {
-		return nil
-	}
-
-	var apiObjects []*ec2.Ipv4PrefixSpecificationRequest
-
-	for _, tfMapRaw := range tfList {
-		tfString, ok := tfMapRaw.(string)
-
-		if !ok {
-			continue
-		}
-
-		apiObject := expandLaunchTemplateIPv4PrefixSpecificationRequest(tfString)
-
-		if apiObject == nil {
-			continue
-		}
-
-		apiObjects = append(apiObjects, apiObject)
-	}
-
-	return apiObjects
-}
-
-func expandLaunchTemplateIPv6PrefixSpecificationRequest(tfString string) *ec2.Ipv6PrefixSpecificationRequest {
-	if tfString == "" {
-		return nil
-	}
-
-	apiObject := &ec2.Ipv6PrefixSpecificationRequest{
-		Ipv6Prefix: aws.String(tfString),
-	}
-
-	return apiObject
-}
-
-func expandLaunchTemplateIPv6PrefixSpecificationRequests(tfList []interface{}) []*ec2.Ipv6PrefixSpecificationRequest {
-	if len(tfList) == 0 {
-		return nil
-	}
-
-	var apiObjects []*ec2.Ipv6PrefixSpecificationRequest
-
-	for _, tfMapRaw := range tfList {
-		tfString, ok := tfMapRaw.(string)
-
-		if !ok {
-			continue
-		}
-
-		apiObject := expandLaunchTemplateIPv6PrefixSpecificationRequest(tfString)
-
-		if apiObject == nil {
-			continue
-		}
-
-		apiObjects = append(apiObjects, apiObject)
-	}
-
-	return apiObjects
 }

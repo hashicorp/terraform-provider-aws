@@ -64,7 +64,7 @@ func ResourceAMI() *schema.Resource {
 				Default:      ec2.ArchitectureValuesX8664,
 				ValidateFunc: validation.StringInSlice(ec2.ArchitectureValues_Values(), false),
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -81,7 +81,7 @@ func ResourceAMI() *schema.Resource {
 				DiffSuppressFunc:      verify.SuppressEquivalentRoundedTime(time.RFC3339, time.Minute),
 				DiffSuppressOnRefresh: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -97,23 +97,23 @@ func ResourceAMI() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrDeleteOnTermination: {
+						"delete_on_termination": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  true,
 							ForceNew: true,
 						},
-						names.AttrDeviceName: {
+						"device_name": {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
 						},
-						names.AttrEncrypted: {
+						"encrypted": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							ForceNew: true,
 						},
-						names.AttrIOPS: {
+						"iops": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							ForceNew: true,
@@ -124,7 +124,7 @@ func ResourceAMI() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						names.AttrSnapshotID: {
+						"snapshot_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -135,13 +135,13 @@ func ResourceAMI() *schema.Resource {
 							Computed: true,
 							ForceNew: true,
 						},
-						names.AttrVolumeSize: {
+						"volume_size": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
-						names.AttrVolumeType: {
+						"volume_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
@@ -153,8 +153,8 @@ func ResourceAMI() *schema.Resource {
 				Set: func(v interface{}) int {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrSnapshotID].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m["device_name"].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m["snapshot_id"].(string)))
 					return create.StringHashcode(buf.String())
 				},
 			},
@@ -170,7 +170,7 @@ func ResourceAMI() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrDeviceName: {
+						"device_name": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -183,7 +183,7 @@ func ResourceAMI() *schema.Resource {
 				Set: func(v interface{}) int {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m["device_name"].(string)))
 					buf.WriteString(fmt.Sprintf("%s-", m["virtual_name"].(string)))
 					return create.StringHashcode(buf.String())
 				},
@@ -225,12 +225,12 @@ func ResourceAMI() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrOwnerID: {
+			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -295,10 +295,10 @@ func resourceAMICreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &ec2.RegisterImageInput{
 		Architecture:       aws.String(d.Get("architecture").(string)),
-		Description:        aws.String(d.Get(names.AttrDescription).(string)),
+		Description:        aws.String(d.Get("description").(string)),
 		EnaSupport:         aws.Bool(d.Get("ena_support").(bool)),
 		ImageLocation:      aws.String(d.Get("image_location").(string)),
 		Name:               aws.String(name),
@@ -337,13 +337,13 @@ func resourceAMICreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 			var encrypted bool
 
-			if v, ok := tfMap[names.AttrEncrypted].(bool); ok {
+			if v, ok := tfMap["encrypted"].(bool); ok {
 				encrypted = v
 			}
 
 			var snapshot string
 
-			if v, ok := tfMap[names.AttrSnapshotID].(string); ok && v != "" {
+			if v, ok := tfMap["snapshot_id"].(string); ok && v != "" {
 				snapshot = v
 			}
 
@@ -424,9 +424,9 @@ func resourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interface
 		Resource:  fmt.Sprintf("image/%s", d.Id()),
 		Service:   ec2.ServiceName,
 	}.String()
-	d.Set(names.AttrARN, imageArn)
+	d.Set("arn", imageArn)
 	d.Set("boot_mode", image.BootMode)
-	d.Set(names.AttrDescription, image.Description)
+	d.Set("description", image.Description)
 	d.Set("deprecation_time", image.DeprecationTime)
 	d.Set("ena_support", image.EnaSupport)
 	d.Set("hypervisor", image.Hypervisor)
@@ -435,8 +435,8 @@ func resourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("image_type", image.ImageType)
 	d.Set("imds_support", image.ImdsSupport)
 	d.Set("kernel_id", image.KernelId)
-	d.Set(names.AttrName, image.Name)
-	d.Set(names.AttrOwnerID, image.OwnerId)
+	d.Set("name", image.Name)
+	d.Set("owner_id", image.OwnerId)
 	d.Set("platform_details", image.PlatformDetails)
 	d.Set("platform", image.Platform)
 	d.Set("public", image.Public)
@@ -465,8 +465,8 @@ func resourceAMIUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	if d.HasChange(names.AttrDescription) {
-		err := updateDescription(ctx, conn, d.Id(), d.Get(names.AttrDescription).(string))
+	if d.HasChange("description") {
+		err := updateDescription(ctx, conn, d.Id(), d.Get("description").(string))
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EC2 AMI (%s): %s", d.Id(), err)
 		}
@@ -511,7 +511,7 @@ func resourceAMIDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 		req := &ec2.DeleteSnapshotInput{}
 		for _, ebsBlockDevI := range ebsBlockDevsSet.List() {
 			ebsBlockDev := ebsBlockDevI.(map[string]interface{})
-			snapshotId := ebsBlockDev[names.AttrSnapshotID].(string)
+			snapshotId := ebsBlockDev["snapshot_id"].(string)
 			if snapshotId != "" {
 				req.SnapshotId = aws.String(snapshotId)
 				_, err := conn.DeleteSnapshotWithContext(ctx, req)
@@ -610,22 +610,22 @@ func expandBlockDeviceMappingForAMIEBSBlockDevice(tfMap map[string]interface{}) 
 		Ebs: &ec2.EbsBlockDevice{},
 	}
 
-	if v, ok := tfMap[names.AttrDeleteOnTermination].(bool); ok {
+	if v, ok := tfMap["delete_on_termination"].(bool); ok {
 		apiObject.Ebs.DeleteOnTermination = aws.Bool(v)
 	}
 
-	if v, ok := tfMap[names.AttrDeviceName].(string); ok && v != "" {
+	if v, ok := tfMap["device_name"].(string); ok && v != "" {
 		apiObject.DeviceName = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrIOPS].(int); ok && v != 0 {
+	if v, ok := tfMap["iops"].(int); ok && v != 0 {
 		apiObject.Ebs.Iops = aws.Int64(int64(v))
 	}
 
 	// "Parameter encrypted is invalid. You cannot specify the encrypted flag if specifying a snapshot id in a block device mapping."
-	if v, ok := tfMap[names.AttrSnapshotID].(string); ok && v != "" {
+	if v, ok := tfMap["snapshot_id"].(string); ok && v != "" {
 		apiObject.Ebs.SnapshotId = aws.String(v)
-	} else if v, ok := tfMap[names.AttrEncrypted].(bool); ok {
+	} else if v, ok := tfMap["encrypted"].(bool); ok {
 		apiObject.Ebs.Encrypted = aws.Bool(v)
 	}
 
@@ -633,11 +633,11 @@ func expandBlockDeviceMappingForAMIEBSBlockDevice(tfMap map[string]interface{}) 
 		apiObject.Ebs.Throughput = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap[names.AttrVolumeSize].(int); ok && v != 0 {
+	if v, ok := tfMap["volume_size"].(int); ok && v != 0 {
 		apiObject.Ebs.VolumeSize = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap[names.AttrVolumeType].(string); ok && v != "" {
+	if v, ok := tfMap["volume_type"].(string); ok && v != "" {
 		apiObject.Ebs.VolumeType = aws.String(v)
 	}
 
@@ -686,23 +686,23 @@ func flattenBlockDeviceMappingForAMIEBSBlockDevice(apiObject *ec2.BlockDeviceMap
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Ebs.DeleteOnTermination; v != nil {
-		tfMap[names.AttrDeleteOnTermination] = aws.BoolValue(v)
+		tfMap["delete_on_termination"] = aws.BoolValue(v)
 	}
 
 	if v := apiObject.DeviceName; v != nil {
-		tfMap[names.AttrDeviceName] = aws.StringValue(v)
+		tfMap["device_name"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Ebs.Encrypted; v != nil {
-		tfMap[names.AttrEncrypted] = aws.BoolValue(v)
+		tfMap["encrypted"] = aws.BoolValue(v)
 	}
 
 	if v := apiObject.Ebs.Iops; v != nil {
-		tfMap[names.AttrIOPS] = aws.Int64Value(v)
+		tfMap["iops"] = aws.Int64Value(v)
 	}
 
 	if v := apiObject.Ebs.SnapshotId; v != nil {
-		tfMap[names.AttrSnapshotID] = aws.StringValue(v)
+		tfMap["snapshot_id"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Ebs.Throughput; v != nil {
@@ -710,11 +710,11 @@ func flattenBlockDeviceMappingForAMIEBSBlockDevice(apiObject *ec2.BlockDeviceMap
 	}
 
 	if v := apiObject.Ebs.VolumeSize; v != nil {
-		tfMap[names.AttrVolumeSize] = aws.Int64Value(v)
+		tfMap["volume_size"] = aws.Int64Value(v)
 	}
 
 	if v := apiObject.Ebs.VolumeType; v != nil {
-		tfMap[names.AttrVolumeType] = aws.StringValue(v)
+		tfMap["volume_type"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Ebs.OutpostArn; v != nil {
@@ -753,7 +753,7 @@ func expandBlockDeviceMappingForAMIEphemeralBlockDevice(tfMap map[string]interfa
 
 	apiObject := &ec2.BlockDeviceMapping{}
 
-	if v, ok := tfMap[names.AttrDeviceName].(string); ok && v != "" {
+	if v, ok := tfMap["device_name"].(string); ok && v != "" {
 		apiObject.DeviceName = aws.String(v)
 	}
 
@@ -798,7 +798,7 @@ func flattenBlockDeviceMappingForAMIEphemeralBlockDevice(apiObject *ec2.BlockDev
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.DeviceName; v != nil {
-		tfMap[names.AttrDeviceName] = aws.StringValue(v)
+		tfMap["device_name"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.VirtualName; v != nil {

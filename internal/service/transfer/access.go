@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_transfer_access")
@@ -34,7 +33,7 @@ func ResourceAccess() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrExternalID: {
+			"external_id": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 256),
@@ -57,7 +56,7 @@ func ResourceAccess() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(0, 1024),
 						},
-						names.AttrTarget: {
+						"target": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(0, 1024),
@@ -73,7 +72,7 @@ func ResourceAccess() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(transfer.HomeDirectoryType_Values(), false),
 			},
 
-			names.AttrPolicy: {
+			"policy": {
 				Type:                  schema.TypeString,
 				Optional:              true,
 				ValidateFunc:          verify.ValidIAMPolicyJSON,
@@ -108,7 +107,7 @@ func ResourceAccess() *schema.Resource {
 				},
 			},
 
-			names.AttrRole: {
+			"role": {
 				Type: schema.TypeString,
 				// Although Role is required in the API it is not currently returned on Read.
 				// Required:     true,
@@ -130,7 +129,7 @@ func resourceAccessCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
-	externalID := d.Get(names.AttrExternalID).(string)
+	externalID := d.Get("external_id").(string)
 	serverID := d.Get("server_id").(string)
 	id := AccessCreateResourceID(serverID, externalID)
 	input := &transfer.CreateAccessInput{
@@ -150,7 +149,7 @@ func resourceAccessCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.HomeDirectoryType = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrPolicy); ok {
+	if v, ok := d.GetOk("policy"); ok {
 		policy, err := structure.NormalizeJsonString(v.(string))
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", v.(string), err)
@@ -163,7 +162,7 @@ func resourceAccessCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.PosixProfile = expandUserPOSIXUser(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk(names.AttrRole); ok {
+	if v, ok := d.GetOk("role"); ok {
 		input.Role = aws.String(v.(string))
 	}
 
@@ -201,7 +200,7 @@ func resourceAccessRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading Transfer Access (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrExternalID, access.ExternalId)
+	d.Set("external_id", access.ExternalId)
 	d.Set("home_directory", access.HomeDirectory)
 	if err := d.Set("home_directory_mappings", flattenHomeDirectoryMappings(access.HomeDirectoryMappings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting home_directory_mappings: %s", err)
@@ -214,12 +213,12 @@ func resourceAccessRead(ctx context.Context, d *schema.ResourceData, meta interf
 	// Role is currently not returned via the API.
 	// d.Set("role", access.Role)
 
-	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), aws.StringValue(access.Policy))
+	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(access.Policy))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Transfer Access (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrPolicy, policyToSet)
+	d.Set("policy", policyToSet)
 
 	d.Set("server_id", serverID)
 
@@ -253,10 +252,10 @@ func resourceAccessUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.HomeDirectoryType = aws.String(d.Get("home_directory_type").(string))
 	}
 
-	if d.HasChange(names.AttrPolicy) {
-		policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
+	if d.HasChange("policy") {
+		policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", d.Get(names.AttrPolicy).(string), err)
+			return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", d.Get("policy").(string), err)
 		}
 
 		input.Policy = aws.String(policy)
@@ -266,8 +265,8 @@ func resourceAccessUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.PosixProfile = expandUserPOSIXUser(d.Get("posix_profile").([]interface{}))
 	}
 
-	if d.HasChange(names.AttrRole) {
-		input.Role = aws.String(d.Get(names.AttrRole).(string))
+	if d.HasChange("role") {
+		input.Role = aws.String(d.Get("role").(string))
 	}
 
 	log.Printf("[DEBUG] Updating Transfer Access: %s", input)

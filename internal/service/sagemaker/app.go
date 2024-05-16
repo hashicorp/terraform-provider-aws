@@ -38,7 +38,7 @@ func ResourceApp() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -70,7 +70,7 @@ func ResourceApp() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrInstanceType: {
+						"instance_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
@@ -184,7 +184,7 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface
 	arn := aws.StringValue(app.AppArn)
 	d.Set("app_name", app.AppName)
 	d.Set("app_type", app.AppType)
-	d.Set(names.AttrARN, arn)
+	d.Set("arn", arn)
 	d.Set("domain_id", app.DomainId)
 	d.Set("space_name", app.SpaceName)
 	d.Set("user_profile_name", app.UserProfileName)

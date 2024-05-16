@@ -45,7 +45,7 @@ func ResourceMedicalVocabulary() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -53,7 +53,7 @@ func ResourceMedicalVocabulary() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrLanguageCode: {
+			"language_code": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -85,7 +85,7 @@ func resourceMedicalVocabularyCreate(ctx context.Context, d *schema.ResourceData
 	in := &transcribe.CreateMedicalVocabularyInput{
 		VocabularyName:    aws.String(vocabularyName),
 		VocabularyFileUri: aws.String(d.Get("vocabulary_file_uri").(string)),
-		LanguageCode:      types.LanguageCode(d.Get(names.AttrLanguageCode).(string)),
+		LanguageCode:      types.LanguageCode(d.Get("language_code").(string)),
 		Tags:              getTagsIn(ctx),
 	}
 
@@ -95,7 +95,7 @@ func resourceMedicalVocabularyCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	if out == nil {
-		return diag.Errorf("creating Amazon Transcribe MedicalVocabulary (%s): empty output", d.Get(names.AttrName).(string))
+		return diag.Errorf("creating Amazon Transcribe MedicalVocabulary (%s): empty output", d.Get("name").(string))
 	}
 
 	d.SetId(aws.ToString(out.VocabularyName))
@@ -130,10 +130,10 @@ func resourceMedicalVocabularyRead(ctx context.Context, d *schema.ResourceData, 
 		Resource:  fmt.Sprintf("medical-vocabulary/%s", d.Id()),
 	}.String()
 
-	d.Set(names.AttrARN, arn)
+	d.Set("arn", arn)
 	d.Set("download_uri", out.DownloadUri)
 	d.Set("vocabulary_name", out.VocabularyName)
-	d.Set(names.AttrLanguageCode, out.LanguageCode)
+	d.Set("language_code", out.LanguageCode)
 
 	return nil
 }
@@ -141,10 +141,10 @@ func resourceMedicalVocabularyRead(ctx context.Context, d *schema.ResourceData, 
 func resourceMedicalVocabularyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		in := &transcribe.UpdateMedicalVocabularyInput{
 			VocabularyName: aws.String(d.Id()),
-			LanguageCode:   types.LanguageCode(d.Get(names.AttrLanguageCode).(string)),
+			LanguageCode:   types.LanguageCode(d.Get("language_code").(string)),
 		}
 
 		if d.HasChanges("vocabulary_file_uri") {

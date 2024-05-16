@@ -35,10 +35,10 @@ func TestAccSchemasRegistry_basic(t *testing.T) {
 				Config: testAccRegistryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegistryExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "schemas", fmt.Sprintf("registry/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "schemas", fmt.Sprintf("registry/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -90,7 +90,7 @@ func TestAccSchemasRegistry_description(t *testing.T) {
 				Config: testAccRegistryConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegistryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
+					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
 				),
 			},
 			{
@@ -102,14 +102,14 @@ func TestAccSchemasRegistry_description(t *testing.T) {
 				Config: testAccRegistryConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegistryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
+					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
 				),
 			},
 			{
 				Config: testAccRegistryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegistryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
 				),
 			},
 		},
@@ -129,11 +129,11 @@ func TestAccSchemasRegistry_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckRegistryDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRegistryConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccRegistryConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegistryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -142,20 +142,20 @@ func TestAccSchemasRegistry_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRegistryConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccRegistryConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegistryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccRegistryConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccRegistryConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegistryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},

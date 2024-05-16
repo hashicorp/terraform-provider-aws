@@ -15,26 +15,26 @@ func TestAccConnect_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"BotAssociation": {
-			acctest.CtBasic:    testAccBotAssociation_basic,
+			"basic":            testAccBotAssociation_basic,
 			"disappears":       testAccBotAssociation_disappears,
 			"dataSource_basic": testAccBotAssociationDataSource_basic,
 		},
 		"ContactFlow": {
-			acctest.CtBasic:   testAccContactFlow_basic,
+			"basic":           testAccContactFlow_basic,
 			"disappears":      testAccContactFlow_disappears,
 			"filename":        testAccContactFlow_filename,
 			"dataSource_id":   testAccContactFlowDataSource_contactFlowID,
 			"dataSource_name": testAccContactFlowDataSource_name,
 		},
 		"ContactFlowModule": {
-			acctest.CtBasic:   testAccContactFlowModule_basic,
+			"basic":           testAccContactFlowModule_basic,
 			"disappears":      testAccContactFlowModule_disappears,
 			"filename":        testAccContactFlowModule_filename,
 			"dataSource_id":   testAccContactFlowModuleDataSource_contactFlowModuleID,
 			"dataSource_name": testAccContactFlowModuleDataSource_name,
 		},
 		"HoursOfOperation": {
-			acctest.CtBasic:   testAccHoursOfOperation_basic,
+			"basic":           testAccHoursOfOperation_basic,
 			"disappears":      testAccHoursOfOperation_disappears,
 			"tags":            testAccHoursOfOperation_updateTags,
 			"config":          testAccHoursOfOperation_updateConfig,
@@ -42,13 +42,13 @@ func TestAccConnect_serial(t *testing.T) {
 			"dataSource_name": testAccHoursOfOperationDataSource_name,
 		},
 		"Instance": {
-			acctest.CtBasic:    testAccInstance_basic,
+			"basic":            testAccInstance_basic,
 			"directory":        testAccInstance_directory,
 			"saml":             testAccInstance_saml,
 			"dataSource_basic": testAccInstanceDataSource_basic,
 		},
 		"InstanceStorageConfig": {
-			acctest.CtBasic:                             testAccInstanceStorageConfig_basic,
+			"basic":                                     testAccInstanceStorageConfig_basic,
 			"disappears":                                testAccInstanceStorageConfig_disappears,
 			"KinesisFirehoseConfig_FirehoseARN":         testAccInstanceStorageConfig_KinesisFirehoseConfig_FirehoseARN,
 			"KinesisStreamConfig_StreamARN":             testAccInstanceStorageConfig_KinesisStreamConfig_StreamARN,
@@ -64,23 +64,23 @@ func TestAccConnect_serial(t *testing.T) {
 			"dataSource_S3Config":                       testAccInstanceStorageConfigDataSource_S3Config,
 		},
 		"LambdaFunctionAssociation": {
-			acctest.CtBasic:    testAccLambdaFunctionAssociation_basic,
+			"basic":            testAccLambdaFunctionAssociation_basic,
 			"disappears":       testAccLambdaFunctionAssociation_disappears,
 			"dataSource_basic": testAccLambdaFunctionAssociationDataSource_basic,
 		},
 		"PhoneNumber": {
-			acctest.CtBasic: testAccPhoneNumber_basic,
-			"disappears":    testAccPhoneNumber_disappears,
-			"tags":          testAccPhoneNumber_tags,
-			"description":   testAccPhoneNumber_description,
-			"prefix":        testAccPhoneNumber_prefix,
-			"targetARN":     testAccPhoneNumber_targetARN,
+			"basic":       testAccPhoneNumber_basic,
+			"disappears":  testAccPhoneNumber_disappears,
+			"tags":        testAccPhoneNumber_tags,
+			"description": testAccPhoneNumber_description,
+			"prefix":      testAccPhoneNumber_prefix,
+			"targetARN":   testAccPhoneNumber_targetARN,
 		},
 		"Prompt": {
 			"dataSource_name": testAccPromptDataSource_name,
 		},
 		"Queue": {
-			acctest.CtBasic:        testAccQueue_basic,
+			"basic":                testAccQueue_basic,
 			"disappears":           testAccQueue_disappears,
 			"tags":                 testAccQueue_updateTags,
 			"hoursOfOperationId":   testAccQueue_updateHoursOfOperationId,
@@ -92,14 +92,14 @@ func TestAccConnect_serial(t *testing.T) {
 			"dataSource_name":      testAccQueueDataSource_name,
 		},
 		"QuickConnect": {
-			acctest.CtBasic:   testAccQuickConnect_phoneNumber,
+			"basic":           testAccQuickConnect_phoneNumber,
 			"disappears":      testAccQuickConnect_disappears,
 			"tags":            testAccQuickConnect_updateTags,
 			"dataSource_id":   testAccQuickConnectDataSource_id,
 			"dataSource_name": testAccQuickConnectDataSource_name,
 		},
 		"RoutingProfile": {
-			acctest.CtBasic:                testAccRoutingProfile_basic,
+			"basic":                        testAccRoutingProfile_basic,
 			"disappears":                   testAccRoutingProfile_disappears,
 			"tags":                         testAccRoutingProfile_updateTags,
 			"concurrency":                  testAccRoutingProfile_updateConcurrency,
@@ -111,7 +111,7 @@ func TestAccConnect_serial(t *testing.T) {
 			"dataSource_name":              testAccRoutingProfileDataSource_name,
 		},
 		"SecurityProfile": {
-			acctest.CtBasic:   testAccSecurityProfile_basic,
+			"basic":           testAccSecurityProfile_basic,
 			"disappears":      testAccSecurityProfile_disappears,
 			"tags":            testAccSecurityProfile_updateTags,
 			"permissions":     testAccSecurityProfile_updatePermissions,
@@ -119,7 +119,7 @@ func TestAccConnect_serial(t *testing.T) {
 			"dataSource_name": testAccSecurityProfileDataSource_name,
 		},
 		"User": {
-			acctest.CtBasic:      testAccUser_basic,
+			"basic":              testAccUser_basic,
 			"disappears":         testAccUser_disappears,
 			"tags":               testAccUser_updateTags,
 			"hierarchyGroupId":   testAccUser_updateHierarchyGroupId,
@@ -131,7 +131,7 @@ func TestAccConnect_serial(t *testing.T) {
 			"dataSource_name":    testAccUserDataSource_name,
 		},
 		"UserHierarchyGroup": {
-			acctest.CtBasic:   testAccUserHierarchyGroup_basic,
+			"basic":           testAccUserHierarchyGroup_basic,
 			"disappears":      testAccUserHierarchyGroup_disappears,
 			"updateTags":      testAccUserHierarchyGroup_updateTags,
 			"parentGroupId":   testAccUserHierarchyGroup_parentGroupId,
@@ -139,12 +139,12 @@ func TestAccConnect_serial(t *testing.T) {
 			"dataSource_name": testAccUserHierarchyGroupDataSource_name,
 		},
 		"UserHierarchyStructure": {
-			acctest.CtBasic: testAccUserHierarchyStructure_basic,
+			"basic":         testAccUserHierarchyStructure_basic,
 			"disappears":    testAccUserHierarchyStructure_disappears,
 			"dataSource_id": testAccUserHierarchyStructureDataSource_instanceID,
 		},
 		"Vocabulary": {
-			acctest.CtBasic:   testAccVocabulary_basic,
+			"basic":           testAccVocabulary_basic,
 			"disappears":      testAccVocabulary_disappears,
 			"tags":            testAccVocabulary_updateTags,
 			"dataSource_id":   testAccVocabularyDataSource_vocabularyID,

@@ -19,7 +19,7 @@ func TestAccGuardDuty_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Detector": {
-			acctest.CtBasic:                     testAccDetector_basic,
+			"basic":                             testAccDetector_basic,
 			"datasources_s3logs":                testAccDetector_datasources_s3logs,
 			"datasources_kubernetes_audit_logs": testAccDetector_datasources_kubernetes_audit_logs,
 			"datasources_malware_protection":    testAccDetector_datasources_malware_protection,
@@ -29,54 +29,54 @@ func TestAccGuardDuty_serial(t *testing.T) {
 			"datasource_id":                     testAccDetectorDataSource_ID,
 		},
 		"DetectorFeature": {
-			acctest.CtBasic:            testAccDetectorFeature_basic,
+			"basic":                    testAccDetectorFeature_basic,
 			"additional_configuration": testAccDetectorFeature_additionalConfiguration,
 			"multiple":                 testAccDetectorFeature_multiple,
 		},
 		"Filter": {
-			acctest.CtBasic: testAccFilter_basic,
-			"update":        testAccFilter_update,
-			"tags":          testAccFilter_tags,
-			"disappears":    testAccFilter_disappears,
+			"basic":      testAccFilter_basic,
+			"update":     testAccFilter_update,
+			"tags":       testAccFilter_tags,
+			"disappears": testAccFilter_disappears,
 		},
 		"FindingIDs": {
 			"datasource_basic": testAccFindingIDsDataSource_basic,
 		},
 		"InviteAccepter": {
-			acctest.CtBasic: testAccInviteAccepter_basic,
+			"basic": testAccInviteAccepter_basic,
 		},
 		"IPSet": {
-			acctest.CtBasic: testAccIPSet_basic,
-			"tags":          testAccIPSet_tags,
+			"basic": testAccIPSet_basic,
+			"tags":  testAccIPSet_tags,
 		},
 		"OrganizationAdminAccount": {
-			acctest.CtBasic: testAccOrganizationAdminAccount_basic,
+			"basic": testAccOrganizationAdminAccount_basic,
 		},
 		"OrganizationConfiguration": {
-			acctest.CtBasic:                 testAccOrganizationConfiguration_basic,
+			"basic":                         testAccOrganizationConfiguration_basic,
 			"autoEnableOrganizationMembers": testAccOrganizationConfiguration_autoEnableOrganizationMembers,
 			"s3Logs":                        testAccOrganizationConfiguration_s3logs,
 			"kubernetes":                    testAccOrganizationConfiguration_kubernetes,
 			"malwareProtection":             testAccOrganizationConfiguration_malwareprotection,
 		},
 		"OrganizationConfigurationFeature": {
-			acctest.CtBasic:            testAccOrganizationConfigurationFeature_basic,
+			"basic":                    testAccOrganizationConfigurationFeature_basic,
 			"additional_configuration": testAccOrganizationConfigurationFeature_additionalConfiguration,
 			"multiple":                 testAccOrganizationConfigurationFeature_multiple,
 		},
 		"ThreatIntelSet": {
-			acctest.CtBasic: testAccThreatIntelSet_basic,
-			"tags":          testAccThreatIntelSet_tags,
+			"basic": testAccThreatIntelSet_basic,
+			"tags":  testAccThreatIntelSet_tags,
 		},
 		"Member": {
-			acctest.CtBasic:      testAccMember_basic,
+			"basic":              testAccMember_basic,
 			"inviteOnUpdate":     testAccMember_invite_onUpdate,
 			"inviteDisassociate": testAccMember_invite_disassociate,
 			"invitationMessage":  testAccMember_invitationMessage,
 		},
 		"PublishingDestination": {
-			acctest.CtBasic: testAccPublishingDestination_basic,
-			"disappears":    testAccPublishingDestination_disappears,
+			"basic":      testAccPublishingDestination_basic,
+			"disappears": testAccPublishingDestination_disappears,
 		},
 	}
 

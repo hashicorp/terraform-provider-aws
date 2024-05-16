@@ -30,7 +30,7 @@ func testAccOrganizationalUnitDataSource_basic(t *testing.T) {
 			{
 				Config: testAccOrganizationalUnitDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 				),
 			},
 		},

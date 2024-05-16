@@ -9,11 +9,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/appstream"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/appstream/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/appstream"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -33,22 +31,22 @@ const (
 )
 
 // waitFleetStateRunning waits for a fleet running
-func waitFleetStateRunning(ctx context.Context, conn *appstream.Client, name string) (*awstypes.Fleet, error) { //nolint:unparam
+func waitFleetStateRunning(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.Fleet, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.FleetStateStarting),
-		Target:  enum.Slice(awstypes.FleetStateRunning),
+		Pending: []string{appstream.FleetStateStarting},
+		Target:  []string{appstream.FleetStateRunning},
 		Refresh: statusFleetState(ctx, conn, name),
 		Timeout: fleetStateTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*awstypes.Fleet); ok {
+	if output, ok := outputRaw.(*appstream.Fleet); ok {
 		if v := output.FleetErrors; len(v) > 0 {
 			var errs []error
 
 			for _, err := range v {
-				errs = append(errs, fmt.Errorf("%s: %s", string(err.ErrorCode), aws.ToString(err.ErrorMessage)))
+				errs = append(errs, fmt.Errorf("%s: %s", aws.StringValue(err.ErrorCode), aws.StringValue(err.ErrorMessage)))
 			}
 
 			tfresource.SetLastError(err, errors.Join(errs...))
@@ -61,22 +59,22 @@ func waitFleetStateRunning(ctx context.Context, conn *appstream.Client, name str
 }
 
 // waitFleetStateStopped waits for a fleet stopped
-func waitFleetStateStopped(ctx context.Context, conn *appstream.Client, name string) (*awstypes.Fleet, error) { //nolint:unparam
+func waitFleetStateStopped(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.Fleet, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.FleetStateStopping),
-		Target:  enum.Slice(awstypes.FleetStateStopped),
+		Pending: []string{appstream.FleetStateStopping},
+		Target:  []string{appstream.FleetStateStopped},
 		Refresh: statusFleetState(ctx, conn, name),
 		Timeout: fleetStateTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*awstypes.Fleet); ok {
+	if output, ok := outputRaw.(*appstream.Fleet); ok {
 		if v := output.FleetErrors; len(v) > 0 {
 			var errs []error
 
 			for _, err := range v {
-				errs = append(errs, fmt.Errorf("%s: %s", string(err.ErrorCode), aws.ToString(err.ErrorMessage)))
+				errs = append(errs, fmt.Errorf("%s: %s", aws.StringValue(err.ErrorCode), aws.StringValue(err.ErrorMessage)))
 			}
 
 			tfresource.SetLastError(err, errors.Join(errs...))
@@ -88,22 +86,22 @@ func waitFleetStateStopped(ctx context.Context, conn *appstream.Client, name str
 	return nil, err
 }
 
-func waitImageBuilderStateRunning(ctx context.Context, conn *appstream.Client, name string) (*awstypes.ImageBuilder, error) {
+func waitImageBuilderStateRunning(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.ImageBuilder, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.ImageBuilderStatePending),
-		Target:  enum.Slice(awstypes.ImageBuilderStateRunning),
+		Pending: []string{appstream.ImageBuilderStatePending},
+		Target:  []string{appstream.ImageBuilderStateRunning},
 		Refresh: statusImageBuilderState(ctx, conn, name),
 		Timeout: imageBuilderStateTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*awstypes.ImageBuilder); ok {
-		if state, v := output.State, output.ImageBuilderErrors; state == awstypes.ImageBuilderStateFailed && len(v) > 0 {
+	if output, ok := outputRaw.(*appstream.ImageBuilder); ok {
+		if state, v := aws.StringValue(output.State), output.ImageBuilderErrors; state == appstream.ImageBuilderStateFailed && len(v) > 0 {
 			var errs []error
 
 			for _, err := range v {
-				errs = append(errs, fmt.Errorf("%s: %s", string(err.ErrorCode), aws.ToString(err.ErrorMessage)))
+				errs = append(errs, fmt.Errorf("%s: %s", aws.StringValue(err.ErrorCode), aws.StringValue(err.ErrorMessage)))
 			}
 
 			tfresource.SetLastError(err, errors.Join(errs...))
@@ -115,9 +113,9 @@ func waitImageBuilderStateRunning(ctx context.Context, conn *appstream.Client, n
 	return nil, err
 }
 
-func waitImageBuilderStateDeleted(ctx context.Context, conn *appstream.Client, name string) (*awstypes.ImageBuilder, error) {
+func waitImageBuilderStateDeleted(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.ImageBuilder, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.ImageBuilderStatePending, awstypes.ImageBuilderStateDeleting),
+		Pending: []string{appstream.ImageBuilderStatePending, appstream.ImageBuilderStateDeleting},
 		Target:  []string{},
 		Refresh: statusImageBuilderState(ctx, conn, name),
 		Timeout: imageBuilderStateTimeout,
@@ -125,12 +123,12 @@ func waitImageBuilderStateDeleted(ctx context.Context, conn *appstream.Client, n
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*awstypes.ImageBuilder); ok {
-		if state, v := output.State, output.ImageBuilderErrors; state == awstypes.ImageBuilderStateFailed && len(v) > 0 {
+	if output, ok := outputRaw.(*appstream.ImageBuilder); ok {
+		if state, v := aws.StringValue(output.State), output.ImageBuilderErrors; state == appstream.ImageBuilderStateFailed && len(v) > 0 {
 			var errs []error
 
 			for _, err := range v {
-				errs = append(errs, fmt.Errorf("%s: %s", string(err.ErrorCode), aws.ToString(err.ErrorMessage)))
+				errs = append(errs, fmt.Errorf("%s: %s", aws.StringValue(err.ErrorCode), aws.StringValue(err.ErrorMessage)))
 			}
 
 			tfresource.SetLastError(err, errors.Join(errs...))
@@ -143,7 +141,7 @@ func waitImageBuilderStateDeleted(ctx context.Context, conn *appstream.Client, n
 }
 
 // waitUserAvailable waits for a user be available
-func waitUserAvailable(ctx context.Context, conn *appstream.Client, username, authType string) (*awstypes.User, error) {
+func waitUserAvailable(ctx context.Context, conn *appstream.AppStream, username, authType string) (*appstream.User, error) {
 	stateConf := &retry.StateChangeConf{
 		Target:  []string{userAvailable},
 		Refresh: statusUserAvailable(ctx, conn, username, authType),
@@ -152,7 +150,7 @@ func waitUserAvailable(ctx context.Context, conn *appstream.Client, username, au
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*awstypes.User); ok {
+	if output, ok := outputRaw.(*appstream.User); ok {
 		return output, err
 	}
 

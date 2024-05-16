@@ -40,7 +40,7 @@ func DataSourceTaskExecution() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						names.AttrWeight: {
+						"weight": {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(0, 1000),
@@ -78,19 +78,19 @@ func DataSourceTaskExecution() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(ecs.LaunchType_Values(), false),
 			},
-			names.AttrNetworkConfiguration: {
+			"network_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrSecurityGroups: {
+						"security_groups": {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Set:      schema.HashString,
 						},
-						names.AttrSubnets: {
+						"subnets": {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -124,16 +124,16 @@ func DataSourceTaskExecution() *schema.Resource {
 										Type:     schema.TypeInt,
 										Optional: true,
 									},
-									names.AttrEnvironment: {
+									"environment": {
 										Type:     schema.TypeSet,
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												names.AttrKey: {
+												"key": {
 													Type:     schema.TypeString,
 													Required: true,
 												},
-												names.AttrValue: {
+												"value": {
 													Type:     schema.TypeString,
 													Required: true,
 												},
@@ -148,7 +148,7 @@ func DataSourceTaskExecution() *schema.Resource {
 										Type:     schema.TypeInt,
 										Optional: true,
 									},
-									names.AttrName: {
+									"name": {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -157,12 +157,12 @@ func DataSourceTaskExecution() *schema.Resource {
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												names.AttrType: {
+												"type": {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.StringInSlice(ecs.ResourceType_Values(), false),
 												},
-												names.AttrValue: {
+												"value": {
 													Type:     schema.TypeString,
 													Required: true,
 												},
@@ -176,7 +176,7 @@ func DataSourceTaskExecution() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						names.AttrExecutionRoleARN: {
+						"execution_role_arn": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -185,7 +185,7 @@ func DataSourceTaskExecution() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrDeviceName: {
+									"device_name": {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -213,11 +213,11 @@ func DataSourceTaskExecution() *schema.Resource {
 				MaxItems: 10,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrExpression: {
+						"expression": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						names.AttrType: {
+						"type": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(ecs.PlacementConstraintType_Values(), false),
@@ -231,11 +231,11 @@ func DataSourceTaskExecution() *schema.Resource {
 				MaxItems: 5,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrField: {
+						"field": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						names.AttrType: {
+						"type": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -246,7 +246,7 @@ func DataSourceTaskExecution() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			names.AttrPropagateTags: {
+			"propagate_tags": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(ecs.PropagateTags_Values(), false),
@@ -259,7 +259,7 @@ func DataSourceTaskExecution() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			names.AttrTags: tftags.TagsSchema(),
+			"tags": tftags.TagsSchema(),
 			"task_arns": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -291,7 +291,7 @@ func dataSourceTaskExecutionRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 	if len(tags) > 0 {
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
@@ -317,7 +317,7 @@ func dataSourceTaskExecutionRead(ctx context.Context, d *schema.ResourceData, me
 	if v, ok := d.GetOk("launch_type"); ok {
 		input.LaunchType = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk(names.AttrNetworkConfiguration); ok {
+	if v, ok := d.GetOk("network_configuration"); ok {
 		input.NetworkConfiguration = expandNetworkConfiguration(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("overrides"); ok {
@@ -340,7 +340,7 @@ func dataSourceTaskExecutionRead(ctx context.Context, d *schema.ResourceData, me
 	if v, ok := d.GetOk("platform_version"); ok {
 		input.PlatformVersion = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk(names.AttrPropagateTags); ok {
+	if v, ok := d.GetOk("propagate_tags"); ok {
 		input.PropagateTags = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("reference_id"); ok {
@@ -381,7 +381,7 @@ func expandTaskOverride(tfList []interface{}) *ecs.TaskOverride {
 	if v, ok := tfMap["memory"]; ok {
 		apiObject.Memory = aws.String(v.(string))
 	}
-	if v, ok := tfMap[names.AttrExecutionRoleARN]; ok {
+	if v, ok := tfMap["execution_role_arn"]; ok {
 		apiObject.ExecutionRoleArn = aws.String(v.(string))
 	}
 	if v, ok := tfMap["task_role_arn"]; ok {
@@ -406,7 +406,7 @@ func expandInferenceAcceleratorOverrides(tfSet *schema.Set) []*ecs.InferenceAcce
 	for _, item := range tfSet.List() {
 		tfMap := item.(map[string]interface{})
 		iao := &ecs.InferenceAcceleratorOverride{
-			DeviceName: aws.String(tfMap[names.AttrDeviceName].(string)),
+			DeviceName: aws.String(tfMap["device_name"].(string)),
 			DeviceType: aws.String(tfMap["device_type"].(string)),
 		}
 		apiObject = append(apiObject, iao)
@@ -424,7 +424,7 @@ func expandContainerOverride(tfList []interface{}) []*ecs.ContainerOverride {
 	for _, item := range tfList {
 		tfMap := item.(map[string]interface{})
 		co := &ecs.ContainerOverride{
-			Name: aws.String(tfMap[names.AttrName].(string)),
+			Name: aws.String(tfMap["name"].(string)),
 		}
 		if v, ok := tfMap["command"]; ok {
 			commandStrings := v.([]interface{})
@@ -433,7 +433,7 @@ func expandContainerOverride(tfList []interface{}) []*ecs.ContainerOverride {
 		if v, ok := tfMap["cpu"]; ok {
 			co.Cpu = aws.Int64(int64(v.(int)))
 		}
-		if v, ok := tfMap[names.AttrEnvironment]; ok {
+		if v, ok := tfMap["environment"]; ok {
 			co.Environment = expandTaskEnvironment(v.(*schema.Set))
 		}
 		if v, ok := tfMap["memory"]; ok {
@@ -460,8 +460,8 @@ func expandTaskEnvironment(tfSet *schema.Set) []*ecs.KeyValuePair {
 	for _, item := range tfSet.List() {
 		tfMap := item.(map[string]interface{})
 		te := &ecs.KeyValuePair{
-			Name:  aws.String(tfMap[names.AttrKey].(string)),
-			Value: aws.String(tfMap[names.AttrValue].(string)),
+			Name:  aws.String(tfMap["key"].(string)),
+			Value: aws.String(tfMap["value"].(string)),
 		}
 		apiObject = append(apiObject, te)
 	}
@@ -478,8 +478,8 @@ func expandResourceRequirements(tfSet *schema.Set) []*ecs.ResourceRequirement {
 	for _, item := range tfSet.List() {
 		tfMap := item.(map[string]interface{})
 		rr := &ecs.ResourceRequirement{
-			Type:  aws.String(tfMap[names.AttrType].(string)),
-			Value: aws.String(tfMap[names.AttrValue].(string)),
+			Type:  aws.String(tfMap["type"].(string)),
+			Value: aws.String(tfMap["value"].(string)),
 		}
 		apiObject = append(apiObject, rr)
 	}

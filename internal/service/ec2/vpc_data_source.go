@@ -32,7 +32,7 @@ func DataSourceVPC() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -54,7 +54,7 @@ func DataSourceVPC() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrState: {
+						"state": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -83,8 +83,8 @@ func DataSourceVPC() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			names.AttrFilter: customFiltersSchema(),
-			names.AttrID: {
+			"filter": customFiltersSchema(),
+			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -105,11 +105,11 @@ func DataSourceVPC() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrOwnerID: {
+			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrState: {
+			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -138,16 +138,16 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interfa
 				"cidr":            d.Get("cidr_block").(string),
 				"dhcp-options-id": d.Get("dhcp_options_id").(string),
 				"isDefault":       isDefaultStr,
-				names.AttrState:   d.Get(names.AttrState).(string),
+				"state":           d.Get("state").(string),
 			},
 		),
 	}
 
-	if v, ok := d.GetOk(names.AttrID); ok {
+	if v, ok := d.GetOk("id"); ok {
 		input.VpcIds = []string{v.(string)}
 	}
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(d.Get(names.AttrFilter).(*schema.Set))...)
+	input.Filters = append(input.Filters, newCustomFilterListV2(d.Get("filter").(*schema.Set))...)
 	input.Filters = append(input.Filters, tagFilters(ctx)...)
 
 	if len(input.Filters) == 0 {
@@ -171,12 +171,12 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		AccountID: aws.ToString(ownerID),
 		Resource:  "vpc/" + d.Id(),
 	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set("arn", arn)
 	d.Set("cidr_block", vpc.CidrBlock)
 	d.Set("default", vpc.IsDefault)
 	d.Set("dhcp_options_id", vpc.DhcpOptionsId)
 	d.Set("instance_tenancy", vpc.InstanceTenancy)
-	d.Set(names.AttrOwnerID, ownerID)
+	d.Set("owner_id", ownerID)
 
 	if v, err := findVPCAttributeV2(ctx, conn, d.Id(), types.VpcAttributeNameEnableDnsHostnames); err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), types.VpcAttributeNameEnableDnsHostnames, err)
@@ -208,7 +208,7 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		association := map[string]interface{}{
 			"association_id": aws.ToString(v.AssociationId),
 			"cidr_block":     aws.ToString(v.CidrBlock),
-			names.AttrState:  aws.ToString(aws.String(string(v.CidrBlockState.State))),
+			"state":          aws.ToString(aws.String(string(v.CidrBlockState.State))),
 		}
 		cidrAssociations = append(cidrAssociations, association)
 	}

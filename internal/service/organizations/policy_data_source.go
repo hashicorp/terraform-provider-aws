@@ -6,21 +6,20 @@ package organizations
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_organizations_policy", name="Policy")
-func dataSourcePolicy() *schema.Resource {
+// @SDKDataSource("aws_organizations_policy")
+func DataSourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePolicyRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -28,15 +27,15 @@ func dataSourcePolicy() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			names.AttrContent: {
+			"content": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -44,7 +43,7 @@ func dataSourcePolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrType: {
+			"type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -54,7 +53,7 @@ func dataSourcePolicy() *schema.Resource {
 
 func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	policyID := d.Get("policy_id").(string)
 	policy, err := findPolicyByID(ctx, conn, policyID)
@@ -64,13 +63,13 @@ func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	policySummary := policy.PolicySummary
-	d.SetId(aws.ToString(policySummary.Id))
-	d.Set(names.AttrARN, policySummary.Arn)
+	d.SetId(aws.StringValue(policySummary.Id))
+	d.Set("arn", policySummary.Arn)
 	d.Set("aws_managed", policySummary.AwsManaged)
-	d.Set(names.AttrContent, policy.Content)
-	d.Set(names.AttrDescription, policySummary.Description)
-	d.Set(names.AttrName, policySummary.Name)
-	d.Set(names.AttrType, policySummary.Type)
+	d.Set("content", policy.Content)
+	d.Set("description", policySummary.Description)
+	d.Set("name", policySummary.Name)
+	d.Set("type", policySummary.Type)
 
 	return diags
 }

@@ -8,15 +8,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/appstream"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/appstream/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/appstream"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -43,7 +42,7 @@ func TestAccAppStreamUserStackAssociation_basic(t *testing.T) {
 					testAccCheckUserStackAssociationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", authType),
 					resource.TestCheckResourceAttr(resourceName, "stack_name", rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, rEmail),
+					resource.TestCheckResourceAttr(resourceName, "user_name", rEmail),
 				),
 			},
 			{
@@ -128,15 +127,15 @@ func testAccCheckUserStackAssociationExists(ctx context.Context, resourceName st
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn(ctx)
 
 		userName, authType, stackName, err := tfappstream.DecodeUserStackAssociationID(rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("error decoding AppStream User Stack Association ID (%s): %w", rs.Primary.ID, err)
 		}
 
-		resp, err := conn.DescribeUserStackAssociations(ctx, &appstream.DescribeUserStackAssociationsInput{
-			AuthenticationType: awstypes.AuthenticationType(authType),
+		resp, err := conn.DescribeUserStackAssociationsWithContext(ctx, &appstream.DescribeUserStackAssociationsInput{
+			AuthenticationType: aws.String(authType),
 			StackName:          aws.String(stackName),
 			UserName:           aws.String(userName),
 		})
@@ -155,7 +154,7 @@ func testAccCheckUserStackAssociationExists(ctx context.Context, resourceName st
 
 func testAccCheckUserStackAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appstream_user_stack_association" {
@@ -167,13 +166,13 @@ func testAccCheckUserStackAssociationDestroy(ctx context.Context) resource.TestC
 				return fmt.Errorf("error decoding AppStream User Stack Association ID (%s): %w", rs.Primary.ID, err)
 			}
 
-			resp, err := conn.DescribeUserStackAssociations(ctx, &appstream.DescribeUserStackAssociationsInput{
-				AuthenticationType: awstypes.AuthenticationType(authType),
+			resp, err := conn.DescribeUserStackAssociationsWithContext(ctx, &appstream.DescribeUserStackAssociationsInput{
+				AuthenticationType: aws.String(authType),
 				StackName:          aws.String(stackName),
 				UserName:           aws.String(userName),
 			})
 
-			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
 				continue
 			}
 

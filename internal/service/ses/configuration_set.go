@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ses_configuration_set")
@@ -34,7 +33,7 @@ func ResourceConfigurationSet() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -67,7 +66,7 @@ func ResourceConfigurationSet() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -95,7 +94,7 @@ func resourceConfigurationSetCreate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
-	configurationSetName := d.Get(names.AttrName).(string)
+	configurationSetName := d.Get("name").(string)
 
 	createOpts := &ses.CreateConfigurationSetInput{
 		ConfigurationSet: &ses.ConfigurationSet{
@@ -194,7 +193,7 @@ func resourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "setting tracking_options: %s", err)
 	}
 
-	d.Set(names.AttrName, response.ConfigurationSet.Name)
+	d.Set("name", response.ConfigurationSet.Name)
 
 	repOpts := response.ReputationOptions
 	if repOpts != nil {
@@ -210,7 +209,7 @@ func resourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, m
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("configuration-set/%s", d.Id()),
 	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set("arn", arn)
 
 	return diags
 }

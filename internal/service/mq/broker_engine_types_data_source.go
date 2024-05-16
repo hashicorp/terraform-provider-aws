@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_mq_broker_engine_types", name="Broker Engine Types")
@@ -38,7 +37,7 @@ func dataSourceBrokerEngineTypes() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrName: {
+									"name": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -106,7 +105,7 @@ func flattenBrokerList(types []types.BrokerEngineType) (brokers []map[string]int
 func flattenEngineVersions(engines []types.EngineVersion) (versions []map[string]string) {
 	for _, engine := range engines {
 		versions = append(versions, map[string]string{
-			names.AttrName: aws.ToString(engine.Name),
+			"name": aws.ToString(engine.Name),
 		})
 	}
 	return

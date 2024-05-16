@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func expandThingTypeProperties(config map[string]interface{}) *iot.ThingTypeProperties {
@@ -16,7 +15,7 @@ func expandThingTypeProperties(config map[string]interface{}) *iot.ThingTypeProp
 		SearchableAttributes: flex.ExpandStringSet(config["searchable_attributes"].(*schema.Set)),
 	}
 
-	if v, ok := config[names.AttrDescription]; ok && v.(string) != "" {
+	if v, ok := config["description"]; ok && v.(string) != "" {
 		properties.ThingTypeDescription = aws.String(v.(string))
 	}
 
@@ -25,7 +24,7 @@ func expandThingTypeProperties(config map[string]interface{}) *iot.ThingTypeProp
 
 func flattenThingTypeProperties(s *iot.ThingTypeProperties) []map[string]interface{} {
 	m := map[string]interface{}{
-		names.AttrDescription:   "",
+		"description":           "",
 		"searchable_attributes": flex.FlattenStringSet(nil),
 	}
 
@@ -33,7 +32,7 @@ func flattenThingTypeProperties(s *iot.ThingTypeProperties) []map[string]interfa
 		return []map[string]interface{}{m}
 	}
 
-	m[names.AttrDescription] = aws.StringValue(s.ThingTypeDescription)
+	m["description"] = aws.StringValue(s.ThingTypeDescription)
 	m["searchable_attributes"] = flex.FlattenStringSet(s.SearchableAttributes)
 
 	return []map[string]interface{}{m}

@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ecr_repository", name="Repository")
@@ -25,11 +24,11 @@ func dataSourceRepository() *schema.Resource {
 		ReadWithoutTimeout: dataSourceRepositoryRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrEncryptionConfiguration: {
+			"encryption_configuration": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -38,7 +37,7 @@ func dataSourceRepository() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrKMSKey: {
+						"kms_key": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -66,7 +65,7 @@ func dataSourceRepository() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -79,7 +78,7 @@ func dataSourceRepository() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -88,7 +87,7 @@ func dataSourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &ecr.DescribeRepositoriesInput{
 		RepositoryNames: []string{name},
 	}
@@ -105,15 +104,15 @@ func dataSourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	d.SetId(aws.ToString(repository.RepositoryName))
 	arn := aws.ToString(repository.RepositoryArn)
-	d.Set(names.AttrARN, arn)
-	if err := d.Set(names.AttrEncryptionConfiguration, flattenRepositoryEncryptionConfiguration(repository.EncryptionConfiguration)); err != nil {
+	d.Set("arn", arn)
+	if err := d.Set("encryption_configuration", flattenRepositoryEncryptionConfiguration(repository.EncryptionConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting encryption_configuration: %s", err)
 	}
 	if err := d.Set("image_scanning_configuration", flattenImageScanningConfiguration(repository.ImageScanningConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting image_scanning_configuration: %s", err)
 	}
 	d.Set("image_tag_mutability", repository.ImageTagMutability)
-	d.Set(names.AttrName, repository.RepositoryName)
+	d.Set("name", repository.RepositoryName)
 	d.Set("registry_id", repository.RegistryId)
 	d.Set("repository_url", repository.RepositoryUri)
 

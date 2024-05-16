@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func funnelChartVisualSchema() *schema.Schema {
@@ -62,8 +61,8 @@ func funnelChartVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"category":       dimensionFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
-													names.AttrValues: measureFieldSchema(1),   // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
+													"category": dimensionFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+													"values":   measureFieldSchema(1),   // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
 												},
 											},
 										},
@@ -202,7 +201,7 @@ func expandFunnelChartAggregatedFieldWells(tfList []interface{}) *quicksight.Fun
 	if v, ok := tfMap["category"].([]interface{}); ok && len(v) > 0 {
 		config.Category = expandDimensionFields(v)
 	}
-	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["values"].([]interface{}); ok && len(v) > 0 {
 		config.Values = expandMeasureFields(v)
 	}
 
@@ -380,7 +379,7 @@ func flattenFunnelChartAggregatedFieldWells(apiObject *quicksight.FunnelChartAgg
 		tfMap["category"] = flattenDimensionFields(apiObject.Category)
 	}
 	if apiObject.Values != nil {
-		tfMap[names.AttrValues] = flattenMeasureFields(apiObject.Values)
+		tfMap["values"] = flattenMeasureFields(apiObject.Values)
 	}
 
 	return []interface{}{tfMap}

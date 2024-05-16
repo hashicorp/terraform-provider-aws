@@ -37,7 +37,7 @@ func TestAccElasticTranscoderPreset_basic(t *testing.T) {
 				Config: testAccPresetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPresetExists(ctx, resourceName, &preset),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "elastictranscoder", regexache.MustCompile(`preset/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elastictranscoder", regexache.MustCompile(`preset/.+`)),
 				),
 			},
 			{
@@ -173,7 +173,7 @@ func TestAccElasticTranscoderPreset_description(t *testing.T) {
 				Config: testAccPresetConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPresetExists(ctx, resourceName, &preset),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
+					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
 				),
 			},
 			{
@@ -202,12 +202,12 @@ func TestAccElasticTranscoderPreset_full(t *testing.T) {
 				Config: testAccPresetConfig_full1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPresetExists(ctx, resourceName, &preset),
-					resource.TestCheckResourceAttr(resourceName, "audio.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "audio_codec_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "thumbnails.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "video.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "audio.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "audio_codec_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "thumbnails.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "video.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "video_codec_options.%", "5"),
-					resource.TestCheckResourceAttr(resourceName, "video_watermarks.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "video_watermarks.#", "0"),
 				),
 			},
 			{
@@ -219,12 +219,12 @@ func TestAccElasticTranscoderPreset_full(t *testing.T) {
 				Config: testAccPresetConfig_full2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPresetExists(ctx, resourceName, &preset),
-					resource.TestCheckResourceAttr(resourceName, "audio.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "audio_codec_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "thumbnails.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "video.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "audio.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "audio_codec_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "thumbnails.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "video.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "video_codec_options.%", "5"),
-					resource.TestCheckResourceAttr(resourceName, "video_watermarks.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "video_watermarks.#", "1"),
 				),
 			},
 			{

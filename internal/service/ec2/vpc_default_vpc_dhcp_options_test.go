@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -17,7 +18,7 @@ func TestAccVPCDefaultVPCDHCPOptions_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:      testAccDefaultVPCDHCPOptions_basic,
+		"basic":              testAccDefaultVPCDHCPOptions_basic,
 		"owner":              testAccDefaultVPCDHCPOptions_owner,
 		"v4.20.0_regression": testAccDefaultVPCDHCPOptions_v420Regression,
 	}
@@ -40,11 +41,11 @@ func testAccDefaultVPCDHCPOptions_basic(t *testing.T) {
 				Config: testAccVPCDefaultVPCDHCPOptionsConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDHCPOptionsExists(ctx, resourceName, &d),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`dhcp-options/dopt-.+`)),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrDomainName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`dhcp-options/dopt-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", tfec2.RegionalPrivateDNSSuffix(acctest.Region())),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_servers", "AmazonProvidedDNS"),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Default DHCP Option Set"),
 				),
 			},
@@ -67,11 +68,11 @@ func testAccDefaultVPCDHCPOptions_owner(t *testing.T) {
 				Config: testAccVPCDefaultVPCDHCPOptionsConfig_owner,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDHCPOptionsExists(ctx, resourceName, &d),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`dhcp-options/dopt-.+`)),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrDomainName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`dhcp-options/dopt-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", tfec2.RegionalPrivateDNSSuffix(acctest.Region())),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_servers", "AmazonProvidedDNS"),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Default DHCP Option Set"),
 				),
 			},

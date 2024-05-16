@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_s3_bucket_policy", name="Bucket Policy")
@@ -35,12 +34,12 @@ func resourceBucketPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrBucket: {
+			"bucket": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrPolicy: {
+			"policy": {
 				Type:                  schema.TypeString,
 				Required:              true,
 				ValidateFunc:          validation.StringIsJSON,
@@ -59,12 +58,12 @@ func resourceBucketPolicyPut(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
+	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	bucket := d.Get(names.AttrBucket).(string)
+	bucket := d.Get("bucket").(string)
 	if isDirectoryBucket(bucket) {
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
@@ -115,13 +114,13 @@ func resourceBucketPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.Errorf("reading S3 Bucket Policy (%s): %s", d.Id(), err)
 	}
 
-	policy, err = verify.PolicyToSet(d.Get(names.AttrPolicy).(string), policy)
+	policy, err = verify.PolicyToSet(d.Get("policy").(string), policy)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set(names.AttrBucket, d.Id())
-	d.Set(names.AttrPolicy, policy)
+	d.Set("bucket", d.Id())
+	d.Set("policy", policy)
 
 	return diags
 }

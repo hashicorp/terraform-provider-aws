@@ -62,7 +62,7 @@ func (r *scraperResource) Metadata(_ context.Context, req resource.MetadataReque
 func (r *scraperResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrAlias: schema.StringAttribute{
+			"alias": schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -70,7 +70,7 @@ func (r *scraperResource) Schema(ctx context.Context, req resource.SchemaRequest
 			},
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrID:  framework.IDAttribute(),
-			names.AttrRoleARN: schema.StringAttribute{
+			"role_arn": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -86,7 +86,7 @@ func (r *scraperResource) Schema(ctx context.Context, req resource.SchemaRequest
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			names.AttrDestination: schema.ListNestedBlock{
+			"destination": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[scraperDestinationModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtLeast(1),
@@ -121,7 +121,7 @@ func (r *scraperResource) Schema(ctx context.Context, req resource.SchemaRequest
 					},
 				},
 			},
-			names.AttrSource: schema.ListNestedBlock{
+			"source": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[scraperSourceModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtLeast(1),
@@ -150,7 +150,7 @@ func (r *scraperResource) Schema(ctx context.Context, req resource.SchemaRequest
 											stringplanmodifier.RequiresReplace(),
 										},
 									},
-									names.AttrSecurityGroupIDs: schema.SetAttribute{
+									"security_group_ids": schema.SetAttribute{
 										CustomType:  fwtypes.SetOfStringType,
 										ElementType: types.StringType,
 										Optional:    true,
@@ -160,7 +160,7 @@ func (r *scraperResource) Schema(ctx context.Context, req resource.SchemaRequest
 											setplanmodifier.UseStateForUnknown(),
 										},
 									},
-									names.AttrSubnetIDs: schema.SetAttribute{
+									"subnet_ids": schema.SetAttribute{
 										CustomType:  fwtypes.SetOfStringType,
 										ElementType: types.StringType,
 										Required:    true,
@@ -177,7 +177,7 @@ func (r *scraperResource) Schema(ctx context.Context, req resource.SchemaRequest
 					},
 				},
 			},
-			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+			"timeouts": timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Delete: true,
 			}),

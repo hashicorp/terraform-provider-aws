@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_route53_resolver_config")
@@ -37,11 +36,11 @@ func ResourceConfig() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(autodefinedReverseFlag_Values(), false),
 			},
-			names.AttrOwnerID: {
+			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrResourceID: {
+			"resource_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -56,7 +55,7 @@ func resourceConfigCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	autodefinedReverseFlag := d.Get("autodefined_reverse_flag").(string)
 	input := &route53resolver.UpdateResolverConfigInput{
 		AutodefinedReverseFlag: aws.String(autodefinedReverseFlag),
-		ResourceId:             aws.String(d.Get(names.AttrResourceID).(string)),
+		ResourceId:             aws.String(d.Get("resource_id").(string)),
 	}
 
 	output, err := conn.UpdateResolverConfigWithContext(ctx, input)
@@ -96,8 +95,8 @@ func resourceConfigRead(ctx context.Context, d *schema.ResourceData, meta interf
 		autodefinedReverseFlag = autodefinedReverseFlagDisable
 	}
 	d.Set("autodefined_reverse_flag", autodefinedReverseFlag)
-	d.Set(names.AttrOwnerID, resolverConfig.OwnerId)
-	d.Set(names.AttrResourceID, resolverConfig.ResourceId)
+	d.Set("owner_id", resolverConfig.OwnerId)
+	d.Set("resource_id", resolverConfig.ResourceId)
 
 	return nil
 }
@@ -108,7 +107,7 @@ func resourceConfigUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	autodefinedReverseFlag := d.Get("autodefined_reverse_flag").(string)
 	input := &route53resolver.UpdateResolverConfigInput{
 		AutodefinedReverseFlag: aws.String(autodefinedReverseFlag),
-		ResourceId:             aws.String(d.Get(names.AttrResourceID).(string)),
+		ResourceId:             aws.String(d.Get("resource_id").(string)),
 	}
 
 	_, err := conn.UpdateResolverConfigWithContext(ctx, input)

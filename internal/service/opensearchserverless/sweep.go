@@ -74,9 +74,9 @@ func sweepAccessPolicies(region string) error {
 
 			log.Printf("[INFO] Deleting OpenSearch Serverless Access Policy: %s", name)
 			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceAccessPolicy, client,
-				framework.NewAttribute(names.AttrID, name),
-				framework.NewAttribute(names.AttrName, name),
-				framework.NewAttribute(names.AttrType, ap.Type),
+				framework.NewAttribute("id", name),
+				framework.NewAttribute("name", name),
+				framework.NewAttribute("type", ap.Type),
 			))
 		}
 	}
@@ -119,7 +119,7 @@ func sweepCollections(region string) error {
 
 			log.Printf("[INFO] Deleting OpenSearch Serverless Collection: %s", id)
 			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceCollection, client,
-				framework.NewAttribute(names.AttrID, id),
+				framework.NewAttribute("id", id),
 			))
 		}
 	}
@@ -164,7 +164,7 @@ func sweepSecurityConfigs(region string) error {
 
 			log.Printf("[INFO] Deleting OpenSearch Serverless Security Config: %s", id)
 			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceCollection, client,
-				framework.NewAttribute(names.AttrID, id),
+				framework.NewAttribute("id", id),
 			))
 		}
 	}
@@ -209,9 +209,9 @@ func sweepSecurityPolicies(region string) error {
 
 			log.Printf("[INFO] Deleting OpenSearch Serverless Security Policy: %s", name)
 			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceCollection, client,
-				framework.NewAttribute(names.AttrID, name),
-				framework.NewAttribute(names.AttrName, name),
-				framework.NewAttribute(names.AttrType, sp.Type),
+				framework.NewAttribute("id", name),
+				framework.NewAttribute("name", name),
+				framework.NewAttribute("type", sp.Type),
 			))
 		}
 	}
@@ -236,9 +236,9 @@ func sweepSecurityPolicies(region string) error {
 
 			log.Printf("[INFO] Deleting OpenSearch Serverless Security Policy: %s", name)
 			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceCollection, client,
-				framework.NewAttribute(names.AttrID, name),
-				framework.NewAttribute(names.AttrName, name),
-				framework.NewAttribute(names.AttrType, sp.Type),
+				framework.NewAttribute("id", name),
+				framework.NewAttribute("name", name),
+				framework.NewAttribute("type", sp.Type),
 			))
 		}
 	}
@@ -281,7 +281,7 @@ func sweepVPCEndpoints(region string) error {
 
 			log.Printf("[INFO] Deleting OpenSearch Serverless VPC Endpoint: %s", id)
 			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceCollection, client,
-				framework.NewAttribute(names.AttrID, id),
+				framework.NewAttribute("id", id),
 			))
 		}
 	}

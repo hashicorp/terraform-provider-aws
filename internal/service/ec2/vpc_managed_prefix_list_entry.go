@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ec2_managed_prefix_list_entry")
@@ -39,7 +38,7 @@ func ResourceManagedPrefixListEntry() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.IsCIDR,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -65,7 +64,7 @@ func resourceManagedPrefixListEntryCreate(ctx context.Context, d *schema.Resourc
 
 	addPrefixListEntry := &ec2.AddPrefixListEntry{Cidr: aws.String(cidr)}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		addPrefixListEntry.Description = aws.String(v.(string))
 	}
 
@@ -130,7 +129,7 @@ func resourceManagedPrefixListEntryRead(ctx context.Context, d *schema.ResourceD
 	entry := outputRaw.(*ec2.PrefixListEntry)
 
 	d.Set("cidr", entry.Cidr)
-	d.Set(names.AttrDescription, entry.Description)
+	d.Set("description", entry.Description)
 
 	return diags
 }

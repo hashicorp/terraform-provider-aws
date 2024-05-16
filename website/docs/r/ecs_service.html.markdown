@@ -299,7 +299,11 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `cluster` - Amazon Resource Name (ARN) of cluster which the service runs on.
+* `desired_count` - Number of instances of the task definition.
+* `iam_role` - ARN of IAM role used for ELB.
 * `id` - ARN that identifies the service.
+* `name` - Name of the service.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts

@@ -38,7 +38,7 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -46,7 +46,7 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			names.AttrAvailabilityZone: {
+			"availability_zone": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -75,27 +75,27 @@ func DataSourceInstance() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrDeleteOnTermination: {
+						"delete_on_termination": {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						names.AttrDeviceName: {
+						"device_name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrEncrypted: {
+						"encrypted": {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						names.AttrIOPS: {
+						"iops": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						names.AttrKMSKeyID: {
+						"kms_key_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrSnapshotID: {
+						"snapshot_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -108,11 +108,11 @@ func DataSourceInstance() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrVolumeSize: {
+						"volume_size": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						names.AttrVolumeType: {
+						"volume_type": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -122,8 +122,8 @@ func DataSourceInstance() *schema.Resource {
 				Set: func(v interface{}) int {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrSnapshotID].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m["device_name"].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m["snapshot_id"].(string)))
 					return create.StringHashcode(buf.String())
 				},
 			},
@@ -136,7 +136,7 @@ func DataSourceInstance() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
+						"enabled": {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
@@ -148,7 +148,7 @@ func DataSourceInstance() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrDeviceName: {
+						"device_name": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -163,7 +163,7 @@ func DataSourceInstance() *schema.Resource {
 					},
 				},
 			},
-			names.AttrFilter: customFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"get_password_data": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -186,12 +186,12 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrInstanceID: {
+			"instance_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"instance_tags": tftags.TagsSchemaComputed(),
-			names.AttrInstanceType: {
+			"instance_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -205,10 +205,6 @@ func DataSourceInstance() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"key_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"launch_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -256,7 +252,7 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			names.AttrNetworkInterfaceID: {
+			"network_interface_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -317,23 +313,23 @@ func DataSourceInstance() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrDeleteOnTermination: {
+						"delete_on_termination": {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						names.AttrDeviceName: {
+						"device_name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrEncrypted: {
+						"encrypted": {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						names.AttrIOPS: {
+						"iops": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						names.AttrKMSKeyID: {
+						"kms_key_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -346,11 +342,11 @@ func DataSourceInstance() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrVolumeSize: {
+						"volume_size": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						names.AttrVolumeType: {
+						"volume_type": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -362,7 +358,7 @@ func DataSourceInstance() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrSecurityGroups: {
+			"security_groups": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -373,11 +369,11 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			names.AttrSubnetID: {
+			"subnet_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 			"tenancy": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -390,7 +386,7 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrVPCSecurityGroupIDs: {
+			"vpc_security_group_ids": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -416,14 +412,14 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get(names.AttrFilter).(*schema.Set),
+		d.Get("filter").(*schema.Set),
 	)...)
 	if len(input.Filters) == 0 {
 		// Don't send an empty filters list; the EC2 API won't accept it.
 		input.Filters = nil
 	}
 
-	if v, ok := d.GetOk(names.AttrInstanceID); ok {
+	if v, ok := d.GetOk("instance_id"); ok {
 		input.InstanceIds = aws.StringSlice([]string{v.(string)})
 	}
 
@@ -454,7 +450,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("instance/%s", d.Id()),
 	}
-	d.Set(names.AttrARN, arn.String())
+	d.Set("arn", arn.String())
 
 	return diags
 }
@@ -473,7 +469,7 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 
 	// Set the easy attributes
 	d.Set("instance_state", instance.State.Name)
-	d.Set(names.AttrAvailabilityZone, instance.Placement.AvailabilityZone)
+	d.Set("availability_zone", instance.Placement.AvailabilityZone)
 	d.Set("placement_group", instance.Placement.GroupName)
 	d.Set("placement_partition_number", instance.Placement.PartitionNumber)
 	d.Set("tenancy", instance.Placement.Tenancy)
@@ -481,9 +477,8 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 	d.Set("host_resource_group_arn", instance.Placement.HostResourceGroupArn)
 
 	d.Set("ami", instance.ImageId)
-	d.Set(names.AttrInstanceType, instanceType)
+	d.Set("instance_type", instanceType)
 	d.Set("key_name", instance.KeyName)
-	d.Set("launch_time", instance.LaunchTime.Format(time.RFC3339))
 	d.Set("outpost_arn", instance.OutpostArn)
 	d.Set("private_dns", instance.PrivateDnsName)
 	d.Set("private_ip", instance.PrivateIpAddress)
@@ -506,8 +501,8 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 	if len(instance.NetworkInterfaces) > 0 {
 		for _, ni := range instance.NetworkInterfaces {
 			if aws.Int64Value(ni.Attachment.DeviceIndex) == 0 {
-				d.Set(names.AttrSubnetID, ni.SubnetId)
-				d.Set(names.AttrNetworkInterfaceID, ni.NetworkInterfaceId)
+				d.Set("subnet_id", ni.SubnetId)
+				d.Set("network_interface_id", ni.NetworkInterfaceId)
 				d.Set("associate_public_ip_address", ni.Association != nil)
 
 				secondaryIPs := make([]string, 0, len(ni.PrivateIpAddresses))
@@ -530,8 +525,8 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 			}
 		}
 	} else {
-		d.Set(names.AttrSubnetID, instance.SubnetId)
-		d.Set(names.AttrNetworkInterfaceID, "")
+		d.Set("subnet_id", instance.SubnetId)
+		d.Set("network_interface_id", "")
 	}
 
 	d.Set("ebs_optimized", instance.EbsOptimized)
@@ -541,11 +536,11 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 
 	if instance.Monitoring != nil {
 		monitoringState := aws.StringValue(instance.Monitoring.State)
-		d.Set("monitoring", monitoringState == names.AttrEnabled || monitoringState == "pending")
+		d.Set("monitoring", monitoringState == "enabled" || monitoringState == "pending")
 	}
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, instance.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, instance.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("setting tags: %w", err)
 	}
 

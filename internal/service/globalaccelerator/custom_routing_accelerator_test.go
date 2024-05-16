@@ -36,21 +36,21 @@ func TestAccGlobalAcceleratorCustomRoutingAccelerator_basic(t *testing.T) {
 				Config: testAccCustomRoutingAcceleratorConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomRoutingAcceleratorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "attributes.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "attributes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.0.flow_logs_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.0.flow_logs_s3_bucket", ""),
 					resource.TestCheckResourceAttr(resourceName, "attributes.0.flow_logs_s3_prefix", ""),
-					resource.TestMatchResourceAttr(resourceName, names.AttrDNSName, dnsNameRegex),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrHostedZoneID, "Z2BJ6XQ5FK7U4H"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "IPV4"),
-					resource.TestCheckResourceAttr(resourceName, "ip_addresses.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "ip_sets.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ip_sets.0.ip_addresses.#", acctest.Ct2),
+					resource.TestMatchResourceAttr(resourceName, "dns_name", dnsNameRegex),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "hosted_zone_id", "Z2BJ6XQ5FK7U4H"),
+					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "IPV4"),
+					resource.TestCheckResourceAttr(resourceName, "ip_addresses.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ip_sets.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ip_sets.0.ip_addresses.#", "2"),
 					resource.TestMatchResourceAttr(resourceName, "ip_sets.0.ip_addresses.0", ipRegex),
 					resource.TestMatchResourceAttr(resourceName, "ip_sets.0.ip_addresses.1", ipRegex),
 					resource.TestCheckResourceAttr(resourceName, "ip_sets.0.ip_family", "IPv4"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
 			{
@@ -97,12 +97,12 @@ func TestAccGlobalAcceleratorCustomRoutingAccelerator_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckCustomRoutingAcceleratorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomRoutingAcceleratorConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccCustomRoutingAcceleratorConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomRoutingAcceleratorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -111,20 +111,20 @@ func TestAccGlobalAcceleratorCustomRoutingAccelerator_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCustomRoutingAcceleratorConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccCustomRoutingAcceleratorConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomRoutingAcceleratorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccCustomRoutingAcceleratorConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccCustomRoutingAcceleratorConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomRoutingAcceleratorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -147,7 +147,7 @@ func TestAccGlobalAcceleratorCustomRoutingAccelerator_update(t *testing.T) {
 				Config: testAccCustomRoutingAcceleratorConfig_basic(rName1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomRoutingAcceleratorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
+					resource.TestCheckResourceAttr(resourceName, "name", rName1),
 				),
 			},
 			{
@@ -159,7 +159,7 @@ func TestAccGlobalAcceleratorCustomRoutingAccelerator_update(t *testing.T) {
 				Config: testAccCustomRoutingAcceleratorConfig_basic(rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomRoutingAcceleratorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
+					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 				),
 			},
 		},
@@ -168,12 +168,16 @@ func TestAccGlobalAcceleratorCustomRoutingAccelerator_update(t *testing.T) {
 
 func testAccCheckCustomRoutingAcceleratorExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn(ctx)
+
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorClient(ctx)
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Global Accelerator Custom Routing Accelerator ID is set")
+		}
 
 		_, err := tfglobalaccelerator.FindCustomRoutingAcceleratorByARN(ctx, conn, rs.Primary.ID)
 
@@ -183,7 +187,7 @@ func testAccCheckCustomRoutingAcceleratorExists(ctx context.Context, n string) r
 
 func testAccCheckCustomRoutingAcceleratorDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_globalaccelerator_custom_routing_accelerator" {

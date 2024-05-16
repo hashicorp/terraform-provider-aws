@@ -5,7 +5,6 @@ package medialive
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func destinationSchema() *schema.Schema {
@@ -59,7 +58,7 @@ func inputLocationSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				names.AttrURI: {
+				"uri": {
 					Type:     schema.TypeString,
 					Required: true,
 				},
@@ -68,7 +67,7 @@ func inputLocationSchema() *schema.Schema {
 					Optional: true,
 					Computed: true,
 				},
-				names.AttrUsername: {
+				"username": {
 					Type:     schema.TypeString,
 					Optional: true,
 					Computed: true,

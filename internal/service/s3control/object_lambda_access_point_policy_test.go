@@ -33,10 +33,10 @@ func TestAccS3ControlObjectLambdaAccessPointPolicy_basic(t *testing.T) {
 				Config: testAccObjectLambdaAccessPointPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectLambdaAccessPointPolicyExists(ctx, resourceName),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
+					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
 					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", "false"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "policy"),
 				),
 			},
 			{
@@ -110,10 +110,10 @@ func TestAccS3ControlObjectLambdaAccessPointPolicy_update(t *testing.T) {
 				Config: testAccObjectLambdaAccessPointPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectLambdaAccessPointPolicyExists(ctx, resourceName),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
+					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
 					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", "false"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "policy"),
 				),
 			},
 			{
@@ -125,10 +125,10 @@ func TestAccS3ControlObjectLambdaAccessPointPolicy_update(t *testing.T) {
 				Config: testAccObjectLambdaAccessPointPolicyConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectLambdaAccessPointPolicyExists(ctx, resourceName),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
+					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
 					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", "false"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "policy"),
 				),
 			},
 		},

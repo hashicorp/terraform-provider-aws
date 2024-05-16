@@ -19,11 +19,7 @@ func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier
 		{{ .ListTagsInIDElem }}: aws.String(identifier),
 		{{- end }}
 		{{- if .TagResTypeElem }}
-		{{- if .TagResTypeElemType }}
-		{{ .TagResTypeElem }}:         awstypes.{{ .TagResTypeElemType }}(resourceType),
-		{{- else }}
 		{{ .TagResTypeElem }}:         aws.String(resourceType),
-		{{- end }}
 		{{- end }}
 		{{- end }}
 	}

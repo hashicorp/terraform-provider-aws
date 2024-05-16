@@ -14,8 +14,8 @@ func TestAccBedrock_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"ModelInvocationLoggingConfiguration": {
-			acctest.CtBasic: testAccModelInvocationLoggingConfiguration_basic,
-			"disappears":    testAccModelInvocationLoggingConfiguration_disappears,
+			"basic":      testAccModelInvocationLoggingConfiguration_basic,
+			"disappears": testAccModelInvocationLoggingConfiguration_disappears,
 		},
 	}
 

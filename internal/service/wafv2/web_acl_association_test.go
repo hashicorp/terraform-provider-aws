@@ -38,7 +38,7 @@ func TestAccWAFV2WebACLAssociation_basic(t *testing.T) {
 				Config: testAccWebACLAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLAssociationExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrResourceARN, "apigateway", regexache.MustCompile(fmt.Sprintf("/restapis/.*/stages/%s", rName))),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "resource_arn", "apigateway", regexache.MustCompile(fmt.Sprintf("/restapis/.*/stages/%s", rName))),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "web_acl_arn", "wafv2", regexache.MustCompile(fmt.Sprintf("regional/webacl/%s/.*", rName))),
 				),
 			},
@@ -85,9 +85,15 @@ func testAccCheckWebACLAssociationDestroy(ctx context.Context) resource.TestChec
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Client(ctx)
+			_, resourceARN, err := tfwafv2.WebACLAssociationParseResourceID(rs.Primary.ID)
 
-			_, err := tfwafv2.FindWebACLByResourceARN(ctx, conn, rs.Primary.Attributes[names.AttrResourceARN])
+			if err != nil {
+				return err
+			}
+
+			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn(ctx)
+
+			_, err = tfwafv2.FindWebACLByResourceARN(ctx, conn, resourceARN)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -111,9 +117,19 @@ func testAccCheckWebACLAssociationExists(ctx context.Context, n string) resource
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Client(ctx)
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No WAFv2 WebACL Association ID is set")
+		}
 
-		_, err := tfwafv2.FindWebACLByResourceARN(ctx, conn, rs.Primary.Attributes[names.AttrResourceARN])
+		_, resourceARN, err := tfwafv2.WebACLAssociationParseResourceID(rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn(ctx)
+
+		_, err = tfwafv2.FindWebACLByResourceARN(ctx, conn, resourceARN)
 
 		return err
 	}

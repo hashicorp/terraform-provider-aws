@@ -165,11 +165,11 @@ func testAccCheckTargetGroupAttachmentExists(ctx context.Context, n string) reso
 			}},
 		}
 
-		if v := rs.Primary.Attributes[names.AttrAvailabilityZone]; v != "" {
+		if v := rs.Primary.Attributes["availability_zone"]; v != "" {
 			input.Targets[0].AvailabilityZone = aws.String(v)
 		}
 
-		if v := rs.Primary.Attributes[names.AttrPort]; v != "" {
+		if v := rs.Primary.Attributes["port"]; v != "" {
 			input.Targets[0].Port = flex.StringValueToInt64(v)
 		}
 
@@ -195,11 +195,11 @@ func testAccCheckTargetGroupAttachmentDestroy(ctx context.Context) resource.Test
 				}},
 			}
 
-			if v := rs.Primary.Attributes[names.AttrAvailabilityZone]; v != "" {
+			if v := rs.Primary.Attributes["availability_zone"]; v != "" {
 				input.Targets[0].AvailabilityZone = aws.String(v)
 			}
 
-			if v := rs.Primary.Attributes[names.AttrPort]; v != "" {
+			if v := rs.Primary.Attributes["port"]; v != "" {
 				input.Targets[0].Port = flex.StringValueToInt64(v)
 			}
 

@@ -7,6 +7,9 @@ import (
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	lambda_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lambda"
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	lambda_sdkv1 "github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -25,39 +28,32 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceAlias,
+			Factory:  DataSourceAlias,
 			TypeName: "aws_lambda_alias",
 		},
 		{
-			Factory:  dataSourceCodeSigningConfig,
+			Factory:  DataSourceCodeSigningConfig,
 			TypeName: "aws_lambda_code_signing_config",
-			Name:     "Code Signing Config",
 		},
 		{
-			Factory:  dataSourceFunction,
+			Factory:  DataSourceFunction,
 			TypeName: "aws_lambda_function",
-			Name:     "Function",
-			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  dataSourceFunctionURL,
+			Factory:  DataSourceFunctionURL,
 			TypeName: "aws_lambda_function_url",
-			Name:     "Function URL",
 		},
 		{
-			Factory:  dataSourceFunctions,
+			Factory:  DataSourceFunctions,
 			TypeName: "aws_lambda_functions",
-			Name:     "Functions",
 		},
 		{
-			Factory:  dataSourceInvocation,
+			Factory:  DataSourceInvocation,
 			TypeName: "aws_lambda_invocation",
-			Name:     "Invocation",
 		},
 		{
-			Factory:  dataSourceLayerVersion,
+			Factory:  DataSourceLayerVersion,
 			TypeName: "aws_lambda_layer_version",
-			Name:     "Layer Version",
 		},
 	}
 }
@@ -65,62 +61,52 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  resourceAlias,
+			Factory:  ResourceAlias,
 			TypeName: "aws_lambda_alias",
-			Name:     "Alias",
 		},
 		{
-			Factory:  resourceCodeSigningConfig,
+			Factory:  ResourceCodeSigningConfig,
 			TypeName: "aws_lambda_code_signing_config",
-			Name:     "Code Signing Config",
 		},
 		{
-			Factory:  resourceEventSourceMapping,
+			Factory:  ResourceEventSourceMapping,
 			TypeName: "aws_lambda_event_source_mapping",
-			Name:     "Event Source Mapping",
 		},
 		{
-			Factory:  resourceFunction,
+			Factory:  ResourceFunction,
 			TypeName: "aws_lambda_function",
 			Name:     "Function",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "arn",
 			},
 		},
 		{
-			Factory:  resourceFunctionEventInvokeConfig,
+			Factory:  ResourceFunctionEventInvokeConfig,
 			TypeName: "aws_lambda_function_event_invoke_config",
-			Name:     "Function Event Invoke Config",
 		},
 		{
-			Factory:  resourceFunctionURL,
+			Factory:  ResourceFunctionURL,
 			TypeName: "aws_lambda_function_url",
-			Name:     "Function URL",
 		},
 		{
-			Factory:  resourceInvocation,
+			Factory:  ResourceInvocation,
 			TypeName: "aws_lambda_invocation",
-			Name:     "Invocation",
 		},
 		{
-			Factory:  resourceLayerVersion,
+			Factory:  ResourceLayerVersion,
 			TypeName: "aws_lambda_layer_version",
-			Name:     "Layer Version",
 		},
 		{
-			Factory:  resourceLayerVersionPermission,
+			Factory:  ResourceLayerVersionPermission,
 			TypeName: "aws_lambda_layer_version_permission",
-			Name:     "Layer Version Permission",
 		},
 		{
-			Factory:  resourcePermission,
+			Factory:  ResourcePermission,
 			TypeName: "aws_lambda_permission",
-			Name:     "Permission",
 		},
 		{
-			Factory:  resourceProvisionedConcurrencyConfig,
+			Factory:  ResourceProvisionedConcurrencyConfig,
 			TypeName: "aws_lambda_provisioned_concurrency_config",
-			Name:     "Provisioned Concurrency Config",
 		},
 	}
 }
@@ -129,12 +115,19 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.Lambda
 }
 
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
+func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*lambda_sdkv1.Lambda, error) {
+	sess := config["session"].(*session_sdkv1.Session)
+
+	return lambda_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+}
+
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*lambda_sdkv2.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
 	return lambda_sdkv2.NewFromConfig(cfg, func(o *lambda_sdkv2.Options) {
-		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
+		if endpoint := config["endpoint"].(string); endpoint != "" {
 			o.BaseEndpoint = aws_sdkv2.String(endpoint)
 		}
 	}), nil

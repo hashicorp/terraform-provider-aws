@@ -49,7 +49,7 @@ func ResourceClusterSnapshot() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			names.AttrAvailabilityZones: {
+			"availability_zones": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
@@ -79,11 +79,11 @@ func ResourceClusterSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrEngineVersion: {
+			"engine_version": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrKMSKeyID: {
+			"kms_key_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -91,7 +91,7 @@ func ResourceClusterSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrPort: {
+			"port": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -103,7 +103,7 @@ func ResourceClusterSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -113,7 +113,7 @@ func ResourceClusterSnapshot() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVPCID: {
+			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -168,20 +168,20 @@ func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	d.Set("allocated_storage", snapshot.AllocatedStorage)
-	d.Set(names.AttrAvailabilityZones, aws.StringValueSlice(snapshot.AvailabilityZones))
+	d.Set("availability_zones", aws.StringValueSlice(snapshot.AvailabilityZones))
 	d.Set("db_cluster_identifier", snapshot.DBClusterIdentifier)
 	d.Set("db_cluster_snapshot_arn", snapshot.DBClusterSnapshotArn)
 	d.Set("db_cluster_snapshot_identifier", snapshot.DBClusterSnapshotIdentifier)
-	d.Set(names.AttrEngineVersion, snapshot.EngineVersion)
+	d.Set("engine_version", snapshot.EngineVersion)
 	d.Set("engine", snapshot.Engine)
-	d.Set(names.AttrKMSKeyID, snapshot.KmsKeyId)
+	d.Set("kms_key_id", snapshot.KmsKeyId)
 	d.Set("license_model", snapshot.LicenseModel)
-	d.Set(names.AttrPort, snapshot.Port)
+	d.Set("port", snapshot.Port)
 	d.Set("snapshot_type", snapshot.SnapshotType)
 	d.Set("source_db_cluster_snapshot_arn", snapshot.SourceDBClusterSnapshotArn)
-	d.Set(names.AttrStatus, snapshot.Status)
+	d.Set("status", snapshot.Status)
 	d.Set("storage_encrypted", snapshot.StorageEncrypted)
-	d.Set(names.AttrVPCID, snapshot.VpcId)
+	d.Set("vpc_id", snapshot.VpcId)
 
 	setTagsOut(ctx, snapshot.TagList)
 

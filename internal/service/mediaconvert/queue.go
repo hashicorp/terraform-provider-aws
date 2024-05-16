@@ -37,15 +37,15 @@ func resourceQueue() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -81,7 +81,7 @@ func resourceQueue() *schema.Resource {
 					},
 				},
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Default:          types.QueueStatusActive,
@@ -99,15 +99,15 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).MediaConvertClient(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &mediaconvert.CreateQueueInput{
 		Name:        aws.String(name),
 		PricingPlan: types.PricingPlan(d.Get("pricing_plan").(string)),
-		Status:      types.QueueStatus(d.Get(names.AttrStatus).(string)),
+		Status:      types.QueueStatus(d.Get("status").(string)),
 		Tags:        getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -142,9 +142,9 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading Media Convert Queue (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, queue.Arn)
-	d.Set(names.AttrDescription, queue.Description)
-	d.Set(names.AttrName, queue.Name)
+	d.Set("arn", queue.Arn)
+	d.Set("description", queue.Description)
+	d.Set("name", queue.Name)
 	d.Set("pricing_plan", queue.PricingPlan)
 	if queue.ReservationPlan != nil {
 		if err := d.Set("reservation_plan_settings", []interface{}{flattenReservationPlan(queue.ReservationPlan)}); err != nil {
@@ -153,7 +153,7 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	} else {
 		d.Set("reservation_plan_settings", nil)
 	}
-	d.Set(names.AttrStatus, queue.Status)
+	d.Set("status", queue.Status)
 
 	return diags
 }
@@ -162,13 +162,13 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).MediaConvertClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &mediaconvert.UpdateQueueInput{
 			Name:   aws.String(d.Id()),
-			Status: types.QueueStatus(d.Get(names.AttrStatus).(string)),
+			Status: types.QueueStatus(d.Get("status").(string)),
 		}
 
-		if v, ok := d.GetOk(names.AttrDescription); ok {
+		if v, ok := d.GetOk("description"); ok {
 			input.Description = aws.String(v.(string))
 		}
 

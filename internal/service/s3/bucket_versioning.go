@@ -23,7 +23,6 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_s3_bucket_versioning", name="Bucket Versioning")
@@ -39,7 +38,7 @@ func resourceBucketVersioning() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrBucket: {
+			"bucket": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -67,7 +66,7 @@ func resourceBucketVersioning() *schema.Resource {
 							Computed:         true,
 							ValidateDiagFunc: enum.Validate[types.MFADelete](),
 						},
-						names.AttrStatus: {
+						"status": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(bucketVersioningStatus_Values(), false),
@@ -102,7 +101,7 @@ func resourceBucketVersioning() *schema.Resource {
 func resourceBucketVersioningCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket := d.Get(names.AttrBucket).(string)
+	bucket := d.Get("bucket").(string)
 	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
 
 	versioningConfiguration := expandBucketVersioningConfiguration(d.Get("versioning_configuration").([]interface{}))
@@ -166,7 +165,7 @@ func resourceBucketVersioningRead(ctx context.Context, d *schema.ResourceData, m
 		return diag.Errorf("reading S3 Bucket Versioning (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrBucket, bucket)
+	d.Set("bucket", bucket)
 	d.Set("expected_bucket_owner", expectedBucketOwner)
 	if err := d.Set("versioning_configuration", flattenVersioning(output)); err != nil {
 		return diag.Errorf("setting versioning_configuration: %s", err)
@@ -265,7 +264,7 @@ func expandBucketVersioningConfiguration(l []interface{}) *types.VersioningConfi
 		result.MFADelete = types.MFADelete(v)
 	}
 
-	if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
+	if v, ok := tfMap["status"].(string); ok && v != "" {
 		result.Status = types.BucketVersioningStatus(v)
 	}
 
@@ -282,10 +281,10 @@ func flattenVersioning(config *s3.GetBucketVersioningOutput) []interface{} {
 	}
 
 	if config.Status != "" {
-		m[names.AttrStatus] = config.Status
+		m["status"] = config.Status
 	} else {
 		// Bucket Versioning by default is disabled but not set in the config struct's Status field
-		m[names.AttrStatus] = bucketVersioningStatusDisabled
+		m["status"] = bucketVersioningStatusDisabled
 	}
 
 	return []interface{}{m}

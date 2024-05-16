@@ -43,8 +43,8 @@ func TestAccOpenSearchServerlessLifecyclePolicy_basic(t *testing.T) {
 				Config: testAccLifecyclePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLifecyclePolicyExists(ctx, resourceName, &lifecyclepolicy),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, "retention"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
+					resource.TestCheckResourceAttr(resourceName, "type", "retention"),
+					resource.TestCheckResourceAttrSet(resourceName, "policy"),
 					resource.TestCheckResourceAttrSet(resourceName, "policy_version"),
 				),
 			},
@@ -104,19 +104,19 @@ func TestAccOpenSearchServerlessLifecyclePolicy_update(t *testing.T) {
 		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLifecyclePolicyConfig_update(rName, names.AttrDescription),
+				Config: testAccLifecyclePolicyConfig_update(rName, "description"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLifecyclePolicyExists(ctx, resourceName, &lifecyclepolicy),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, "retention"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, names.AttrDescription),
+					resource.TestCheckResourceAttr(resourceName, "type", "retention"),
+					resource.TestCheckResourceAttr(resourceName, "description", "description"),
 				),
 			},
 			{
 				Config: testAccLifecyclePolicyConfig_update(rName, "description updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLifecyclePolicyExists(ctx, resourceName, &lifecyclepolicy),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, "retention"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description updated"),
+					resource.TestCheckResourceAttr(resourceName, "type", "retention"),
+					resource.TestCheckResourceAttr(resourceName, "description", "description updated"),
 				),
 			},
 		},
@@ -132,7 +132,7 @@ func testAccCheckLifecyclePolicyDestroy(ctx context.Context) resource.TestCheckF
 				continue
 			}
 
-			_, err := tfopensearchserverless.FindLifecyclePolicyByNameAndType(ctx, conn, rs.Primary.ID, rs.Primary.Attributes[names.AttrType])
+			_, err := tfopensearchserverless.FindLifecyclePolicyByNameAndType(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["type"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -160,7 +160,7 @@ func testAccCheckLifecyclePolicyExists(ctx context.Context, name string, lifecyc
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchServerlessClient(ctx)
-		resp, err := tfopensearchserverless.FindLifecyclePolicyByNameAndType(ctx, conn, rs.Primary.ID, rs.Primary.Attributes[names.AttrType])
+		resp, err := tfopensearchserverless.FindLifecyclePolicyByNameAndType(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["type"])
 
 		if err != nil {
 			return create.Error(names.OpenSearchServerless, create.ErrActionCheckingExistence, tfopensearchserverless.ResNameLifecyclePolicy, rs.Primary.ID, err)
@@ -179,7 +179,7 @@ func testAccLifecyclePolicyImportStateIdFunc(resourceName string) resource.Impor
 			return "", fmt.Errorf("not found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s/%s", rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes[names.AttrType]), nil
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["name"], rs.Primary.Attributes["type"]), nil
 	}
 }
 

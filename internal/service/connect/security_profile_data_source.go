@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_connect_security_profile")
@@ -24,30 +23,30 @@ func DataSourceSecurityProfile() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSecurityProfileRead,
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrInstanceID: {
+			"instance_id": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{names.AttrName, "security_profile_id"},
+				ExactlyOneOf: []string{"name", "security_profile_id"},
 			},
 			"organization_resource_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrPermissions: {
+			"permissions": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -58,9 +57,9 @@ func DataSourceSecurityProfile() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"security_profile_id", names.AttrName},
+				ExactlyOneOf: []string{"security_profile_id", "name"},
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -71,7 +70,7 @@ func dataSourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	instanceID := d.Get(names.AttrInstanceID).(string)
+	instanceID := d.Get("instance_id").(string)
 
 	input := &connect.DescribeSecurityProfileInput{
 		InstanceId: aws.String(instanceID),
@@ -79,7 +78,7 @@ func dataSourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, 
 
 	if v, ok := d.GetOk("security_profile_id"); ok {
 		input.SecurityProfileId = aws.String(v.(string))
-	} else if v, ok := d.GetOk(names.AttrName); ok {
+	} else if v, ok := d.GetOk("name"); ok {
 		name := v.(string)
 		securityProfileSummary, err := dataSourceGetSecurityProfileSummaryByName(ctx, conn, instanceID, name)
 
@@ -106,12 +105,12 @@ func dataSourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, 
 
 	securityProfile := resp.SecurityProfile
 
-	d.Set(names.AttrARN, resp.SecurityProfile.Arn)
-	d.Set(names.AttrDescription, resp.SecurityProfile.Description)
-	d.Set(names.AttrInstanceID, instanceID)
+	d.Set("arn", resp.SecurityProfile.Arn)
+	d.Set("description", resp.SecurityProfile.Description)
+	d.Set("instance_id", instanceID)
 	d.Set("organization_resource_id", resp.SecurityProfile.OrganizationResourceId)
 	d.Set("security_profile_id", resp.SecurityProfile.Id)
-	d.Set(names.AttrName, resp.SecurityProfile.SecurityProfileName)
+	d.Set("name", resp.SecurityProfile.SecurityProfileName)
 
 	// reading permissions requires a separate API call
 	permissions, err := getSecurityProfilePermissions(ctx, conn, instanceID, *resp.SecurityProfile.Id)
@@ -121,10 +120,10 @@ func dataSourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if permissions != nil {
-		d.Set(names.AttrPermissions, flex.FlattenStringSet(permissions))
+		d.Set("permissions", flex.FlattenStringSet(permissions))
 	}
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, securityProfile.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, securityProfile.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

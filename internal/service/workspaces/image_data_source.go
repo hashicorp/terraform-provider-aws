@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_workspaces_image")
@@ -24,11 +23,11 @@ func DataSourceImage() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -40,7 +39,7 @@ func DataSourceImage() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrState: {
+			"state": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -67,11 +66,11 @@ func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	image := resp.Images[0]
 	d.SetId(imageID)
-	d.Set(names.AttrName, image.Name)
-	d.Set(names.AttrDescription, image.Description)
+	d.Set("name", image.Name)
+	d.Set("description", image.Description)
 	d.Set("operating_system_type", image.OperatingSystem.Type)
 	d.Set("required_tenancy", image.RequiredTenancy)
-	d.Set(names.AttrState, image.State)
+	d.Set("state", image.State)
 
 	return diags
 }

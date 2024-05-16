@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource
 func newDataSourceRegion(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceRegion{}
+	d.SetMigratedFromPluginSDK(true)
 
 	return d, nil
 }
@@ -38,18 +38,18 @@ func (d *dataSourceRegion) Metadata(_ context.Context, request datasource.Metada
 func (d *dataSourceRegion) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrDescription: schema.StringAttribute{
+			"description": schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrEndpoint: schema.StringAttribute{
+			"endpoint": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
-			names.AttrID: schema.StringAttribute{
+			"id": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
-			names.AttrName: schema.StringAttribute{
+			"name": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},

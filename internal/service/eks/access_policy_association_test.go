@@ -43,7 +43,7 @@ func TestAccEKSAccessPolicyAssociation_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPolicyAssociationExists(ctx, resourceName, &associatedaccesspolicy),
 					resource.TestCheckResourceAttrSet(resourceName, "associated_at"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrClusterName),
+					resource.TestCheckResourceAttrSet(resourceName, "cluster_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "modified_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "policy_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "principal_arn"),
@@ -130,7 +130,7 @@ func testAccCheckAccessPolicyAssociationDestroy(ctx context.Context) resource.Te
 				continue
 			}
 
-			_, err := tfeks.FindAccessPolicyAssociationByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrClusterName], rs.Primary.Attributes["principal_arn"], rs.Primary.Attributes["policy_arn"])
+			_, err := tfeks.FindAccessPolicyAssociationByThreePartKey(ctx, conn, rs.Primary.Attributes["cluster_name"], rs.Primary.Attributes["principal_arn"], rs.Primary.Attributes["policy_arn"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -156,7 +156,7 @@ func testAccCheckAccessPolicyAssociationExists(ctx context.Context, n string, v 
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSClient(ctx)
 
-		output, err := tfeks.FindAccessPolicyAssociationByThreePartKey(ctx, conn, rs.Primary.Attributes[names.AttrClusterName], rs.Primary.Attributes["principal_arn"], rs.Primary.Attributes["policy_arn"])
+		output, err := tfeks.FindAccessPolicyAssociationByThreePartKey(ctx, conn, rs.Primary.Attributes["cluster_name"], rs.Primary.Attributes["principal_arn"], rs.Primary.Attributes["policy_arn"])
 
 		if err != nil {
 			return err

@@ -40,7 +40,7 @@ func ResourceExtension() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -55,25 +55,25 @@ func ResourceExtension() *schema.Resource {
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.ActionPoint](),
 						},
-						names.AttrAction: {
+						"action": {
 							Type:     schema.TypeSet,
 							Required: true,
 							MinItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrDescription: {
+									"description": {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									names.AttrName: {
+									"name": {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									names.AttrRoleARN: {
+									"role_arn": {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									names.AttrURI: {
+									"uri": {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -83,22 +83,22 @@ func ResourceExtension() *schema.Resource {
 					},
 				},
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			names.AttrParameter: {
+			"parameter": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrName: {
+						"name": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						names.AttrDescription: {
+						"description": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -109,14 +109,14 @@ func ResourceExtension() *schema.Resource {
 					},
 				},
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVersion: {
+			"version": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -132,26 +132,26 @@ func resourceExtensionCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	in := appconfig.CreateExtensionInput{
 		Actions: expandExtensionActionPoints(d.Get("action_point").(*schema.Set).List()),
-		Name:    aws.String(d.Get(names.AttrName).(string)),
+		Name:    aws.String(d.Get("name").(string)),
 		Tags:    getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		in.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrParameter); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk("parameter"); ok && v.(*schema.Set).Len() > 0 {
 		in.Parameters = expandExtensionParameters(v.(*schema.Set).List())
 	}
 
 	out, err := conn.CreateExtension(ctx, &in)
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionCreating, ResExtension, d.Get(names.AttrName).(string), err)
+		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionCreating, ResExtension, d.Get("name").(string), err)
 	}
 
 	if out == nil {
-		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionCreating, ResExtension, d.Get(names.AttrName).(string), errors.New("No Extension returned with create request."))
+		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionCreating, ResExtension, d.Get("name").(string), errors.New("No Extension returned with create request."))
 	}
 
 	d.SetId(aws.ToString(out.Id))
@@ -176,12 +176,12 @@ func resourceExtensionRead(ctx context.Context, d *schema.ResourceData, meta int
 		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionReading, ResExtension, d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, out.Arn)
+	d.Set("arn", out.Arn)
 	d.Set("action_point", flattenExtensionActionPoints(out.Actions))
-	d.Set(names.AttrDescription, out.Description)
-	d.Set(names.AttrParameter, flattenExtensionParameters(out.Parameters))
-	d.Set(names.AttrName, out.Name)
-	d.Set(names.AttrVersion, out.VersionNumber)
+	d.Set("description", out.Description)
+	d.Set("parameter", flattenExtensionParameters(out.Parameters))
+	d.Set("name", out.Name)
+	d.Set("version", out.VersionNumber)
 
 	return diags
 }
@@ -196,8 +196,8 @@ func resourceExtensionUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		ExtensionIdentifier: aws.String(d.Id()),
 	}
 
-	if d.HasChange(names.AttrDescription) {
-		in.Description = aws.String(d.Get(names.AttrDescription).(string))
+	if d.HasChange("description") {
+		in.Description = aws.String(d.Get("description").(string))
 		requestUpdate = true
 	}
 
@@ -206,8 +206,8 @@ func resourceExtensionUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		requestUpdate = true
 	}
 
-	if d.HasChange(names.AttrParameter) {
-		in.Parameters = expandExtensionParameters(d.Get(names.AttrParameter).(*schema.Set).List())
+	if d.HasChange("parameter") {
+		in.Parameters = expandExtensionParameters(d.Get("parameter").(*schema.Set).List())
 		requestUpdate = true
 	}
 
@@ -215,11 +215,11 @@ func resourceExtensionUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		out, err := conn.UpdateExtension(ctx, in)
 
 		if err != nil {
-			return create.AppendDiagError(diags, names.AppConfig, create.ErrActionWaitingForUpdate, ResExtension, d.Get(names.AttrName).(string), err)
+			return create.AppendDiagError(diags, names.AppConfig, create.ErrActionWaitingForUpdate, ResExtension, d.Get("name").(string), err)
 		}
 
 		if out == nil {
-			return create.AppendDiagError(diags, names.AppConfig, create.ErrActionWaitingForUpdate, ResExtension, d.Get(names.AttrName).(string), errors.New("No Extension returned with update request."))
+			return create.AppendDiagError(diags, names.AppConfig, create.ErrActionWaitingForUpdate, ResExtension, d.Get("name").(string), errors.New("No Extension returned with update request."))
 		}
 	}
 
@@ -256,10 +256,10 @@ func expandExtensionActions(actionsListRaw interface{}) []awstypes.Action {
 		}
 
 		action := awstypes.Action{
-			Description: aws.String(actionMap[names.AttrDescription].(string)),
-			Name:        aws.String(actionMap[names.AttrName].(string)),
-			RoleArn:     aws.String(actionMap[names.AttrRoleARN].(string)),
-			Uri:         aws.String(actionMap[names.AttrURI].(string)),
+			Description: aws.String(actionMap["description"].(string)),
+			Name:        aws.String(actionMap["name"].(string)),
+			RoleArn:     aws.String(actionMap["role_arn"].(string)),
+			Uri:         aws.String(actionMap["uri"].(string)),
 		}
 
 		actions = append(actions, action)
@@ -276,7 +276,7 @@ func expandExtensionActionPoints(actionsPointListRaw []interface{}) map[string][
 	actionsMap := make(map[string][]awstypes.Action)
 	for _, actionPointRaw := range actionsPointListRaw {
 		actionPointMap := actionPointRaw.(map[string]interface{})
-		actionsMap[actionPointMap["point"].(string)] = expandExtensionActions(actionPointMap[names.AttrAction])
+		actionsMap[actionPointMap["point"].(string)] = expandExtensionActions(actionPointMap["action"])
 	}
 
 	return actionsMap
@@ -297,10 +297,10 @@ func expandExtensionParameters(rawParameters []interface{}) map[string]awstypes.
 		}
 
 		parameter := awstypes.Parameter{
-			Description: aws.String(parameterMap[names.AttrDescription].(string)),
+			Description: aws.String(parameterMap["description"].(string)),
 			Required:    parameterMap["required"].(bool),
 		}
-		parameters[parameterMap[names.AttrName].(string)] = parameter
+		parameters[parameterMap["name"].(string)] = parameter
 	}
 
 	return parameters
@@ -310,10 +310,10 @@ func flattenExtensionActions(actions []awstypes.Action) []interface{} {
 	var rawActions []interface{}
 	for _, action := range actions {
 		rawAction := map[string]interface{}{
-			names.AttrName:        aws.ToString(action.Name),
-			names.AttrDescription: aws.ToString(action.Description),
-			names.AttrRoleARN:     aws.ToString(action.RoleArn),
-			names.AttrURI:         aws.ToString(action.Uri),
+			"name":        aws.ToString(action.Name),
+			"description": aws.ToString(action.Description),
+			"role_arn":    aws.ToString(action.RoleArn),
+			"uri":         aws.ToString(action.Uri),
 		}
 		rawActions = append(rawActions, rawAction)
 	}
@@ -328,8 +328,8 @@ func flattenExtensionActionPoints(actionPointsMap map[string][]awstypes.Action) 
 	var rawActionPoints []interface{}
 	for actionPoint, actions := range actionPointsMap {
 		rawActionPoint := map[string]interface{}{
-			"point":          actionPoint,
-			names.AttrAction: flattenExtensionActions(actions),
+			"point":  actionPoint,
+			"action": flattenExtensionActions(actions),
 		}
 		rawActionPoints = append(rawActionPoints, rawActionPoint)
 	}
@@ -345,9 +345,9 @@ func flattenExtensionParameters(parameters map[string]awstypes.Parameter) []inte
 	var rawParameters []interface{}
 	for key, parameter := range parameters {
 		rawParameter := map[string]interface{}{
-			names.AttrName:        key,
-			names.AttrDescription: aws.ToString(parameter.Description),
-			"required":            parameter.Required,
+			"name":        key,
+			"description": aws.ToString(parameter.Description),
+			"required":    parameter.Required,
 		}
 
 		rawParameters = append(rawParameters, rawParameter)

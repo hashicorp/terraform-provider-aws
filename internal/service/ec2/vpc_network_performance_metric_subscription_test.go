@@ -21,8 +21,8 @@ func TestAccVPCNetworkPerformanceMetricSubscription_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic: testAccNetworkPerformanceMetricSubscription_basic,
-		"disappears":    testAccNetworkPerformanceMetricSubscription_disappears,
+		"basic":      testAccNetworkPerformanceMetricSubscription_basic,
+		"disappears": testAccNetworkPerformanceMetricSubscription_disappears,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -44,10 +44,10 @@ func testAccNetworkPerformanceMetricSubscription_basic(t *testing.T) {
 				Config: testAccVPCNetworkPerformanceMetricSubscription_basic(src, dst),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkPerformanceMetricSubscriptionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDestination, dst),
+					resource.TestCheckResourceAttr(resourceName, "destination", dst),
 					resource.TestCheckResourceAttr(resourceName, "metric", "aggregate-latency"),
 					resource.TestCheckResourceAttr(resourceName, "period", "five-minutes"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrSource, src),
+					resource.TestCheckResourceAttr(resourceName, "source", src),
 					resource.TestCheckResourceAttr(resourceName, "statistic", "p50"),
 				),
 			},

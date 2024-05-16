@@ -15,12 +15,12 @@ func TestAccAppSync_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"APIKey": {
-			acctest.CtBasic: testAccAPIKey_basic,
-			"description":   testAccAPIKey_description,
-			"expires":       testAccAPIKey_expires,
+			"basic":       testAccAPIKey_basic,
+			"description": testAccAPIKey_description,
+			"expires":     testAccAPIKey_expires,
 		},
 		"DataSource": {
-			acctest.CtBasic:                 testAccDataSource_basic,
+			"basic":                         testAccDataSource_basic,
 			"description":                   testAccDataSource_description,
 			"DynamoDB_region":               testAccDataSource_DynamoDB_region,
 			"DynamoDB_useCallerCredentials": testAccDataSource_DynamoDB_useCallerCredentials,
@@ -36,7 +36,7 @@ func TestAccAppSync_serial(t *testing.T) {
 			"Type_eventBridge":              testAccDataSource_Type_eventBridge,
 		},
 		"GraphQLAPI": {
-			acctest.CtBasic:             testAccGraphQLAPI_basic,
+			"basic":                     testAccGraphQLAPI_basic,
 			"disappears":                testAccGraphQLAPI_disappears,
 			"tags":                      testAccGraphQLAPI_tags,
 			"schema":                    testAccGraphQLAPI_schema,
@@ -72,7 +72,7 @@ func TestAccAppSync_serial(t *testing.T) {
 			"resolverCountLimit":                                  testAccGraphQLAPI_resolverCountLimit,
 		},
 		"Function": {
-			acctest.CtBasic:           testAccFunction_basic,
+			"basic":                   testAccFunction_basic,
 			"code":                    testAccFunction_code,
 			"disappears":              testAccFunction_disappears,
 			"description":             testAccFunction_description,
@@ -80,7 +80,7 @@ func TestAccAppSync_serial(t *testing.T) {
 			"sync":                    testAccFunction_syncConfig,
 		},
 		"Resolver": {
-			acctest.CtBasic:     testAccResolver_basic,
+			"basic":             testAccResolver_basic,
 			"code":              testAccResolver_code,
 			"disappears":        testAccResolver_disappears,
 			"dataSource":        testAccResolver_dataSource,
@@ -93,21 +93,21 @@ func TestAccAppSync_serial(t *testing.T) {
 			"sync":              testAccResolver_syncConfig,
 		},
 		"ApiCache": {
-			acctest.CtBasic: testAccAPICache_basic,
-			"disappears":    testAccAPICache_disappears,
+			"basic":      testAccAPICache_basic,
+			"disappears": testAccAPICache_disappears,
 		},
 		"Type": {
-			acctest.CtBasic: testAccType_basic,
-			"disappears":    testAccType_disappears,
+			"basic":      testAccType_basic,
+			"disappears": testAccType_disappears,
 		},
 		"DomainName": {
-			acctest.CtBasic: testAccDomainName_basic,
-			"disappears":    testAccDomainName_disappears,
-			"description":   testAccDomainName_description,
+			"basic":       testAccDomainName_basic,
+			"disappears":  testAccDomainName_disappears,
+			"description": testAccDomainName_description,
 		},
 		"DomainNameAssociation": {
-			acctest.CtBasic: testAccDomainNameAPIAssociation_basic,
-			"disappears":    testAccDomainNameAPIAssociation_disappears,
+			"basic":      testAccDomainNameAPIAssociation_basic,
+			"disappears": testAccDomainNameAPIAssociation_disappears,
 		},
 	}
 

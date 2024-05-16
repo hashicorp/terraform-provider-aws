@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_glue_catalog_table")
@@ -38,27 +37,27 @@ func ResourceCatalogTable() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrCatalogID: {
+			"catalog_id": {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
 				Computed: true,
 			},
-			names.AttrDatabaseName: {
+			"database_name": {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 2048),
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
@@ -67,11 +66,11 @@ func ResourceCatalogTable() *schema.Resource {
 					validation.StringDoesNotMatch(regexache.MustCompile(`[A-Z]`), "uppercase characters cannot be used"),
 				),
 			},
-			names.AttrOwner: {
+			"owner": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			names.AttrParameters: {
+			"parameters": {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -81,17 +80,17 @@ func ResourceCatalogTable() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrComment: {
+						"comment": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(0, 255),
 						},
-						names.AttrName: {
+						"name": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
 						},
-						names.AttrType: {
+						"type": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(0, 131072),
@@ -124,22 +123,22 @@ func ResourceCatalogTable() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrComment: {
+									"comment": {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(0, 255),
 									},
-									names.AttrName: {
+									"name": {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 255),
 									},
-									names.AttrParameters: {
+									"parameters": {
 										Type:     schema.TypeMap,
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
-									names.AttrType: {
+									"type": {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(0, 131072),
@@ -167,7 +166,7 @@ func ResourceCatalogTable() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						names.AttrParameters: {
+						"parameters": {
 							Type:     schema.TypeMap,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -178,12 +177,12 @@ func ResourceCatalogTable() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrName: {
+									"name": {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(1, 255),
 									},
-									names.AttrParameters: {
+									"parameters": {
 										Type:     schema.TypeMap,
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
@@ -313,7 +312,7 @@ func ResourceCatalogTable() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.StringInSlice([]string{"CREATE"}, false),
 									},
-									names.AttrVersion: {
+									"version": {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(1, 255),
@@ -331,19 +330,19 @@ func ResourceCatalogTable() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrCatalogID: {
+						"catalog_id": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						names.AttrDatabaseName: {
+						"database_name": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						names.AttrName: {
+						"name": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						names.AttrRegion: {
+						"region": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -402,8 +401,8 @@ func resourceCatalogTableCreate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
-	dbName := d.Get(names.AttrDatabaseName).(string)
-	name := d.Get(names.AttrName).(string)
+	dbName := d.Get("database_name").(string)
+	name := d.Get("name").(string)
 
 	input := &glue.CreateTableInput{
 		CatalogId:            aws.String(catalogID),
@@ -451,12 +450,12 @@ func resourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta 
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("table/%s/%s", dbName, aws.StringValue(table.Name)),
 	}.String()
-	d.Set(names.AttrARN, tableArn)
-	d.Set(names.AttrCatalogID, catalogID)
-	d.Set(names.AttrDatabaseName, dbName)
-	d.Set(names.AttrDescription, table.Description)
-	d.Set(names.AttrName, table.Name)
-	d.Set(names.AttrOwner, table.Owner)
+	d.Set("arn", tableArn)
+	d.Set("catalog_id", catalogID)
+	d.Set("database_name", dbName)
+	d.Set("description", table.Description)
+	d.Set("name", table.Name)
+	d.Set("owner", table.Owner)
 	d.Set("retention", table.Retention)
 
 	if err := d.Set("storage_descriptor", flattenStorageDescriptor(table.StorageDescriptor)); err != nil {
@@ -471,7 +470,7 @@ func resourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("view_expanded_text", table.ViewExpandedText)
 	d.Set("table_type", table.TableType)
 
-	if err := d.Set(names.AttrParameters, flattenNonManagedParameters(table)); err != nil {
+	if err := d.Set("parameters", flattenNonManagedParameters(table)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting parameters: %s", err)
 	}
 
@@ -602,14 +601,14 @@ func FindTableByName(ctx context.Context, conn *glue.Glue, catalogID, dbName, na
 
 func expandTableInput(d *schema.ResourceData) *glue.TableInput {
 	tableInput := &glue.TableInput{
-		Name: aws.String(d.Get(names.AttrName).(string)),
+		Name: aws.String(d.Get("name").(string)),
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		tableInput.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrOwner); ok {
+	if v, ok := d.GetOk("owner"); ok {
 		tableInput.Owner = aws.String(v.(string))
 	}
 
@@ -639,7 +638,7 @@ func expandTableInput(d *schema.ResourceData) *glue.TableInput {
 		tableInput.TableType = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrParameters); ok {
+	if v, ok := d.GetOk("parameters"); ok {
 		tableInput.Parameters = flex.ExpandStringMap(v.(map[string]interface{}))
 	}
 
@@ -665,7 +664,7 @@ func expandIcebergInput(s map[string]interface{}) *glue.IcebergInput_ {
 	icebergInput := &glue.IcebergInput_{
 		MetadataOperation: aws.String(iceberg["metadata_operation"].(string)),
 	}
-	if v, ok := iceberg[names.AttrVersion].(string); ok && v != "" {
+	if v, ok := iceberg["version"].(string); ok && v != "" {
 		icebergInput.Version = aws.String(v)
 	}
 	return icebergInput
@@ -738,7 +737,7 @@ func expandStorageDescriptor(l []interface{}) *glue.StorageDescriptor {
 		storageDescriptor.SkewedInfo = expandSkewedInfo(v.([]interface{}))
 	}
 
-	if v, ok := s[names.AttrParameters]; ok {
+	if v, ok := s["parameters"]; ok {
 		storageDescriptor.Parameters = flex.ExpandStringMap(v.(map[string]interface{}))
 	}
 
@@ -760,18 +759,18 @@ func expandColumns(columns []interface{}) []*glue.Column {
 		elementMap := element.(map[string]interface{})
 
 		column := &glue.Column{
-			Name: aws.String(elementMap[names.AttrName].(string)),
+			Name: aws.String(elementMap["name"].(string)),
 		}
 
-		if v, ok := elementMap[names.AttrComment]; ok {
+		if v, ok := elementMap["comment"]; ok {
 			column.Comment = aws.String(v.(string))
 		}
 
-		if v, ok := elementMap[names.AttrType]; ok {
+		if v, ok := elementMap["type"]; ok {
 			column.Type = aws.String(v.(string))
 		}
 
-		if v, ok := elementMap[names.AttrParameters]; ok {
+		if v, ok := elementMap["parameters"]; ok {
 			column.Parameters = flex.ExpandStringMap(v.(map[string]interface{}))
 		}
 
@@ -789,11 +788,11 @@ func expandSerDeInfo(l []interface{}) *glue.SerDeInfo {
 	s := l[0].(map[string]interface{})
 	serDeInfo := &glue.SerDeInfo{}
 
-	if v := s[names.AttrName]; len(v.(string)) > 0 {
+	if v := s["name"]; len(v.(string)) > 0 {
 		serDeInfo.Name = aws.String(v.(string))
 	}
 
-	if v := s[names.AttrParameters]; len(v.(map[string]interface{})) > 0 {
+	if v := s["parameters"]; len(v.(map[string]interface{})) > 0 {
 		serDeInfo.Parameters = flex.ExpandStringMap(v.(map[string]interface{}))
 	}
 
@@ -912,7 +911,7 @@ func flattenStorageDescriptor(s *glue.StorageDescriptor) []map[string]interface{
 	storageDescriptor["ser_de_info"] = flattenSerDeInfo(s.SerdeInfo)
 	storageDescriptor["bucket_columns"] = flex.FlattenStringList(s.BucketColumns)
 	storageDescriptor["sort_columns"] = flattenOrders(s.SortColumns)
-	storageDescriptor[names.AttrParameters] = aws.StringValueMap(s.Parameters)
+	storageDescriptor["parameters"] = aws.StringValueMap(s.Parameters)
 	storageDescriptor["skewed_info"] = flattenSkewedInfo(s.SkewedInfo)
 	storageDescriptor["stored_as_sub_directories"] = aws.BoolValue(s.StoredAsSubDirectories)
 
@@ -944,19 +943,19 @@ func flattenColumn(c *glue.Column) map[string]interface{} {
 	}
 
 	if v := aws.StringValue(c.Name); v != "" {
-		column[names.AttrName] = v
+		column["name"] = v
 	}
 
 	if v := aws.StringValue(c.Type); v != "" {
-		column[names.AttrType] = v
+		column["type"] = v
 	}
 
 	if v := aws.StringValue(c.Comment); v != "" {
-		column[names.AttrComment] = v
+		column["comment"] = v
 	}
 
 	if v := c.Parameters; v != nil {
-		column[names.AttrParameters] = aws.StringValueMap(v)
+		column["parameters"] = aws.StringValueMap(v)
 	}
 
 	return column
@@ -1009,10 +1008,10 @@ func flattenSerDeInfo(s *glue.SerDeInfo) []map[string]interface{} {
 	serDeInfo := make(map[string]interface{})
 
 	if v := aws.StringValue(s.Name); v != "" {
-		serDeInfo[names.AttrName] = v
+		serDeInfo["name"] = v
 	}
 
-	serDeInfo[names.AttrParameters] = aws.StringValueMap(s.Parameters)
+	serDeInfo["parameters"] = aws.StringValueMap(s.Parameters)
 
 	if v := aws.StringValue(s.SerializationLibrary); v != "" {
 		serDeInfo["serialization_library"] = v
@@ -1112,19 +1111,19 @@ func expandTableTargetTable(tfMap map[string]interface{}) *glue.TableIdentifier 
 
 	apiObject := &glue.TableIdentifier{}
 
-	if v, ok := tfMap[names.AttrCatalogID].(string); ok && v != "" {
+	if v, ok := tfMap["catalog_id"].(string); ok && v != "" {
 		apiObject.CatalogId = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrDatabaseName].(string); ok && v != "" {
+	if v, ok := tfMap["database_name"].(string); ok && v != "" {
 		apiObject.DatabaseName = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
+	if v, ok := tfMap["name"].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrRegion].(string); ok && v != "" {
+	if v, ok := tfMap["region"].(string); ok && v != "" {
 		apiObject.Region = aws.String(v)
 	}
 
@@ -1139,19 +1138,19 @@ func flattenTableTargetTable(apiObject *glue.TableIdentifier) map[string]interfa
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.CatalogId; v != nil {
-		tfMap[names.AttrCatalogID] = aws.StringValue(v)
+		tfMap["catalog_id"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.DatabaseName; v != nil {
-		tfMap[names.AttrDatabaseName] = aws.StringValue(v)
+		tfMap["database_name"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap[names.AttrName] = aws.StringValue(v)
+		tfMap["name"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Region; v != nil {
-		tfMap[names.AttrRegion] = aws.StringValue(v)
+		tfMap["region"] = aws.StringValue(v)
 	}
 
 	return tfMap

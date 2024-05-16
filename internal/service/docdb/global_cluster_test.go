@@ -40,11 +40,11 @@ func TestAccDocDBGlobalCluster_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster),
 					//This is a rds arn
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("global-cluster:%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, ""),
+					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "rds", fmt.Sprintf("global-cluster:%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "database_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
+					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
 					resource.TestCheckResourceAttr(resourceName, "global_cluster_identifier", rName),
 					resource.TestMatchResourceAttr(resourceName, "global_cluster_resource_id", regexache.MustCompile(`cluster-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
@@ -99,7 +99,7 @@ func TestAccDocDBGlobalCluster_DatabaseName(t *testing.T) {
 				Config: testAccGlobalClusterConfig_databaseName(rName, "database1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, "database1"),
+					resource.TestCheckResourceAttr(resourceName, "database_name", "database1"),
 				),
 			},
 			{
@@ -112,7 +112,7 @@ func TestAccDocDBGlobalCluster_DatabaseName(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster2),
 					testAccCheckGlobalClusterRecreated(&globalCluster1, &globalCluster2),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, "database2"),
+					resource.TestCheckResourceAttr(resourceName, "database_name", "database2"),
 				),
 			},
 		},
@@ -199,7 +199,7 @@ func TestAccDocDBGlobalCluster_EngineVersion(t *testing.T) {
 				Config: testAccGlobalClusterConfig_engineVersion(rName, "docdb", "4.0.0"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "4.0.0"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "4.0.0"),
 				),
 			},
 			{
@@ -228,7 +228,7 @@ func TestAccDocDBGlobalCluster_SourceDBClusterIdentifier_basic(t *testing.T) {
 				Config: testAccGlobalClusterConfig_sourceDBIdentifier(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster),
-					resource.TestCheckResourceAttrPair(resourceName, "source_db_cluster_identifier", clusterResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "source_db_cluster_identifier", clusterResourceName, "arn"),
 				),
 			},
 			{
@@ -258,7 +258,7 @@ func TestAccDocDBGlobalCluster_SourceDBClusterIdentifier_storageEncrypted(t *tes
 				Config: testAccGlobalClusterConfig_sourceDBIdentifierStorageEncrypted(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster),
-					resource.TestCheckResourceAttrPair(resourceName, "source_db_cluster_identifier", clusterResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "source_db_cluster_identifier", clusterResourceName, "arn"),
 				),
 			},
 			{

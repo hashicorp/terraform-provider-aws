@@ -7,20 +7,20 @@ import (
 	"context"
 	"strings"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_dynamodb_table_item", name="Table Item")
-func dataSourceTableItem() *schema.Resource {
+// @SDKDataSource("aws_dynamodb_table_item")
+func DataSourceTableItem() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTableItemRead,
 
@@ -34,7 +34,7 @@ func dataSourceTableItem() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrKey: {
+			"key": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validateTableItem,
@@ -43,7 +43,7 @@ func dataSourceTableItem() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			names.AttrTableName: {
+			"table_name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -51,46 +51,57 @@ func dataSourceTableItem() *schema.Resource {
 	}
 }
 
+const (
+	DSNameTableItem = "Table Item Data Source"
+)
+
 func dataSourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
-	tableName := d.Get(names.AttrTableName).(string)
-	key, err := expandTableItemAttributes(d.Get(names.AttrKey).(string))
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
+
+	tableName := d.Get("table_name").(string)
+	key, err := ExpandTableItemAttributes(d.Get("key").(string))
+
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	id := createTableItemDataSourceID(tableName, key)
-	input := &dynamodb.GetItemInput{
+	id := buildTableItemDataSourceID(tableName, key)
+	in := &dynamodb.GetItemInput{
 		ConsistentRead: aws.Bool(true),
 		Key:            key,
 		TableName:      aws.String(tableName),
 	}
 
 	if v, ok := d.GetOk("expression_attribute_names"); ok && len(v.(map[string]interface{})) > 0 {
-		input.ExpressionAttributeNames = flex.ExpandStringValueMap(v.(map[string]interface{}))
+		in.ExpressionAttributeNames = flex.ExpandStringMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("projection_expression"); ok {
-		input.ProjectionExpression = aws.String(v.(string))
+		in.ProjectionExpression = aws.String(v.(string))
 	}
 
-	item, err := findTableItem(ctx, conn, input)
+	out, err := conn.GetItemWithContext(ctx, in)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading DynamoDB Table Item (%s): %s", id, err)
+		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionReading, DSNameTableItem, id, err)
+	}
+
+	if out.Item == nil {
+		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionReading, DSNameTableItem, id, err)
 	}
 
 	d.SetId(id)
-	d.Set("expression_attribute_names", input.ExpressionAttributeNames)
-	d.Set("projection_expression", input.ProjectionExpression)
-	d.Set(names.AttrTableName, tableName)
 
-	itemAttrs, err := flattenTableItemAttributes(item)
+	d.Set("expression_attribute_names", aws.StringValueMap(in.ExpressionAttributeNames))
+	d.Set("projection_expression", in.ProjectionExpression)
+	d.Set("table_name", tableName)
+
+	itemAttrs, err := flattenTableItemAttributes(out.Item)
 
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionReading, DSNameTableItem, id, err)
 	}
 
 	d.Set("item", itemAttrs)
@@ -98,18 +109,13 @@ func dataSourceTableItemRead(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func createTableItemDataSourceID(tableName string, attrs map[string]awstypes.AttributeValue) string {
+func buildTableItemDataSourceID(tableName string, attrs map[string]*dynamodb.AttributeValue) string {
 	id := []string{tableName}
 
-	for k, v := range attrs {
-		switch v := v.(type) {
-		case *awstypes.AttributeValueMemberB:
-			id = append(id, k, itypes.Base64EncodeOnce(v.Value))
-		case *awstypes.AttributeValueMemberN:
-			id = append(id, v.Value)
-		case *awstypes.AttributeValueMemberS:
-			id = append(id, v.Value)
-		}
+	for key, element := range attrs {
+		id = append(id, key, itypes.Base64EncodeOnce(element.B))
+		id = append(id, aws.StringValue(element.S))
+		id = append(id, aws.StringValue(element.N))
 	}
 
 	return strings.Join(id, "|")

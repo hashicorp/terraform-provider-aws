@@ -26,23 +26,23 @@ func dataSourceVPCLink() *schema.Resource {
 		ReadWithoutTimeout: dataSourceVPCLinkRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrID: {
+			"id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrStatusMessage: {
+			"status_message": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -60,7 +60,7 @@ func dataSourceVPCLinkRead(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	name := d.Get(names.AttrName)
+	name := d.Get("name")
 	input := &apigateway.GetVpcLinksInput{}
 
 	match, err := findVPCLink(ctx, conn, input, func(v *types.VpcLink) bool {
@@ -72,10 +72,10 @@ func dataSourceVPCLinkRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	d.SetId(aws.ToString(match.Id))
-	d.Set(names.AttrDescription, match.Description)
-	d.Set(names.AttrName, match.Name)
-	d.Set(names.AttrStatus, match.Status)
-	d.Set(names.AttrStatusMessage, match.StatusMessage)
+	d.Set("description", match.Description)
+	d.Set("name", match.Name)
+	d.Set("status", match.Status)
+	d.Set("status_message", match.StatusMessage)
 	d.Set("target_arns", match.TargetArns)
 
 	setTagsOut(ctx, match.Tags)

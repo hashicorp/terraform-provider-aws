@@ -5,39 +5,38 @@ package ssm
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
-	"github.com/aws/aws-sdk-go-v2/service/ssm"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ssm_document", name="Document")
-func dataSourceDocument() *schema.Resource {
+// @SDKDataSource("aws_ssm_document")
+func DataSourceDocument() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataDocumentRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrContent: {
+			"content": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"document_format": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.DocumentFormatJson,
-				ValidateDiagFunc: enum.Validate[awstypes.DocumentFormat](),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      ssm.DocumentFormatJson,
+				ValidateFunc: validation.StringInSlice(ssm.DocumentFormat_Values(), false),
 			},
 			"document_type": {
 				Type:     schema.TypeString,
@@ -47,7 +46,7 @@ func dataSourceDocument() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -57,11 +56,11 @@ func dataSourceDocument() *schema.Resource {
 
 func dataDocumentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMClient(ctx)
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &ssm.GetDocumentInput{
-		DocumentFormat: awstypes.DocumentFormat(d.Get("document_format").(string)),
+		DocumentFormat: aws.String(d.Get("document_format").(string)),
 		Name:           aws.String(name),
 	}
 
@@ -69,13 +68,13 @@ func dataDocumentRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		input.DocumentVersion = aws.String(v.(string))
 	}
 
-	output, err := conn.GetDocument(ctx, input)
+	output, err := conn.GetDocumentWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SSM Document (%s) content: %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "reading SSM Document (%s): %s", name, err)
 	}
 
-	d.SetId(aws.ToString(output.Name))
+	d.SetId(aws.StringValue(output.Name))
 
 	if !strings.HasPrefix(name, "AWS-") {
 		arn := arn.ARN{
@@ -83,17 +82,17 @@ func dataDocumentRead(ctx context.Context, d *schema.ResourceData, meta interfac
 			Service:   "ssm",
 			Region:    meta.(*conns.AWSClient).Region,
 			AccountID: meta.(*conns.AWSClient).AccountID,
-			Resource:  "document/" + name,
+			Resource:  fmt.Sprintf("document/%s", name),
 		}.String()
-		d.Set(names.AttrARN, arn)
+		d.Set("arn", arn)
 	} else {
-		d.Set(names.AttrARN, name)
+		d.Set("arn", name)
 	}
-	d.Set(names.AttrContent, output.Content)
+	d.Set("content", output.Content)
 	d.Set("document_format", output.DocumentFormat)
 	d.Set("document_type", output.DocumentType)
 	d.Set("document_version", output.DocumentVersion)
-	d.Set(names.AttrName, output.Name)
+	d.Set("name", output.Name)
 
 	return diags
 }

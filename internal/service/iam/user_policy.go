@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_iam_user_policy", name="User Policy")
@@ -38,21 +37,21 @@ func resourceUserPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrName: {
+			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
+				ConflictsWith: []string{"name_prefix"},
 			},
-			names.AttrNamePrefix: {
+			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
+				ConflictsWith: []string{"name"},
 			},
-			names.AttrPolicy: {
+			"policy": {
 				Type:                  schema.TypeString,
 				Required:              true,
 				ValidateFunc:          verify.ValidIAMPolicyJSON,
@@ -76,13 +75,13 @@ func resourceUserPolicyPut(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	policyDoc, err := verify.LegacyPolicyNormalize(d.Get(names.AttrPolicy).(string))
+	policyDoc, err := verify.LegacyPolicyNormalize(d.Get("policy").(string))
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	userName := d.Get("user").(string)
-	policyName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	policyName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &iam.PutUserPolicyInput{
 		PolicyDocument: aws.String(policyDoc),
 		PolicyName:     aws.String(policyName),
@@ -136,14 +135,14 @@ func resourceUserPolicyRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	policyToSet, err := verify.LegacyPolicyToSet(d.Get(names.AttrPolicy).(string), policy)
+	policyToSet, err := verify.LegacyPolicyToSet(d.Get("policy").(string), policy)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set(names.AttrName, policyName)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(policyName))
-	d.Set(names.AttrPolicy, policyToSet)
+	d.Set("name", policyName)
+	d.Set("name_prefix", create.NamePrefixFromName(policyName))
+	d.Set("policy", policyToSet)
 	d.Set("user", userName)
 
 	return diags

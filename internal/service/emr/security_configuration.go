@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_emr_security_configuration", name="Security Configuration")
@@ -35,30 +34,30 @@ func resourceSecurityConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrConfiguration: {
+			"configuration": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringIsJSON,
 			},
-			names.AttrCreationDate: {
+			"creation_date": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
+				ConflictsWith: []string{"name_prefix"},
 				ValidateFunc:  validation.StringLenBetween(0, 10280),
 			},
-			names.AttrNamePrefix: {
+			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
+				ConflictsWith: []string{"name"},
 				ValidateFunc:  validation.StringLenBetween(0, 10280-id.UniqueIDSuffixLength),
 			},
 		},
@@ -70,13 +69,13 @@ func resourceSecurityConfigurationCreate(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	name := create.NewNameGenerator(
-		create.WithConfiguredName(d.Get(names.AttrName).(string)),
-		create.WithConfiguredPrefix(d.Get(names.AttrNamePrefix).(string)),
+		create.WithConfiguredName(d.Get("name").(string)),
+		create.WithConfiguredPrefix(d.Get("name_prefix").(string)),
 		create.WithDefaultPrefix("tf-emr-sc-"),
 	).Generate()
 	input := &emr.CreateSecurityConfigurationInput{
 		Name:                  aws.String(name),
-		SecurityConfiguration: aws.String(d.Get(names.AttrConfiguration).(string)),
+		SecurityConfiguration: aws.String(d.Get("configuration").(string)),
 	}
 
 	output, err := conn.CreateSecurityConfigurationWithContext(ctx, input)
@@ -106,10 +105,10 @@ func resourceSecurityConfigurationRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "reading EMR Security Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrConfiguration, output.SecurityConfiguration)
-	d.Set(names.AttrCreationDate, aws.TimeValue(output.CreationDateTime).Format(time.RFC3339))
-	d.Set(names.AttrName, output.Name)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(output.Name)))
+	d.Set("configuration", output.SecurityConfiguration)
+	d.Set("creation_date", aws.TimeValue(output.CreationDateTime).Format(time.RFC3339))
+	d.Set("name", output.Name)
+	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(output.Name)))
 
 	return diags
 }

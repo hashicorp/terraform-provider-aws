@@ -24,9 +24,9 @@ func TestAccAuditManagerAccountRegistration_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic: testAccAccountRegistration_basic,
-		"disappears":    testAccAccountRegistration_disappears,
-		"kms key":       testAccAccountRegistration_optionalKMSKey,
+		"basic":      testAccAccountRegistration_basic,
+		"disappears": testAccAccountRegistration_disappears,
+		"kms key":    testAccAccountRegistration_optionalKMSKey,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -111,21 +111,21 @@ func testAccAccountRegistration_optionalKMSKey(t *testing.T) {
 				Config: testAccAccountRegistrationConfig_KMSKey(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountRegisterationIsActive(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKey),
+					resource.TestCheckResourceAttrSet(resourceName, "kms_key"),
 				),
 			},
 			{
 				Config: testAccAccountRegistrationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountRegisterationIsActive(ctx, resourceName),
-					resource.TestCheckNoResourceAttr(resourceName, names.AttrKMSKey),
+					resource.TestCheckNoResourceAttr(resourceName, "kms_key"),
 				),
 			},
 			{
 				Config: testAccAccountRegistrationConfig_KMSKey(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountRegisterationIsActive(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKey),
+					resource.TestCheckResourceAttrSet(resourceName, "kms_key"),
 				),
 			},
 		},

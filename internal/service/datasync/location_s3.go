@@ -50,7 +50,7 @@ func resourceLocationS3() *schema.Resource {
 					ValidateFunc: verify.ValidARN,
 				},
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -100,7 +100,7 @@ func resourceLocationS3() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrURI: {
+			"uri": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -189,7 +189,7 @@ func resourceLocationS3Read(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	d.Set("agent_arns", output.AgentArns)
-	d.Set(names.AttrARN, output.LocationArn)
+	d.Set("arn", output.LocationArn)
 	s3BucketArn := fmt.Sprintf("arn:%s:s3:::%s", locationARN.Partition, s3BucketName)
 	d.Set("s3_bucket_arn", s3BucketArn)
 	if err := d.Set("s3_config", flattenS3Config(output.S3Config)); err != nil {
@@ -197,7 +197,7 @@ func resourceLocationS3Read(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	d.Set("s3_storage_class", output.S3StorageClass)
 	d.Set("subdirectory", subdirectory)
-	d.Set(names.AttrURI, uri)
+	d.Set("uri", uri)
 
 	return diags
 }

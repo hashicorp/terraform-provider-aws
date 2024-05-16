@@ -40,15 +40,15 @@ func ResourceFirewallPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			names.AttrEncryptionConfiguration: encryptionConfigurationSchema(),
+			"encryption_configuration": encryptionConfigurationSchema(),
 			"firewall_policy": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -66,7 +66,7 @@ func ResourceFirewallPolicy() *schema.Resource {
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												names.AttrKey: {
+												"key": {
 													Type:     schema.TypeString,
 													Required: true,
 													ValidateFunc: validation.All(
@@ -130,7 +130,7 @@ func ResourceFirewallPolicy() *schema.Resource {
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												names.AttrAction: {
+												"action": {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(networkfirewall.OverrideAction_Values(), false),
@@ -138,12 +138,12 @@ func ResourceFirewallPolicy() *schema.Resource {
 											},
 										},
 									},
-									names.AttrPriority: {
+									"priority": {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										ValidateFunc: validation.IntAtLeast(1),
 									},
-									names.AttrResourceARN: {
+									"resource_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
@@ -167,12 +167,12 @@ func ResourceFirewallPolicy() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrPriority: {
+									"priority": {
 										Type:         schema.TypeInt,
 										Required:     true,
 										ValidateFunc: validation.IntAtLeast(1),
 									},
-									names.AttrResourceARN: {
+									"resource_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
@@ -188,7 +188,7 @@ func ResourceFirewallPolicy() *schema.Resource {
 					},
 				},
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -217,17 +217,17 @@ func resourceFirewallPolicyCreate(ctx context.Context, d *schema.ResourceData, m
 
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &networkfirewall.CreateFirewallPolicyInput{
 		FirewallPolicy:     expandFirewallPolicy(d.Get("firewall_policy").([]interface{})),
-		FirewallPolicyName: aws.String(d.Get(names.AttrName).(string)),
+		FirewallPolicyName: aws.String(d.Get("name").(string)),
 		Tags:               getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk(names.AttrEncryptionConfiguration); ok {
+	if v, ok := d.GetOk("encryption_configuration"); ok {
 		input.EncryptionConfiguration = expandEncryptionConfiguration(v.([]interface{}))
 	}
 
@@ -260,13 +260,13 @@ func resourceFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	response := output.FirewallPolicyResponse
-	d.Set(names.AttrARN, response.FirewallPolicyArn)
-	d.Set(names.AttrDescription, response.Description)
-	d.Set(names.AttrEncryptionConfiguration, flattenEncryptionConfiguration(response.EncryptionConfiguration))
+	d.Set("arn", response.FirewallPolicyArn)
+	d.Set("description", response.Description)
+	d.Set("encryption_configuration", flattenEncryptionConfiguration(response.EncryptionConfiguration))
 	if err := d.Set("firewall_policy", flattenFirewallPolicy(output.FirewallPolicy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting firewall_policy: %s", err)
 	}
-	d.Set(names.AttrName, response.FirewallPolicyName)
+	d.Set("name", response.FirewallPolicyName)
 	d.Set("update_token", output.UpdateToken)
 
 	setTagsOut(ctx, response.Tags)
@@ -279,16 +279,16 @@ func resourceFirewallPolicyUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 
-	if d.HasChanges(names.AttrDescription, names.AttrEncryptionConfiguration, "firewall_policy") {
+	if d.HasChanges("description", "encryption_configuration", "firewall_policy") {
 		input := &networkfirewall.UpdateFirewallPolicyInput{
-			EncryptionConfiguration: expandEncryptionConfiguration(d.Get(names.AttrEncryptionConfiguration).([]interface{})),
+			EncryptionConfiguration: expandEncryptionConfiguration(d.Get("encryption_configuration").([]interface{})),
 			FirewallPolicy:          expandFirewallPolicy(d.Get("firewall_policy").([]interface{})),
 			FirewallPolicyArn:       aws.String(d.Id()),
 			UpdateToken:             aws.String(d.Get("update_token").(string)),
 		}
 
 		// Only pass non-empty description values, else API request returns an InternalServiceError
-		if v, ok := d.GetOk(names.AttrDescription); ok {
+		if v, ok := d.GetOk("description"); ok {
 			input.Description = aws.String(v.(string))
 		}
 
@@ -430,7 +430,7 @@ func expandStatefulRuleGroupOverride(l []interface{}) *networkfirewall.StatefulR
 	lRaw := l[0].(map[string]interface{})
 	override := &networkfirewall.StatefulRuleGroupOverride{}
 
-	if v, ok := lRaw[names.AttrAction].(string); ok && v != "" {
+	if v, ok := lRaw["action"].(string); ok && v != "" {
 		override.SetAction(v)
 	}
 
@@ -449,10 +449,10 @@ func expandStatefulRuleGroupReferences(l []interface{}) []*networkfirewall.State
 		}
 
 		reference := &networkfirewall.StatefulRuleGroupReference{}
-		if v, ok := tfMap[names.AttrPriority].(int); ok && v > 0 {
+		if v, ok := tfMap["priority"].(int); ok && v > 0 {
 			reference.Priority = aws.Int64(int64(v))
 		}
-		if v, ok := tfMap[names.AttrResourceARN].(string); ok && v != "" {
+		if v, ok := tfMap["resource_arn"].(string); ok && v != "" {
 			reference.ResourceArn = aws.String(v)
 		}
 
@@ -477,10 +477,10 @@ func expandStatelessRuleGroupReferences(l []interface{}) []*networkfirewall.Stat
 			continue
 		}
 		reference := &networkfirewall.StatelessRuleGroupReference{}
-		if v, ok := tfMap[names.AttrPriority].(int); ok && v > 0 {
+		if v, ok := tfMap["priority"].(int); ok && v > 0 {
 			reference.Priority = aws.Int64(int64(v))
 		}
-		if v, ok := tfMap[names.AttrResourceARN].(string); ok && v != "" {
+		if v, ok := tfMap["resource_arn"].(string); ok && v != "" {
 			reference.ResourceArn = aws.String(v)
 		}
 		references = append(references, reference)
@@ -599,7 +599,7 @@ func flattenStatefulRuleGroupOverride(override *networkfirewall.StatefulRuleGrou
 	}
 
 	m := map[string]interface{}{
-		names.AttrAction: aws.StringValue(override.Action),
+		"action": aws.StringValue(override.Action),
 	}
 
 	return []interface{}{m}
@@ -609,10 +609,10 @@ func flattenPolicyStatefulRuleGroupReference(l []*networkfirewall.StatefulRuleGr
 	references := make([]interface{}, 0, len(l))
 	for _, ref := range l {
 		reference := map[string]interface{}{
-			names.AttrResourceARN: aws.StringValue(ref.ResourceArn),
+			"resource_arn": aws.StringValue(ref.ResourceArn),
 		}
 		if ref.Priority != nil {
-			reference[names.AttrPriority] = int(aws.Int64Value(ref.Priority))
+			reference["priority"] = int(aws.Int64Value(ref.Priority))
 		}
 		if ref.Override != nil {
 			reference["override"] = flattenStatefulRuleGroupOverride(ref.Override)
@@ -628,8 +628,8 @@ func flattenPolicyStatelessRuleGroupReference(l []*networkfirewall.StatelessRule
 	references := make([]interface{}, 0, len(l))
 	for _, ref := range l {
 		reference := map[string]interface{}{
-			names.AttrPriority:    int(aws.Int64Value(ref.Priority)),
-			names.AttrResourceARN: aws.StringValue(ref.ResourceArn),
+			"priority":     int(aws.Int64Value(ref.Priority)),
+			"resource_arn": aws.StringValue(ref.ResourceArn),
 		}
 		references = append(references, reference)
 	}

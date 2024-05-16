@@ -15,25 +15,25 @@ func TestAccDetective_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Graph": {
-			acctest.CtBasic: testAccGraph_basic,
-			"disappears":    testAccGraph_disappears,
-			"tags":          testAccGraph_tags,
+			"basic":      testAccGraph_basic,
+			"disappears": testAccGraph_disappears,
+			"tags":       testAccGraph_tags,
 		},
 		"InvitationAccepter": {
-			acctest.CtBasic: testAccInvitationAccepter_basic,
+			"basic": testAccInvitationAccepter_basic,
 		},
 		"Member": {
-			acctest.CtBasic: testAccMember_basic,
-			"disappear":     testAccMember_disappears,
-			"message":       testAccMember_message,
+			"basic":     testAccMember_basic,
+			"disappear": testAccMember_disappears,
+			"message":   testAccMember_message,
 		},
 		"OrganizationAdminAccount": {
-			acctest.CtBasic: testAccOrganizationAdminAccount_basic,
-			"disappears":    testAccOrganizationAdminAccount_disappears,
-			"MultiRegion":   testAccOrganizationAdminAccount_MultiRegion,
+			"basic":       testAccOrganizationAdminAccount_basic,
+			"disappears":  testAccOrganizationAdminAccount_disappears,
+			"MultiRegion": testAccOrganizationAdminAccount_MultiRegion,
 		},
 		"OrganizationConfiguration": {
-			acctest.CtBasic: testAccOrganizationConfiguration_basic,
+			"basic": testAccOrganizationConfiguration_basic,
 		},
 	}
 

@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_location_place_index")
@@ -23,7 +22,7 @@ func DataSourcePlaceIndex() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePlaceIndexRead,
 		Schema: map[string]*schema.Schema{
-			names.AttrCreateTime: {
+			"create_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -43,7 +42,7 @@ func DataSourcePlaceIndex() *schema.Resource {
 					},
 				},
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -56,7 +55,7 @@ func DataSourcePlaceIndex() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 			"update_time": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -86,7 +85,7 @@ func dataSourcePlaceIndexRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.SetId(aws.StringValue(output.IndexName))
-	d.Set(names.AttrCreateTime, aws.TimeValue(output.CreateTime).Format(time.RFC3339))
+	d.Set("create_time", aws.TimeValue(output.CreateTime).Format(time.RFC3339))
 	d.Set("data_source", output.DataSource)
 
 	if output.DataSourceConfiguration != nil {
@@ -95,10 +94,10 @@ func dataSourcePlaceIndexRead(ctx context.Context, d *schema.ResourceData, meta 
 		d.Set("data_source_configuration", nil)
 	}
 
-	d.Set(names.AttrDescription, output.Description)
+	d.Set("description", output.Description)
 	d.Set("index_arn", output.IndexArn)
 	d.Set("index_name", output.IndexName)
-	d.Set(names.AttrTags, KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(meta.(*conns.AWSClient).IgnoreTagsConfig).Map())
+	d.Set("tags", KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(meta.(*conns.AWSClient).IgnoreTagsConfig).Map())
 	d.Set("update_time", aws.TimeValue(output.UpdateTime).Format(time.RFC3339))
 
 	return diags

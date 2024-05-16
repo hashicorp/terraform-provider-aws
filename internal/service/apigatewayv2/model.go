@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_apigatewayv2_model", name="Model")
@@ -44,17 +43,17 @@ func resourceModel() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrContentType: {
+			"content_type": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 256),
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
@@ -62,7 +61,7 @@ func resourceModel() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]+$`), "must be alphanumeric"),
 				),
 			},
-			names.AttrSchema: {
+			"schema": {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
@@ -84,15 +83,15 @@ func resourceModelCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &apigatewayv2.CreateModelInput{
 		ApiId:       aws.String(d.Get("api_id").(string)),
-		ContentType: aws.String(d.Get(names.AttrContentType).(string)),
+		ContentType: aws.String(d.Get("content_type").(string)),
 		Name:        aws.String(name),
-		Schema:      aws.String(d.Get(names.AttrSchema).(string)),
+		Schema:      aws.String(d.Get("schema").(string)),
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -123,10 +122,10 @@ func resourceModelRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway v2 Model (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrContentType, output.ContentType)
-	d.Set(names.AttrDescription, output.Description)
-	d.Set(names.AttrName, output.Name)
-	d.Set(names.AttrSchema, output.Schema)
+	d.Set("content_type", output.ContentType)
+	d.Set("description", output.Description)
+	d.Set("name", output.Name)
+	d.Set("schema", output.Schema)
 
 	return diags
 }
@@ -140,20 +139,20 @@ func resourceModelUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		ModelId: aws.String(d.Id()),
 	}
 
-	if d.HasChange(names.AttrContentType) {
-		input.ContentType = aws.String(d.Get(names.AttrContentType).(string))
+	if d.HasChange("content_type") {
+		input.ContentType = aws.String(d.Get("content_type").(string))
 	}
 
-	if d.HasChange(names.AttrDescription) {
-		input.Description = aws.String(d.Get(names.AttrDescription).(string))
+	if d.HasChange("description") {
+		input.Description = aws.String(d.Get("description").(string))
 	}
 
-	if d.HasChange(names.AttrName) {
-		input.Name = aws.String(d.Get(names.AttrName).(string))
+	if d.HasChange("name") {
+		input.Name = aws.String(d.Get("name").(string))
 	}
 
-	if d.HasChange(names.AttrSchema) {
-		input.Schema = aws.String(d.Get(names.AttrSchema).(string))
+	if d.HasChange("schema") {
+		input.Schema = aws.String(d.Get("schema").(string))
 	}
 
 	_, err := conn.UpdateModel(ctx, input)

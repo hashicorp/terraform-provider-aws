@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_iot_endpoint")
@@ -25,7 +24,7 @@ func DataSourceEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrEndpointType: {
+			"endpoint_type": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ValidateFunc: validation.StringInSlice([]string{
@@ -44,7 +43,7 @@ func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 	input := &iot.DescribeEndpointInput{}
 
-	if v, ok := d.GetOk(names.AttrEndpointType); ok {
+	if v, ok := d.GetOk("endpoint_type"); ok {
 		input.EndpointType = aws.String(v.(string))
 	}
 

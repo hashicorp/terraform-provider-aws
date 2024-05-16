@@ -166,7 +166,7 @@ func testAccCheckBasePathExists(ctx context.Context, n string, v *apigateway.Get
 		if basePath == "" {
 			basePath = "(none)"
 		}
-		output, err := tfapigateway.FindBasePathMappingByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrDomainName], basePath)
+		output, err := tfapigateway.FindBasePathMappingByTwoPartKey(ctx, conn, rs.Primary.Attributes["domain_name"], basePath)
 
 		if err != nil {
 			return err
@@ -191,7 +191,7 @@ func testAccCheckBasePathDestroy(ctx context.Context) resource.TestCheckFunc {
 			if basePath == "" {
 				basePath = "(none)"
 			}
-			_, err := tfapigateway.FindBasePathMappingByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrDomainName], basePath)
+			_, err := tfapigateway.FindBasePathMappingByTwoPartKey(ctx, conn, rs.Primary.Attributes["domain_name"], basePath)
 
 			if tfresource.NotFound(err) {
 				continue

@@ -41,11 +41,11 @@ func ResourceWorkflow() *schema.Resource {
 		),
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -78,12 +78,12 @@ func ResourceWorkflow() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															names.AttrFileSystemID: {
+															"file_system_id": {
 																Type:     schema.TypeString,
 																Optional: true,
 																ForceNew: true,
 															},
-															names.AttrPath: {
+															"path": {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ForceNew:     true,
@@ -99,12 +99,12 @@ func ResourceWorkflow() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															names.AttrBucket: {
+															"bucket": {
 																Type:     schema.TypeString,
 																Optional: true,
 																ForceNew: true,
 															},
-															names.AttrKey: {
+															"key": {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ForceNew:     true,
@@ -116,7 +116,7 @@ func ResourceWorkflow() *schema.Resource {
 											},
 										},
 									},
-									names.AttrName: {
+									"name": {
 										Type:     schema.TypeString,
 										Optional: true,
 										ForceNew: true,
@@ -151,7 +151,7 @@ func ResourceWorkflow() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrName: {
+									"name": {
 										Type:     schema.TypeString,
 										Optional: true,
 										ForceNew: true,
@@ -169,7 +169,7 @@ func ResourceWorkflow() *schema.Resource {
 											validation.StringMatch(regexache.MustCompile(`^\$\{(\w+.)+\w+\}$`), "Must be of the pattern ^\\$\\{(\\w+.)+\\w+\\}$"),
 										),
 									},
-									names.AttrTarget: {
+									"target": {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ForceNew:     true,
@@ -205,12 +205,12 @@ func ResourceWorkflow() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															names.AttrFileSystemID: {
+															"file_system_id": {
 																Type:     schema.TypeString,
 																Optional: true,
 																ForceNew: true,
 															},
-															names.AttrPath: {
+															"path": {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ForceNew:     true,
@@ -225,12 +225,12 @@ func ResourceWorkflow() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															names.AttrBucket: {
+															"bucket": {
 																Type:     schema.TypeString,
 																Optional: true,
 																ForceNew: true,
 															},
-															names.AttrKey: {
+															"key": {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ForceNew:     true,
@@ -242,7 +242,7 @@ func ResourceWorkflow() *schema.Resource {
 											},
 										},
 									},
-									names.AttrName: {
+									"name": {
 										Type:     schema.TypeString,
 										Optional: true,
 										ForceNew: true,
@@ -267,7 +267,7 @@ func ResourceWorkflow() *schema.Resource {
 											validation.StringMatch(regexache.MustCompile(`^\$\{(\w+.)+\w+\}$`), "Must be of the pattern ^\\$\\{(\\w+.)+\\w+\\}$"),
 										),
 									},
-									names.AttrType: {
+									"type": {
 										Type:         schema.TypeString,
 										Required:     true,
 										ForceNew:     true,
@@ -283,7 +283,7 @@ func ResourceWorkflow() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrName: {
+									"name": {
 										Type:     schema.TypeString,
 										Optional: true,
 										ForceNew: true,
@@ -311,7 +311,7 @@ func ResourceWorkflow() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrName: {
+									"name": {
 										Type:     schema.TypeString,
 										Optional: true,
 										ForceNew: true,
@@ -329,20 +329,20 @@ func ResourceWorkflow() *schema.Resource {
 											validation.StringMatch(regexache.MustCompile(`^\$\{(\w+.)+\w+\}$`), "Must be of the pattern ^\\$\\{(\\w+.)+\\w+\\}$"),
 										),
 									},
-									names.AttrTags: {
+									"tags": {
 										Type:     schema.TypeList,
 										Optional: true,
 										ForceNew: true,
 										MaxItems: 10,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												names.AttrKey: {
+												"key": {
 													Type:         schema.TypeString,
 													Required:     true,
 													ForceNew:     true,
 													ValidateFunc: validation.StringLenBetween(0, 128),
 												},
-												names.AttrValue: {
+												"value": {
 													Type:         schema.TypeString,
 													Required:     true,
 													ForceNew:     true,
@@ -354,7 +354,7 @@ func ResourceWorkflow() *schema.Resource {
 								},
 							},
 						},
-						names.AttrType: {
+						"type": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -391,12 +391,12 @@ func ResourceWorkflow() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															names.AttrFileSystemID: {
+															"file_system_id": {
 																Type:     schema.TypeString,
 																Optional: true,
 																ForceNew: true,
 															},
-															names.AttrPath: {
+															"path": {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ForceNew:     true,
@@ -412,12 +412,12 @@ func ResourceWorkflow() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															names.AttrBucket: {
+															"bucket": {
 																Type:     schema.TypeString,
 																Optional: true,
 																ForceNew: true,
 															},
-															names.AttrKey: {
+															"key": {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ForceNew:     true,
@@ -429,7 +429,7 @@ func ResourceWorkflow() *schema.Resource {
 											},
 										},
 									},
-									names.AttrName: {
+									"name": {
 										Type:     schema.TypeString,
 										Optional: true,
 										ForceNew: true,
@@ -464,7 +464,7 @@ func ResourceWorkflow() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrName: {
+									"name": {
 										Type:     schema.TypeString,
 										Optional: true,
 										ForceNew: true,
@@ -482,7 +482,7 @@ func ResourceWorkflow() *schema.Resource {
 											validation.StringMatch(regexache.MustCompile(`^\$\{(\w+.)+\w+\}$`), "Must be of the pattern ^\\$\\{(\\w+.)+\\w+\\}$"),
 										),
 									},
-									names.AttrTarget: {
+									"target": {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ForceNew:     true,
@@ -518,12 +518,12 @@ func ResourceWorkflow() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															names.AttrFileSystemID: {
+															"file_system_id": {
 																Type:     schema.TypeString,
 																Optional: true,
 																ForceNew: true,
 															},
-															names.AttrPath: {
+															"path": {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ForceNew:     true,
@@ -539,12 +539,12 @@ func ResourceWorkflow() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															names.AttrBucket: {
+															"bucket": {
 																Type:     schema.TypeString,
 																Optional: true,
 																ForceNew: true,
 															},
-															names.AttrKey: {
+															"key": {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ForceNew:     true,
@@ -556,7 +556,7 @@ func ResourceWorkflow() *schema.Resource {
 											},
 										},
 									},
-									names.AttrName: {
+									"name": {
 										Type:     schema.TypeString,
 										Optional: true,
 										ForceNew: true,
@@ -581,7 +581,7 @@ func ResourceWorkflow() *schema.Resource {
 											validation.StringMatch(regexache.MustCompile(`^\$\{(\w+.)+\w+\}$`), "Must be of the pattern ^\\$\\{(\\w+.)+\\w+\\}$"),
 										),
 									},
-									names.AttrType: {
+									"type": {
 										Type:         schema.TypeString,
 										Required:     true,
 										ForceNew:     true,
@@ -597,7 +597,7 @@ func ResourceWorkflow() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrName: {
+									"name": {
 										Type:     schema.TypeString,
 										Optional: true,
 										ForceNew: true,
@@ -625,7 +625,7 @@ func ResourceWorkflow() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrName: {
+									"name": {
 										Type:     schema.TypeString,
 										Optional: true,
 										ForceNew: true,
@@ -643,20 +643,20 @@ func ResourceWorkflow() *schema.Resource {
 											validation.StringMatch(regexache.MustCompile(`^\$\{(\w+.)+\w+\}$`), "Must be of the pattern ^\\$\\{(\\w+.)+\\w+\\}$"),
 										),
 									},
-									names.AttrTags: {
+									"tags": {
 										Type:     schema.TypeList,
 										Optional: true,
 										ForceNew: true,
 										MaxItems: 10,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												names.AttrKey: {
+												"key": {
 													Type:         schema.TypeString,
 													Required:     true,
 													ForceNew:     true,
 													ValidateFunc: validation.StringLenBetween(0, 128),
 												},
-												names.AttrValue: {
+												"value": {
 													Type:         schema.TypeString,
 													Required:     true,
 													ForceNew:     true,
@@ -668,7 +668,7 @@ func ResourceWorkflow() *schema.Resource {
 								},
 							},
 						},
-						names.AttrType: {
+						"type": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -691,7 +691,7 @@ func resourceWorkflowCreate(ctx context.Context, d *schema.ResourceData, meta in
 		Tags: getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -729,8 +729,8 @@ func resourceWorkflowRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading Transfer Workflow (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, output.Arn)
-	d.Set(names.AttrDescription, output.Description)
+	d.Set("arn", output.Arn)
+	d.Set("description", output.Description)
 	if err := d.Set("on_exception_steps", flattenWorkflows(output.OnExceptionSteps)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting on_exception_steps: %s", err)
 	}
@@ -782,7 +782,7 @@ func expandWorkflows(tfList []interface{}) []*transfer.WorkflowStep {
 		tfMap, _ := tfMapRaw.(map[string]interface{})
 
 		apiObject := &transfer.WorkflowStep{
-			Type: aws.String(tfMap[names.AttrType].(string)),
+			Type: aws.String(tfMap["type"].(string)),
 		}
 
 		if v, ok := tfMap["copy_step_details"].([]interface{}); ok && len(v) > 0 {
@@ -824,7 +824,7 @@ func flattenWorkflows(apiObjects []*transfer.WorkflowStep) []interface{} {
 		}
 
 		flattenedObject := map[string]interface{}{
-			names.AttrType: aws.StringValue(apiObject.Type),
+			"type": aws.StringValue(apiObject.Type),
 		}
 
 		if apiObject.CopyStepDetails != nil {
@@ -866,7 +866,7 @@ func expandCopyStepDetails(tfMap []interface{}) *transfer.CopyStepDetails {
 		apiObject.DestinationFileLocation = expandDestinationFileLocation(v)
 	}
 
-	if v, ok := tfMapRaw[names.AttrName].(string); ok && v != "" {
+	if v, ok := tfMapRaw["name"].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
@@ -893,7 +893,7 @@ func flattenCopyStepDetails(apiObject *transfer.CopyStepDetails) []interface{} {
 	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap[names.AttrName] = aws.StringValue(v)
+		tfMap["name"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.OverwriteExisting; v != nil {
@@ -916,7 +916,7 @@ func expandCustomStepDetails(tfMap []interface{}) *transfer.CustomStepDetails {
 
 	apiObject := &transfer.CustomStepDetails{}
 
-	if v, ok := tfMapRaw[names.AttrName].(string); ok && v != "" {
+	if v, ok := tfMapRaw["name"].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
@@ -924,7 +924,7 @@ func expandCustomStepDetails(tfMap []interface{}) *transfer.CustomStepDetails {
 		apiObject.SourceFileLocation = aws.String(v)
 	}
 
-	if v, ok := tfMapRaw[names.AttrTarget].(string); ok && v != "" {
+	if v, ok := tfMapRaw["target"].(string); ok && v != "" {
 		apiObject.Target = aws.String(v)
 	}
 
@@ -943,7 +943,7 @@ func flattenCustomStepDetails(apiObject *transfer.CustomStepDetails) []interface
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Name; v != nil {
-		tfMap[names.AttrName] = aws.StringValue(v)
+		tfMap["name"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.SourceFileLocation; v != nil {
@@ -951,7 +951,7 @@ func flattenCustomStepDetails(apiObject *transfer.CustomStepDetails) []interface
 	}
 
 	if v := apiObject.Target; v != nil {
-		tfMap[names.AttrTarget] = aws.StringValue(v)
+		tfMap["target"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.TimeoutSeconds; v != nil {
@@ -974,7 +974,7 @@ func expandDecryptStepDetails(tfMap []interface{}) *transfer.DecryptStepDetails 
 		apiObject.DestinationFileLocation = expandDestinationFileLocation(v)
 	}
 
-	if v, ok := tfMapRaw[names.AttrName].(string); ok && v != "" {
+	if v, ok := tfMapRaw["name"].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
@@ -986,7 +986,7 @@ func expandDecryptStepDetails(tfMap []interface{}) *transfer.DecryptStepDetails 
 		apiObject.SourceFileLocation = aws.String(v)
 	}
 
-	if v, ok := tfMapRaw[names.AttrType].(string); ok && v != "" {
+	if v, ok := tfMapRaw["type"].(string); ok && v != "" {
 		apiObject.Type = aws.String(v)
 	}
 
@@ -1005,7 +1005,7 @@ func flattenDecryptStepDetails(apiObject *transfer.DecryptStepDetails) []interfa
 	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap[names.AttrName] = aws.StringValue(v)
+		tfMap["name"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.OverwriteExisting; v != nil {
@@ -1017,7 +1017,7 @@ func flattenDecryptStepDetails(apiObject *transfer.DecryptStepDetails) []interfa
 	}
 
 	if v := apiObject.Type; v != nil {
-		tfMap[names.AttrType] = aws.StringValue(v)
+		tfMap["type"] = aws.StringValue(v)
 	}
 
 	return []interface{}{tfMap}
@@ -1032,7 +1032,7 @@ func expandDeleteStepDetails(tfMap []interface{}) *transfer.DeleteStepDetails {
 
 	apiObject := &transfer.DeleteStepDetails{}
 
-	if v, ok := tfMapRaw[names.AttrName].(string); ok && v != "" {
+	if v, ok := tfMapRaw["name"].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
@@ -1051,7 +1051,7 @@ func flattenDeleteStepDetails(apiObject *transfer.DeleteStepDetails) []interface
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Name; v != nil {
-		tfMap[names.AttrName] = aws.StringValue(v)
+		tfMap["name"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.SourceFileLocation; v != nil {
@@ -1070,7 +1070,7 @@ func expandTagStepDetails(tfMap []interface{}) *transfer.TagStepDetails {
 
 	apiObject := &transfer.TagStepDetails{}
 
-	if v, ok := tfMapRaw[names.AttrName].(string); ok && v != "" {
+	if v, ok := tfMapRaw["name"].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
@@ -1078,7 +1078,7 @@ func expandTagStepDetails(tfMap []interface{}) *transfer.TagStepDetails {
 		apiObject.SourceFileLocation = aws.String(v)
 	}
 
-	if v, ok := tfMapRaw[names.AttrTags].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMapRaw["tags"].([]interface{}); ok && len(v) > 0 {
 		apiObject.Tags = expandS3Tags(v)
 	}
 
@@ -1093,7 +1093,7 @@ func flattenTagStepDetails(apiObject *transfer.TagStepDetails) []interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Name; v != nil {
-		tfMap[names.AttrName] = aws.StringValue(v)
+		tfMap["name"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.SourceFileLocation; v != nil {
@@ -1101,7 +1101,7 @@ func flattenTagStepDetails(apiObject *transfer.TagStepDetails) []interface{} {
 	}
 
 	if apiObject.Tags != nil {
-		tfMap[names.AttrTags] = flattenS3Tags(apiObject.Tags)
+		tfMap["tags"] = flattenS3Tags(apiObject.Tags)
 	}
 
 	return []interface{}{tfMap}
@@ -1154,11 +1154,11 @@ func expandEFSFileLocation(tfMap []interface{}) *transfer.EfsFileLocation {
 
 	apiObject := &transfer.EfsFileLocation{}
 
-	if v, ok := tfMapRaw[names.AttrFileSystemID].(string); ok && v != "" {
+	if v, ok := tfMapRaw["file_system_id"].(string); ok && v != "" {
 		apiObject.FileSystemId = aws.String(v)
 	}
 
-	if v, ok := tfMapRaw[names.AttrPath].(string); ok && v != "" {
+	if v, ok := tfMapRaw["path"].(string); ok && v != "" {
 		apiObject.Path = aws.String(v)
 	}
 
@@ -1173,11 +1173,11 @@ func flattenEFSFileLocation(apiObject *transfer.EfsFileLocation) []interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.FileSystemId; v != nil {
-		tfMap[names.AttrFileSystemID] = aws.StringValue(v)
+		tfMap["file_system_id"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Path; v != nil {
-		tfMap[names.AttrPath] = aws.StringValue(v)
+		tfMap["path"] = aws.StringValue(v)
 	}
 
 	return []interface{}{tfMap}
@@ -1192,11 +1192,11 @@ func expandS3FileLocation(tfMap []interface{}) *transfer.S3InputFileLocation {
 
 	apiObject := &transfer.S3InputFileLocation{}
 
-	if v, ok := tfMapRaw[names.AttrBucket].(string); ok && v != "" {
+	if v, ok := tfMapRaw["bucket"].(string); ok && v != "" {
 		apiObject.Bucket = aws.String(v)
 	}
 
-	if v, ok := tfMapRaw[names.AttrKey].(string); ok && v != "" {
+	if v, ok := tfMapRaw["key"].(string); ok && v != "" {
 		apiObject.Key = aws.String(v)
 	}
 
@@ -1211,11 +1211,11 @@ func flattenS3FileLocation(apiObject *transfer.S3InputFileLocation) []interface{
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Bucket; v != nil {
-		tfMap[names.AttrBucket] = aws.StringValue(v)
+		tfMap["bucket"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Key; v != nil {
-		tfMap[names.AttrKey] = aws.StringValue(v)
+		tfMap["key"] = aws.StringValue(v)
 	}
 
 	return []interface{}{tfMap}
@@ -1233,11 +1233,11 @@ func expandS3Tags(tfList []interface{}) []*transfer.S3Tag {
 
 		apiObject := &transfer.S3Tag{}
 
-		if v, ok := tfMap[names.AttrKey].(string); ok && v != "" {
+		if v, ok := tfMap["key"].(string); ok && v != "" {
 			apiObject.Key = aws.String(v)
 		}
 
-		if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
+		if v, ok := tfMap["value"].(string); ok && v != "" {
 			apiObject.Value = aws.String(v)
 		}
 
@@ -1262,11 +1262,11 @@ func flattenS3Tags(apiObjects []*transfer.S3Tag) []interface{} {
 		flattenedObject := map[string]interface{}{}
 
 		if v := apiObject.Key; v != nil {
-			flattenedObject[names.AttrKey] = aws.StringValue(v)
+			flattenedObject["key"] = aws.StringValue(v)
 		}
 
 		if v := apiObject.Value; v != nil {
-			flattenedObject[names.AttrValue] = aws.StringValue(v)
+			flattenedObject["value"] = aws.StringValue(v)
 		}
 
 		tfList = append(tfList, flattenedObject)

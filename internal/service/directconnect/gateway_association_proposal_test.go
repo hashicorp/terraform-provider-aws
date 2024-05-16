@@ -40,11 +40,11 @@ func TestAccDirectConnectGatewayAssociationProposal_basicVPNGateway(t *testing.T
 				Config: testAccGatewayAssociationProposalConfig_basicVPN(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayAssociationProposalExists(ctx, resourceName, &proposal),
-					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", acctest.Ct1),
-					resource.TestCheckResourceAttrPair(resourceName, "associated_gateway_id", resourceNameVgw, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "associated_gateway_id", resourceNameVgw, "id"),
 					acctest.CheckResourceAttrAccountID(resourceName, "associated_gateway_owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "associated_gateway_type", "virtualPrivateGateway"),
-					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, "id"),
 				),
 			},
 			{
@@ -76,13 +76,13 @@ func TestAccDirectConnectGatewayAssociationProposal_basicTransitGateway(t *testi
 				Config: testAccGatewayAssociationProposalConfig_basicTransit(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayAssociationProposalExists(ctx, resourceName, &proposal),
-					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.0/30"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.8/30"),
-					resource.TestCheckResourceAttrPair(resourceName, "associated_gateway_id", resourceNameTgw, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "associated_gateway_id", resourceNameTgw, "id"),
 					acctest.CheckResourceAttrAccountID(resourceName, "associated_gateway_owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "associated_gateway_type", "transitGateway"),
-					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "dx_gateway_id", resourceNameDxGw, "id"),
 				),
 			},
 			{
@@ -211,7 +211,7 @@ func TestAccDirectConnectGatewayAssociationProposal_allowedPrefixes(t *testing.T
 				Config: testAccGatewayAssociationProposalConfig_allowedPrefixes1(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayAssociationProposalExists(ctx, resourceName, &proposal1),
-					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "1"),
 				),
 			},
 			{
@@ -225,7 +225,7 @@ func TestAccDirectConnectGatewayAssociationProposal_allowedPrefixes(t *testing.T
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayAssociationProposalExists(ctx, resourceName, &proposal2),
 					testAccCheckGatewayAssociationProposalRecreated(&proposal1, &proposal2),
-					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "2"),
 				),
 			},
 		},

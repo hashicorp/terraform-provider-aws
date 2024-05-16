@@ -26,7 +26,7 @@ func TestAccS3ControlAccountPublicAccessBlock_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"PublicAccessBlock": {
-			acctest.CtBasic:         testAccAccountPublicAccessBlock_basic,
+			"basic":                 testAccAccountPublicAccessBlock_basic,
 			"disappears":            testAccAccountPublicAccessBlock_disappears,
 			"AccountId":             testAccAccountPublicAccessBlock_AccountID,
 			"BlockPublicAcls":       testAccAccountPublicAccessBlock_BlockPublicACLs,
@@ -55,7 +55,7 @@ func testAccAccountPublicAccessBlock_basic(t *testing.T) {
 				Config: testAccAccountPublicAccessBlockConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
+					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
 					resource.TestCheckResourceAttr(resourceName, "block_public_acls", "false"),
 					resource.TestCheckResourceAttr(resourceName, "block_public_policy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "ignore_public_acls", "false"),
@@ -109,7 +109,7 @@ func testAccAccountPublicAccessBlock_AccountID(t *testing.T) {
 				Config: testAccAccountPublicAccessBlockConfig_id(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
+					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
 				),
 			},
 			{

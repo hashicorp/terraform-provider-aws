@@ -21,9 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 )
 
 // @SDKResource("aws_accessanalyzer_archive_rule")
@@ -44,7 +43,7 @@ func resourceArchiveRule() *schema.Resource {
 				ForceNew: true,
 				Required: true,
 			},
-			names.AttrFilter: {
+			"filter": {
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem: &schema.Resource{
@@ -103,7 +102,7 @@ func resourceArchiveRuleCreate(ctx context.Context, d *schema.ResourceData, meta
 		RuleName:     aws.String(ruleName),
 	}
 
-	if v, ok := d.GetOk(names.AttrFilter); ok {
+	if v, ok := d.GetOk("filter"); ok {
 		input.Filter = expandFilter(v.(*schema.Set))
 	}
 
@@ -142,7 +141,7 @@ func resourceArchiveRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.Set("analyzer_name", analyzerName)
-	d.Set(names.AttrFilter, flattenFilter(archiveRule.Filter))
+	d.Set("filter", flattenFilter(archiveRule.Filter))
 	d.Set("rule_name", archiveRule.RuleName)
 
 	return diags
@@ -165,8 +164,8 @@ func resourceArchiveRuleUpdate(ctx context.Context, d *schema.ResourceData, meta
 		RuleName:     aws.String(ruleName),
 	}
 
-	if d.HasChanges(names.AttrFilter) {
-		input.Filter = expandFilter(d.Get(names.AttrFilter).(*schema.Set))
+	if d.HasChanges("filter") {
+		input.Filter = expandFilter(d.Get("filter").(*schema.Set))
 	}
 
 	_, err = conn.UpdateArchiveRule(ctx, input)
@@ -283,7 +282,7 @@ func expandFilter(l *schema.Set) map[string]types.Criterion {
 			}
 		}
 		if v, ok := value.(map[string]interface{})["exists"]; ok {
-			if val, null, _ := nullable.Bool(v.(string)).ValueBool(); !null {
+			if val, null, _ := nullable.Bool(v.(string)).Value(); !null {
 				c.Exists = aws.Bool(val)
 			}
 		}

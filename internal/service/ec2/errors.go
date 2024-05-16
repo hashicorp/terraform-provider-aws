@@ -7,12 +7,9 @@ import (
 	"errors"
 	"fmt"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
 const (
@@ -42,7 +39,6 @@ const (
 	errCodeInvalidConversionTaskIdMalformed                  = "InvalidConversionTaskId.Malformed"
 	errCodeInvalidCustomerGatewayIDNotFound                  = "InvalidCustomerGatewayID.NotFound"
 	errCodeInvalidDHCPOptionIDNotFound                       = "InvalidDhcpOptionID.NotFound"
-	errCodeInvalidDHCPOptionsIDNotFound                      = "InvalidDhcpOptionsID.NotFound"
 	errCodeInvalidFleetIdNotFound                            = "InvalidFleetId.NotFound"
 	errCodeInvalidFlowLogIdNotFound                          = "InvalidFlowLogId.NotFound"
 	errCodeInvalidGatewayIDNotFound                          = "InvalidGatewayID.NotFound"
@@ -118,7 +114,6 @@ const (
 	errCodeInvalidVPNConnectionIDNotFound                    = "InvalidVpnConnectionID.NotFound"
 	errCodeInvalidVPNGatewayAttachmentNotFound               = "InvalidVpnGatewayAttachment.NotFound"
 	errCodeInvalidVPNGatewayIDNotFound                       = "InvalidVpnGatewayID.NotFound"
-	errCodeIPAMOrganizationAccountNotRegistered              = "IpamOrganizationAccountNotRegistered"
 	errCodeNatGatewayNotFound                                = "NatGatewayNotFound"
 	errCodeNetworkACLEntryAlreadyExists                      = "NetworkAclEntryAlreadyExists"
 	errCodeOperationNotPermitted                             = "OperationNotPermitted"
@@ -190,38 +185,6 @@ func UnsuccessfulItemsError(apiObjects []*ec2.UnsuccessfulItem) error {
 
 		if err := UnsuccessfulItemError(apiObject.Error); err != nil {
 			errs = append(errs, fmt.Errorf("%s: %w", aws.StringValue(apiObject.ResourceId), err))
-		}
-	}
-
-	return errors.Join(errs...)
-}
-
-func enableFastSnapshotRestoreStateItemError(apiObject *awstypes.EnableFastSnapshotRestoreStateError) error {
-	if apiObject == nil {
-		return nil
-	}
-
-	return errs.APIError(aws_sdkv2.ToString(apiObject.Code), aws_sdkv2.ToString(apiObject.Message))
-}
-
-func enableFastSnapshotRestoreStateItemsError(apiObjects []awstypes.EnableFastSnapshotRestoreStateErrorItem) error {
-	var errs []error
-
-	for _, apiObject := range apiObjects {
-		if err := enableFastSnapshotRestoreStateItemError(apiObject.Error); err != nil {
-			errs = append(errs, fmt.Errorf("%s: %w", aws_sdkv2.ToString(apiObject.AvailabilityZone), err))
-		}
-	}
-
-	return errors.Join(errs...)
-}
-
-func enableFastSnapshotRestoreItemsError(apiObjects []awstypes.EnableFastSnapshotRestoreErrorItem) error {
-	var errs []error
-
-	for _, apiObject := range apiObjects {
-		if err := enableFastSnapshotRestoreStateItemsError(apiObject.FastSnapshotRestoreStateErrors); err != nil {
-			errs = append(errs, fmt.Errorf("%s: %w", aws_sdkv2.ToString(apiObject.SnapshotId), err))
 		}
 	}
 

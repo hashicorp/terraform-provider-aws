@@ -42,6 +42,7 @@ import (
 // @FrameworkResource(name="User Pool Client")
 func newUserPoolClientResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &userPoolClientResource{}
+	r.SetMigratedFromPluginSDK(true)
 
 	return r, nil
 }
@@ -121,7 +122,7 @@ func (r *userPoolClientResource) Schema(ctx context.Context, request resource.Sc
 					setplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrClientSecret: schema.StringAttribute{
+			"client_secret": schema.StringAttribute{
 				Computed:  true,
 				Sensitive: true,
 				PlanModifiers: []planmodifier.String{
@@ -169,7 +170,7 @@ func (r *userPoolClientResource) Schema(ctx context.Context, request resource.Sc
 					boolplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrID: framework.IDAttribute(),
+			"id": framework.IDAttribute(),
 			"id_token_validity": schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
@@ -191,7 +192,7 @@ func (r *userPoolClientResource) Schema(ctx context.Context, request resource.Sc
 					setplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrName: schema.StringAttribute{
+			"name": schema.StringAttribute{
 				Required:   true,
 				Validators: userPoolClientNameValidator,
 			},
@@ -264,8 +265,8 @@ func (r *userPoolClientResource) Schema(ctx context.Context, request resource.Sc
 									path.MatchRelative().AtParent().AtName("application_id"),
 								),
 								stringvalidator.ConflictsWith(
-									path.MatchRelative().AtParent().AtName(names.AttrExternalID),
-									path.MatchRelative().AtParent().AtName(names.AttrRoleARN),
+									path.MatchRelative().AtParent().AtName("external_id"),
+									path.MatchRelative().AtParent().AtName("role_arn"),
 								),
 							},
 						},
@@ -273,15 +274,15 @@ func (r *userPoolClientResource) Schema(ctx context.Context, request resource.Sc
 							Optional: true,
 							Validators: []validator.String{
 								stringvalidator.AlsoRequires(
-									path.MatchRelative().AtParent().AtName(names.AttrExternalID),
-									path.MatchRelative().AtParent().AtName(names.AttrRoleARN),
+									path.MatchRelative().AtParent().AtName("external_id"),
+									path.MatchRelative().AtParent().AtName("role_arn"),
 								),
 							},
 						},
-						names.AttrExternalID: schema.StringAttribute{
+						"external_id": schema.StringAttribute{
 							Optional: true,
 						},
-						names.AttrRoleARN: schema.StringAttribute{
+						"role_arn": schema.StringAttribute{
 							CustomType: fwtypes.ARNType,
 							Optional:   true,
 							Computed:   true,
@@ -541,7 +542,7 @@ func (r *userPoolClientResource) Delete(ctx context.Context, request resource.De
 	params := state.deleteInput(ctx)
 
 	tflog.Debug(ctx, "deleting Cognito User Pool Client", map[string]interface{}{
-		names.AttrID:   state.ID.ValueString(),
+		"id":           state.ID.ValueString(),
 		"user_pool_id": state.UserPoolID.ValueString(),
 	})
 
@@ -569,7 +570,7 @@ func (r *userPoolClientResource) ImportState(ctx context.Context, request resour
 	}
 	userPoolId := parts[0]
 	clientId := parts[1]
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), clientId)...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("id"), clientId)...)
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("user_pool_id"), userPoolId)...)
 }
 
@@ -737,8 +738,8 @@ func flattenAnaylticsConfiguration(ctx context.Context, ac *cognitoidentityprovi
 	attrs := map[string]attr.Value{}
 	attrs["application_arn"] = flex.StringToFrameworkARN(ctx, ac.ApplicationArn)
 	attrs["application_id"] = flex.StringToFramework(ctx, ac.ApplicationId)
-	attrs[names.AttrExternalID] = flex.StringToFramework(ctx, ac.ExternalId)
-	attrs[names.AttrRoleARN] = flex.StringToFrameworkARN(ctx, ac.RoleArn)
+	attrs["external_id"] = flex.StringToFramework(ctx, ac.ExternalId)
+	attrs["role_arn"] = flex.StringToFrameworkARN(ctx, ac.RoleArn)
 	attrs["user_data_shared"] = flex.BoolToFramework(ctx, ac.UserDataShared)
 
 	val := types.ObjectValueMust(attributeTypes, attrs)

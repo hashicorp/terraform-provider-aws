@@ -23,11 +23,11 @@ func dataSourceDomainName() *schema.Resource {
 		ReadWithoutTimeout: dataSourceDomainNameRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrCertificateARN: {
+			"certificate_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -47,7 +47,7 @@ func dataSourceDomainName() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDomainName: {
+			"domain_name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -93,7 +93,7 @@ func dataSourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	domainName := d.Get(names.AttrDomainName).(string)
+	domainName := d.Get("domain_name").(string)
 	output, err := findDomainByName(ctx, conn, domainName)
 
 	if err != nil {
@@ -101,15 +101,15 @@ func dataSourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.SetId(aws.ToString(output.DomainName))
-	d.Set(names.AttrARN, domainNameARN(meta.(*conns.AWSClient), d.Id()))
-	d.Set(names.AttrCertificateARN, output.CertificateArn)
+	d.Set("arn", domainNameARN(meta.(*conns.AWSClient), d.Id()))
+	d.Set("certificate_arn", output.CertificateArn)
 	d.Set("certificate_name", output.CertificateName)
 	if output.CertificateUploadDate != nil {
 		d.Set("certificate_upload_date", output.CertificateUploadDate.Format(time.RFC3339))
 	}
 	d.Set("cloudfront_domain_name", output.DistributionDomainName)
 	d.Set("cloudfront_zone_id", meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID(ctx))
-	d.Set(names.AttrDomainName, output.DomainName)
+	d.Set("domain_name", output.DomainName)
 	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(output.EndpointConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoint_configuration: %s", err)
 	}

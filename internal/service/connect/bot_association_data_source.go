@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_connect_bot_association")
@@ -20,7 +19,7 @@ func DataSourceBotAssociation() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceBotAssociationRead,
 		Schema: map[string]*schema.Schema{
-			names.AttrInstanceID: {
+			"instance_id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -35,7 +34,7 @@ func DataSourceBotAssociation() *schema.Resource {
 							Optional: true,
 							Computed: true,
 						},
-						names.AttrName: {
+						"name": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(2, 50),
@@ -52,7 +51,7 @@ func dataSourceBotAssociationRead(ctx context.Context, d *schema.ResourceData, m
 
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
-	instanceID := d.Get(names.AttrInstanceID).(string)
+	instanceID := d.Get("instance_id").(string)
 
 	var name, region string
 	if v, ok := d.GetOk("lex_bot"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -72,7 +71,7 @@ func dataSourceBotAssociationRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 
-	d.Set(names.AttrInstanceID, instanceID)
+	d.Set("instance_id", instanceID)
 	if err := d.Set("lex_bot", flattenLexBot(lexBot)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting lex_bot: %s", err)
 	}

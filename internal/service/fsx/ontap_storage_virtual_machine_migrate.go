@@ -15,11 +15,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func resourceONTAPStorageVirtualMachineV0() *schema.Resource {
+func ResourceONTAPStorageVirtualMachineV0() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 0,
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -53,7 +53,7 @@ func resourceONTAPStorageVirtualMachineV0() *schema.Resource {
 											ValidateFunc: validation.IsIPAddress,
 										},
 									},
-									names.AttrDomainName: {
+									"domain_name": {
 										Type:         schema.TypeString,
 										Required:     true,
 										ForceNew:     true,
@@ -80,13 +80,13 @@ func resourceONTAPStorageVirtualMachineV0() *schema.Resource {
 										ValidateFunc:  validation.StringLenBetween(1, 2000),
 										ConflictsWith: []string{"active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguidshed_name"},
 									},
-									names.AttrPassword: {
+									"password": {
 										Type:         schema.TypeString,
 										Sensitive:    true,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 256),
 									},
-									names.AttrUsername: {
+									"username": {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 256),
@@ -97,7 +97,7 @@ func resourceONTAPStorageVirtualMachineV0() *schema.Resource {
 					},
 				},
 			},
-			names.AttrEndpoints: {
+			"endpoints": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -107,7 +107,7 @@ func resourceONTAPStorageVirtualMachineV0() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrDNSName: {
+									"dns_name": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -124,7 +124,7 @@ func resourceONTAPStorageVirtualMachineV0() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrDNSName: {
+									"dns_name": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -141,7 +141,7 @@ func resourceONTAPStorageVirtualMachineV0() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrDNSName: {
+									"dns_name": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -158,7 +158,7 @@ func resourceONTAPStorageVirtualMachineV0() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrDNSName: {
+									"dns_name": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -173,12 +173,12 @@ func resourceONTAPStorageVirtualMachineV0() *schema.Resource {
 					},
 				},
 			},
-			names.AttrFileSystemID: {
+			"file_system_id": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(11, 21),
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -210,7 +210,7 @@ func resourceONTAPStorageVirtualMachineV0() *schema.Resource {
 	}
 }
 
-func resourceONTAPStorageVirtualMachineStateUpgradeV0(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func ResourceONTAPStorageVirtualMachineStateUpgradeV0(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
 	log.Printf("[DEBUG] Attributes before migration: %#v", rawState)
 
 	rawState["active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguished_name"] = rawState["active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguidshed_name"]

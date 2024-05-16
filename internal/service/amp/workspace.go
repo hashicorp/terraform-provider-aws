@@ -41,28 +41,28 @@ func resourceWorkspace() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			// Once set, alias cannot be unset.
-			customdiff.ForceNewIfChange(names.AttrAlias, func(_ context.Context, old, new, meta interface{}) bool {
+			customdiff.ForceNewIfChange("alias", func(_ context.Context, old, new, meta interface{}) bool {
 				return old.(string) != "" && new.(string) == ""
 			}),
 			verify.SetTagsDiff,
 		),
 
 		Schema: map[string]*schema.Schema{
-			names.AttrAlias: {
+			"alias": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrKMSKeyARN: {
+			"kms_key_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			names.AttrLoggingConfiguration: {
+			"logging_configuration": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
@@ -94,11 +94,11 @@ func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 		Tags: getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk(names.AttrAlias); ok {
+	if v, ok := d.GetOk("alias"); ok {
 		input.Alias = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrKMSKeyARN); ok {
+	if v, ok := d.GetOk("kms_key_arn"); ok {
 		input.KmsKeyArn = aws.String(v.(string))
 	}
 
@@ -114,7 +114,7 @@ func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "waiting for Prometheus Workspace (%s) create: %s", d.Id(), err)
 	}
 
-	if v, ok := d.GetOk(names.AttrLoggingConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk("logging_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		tfMap := v.([]interface{})[0].(map[string]interface{})
 		input := &amp.CreateLoggingConfigurationInput{
 			LogGroupArn: aws.String(tfMap["log_group_arn"].(string)),
@@ -151,20 +151,20 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "reading Prometheus Workspace (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrAlias, ws.Alias)
+	d.Set("alias", ws.Alias)
 	arn := aws.ToString(ws.Arn)
-	d.Set(names.AttrARN, arn)
-	d.Set(names.AttrKMSKeyARN, ws.KmsKeyArn)
+	d.Set("arn", arn)
+	d.Set("kms_key_arn", ws.KmsKeyArn)
 	d.Set("prometheus_endpoint", ws.PrometheusEndpoint)
 
 	loggingConfiguration, err := findLoggingConfigurationByWorkspaceID(ctx, conn, d.Id())
 
 	if tfresource.NotFound(err) {
-		d.Set(names.AttrLoggingConfiguration, nil)
+		d.Set("logging_configuration", nil)
 	} else if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Prometheus Workspace (%s) logging configuration: %s", d.Id(), err)
 	} else {
-		if err := d.Set(names.AttrLoggingConfiguration, []interface{}{flattenLoggingConfigurationMetadata(loggingConfiguration)}); err != nil {
+		if err := d.Set("logging_configuration", []interface{}{flattenLoggingConfigurationMetadata(loggingConfiguration)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting logging_configuration: %s", err)
 		}
 	}
@@ -176,9 +176,9 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
-	if d.HasChange(names.AttrAlias) {
+	if d.HasChange("alias") {
 		input := &amp.UpdateWorkspaceAliasInput{
-			Alias:       aws.String(d.Get(names.AttrAlias).(string)),
+			Alias:       aws.String(d.Get("alias").(string)),
 			WorkspaceId: aws.String(d.Id()),
 		}
 
@@ -193,11 +193,11 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 	}
 
-	if d.HasChange(names.AttrLoggingConfiguration) {
-		if v, ok := d.GetOk(names.AttrLoggingConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if d.HasChange("logging_configuration") {
+		if v, ok := d.GetOk("logging_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			tfMap := v.([]interface{})[0].(map[string]interface{})
 
-			if o, _ := d.GetChange(names.AttrLoggingConfiguration); o == nil || len(o.([]interface{})) == 0 || o.([]interface{})[0] == nil {
+			if o, _ := d.GetChange("logging_configuration"); o == nil || len(o.([]interface{})) == 0 || o.([]interface{})[0] == nil {
 				input := &amp.CreateLoggingConfigurationInput{
 					LogGroupArn: aws.String(tfMap["log_group_arn"].(string)),
 					WorkspaceId: aws.String(d.Id()),

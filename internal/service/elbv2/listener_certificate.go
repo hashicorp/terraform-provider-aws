@@ -41,7 +41,7 @@ func ResourceListenerCertificate() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			names.AttrCertificateARN: {
+			"certificate_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -61,7 +61,7 @@ func resourceListenerCertificateCreate(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
 	listenerArn := d.Get("listener_arn").(string)
-	certificateArn := d.Get(names.AttrCertificateARN).(string)
+	certificateArn := d.Get("certificate_arn").(string)
 
 	params := &elasticloadbalancingv2.AddListenerCertificatesInput{
 		ListenerArn: aws.String(listenerArn),
@@ -138,7 +138,7 @@ func resourceListenerCertificateRead(ctx context.Context, d *schema.ResourceData
 		return create.AppendDiagError(diags, names.ELBV2, create.ErrActionReading, ResNameListenerCertificate, d.Id(), err)
 	}
 
-	d.Set(names.AttrCertificateARN, certificateArn)
+	d.Set("certificate_arn", certificateArn)
 	d.Set("listener_arn", listenerArn)
 
 	return diags
@@ -148,7 +148,7 @@ func resourceListenerCertificateDelete(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
-	certificateArn := d.Get(names.AttrCertificateARN).(string)
+	certificateArn := d.Get("certificate_arn").(string)
 	listenerArn := d.Get("listener_arn").(string)
 
 	log.Printf("[DEBUG] Deleting certificate: %s of listener: %s", certificateArn, listenerArn)

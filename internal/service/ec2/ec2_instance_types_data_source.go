@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ec2_instance_types")
@@ -26,7 +25,7 @@ func DataSourceInstanceTypes() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrFilter: customFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"instance_types": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -42,7 +41,7 @@ func dataSourceInstanceTypesRead(ctx context.Context, d *schema.ResourceData, me
 
 	input := &ec2.DescribeInstanceTypesInput{}
 
-	if v, ok := d.GetOk(names.AttrFilter); ok {
+	if v, ok := d.GetOk("filter"); ok {
 		input.Filters = newCustomFilterList(v.(*schema.Set))
 	}
 

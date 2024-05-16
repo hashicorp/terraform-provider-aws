@@ -51,11 +51,11 @@ func (r *resourcePolicyStore) Metadata(_ context.Context, request resource.Metad
 func (r *resourcePolicyStore) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrDescription: schema.StringAttribute{
+			"arn": framework.ARNAttributeComputedOnly(),
+			"description": schema.StringAttribute{
 				Optional: true,
 			},
-			names.AttrID: framework.IDAttribute(),
+			"id": framework.IDAttribute(),
 			"policy_store_id": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -72,7 +72,7 @@ func (r *resourcePolicyStore) Schema(ctx context.Context, request resource.Schem
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						names.AttrMode: schema.StringAttribute{
+						"mode": schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.ValidationMode](),
 							Required:   true,
 						},
@@ -212,7 +212,7 @@ func (r *resourcePolicyStore) Delete(ctx context.Context, request resource.Delet
 	}
 
 	tflog.Debug(ctx, "deleting Verified Permissions Policy Store", map[string]interface{}{
-		names.AttrID: state.ID.ValueString(),
+		"id": state.ID.ValueString(),
 	})
 
 	input := &verifiedpermissions.DeletePolicyStoreInput{
@@ -235,7 +235,7 @@ func (r *resourcePolicyStore) Delete(ctx context.Context, request resource.Delet
 }
 
 func (r *resourcePolicyStore) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), request, response)
 }
 
 type resourcePolicyStoreData struct {

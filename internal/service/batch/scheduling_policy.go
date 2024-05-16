@@ -25,7 +25,7 @@ import (
 
 // @SDKResource("aws_batch_scheduling_policy", name="Scheduling Policy")
 // @Tags(identifierAttribute="arn")
-// @Testing(existsType="github.com/aws/aws-sdk-go/service/batch;batch.SchedulingPolicyDetail")
+// @Testing(existsType="github.com/aws/aws-sdk-go/service/batch.SchedulingPolicyDetail")
 func ResourceSchedulingPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSchedulingPolicyCreate,
@@ -38,7 +38,7 @@ func ResourceSchedulingPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -90,7 +90,7 @@ func ResourceSchedulingPolicy() *schema.Resource {
 					},
 				},
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -109,7 +109,7 @@ func resourceSchedulingPolicyCreate(ctx context.Context, d *schema.ResourceData,
 
 	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &batch.CreateSchedulingPolicyInput{
 		FairsharePolicy: expandFairsharePolicy(d.Get("fair_share_policy").([]interface{})),
 		Name:            aws.String(name),
@@ -144,11 +144,11 @@ func resourceSchedulingPolicyRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading Batch Scheduling Policy (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, sp.Arn)
+	d.Set("arn", sp.Arn)
 	if err := d.Set("fair_share_policy", flattenFairsharePolicy(sp.FairsharePolicy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting fair_share_policy: %s", err)
 	}
-	d.Set(names.AttrName, sp.Name)
+	d.Set("name", sp.Name)
 
 	setTagsOut(ctx, sp.Tags)
 

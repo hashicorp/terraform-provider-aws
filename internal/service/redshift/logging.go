@@ -49,16 +49,16 @@ func (r *resourceLogging) Metadata(_ context.Context, req resource.MetadataReque
 func (r *resourceLogging) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrBucketName: schema.StringAttribute{
+			"bucket_name": schema.StringAttribute{
 				Optional: true,
 			},
-			names.AttrClusterIdentifier: schema.StringAttribute{
+			"cluster_identifier": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrID: framework.IDAttribute(),
+			"id": framework.IDAttribute(),
 			"log_destination_type": schema.StringAttribute{
 				Optional:   true,
 				CustomType: fwtypes.StringEnumType[awstypes.LogDestinationType](),
@@ -73,7 +73,7 @@ func (r *resourceLogging) Schema(ctx context.Context, req resource.SchemaRequest
 					),
 				},
 			},
-			names.AttrS3KeyPrefix: schema.StringAttribute{
+			"s3_key_prefix": schema.StringAttribute{
 				Optional: true,
 			},
 		},
@@ -233,8 +233,8 @@ func (r *resourceLogging) Delete(ctx context.Context, req resource.DeleteRequest
 }
 
 func (r *resourceLogging) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), req.ID)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrClusterIdentifier), req.ID)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), req.ID)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("cluster_identifier"), req.ID)...)
 }
 
 func findLoggingByID(ctx context.Context, conn *redshift.Client, id string) (*redshift.DescribeLoggingStatusOutput, error) {

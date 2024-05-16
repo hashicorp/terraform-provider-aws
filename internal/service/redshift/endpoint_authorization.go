@@ -19,17 +19,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_redshift_endpoint_authorization", name="Endpoint Authorization")
-func resourceEndpointAuthorization() *schema.Resource {
+// @SDKResource("aws_redshift_endpoint_authorization")
+func ResourceEndpointAuthorization() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEndpointAuthorizationCreate,
 		ReadWithoutTimeout:   resourceEndpointAuthorizationRead,
 		UpdateWithoutTimeout: resourceEndpointAuthorizationUpdate,
 		DeleteWithoutTimeout: resourceEndpointAuthorizationDelete,
-
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -45,7 +43,7 @@ func resourceEndpointAuthorization() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			names.AttrClusterIdentifier: {
+			"cluster_identifier": {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
@@ -54,7 +52,7 @@ func resourceEndpointAuthorization() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			names.AttrForceDelete: {
+			"force_delete": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -83,7 +81,7 @@ func resourceEndpointAuthorizationCreate(ctx context.Context, d *schema.Resource
 	account := d.Get("account").(string)
 	input := redshift.AuthorizeEndpointAccessInput{
 		Account:           aws.String(account),
-		ClusterIdentifier: aws.String(d.Get(names.AttrClusterIdentifier).(string)),
+		ClusterIdentifier: aws.String(d.Get("cluster_identifier").(string)),
 	}
 
 	if v, ok := d.GetOk("vpc_ids"); ok && v.(*schema.Set).Len() > 0 {
@@ -105,7 +103,7 @@ func resourceEndpointAuthorizationRead(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	endpoint, err := findEndpointAuthorizationByID(ctx, conn, d.Id())
+	endpoint, err := FindEndpointAuthorizationById(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Endpoint Authorization (%s) not found, removing from state", d.Id())
@@ -120,7 +118,7 @@ func resourceEndpointAuthorizationRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("account", endpoint.Grantee)
 	d.Set("grantee", endpoint.Grantee)
 	d.Set("grantor", endpoint.Grantor)
-	d.Set(names.AttrClusterIdentifier, endpoint.ClusterIdentifier)
+	d.Set("cluster_identifier", endpoint.ClusterIdentifier)
 	d.Set("vpc_ids", flex.FlattenStringSet(endpoint.AllowedVPCs))
 	d.Set("allowed_all_vpcs", endpoint.AllowedAllVPCs)
 	d.Set("endpoint_count", endpoint.EndpointCount)
@@ -184,7 +182,7 @@ func resourceEndpointAuthorizationDelete(ctx context.Context, d *schema.Resource
 	input := &redshift.RevokeEndpointAccessInput{
 		Account:           aws.String(account),
 		ClusterIdentifier: aws.String(clusterId),
-		Force:             aws.Bool(d.Get(names.AttrForceDelete).(bool)),
+		Force:             aws.Bool(d.Get("force_delete").(bool)),
 	}
 
 	_, err = conn.RevokeEndpointAccessWithContext(ctx, input)

@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_db_proxy", name="DB Proxy")
@@ -19,7 +18,7 @@ func dataSourceProxy() *schema.Resource {
 		ReadWithoutTimeout: dataSourceProxyRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -36,7 +35,7 @@ func dataSourceProxy() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrDescription: {
+						"description": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -48,7 +47,7 @@ func dataSourceProxy() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrUsername: {
+						"username": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -59,7 +58,7 @@ func dataSourceProxy() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			names.AttrEndpoint: {
+			"endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -71,7 +70,7 @@ func dataSourceProxy() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -79,15 +78,15 @@ func dataSourceProxy() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			names.AttrRoleARN: {
+			"role_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrVPCID: {
+			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrVPCSecurityGroupIDs: {
+			"vpc_security_group_ids": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -105,7 +104,7 @@ func dataSourceProxyRead(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	dbProxy, err := findDBProxyByName(ctx, conn, name)
 
 	if err != nil {
@@ -113,16 +112,16 @@ func dataSourceProxyRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.SetId(name)
-	d.Set(names.AttrARN, dbProxy.DBProxyArn)
+	d.Set("arn", dbProxy.DBProxyArn)
 	d.Set("auth", flattenUserAuthConfigInfos(dbProxy.Auth))
 	d.Set("debug_logging", dbProxy.DebugLogging)
-	d.Set(names.AttrEndpoint, dbProxy.Endpoint)
+	d.Set("endpoint", dbProxy.Endpoint)
 	d.Set("engine_family", dbProxy.EngineFamily)
 	d.Set("idle_client_timeout", dbProxy.IdleClientTimeout)
 	d.Set("require_tls", dbProxy.RequireTLS)
-	d.Set(names.AttrRoleARN, dbProxy.RoleArn)
-	d.Set(names.AttrVPCID, dbProxy.VpcId)
-	d.Set(names.AttrVPCSecurityGroupIDs, dbProxy.VpcSecurityGroupIds)
+	d.Set("role_arn", dbProxy.RoleArn)
+	d.Set("vpc_id", dbProxy.VpcId)
+	d.Set("vpc_security_group_ids", dbProxy.VpcSecurityGroupIds)
 	d.Set("vpc_subnet_ids", dbProxy.VpcSubnetIds)
 
 	return diags

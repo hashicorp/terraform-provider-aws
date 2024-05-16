@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ec2_transit_gateway_attachments")
@@ -27,13 +26,13 @@ func DataSourceTransitGatewayAttachments() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrFilter: customFiltersSchema(),
-			names.AttrIDs: {
+			"filter": customFiltersSchema(),
+			"ids": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -45,10 +44,10 @@ func dataSourceTransitGatewayAttachmentsRead(ctx context.Context, d *schema.Reso
 	input := &ec2.DescribeTransitGatewayAttachmentsInput{}
 
 	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get(names.AttrFilter).(*schema.Set),
+		d.Get("filter").(*schema.Set),
 	)...)
 
-	if v, ok := d.GetOk(names.AttrTags); ok {
+	if v, ok := d.GetOk("tags"); ok {
 		input.Filters = append(input.Filters, newTagFilterList(
 			Tags(tftags.New(ctx, v.(map[string]interface{}))),
 		)...)
@@ -67,7 +66,7 @@ func dataSourceTransitGatewayAttachmentsRead(ctx context.Context, d *schema.Reso
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set(names.AttrIDs, attachmentIDs)
+	d.Set("ids", attachmentIDs)
 
 	return diags
 }

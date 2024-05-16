@@ -37,7 +37,6 @@ const (
 
 // @SDKResource("aws_accessanalyzer_analyzer", name="Analyzer")
 // @Tags(identifierAttribute="arn")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/accessanalyzer/types;types.AnalyzerSummary", serialize="true", preCheck="true")
 func resourceAnalyzer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAnalyzerCreate,
@@ -59,11 +58,11 @@ func resourceAnalyzer() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`^[A-Za-z][0-9A-Za-z_.-]*$`), "must begin with a letter and contain only alphanumeric, underscore, period, or hyphen characters"),
 				),
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrConfiguration: {
+			"configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
@@ -90,7 +89,7 @@ func resourceAnalyzer() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrType: {
+			"type": {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ForceNew:         true,
@@ -112,10 +111,10 @@ func resourceAnalyzerCreate(ctx context.Context, d *schema.ResourceData, meta in
 		AnalyzerName: aws.String(analyzerName),
 		ClientToken:  aws.String(id.UniqueId()),
 		Tags:         getTagsIn(ctx),
-		Type:         types.Type(d.Get(names.AttrType).(string)),
+		Type:         types.Type(d.Get("type").(string)),
 	}
 
-	if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk("configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Configuration = expandAnalyzerConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -153,15 +152,15 @@ func resourceAnalyzerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.Set("analyzer_name", analyzer.Name)
-	d.Set(names.AttrARN, analyzer.Arn)
+	d.Set("arn", analyzer.Arn)
 	if analyzer.Configuration != nil {
-		if err := d.Set(names.AttrConfiguration, []interface{}{flattenConfiguration(analyzer.Configuration)}); err != nil {
+		if err := d.Set("configuration", []interface{}{flattenConfiguration(analyzer.Configuration)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting configuration: %s", err)
 		}
 	} else {
-		d.Set(names.AttrConfiguration, nil)
+		d.Set("configuration", nil)
 	}
-	d.Set(names.AttrType, analyzer.Type)
+	d.Set("type", analyzer.Type)
 
 	setTagsOut(ctx, analyzer.Tags)
 

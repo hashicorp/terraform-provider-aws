@@ -36,7 +36,7 @@ func ResourceGraph() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrCreatedTime: {
+			"created_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -94,7 +94,7 @@ func resourceGraphRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading Detective Graph (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrCreatedTime, aws.TimeValue(graph.CreatedTime).Format(time.RFC3339))
+	d.Set("created_time", aws.TimeValue(graph.CreatedTime).Format(time.RFC3339))
 	d.Set("graph_arn", graph.Arn)
 
 	return diags

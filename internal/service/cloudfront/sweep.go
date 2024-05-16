@@ -4,19 +4,16 @@
 package cloudfront
 
 import (
-	"errors"
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -106,30 +103,32 @@ func sweepCachePolicies(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.CloudFrontClient(ctx)
+	conn := client.CloudFrontConn(ctx)
 	input := &cloudfront.ListCachePoliciesInput{
-		Type: awstypes.CachePolicyTypeCustom,
+		Type: aws.String(cloudfront.ResponseHeadersPolicyTypeCustom),
 	}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = listCachePoliciesPages(ctx, conn, input, func(page *cloudfront.ListCachePoliciesOutput, lastPage bool) bool {
+	err = ListCachePoliciesPages(ctx, conn, input, func(page *cloudfront.ListCachePoliciesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
 		for _, v := range page.CachePolicyList.Items {
-			id := aws.ToString(v.CachePolicy.Id)
-			output, err := findCachePolicyByID(ctx, conn, id)
+			id := aws.StringValue(v.CachePolicy.Id)
+
+			output, err := FindCachePolicyByID(ctx, conn, id)
 
 			if tfresource.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
+				log.Printf("[WARN] %s", err)
 				continue
 			}
 
-			r := resourceCachePolicy()
+			r := ResourceCachePolicy()
 			d := r.Data(nil)
 			d.SetId(id)
 			d.Set("etag", output.ETag)
@@ -140,7 +139,7 @@ func sweepCachePolicies(region string) error {
 		return !lastPage
 	})
 
-	if awsv2.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping CloudFront Cache Policy sweep for %s: %s", region, err)
 		return nil
 	}
@@ -159,82 +158,86 @@ func sweepCachePolicies(region string) error {
 }
 
 func sweepDistributions(region string) error {
-	var errs []error
+	var result *multierror.Error
 
 	// 1. Production Distributions
-	if err := sweepDistributionsByProductionOrStaging(region, false); err != nil {
-		errs = append(errs, err)
+	if err := sweepDistributionsByProductionStaging(region, false); err != nil {
+		result = multierror.Append(result, err)
 	}
 
 	// 2. Continuous Deployment Policies
 	if err := sweepContinuousDeploymentPolicies(region); err != nil {
-		errs = append(errs, err)
+		result = multierror.Append(result, err)
 	}
 
 	// 3. Staging Distributions
-	if err := sweepDistributionsByProductionOrStaging(region, true); err != nil {
-		errs = append(errs, err)
+	if err := sweepDistributionsByProductionStaging(region, true); err != nil {
+		result = multierror.Append(result, err)
 	}
 
-	return errors.Join(errs...)
+	return result.ErrorOrNil()
 }
 
-func sweepDistributionsByProductionOrStaging(region string, staging bool) error {
+func sweepDistributionsByProductionStaging(region string, staging bool) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.CloudFrontClient(ctx)
+	conn := client.CloudFrontConn(ctx)
 	input := &cloudfront.ListDistributionsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	if staging {
-		log.Print("[INFO] Sweeping staging CloudFront Distributions")
+		log.Print("[INFO] Sweeping staging distributions")
 	} else {
-		log.Print("[INFO] Sweeping production CloudFront Distributions")
+		log.Print("[INFO] Sweeping production distributions")
 	}
 
-	pages := cloudfront.NewListDistributionsPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping CloudFront Distribution sweep for %s: %s", region, err)
-			return nil
-		}
-
-		if err != nil {
-			return fmt.Errorf("error listing CloudFront Distributions (%s): %w", region, err)
+	err = conn.ListDistributionsPagesWithContext(ctx, input, func(page *cloudfront.ListDistributionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
 		for _, v := range page.DistributionList.Items {
-			id := aws.ToString(v.Id)
-			output, err := findDistributionByID(ctx, conn, id)
+			id := aws.StringValue(v.Id)
+
+			output, err := FindDistributionByID(ctx, conn, id)
 
 			if tfresource.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
+				log.Printf("[WARN] %s", err)
 				continue
 			}
 
-			if staging != aws.ToBool(output.Distribution.DistributionConfig.Staging) {
+			if staging != aws.BoolValue(output.Distribution.DistributionConfig.Staging) {
 				continue
 			}
 
-			r := resourceDistribution()
+			r := ResourceDistribution()
 			d := r.Data(nil)
 			d.SetId(id)
 			d.Set("etag", output.ETag)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
+
+		return !lastPage
+	})
+
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping CloudFront Distribution sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing CloudFront Distributions (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
 	if err != nil {
 		return fmt.Errorf("error sweeping CloudFront Distributions (%s): %w", region, err)
 	}
@@ -248,40 +251,43 @@ func sweepContinuousDeploymentPolicies(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.CloudFrontClient(ctx)
+	conn := client.CloudFrontConn(ctx)
 	input := &cloudfront.ListContinuousDeploymentPoliciesInput{}
-	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = listContinuousDeploymentPoliciesPages(ctx, conn, input, func(page *cloudfront.ListContinuousDeploymentPoliciesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	log.Printf("[INFO] Sweeping continuous deployment policies")
+	var result *multierror.Error
+
+	// ListContinuousDeploymentPolicies does not have a paginator
+	for {
+		output, err := conn.ListContinuousDeploymentPoliciesWithContext(ctx, input)
+		if awsv1.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping CloudFront Continuous Deployment Policy sweep for %s: %s", region, err)
+			return result.ErrorOrNil()
+		}
+		if err != nil {
+			result = multierror.Append(result, fmt.Errorf("listing CloudFront Continuous Deployment Policies: %w", err))
+			break
 		}
 
-		for _, v := range page.ContinuousDeploymentPolicyList.Items {
-			sweepResources = append(sweepResources, framework.NewSweepResource(newContinuousDeploymentPolicyResource, client,
-				framework.NewAttribute(names.AttrID, aws.ToString(v.ContinuousDeploymentPolicy.Id)),
-			))
+		if output == nil || output.ContinuousDeploymentPolicyList == nil {
+			log.Printf("[WARN] CloudFront Continuous Deployment Policies: empty response")
+			break
 		}
 
-		return !lastPage
-	})
+		for _, cdp := range output.ContinuousDeploymentPolicyList.Items {
+			if err := DeleteCDP(ctx, conn, aws.StringValue(cdp.ContinuousDeploymentPolicy.Id)); err != nil {
+				result = multierror.Append(result, err)
+			}
+		}
 
-	if awsv2.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping CloudFront Continuous Deployment Policy sweep for %s: %s", region, err)
-		return nil
+		if output.ContinuousDeploymentPolicyList.NextMarker == nil {
+			break
+		}
+
+		input.Marker = output.ContinuousDeploymentPolicyList.NextMarker
 	}
 
-	if err != nil {
-		return fmt.Errorf("error listing CloudFront Continuous Deployment Policies (%s): %w", region, err)
-	}
-
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping CloudFront Continuous Deployment Policies (%s): %w", region, err)
-	}
-
-	return nil
+	return result.ErrorOrNil()
 }
 
 func sweepFunctions(region string) error {
@@ -290,24 +296,29 @@ func sweepFunctions(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.CloudFrontClient(ctx)
-	input := &cloudfront.ListFunctionsInput{}
+	conn := client.CloudFrontConn(ctx)
+	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = listFunctionsPages(ctx, conn, input, func(page *cloudfront.ListFunctionsOutput, lastPage bool) bool {
+	input := &cloudfront.ListFunctionsInput{}
+	err = ListFunctionsPages(ctx, conn, input, func(page *cloudfront.ListFunctionsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, v := range page.FunctionList.Items {
-			name := aws.ToString(v.Name)
-			output, err := findFunctionByTwoPartKey(ctx, conn, name, awstypes.FunctionStageDevelopment)
+		for _, item := range page.FunctionList.Items {
+			name := aws.StringValue(item.Name)
+
+			output, err := findFunctionByTwoPartKey(ctx, conn, name, cloudfront.FunctionStageDevelopment)
 
 			if tfresource.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
+				sweeperErr := fmt.Errorf("error reading CloudFront Function (%s): %w", name, err)
+				log.Printf("[ERROR] %s", err)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 				continue
 			}
 
@@ -322,22 +333,19 @@ func sweepFunctions(region string) error {
 		return !lastPage
 	})
 
-	if awsv2.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping CloudFront Function sweep for %s: %s", region, err)
-		return nil
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
-
 	if err != nil {
-		return fmt.Errorf("error listing CloudFront Functions (%s): %w", region, err)
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing CloudFront Functions: %w", err))
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping CloudFront Functions (%s): %w", region, err)
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping CloudFront Functions: %w", err))
 	}
 
-	return nil
+	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepKeyGroup(region string) error {
@@ -346,54 +354,58 @@ func sweepKeyGroup(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
-	conn := client.CloudFrontClient(ctx)
+	conn := client.CloudFrontConn(ctx)
+	var sweeperErrs *multierror.Error
+
 	input := &cloudfront.ListKeyGroupsInput{}
-	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = listKeyGroupsPages(ctx, conn, input, func(page *cloudfront.ListKeyGroupsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	for {
+		output, err := conn.ListKeyGroupsWithContext(ctx, input)
+		if err != nil {
+			if awsv1.SkipSweepError(err) {
+				log.Printf("[WARN] Skipping CloudFront key group sweep for %s: %s", region, err)
+				return nil
+			}
+			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving CloudFront key group: %w", err))
+			return sweeperErrs.ErrorOrNil()
 		}
 
-		for _, v := range page.KeyGroupList.Items {
-			id := aws.ToString(v.KeyGroup.Id)
-			output, err := findKeyGroupByID(ctx, conn, id)
+		if output == nil || output.KeyGroupList == nil || len(output.KeyGroupList.Items) == 0 {
+			log.Print("[DEBUG] No CloudFront key group to sweep")
+			return nil
+		}
 
-			if tfresource.NotFound(err) {
-				continue
-			}
-
+		for _, item := range output.KeyGroupList.Items {
+			id := item.KeyGroup.Id
+			out, err := conn.GetKeyGroupWithContext(ctx, &cloudfront.GetKeyGroupInput{
+				Id: id,
+			})
 			if err != nil {
+				sweeperErr := fmt.Errorf("error reading CloudFront key group %s: %w", aws.StringValue(id), err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 				continue
 			}
 
-			r := resourceKeyGroup()
-			d := r.Data(nil)
-			d.SetId(id)
-			d.Set("etag", output.ETag)
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+			_, err = conn.DeleteKeyGroupWithContext(ctx, &cloudfront.DeleteKeyGroupInput{
+				Id:      id,
+				IfMatch: out.ETag,
+			})
+			if err != nil {
+				sweeperErr := fmt.Errorf("error sweeping CloudFront key group %s: %w", aws.StringValue(id), err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
 		}
 
-		return !lastPage
-	})
-
-	if awsv2.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping CloudFront Key Group sweep for %s: %s", region, err)
-		return nil
+		if output.KeyGroupList.NextMarker == nil {
+			break
+		}
+		input.Marker = output.KeyGroupList.NextMarker
 	}
 
-	if err != nil {
-		return fmt.Errorf("error listing CloudFront Key Groups (%s): %w", region, err)
-	}
-
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping CloudFront Key Groups (%s): %w", region, err)
-	}
-
-	return nil
+	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepMonitoringSubscriptions(region string) error {
@@ -402,39 +414,46 @@ func sweepMonitoringSubscriptions(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.CloudFrontClient(ctx)
+	conn := client.CloudFrontConn(ctx)
+	var sweeperErrs *multierror.Error
+
+	distributionSummaries := make([]*cloudfront.DistributionSummary, 0)
+
 	input := &cloudfront.ListDistributionsInput{}
-	sweepResources := make([]sweep.Sweepable, 0)
-
-	pages := cloudfront.NewListDistributionsPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping CloudFront Monitoring Subscription sweep for %s: %s", region, err)
+	err = conn.ListDistributionsPagesWithContext(ctx, input, func(page *cloudfront.ListDistributionsOutput, lastPage bool) bool {
+		distributionSummaries = append(distributionSummaries, page.DistributionList.Items...)
+		return !lastPage
+	})
+	if err != nil {
+		if awsv1.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping CloudFront Monitoring Subscriptions sweep for %s: %s", region, err)
 			return nil
 		}
+		return fmt.Errorf("error listing CloudFront Distributions: %s", err)
+	}
 
+	if len(distributionSummaries) == 0 {
+		log.Print("[DEBUG] No CloudFront Distributions found")
+		return nil
+	}
+
+	for _, distributionSummary := range distributionSummaries {
+		_, err := conn.GetMonitoringSubscriptionWithContext(ctx, &cloudfront.GetMonitoringSubscriptionInput{
+			DistributionId: distributionSummary.Id,
+		})
 		if err != nil {
-			return fmt.Errorf("error listing CloudFront Distributions (%s): %w", region, err)
+			return fmt.Errorf("error reading CloudFront Monitoring Subscription %s: %s", aws.StringValue(distributionSummary.Id), err)
 		}
 
-		for _, v := range page.DistributionList.Items {
-			r := resourceMonitoringSubscription()
-			d := r.Data(nil)
-			d.SetId(aws.ToString(v.Id))
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		_, err = conn.DeleteMonitoringSubscriptionWithContext(ctx, &cloudfront.DeleteMonitoringSubscriptionInput{
+			DistributionId: distributionSummary.Id,
+		})
+		if err != nil {
+			return fmt.Errorf("error deleting CloudFront Monitoring Subscription %s: %s", aws.StringValue(distributionSummary.Id), err)
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping CloudFront Monitoring Subscriptions (%s): %w", region, err)
-	}
-
-	return nil
+	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepRealtimeLogsConfig(region string) error {
@@ -443,42 +462,46 @@ func sweepRealtimeLogsConfig(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.CloudFrontClient(ctx)
-	input := &cloudfront.ListRealtimeLogConfigsInput{}
+	conn := client.CloudFrontConn(ctx)
+	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = listRealtimeLogConfigsPages(ctx, conn, input, func(page *cloudfront.ListRealtimeLogConfigsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	input := &cloudfront.ListRealtimeLogConfigsInput{}
+	for {
+		output, err := conn.ListRealtimeLogConfigsWithContext(ctx, input)
+
+		if awsv1.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping CloudFront Real-time Log Configs sweep for %s: %s", region, err)
+			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 		}
 
-		for _, v := range page.RealtimeLogConfigs.Items {
-			r := resourceRealtimeLogConfig()
+		if err != nil {
+			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving CloudFront Real-time Log Configs: %w", err))
+			return sweeperErrs
+		}
+
+		for _, config := range output.RealtimeLogConfigs.Items {
+			id := aws.StringValue(config.ARN)
+
+			log.Printf("[INFO] Deleting CloudFront Real-time Log Config: %s", id)
+			r := ResourceRealtimeLogConfig()
 			d := r.Data(nil)
-			d.SetId(aws.ToString(v.ARN))
+			d.SetId(id)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
-		return !lastPage
-	})
-
-	if awsv2.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping CloudFront Real-time Log Config sweep for %s: %s", region, err)
-		return nil
+		if aws.StringValue(output.RealtimeLogConfigs.NextMarker) == "" {
+			break
+		}
+		input.Marker = output.RealtimeLogConfigs.NextMarker
 	}
 
-	if err != nil {
-		return fmt.Errorf("error listing CloudFront Real-time Log Configs (%s): %w", region, err)
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping CloudFront Real-time Log Configs: %w", err))
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping CloudFront Real-time Log Configs (%s): %w", region, err)
-	}
-
-	return nil
+	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepFieldLevelEncryptionConfigs(region string) error {
@@ -487,28 +510,30 @@ func sweepFieldLevelEncryptionConfigs(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.CloudFrontClient(ctx)
+	conn := client.CloudFrontConn(ctx)
 	input := &cloudfront.ListFieldLevelEncryptionConfigsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = listFieldLevelEncryptionConfigsPages(ctx, conn, input, func(page *cloudfront.ListFieldLevelEncryptionConfigsOutput, lastPage bool) bool {
+	err = ListFieldLevelEncryptionConfigsPages(ctx, conn, input, func(page *cloudfront.ListFieldLevelEncryptionConfigsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
 		for _, v := range page.FieldLevelEncryptionList.Items {
-			id := aws.ToString(v.Id)
-			output, err := findFieldLevelEncryptionConfigByID(ctx, conn, id)
+			id := aws.StringValue(v.Id)
+
+			output, err := FindFieldLevelEncryptionConfigByID(ctx, conn, id)
 
 			if tfresource.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
+				log.Printf("[WARN] %s", err)
 				continue
 			}
 
-			r := resourceFieldLevelEncryptionConfig()
+			r := ResourceFieldLevelEncryptionConfig()
 			d := r.Data(nil)
 			d.SetId(id)
 			d.Set("etag", output.ETag)
@@ -519,7 +544,7 @@ func sweepFieldLevelEncryptionConfigs(region string) error {
 		return !lastPage
 	})
 
-	if awsv2.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping CloudFront Field-level Encryption Config sweep for %s: %s", region, err)
 		return nil
 	}
@@ -543,28 +568,30 @@ func sweepFieldLevelEncryptionProfiles(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.CloudFrontClient(ctx)
+	conn := client.CloudFrontConn(ctx)
 	input := &cloudfront.ListFieldLevelEncryptionProfilesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = listFieldLevelEncryptionProfilesPages(ctx, conn, input, func(page *cloudfront.ListFieldLevelEncryptionProfilesOutput, lastPage bool) bool {
+	err = ListFieldLevelEncryptionProfilesPages(ctx, conn, input, func(page *cloudfront.ListFieldLevelEncryptionProfilesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
 		for _, v := range page.FieldLevelEncryptionProfileList.Items {
-			id := aws.ToString(v.Id)
-			output, err := findFieldLevelEncryptionProfileByID(ctx, conn, id)
+			id := aws.StringValue(v.Id)
+
+			output, err := FindFieldLevelEncryptionProfileByID(ctx, conn, id)
 
 			if tfresource.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
+				log.Printf("[WARN] %s", err)
 				continue
 			}
 
-			r := resourceFieldLevelEncryptionProfile()
+			r := ResourceFieldLevelEncryptionProfile()
 			d := r.Data(nil)
 			d.SetId(id)
 			d.Set("etag", output.ETag)
@@ -575,7 +602,7 @@ func sweepFieldLevelEncryptionProfiles(region string) error {
 		return !lastPage
 	})
 
-	if awsv2.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping CloudFront Field-level Encryption Profile sweep for %s: %s", region, err)
 		return nil
 	}
@@ -599,30 +626,32 @@ func sweepOriginRequestPolicies(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.CloudFrontClient(ctx)
+	conn := client.CloudFrontConn(ctx)
 	input := &cloudfront.ListOriginRequestPoliciesInput{
-		Type: awstypes.OriginRequestPolicyTypeCustom,
+		Type: aws.String(cloudfront.ResponseHeadersPolicyTypeCustom),
 	}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = listOriginRequestPoliciesPages(ctx, conn, input, func(page *cloudfront.ListOriginRequestPoliciesOutput, lastPage bool) bool {
+	err = ListOriginRequestPoliciesPages(ctx, conn, input, func(page *cloudfront.ListOriginRequestPoliciesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
 		for _, v := range page.OriginRequestPolicyList.Items {
-			id := aws.ToString(v.OriginRequestPolicy.Id)
-			output, err := findOriginRequestPolicyByID(ctx, conn, id)
+			id := aws.StringValue(v.OriginRequestPolicy.Id)
+
+			output, err := FindOriginRequestPolicyByID(ctx, conn, id)
 
 			if tfresource.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
+				log.Printf("[WARN] %s", err)
 				continue
 			}
 
-			r := resourceOriginRequestPolicy()
+			r := ResourceOriginRequestPolicy()
 			d := r.Data(nil)
 			d.SetId(id)
 			d.Set("etag", output.ETag)
@@ -633,7 +662,7 @@ func sweepOriginRequestPolicies(region string) error {
 		return !lastPage
 	})
 
-	if awsv2.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping CloudFront Origin Request Policy sweep for %s: %s", region, err)
 		return nil
 	}
@@ -657,30 +686,32 @@ func sweepResponseHeadersPolicies(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.CloudFrontClient(ctx)
+	conn := client.CloudFrontConn(ctx)
 	input := &cloudfront.ListResponseHeadersPoliciesInput{
-		Type: awstypes.ResponseHeadersPolicyTypeCustom,
+		Type: aws.String(cloudfront.ResponseHeadersPolicyTypeCustom),
 	}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = listResponseHeadersPoliciesPages(ctx, conn, input, func(page *cloudfront.ListResponseHeadersPoliciesOutput, lastPage bool) bool {
+	err = ListResponseHeadersPoliciesPages(ctx, conn, input, func(page *cloudfront.ListResponseHeadersPoliciesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
 		for _, v := range page.ResponseHeadersPolicyList.Items {
-			id := aws.ToString(v.ResponseHeadersPolicy.Id)
-			output, err := findResponseHeadersPolicyByID(ctx, conn, id)
+			id := aws.StringValue(v.ResponseHeadersPolicy.Id)
+
+			output, err := FindResponseHeadersPolicyByID(ctx, conn, id)
 
 			if tfresource.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
+				log.Printf("[WARN] %s", err)
 				continue
 			}
 
-			r := resourceResponseHeadersPolicy()
+			r := ResourceResponseHeadersPolicy()
 			d := r.Data(nil)
 			d.SetId(id)
 			d.Set("etag", output.ETag)
@@ -691,7 +722,7 @@ func sweepResponseHeadersPolicies(region string) error {
 		return !lastPage
 	})
 
-	if awsv2.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping CloudFront Response Headers Policy sweep for %s: %s", region, err)
 		return nil
 	}
@@ -715,17 +746,18 @@ func sweepOriginAccessControls(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.CloudFrontClient(ctx)
+	conn := client.CloudFrontConn(ctx)
 	input := &cloudfront.ListOriginAccessControlsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = listOriginAccessControlsPages(ctx, conn, input, func(page *cloudfront.ListOriginAccessControlsOutput, lastPage bool) bool {
+	err = ListOriginAccessControlsPages(ctx, conn, input, func(page *cloudfront.ListOriginAccessControlsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
 		for _, v := range page.OriginAccessControlList.Items {
-			id := aws.ToString(v.Id)
+			id := aws.StringValue(v.Id)
+
 			output, err := findOriginAccessControlByID(ctx, conn, id)
 
 			if tfresource.NotFound(err) {
@@ -733,10 +765,11 @@ func sweepOriginAccessControls(region string) error {
 			}
 
 			if err != nil {
+				log.Printf("[WARN] %s", err)
 				continue
 			}
 
-			r := resourceOriginAccessControl()
+			r := ResourceOriginAccessControl()
 			d := r.Data(nil)
 			d.SetId(id)
 			d.Set("etag", output.ETag)
@@ -747,7 +780,7 @@ func sweepOriginAccessControls(region string) error {
 		return !lastPage
 	})
 
-	if awsv2.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping CloudFront Origin Access Control sweep for %s: %s", region, err)
 		return nil
 	}

@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_imagebuilder_container_recipes", name="Container Recipes")
@@ -22,18 +21,18 @@ func DataSourceContainerRecipes() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceContainerRecipesRead,
 		Schema: map[string]*schema.Schema{
-			names.AttrARNs: {
+			"arns": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrFilter: namevaluesfilters.Schema(),
-			names.AttrNames: {
+			"filter": namevaluesfilters.Schema(),
+			"names": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrOwner: {
+			"owner": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(imagebuilder.Ownership_Values(), false),
@@ -48,11 +47,11 @@ func dataSourceContainerRecipesRead(ctx context.Context, d *schema.ResourceData,
 
 	input := &imagebuilder.ListContainerRecipesInput{}
 
-	if v, ok := d.GetOk(names.AttrOwner); ok {
+	if v, ok := d.GetOk("owner"); ok {
 		input.Owner = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrFilter); ok {
+	if v, ok := d.GetOk("filter"); ok {
 		input.Filters = namevaluesfilters.New(v.(*schema.Set)).ImagebuilderFilters()
 	}
 
@@ -78,16 +77,16 @@ func dataSourceContainerRecipesRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "reading Image Builder Container Recipes: %s", err)
 	}
 
-	var arns, nms []string
+	var arns, names []string
 
 	for _, r := range results {
 		arns = append(arns, aws.StringValue(r.Arn))
-		nms = append(nms, aws.StringValue(r.Name))
+		names = append(names, aws.StringValue(r.Name))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set(names.AttrARNs, arns)
-	d.Set(names.AttrNames, nms)
+	d.Set("arns", arns)
+	d.Set("names", names)
 
 	return diags
 }

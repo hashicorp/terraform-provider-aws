@@ -94,7 +94,7 @@ func sweepBackups(region string) error {
 		}
 
 		for _, fs := range page.Backups {
-			r := resourceBackup()
+			r := ResourceBackup()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(fs.BackupId))
 
@@ -143,7 +143,7 @@ func sweepLustreFileSystems(region string) error {
 				continue
 			}
 
-			r := resourceLustreFileSystem()
+			r := ResourceLustreFileSystem()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(fs.FileSystemId))
 
@@ -192,7 +192,7 @@ func sweepONTAPFileSystems(region string) error {
 				continue
 			}
 
-			r := resourceONTAPFileSystem()
+			r := ResourceONTAPFileSystem()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(fs.FileSystemId))
 
@@ -237,7 +237,7 @@ func sweepONTAPStorageVirtualMachine(region string) error {
 		}
 
 		for _, vm := range page.StorageVirtualMachines {
-			r := resourceONTAPStorageVirtualMachine()
+			r := ResourceONTAPStorageVirtualMachine()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(vm.StorageVirtualMachineId))
 
@@ -289,7 +289,7 @@ func sweepONTAPVolumes(region string) error {
 				continue
 			}
 
-			r := resourceONTAPVolume()
+			r := ResourceONTAPVolume()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.VolumeId))
 			d.Set("bypass_snaplock_enterprise_retention", true)
@@ -340,7 +340,7 @@ func sweepOpenZFSFileSystems(region string) error {
 				continue
 			}
 
-			r := resourceOpenZFSFileSystem()
+			r := ResourceOpenZFSFileSystem()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(fs.FileSystemId))
 
@@ -392,7 +392,7 @@ func sweepOpenZFSVolume(region string) error {
 				continue
 			}
 
-			r := resourceOpenZFSVolume()
+			r := ResourceOpenZFSVolume()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.VolumeId))
 
@@ -441,7 +441,7 @@ func sweepWindowsFileSystems(region string) error {
 				continue
 			}
 
-			r := resourceWindowsFileSystem()
+			r := ResourceWindowsFileSystem()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(fs.FileSystemId))
 			d.Set("skip_final_backup", true)

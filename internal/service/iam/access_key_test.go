@@ -132,7 +132,7 @@ func TestAccIAMAccessKey_status(t *testing.T) {
 				Config: testAccAccessKeyConfig_status(rName, string(awstypes.StatusTypeInactive)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessKeyExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StatusTypeInactive)),
+					resource.TestCheckResourceAttr(resourceName, "status", string(awstypes.StatusTypeInactive)),
 				),
 			},
 			{
@@ -145,14 +145,14 @@ func TestAccIAMAccessKey_status(t *testing.T) {
 				Config: testAccAccessKeyConfig_status(rName, string(awstypes.StatusTypeActive)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessKeyExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StatusTypeActive)),
+					resource.TestCheckResourceAttr(resourceName, "status", string(awstypes.StatusTypeActive)),
 				),
 			},
 			{
 				Config: testAccAccessKeyConfig_status(rName, string(awstypes.StatusTypeInactive)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessKeyExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.StatusTypeInactive)),
+					resource.TestCheckResourceAttr(resourceName, "status", string(awstypes.StatusTypeInactive)),
 				),
 			},
 		},
@@ -164,7 +164,7 @@ func testAccCheckAccessKeyDestroy(ctx context.Context) resource.TestCheckFunc {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_iam_access_key" {
+			if rs.Type != "aws_access_key" {
 				continue
 			}
 

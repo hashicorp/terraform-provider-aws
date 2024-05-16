@@ -324,7 +324,7 @@ service/bedrockagent:
       - changed-files:
           - any-glob-to-any-file:
               - 'internal/service/bedrockagent/**/*'
-              - 'website/**/bedrockagent_*'
+              - 'website/**/bedrock_agent_*'
 service/billingconductor:
   - any:
       - changed-files:
@@ -349,12 +349,6 @@ service/ce:
           - any-glob-to-any-file:
               - 'internal/service/ce/**/*'
               - 'website/**/ce_*'
-service/chatbot:
-  - any:
-      - changed-files:
-          - any-glob-to-any-file:
-              - 'internal/service/chatbot/**/*'
-              - 'website/**/chatbot_*'
 service/chime:
   - any:
       - changed-files:
@@ -1800,12 +1794,6 @@ service/route53domains:
           - any-glob-to-any-file:
               - 'internal/service/route53domains/**/*'
               - 'website/**/route53domains_*'
-service/route53profiles:
-  - any:
-      - changed-files:
-          - any-glob-to-any-file:
-              - 'internal/service/route53profiles/**/*'
-              - 'website/**/route53profiles_*'
 service/route53recoverycluster:
   - any:
       - changed-files:

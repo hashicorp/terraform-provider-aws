@@ -10,18 +10,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/appstream"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/appstream/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/appstream"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_appstream_user")
@@ -35,21 +32,21 @@ func ResourceUser() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"authentication_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.AuthenticationType](),
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(appstream.AuthenticationType_Values(), false),
 			},
-			names.AttrCreatedTime: {
+			"created_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrEnabled: {
+			"enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
@@ -71,7 +68,7 @@ func ResourceUser() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
-			names.AttrUserName: {
+			"user_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -84,13 +81,13 @@ func ResourceUser() *schema.Resource {
 func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).AppStreamClient(ctx)
+	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 
-	userName := d.Get(names.AttrUserName).(string)
+	userName := d.Get("user_name").(string)
 	authType := d.Get("authentication_type").(string)
 
 	input := &appstream.CreateUserInput{
-		AuthenticationType: awstypes.AuthenticationType(authType),
+		AuthenticationType: aws.String(authType),
 		UserName:           aws.String(userName),
 	}
 
@@ -103,10 +100,10 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if !d.Get("send_email_notification").(bool) {
-		input.MessageAction = awstypes.MessageActionSuppress
+		input.MessageAction = aws.String(appstream.MessageActionSuppress)
 	}
 
-	_, err := conn.CreateUser(ctx, input)
+	_, err := conn.CreateUserWithContext(ctx, input)
 
 	id := EncodeUserID(userName, authType)
 
@@ -119,13 +116,13 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	// Enabling/disabling workflow
-	if !d.Get(names.AttrEnabled).(bool) {
+	if !d.Get("enabled").(bool) {
 		input := &appstream.DisableUserInput{
-			AuthenticationType: awstypes.AuthenticationType(authType),
+			AuthenticationType: aws.String(authType),
 			UserName:           aws.String(userName),
 		}
 
-		_, err = conn.DisableUser(ctx, input)
+		_, err = conn.DisableUserWithContext(ctx, input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "disabling AppStream User (%s): %s", id, err)
 		}
@@ -139,7 +136,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).AppStreamClient(ctx)
+	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 
 	userName, authType, err := DecodeUserID(d.Id())
 	if err != nil {
@@ -156,14 +153,14 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return sdkdiag.AppendErrorf(diags, "reading AppStream User (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, user.Arn)
+	d.Set("arn", user.Arn)
 	d.Set("authentication_type", user.AuthenticationType)
-	d.Set(names.AttrCreatedTime, aws.ToTime(user.CreatedTime).Format(time.RFC3339))
-	d.Set(names.AttrEnabled, user.Enabled)
+	d.Set("created_time", aws.TimeValue(user.CreatedTime).Format(time.RFC3339))
+	d.Set("enabled", user.Enabled)
 	d.Set("first_name", user.FirstName)
 
 	d.Set("last_name", user.LastName)
-	d.Set(names.AttrUserName, user.UserName)
+	d.Set("user_name", user.UserName)
 
 	return diags
 }
@@ -171,31 +168,31 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).AppStreamClient(ctx)
+	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 
 	userName, authType, err := DecodeUserID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "decoding AppStream User ID (%s): %s", d.Id(), err)
 	}
 
-	if d.HasChange(names.AttrEnabled) {
-		if d.Get(names.AttrEnabled).(bool) {
+	if d.HasChange("enabled") {
+		if d.Get("enabled").(bool) {
 			input := &appstream.EnableUserInput{
-				AuthenticationType: awstypes.AuthenticationType(authType),
+				AuthenticationType: aws.String(authType),
 				UserName:           aws.String(userName),
 			}
 
-			_, err = conn.EnableUser(ctx, input)
+			_, err = conn.EnableUserWithContext(ctx, input)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "enabling AppStream User (%s): %s", d.Id(), err)
 			}
 		} else {
 			input := &appstream.DisableUserInput{
-				AuthenticationType: awstypes.AuthenticationType(authType),
+				AuthenticationType: aws.String(authType),
 				UserName:           aws.String(userName),
 			}
 
-			_, err = conn.DisableUser(ctx, input)
+			_, err = conn.DisableUserWithContext(ctx, input)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "disabling AppStream User (%s): %s", d.Id(), err)
 			}
@@ -208,20 +205,20 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).AppStreamClient(ctx)
+	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 
 	userName, authType, err := DecodeUserID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "decoding AppStream User ID (%s): %s", d.Id(), err)
 	}
 
-	_, err = conn.DeleteUser(ctx, &appstream.DeleteUserInput{
-		AuthenticationType: awstypes.AuthenticationType(authType),
+	_, err = conn.DeleteUserWithContext(ctx, &appstream.DeleteUserInput{
+		AuthenticationType: aws.String(authType),
 		UserName:           aws.String(userName),
 	})
 
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "deleting AppStream User (%s): %s", d.Id(), err)

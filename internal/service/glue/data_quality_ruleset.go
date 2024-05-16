@@ -37,7 +37,7 @@ func ResourceDataQualityRuleset() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -45,7 +45,7 @@ func ResourceDataQualityRuleset() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 2048),
@@ -54,7 +54,7 @@ func ResourceDataQualityRuleset() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				ForceNew:     true,
 				Required:     true,
@@ -78,19 +78,19 @@ func ResourceDataQualityRuleset() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrCatalogID: {
+						"catalog_id": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
 						},
-						names.AttrDatabaseName: {
+						"database_name": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
 						},
-						names.AttrTableName: {
+						"table_name": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -107,7 +107,7 @@ func resourceDataQualityRulesetCreate(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 
 	input := &glue.CreateDataQualityRulesetInput{
 		Name:    aws.String(name),
@@ -115,7 +115,7 @@ func resourceDataQualityRulesetCreate(ctx context.Context, d *schema.ResourceDat
 		Tags:    getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -158,10 +158,10 @@ func resourceDataQualityRulesetRead(ctx context.Context, d *schema.ResourceData,
 		Resource:  fmt.Sprintf("dataQualityRuleset/%s", aws.StringValue(dataQualityRuleset.Name)),
 	}.String()
 
-	d.Set(names.AttrARN, dataQualityRulesetArn)
+	d.Set("arn", dataQualityRulesetArn)
 	d.Set("created_on", dataQualityRuleset.CreatedOn.Format(time.RFC3339))
-	d.Set(names.AttrName, dataQualityRuleset.Name)
-	d.Set(names.AttrDescription, dataQualityRuleset.Description)
+	d.Set("name", dataQualityRuleset.Name)
+	d.Set("description", dataQualityRuleset.Description)
 	d.Set("last_modified_on", dataQualityRuleset.CreatedOn.Format(time.RFC3339))
 	d.Set("recommendation_run_id", dataQualityRuleset.RecommendationRunId)
 	d.Set("ruleset", dataQualityRuleset.Ruleset)
@@ -177,14 +177,14 @@ func resourceDataQualityRulesetUpdate(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
-	if d.HasChanges(names.AttrDescription, "ruleset") {
+	if d.HasChanges("description", "ruleset") {
 		name := d.Id()
 
 		input := &glue.UpdateDataQualityRulesetInput{
 			Name: aws.String(name),
 		}
 
-		if v, ok := d.GetOk(names.AttrDescription); ok {
+		if v, ok := d.GetOk("description"); ok {
 			input.Description = aws.String(v.(string))
 		}
 
@@ -206,7 +206,7 @@ func resourceDataQualityRulesetDelete(ctx context.Context, d *schema.ResourceDat
 
 	log.Printf("[DEBUG] Glue Data Quality Ruleset: %s", d.Id())
 	_, err := conn.DeleteDataQualityRulesetWithContext(ctx, &glue.DeleteDataQualityRulesetInput{
-		Name: aws.String(d.Get(names.AttrName).(string)),
+		Name: aws.String(d.Get("name").(string)),
 	})
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Glue Data Quality Ruleset (%s): %s", d.Id(), err)
@@ -221,11 +221,11 @@ func expandTargetTable(tfMap map[string]interface{}) *glue.DataQualityTargetTabl
 	}
 
 	apiObject := &glue.DataQualityTargetTable{
-		DatabaseName: aws.String(tfMap[names.AttrDatabaseName].(string)),
-		TableName:    aws.String(tfMap[names.AttrTableName].(string)),
+		DatabaseName: aws.String(tfMap["database_name"].(string)),
+		TableName:    aws.String(tfMap["table_name"].(string)),
 	}
 
-	if v, ok := tfMap[names.AttrCatalogID].(string); ok && v != "" {
+	if v, ok := tfMap["catalog_id"].(string); ok && v != "" {
 		apiObject.CatalogId = aws.String(v)
 	}
 
@@ -238,12 +238,12 @@ func flattenTargetTable(apiObject *glue.DataQualityTargetTable) []interface{} {
 	}
 
 	tfMap := map[string]interface{}{
-		names.AttrDatabaseName: aws.StringValue(apiObject.DatabaseName),
-		names.AttrTableName:    aws.StringValue(apiObject.TableName),
+		"database_name": aws.StringValue(apiObject.DatabaseName),
+		"table_name":    aws.StringValue(apiObject.TableName),
 	}
 
 	if v := apiObject.CatalogId; v != nil {
-		tfMap[names.AttrCatalogID] = aws.StringValue(v)
+		tfMap["catalog_id"] = aws.StringValue(v)
 	}
 
 	return []interface{}{tfMap}

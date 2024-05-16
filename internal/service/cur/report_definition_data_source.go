@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_cur_report_definition", name="Report Definition")
@@ -34,7 +33,7 @@ func dataSourceReportDefinition() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrFormat: {
+			"format": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -50,7 +49,7 @@ func dataSourceReportDefinition() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrS3Bucket: {
+			"s3_bucket": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -85,11 +84,11 @@ func dataSourceReportDefinitionRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("additional_artifacts", reportDefinition.AdditionalArtifacts)
 	d.Set("additional_schema_elements", reportDefinition.AdditionalSchemaElements)
 	d.Set("compression", reportDefinition.Compression)
-	d.Set(names.AttrFormat, reportDefinition.Format)
+	d.Set("format", reportDefinition.Format)
 	d.Set("refresh_closed_reports", reportDefinition.RefreshClosedReports)
 	d.Set("report_name", reportDefinition.ReportName)
 	d.Set("report_versioning", reportDefinition.ReportVersioning)
-	d.Set(names.AttrS3Bucket, reportDefinition.S3Bucket)
+	d.Set("s3_bucket", reportDefinition.S3Bucket)
 	d.Set("s3_prefix", reportDefinition.S3Prefix)
 	d.Set("s3_region", reportDefinition.S3Region)
 	d.Set("time_unit", reportDefinition.TimeUnit)

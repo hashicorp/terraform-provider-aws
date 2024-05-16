@@ -36,11 +36,11 @@ func ResourceDeviceFleet() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 800),
@@ -68,7 +68,7 @@ func ResourceDeviceFleet() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrKMSKeyID: {
+						"kms_key_id": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
@@ -81,7 +81,7 @@ func ResourceDeviceFleet() *schema.Resource {
 					},
 				},
 			},
-			names.AttrRoleARN: {
+			"role_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -105,11 +105,11 @@ func resourceDeviceFleetCreate(ctx context.Context, d *schema.ResourceData, meta
 		Tags:               getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk(names.AttrRoleARN); ok {
+	if v, ok := d.GetOk("role_arn"); ok {
 		input.RoleArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -142,9 +142,9 @@ func resourceDeviceFleetRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	arn := aws.StringValue(deviceFleet.DeviceFleetArn)
 	d.Set("device_fleet_name", deviceFleet.DeviceFleetName)
-	d.Set(names.AttrARN, arn)
-	d.Set(names.AttrRoleARN, deviceFleet.RoleArn)
-	d.Set(names.AttrDescription, deviceFleet.Description)
+	d.Set("arn", arn)
+	d.Set("role_arn", deviceFleet.RoleArn)
+	d.Set("description", deviceFleet.Description)
 
 	iotAlias := aws.StringValue(deviceFleet.IotRoleAlias)
 	d.Set("iot_role_alias", iotAlias)
@@ -161,16 +161,16 @@ func resourceDeviceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &sagemaker.UpdateDeviceFleetInput{
 			DeviceFleetName:    aws.String(d.Id()),
 			EnableIotRoleAlias: aws.Bool(d.Get("enable_iot_role_alias").(bool)),
 			OutputConfig:       expandFeatureDeviceFleetOutputConfig(d.Get("output_config").([]interface{})),
-			RoleArn:            aws.String(d.Get(names.AttrRoleARN).(string)),
+			RoleArn:            aws.String(d.Get("role_arn").(string)),
 		}
 
-		if d.HasChange(names.AttrDescription) {
-			input.Description = aws.String(d.Get(names.AttrDescription).(string))
+		if d.HasChange("description") {
+			input.Description = aws.String(d.Get("description").(string))
 		}
 
 		log.Printf("[DEBUG] sagemaker DeviceFleet update config: %s", input.String())
@@ -212,8 +212,8 @@ func expandFeatureDeviceFleetOutputConfig(l []interface{}) *sagemaker.EdgeOutput
 		S3OutputLocation: aws.String(m["s3_output_location"].(string)),
 	}
 
-	if v, ok := m[names.AttrKMSKeyID].(string); ok && v != "" {
-		config.KmsKeyId = aws.String(m[names.AttrKMSKeyID].(string))
+	if v, ok := m["kms_key_id"].(string); ok && v != "" {
+		config.KmsKeyId = aws.String(m["kms_key_id"].(string))
 	}
 
 	return config
@@ -229,7 +229,7 @@ func flattenFeatureDeviceFleetOutputConfig(config *sagemaker.EdgeOutputConfig) [
 	}
 
 	if config.KmsKeyId != nil {
-		m[names.AttrKMSKeyID] = aws.StringValue(config.KmsKeyId)
+		m["kms_key_id"] = aws.StringValue(config.KmsKeyId)
 	}
 
 	return []map[string]interface{}{m}

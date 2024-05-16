@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_config_remediation_configuration", name="Remediation Configuration")
@@ -38,7 +37,7 @@ func resourceRemediationConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -85,13 +84,13 @@ func resourceRemediationConfiguration() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(1, 25),
 			},
-			names.AttrParameter: {
+			"parameter": {
 				Type:     schema.TypeList,
 				MaxItems: 25,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrName: {
+						"name": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -113,7 +112,7 @@ func resourceRemediationConfiguration() *schema.Resource {
 					},
 				},
 			},
-			names.AttrResourceType: {
+			"resource_type": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -161,11 +160,11 @@ func resourceRemediationConfigurationPut(ctx context.Context, d *schema.Resource
 		remediationConfiguration.MaximumAutomaticAttempts = aws.Int32(int32(v.(int)))
 	}
 
-	if v, ok := d.GetOk(names.AttrParameter); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk("parameter"); ok && len(v.([]interface{})) > 0 {
 		remediationConfiguration.Parameters = expandRemediationParameterValues(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk(names.AttrResourceType); ok {
+	if v, ok := d.GetOk("resource_type"); ok {
 		remediationConfiguration.ResourceType = aws.String(v.(string))
 	}
 
@@ -216,17 +215,17 @@ func resourceRemediationConfigurationRead(ctx context.Context, d *schema.Resourc
 		return sdkdiag.AppendErrorf(diags, "reading ConfigService Remediation Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, remediationConfiguration.Arn)
+	d.Set("arn", remediationConfiguration.Arn)
 	d.Set("automatic", remediationConfiguration.Automatic)
 	d.Set("config_rule_name", remediationConfiguration.ConfigRuleName)
 	if err := d.Set("execution_controls", flattenExecutionControls(remediationConfiguration.ExecutionControls)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting execution_controls: %s", err)
 	}
 	d.Set("maximum_automatic_attempts", remediationConfiguration.MaximumAutomaticAttempts)
-	if err := d.Set(names.AttrParameter, flattenRemediationParameterValues(remediationConfiguration.Parameters)); err != nil {
+	if err := d.Set("parameter", flattenRemediationParameterValues(remediationConfiguration.Parameters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting parameter: %s", err)
 	}
-	d.Set(names.AttrResourceType, remediationConfiguration.ResourceType)
+	d.Set("resource_type", remediationConfiguration.ResourceType)
 	d.Set("retry_attempt_seconds", remediationConfiguration.RetryAttemptSeconds)
 	d.Set("target_id", remediationConfiguration.TargetId)
 	d.Set("target_type", remediationConfiguration.TargetType)
@@ -243,7 +242,7 @@ func resourceRemediationConfigurationDelete(ctx context.Context, d *schema.Resou
 		ConfigRuleName: aws.String(d.Id()),
 	}
 
-	if v, ok := d.GetOk(names.AttrResourceType); ok {
+	if v, ok := d.GetOk("resource_type"); ok {
 		input.ResourceType = aws.String(v.(string))
 	}
 
@@ -343,11 +342,11 @@ func expandRemediationParameterValues(tfList []interface{}) map[string]types.Rem
 			continue
 		}
 
-		if v, ok := tfMap[names.AttrName].(string); !ok || v == "" {
+		if v, ok := tfMap["name"].(string); !ok || v == "" {
 			continue
 		}
 
-		apiObjects[tfMap[names.AttrName].(string)] = expandRemediationParameterValue(tfMap)
+		apiObjects[tfMap["name"].(string)] = expandRemediationParameterValue(tfMap)
 	}
 
 	return apiObjects
@@ -390,7 +389,7 @@ func flattenRemediationParameterValues(apiObjects map[string]types.RemediationPa
 
 	for key, value := range apiObjects {
 		tfMap := map[string]interface{}{
-			names.AttrName: key,
+			"name": key,
 		}
 
 		if v := value.ResourceValue; v != nil {
@@ -411,11 +410,11 @@ func flattenRemediationParameterValues(apiObjects map[string]types.RemediationPa
 	}
 
 	slices.SortFunc(tfList, func(a, b interface{}) int {
-		if a.(map[string]interface{})[names.AttrName].(string) < b.(map[string]interface{})[names.AttrName].(string) {
+		if a.(map[string]interface{})["name"].(string) < b.(map[string]interface{})["name"].(string) {
 			return -1
 		}
 
-		if a.(map[string]interface{})[names.AttrName].(string) > b.(map[string]interface{})[names.AttrName].(string) {
+		if a.(map[string]interface{})["name"].(string) > b.(map[string]interface{})["name"].(string) {
 			return 1
 		}
 

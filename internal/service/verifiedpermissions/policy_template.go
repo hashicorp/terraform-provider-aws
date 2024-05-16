@@ -52,17 +52,17 @@ func (r *resourcePolicyTemplate) Metadata(_ context.Context, request resource.Me
 func (r *resourcePolicyTemplate) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrCreatedDate: schema.StringAttribute{
+			"created_date": schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrDescription: schema.StringAttribute{
+			"description": schema.StringAttribute{
 				Optional: true,
 			},
-			names.AttrID: framework.IDAttribute(),
+			"id": framework.IDAttribute(),
 			"policy_store_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -219,7 +219,7 @@ func (r *resourcePolicyTemplate) Delete(ctx context.Context, request resource.De
 	}
 
 	tflog.Debug(ctx, "deleting Verified Permissions Policy Template", map[string]interface{}{
-		names.AttrID: state.ID.ValueString(),
+		"id": state.ID.ValueString(),
 	})
 
 	input := &verifiedpermissions.DeletePolicyTemplateInput{

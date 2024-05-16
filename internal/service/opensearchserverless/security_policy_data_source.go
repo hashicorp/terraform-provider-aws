@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_opensearchserverless_security_policy")
@@ -25,11 +24,11 @@ func DataSourceSecurityPolicy() *schema.Resource {
 		ReadWithoutTimeout: dataSourceSecurityPolicyRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrCreatedDate: {
+			"created_date": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -37,7 +36,7 @@ func DataSourceSecurityPolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
@@ -45,7 +44,7 @@ func DataSourceSecurityPolicy() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`^[a-z][0-9a-z-]+$`), `must start with any lower case letter and can include any lower case letter, number, or "-"`),
 				),
 			},
-			names.AttrPolicy: {
+			"policy": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -53,7 +52,7 @@ func DataSourceSecurityPolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrType: {
+			"type": {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateDiagFunc: enum.Validate[types.SecurityPolicyType](),
@@ -66,8 +65,8 @@ func dataSourceSecurityPolicyRead(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchServerlessClient(ctx)
 
-	securityPolicyName := d.Get(names.AttrName).(string)
-	securityPolicyType := d.Get(names.AttrType).(string)
+	securityPolicyName := d.Get("name").(string)
+	securityPolicyType := d.Get("type").(string)
 	securityPolicy, err := findSecurityPolicyByNameAndType(ctx, conn, securityPolicyName, securityPolicyType)
 
 	if err != nil {
@@ -80,14 +79,14 @@ func dataSourceSecurityPolicyRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	d.SetId(aws.ToString(securityPolicy.Name))
-	d.Set(names.AttrDescription, securityPolicy.Description)
-	d.Set(names.AttrName, securityPolicy.Name)
-	d.Set(names.AttrPolicy, string(policyBytes))
+	d.Set("description", securityPolicy.Description)
+	d.Set("name", securityPolicy.Name)
+	d.Set("policy", string(policyBytes))
 	d.Set("policy_version", securityPolicy.PolicyVersion)
-	d.Set(names.AttrType, securityPolicy.Type)
+	d.Set("type", securityPolicy.Type)
 
 	createdDate := time.UnixMilli(aws.ToInt64(securityPolicy.CreatedDate))
-	d.Set(names.AttrCreatedDate, createdDate.Format(time.RFC3339))
+	d.Set("created_date", createdDate.Format(time.RFC3339))
 
 	lastModifiedDate := time.UnixMilli(aws.ToInt64(securityPolicy.LastModifiedDate))
 	d.Set("last_modified_date", lastModifiedDate.Format(time.RFC3339))

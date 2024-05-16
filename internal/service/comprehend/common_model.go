@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type safeMutex struct {
@@ -111,8 +110,8 @@ func flattenVPCConfig(apiObject *types.VpcConfig) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		names.AttrSecurityGroupIDs: flex.FlattenStringValueSet(apiObject.SecurityGroupIds),
-		names.AttrSubnets:          flex.FlattenStringValueSet(apiObject.Subnets),
+		"security_group_ids": flex.FlattenStringValueSet(apiObject.SecurityGroupIds),
+		"subnets":            flex.FlattenStringValueSet(apiObject.Subnets),
 	}
 
 	return []interface{}{m}
@@ -126,8 +125,8 @@ func expandVPCConfig(tfList []interface{}) *types.VpcConfig {
 	tfMap := tfList[0].(map[string]interface{})
 
 	a := &types.VpcConfig{
-		SecurityGroupIds: flex.ExpandStringValueSet(tfMap[names.AttrSecurityGroupIDs].(*schema.Set)),
-		Subnets:          flex.ExpandStringValueSet(tfMap[names.AttrSubnets].(*schema.Set)),
+		SecurityGroupIds: flex.ExpandStringValueSet(tfMap["security_group_ids"].(*schema.Set)),
+		Subnets:          flex.ExpandStringValueSet(tfMap["subnets"].(*schema.Set)),
 	}
 
 	return a

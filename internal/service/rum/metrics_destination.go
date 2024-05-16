@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_rum_metrics_destination")
@@ -37,17 +36,17 @@ func ResourceMetricsDestination() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrDestination: {
+			"destination": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(cloudwatchrum.MetricDestination_Values(), false),
 			},
-			names.AttrDestinationARN: {
+			"destination_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			names.AttrIAMRoleARN: {
+			"iam_role_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
@@ -62,14 +61,14 @@ func resourceMetricsDestinationPut(ctx context.Context, d *schema.ResourceData, 
 	name := d.Get("app_monitor_name").(string)
 	input := &cloudwatchrum.PutRumMetricsDestinationInput{
 		AppMonitorName: aws.String(name),
-		Destination:    aws.String(d.Get(names.AttrDestination).(string)),
+		Destination:    aws.String(d.Get("destination").(string)),
 	}
 
-	if v, ok := d.GetOk(names.AttrDestinationARN); ok {
+	if v, ok := d.GetOk("destination_arn"); ok {
 		input.DestinationArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrIAMRoleARN); ok {
+	if v, ok := d.GetOk("iam_role_arn"); ok {
 		input.IamRoleArn = aws.String(v.(string))
 	}
 
@@ -102,9 +101,9 @@ func resourceMetricsDestinationRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	d.Set("app_monitor_name", d.Id())
-	d.Set(names.AttrDestination, dest.Destination)
-	d.Set(names.AttrDestinationARN, dest.DestinationArn)
-	d.Set(names.AttrIAMRoleARN, dest.IamRoleArn)
+	d.Set("destination", dest.Destination)
+	d.Set("destination_arn", dest.DestinationArn)
+	d.Set("iam_role_arn", dest.IamRoleArn)
 
 	return nil
 }
@@ -114,10 +113,10 @@ func resourceMetricsDestinationDelete(ctx context.Context, d *schema.ResourceDat
 
 	input := &cloudwatchrum.DeleteRumMetricsDestinationInput{
 		AppMonitorName: aws.String(d.Id()),
-		Destination:    aws.String(d.Get(names.AttrDestination).(string)),
+		Destination:    aws.String(d.Get("destination").(string)),
 	}
 
-	if v, ok := d.GetOk(names.AttrDestinationARN); ok {
+	if v, ok := d.GetOk("destination_arn"); ok {
 		input.DestinationArn = aws.String(v.(string))
 	}
 

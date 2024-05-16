@@ -32,7 +32,7 @@ func TestAccSQSQueuePolicy_basic(t *testing.T) {
 				Config: testAccQueuePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, queueResourceName, &queueAttributes),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
+					resource.TestCheckResourceAttrSet(resourceName, "policy"),
 				),
 			},
 			{
@@ -44,7 +44,7 @@ func TestAccSQSQueuePolicy_basic(t *testing.T) {
 				Config:   testAccQueuePolicyConfig_basic(rName),
 				PlanOnly: true,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrPolicy, queueResourceName, names.AttrPolicy),
+					resource.TestCheckResourceAttrPair(resourceName, "policy", queueResourceName, "policy"),
 				),
 			},
 		},
@@ -117,7 +117,7 @@ func TestAccSQSQueuePolicy_update(t *testing.T) {
 				Config: testAccQueuePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, queueResourceName, &queueAttributes),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
+					resource.TestCheckResourceAttrSet(resourceName, "policy"),
 				),
 			},
 			{
@@ -128,7 +128,7 @@ func TestAccSQSQueuePolicy_update(t *testing.T) {
 			{
 				Config: testAccQueuePolicyConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
+					resource.TestCheckResourceAttrSet(resourceName, "policy"),
 				),
 			},
 		},

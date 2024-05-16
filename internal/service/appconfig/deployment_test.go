@@ -34,22 +34,24 @@ func TestAccAppConfigDeployment_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckDestroyNoop,
+		// AppConfig Deployments cannot be destroyed, but we want to ensure
+		// the Application and its dependents are removed.
+		CheckDestroy: testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appconfig", regexache.MustCompile(`application/[0-9a-z]{4,7}/environment/[0-9a-z]{4,7}/deployment/1`)),
-					resource.TestCheckResourceAttrPair(resourceName, "application_id", appResourceName, names.AttrID),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appconfig", regexache.MustCompile(`application/[0-9a-z]{4,7}/environment/[0-9a-z]{4,7}/deployment/1`)),
+					resource.TestCheckResourceAttrPair(resourceName, "application_id", appResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration_profile_id", confProfResourceName, "configuration_profile_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration_version", confVersionResourceName, "version_number"),
-					resource.TestCheckResourceAttr(resourceName, "deployment_number", acctest.Ct1),
-					resource.TestCheckResourceAttrPair(resourceName, "deployment_strategy_id", depStrategyResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
+					resource.TestCheckResourceAttr(resourceName, "deployment_number", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "deployment_strategy_id", depStrategyResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "description", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "environment_id", envResourceName, "environment_id"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttrSet(resourceName, "state"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -75,23 +77,25 @@ func TestAccAppConfigDeployment_kms(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckDestroyNoop,
+		// AppConfig Deployments cannot be destroyed, but we want to ensure
+		// the Application and its dependents are removed.
+		CheckDestroy: testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentConfig_kms(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appconfig", regexache.MustCompile(`application/[0-9a-z]{4,7}/environment/[0-9a-z]{4,7}/deployment/1`)),
-					resource.TestCheckResourceAttrPair(resourceName, "application_id", appResourceName, names.AttrID),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appconfig", regexache.MustCompile(`application/[0-9a-z]{4,7}/environment/[0-9a-z]{4,7}/deployment/1`)),
+					resource.TestCheckResourceAttrPair(resourceName, "application_id", appResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration_profile_id", confProfResourceName, "configuration_profile_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration_version", confVersionResourceName, "version_number"),
-					resource.TestCheckResourceAttr(resourceName, "deployment_number", acctest.Ct1),
-					resource.TestCheckResourceAttrPair(resourceName, "deployment_strategy_id", depStrategyResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
+					resource.TestCheckResourceAttr(resourceName, "deployment_number", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "deployment_strategy_id", depStrategyResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "description", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "environment_id", envResourceName, "environment_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "kms_key_identifier"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttrSet(resourceName, "state"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 		},
@@ -108,7 +112,9 @@ func TestAccAppConfigDeployment_predefinedStrategy(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckDestroyNoop,
+		// AppConfig Deployments cannot be destroyed, but we want to ensure
+		// the Application and its dependents are removed.
+		CheckDestroy: testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentConfig_predefinedStrategy(rName, strategy),
@@ -125,7 +131,7 @@ func TestAccAppConfigDeployment_predefinedStrategy(t *testing.T) {
 				// depending on the predefined deployment strategy,
 				// a waiter is not implemented for the resource;
 				// thus, we cannot guarantee the "state" value during import.
-				ImportStateVerifyIgnore: []string{names.AttrState},
+				ImportStateVerifyIgnore: []string{"state"},
 			},
 		},
 	})
@@ -140,14 +146,14 @@ func TestAccAppConfigDeployment_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckDestroyNoop,
+		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeploymentConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccDeploymentConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -156,45 +162,20 @@ func TestAccAppConfigDeployment_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDeploymentConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccDeploymentConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccDeploymentConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccDeploymentConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAppConfigDeployment_multiple(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resource1Name := "aws_appconfig_deployment.test.0"
-	resource2Name := "aws_appconfig_deployment.test.1"
-	resource3Name := "aws_appconfig_deployment.test.2"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AppConfigServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckDestroyNoop,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDeploymentConfig_multiple(rName, 3),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resource1Name),
-					testAccCheckDeploymentExists(ctx, resource2Name),
-					testAccCheckDeploymentExists(ctx, resource3Name),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -222,7 +203,7 @@ func testAccCheckDeploymentExists(ctx context.Context, resourceName string) reso
 
 		input := &appconfig.GetDeploymentInput{
 			ApplicationId:    aws.String(appID),
-			DeploymentNumber: aws.Int32(deploymentNum),
+			DeploymentNumber: aws.Int32(int32(deploymentNum)),
 			EnvironmentId:    aws.String(envID),
 		}
 
@@ -240,7 +221,7 @@ func testAccCheckDeploymentExists(ctx context.Context, resourceName string) reso
 	}
 }
 
-func testAccDeploymentConfig_base(rName string) string {
+func testAccDeploymentBaseConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_appconfig_application" "test" {
   name = %[1]q
@@ -278,7 +259,7 @@ resource "aws_appconfig_hosted_configuration_version" "test" {
 `, rName)
 }
 
-func testAccDeploymentConfig_baseKMS(rName string) string {
+func testAccDeploymentKMSConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
@@ -323,7 +304,9 @@ resource "aws_appconfig_hosted_configuration_version" "test" {
 }
 
 func testAccDeploymentConfig_name(rName string) string {
-	return acctest.ConfigCompose(testAccDeploymentConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccDeploymentBaseConfig(rName),
+		fmt.Sprintf(`
 resource "aws_appconfig_deployment" "test"{
   application_id           = aws_appconfig_application.test.id
   configuration_profile_id = aws_appconfig_configuration_profile.test.configuration_profile_id
@@ -336,7 +319,9 @@ resource "aws_appconfig_deployment" "test"{
 }
 
 func testAccDeploymentConfig_kms(rName string) string {
-	return acctest.ConfigCompose(testAccDeploymentConfig_baseKMS(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccDeploymentKMSConfig(rName),
+		fmt.Sprintf(`
 resource "aws_appconfig_deployment" "test"{
   application_id           = aws_appconfig_application.test.id
   configuration_profile_id = aws_appconfig_configuration_profile.test.configuration_profile_id
@@ -350,7 +335,9 @@ resource "aws_appconfig_deployment" "test"{
 }
 
 func testAccDeploymentConfig_predefinedStrategy(rName, strategy string) string {
-	return acctest.ConfigCompose(testAccDeploymentConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccDeploymentBaseConfig(rName),
+		fmt.Sprintf(`
 resource "aws_appconfig_deployment" "test"{
   application_id           = aws_appconfig_application.test.id
   configuration_profile_id = aws_appconfig_configuration_profile.test.configuration_profile_id
@@ -363,7 +350,9 @@ resource "aws_appconfig_deployment" "test"{
 }
 
 func testAccDeploymentConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccDeploymentConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccDeploymentBaseConfig(rName),
+		fmt.Sprintf(`
 resource "aws_appconfig_deployment" "test"{
   application_id           = aws_appconfig_application.test.id
   configuration_profile_id = aws_appconfig_configuration_profile.test.configuration_profile_id
@@ -379,7 +368,9 @@ resource "aws_appconfig_deployment" "test"{
 }
 
 func testAccDeploymentConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccDeploymentConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccDeploymentBaseConfig(rName),
+		fmt.Sprintf(`
 resource "aws_appconfig_deployment" "test"{
   application_id           = aws_appconfig_application.test.id
   configuration_profile_id = aws_appconfig_configuration_profile.test.configuration_profile_id
@@ -393,57 +384,4 @@ resource "aws_appconfig_deployment" "test"{
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
-}
-
-func testAccDeploymentConfig_multiple(rName string, n int) string {
-	return fmt.Sprintf(`
-resource "aws_appconfig_application" "test" {
-  name = %[1]q
-}
-
-resource "aws_appconfig_environment" "test" {
-  name           = %[1]q
-  application_id = aws_appconfig_application.test.id
-}
-
-resource "aws_appconfig_configuration_profile" "test" {
-  count = %[2]d
-
-  application_id = aws_appconfig_application.test.id
-  name           = "%[1]s-${count.index}"
-  location_uri   = "hosted"
-}
-
-resource "aws_appconfig_deployment_strategy" "test" {
-  name                           = %[1]q
-  deployment_duration_in_minutes = 3
-  growth_factor                  = 10
-  replicate_to                   = "NONE"
-}
-
-resource "aws_appconfig_hosted_configuration_version" "test" {
-  count = %[2]d
-
-  application_id           = aws_appconfig_application.test.id
-  configuration_profile_id = aws_appconfig_configuration_profile.test[count.index].configuration_profile_id
-  content_type             = "application/json"
-
-  content = jsonencode({
-    foo = "bar"
-  })
-
-  description = "%[1]s-${count.index}"
-}
-
-resource "aws_appconfig_deployment" "test" {
-  count = %[2]d
-
-  application_id           = aws_appconfig_application.test.id
-  configuration_profile_id = aws_appconfig_configuration_profile.test[count.index].configuration_profile_id
-  configuration_version    = aws_appconfig_hosted_configuration_version.test[count.index].version_number
-  description              = "%[1]s-${count.index}"
-  deployment_strategy_id   = aws_appconfig_deployment_strategy.test.id
-  environment_id           = aws_appconfig_environment.test.environment_id
-}
-`, rName, n)
 }

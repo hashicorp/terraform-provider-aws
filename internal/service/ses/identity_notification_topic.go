@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ses_identity_notification_topic")
@@ -32,7 +31,7 @@ func ResourceIdentityNotificationTopic() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrTopicARN: {
+			"topic_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
@@ -76,7 +75,7 @@ func resourceNotificationTopicSet(ctx context.Context, d *schema.ResourceData, m
 		NotificationType: aws.String(notification),
 	}
 
-	if v, ok := d.GetOk(names.AttrTopicARN); ok {
+	if v, ok := d.GetOk("topic_arn"); ok {
 		setOpts.SnsTopic = aws.String(v.(string))
 	}
 
@@ -125,7 +124,7 @@ func resourceIdentityNotificationTopicRead(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendErrorf(diags, "reading SES Identity Notification Topic (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrTopicARN, "")
+	d.Set("topic_arn", "")
 	if response == nil {
 		return diags
 	}
@@ -137,13 +136,13 @@ func resourceIdentityNotificationTopicRead(ctx context.Context, d *schema.Resour
 
 	switch notificationType {
 	case ses.NotificationTypeBounce:
-		d.Set(names.AttrTopicARN, notificationAttributes.BounceTopic)
+		d.Set("topic_arn", notificationAttributes.BounceTopic)
 		d.Set("include_original_headers", notificationAttributes.HeadersInBounceNotificationsEnabled)
 	case ses.NotificationTypeComplaint:
-		d.Set(names.AttrTopicARN, notificationAttributes.ComplaintTopic)
+		d.Set("topic_arn", notificationAttributes.ComplaintTopic)
 		d.Set("include_original_headers", notificationAttributes.HeadersInComplaintNotificationsEnabled)
 	case ses.NotificationTypeDelivery:
-		d.Set(names.AttrTopicARN, notificationAttributes.DeliveryTopic)
+		d.Set("topic_arn", notificationAttributes.DeliveryTopic)
 		d.Set("include_original_headers", notificationAttributes.HeadersInDeliveryNotificationsEnabled)
 	}
 

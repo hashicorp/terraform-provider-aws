@@ -29,7 +29,7 @@ func TestAccS3BucketPolicyDataSource_basic(t *testing.T) {
 			{
 				Config: testAccBucketPolicyDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketPolicyMatch(dataSourceName, names.AttrPolicy, resourceName, names.AttrPolicy),
+					testAccCheckBucketPolicyMatch(dataSourceName, "policy", resourceName, "policy"),
 				),
 			},
 		},

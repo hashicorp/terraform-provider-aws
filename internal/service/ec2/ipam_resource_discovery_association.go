@@ -45,7 +45,7 @@ func ResourceIPAMResourceDiscoveryAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -69,11 +69,11 @@ func ResourceIPAMResourceDiscoveryAssociation() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			names.AttrOwnerID: {
+			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrState: {
+			"state": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -127,14 +127,14 @@ func resourceIPAMResourceDiscoveryAssociationRead(ctx context.Context, d *schema
 		return sdkdiag.AppendErrorf(diags, "reading IPAM Resource Discovery Association (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, rda.IpamResourceDiscoveryAssociationArn)
+	d.Set("arn", rda.IpamResourceDiscoveryAssociationArn)
 	d.Set("ipam_arn", rda.IpamArn)
 	d.Set("ipam_id", rda.IpamId)
 	d.Set("ipam_region", rda.IpamRegion)
 	d.Set("ipam_resource_discovery_id", rda.IpamResourceDiscoveryId)
 	d.Set("is_default", rda.IsDefault)
-	d.Set(names.AttrOwnerID, rda.OwnerId)
-	d.Set(names.AttrState, rda.State)
+	d.Set("owner_id", rda.OwnerId)
+	d.Set("state", rda.State)
 
 	setTagsOut(ctx, rda.Tags)
 

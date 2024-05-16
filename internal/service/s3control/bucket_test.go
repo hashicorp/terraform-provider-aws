@@ -35,12 +35,12 @@ func TestAccS3ControlBucket_basic(t *testing.T) {
 				Config: testAccBucketConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "s3-outposts", regexache.MustCompile(fmt.Sprintf("outpost/[^/]+/bucket/%s", rName))),
-					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, rName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
-					resource.TestCheckResourceAttrPair(resourceName, "outpost_id", "data.aws_outposts_outpost.test", names.AttrID),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "s3-outposts", regexache.MustCompile(fmt.Sprintf("outpost/[^/]+/bucket/%s", rName))),
+					resource.TestCheckResourceAttr(resourceName, "bucket", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
+					resource.TestCheckResourceAttrPair(resourceName, "outpost_id", "data.aws_outposts_outpost.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "public_access_block_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -89,11 +89,11 @@ func TestAccS3ControlBucket_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckBucketDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccBucketConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -102,20 +102,20 @@ func TestAccS3ControlBucket_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBucketConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccBucketConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccBucketConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccBucketConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},

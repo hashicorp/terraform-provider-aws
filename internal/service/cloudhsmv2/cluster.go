@@ -99,7 +99,7 @@ func resourceCluster() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			names.AttrSubnetIDs: {
+			"subnet_ids": {
 				Type:     schema.TypeSet,
 				Required: true,
 				ForceNew: true,
@@ -107,7 +107,7 @@ func resourceCluster() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVPCID: {
+			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -123,7 +123,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	input := &cloudhsmv2.CreateClusterInput{
 		HsmType:   aws.String(d.Get("hsm_type").(string)),
-		SubnetIds: flex.ExpandStringValueSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
+		SubnetIds: flex.ExpandStringValueSet(d.Get("subnet_ids").(*schema.Set)),
 		TagList:   getTagsIn(ctx),
 	}
 
@@ -175,8 +175,8 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("hsm_type", cluster.HsmType)
 	d.Set("security_group_id", cluster.SecurityGroup)
 	d.Set("source_backup_identifier", cluster.SourceBackupId)
-	d.Set(names.AttrSubnetIDs, tfmaps.Values(cluster.SubnetMapping))
-	d.Set(names.AttrVPCID, cluster.VpcId)
+	d.Set("subnet_ids", tfmaps.Values(cluster.SubnetMapping))
+	d.Set("vpc_id", cluster.VpcId)
 
 	setTagsOut(ctx, cluster.TagList)
 

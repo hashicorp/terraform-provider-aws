@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_iot_topic_rule_destination")
@@ -42,41 +41,41 @@ func ResourceTopicRuleDestination() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrEnabled: {
+			"enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
-			names.AttrVPCConfiguration: {
+			"vpc_configuration": {
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrRoleARN: {
+						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						names.AttrSecurityGroups: {
+						"security_groups": {
 							Type:     schema.TypeSet,
 							Optional: true,
 							ForceNew: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						names.AttrSubnetIDs: {
+						"subnet_ids": {
 							Type:     schema.TypeSet,
 							Required: true,
 							ForceNew: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						names.AttrVPCID: {
+						"vpc_id": {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -97,7 +96,7 @@ func resourceTopicRuleDestinationCreate(ctx context.Context, d *schema.ResourceD
 		DestinationConfiguration: &iot.TopicRuleDestinationConfiguration{},
 	}
 
-	if v, ok := d.GetOk(names.AttrVPCConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk("vpc_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.DestinationConfiguration.VpcConfiguration = expandVPCDestinationConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -126,7 +125,7 @@ func resourceTopicRuleDestinationCreate(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "waiting for IoT Topic Rule Destination (%s) create: %s", d.Id(), err)
 	}
 
-	if _, ok := d.GetOk(names.AttrEnabled); !ok {
+	if _, ok := d.GetOk("enabled"); !ok {
 		_, err := conn.UpdateTopicRuleDestinationWithContext(ctx, &iot.UpdateTopicRuleDestinationInput{
 			Arn:    aws.String(d.Id()),
 			Status: aws.String(iot.TopicRuleDestinationStatusDisabled),
@@ -161,14 +160,14 @@ func resourceTopicRuleDestinationRead(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "reading IoT Topic Rule Destination (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, output.Arn)
-	d.Set(names.AttrEnabled, aws.StringValue(output.Status) == iot.TopicRuleDestinationStatusEnabled)
+	d.Set("arn", output.Arn)
+	d.Set("enabled", aws.StringValue(output.Status) == iot.TopicRuleDestinationStatusEnabled)
 	if output.VpcProperties != nil {
-		if err := d.Set(names.AttrVPCConfiguration, []interface{}{flattenVPCDestinationProperties(output.VpcProperties)}); err != nil {
+		if err := d.Set("vpc_configuration", []interface{}{flattenVPCDestinationProperties(output.VpcProperties)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting vpc_configuration: %s", err)
 		}
 	} else {
-		d.Set(names.AttrVPCConfiguration, nil)
+		d.Set("vpc_configuration", nil)
 	}
 
 	return diags
@@ -179,14 +178,14 @@ func resourceTopicRuleDestinationUpdate(ctx context.Context, d *schema.ResourceD
 
 	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
-	if d.HasChange(names.AttrEnabled) {
+	if d.HasChange("enabled") {
 		input := &iot.UpdateTopicRuleDestinationInput{
 			Arn:    aws.String(d.Id()),
 			Status: aws.String(iot.TopicRuleDestinationStatusEnabled),
 		}
 		waiter := waitTopicRuleDestinationEnabled
 
-		if _, ok := d.GetOk(names.AttrEnabled); !ok {
+		if _, ok := d.GetOk("enabled"); !ok {
 			input.Status = aws.String(iot.TopicRuleDestinationStatusDisabled)
 			waiter = waitTopicRuleDestinationDisabled
 		}
@@ -233,19 +232,19 @@ func expandVPCDestinationConfiguration(tfMap map[string]interface{}) *iot.VpcDes
 
 	apiObject := &iot.VpcDestinationConfiguration{}
 
-	if v, ok := tfMap[names.AttrRoleARN].(string); ok && v != "" {
+	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
 		apiObject.RoleArn = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrSecurityGroups].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap["security_groups"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SecurityGroups = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := tfMap[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap["subnet_ids"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SubnetIds = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := tfMap[names.AttrVPCID].(string); ok && v != "" {
+	if v, ok := tfMap["vpc_id"].(string); ok && v != "" {
 		apiObject.VpcId = aws.String(v)
 	}
 
@@ -260,19 +259,19 @@ func flattenVPCDestinationProperties(apiObject *iot.VpcDestinationProperties) ma
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.RoleArn; v != nil {
-		tfMap[names.AttrRoleARN] = aws.StringValue(v)
+		tfMap["role_arn"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.SecurityGroups; v != nil {
-		tfMap[names.AttrSecurityGroups] = aws.StringValueSlice(v)
+		tfMap["security_groups"] = aws.StringValueSlice(v)
 	}
 
 	if v := apiObject.SubnetIds; v != nil {
-		tfMap[names.AttrSubnetIDs] = aws.StringValueSlice(v)
+		tfMap["subnet_ids"] = aws.StringValueSlice(v)
 	}
 
 	if v := apiObject.VpcId; v != nil {
-		tfMap[names.AttrVPCID] = aws.StringValue(v)
+		tfMap["vpc_id"] = aws.StringValue(v)
 	}
 
 	return tfMap

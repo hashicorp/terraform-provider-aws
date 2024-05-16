@@ -65,7 +65,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `masterAccountArn` - ARN of the master account
 * `masterAccountEmail` - Email address of the master account
 * `masterAccountId` - Identifier of the master account
-* `masterAccountName` - Name of the master account
 * `nonMasterAccounts` - List of organization accounts excluding the master account. For a list including the master account, see the `accounts` attribute. All elements have these attributes:
     * `arn` - ARN of the account
     * `email` - Email of the account
@@ -112,4 +111,4 @@ Using `terraform import`, import the AWS organization using the `id`. For exampl
 % terraform import aws_organizations_organization.my_org o-1234567
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-f638eb1d6cd8561baf40168a25f0ca1df3c2ecd70e0aab2ecf69025a3d062087 -->
+<!-- cache-key: cdktf-0.20.1 input-94624882d07e9da3b0a6aac6dc0902e40fde096b01acc4c3e884c266bbfd7a56 -->

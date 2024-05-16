@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ecrpublic_authorization_token")
@@ -33,12 +32,12 @@ func DataSourceAuthorizationToken() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrPassword: {
+			"password": {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
 			},
-			names.AttrUserName: {
+			"user_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -76,8 +75,8 @@ func dataSourceAuthorizationTokenRead(ctx context.Context, d *schema.ResourceDat
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set("authorization_token", authorizationToken)
 	d.Set("expires_at", expiresAt)
-	d.Set(names.AttrUserName, userName)
-	d.Set(names.AttrPassword, password)
+	d.Set("user_name", userName)
+	d.Set("password", password)
 
 	return diags
 }

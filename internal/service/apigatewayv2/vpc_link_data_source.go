@@ -21,20 +21,20 @@ func dataSourceVPCLink() *schema.Resource {
 		ReadWithoutTimeout: dataSourceVPCLinkRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrSecurityGroupIDs: {
+			"security_group_ids": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrSubnetIDs: {
+			"subnet_ids": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -60,10 +60,10 @@ func dataSourceVPCLinkRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	d.SetId(vpcLinkID)
-	d.Set(names.AttrARN, vpcLinkARN(meta.(*conns.AWSClient), d.Id()))
-	d.Set(names.AttrName, output.Name)
-	d.Set(names.AttrSecurityGroupIDs, output.SecurityGroupIds)
-	d.Set(names.AttrSubnetIDs, output.SubnetIds)
+	d.Set("arn", vpcLinkARN(meta.(*conns.AWSClient), d.Id()))
+	d.Set("name", output.Name)
+	d.Set("security_group_ids", output.SecurityGroupIds)
+	d.Set("subnet_ids", output.SubnetIds)
 
 	setTagsOut(ctx, output.Tags)
 

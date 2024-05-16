@@ -778,89 +778,7 @@ func TestValidServicePrincipal(t *testing.T) {
 	}
 }
 
-func TestMapKeyNoMatch(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		name    string
-		value   interface{}
-		wantErr bool
-	}{
-		{
-			name: "two invalid keys",
-			value: map[string]interface{}{
-				"Ka": "V1",
-				"K2": "V2",
-				"Kb": "V3",
-				"Kc": "V4",
-				"K5": "V5",
-			},
-			wantErr: true,
-		},
-		{
-			name: "ok",
-			value: map[string]interface{}{
-				"Ka": "V1",
-				"Kb": "V2",
-			},
-		},
-	}
-	f := MapKeyNoMatch(regexache.MustCompile(`^.*\d$`), "must not end with a digit")
-	for _, testCase := range testCases {
-		testCase := testCase
-		t.Run(testCase.name, func(t *testing.T) {
-			t.Parallel()
-
-			diags := f(testCase.value, cty.Path{})
-			if got, want := diags.HasError(), testCase.wantErr; got != want {
-				t.Errorf("got = %v, want = %v", got, want)
-			}
-		})
-	}
-}
-
-func TestMapSizeAtMost(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		name    string
-		value   interface{}
-		wantErr bool
-	}{
-		{
-			name: "too long",
-			value: map[string]interface{}{
-				"K1": "V1",
-				"K2": "V2",
-				"K3": "V3",
-				"K4": "V4",
-				"K5": "V5",
-			},
-			wantErr: true,
-		},
-		{
-			name: "ok",
-			value: map[string]interface{}{
-				"K1": "V1",
-				"K2": "V2",
-			},
-		},
-	}
-	f := MapSizeAtMost(4)
-	for _, testCase := range testCases {
-		testCase := testCase
-		t.Run(testCase.name, func(t *testing.T) {
-			t.Parallel()
-
-			diags := f(testCase.value, cty.Path{})
-			if got, want := diags.HasError(), testCase.wantErr; got != want {
-				t.Errorf("got = %v, want = %v", got, want)
-			}
-		})
-	}
-}
-
-func TestMapSizeBetween(t *testing.T) {
+func TestMapLenBetween(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
@@ -894,7 +812,7 @@ func TestMapSizeBetween(t *testing.T) {
 			},
 		},
 	}
-	f := MapSizeBetween(2, 4)
+	f := MapLenBetween(2, 4)
 	for _, testCase := range testCases {
 		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {

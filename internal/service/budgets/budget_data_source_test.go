@@ -35,12 +35,10 @@ func TestAccBudgetsBudgetDataSource_basic(t *testing.T) {
 				Config: testAccBudgetDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccBudgetExists(ctx, resourceName, &budget),
-					acctest.CheckResourceAttrAccountID(dataSourceName, names.AttrAccountID),
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
+					acctest.CheckResourceAttrAccountID(dataSourceName, "account_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "calculated_spend.#"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "budget_limit.#"),
-					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
-					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsKey1, resourceName, acctest.CtTagsKey1),
 				),
 			},
 		},
@@ -59,9 +57,6 @@ resource "aws_budgets_budget" "test" {
   cost_filter {
     name   = "Service"
     values = ["Amazon Redshift"]
-  }
-  tags = {
-    "key1" = "value1updated"
   }
 }
 

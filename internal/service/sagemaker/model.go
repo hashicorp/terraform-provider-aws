@@ -38,7 +38,7 @@ func ResourceModel() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -53,7 +53,7 @@ func ResourceModel() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: validName,
 						},
-						names.AttrEnvironment: {
+						"environment": {
 							Type:         schema.TypeMap,
 							Optional:     true,
 							ForceNew:     true,
@@ -96,7 +96,7 @@ func ResourceModel() *schema.Resource {
 								},
 							},
 						},
-						names.AttrMode: {
+						"mode": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
@@ -159,7 +159,7 @@ func ResourceModel() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			names.AttrExecutionRoleARN: {
+			"execution_role_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -173,7 +173,7 @@ func ResourceModel() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrMode: {
+						"mode": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(sagemaker.InferenceExecutionMode_Values(), false),
@@ -181,7 +181,7 @@ func ResourceModel() *schema.Resource {
 					},
 				},
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -200,7 +200,7 @@ func ResourceModel() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: validName,
 						},
-						names.AttrEnvironment: {
+						"environment": {
 							Type:         schema.TypeMap,
 							Optional:     true,
 							ForceNew:     true,
@@ -243,7 +243,7 @@ func ResourceModel() *schema.Resource {
 								},
 							},
 						},
-						names.AttrMode: {
+						"mode": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
@@ -303,20 +303,20 @@ func ResourceModel() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVPCConfig: {
+			"vpc_config": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrSubnets: {
+						"subnets": {
 							Type:     schema.TypeSet,
 							Required: true,
 							MaxItems: 16,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						names.AttrSecurityGroupIDs: {
+						"security_group_ids": {
 							Type:     schema.TypeSet,
 							Required: true,
 							MaxItems: 5,
@@ -336,7 +336,7 @@ func resourceModelCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
 	var name string
-	if v, ok := d.GetOk(names.AttrName); ok {
+	if v, ok := d.GetOk("name"); ok {
 		name = v.(string)
 	} else {
 		name = id.UniqueId()
@@ -355,11 +355,11 @@ func resourceModelCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		createOpts.Containers = expandContainers(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk(names.AttrExecutionRoleARN); ok {
+	if v, ok := d.GetOk("execution_role_arn"); ok {
 		createOpts.ExecutionRoleArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrVPCConfig); ok {
+	if v, ok := d.GetOk("vpc_config"); ok {
 		createOpts.VpcConfig = expandVPCConfigRequest(v.([]interface{}))
 	}
 
@@ -392,8 +392,8 @@ func expandVPCConfigRequest(l []interface{}) *sagemaker.VpcConfig {
 	m := l[0].(map[string]interface{})
 
 	return &sagemaker.VpcConfig{
-		SecurityGroupIds: flex.ExpandStringSet(m[names.AttrSecurityGroupIDs].(*schema.Set)),
-		Subnets:          flex.ExpandStringSet(m[names.AttrSubnets].(*schema.Set)),
+		SecurityGroupIds: flex.ExpandStringSet(m["security_group_ids"].(*schema.Set)),
+		Subnets:          flex.ExpandStringSet(m["subnets"].(*schema.Set)),
 	}
 }
 
@@ -416,9 +416,9 @@ func resourceModelRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	arn := aws.StringValue(model.ModelArn)
-	d.Set(names.AttrARN, arn)
-	d.Set(names.AttrName, model.ModelName)
-	d.Set(names.AttrExecutionRoleARN, model.ExecutionRoleArn)
+	d.Set("arn", arn)
+	d.Set("name", model.ModelName)
+	d.Set("execution_role_arn", model.ExecutionRoleArn)
 	d.Set("enable_network_isolation", model.EnableNetworkIsolation)
 
 	if err := d.Set("primary_container", flattenContainer(model.PrimaryContainer)); err != nil {
@@ -429,7 +429,7 @@ func resourceModelRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "setting container: %s", err)
 	}
 
-	if err := d.Set(names.AttrVPCConfig, flattenVPCConfigResponse(model.VpcConfig)); err != nil {
+	if err := d.Set("vpc_config", flattenVPCConfigResponse(model.VpcConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
 	}
 
@@ -446,8 +446,8 @@ func flattenVPCConfigResponse(vpcConfig *sagemaker.VpcConfig) []map[string]inter
 	}
 
 	m := map[string]interface{}{
-		names.AttrSecurityGroupIDs: flex.FlattenStringSet(vpcConfig.SecurityGroupIds),
-		names.AttrSubnets:          flex.FlattenStringSet(vpcConfig.Subnets),
+		"security_group_ids": flex.FlattenStringSet(vpcConfig.SecurityGroupIds),
+		"subnets":            flex.FlattenStringSet(vpcConfig.Subnets),
 	}
 
 	return []map[string]interface{}{m}
@@ -497,7 +497,7 @@ func expandContainer(m map[string]interface{}) *sagemaker.ContainerDefinition {
 		container.Image = aws.String(v.(string))
 	}
 
-	if v, ok := m[names.AttrMode]; ok && v.(string) != "" {
+	if v, ok := m["mode"]; ok && v.(string) != "" {
 		container.Mode = aws.String(v.(string))
 	}
 
@@ -513,7 +513,7 @@ func expandContainer(m map[string]interface{}) *sagemaker.ContainerDefinition {
 	if v, ok := m["model_data_source"]; ok {
 		container.ModelDataSource = expandModelDataSource(v.([]interface{}))
 	}
-	if v, ok := m[names.AttrEnvironment].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := m["environment"].(map[string]interface{}); ok && len(v) > 0 {
 		container.Environment = flex.ExpandStringMap(v)
 	}
 
@@ -616,7 +616,7 @@ func flattenContainer(container *sagemaker.ContainerDefinition) []interface{} {
 	}
 
 	if container.Mode != nil {
-		cfg[names.AttrMode] = aws.StringValue(container.Mode)
+		cfg["mode"] = aws.StringValue(container.Mode)
 	}
 
 	if container.ContainerHostname != nil {
@@ -632,7 +632,7 @@ func flattenContainer(container *sagemaker.ContainerDefinition) []interface{} {
 		cfg["model_package_name"] = aws.StringValue(container.ModelPackageName)
 	}
 	if container.Environment != nil {
-		cfg[names.AttrEnvironment] = aws.StringValueMap(container.Environment)
+		cfg["environment"] = aws.StringValueMap(container.Environment)
 	}
 
 	if container.ImageConfig != nil {
@@ -722,7 +722,7 @@ func expandModelInferenceExecutionConfig(l []interface{}) *sagemaker.InferenceEx
 	m := l[0].(map[string]interface{})
 
 	config := &sagemaker.InferenceExecutionConfig{
-		Mode: aws.String(m[names.AttrMode].(string)),
+		Mode: aws.String(m["mode"].(string)),
 	}
 
 	return config
@@ -735,7 +735,7 @@ func flattenModelInferenceExecutionConfig(config *sagemaker.InferenceExecutionCo
 
 	cfg := make(map[string]interface{})
 
-	cfg[names.AttrMode] = aws.StringValue(config.Mode)
+	cfg["mode"] = aws.StringValue(config.Mode)
 
 	return []interface{}{cfg}
 }

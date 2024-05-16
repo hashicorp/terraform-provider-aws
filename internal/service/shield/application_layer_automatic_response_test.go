@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfshield "github.com/hashicorp/terraform-provider-aws/internal/service/shield"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccShieldApplicationLayerAutomaticResponse_basic(t *testing.T) {
@@ -38,7 +37,7 @@ func TestAccShieldApplicationLayerAutomaticResponse_basic(t *testing.T) {
 				Config: testAccApplicationLayerAutomaticResponseConfig_basic(rName, "COUNT"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationLayerAutomaticResponseExists(ctx, resourceName, &applicationlayerautomaticresponse),
-					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "COUNT"),
+					resource.TestCheckResourceAttr(resourceName, "action", "COUNT"),
 				),
 			},
 			{
@@ -50,7 +49,7 @@ func TestAccShieldApplicationLayerAutomaticResponse_basic(t *testing.T) {
 				Config: testAccApplicationLayerAutomaticResponseConfig_basic(rName, "BLOCK"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationLayerAutomaticResponseExists(ctx, resourceName, &applicationlayerautomaticresponse),
-					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "BLOCK"),
+					resource.TestCheckResourceAttr(resourceName, "action", "BLOCK"),
 				),
 			},
 		},

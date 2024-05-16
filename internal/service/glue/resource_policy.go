@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_glue_resource_policy")
@@ -32,7 +31,7 @@ func ResourceResourcePolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrPolicy: {
+			"policy": {
 				Type:                  schema.TypeString,
 				Required:              true,
 				ValidateFunc:          validation.StringIsJSON,
@@ -57,7 +56,7 @@ func resourceResourcePolicyPut(condition string) func(context.Context, *schema.R
 		var diags diag.Diagnostics
 		conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
-		policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
+		policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "policy is invalid JSON: %s", err)
@@ -100,13 +99,13 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 		//Since the glue resource policy is global we expect it to be deleted when the policy is empty
 		d.SetId("")
 	} else {
-		policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), aws.StringValue(resourcePolicy.PolicyInJson))
+		policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(resourcePolicy.PolicyInJson))
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading Glue Resource Policy (%s): %s", d.Id(), err)
 		}
 
-		d.Set(names.AttrPolicy, policyToSet)
+		d.Set("policy", policyToSet)
 	}
 	return diags
 }

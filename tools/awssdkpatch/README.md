@@ -15,10 +15,6 @@ Generate a patch file to migrate a service from AWS SDK for Go V1 to V2.
 Usage: awssdkpatch [flags]
 
 Flags:
-  -importalias string
-        alias that the service package is imported as (optional)
-  -multiclient
-        whether the service supports both v1 and v2 clients (optional)
   -out string
         output file (optional) (default "awssdk.patch")
   -service string
@@ -44,20 +40,4 @@ To preview the changes in stdout without modifying files, include the `-d/--diff
 
 ```console
 gopatch -d -p awssdk.patch internal/service/xray/...
-```
-
-### Import aliases
-
-If the service uses an import alias, include the `-importalias` flag when generating the patch file:
-
-```console
-awssdkpatch -service dms -importalias dms
-```
-
-### Multiple clients
-
-If the service supports both V1 and V2 AWS SDK clients (a common pattern in large services which are migrated in parts), include the `-multiclient` flag when generating the patch file:
-
-```console
-awssdkpatch -service ec2 -multiclient
 ```

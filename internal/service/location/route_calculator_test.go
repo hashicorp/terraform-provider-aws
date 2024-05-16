@@ -37,11 +37,11 @@ func TestAccLocationRouteCalculator_basic(t *testing.T) {
 					testAccCheckRouteCalculatorExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "calculator_arn", "geo", fmt.Sprintf("route-calculator/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "calculator_name", rName),
-					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreateTime),
+					acctest.CheckResourceAttrRFC3339(resourceName, "create_time"),
 					resource.TestCheckResourceAttr(resourceName, "data_source", "Here"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					acctest.CheckResourceAttrRFC3339(resourceName, "update_time"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -91,7 +91,7 @@ func TestAccLocationRouteCalculator_description(t *testing.T) {
 				Config: testAccRouteCalculatorConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteCalculatorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
+					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
 				),
 			},
 			{
@@ -103,7 +103,7 @@ func TestAccLocationRouteCalculator_description(t *testing.T) {
 				Config: testAccRouteCalculatorConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteCalculatorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
+					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
 				),
 			},
 		},
@@ -122,11 +122,11 @@ func TestAccLocationRouteCalculator_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckRouteCalculatorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteCalculatorConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccRouteCalculatorConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteCalculatorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -135,20 +135,20 @@ func TestAccLocationRouteCalculator_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRouteCalculatorConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccRouteCalculatorConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteCalculatorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccRouteCalculatorConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccRouteCalculatorConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteCalculatorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},

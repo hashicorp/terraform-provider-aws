@@ -49,12 +49,12 @@ func TestAccVPCDefaultRouteTable_basic(t *testing.T) {
 				Config: testAccVPCDefaultRouteTableConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "route.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, vpcResourceName, names.AttrID),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`route-table/.+$`)),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpcResourceName, "id"),
 				),
 			},
 			{
@@ -113,12 +113,12 @@ func TestAccVPCDefaultRouteTable_Route_mode(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 2),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "route.#", acctest.Ct1),
-					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr, "gateway_id", igwResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`route-table/.+$`)),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
+					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr, "gateway_id", igwResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -133,14 +133,14 @@ func TestAccVPCDefaultRouteTable_Route_mode(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 2),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", acctest.Ct0),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`route-table/.+$`)),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
 					// The route block from the previous step should still be
 					// present, because no blocks means "ignore existing blocks".
-					resource.TestCheckResourceAttr(resourceName, "route.#", acctest.Ct1),
-					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr, "gateway_id", igwResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
+					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr, "gateway_id", igwResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -149,13 +149,13 @@ func TestAccVPCDefaultRouteTable_Route_mode(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", acctest.Ct0),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`route-table/.+$`)),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
 					// This config uses attribute syntax to set zero routes
 					// explicitly, so should remove the one we created before.
-					resource.TestCheckResourceAttr(resourceName, "route.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -184,12 +184,12 @@ func TestAccVPCDefaultRouteTable_swap(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 2),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "route.#", acctest.Ct1),
-					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr1, "gateway_id", igwResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`route-table/.+$`)),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
+					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr1, "gateway_id", igwResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -210,8 +210,8 @@ func TestAccVPCDefaultRouteTable_swap(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 2),
-					resource.TestCheckResourceAttr(resourceName, "route.#", acctest.Ct1),
-					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr1, "gateway_id", igwResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
+					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr1, "gateway_id", igwResourceName, "id"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -220,9 +220,9 @@ func TestAccVPCDefaultRouteTable_swap(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 2),
-					resource.TestCheckResourceAttr(resourceName, "route.#", acctest.Ct1),
-					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr1, "gateway_id", igwResourceName, names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, rtResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
+					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr1, "gateway_id", igwResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "id", rtResourceName, "id"),
 				),
 				// Follow up plan will now show a diff as the destination CIDR on the aws_route_table
 				// (now also the aws_default_route_table) will change from destinationCidr1 to destinationCidr2.
@@ -255,8 +255,8 @@ func TestAccVPCDefaultRouteTable_ipv4ToTransitGateway(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 2),
-					resource.TestCheckResourceAttr(resourceName, "route.#", acctest.Ct1),
-					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr, names.AttrTransitGatewayID, tgwResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
+					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr, "transit_gateway_id", tgwResourceName, "id"),
 				),
 			},
 			{
@@ -292,8 +292,8 @@ func TestAccVPCDefaultRouteTable_ipv4ToVPCEndpoint(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 2),
-					resource.TestCheckResourceAttr(resourceName, "route.#", acctest.Ct1),
-					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr, names.AttrVPCEndpointID, vpceResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
+					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr, "vpc_endpoint_id", vpceResourceName, "id"),
 				),
 			},
 			{
@@ -334,8 +334,8 @@ func TestAccVPCDefaultRouteTable_vpcEndpointAssociation(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 3),
-					resource.TestCheckResourceAttr(resourceName, "route.#", acctest.Ct1),
-					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr, "gateway_id", igwResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
+					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr, "gateway_id", igwResourceName, "id"),
 				),
 			},
 			{
@@ -361,28 +361,28 @@ func TestAccVPCDefaultRouteTable_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckRouteTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCDefaultRouteTableConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccVPCDefaultRouteTableConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
-				Config: testAccVPCDefaultRouteTableConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccVPCDefaultRouteTableConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccVPCDefaultRouteTableConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccVPCDefaultRouteTableConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -408,14 +408,14 @@ func TestAccVPCDefaultRouteTable_conditionalCIDRBlock(t *testing.T) {
 				Config: testAccVPCDefaultRouteTableConfig_conditionalIPv4v6(rName, destinationCidr, destinationIpv6Cidr, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
-					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr, "gateway_id", igwResourceName, names.AttrID),
+					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr, "gateway_id", igwResourceName, "id"),
 				),
 			},
 			{
 				Config: testAccVPCDefaultRouteTableConfig_conditionalIPv4v6(rName, destinationCidr, destinationIpv6Cidr, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
-					testAccCheckRouteTableRoute(resourceName, "ipv6_cidr_block", destinationIpv6Cidr, "gateway_id", igwResourceName, names.AttrID),
+					testAccCheckRouteTableRoute(resourceName, "ipv6_cidr_block", destinationIpv6Cidr, "gateway_id", igwResourceName, "id"),
 				),
 			},
 			{
@@ -447,8 +447,8 @@ func TestAccVPCDefaultRouteTable_prefixListToInternetGateway(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 2),
-					resource.TestCheckResourceAttr(resourceName, "route.#", acctest.Ct1),
-					testAccCheckRouteTablePrefixListRoute(resourceName, plResourceName, "gateway_id", igwResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
+					testAccCheckRouteTablePrefixListRoute(resourceName, plResourceName, "gateway_id", igwResourceName, "id"),
 				),
 			},
 			{
@@ -492,11 +492,11 @@ func TestAccVPCDefaultRouteTable_revokeExistingRules(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, rtResourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 3),
-					resource.TestCheckResourceAttr(rtResourceName, "propagating_vgws.#", acctest.Ct1),
-					resource.TestCheckTypeSetElemAttrPair(rtResourceName, "propagating_vgws.*", vgwResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(rtResourceName, "route.#", acctest.Ct1),
-					testAccCheckRouteTableRoute(rtResourceName, "ipv6_cidr_block", "::/0", "egress_only_gateway_id", eoigwResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(rtResourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(rtResourceName, "propagating_vgws.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(rtResourceName, "propagating_vgws.*", vgwResourceName, "id"),
+					resource.TestCheckResourceAttr(rtResourceName, "route.#", "1"),
+					testAccCheckRouteTableRoute(rtResourceName, "ipv6_cidr_block", "::/0", "egress_only_gateway_id", eoigwResourceName, "id"),
+					resource.TestCheckResourceAttr(rtResourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(rtResourceName, "tags.Name", rName),
 				),
 			},
@@ -505,11 +505,11 @@ func TestAccVPCDefaultRouteTable_revokeExistingRules(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, rtResourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 3),
-					resource.TestCheckResourceAttr(rtResourceName, "propagating_vgws.#", acctest.Ct1),
-					resource.TestCheckTypeSetElemAttrPair(rtResourceName, "propagating_vgws.*", vgwResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(rtResourceName, "route.#", acctest.Ct1),
-					testAccCheckRouteTableRoute(rtResourceName, "ipv6_cidr_block", "::/0", "egress_only_gateway_id", eoigwResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(rtResourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(rtResourceName, "propagating_vgws.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(rtResourceName, "propagating_vgws.*", vgwResourceName, "id"),
+					resource.TestCheckResourceAttr(rtResourceName, "route.#", "1"),
+					testAccCheckRouteTableRoute(rtResourceName, "ipv6_cidr_block", "::/0", "egress_only_gateway_id", eoigwResourceName, "id"),
+					resource.TestCheckResourceAttr(rtResourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(rtResourceName, "tags.Name", rName),
 				),
 			},
@@ -518,10 +518,10 @@ func TestAccVPCDefaultRouteTable_revokeExistingRules(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 3),
-					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "route.#", acctest.Ct1),
-					testAccCheckRouteTableRoute(resourceName, "cidr_block", "0.0.0.0/0", "gateway_id", igwResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
+					testAccCheckRouteTableRoute(resourceName, "cidr_block", "0.0.0.0/0", "gateway_id", igwResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 				// The plan on refresh will not be empty as the custom route table resource's routes and propagating VGWs have
@@ -565,7 +565,7 @@ func testAccDefaultRouteTableImportStateIdFunc(resourceName string) resource.Imp
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return rs.Primary.Attributes[names.AttrVPCID], nil
+		return rs.Primary.Attributes["vpc_id"], nil
 	}
 }
 

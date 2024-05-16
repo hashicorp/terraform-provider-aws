@@ -4,43 +4,57 @@
 package ssm
 
 import (
-	"github.com/aws/aws-sdk-go-v2/aws"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
+	"strings"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func expandTargets(tfList []interface{}) []awstypes.Target {
-	apiObjects := make([]awstypes.Target, 0)
+func expandTargets(in []interface{}) []*ssm.Target {
+	targets := make([]*ssm.Target, 0)
 
-	for _, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
+	for _, tConfig := range in {
+		config := tConfig.(map[string]interface{})
 
-		apiObject := awstypes.Target{
-			Key:    aws.String(tfMap[names.AttrKey].(string)),
-			Values: flex.ExpandStringValueList(tfMap[names.AttrValues].([]interface{})),
+		target := &ssm.Target{
+			Key:    aws.String(config["key"].(string)),
+			Values: flex.ExpandStringList(config["values"].([]interface{})),
 		}
 
-		apiObjects = append(apiObjects, apiObject)
+		targets = append(targets, target)
 	}
 
-	return apiObjects
+	return targets
 }
 
-func flattenTargets(apiObjects []awstypes.Target) []interface{} {
-	if len(apiObjects) == 0 {
+func flattenParameters(parameters map[string][]*string) map[string]string {
+	result := make(map[string]string)
+	for p, values := range parameters {
+		var vs []string
+		for _, vPtr := range values {
+			if v := aws.StringValue(vPtr); v != "" {
+				vs = append(vs, v)
+			}
+		}
+		result[p] = strings.Join(vs, ",")
+	}
+	return result
+}
+
+func flattenTargets(targets []*ssm.Target) []map[string]interface{} {
+	if len(targets) == 0 {
 		return nil
 	}
 
-	tfList := make([]interface{}, 0, len(apiObjects))
+	result := make([]map[string]interface{}, 0, len(targets))
+	for _, target := range targets {
+		t := make(map[string]interface{}, 1)
+		t["key"] = aws.StringValue(target.Key)
+		t["values"] = flex.FlattenStringList(target.Values)
 
-	for _, apiObject := range apiObjects {
-		tfMap := make(map[string]interface{}, 1)
-		tfMap[names.AttrKey] = aws.ToString(apiObject.Key)
-		tfMap[names.AttrValues] = apiObject.Values
-
-		tfList = append(tfList, tfMap)
+		result = append(result, t)
 	}
 
-	return tfList
+	return result
 }

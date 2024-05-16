@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_athena_prepared_statement", name="Prepared Statement")
@@ -44,12 +43,12 @@ func resourcePreparedStatement() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrDescription: {
+			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -74,7 +73,7 @@ func resourcePreparedStatementCreate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
-	workGroupName, statementName := d.Get("workgroup").(string), d.Get(names.AttrName).(string)
+	workGroupName, statementName := d.Get("workgroup").(string), d.Get("name").(string)
 	id := preparedStatementCreateResourceID(workGroupName, statementName)
 	input := &athena.CreatePreparedStatementInput{
 		QueryStatement: aws.String(d.Get("query_statement").(string)),
@@ -82,7 +81,7 @@ func resourcePreparedStatementCreate(ctx context.Context, d *schema.ResourceData
 		WorkGroup:      aws.String(workGroupName),
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -118,8 +117,8 @@ func resourcePreparedStatementRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading Athena Prepared Statement (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrDescription, preparedStatement.Description)
-	d.Set(names.AttrName, preparedStatement.StatementName)
+	d.Set("description", preparedStatement.Description)
+	d.Set("name", preparedStatement.StatementName)
 	d.Set("query_statement", preparedStatement.QueryStatement)
 	d.Set("workgroup", preparedStatement.WorkGroupName)
 
@@ -140,8 +139,8 @@ func resourcePreparedStatementUpdate(ctx context.Context, d *schema.ResourceData
 		WorkGroup:     aws.String(workGroupName),
 	}
 
-	if d.HasChanges(names.AttrDescription) {
-		input.Description = aws.String(d.Get(names.AttrDescription).(string))
+	if d.HasChanges("description") {
+		input.Description = aws.String(d.Get("description").(string))
 	}
 
 	if d.HasChanges("query_statement") {

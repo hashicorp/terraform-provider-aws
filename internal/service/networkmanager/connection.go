@@ -66,7 +66,7 @@ func ResourceConnection() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -79,7 +79,7 @@ func ResourceConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
@@ -121,7 +121,7 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.ConnectedLinkId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -163,10 +163,10 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading Network Manager Connection (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, connection.ConnectionArn)
+	d.Set("arn", connection.ConnectionArn)
 	d.Set("connected_device_id", connection.ConnectedDeviceId)
 	d.Set("connected_link_id", connection.ConnectedLinkId)
-	d.Set(names.AttrDescription, connection.Description)
+	d.Set("description", connection.Description)
 	d.Set("device_id", connection.DeviceId)
 	d.Set("global_network_id", connection.GlobalNetworkId)
 	d.Set("link_id", connection.LinkId)
@@ -181,12 +181,12 @@ func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		globalNetworkID := d.Get("global_network_id").(string)
 		input := &networkmanager.UpdateConnectionInput{
 			ConnectedLinkId: aws.String(d.Get("connected_link_id").(string)),
 			ConnectionId:    aws.String(d.Id()),
-			Description:     aws.String(d.Get(names.AttrDescription).(string)),
+			Description:     aws.String(d.Get("description").(string)),
 			GlobalNetworkId: aws.String(globalNetworkID),
 			LinkId:          aws.String(d.Get("link_id").(string)),
 		}

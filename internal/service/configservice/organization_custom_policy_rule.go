@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_config_organization_custom_policy_rule", name="Organization Custom Policy Rule")
@@ -44,7 +43,7 @@ func resourceOrganizationCustomPolicyRule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -57,7 +56,7 @@ func resourceOrganizationCustomPolicyRule() *schema.Resource {
 					ValidateFunc: verify.ValidAccountID,
 				},
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
@@ -86,7 +85,7 @@ func resourceOrganizationCustomPolicyRule() *schema.Resource {
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[types.MaximumExecutionFrequency](),
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -144,7 +143,7 @@ func resourceOrganizationCustomPolicyRuleCreate(ctx context.Context, d *schema.R
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &configservice.PutOrganizationConfigRuleInput{
 		OrganizationConfigRuleName: aws.String(name),
 		OrganizationCustomPolicyRuleMetadata: &types.OrganizationCustomPolicyRuleMetadata{
@@ -158,7 +157,7 @@ func resourceOrganizationCustomPolicyRuleCreate(ctx context.Context, d *schema.R
 		input.OrganizationCustomPolicyRuleMetadata.DebugLogDeliveryAccounts = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.OrganizationCustomPolicyRuleMetadata.Description = aws.String(v.(string))
 	}
 
@@ -230,15 +229,15 @@ func resourceOrganizationCustomPolicyRuleRead(ctx context.Context, d *schema.Res
 	}
 
 	customPolicyRule := configRule.OrganizationCustomPolicyRuleMetadata
-	d.Set(names.AttrARN, configRule.OrganizationConfigRuleArn)
+	d.Set("arn", configRule.OrganizationConfigRuleArn)
 	d.Set("debug_log_delivery_accounts", customPolicyRule.DebugLogDeliveryAccounts)
-	d.Set(names.AttrDescription, customPolicyRule.Description)
+	d.Set("description", customPolicyRule.Description)
 	d.Set("excluded_accounts", configRule.ExcludedAccounts)
 	d.Set("input_parameters", customPolicyRule.InputParameters)
 	d.Set("policy_runtime", customPolicyRule.PolicyRuntime)
 	d.Set("policy_text", policy)
 	d.Set("maximum_execution_frequency", customPolicyRule.MaximumExecutionFrequency)
-	d.Set(names.AttrName, configRule.OrganizationConfigRuleName)
+	d.Set("name", configRule.OrganizationConfigRuleName)
 	d.Set("resource_id_scope", customPolicyRule.ResourceIdScope)
 	d.Set("resource_types_scope", customPolicyRule.ResourceTypesScope)
 	d.Set("tag_key_scope", customPolicyRule.TagKeyScope)
@@ -266,7 +265,7 @@ func resourceOrganizationCustomPolicyRuleUpdate(ctx context.Context, d *schema.R
 		input.OrganizationCustomPolicyRuleMetadata.DebugLogDeliveryAccounts = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.OrganizationCustomPolicyRuleMetadata.Description = aws.String(v.(string))
 	}
 

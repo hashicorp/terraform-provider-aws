@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_apigatewayv2_deployment", name="Deployment")
@@ -48,12 +47,12 @@ func resourceDeployment() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
-			names.AttrTriggers: {
+			"triggers": {
 				Type:     schema.TypeMap,
 				Optional: true,
 				ForceNew: true,
@@ -72,7 +71,7 @@ func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta 
 		ApiId: aws.String(apiID),
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -108,7 +107,7 @@ func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	d.Set("auto_deployed", output.AutoDeployed)
-	d.Set(names.AttrDescription, output.Description)
+	d.Set("description", output.Description)
 
 	return diags
 }
@@ -123,8 +122,8 @@ func resourceDeploymentUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		DeploymentId: aws.String(d.Id()),
 	}
 
-	if d.HasChange(names.AttrDescription) {
-		input.Description = aws.String(d.Get(names.AttrDescription).(string))
+	if d.HasChange("description") {
+		input.Description = aws.String(d.Get("description").(string))
 	}
 
 	_, err := conn.UpdateDeployment(ctx, input)

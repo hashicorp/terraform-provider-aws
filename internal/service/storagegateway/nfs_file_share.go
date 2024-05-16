@@ -45,7 +45,7 @@ func ResourceNFSFileShare() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -119,7 +119,7 @@ func ResourceNFSFileShare() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			names.AttrKMSKeyARN: {
+			"kms_key_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
@@ -154,7 +154,7 @@ func ResourceNFSFileShare() *schema.Resource {
 							Default:      "65534",
 							ValidateFunc: valid4ByteASN,
 						},
-						names.AttrOwnerID: {
+						"owner_id": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      "65534",
@@ -178,7 +178,7 @@ func ResourceNFSFileShare() *schema.Resource {
 				Default:      storagegateway.ObjectACLPrivate,
 				ValidateFunc: validation.StringInSlice(storagegateway.ObjectACL_Values(), false),
 			},
-			names.AttrPath: {
+			"path": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -192,7 +192,7 @@ func ResourceNFSFileShare() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			names.AttrRoleARN: {
+			"role_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -239,7 +239,7 @@ func resourceNFSFileShareCreate(ctx context.Context, d *schema.ResourceData, met
 		ObjectACL:            aws.String(d.Get("object_acl").(string)),
 		ReadOnly:             aws.Bool(d.Get("read_only").(bool)),
 		RequesterPays:        aws.Bool(d.Get("requester_pays").(bool)),
-		Role:                 aws.String(d.Get(names.AttrRoleARN).(string)),
+		Role:                 aws.String(d.Get("role_arn").(string)),
 		Squash:               aws.String(d.Get("squash").(string)),
 		Tags:                 getTagsIn(ctx),
 	}
@@ -260,7 +260,7 @@ func resourceNFSFileShareCreate(ctx context.Context, d *schema.ResourceData, met
 		input.FileShareName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrKMSKeyARN); ok {
+	if v, ok := d.GetOk("kms_key_arn"); ok {
 		input.KMSKey = aws.String(v.(string))
 	}
 
@@ -304,7 +304,7 @@ func resourceNFSFileShareRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading Storage Gateway NFS File Share (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, fileshare.FileShareARN)
+	d.Set("arn", fileshare.FileShareARN)
 	d.Set("audit_destination_arn", fileshare.AuditDestinationARN)
 	d.Set("bucket_region", fileshare.BucketRegion)
 	if err := d.Set("cache_attributes", flattenNFSFileShareCacheAttributes(fileshare.CacheAttributes)); err != nil {
@@ -319,17 +319,17 @@ func resourceNFSFileShareRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("gateway_arn", fileshare.GatewayARN)
 	d.Set("guess_mime_type_enabled", fileshare.GuessMIMETypeEnabled)
 	d.Set("kms_encrypted", fileshare.KMSEncrypted)
-	d.Set(names.AttrKMSKeyARN, fileshare.KMSKey)
+	d.Set("kms_key_arn", fileshare.KMSKey)
 	d.Set("location_arn", fileshare.LocationARN)
 	if err := d.Set("nfs_file_share_defaults", flattenNFSFileShareDefaults(fileshare.NFSFileShareDefaults)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting nfs_file_share_defaults: %s", err)
 	}
 	d.Set("notification_policy", fileshare.NotificationPolicy)
 	d.Set("object_acl", fileshare.ObjectACL)
-	d.Set(names.AttrPath, fileshare.Path)
+	d.Set("path", fileshare.Path)
 	d.Set("read_only", fileshare.ReadOnly)
 	d.Set("requester_pays", fileshare.RequesterPays)
-	d.Set(names.AttrRoleARN, fileshare.Role)
+	d.Set("role_arn", fileshare.Role)
 	d.Set("squash", fileshare.Squash)
 	d.Set("vpc_endpoint_dns_name", fileshare.VPCEndpointDNSName)
 
@@ -342,7 +342,7 @@ func resourceNFSFileShareUpdate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		fileShareDefaults, err := expandNFSFileShareDefaults(d.Get("nfs_file_share_defaults").([]interface{}))
 
 		if err != nil {
@@ -374,7 +374,7 @@ func resourceNFSFileShareUpdate(ctx context.Context, d *schema.ResourceData, met
 			input.FileShareName = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk(names.AttrKMSKeyARN); ok {
+		if v, ok := d.GetOk("kms_key_arn"); ok {
 			input.KMSKey = aws.String(v.(string))
 		}
 
@@ -433,7 +433,7 @@ func expandNFSFileShareDefaults(l []interface{}) (*storagegateway.NFSFileShareDe
 		return nil, err
 	}
 
-	ownerID, err := strconv.ParseInt(m[names.AttrOwnerID].(string), 10, 64)
+	ownerID, err := strconv.ParseInt(m["owner_id"].(string), 10, 64)
 	if err != nil {
 		return nil, err
 	}
@@ -454,10 +454,10 @@ func flattenNFSFileShareDefaults(nfsFileShareDefaults *storagegateway.NFSFileSha
 	}
 
 	m := map[string]interface{}{
-		"directory_mode":  aws.StringValue(nfsFileShareDefaults.DirectoryMode),
-		"file_mode":       aws.StringValue(nfsFileShareDefaults.FileMode),
-		"group_id":        strconv.Itoa(int(aws.Int64Value(nfsFileShareDefaults.GroupId))),
-		names.AttrOwnerID: strconv.Itoa(int(aws.Int64Value(nfsFileShareDefaults.OwnerId))),
+		"directory_mode": aws.StringValue(nfsFileShareDefaults.DirectoryMode),
+		"file_mode":      aws.StringValue(nfsFileShareDefaults.FileMode),
+		"group_id":       strconv.Itoa(int(aws.Int64Value(nfsFileShareDefaults.GroupId))),
+		"owner_id":       strconv.Itoa(int(aws.Int64Value(nfsFileShareDefaults.OwnerId))),
 	}
 
 	return []interface{}{m}

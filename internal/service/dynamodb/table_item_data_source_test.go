@@ -41,7 +41,7 @@ func TestAccDynamoDBTableItemDataSource_basic(t *testing.T) {
 				Config: testAccTableItemDataSourceConfig_basic(rName, hashKey, itemContent, key),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrEquivalentJSON(dataSourceName, "item", itemContent),
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrTableName, rName),
+					resource.TestCheckResourceAttr(dataSourceName, "table_name", rName),
 				),
 			},
 		},
@@ -82,7 +82,7 @@ func TestAccDynamoDBTableItemDataSource_projectionExpression(t *testing.T) {
 				Config: testAccTableItemDataSourceConfig_projectionExpression(rName, hashKey, itemContent, projectionExpression, key),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrEquivalentJSON(dataSourceName, "item", expected),
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrTableName, rName),
+					resource.TestCheckResourceAttr(dataSourceName, "table_name", rName),
 					resource.TestCheckResourceAttr(dataSourceName, "projection_expression", projectionExpression),
 				),
 			},
@@ -120,7 +120,7 @@ func TestAccDynamoDBTableItemDataSource_expressionAttributeNames(t *testing.T) {
 				Config: testAccTableItemDataSourceConfig_expressionAttributeNames(rName, hashKey, itemContent, key),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrEquivalentJSON(dataSourceName, "item", expected),
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrTableName, rName),
+					resource.TestCheckResourceAttr(dataSourceName, "table_name", rName),
 					resource.TestCheckResourceAttr(dataSourceName, "projection_expression", "#P"),
 				),
 			},

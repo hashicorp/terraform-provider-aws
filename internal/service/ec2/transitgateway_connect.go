@@ -44,7 +44,7 @@ func ResourceTransitGatewayConnect() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrProtocol: {
+			"protocol": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -63,7 +63,7 @@ func ResourceTransitGatewayConnect() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
-			names.AttrTransitGatewayID: {
+			"transit_gateway_id": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -87,7 +87,7 @@ func resourceTransitGatewayConnectCreate(ctx context.Context, d *schema.Resource
 	transportAttachmentID := d.Get("transport_attachment_id").(string)
 	input := &ec2.CreateTransitGatewayConnectInput{
 		Options: &ec2.CreateTransitGatewayConnectRequestOptions{
-			Protocol: aws.String(d.Get(names.AttrProtocol).(string)),
+			Protocol: aws.String(d.Get("protocol").(string)),
 		},
 		TagSpecifications:                   getTagSpecificationsIn(ctx, ec2.ResourceTypeTransitGatewayAttachment),
 		TransportTransitGatewayAttachmentId: aws.String(transportAttachmentID),
@@ -193,10 +193,10 @@ func resourceTransitGatewayConnectRead(ctx context.Context, d *schema.ResourceDa
 		}
 	}
 
-	d.Set(names.AttrProtocol, transitGatewayConnect.Options.Protocol)
+	d.Set("protocol", transitGatewayConnect.Options.Protocol)
 	d.Set("transit_gateway_default_route_table_association", transitGatewayDefaultRouteTableAssociation)
 	d.Set("transit_gateway_default_route_table_propagation", transitGatewayDefaultRouteTablePropagation)
-	d.Set(names.AttrTransitGatewayID, transitGatewayConnect.TransitGatewayId)
+	d.Set("transit_gateway_id", transitGatewayConnect.TransitGatewayId)
 	d.Set("transport_attachment_id", transitGatewayConnect.TransportTransitGatewayAttachmentId)
 
 	setTagsOut(ctx, transitGatewayConnect.Tags)
@@ -210,7 +210,7 @@ func resourceTransitGatewayConnectUpdate(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if d.HasChanges("transit_gateway_default_route_table_association", "transit_gateway_default_route_table_propagation") {
-		transitGatewayID := d.Get(names.AttrTransitGatewayID).(string)
+		transitGatewayID := d.Get("transit_gateway_id").(string)
 		transitGateway, err := FindTransitGatewayByID(ctx, conn, transitGatewayID)
 
 		if err != nil {

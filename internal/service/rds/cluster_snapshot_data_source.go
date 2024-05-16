@@ -30,7 +30,7 @@ func DataSourceClusterSnapshot() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			names.AttrAvailabilityZones: {
+			"availability_zones": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
@@ -51,11 +51,11 @@ func DataSourceClusterSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrEngineVersion: {
+			"engine_version": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrKMSKeyID: {
+			"kms_key_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -73,12 +73,12 @@ func DataSourceClusterSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrMostRecent: {
+			"most_recent": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-			names.AttrPort: {
+			"port": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -94,7 +94,7 @@ func DataSourceClusterSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -103,7 +103,7 @@ func DataSourceClusterSnapshot() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
-			names.AttrVPCID: {
+			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -151,7 +151,7 @@ func dataSourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, 
 
 	var snapshot *rds.DBClusterSnapshot
 	if len(snapshots) > 1 {
-		if d.Get(names.AttrMostRecent).(bool) {
+		if d.Get("most_recent").(bool) {
 			snapshot = mostRecentClusterSnapshot(snapshots)
 		} else {
 			return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more specific search criteria.")
@@ -162,23 +162,23 @@ func dataSourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, 
 
 	d.SetId(aws.StringValue(snapshot.DBClusterSnapshotIdentifier))
 	d.Set("allocated_storage", snapshot.AllocatedStorage)
-	d.Set(names.AttrAvailabilityZones, aws.StringValueSlice(snapshot.AvailabilityZones))
+	d.Set("availability_zones", aws.StringValueSlice(snapshot.AvailabilityZones))
 	d.Set("db_cluster_identifier", snapshot.DBClusterIdentifier)
 	d.Set("db_cluster_snapshot_arn", snapshot.DBClusterSnapshotArn)
 	d.Set("db_cluster_snapshot_identifier", snapshot.DBClusterSnapshotIdentifier)
 	d.Set("engine", snapshot.Engine)
-	d.Set(names.AttrEngineVersion, snapshot.EngineVersion)
-	d.Set(names.AttrKMSKeyID, snapshot.KmsKeyId)
+	d.Set("engine_version", snapshot.EngineVersion)
+	d.Set("kms_key_id", snapshot.KmsKeyId)
 	d.Set("license_model", snapshot.LicenseModel)
-	d.Set(names.AttrPort, snapshot.Port)
+	d.Set("port", snapshot.Port)
 	if snapshot.SnapshotCreateTime != nil {
 		d.Set("snapshot_create_time", snapshot.SnapshotCreateTime.Format(time.RFC3339))
 	}
 	d.Set("snapshot_type", snapshot.SnapshotType)
 	d.Set("source_db_cluster_snapshot_arn", snapshot.SourceDBClusterSnapshotArn)
-	d.Set(names.AttrStatus, snapshot.Status)
+	d.Set("status", snapshot.Status)
 	d.Set("storage_encrypted", snapshot.StorageEncrypted)
-	d.Set(names.AttrVPCID, snapshot.VpcId)
+	d.Set("vpc_id", snapshot.VpcId)
 
 	setTagsOut(ctx, snapshot.TagList)
 

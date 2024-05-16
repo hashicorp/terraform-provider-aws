@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_kinesis_stream_consumer", name="Stream Consumer")
@@ -35,7 +34,7 @@ func resourceStreamConsumer() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -43,12 +42,12 @@ func resourceStreamConsumer() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrStreamARN: {
+			"stream_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -62,10 +61,10 @@ func resourceStreamConsumerCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisClient(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &kinesis.RegisterStreamConsumerInput{
 		ConsumerName: aws.String(name),
-		StreamARN:    aws.String(d.Get(names.AttrStreamARN).(string)),
+		StreamARN:    aws.String(d.Get("stream_arn").(string)),
 	}
 
 	output, err := conn.RegisterStreamConsumer(ctx, input)
@@ -99,10 +98,10 @@ func resourceStreamConsumerRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading Kinesis Stream Consumer (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, consumer.ConsumerARN)
+	d.Set("arn", consumer.ConsumerARN)
 	d.Set("creation_timestamp", aws.ToTime(consumer.ConsumerCreationTimestamp).Format(time.RFC3339))
-	d.Set(names.AttrName, consumer.ConsumerName)
-	d.Set(names.AttrStreamARN, consumer.StreamARN)
+	d.Set("name", consumer.ConsumerName)
+	d.Set("stream_arn", consumer.StreamARN)
 
 	return diags
 }

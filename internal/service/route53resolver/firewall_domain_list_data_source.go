@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_route53_resolver_firewall_domain_list")
@@ -19,11 +18,11 @@ func DataSourceFirewallDomainList() *schema.Resource {
 		ReadWithoutTimeout: dataSourceFirewallDomainListRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrCreationTime: {
+			"creation_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -39,7 +38,7 @@ func DataSourceFirewallDomainList() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -51,11 +50,11 @@ func DataSourceFirewallDomainList() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrStatusMessage: {
+			"status_message": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -74,16 +73,16 @@ func dataSourceFirewallDomainListRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	d.SetId(aws.StringValue(firewallDomainList.Id))
-	d.Set(names.AttrARN, firewallDomainList.Arn)
-	d.Set(names.AttrCreationTime, firewallDomainList.CreationTime)
+	d.Set("arn", firewallDomainList.Arn)
+	d.Set("creation_time", firewallDomainList.CreationTime)
 	d.Set("creator_request_id", firewallDomainList.CreatorRequestId)
 	d.Set("domain_count", firewallDomainList.DomainCount)
 	d.Set("firewall_domain_list_id", firewallDomainList.Id)
-	d.Set(names.AttrName, firewallDomainList.Name)
+	d.Set("name", firewallDomainList.Name)
 	d.Set("managed_owner_name", firewallDomainList.ManagedOwnerName)
 	d.Set("modification_time", firewallDomainList.ModificationTime)
-	d.Set(names.AttrStatus, firewallDomainList.Status)
-	d.Set(names.AttrStatusMessage, firewallDomainList.StatusMessage)
+	d.Set("status", firewallDomainList.Status)
+	d.Set("status_message", firewallDomainList.StatusMessage)
 
 	return nil
 }

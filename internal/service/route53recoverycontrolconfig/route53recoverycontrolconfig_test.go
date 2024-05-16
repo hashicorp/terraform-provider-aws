@@ -16,15 +16,15 @@ func TestAccRoute53RecoveryControlConfig_serial(t *testing.T) {
 	// ServiceQuotaExceededException: AwsAccountId(X) has 2 Meridian clusters. Limit 2
 	testCases := map[string]map[string]func(t *testing.T){
 		"Cluster": {
-			acctest.CtBasic: testAccCluster_basic,
-			"disappears":    testAccCluster_disappears,
+			"basic":      testAccCluster_basic,
+			"disappears": testAccCluster_disappears,
 		},
 		"ControlPanel": {
-			acctest.CtBasic: testAccControlPanel_basic,
-			"disappears":    testAccControlPanel_disappears,
+			"basic":      testAccControlPanel_basic,
+			"disappears": testAccControlPanel_disappears,
 		},
 		"RoutingControl": {
-			acctest.CtBasic:         testAccRoutingControl_basic,
+			"basic":                 testAccRoutingControl_basic,
 			"disappears":            testAccRoutingControl_disappears,
 			"nonDefaultControlPane": testAccRoutingControl_nonDefaultControlPanel,
 		},

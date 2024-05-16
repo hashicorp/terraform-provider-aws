@@ -43,11 +43,11 @@ func ResourceIPAMScope() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -89,7 +89,7 @@ func resourceIPAMScopeCreate(ctx context.Context, d *schema.ResourceData, meta i
 		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeIpamScope),
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -125,8 +125,8 @@ func resourceIPAMScopeRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	ipamID := strings.Split(aws.StringValue(scope.IpamArn), "/")[1]
-	d.Set(names.AttrARN, scope.IpamScopeArn)
-	d.Set(names.AttrDescription, scope.Description)
+	d.Set("arn", scope.IpamScopeArn)
+	d.Set("description", scope.Description)
 	d.Set("ipam_arn", scope.IpamArn)
 	d.Set("ipam_id", ipamID)
 	d.Set("ipam_scope_type", scope.IpamScopeType)
@@ -142,12 +142,12 @@ func resourceIPAMScopeUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	if d.HasChange(names.AttrDescription) {
+	if d.HasChange("description") {
 		input := &ec2.ModifyIpamScopeInput{
 			IpamScopeId: aws.String(d.Id()),
 		}
 
-		if v, ok := d.GetOk(names.AttrDescription); ok {
+		if v, ok := d.GetOk("description"); ok {
 			input.Description = aws.String(v.(string))
 		}
 

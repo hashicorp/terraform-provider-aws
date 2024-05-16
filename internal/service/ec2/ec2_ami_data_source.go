@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ami")
@@ -40,7 +39,7 @@ func DataSourceAMI() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -50,7 +49,7 @@ func DataSourceAMI() *schema.Resource {
 				Set:      amiBlockDeviceMappingHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrDeviceName: {
+						"device_name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -74,7 +73,7 @@ func DataSourceAMI() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrCreationDate: {
+			"creation_date": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -82,7 +81,7 @@ func DataSourceAMI() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -95,7 +94,7 @@ func DataSourceAMI() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrFilter: customFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"hypervisor": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -129,12 +128,12 @@ func DataSourceAMI() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrMostRecent: {
+			"most_recent": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -143,7 +142,7 @@ func DataSourceAMI() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringIsValidRegExp,
 			},
-			names.AttrOwnerID: {
+			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -205,7 +204,7 @@ func DataSourceAMI() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrState: {
+			"state": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -214,7 +213,7 @@ func DataSourceAMI() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 			"tpm_support": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -244,7 +243,7 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.ExecutableUsers = flex.ExpandStringList(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk(names.AttrFilter); ok {
+	if v, ok := d.GetOk("filter"); ok {
 		input.Filters = newCustomFilterList(v.(*schema.Set))
 	}
 
@@ -284,7 +283,7 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if len(filteredImages) > 1 {
-		if !d.Get(names.AttrMostRecent).(bool) {
+		if !d.Get("most_recent").(bool) {
 			return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more "+
 				"specific search criteria, or set `most_recent` attribute to true.")
 		}
@@ -305,14 +304,14 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		Service:   ec2.ServiceName,
 		Resource:  fmt.Sprintf("image/%s", d.Id()),
 	}.String()
-	d.Set(names.AttrARN, imageArn)
+	d.Set("arn", imageArn)
 	if err := d.Set("block_device_mappings", flattenAMIBlockDeviceMappings(image.BlockDeviceMappings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting block_device_mappings: %s", err)
 	}
 	d.Set("boot_mode", image.BootMode)
-	d.Set(names.AttrCreationDate, image.CreationDate)
+	d.Set("creation_date", image.CreationDate)
 	d.Set("deprecation_time", image.DeprecationTime)
-	d.Set(names.AttrDescription, image.Description)
+	d.Set("description", image.Description)
 	d.Set("ena_support", image.EnaSupport)
 	d.Set("hypervisor", image.Hypervisor)
 	d.Set("image_id", image.ImageId)
@@ -321,8 +320,8 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("image_type", image.ImageType)
 	d.Set("imds_support", image.ImdsSupport)
 	d.Set("kernel_id", image.KernelId)
-	d.Set(names.AttrName, image.Name)
-	d.Set(names.AttrOwnerID, image.OwnerId)
+	d.Set("name", image.Name)
+	d.Set("owner_id", image.OwnerId)
 	d.Set("platform", image.Platform)
 	d.Set("platform_details", image.PlatformDetails)
 	if err := d.Set("product_codes", flattenAMIProductCodes(image.ProductCodes)); err != nil {
@@ -334,7 +333,7 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("root_device_type", image.RootDeviceType)
 	d.Set("root_snapshot_id", amiRootSnapshotId(image))
 	d.Set("sriov_net_support", image.SriovNetSupport)
-	d.Set(names.AttrState, image.State)
+	d.Set("state", image.State)
 	if err := d.Set("state_reason", flattenAMIStateReason(image.StateReason)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting state_reason: %s", err)
 	}
@@ -342,7 +341,7 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("usage_operation", image.UsageOperation)
 	d.Set("virtualization_type", image.VirtualizationType)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, image.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, image.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
@@ -355,19 +354,19 @@ func flattenAMIBlockDeviceMappings(m []*ec2.BlockDeviceMapping) *schema.Set {
 	}
 	for _, v := range m {
 		mapping := map[string]interface{}{
-			names.AttrDeviceName: aws.StringValue(v.DeviceName),
-			"virtual_name":       aws.StringValue(v.VirtualName),
+			"device_name":  aws.StringValue(v.DeviceName),
+			"virtual_name": aws.StringValue(v.VirtualName),
 		}
 
 		if v.Ebs != nil {
 			ebs := map[string]interface{}{
-				names.AttrDeleteOnTermination: fmt.Sprintf("%t", aws.BoolValue(v.Ebs.DeleteOnTermination)),
-				names.AttrEncrypted:           fmt.Sprintf("%t", aws.BoolValue(v.Ebs.Encrypted)),
-				names.AttrIOPS:                fmt.Sprintf("%d", aws.Int64Value(v.Ebs.Iops)),
-				"throughput":                  fmt.Sprintf("%d", aws.Int64Value(v.Ebs.Throughput)),
-				names.AttrVolumeSize:          fmt.Sprintf("%d", aws.Int64Value(v.Ebs.VolumeSize)),
-				names.AttrSnapshotID:          aws.StringValue(v.Ebs.SnapshotId),
-				names.AttrVolumeType:          aws.StringValue(v.Ebs.VolumeType),
+				"delete_on_termination": fmt.Sprintf("%t", aws.BoolValue(v.Ebs.DeleteOnTermination)),
+				"encrypted":             fmt.Sprintf("%t", aws.BoolValue(v.Ebs.Encrypted)),
+				"iops":                  fmt.Sprintf("%d", aws.Int64Value(v.Ebs.Iops)),
+				"throughput":            fmt.Sprintf("%d", aws.Int64Value(v.Ebs.Throughput)),
+				"volume_size":           fmt.Sprintf("%d", aws.Int64Value(v.Ebs.VolumeSize)),
+				"snapshot_id":           aws.StringValue(v.Ebs.SnapshotId),
+				"volume_type":           aws.StringValue(v.Ebs.VolumeType),
 			}
 
 			mapping["ebs"] = ebs
@@ -413,10 +412,10 @@ func flattenAMIStateReason(m *ec2.StateReason) map[string]interface{} {
 	s := make(map[string]interface{})
 	if m != nil {
 		s["code"] = aws.StringValue(m.Code)
-		s[names.AttrMessage] = aws.StringValue(m.Message)
+		s["message"] = aws.StringValue(m.Message)
 	} else {
 		s["code"] = "UNSET"
-		s[names.AttrMessage] = "UNSET"
+		s["message"] = "UNSET"
 	}
 	return s
 }
@@ -425,15 +424,15 @@ func amiBlockDeviceMappingHash(v interface{}) int {
 	var buf bytes.Buffer
 	// All keys added in alphabetical order.
 	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m["device_name"].(string)))
 	if d, ok := m["ebs"]; ok {
 		if len(d.(map[string]interface{})) > 0 {
 			e := d.(map[string]interface{})
-			buf.WriteString(fmt.Sprintf("%s-", e[names.AttrDeleteOnTermination].(string)))
-			buf.WriteString(fmt.Sprintf("%s-", e[names.AttrEncrypted].(string)))
-			buf.WriteString(fmt.Sprintf("%s-", e[names.AttrIOPS].(string)))
-			buf.WriteString(fmt.Sprintf("%s-", e[names.AttrVolumeSize].(string)))
-			buf.WriteString(fmt.Sprintf("%s-", e[names.AttrVolumeType].(string)))
+			buf.WriteString(fmt.Sprintf("%s-", e["delete_on_termination"].(string)))
+			buf.WriteString(fmt.Sprintf("%s-", e["encrypted"].(string)))
+			buf.WriteString(fmt.Sprintf("%s-", e["iops"].(string)))
+			buf.WriteString(fmt.Sprintf("%s-", e["volume_size"].(string)))
+			buf.WriteString(fmt.Sprintf("%s-", e["volume_type"].(string)))
 		}
 	}
 	if d, ok := m["no_device"]; ok {
@@ -442,7 +441,7 @@ func amiBlockDeviceMappingHash(v interface{}) int {
 	if d, ok := m["virtual_name"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", d.(string)))
 	}
-	if d, ok := m[names.AttrSnapshotID]; ok {
+	if d, ok := m["snapshot_id"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", d.(string)))
 	}
 	return create.StringHashcode(buf.String())

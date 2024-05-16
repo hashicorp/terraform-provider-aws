@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_prefix_list")
@@ -32,8 +31,8 @@ func DataSourcePrefixList() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrFilter: customFiltersSchema(),
-			names.AttrName: {
+			"filter": customFiltersSchema(),
+			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -52,7 +51,7 @@ func dataSourcePrefixListRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	input := &ec2.DescribePrefixListsInput{}
 
-	if v, ok := d.GetOk(names.AttrName); ok {
+	if v, ok := d.GetOk("name"); ok {
 		input.Filters = append(input.Filters, newAttributeFilterList(map[string]string{
 			"prefix-list-name": v.(string),
 		})...)
@@ -63,7 +62,7 @@ func dataSourcePrefixListRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get(names.AttrFilter).(*schema.Set),
+		d.Get("filter").(*schema.Set),
 	)...)
 
 	pl, err := FindPrefixList(ctx, conn, input)
@@ -74,7 +73,7 @@ func dataSourcePrefixListRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	d.SetId(aws.StringValue(pl.PrefixListId))
 	d.Set("cidr_blocks", aws.StringValueSlice(pl.Cidrs))
-	d.Set(names.AttrName, pl.PrefixListName)
+	d.Set("name", pl.PrefixListName)
 
 	return diags
 }

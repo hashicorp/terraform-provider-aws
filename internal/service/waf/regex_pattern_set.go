@@ -8,42 +8,36 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
-	"github.com/aws/aws-sdk-go-v2/service/waf"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_waf_regex_pattern_set", name="Regex Pattern Set")
-func resourceRegexPatternSet() *schema.Resource {
+// @SDKResource("aws_waf_regex_pattern_set")
+func ResourceRegexPatternSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRegexPatternSetCreate,
 		ReadWithoutTimeout:   resourceRegexPatternSetRead,
 		UpdateWithoutTimeout: resourceRegexPatternSetUpdate,
 		DeleteWithoutTimeout: resourceRegexPatternSetDelete,
-
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"regex_pattern_strings": {
 				Type:     schema.TypeSet,
@@ -56,65 +50,73 @@ func resourceRegexPatternSet() *schema.Resource {
 
 func resourceRegexPatternSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFClient(ctx)
+	conn := meta.(*conns.AWSClient).WAFConn(ctx)
 
-	name := d.Get(names.AttrName).(string)
-	output, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
-		input := &waf.CreateRegexPatternSetInput{
+	log.Printf("[INFO] Creating WAF Regex Pattern Set: %s", d.Get("name").(string))
+
+	wr := NewRetryer(conn)
+	out, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
+		params := &waf.CreateRegexPatternSetInput{
 			ChangeToken: token,
-			Name:        aws.String(name),
+			Name:        aws.String(d.Get("name").(string)),
 		}
-
-		return conn.CreateRegexPatternSet(ctx, input)
+		return conn.CreateRegexPatternSetWithContext(ctx, params)
 	})
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating WAF Regex Pattern Set (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating WAF Regex Pattern Set: %s", err)
 	}
+	resp := out.(*waf.CreateRegexPatternSetOutput)
 
-	d.SetId(aws.ToString(output.(*waf.CreateRegexPatternSetOutput).RegexPatternSet.RegexPatternSetId))
+	d.SetId(aws.StringValue(resp.RegexPatternSet.RegexPatternSetId))
 
 	return append(diags, resourceRegexPatternSetUpdate(ctx, d, meta)...)
 }
 
 func resourceRegexPatternSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFClient(ctx)
-
-	regexPatternSet, err := findRegexPatternSetByID(ctx, conn, d.Id())
-
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] WAF Regex Pattern Set (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+	conn := meta.(*conns.AWSClient).WAFConn(ctx)
+	log.Printf("[INFO] Reading WAF Regex Pattern Set: %s", d.Get("name").(string))
+	params := &waf.GetRegexPatternSetInput{
+		RegexPatternSetId: aws.String(d.Id()),
 	}
 
+	resp, err := conn.GetRegexPatternSetWithContext(ctx, params)
 	if err != nil {
-		return diag.Errorf("reading WAF Regex Pattern Set (%s): %s", d.Id(), err)
+		if tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
+			log.Printf("[WARN] WAF Regex Pattern Set (%s) not found, removing from state", d.Id())
+			d.SetId("")
+			return diags
+		}
+
+		return sdkdiag.AppendErrorf(diags, "reading WAF Regex Pattern Set (%s): %s", d.Get("name").(string), err)
 	}
+
+	d.Set("name", resp.RegexPatternSet.Name)
+	d.Set("regex_pattern_strings", aws.StringValueSlice(resp.RegexPatternSet.RegexPatternStrings))
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "waf",
 		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  "regexpatternset/" + d.Id(),
+		Resource:  fmt.Sprintf("regexpatternset/%s", d.Id()),
 	}
-	d.Set(names.AttrARN, arn.String())
-	d.Set(names.AttrName, regexPatternSet.Name)
-	d.Set("regex_pattern_strings", regexPatternSet.RegexPatternStrings)
+	d.Set("arn", arn.String())
 
 	return diags
 }
 
 func resourceRegexPatternSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFClient(ctx)
+	conn := meta.(*conns.AWSClient).WAFConn(ctx)
+
+	log.Printf("[INFO] Updating WAF Regex Pattern Set: %s", d.Get("name").(string))
 
 	if d.HasChange("regex_pattern_strings") {
 		o, n := d.GetChange("regex_pattern_strings")
 		oldPatterns, newPatterns := o.(*schema.Set).List(), n.(*schema.Set).List()
-		if err := updateRegexPatternSetPatternStrings(ctx, conn, d.Id(), oldPatterns, newPatterns); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
+		err := updateRegexPatternSetPatternStrings(ctx, d.Id(), oldPatterns, newPatterns, conn)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating WAF Regex Pattern Set: %s", err)
 		}
 	}
 
@@ -123,99 +125,47 @@ func resourceRegexPatternSetUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceRegexPatternSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFClient(ctx)
+	conn := meta.(*conns.AWSClient).WAFConn(ctx)
 
-	if oldPatterns := d.Get("regex_pattern_strings").(*schema.Set).List(); len(oldPatterns) > 0 {
+	oldPatterns := d.Get("regex_pattern_strings").(*schema.Set).List()
+	if len(oldPatterns) > 0 {
 		noPatterns := []interface{}{}
-		if err := updateRegexPatternSetPatternStrings(ctx, conn, d.Id(), oldPatterns, noPatterns); err != nil && !errs.IsA[*awstypes.WAFNonexistentItemException](err) && !errs.IsA[*awstypes.WAFNonexistentContainerException](err) {
-			return sdkdiag.AppendFromErr(diags, err)
+		err := updateRegexPatternSetPatternStrings(ctx, d.Id(), oldPatterns, noPatterns, conn)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating WAF Regex Pattern Set: %s", err)
 		}
 	}
 
-	log.Printf("[INFO] Deleting WAF Regex Pattern Set: %s", d.Id())
-	_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
-		input := &waf.DeleteRegexPatternSetInput{
+	wr := NewRetryer(conn)
+	_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
+		req := &waf.DeleteRegexPatternSetInput{
 			ChangeToken:       token,
 			RegexPatternSetId: aws.String(d.Id()),
 		}
-
-		return conn.DeleteRegexPatternSet(ctx, input)
+		log.Printf("[INFO] Deleting WAF Regex Pattern Set: %s", req)
+		return conn.DeleteRegexPatternSetWithContext(ctx, req)
 	})
-
-	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
-		return diags
-	}
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting WAF Regex Pattern Set (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting WAF Regex Pattern Set: %s", err)
 	}
 
 	return diags
 }
 
-func findRegexPatternSetByID(ctx context.Context, conn *waf.Client, id string) (*awstypes.RegexPatternSet, error) {
-	input := &waf.GetRegexPatternSetInput{
-		RegexPatternSetId: aws.String(id),
-	}
-
-	output, err := conn.GetRegexPatternSet(ctx, input)
-
-	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.RegexPatternSet == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.RegexPatternSet, nil
-}
-
-func updateRegexPatternSetPatternStrings(ctx context.Context, conn *waf.Client, id string, oldPatterns, newPatterns []interface{}) error {
-	_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
-		input := &waf.UpdateRegexPatternSetInput{
+func updateRegexPatternSetPatternStrings(ctx context.Context, id string, oldPatterns, newPatterns []interface{}, conn *waf.WAF) error {
+	wr := NewRetryer(conn)
+	_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
+		req := &waf.UpdateRegexPatternSetInput{
 			ChangeToken:       token,
 			RegexPatternSetId: aws.String(id),
-			Updates:           diffRegexPatternSetPatternStrings(oldPatterns, newPatterns),
+			Updates:           DiffRegexPatternSetPatternStrings(oldPatterns, newPatterns),
 		}
 
-		return conn.UpdateRegexPatternSet(ctx, input)
+		return conn.UpdateRegexPatternSetWithContext(ctx, req)
 	})
-
 	if err != nil {
-		return fmt.Errorf("updating WAF Regex Pattern Set (%s): %w", id, err)
+		return fmt.Errorf("Failed updating WAF Regex Pattern Set: %s", err)
 	}
 
 	return nil
-}
-
-func diffRegexPatternSetPatternStrings(oldPatterns, newPatterns []interface{}) []awstypes.RegexPatternSetUpdate {
-	updates := make([]awstypes.RegexPatternSetUpdate, 0)
-
-	for _, op := range oldPatterns {
-		if idx := tfslices.IndexOf(newPatterns, op.(string)); idx > -1 {
-			newPatterns = append(newPatterns[:idx], newPatterns[idx+1:]...)
-			continue
-		}
-
-		updates = append(updates, awstypes.RegexPatternSetUpdate{
-			Action:             awstypes.ChangeActionDelete,
-			RegexPatternString: aws.String(op.(string)),
-		})
-	}
-
-	for _, np := range newPatterns {
-		updates = append(updates, awstypes.RegexPatternSetUpdate{
-			Action:             awstypes.ChangeActionInsert,
-			RegexPatternString: aws.String(np.(string)),
-		})
-	}
-	return updates
 }

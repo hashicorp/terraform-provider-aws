@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const measureFieldsMaxItems5 = 5
@@ -90,8 +89,8 @@ func measureFieldSchema(maxItems int) *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							names.AttrExpression: stringSchema(true, validation.StringLenBetween(1, 4096)),
-							"field_id":           stringSchema(true, validation.StringLenBetween(1, 512)),
+							"expression": stringSchema(true, validation.StringLenBetween(1, 4096)),
+							"field_id":   stringSchema(true, validation.StringLenBetween(1, 512)),
 						},
 					},
 				},
@@ -363,7 +362,7 @@ func expandCalculatedMeasureField(tfList []interface{}) *quicksight.CalculatedMe
 	if v, ok := tfMap["field_id"].(string); ok && v != "" {
 		field.FieldId = aws.String(v)
 	}
-	if v, ok := tfMap[names.AttrExpression].(string); ok && v != "" {
+	if v, ok := tfMap["expression"].(string); ok && v != "" {
 		field.Expression = aws.String(v)
 	}
 
@@ -633,7 +632,7 @@ func flattenCalculatedMeasureField(apiObject *quicksight.CalculatedMeasureField)
 		tfMap["field_id"] = aws.StringValue(apiObject.FieldId)
 	}
 	if apiObject.Expression != nil {
-		tfMap[names.AttrExpression] = aws.StringValue(apiObject.Expression)
+		tfMap["expression"] = aws.StringValue(apiObject.Expression)
 	}
 
 	return []interface{}{tfMap}

@@ -10,26 +10,19 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/ram"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ram/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/ram"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
-)
-
-const (
-	resourceShareInvitationPropagationTimeout = 2 * time.Minute
 )
 
 // @SDKResource("aws_ram_resource_share_accepter", name="Resource Share Accepter")
@@ -57,7 +50,7 @@ func resourceResourceShareAccepter() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrResources: {
+			"resources": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -82,7 +75,7 @@ func resourceResourceShareAccepter() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -92,10 +85,10 @@ func resourceResourceShareAccepter() *schema.Resource {
 
 func resourceResourceShareAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RAMClient(ctx)
+	conn := meta.(*conns.AWSClient).RAMConn(ctx)
 
 	shareARN := d.Get("share_arn").(string)
-	maybeInvitation, err := findMaybeResourceShareInvitationByResourceShareARNAndStatus(ctx, conn, shareARN, string(awstypes.ResourceShareInvitationStatusPending))
+	maybeInvitation, err := findMaybeResourceShareInvitationByResourceShareARNAndStatus(ctx, conn, shareARN, ram.ResourceShareInvitationStatusPending)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading pending RAM Resource Share (%s) invitation: %s", shareARN, err)
@@ -105,7 +98,7 @@ func resourceResourceShareAccepterCreate(ctx context.Context, d *schema.Resource
 	var invitationARN string
 	if maybeInvitation.IsSome() {
 		invitationExists = true
-		invitationARN = aws.ToString(maybeInvitation.MustUnwrap().ResourceShareInvitationArn)
+		invitationARN = aws.StringValue(maybeInvitation.MustUnwrap().ResourceShareInvitationArn)
 	}
 
 	if !invitationExists || invitationARN == "" {
@@ -119,7 +112,7 @@ func resourceResourceShareAccepterCreate(ctx context.Context, d *schema.Resource
 		ResourceShareInvitationArn: aws.String(invitationARN),
 	}
 
-	output, err := conn.AcceptResourceShareInvitation(ctx, input)
+	output, err := conn.AcceptResourceShareInvitationWithContext(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "accepting RAM Resource Share (%s) invitation (%s): %s", shareARN, invitationARN, err)
@@ -127,7 +120,7 @@ func resourceResourceShareAccepterCreate(ctx context.Context, d *schema.Resource
 
 	d.SetId(shareARN)
 
-	invitationARN = aws.ToString(output.ResourceShareInvitation.ResourceShareInvitationArn)
+	invitationARN = aws.StringValue(output.ResourceShareInvitation.ResourceShareInvitationArn)
 	if _, err := waitResourceShareInvitationAccepted(ctx, conn, invitationARN, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for RAM Resource Share (%s) invitation (%s) accept: %s", shareARN, invitationARN, err)
 	}
@@ -146,11 +139,11 @@ func resourceResourceShareAccepterCreate(ctx context.Context, d *schema.Resource
 func resourceResourceShareAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	accountID := meta.(*conns.AWSClient).AccountID
-	conn := meta.(*conns.AWSClient).RAMClient(ctx)
+	conn := meta.(*conns.AWSClient).RAMConn(ctx)
 
-	maybeInvitation, err := findMaybeResourceShareInvitationByResourceShareARNAndStatus(ctx, conn, d.Id(), string(awstypes.ResourceShareInvitationStatusAccepted))
+	maybeInvitation, err := findMaybeResourceShareInvitationByResourceShareARNAndStatus(ctx, conn, d.Id(), ram.ResourceShareInvitationStatusAccepted)
 
-	if err != nil && !errs.IsA[*awstypes.ResourceShareInvitationArnNotFoundException](err) {
+	if err != nil && !tfawserr.ErrCodeEquals(err, ram.ErrCodeResourceShareInvitationArnNotFoundException) {
 		return sdkdiag.AppendErrorf(diags, "reading accepted RAM Resource Share (%s) invitation: %s", d.Id(), err)
 	}
 
@@ -178,12 +171,12 @@ func resourceResourceShareAccepterRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("share_arn", resourceShare.ResourceShareArn)
 	d.Set("share_id", resourceResourceShareIDFromARN(d.Id()))
 	d.Set("share_name", resourceShare.Name)
-	d.Set(names.AttrStatus, resourceShare.Status)
+	d.Set("status", resourceShare.Status)
 
 	input := &ram.ListResourcesInput{
-		MaxResults:        aws.Int32(500),
-		ResourceOwner:     awstypes.ResourceOwnerOtherAccounts,
-		ResourceShareArns: []string{d.Id()},
+		MaxResults:        aws.Int64(500),
+		ResourceOwner:     aws.String(ram.ResourceOwnerOtherAccounts),
+		ResourceShareArns: aws.StringSlice([]string{d.Id()}),
 	}
 	resources, err := findResources(ctx, conn, input)
 
@@ -191,17 +184,17 @@ func resourceResourceShareAccepterRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "reading RAM Resource Share (%s) resources: %s", d.Id(), err)
 	}
 
-	resourceARNs := tfslices.ApplyToAll(resources, func(r awstypes.Resource) string {
-		return aws.ToString(r.Arn)
+	resourceARNs := tfslices.ApplyToAll(resources, func(r *ram.Resource) string {
+		return aws.StringValue(r.Arn)
 	})
-	d.Set(names.AttrResources, resourceARNs)
+	d.Set("resources", resourceARNs)
 
 	return diags
 }
 
 func resourceResourceShareAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RAMClient(ctx)
+	conn := meta.(*conns.AWSClient).RAMConn(ctx)
 
 	receiverAccountID := d.Get("receiver_account_id").(string)
 	if receiverAccountID == "" {
@@ -210,17 +203,17 @@ func resourceResourceShareAccepterDelete(ctx context.Context, d *schema.Resource
 
 	input := &ram.DisassociateResourceShareInput{
 		ClientToken:      aws.String(id.UniqueId()),
-		Principals:       []string{receiverAccountID},
+		Principals:       []*string{aws.String(receiverAccountID)},
 		ResourceShareArn: aws.String(d.Id()),
 	}
 
-	_, err := conn.DisassociateResourceShare(ctx, input)
+	_, err := conn.DisassociateResourceShareWithContext(ctx, input)
 
 	switch {
-	case errs.IsA[*awstypes.UnknownResourceException](err):
+	case tfawserr.ErrCodeEquals(err, ram.ErrCodeUnknownResourceException):
 		return diags
 
-	case errs.IsA[*awstypes.OperationNotPermittedException](err):
+	case tfawserr.ErrCodeEquals(err, ram.ErrCodeOperationNotPermittedException):
 		log.Printf("[WARN] Resource share could not be disassociated, but continuing: %s", err)
 
 	case err != nil:
@@ -238,10 +231,10 @@ func resourceResourceShareIDFromARN(arn string) string {
 	return strings.Replace(arn[strings.LastIndex(arn, ":")+1:], "resource-share/", "rs-", -1)
 }
 
-func findResourceShareOwnerOtherAccountsByARN(ctx context.Context, conn *ram.Client, arn string) (*awstypes.ResourceShare, error) {
+func findResourceShareOwnerOtherAccountsByARN(ctx context.Context, conn *ram.RAM, arn string) (*ram.ResourceShare, error) {
 	input := &ram.GetResourceSharesInput{
-		ResourceOwner:     awstypes.ResourceOwnerOtherAccounts,
-		ResourceShareArns: []string{arn},
+		ResourceOwner:     aws.String(ram.ResourceOwnerOtherAccounts),
+		ResourceShareArns: aws.StringSlice([]string{arn}),
 	}
 
 	output, err := findResourceShare(ctx, conn, input)
@@ -255,45 +248,52 @@ func findResourceShareOwnerOtherAccountsByARN(ctx context.Context, conn *ram.Cli
 	return output, nil
 }
 
-func findResources(ctx context.Context, conn *ram.Client, input *ram.ListResourcesInput) ([]awstypes.Resource, error) {
-	var output []awstypes.Resource
+func findResources(ctx context.Context, conn *ram.RAM, input *ram.ListResourcesInput) ([]*ram.Resource, error) {
+	var output []*ram.Resource
 
-	pages := ram.NewListResourcesPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if err != nil {
-			return nil, err
+	err := conn.ListResourcesPagesWithContext(ctx, input, func(page *ram.ListResourcesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		output = append(output, page.Resources...)
+		for _, v := range page.Resources {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
 	}
 
 	return output, nil
 }
 
-func findMaybeResourceShareInvitationByResourceShareARNAndStatus(ctx context.Context, conn *ram.Client, resourceShareARN, status string) (option.Option[awstypes.ResourceShareInvitation], error) {
+func findMaybeResourceShareInvitationByResourceShareARNAndStatus(ctx context.Context, conn *ram.RAM, resourceShareARN, status string) (option.Option[*ram.ResourceShareInvitation], error) {
 	input := &ram.GetResourceShareInvitationsInput{
-		ResourceShareArns: []string{resourceShareARN},
+		ResourceShareArns: aws.StringSlice([]string{resourceShareARN}),
 	}
 
-	return findMaybeResourceShareInvitationRetry(ctx, conn, input, func(v *awstypes.ResourceShareInvitation) bool {
-		return string(v.Status) == status
+	return findMaybeResourceShareInvitationRetry(ctx, conn, input, func(v *ram.ResourceShareInvitation) bool {
+		return aws.StringValue(v.Status) == status
 	})
 }
 
-func findMaybeResourceShareInvitationByARN(ctx context.Context, conn *ram.Client, arn string) (option.Option[awstypes.ResourceShareInvitation], error) {
+func findMaybeResourceShareInvitationByARN(ctx context.Context, conn *ram.RAM, arn string) (option.Option[*ram.ResourceShareInvitation], error) {
 	input := &ram.GetResourceShareInvitationsInput{
-		ResourceShareInvitationArns: []string{arn},
+		ResourceShareInvitationArns: aws.StringSlice([]string{arn}),
 	}
 
-	return findMaybeResourceShareInvitationRetry(ctx, conn, input, tfslices.PredicateTrue[*awstypes.ResourceShareInvitation]())
+	return findMaybeResourceShareInvitationRetry(ctx, conn, input, tfslices.PredicateTrue[*ram.ResourceShareInvitation]())
 }
 
-func findMaybeResourceShareInvitationRetry(ctx context.Context, conn *ram.Client, input *ram.GetResourceShareInvitationsInput, filter tfslices.Predicate[*awstypes.ResourceShareInvitation]) (option.Option[awstypes.ResourceShareInvitation], error) {
+func findMaybeResourceShareInvitationRetry(ctx context.Context, conn *ram.RAM, input *ram.GetResourceShareInvitationsInput, filter tfslices.Predicate[*ram.ResourceShareInvitation]) (option.Option[*ram.ResourceShareInvitation], error) {
 	// Retry for RAM resource share invitation eventual consistency.
 	errNotFound := errors.New("not found")
-	var output option.Option[awstypes.ResourceShareInvitation]
+	var output option.Option[*ram.ResourceShareInvitation]
 	err := tfresource.Retry(ctx, resourceShareInvitationPropagationTimeout, func() *retry.RetryError {
 		var err error
 		output, err = findMaybeResourceShareInvitation(ctx, conn, input, filter)
@@ -314,51 +314,54 @@ func findMaybeResourceShareInvitationRetry(ctx context.Context, conn *ram.Client
 	}
 
 	if errors.Is(err, errNotFound) {
-		output, err = option.None[awstypes.ResourceShareInvitation](), nil
+		output, err = option.None[*ram.ResourceShareInvitation](), nil
 	}
 
 	return output, err
 }
 
-func findMaybeResourceShareInvitation(ctx context.Context, conn *ram.Client, input *ram.GetResourceShareInvitationsInput, filter tfslices.Predicate[*awstypes.ResourceShareInvitation]) (option.Option[awstypes.ResourceShareInvitation], error) {
+func findMaybeResourceShareInvitation(ctx context.Context, conn *ram.RAM, input *ram.GetResourceShareInvitationsInput, filter tfslices.Predicate[*ram.ResourceShareInvitation]) (option.Option[*ram.ResourceShareInvitation], error) {
 	output, err := findResourceShareInvitations(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertMaybeSingleValueResult(output)
+	return tfresource.AssertMaybeSinglePtrResult(output)
 }
 
-func findResourceShareInvitations(ctx context.Context, conn *ram.Client, input *ram.GetResourceShareInvitationsInput, filter tfslices.Predicate[*awstypes.ResourceShareInvitation]) ([]awstypes.ResourceShareInvitation, error) {
-	var output []awstypes.ResourceShareInvitation
+func findResourceShareInvitations(ctx context.Context, conn *ram.RAM, input *ram.GetResourceShareInvitationsInput, filter tfslices.Predicate[*ram.ResourceShareInvitation]) ([]*ram.ResourceShareInvitation, error) {
+	var output []*ram.ResourceShareInvitation
 
-	pages := ram.NewGetResourceShareInvitationsPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if errs.IsA[*awstypes.ResourceShareInvitationArnNotFoundException](err) || errs.IsA[*awstypes.UnknownResourceException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
-			}
-		}
-
-		if err != nil {
-			return nil, err
+	err := conn.GetResourceShareInvitationsPagesWithContext(ctx, input, func(page *ram.GetResourceShareInvitationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
 		for _, v := range page.ResourceShareInvitations {
-			if filter(&v) {
+			if v != nil && filter(v) {
 				output = append(output, v)
 			}
 		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, ram.ErrCodeResourceShareInvitationArnNotFoundException, ram.ErrCodeUnknownResourceException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
 	}
 
 	return output, nil
 }
 
-func statusResourceShareInvitation(ctx context.Context, conn *ram.Client, arn string) retry.StateRefreshFunc {
+func statusResourceShareInvitation(ctx context.Context, conn *ram.RAM, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		maybeInvitation, err := findMaybeResourceShareInvitationByARN(ctx, conn, arn)
 
@@ -372,30 +375,30 @@ func statusResourceShareInvitation(ctx context.Context, conn *ram.Client, arn st
 
 		output := maybeInvitation.MustUnwrap()
 
-		return output, string(output.Status), nil
+		return output, aws.StringValue(output.Status), nil
 	}
 }
 
-func waitResourceShareInvitationAccepted(ctx context.Context, conn *ram.Client, arn string, timeout time.Duration) (*awstypes.ResourceShareInvitation, error) {
+func waitResourceShareInvitationAccepted(ctx context.Context, conn *ram.RAM, arn string, timeout time.Duration) (*ram.ResourceShareInvitation, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.ResourceShareInvitationStatusPending),
-		Target:  enum.Slice(awstypes.ResourceShareInvitationStatusAccepted),
+		Pending: []string{ram.ResourceShareInvitationStatusPending},
+		Target:  []string{ram.ResourceShareInvitationStatusAccepted},
 		Refresh: statusResourceShareInvitation(ctx, conn, arn),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if v, ok := outputRaw.(*awstypes.ResourceShareInvitation); ok {
+	if v, ok := outputRaw.(*ram.ResourceShareInvitation); ok {
 		return v, err
 	}
 
 	return nil, err
 }
 
-func waitResourceShareOwnedBySelfDisassociated(ctx context.Context, conn *ram.Client, arn string, timeout time.Duration) (*awstypes.ResourceShare, error) {
+func waitResourceShareOwnedBySelfDisassociated(ctx context.Context, conn *ram.RAM, arn string, timeout time.Duration) (*ram.ResourceShare, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.ResourceShareAssociationStatusAssociated),
+		Pending: []string{ram.ResourceShareAssociationStatusAssociated},
 		Target:  []string{},
 		Refresh: statusResourceShareOwnerSelf(ctx, conn, arn),
 		Timeout: timeout,
@@ -403,8 +406,8 @@ func waitResourceShareOwnedBySelfDisassociated(ctx context.Context, conn *ram.Cl
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*awstypes.ResourceShare); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+	if output, ok := outputRaw.(*ram.ResourceShare); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusMessage)))
 
 		return output, err
 	}

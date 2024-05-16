@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_iam_user_ssh_key", name="User SSH Key")
@@ -46,7 +45,7 @@ func resourceUserSSHKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrPublicKey: {
+			"public_key": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -62,12 +61,12 @@ func resourceUserSSHKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			names.AttrUsername: {
+			"username": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -80,9 +79,9 @@ func resourceUserSSHKeyCreate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	username := d.Get(names.AttrUsername).(string)
+	username := d.Get("username").(string)
 	input := &iam.UploadSSHPublicKeyInput{
-		SSHPublicKeyBody: aws.String(d.Get(names.AttrPublicKey).(string)),
+		SSHPublicKeyBody: aws.String(d.Get("public_key").(string)),
 		UserName:         aws.String(username),
 	}
 
@@ -102,7 +101,7 @@ func resourceUserSSHKeyCreate(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "waiting for IAM User SSH Key (%s) create: %s", d.Id(), err)
 	}
 
-	if v, ok := d.GetOk(names.AttrStatus); ok {
+	if v, ok := d.GetOk("status"); ok {
 		input := &iam.UpdateSSHPublicKeyInput{
 			SSHPublicKeyId: aws.String(d.Id()),
 			Status:         awstypes.StatusType(v.(string)),
@@ -124,7 +123,7 @@ func resourceUserSSHKeyRead(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	encoding := d.Get("encoding").(string)
-	key, err := findSSHPublicKeyByThreePartKey(ctx, conn, d.Id(), encoding, d.Get(names.AttrUsername).(string))
+	key, err := findSSHPublicKeyByThreePartKey(ctx, conn, d.Id(), encoding, d.Get("username").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IAM User SSH Key (%s) not found, removing from state", d.Id())
@@ -141,9 +140,9 @@ func resourceUserSSHKeyRead(ctx context.Context, d *schema.ResourceData, meta in
 	if encoding == string(awstypes.EncodingTypeSsh) {
 		publicKey = cleanSSHKey(publicKey)
 	}
-	d.Set(names.AttrPublicKey, publicKey)
+	d.Set("public_key", publicKey)
 	d.Set("ssh_public_key_id", key.SSHPublicKeyId)
-	d.Set(names.AttrStatus, key.Status)
+	d.Set("status", key.Status)
 
 	return diags
 }
@@ -154,8 +153,8 @@ func resourceUserSSHKeyUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 	input := &iam.UpdateSSHPublicKeyInput{
 		SSHPublicKeyId: aws.String(d.Id()),
-		Status:         awstypes.StatusType(d.Get(names.AttrStatus).(string)),
-		UserName:       aws.String(d.Get(names.AttrUsername).(string)),
+		Status:         awstypes.StatusType(d.Get("status").(string)),
+		UserName:       aws.String(d.Get("username").(string)),
 	}
 
 	_, err := conn.UpdateSSHPublicKey(ctx, input)
@@ -174,7 +173,7 @@ func resourceUserSSHKeyDelete(ctx context.Context, d *schema.ResourceData, meta 
 	log.Printf("[DEBUG] Deleting IAM User SSH Key: %s", d.Id())
 	_, err := conn.DeleteSSHPublicKey(ctx, &iam.DeleteSSHPublicKeyInput{
 		SSHPublicKeyId: aws.String(d.Id()),
-		UserName:       aws.String(d.Get(names.AttrUsername).(string)),
+		UserName:       aws.String(d.Get("username").(string)),
 	})
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
@@ -199,7 +198,7 @@ func resourceUserSSHKeyImport(ctx context.Context, d *schema.ResourceData, meta 
 	sshPublicKeyId := idParts[1]
 	encoding := idParts[2]
 
-	d.Set(names.AttrUsername, username)
+	d.Set("username", username)
 	d.Set("ssh_public_key_id", sshPublicKeyId)
 	d.Set("encoding", encoding)
 	d.SetId(sshPublicKeyId)

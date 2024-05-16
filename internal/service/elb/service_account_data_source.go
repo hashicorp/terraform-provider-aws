@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // See http://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-access-logs.html#attach-bucket-policy
@@ -54,11 +53,11 @@ func DataSourceServiceAccount() *schema.Resource {
 		ReadWithoutTimeout: dataSourceServiceAccountRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrRegion: {
+			"region": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -69,7 +68,7 @@ func DataSourceServiceAccount() *schema.Resource {
 func dataSourceServiceAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	region := meta.(*conns.AWSClient).Region
-	if v, ok := d.GetOk(names.AttrRegion); ok {
+	if v, ok := d.GetOk("region"); ok {
 		region = v.(string)
 	}
 
@@ -81,7 +80,7 @@ func dataSourceServiceAccountRead(ctx context.Context, d *schema.ResourceData, m
 			AccountID: accid,
 			Resource:  "root",
 		}.String()
-		d.Set(names.AttrARN, arn)
+		d.Set("arn", arn)
 
 		return diags
 	}

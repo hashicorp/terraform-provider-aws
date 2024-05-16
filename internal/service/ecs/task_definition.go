@@ -42,7 +42,7 @@ func ResourceTaskDefinition() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				d.Set(names.AttrARN, d.Id())
+				d.Set("arn", d.Id())
 
 				idErr := fmt.Errorf("Expected ID in format of arn:PARTITION:ecs:REGION:ACCOUNTID:task-definition/FAMILY:REVISION and provided: %s", d.Id())
 				resARN, err := arn.Parse(d.Id())
@@ -66,7 +66,7 @@ func ResourceTaskDefinition() *schema.Resource {
 		MigrateState:  resourceTaskDefinitionMigrateState,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -119,13 +119,13 @@ func ResourceTaskDefinition() *schema.Resource {
 					},
 				},
 			},
-			names.AttrExecutionRoleARN: {
+			"execution_role_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			names.AttrFamily: {
+			"family": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -140,7 +140,7 @@ func ResourceTaskDefinition() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrDeviceName: {
+						"device_name": {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -184,12 +184,12 @@ func ResourceTaskDefinition() *schema.Resource {
 				MaxItems: 10,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrExpression: {
+						"expression": {
 							Type:     schema.TypeString,
 							ForceNew: true,
 							Optional: true,
 						},
-						names.AttrType: {
+						"type": {
 							Type:         schema.TypeString,
 							ForceNew:     true,
 							Required:     true,
@@ -210,13 +210,13 @@ func ResourceTaskDefinition() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
-						names.AttrProperties: {
+						"properties": {
 							Type:     schema.TypeMap,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Optional: true,
 							ForceNew: true,
 						},
-						names.AttrType: {
+						"type": {
 							Type:         schema.TypeString,
 							Default:      ecs.ProxyConfigurationTypeAppmesh,
 							Optional:     true,
@@ -265,7 +265,7 @@ func ResourceTaskDefinition() *schema.Resource {
 					},
 				},
 			},
-			names.AttrSkipDestroy: {
+			"skip_destroy": {
 				Type:     schema.TypeBool,
 				Default:  false,
 				Optional: true,
@@ -319,7 +319,7 @@ func ResourceTaskDefinition() *schema.Resource {
 										ForceNew: true,
 										Optional: true,
 									},
-									names.AttrScope: {
+									"scope": {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Computed:     true,
@@ -357,7 +357,7 @@ func ResourceTaskDefinition() *schema.Resource {
 											},
 										},
 									},
-									names.AttrFileSystemID: {
+									"file_system_id": {
 										Type:     schema.TypeString,
 										ForceNew: true,
 										Required: true,
@@ -404,7 +404,7 @@ func ResourceTaskDefinition() *schema.Resource {
 													Required:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												names.AttrDomain: {
+												"domain": {
 													Type:     schema.TypeString,
 													ForceNew: true,
 													Required: true,
@@ -412,7 +412,7 @@ func ResourceTaskDefinition() *schema.Resource {
 											},
 										},
 									},
-									names.AttrFileSystemID: {
+									"file_system_id": {
 										Type:     schema.TypeString,
 										ForceNew: true,
 										Required: true,
@@ -430,7 +430,7 @@ func ResourceTaskDefinition() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 						},
-						names.AttrName: {
+						"name": {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -459,12 +459,12 @@ func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 	rawDefinitions := d.Get("container_definitions").(string)
 	definitions, err := expandContainerDefinitions(rawDefinitions)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating ECS Task Definition (%s): %s", d.Get(names.AttrFamily).(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating ECS Task Definition (%s): %s", d.Get("family").(string), err)
 	}
 
 	input := &ecs.RegisterTaskDefinitionInput{
 		ContainerDefinitions: definitions,
-		Family:               aws.String(d.Get(names.AttrFamily).(string)),
+		Family:               aws.String(d.Get("family").(string)),
 		Tags:                 getTagsIn(ctx),
 	}
 
@@ -476,7 +476,7 @@ func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 		input.EphemeralStorage = expandTaskDefinitionEphemeralStorage(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk(names.AttrExecutionRoleARN); ok {
+	if v, ok := d.GetOk("execution_role_arn"); ok {
 		input.ExecutionRoleArn = aws.String(v.(string))
 	}
 
@@ -503,7 +503,7 @@ func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 	if constraints := d.Get("placement_constraints").(*schema.Set).List(); len(constraints) > 0 {
 		cons, err := expandTaskDefinitionPlacementConstraints(constraints)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating ECS Task Definition (%s): %s", d.Get(names.AttrFamily).(string), err)
+			return sdkdiag.AppendErrorf(diags, "creating ECS Task Definition (%s): %s", d.Get("family").(string), err)
 		}
 		input.PlacementConstraints = cons
 	}
@@ -539,13 +539,13 @@ func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating ECS Task Definition (%s): %s", d.Get(names.AttrFamily).(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating ECS Task Definition (%s): %s", d.Get("family").(string), err)
 	}
 
 	taskDefinition := *output.TaskDefinition // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-assignment // false positive
 
 	d.SetId(aws.StringValue(taskDefinition.Family))
-	d.Set(names.AttrARN, taskDefinition.TaskDefinitionArn)
+	d.Set("arn", taskDefinition.TaskDefinitionArn)
 	d.Set("arn_without_revision", StripRevision(aws.StringValue(taskDefinition.TaskDefinitionArn)))
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
@@ -569,9 +569,9 @@ func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
-	trackedTaskDefinition := d.Get(names.AttrARN).(string)
+	trackedTaskDefinition := d.Get("arn").(string)
 	if _, ok := d.GetOk("track_latest"); ok {
-		trackedTaskDefinition = d.Get(names.AttrFamily).(string)
+		trackedTaskDefinition = d.Get("family").(string)
 	}
 
 	input := ecs.DescribeTaskDefinitionInput{
@@ -605,9 +605,9 @@ func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.SetId(aws.StringValue(taskDefinition.Family))
-	d.Set(names.AttrARN, taskDefinition.TaskDefinitionArn)
+	d.Set("arn", taskDefinition.TaskDefinitionArn)
 	d.Set("arn_without_revision", StripRevision(aws.StringValue(taskDefinition.TaskDefinitionArn)))
-	d.Set(names.AttrFamily, taskDefinition.Family)
+	d.Set("family", taskDefinition.Family)
 	d.Set("revision", taskDefinition.Revision)
 	d.Set("track_latest", d.Get("track_latest"))
 
@@ -628,7 +628,7 @@ func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.Set("task_role_arn", taskDefinition.TaskRoleArn)
-	d.Set(names.AttrExecutionRoleARN, taskDefinition.ExecutionRoleArn)
+	d.Set("execution_role_arn", taskDefinition.ExecutionRoleArn)
 	d.Set("cpu", taskDefinition.Cpu)
 	d.Set("memory", taskDefinition.Memory)
 	d.Set("network_mode", taskDefinition.NetworkMode)
@@ -678,7 +678,7 @@ func resourceTaskDefinitionUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceTaskDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	if v, ok := d.GetOk(names.AttrSkipDestroy); ok && v.(bool) {
+	if v, ok := d.GetOk("skip_destroy"); ok && v.(bool) {
 		log.Printf("[DEBUG] Retaining ECS Task Definition Revision %q", d.Id())
 		return diags
 	}
@@ -686,7 +686,7 @@ func resourceTaskDefinitionDelete(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	_, err := conn.DeregisterTaskDefinitionWithContext(ctx, &ecs.DeregisterTaskDefinitionInput{
-		TaskDefinition: aws.String(d.Get(names.AttrARN).(string)),
+		TaskDefinition: aws.String(d.Get("arn").(string)),
 	})
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting ECS Task Definition (%s): %s", d.Id(), err)
@@ -698,13 +698,13 @@ func resourceTaskDefinitionDelete(ctx context.Context, d *schema.ResourceData, m
 func resourceTaskDefinitionVolumeHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrName].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m["name"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["host_path"].(string)))
 
 	if v, ok := m["efs_volume_configuration"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		m := v.([]interface{})[0].(map[string]interface{})
 
-		if v, ok := m[names.AttrFileSystemID]; ok && v.(string) != "" {
+		if v, ok := m["file_system_id"]; ok && v.(string) != "" {
 			buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 		}
 
@@ -732,7 +732,7 @@ func resourceTaskDefinitionVolumeHash(v interface{}) int {
 	if v, ok := m["fsx_windows_file_server_volume_configuration"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		m := v.([]interface{})[0].(map[string]interface{})
 
-		if v, ok := m[names.AttrFileSystemID]; ok && v.(string) != "" {
+		if v, ok := m["file_system_id"]; ok && v.(string) != "" {
 			buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 		}
 
@@ -745,7 +745,7 @@ func resourceTaskDefinitionVolumeHash(v interface{}) int {
 			if v, ok := m["credentials_parameter"]; ok && v.(string) != "" {
 				buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 			}
-			if v, ok := m[names.AttrDomain]; ok && v.(string) != "" {
+			if v, ok := m["domain"]; ok && v.(string) != "" {
 				buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 			}
 		}
@@ -761,8 +761,8 @@ func flattenPlacementConstraints(pcs []*ecs.TaskDefinitionPlacementConstraint) [
 	results := make([]map[string]interface{}, 0)
 	for _, pc := range pcs {
 		c := make(map[string]interface{})
-		c[names.AttrType] = aws.StringValue(pc.Type)
-		c[names.AttrExpression] = aws.StringValue(pc.Expression)
+		c["type"] = aws.StringValue(pc.Type)
+		c["expression"] = aws.StringValue(pc.Expression)
 		results = append(results, c)
 	}
 	return results
@@ -808,8 +808,8 @@ func flattenProxyConfiguration(pc *ecs.ProxyConfiguration) []map[string]interfac
 
 	config := make(map[string]interface{})
 	config["container_name"] = aws.StringValue(pc.ContainerName)
-	config[names.AttrType] = aws.StringValue(pc.Type)
-	config[names.AttrProperties] = meshProperties
+	config["type"] = aws.StringValue(pc.Type)
+	config["properties"] = meshProperties
 
 	return []map[string]interface{}{
 		config,
@@ -820,8 +820,8 @@ func flattenInferenceAccelerators(list []*ecs.InferenceAccelerator) []map[string
 	result := make([]map[string]interface{}, 0, len(list))
 	for _, iAcc := range list {
 		l := map[string]interface{}{
-			names.AttrDeviceName: aws.StringValue(iAcc.DeviceName),
-			"device_type":        aws.StringValue(iAcc.DeviceType),
+			"device_name": aws.StringValue(iAcc.DeviceName),
+			"device_type": aws.StringValue(iAcc.DeviceType),
 		}
 
 		result = append(result, l)
@@ -834,7 +834,7 @@ func expandInferenceAccelerators(configured []interface{}) []*ecs.InferenceAccel
 	for _, lRaw := range configured {
 		data := lRaw.(map[string]interface{})
 		l := &ecs.InferenceAccelerator{
-			DeviceName: aws.String(data[names.AttrDeviceName].(string)),
+			DeviceName: aws.String(data["device_name"].(string)),
 			DeviceType: aws.String(data["device_type"].(string)),
 		}
 		iAccs = append(iAccs, l)
@@ -847,8 +847,8 @@ func expandTaskDefinitionPlacementConstraints(constraints []interface{}) ([]*ecs
 	var pc []*ecs.TaskDefinitionPlacementConstraint
 	for _, raw := range constraints {
 		p := raw.(map[string]interface{})
-		t := p[names.AttrType].(string)
-		e := p[names.AttrExpression].(string)
+		t := p["type"].(string)
+		e := p["expression"].(string)
 		if err := validPlacementConstraint(t, e); err != nil {
 			return nil, err
 		}
@@ -884,7 +884,7 @@ func expandTaskDefinitionProxyConfiguration(proxyConfigs []interface{}) *ecs.Pro
 	proxyConfig := proxyConfigs[0]
 	configMap := proxyConfig.(map[string]interface{})
 
-	rawProperties := configMap[names.AttrProperties].(map[string]interface{})
+	rawProperties := configMap["properties"].(map[string]interface{})
 
 	properties := make([]*ecs.KeyValuePair, len(rawProperties))
 	i := 0
@@ -898,7 +898,7 @@ func expandTaskDefinitionProxyConfiguration(proxyConfigs []interface{}) *ecs.Pro
 
 	ecsProxyConfig := &ecs.ProxyConfiguration{
 		ContainerName: aws.String(configMap["container_name"].(string)),
-		Type:          aws.String(configMap[names.AttrType].(string)),
+		Type:          aws.String(configMap["type"].(string)),
 		Properties:    properties,
 	}
 
@@ -914,7 +914,7 @@ func expandVolumes(configured []interface{}) []*ecs.Volume {
 		data := lRaw.(map[string]interface{})
 
 		l := &ecs.Volume{
-			Name: aws.String(data[names.AttrName].(string)),
+			Name: aws.String(data["name"].(string)),
 		}
 
 		hostPath := data["host_path"].(string)
@@ -946,7 +946,7 @@ func expandVolumesDockerVolume(configList []interface{}) *ecs.DockerVolumeConfig
 	config := configList[0].(map[string]interface{})
 	dockerVol := &ecs.DockerVolumeConfiguration{}
 
-	if v, ok := config[names.AttrScope].(string); ok && v != "" {
+	if v, ok := config["scope"].(string); ok && v != "" {
 		dockerVol.Scope = aws.String(v)
 	}
 
@@ -975,7 +975,7 @@ func expandVolumesEFSVolume(efsConfig []interface{}) *ecs.EFSVolumeConfiguration
 	config := efsConfig[0].(map[string]interface{})
 	efsVol := &ecs.EFSVolumeConfiguration{}
 
-	if v, ok := config[names.AttrFileSystemID].(string); ok && v != "" {
+	if v, ok := config["file_system_id"].(string); ok && v != "" {
 		efsVol.FileSystemId = aws.String(v)
 	}
 
@@ -1015,7 +1015,7 @@ func expandVolumesFSxWinVolume(fsxWinConfig []interface{}) *ecs.FSxWindowsFileSe
 	config := fsxWinConfig[0].(map[string]interface{})
 	fsxVol := &ecs.FSxWindowsFileServerVolumeConfiguration{}
 
-	if v, ok := config[names.AttrFileSystemID].(string); ok && v != "" {
+	if v, ok := config["file_system_id"].(string); ok && v != "" {
 		fsxVol.FileSystemId = aws.String(v)
 	}
 
@@ -1038,7 +1038,7 @@ func expandVolumesFSxWinVolumeAuthorizationConfig(config []interface{}) *ecs.FSx
 		auth.CredentialsParameter = aws.String(v)
 	}
 
-	if v, ok := authconfig[names.AttrDomain].(string); ok && v != "" {
+	if v, ok := authconfig["domain"].(string); ok && v != "" {
 		auth.Domain = aws.String(v)
 	}
 
@@ -1049,7 +1049,7 @@ func flattenVolumes(list []*ecs.Volume) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(list))
 	for _, volume := range list {
 		l := map[string]interface{}{
-			names.AttrName: aws.StringValue(volume.Name),
+			"name": aws.StringValue(volume.Name),
 		}
 
 		if volume.Host != nil && volume.Host.SourcePath != nil {
@@ -1078,7 +1078,7 @@ func flattenDockerVolumeConfiguration(config *ecs.DockerVolumeConfiguration) []i
 	m := make(map[string]interface{})
 
 	if v := config.Scope; v != nil {
-		m[names.AttrScope] = aws.StringValue(v)
+		m["scope"] = aws.StringValue(v)
 	}
 
 	if v := config.Autoprovision; v != nil {
@@ -1106,7 +1106,7 @@ func flattenEFSVolumeConfiguration(config *ecs.EFSVolumeConfiguration) []interfa
 	m := make(map[string]interface{})
 	if config != nil {
 		if v := config.FileSystemId; v != nil {
-			m[names.AttrFileSystemID] = aws.StringValue(v)
+			m["file_system_id"] = aws.StringValue(v)
 		}
 
 		if v := config.RootDirectory; v != nil {
@@ -1150,7 +1150,7 @@ func flattenFSxWinVolumeConfiguration(config *ecs.FSxWindowsFileServerVolumeConf
 	m := make(map[string]interface{})
 	if config != nil {
 		if v := config.FileSystemId; v != nil {
-			m[names.AttrFileSystemID] = aws.StringValue(v)
+			m["file_system_id"] = aws.StringValue(v)
 		}
 
 		if v := config.RootDirectory; v != nil {
@@ -1174,7 +1174,7 @@ func flattenFSxWinVolumeAuthorizationConfig(config *ecs.FSxWindowsFileServerAuth
 			m["credentials_parameter"] = aws.StringValue(v)
 		}
 		if v := config.Domain; v != nil {
-			m[names.AttrDomain] = aws.StringValue(v)
+			m["domain"] = aws.StringValue(v)
 		}
 	}
 

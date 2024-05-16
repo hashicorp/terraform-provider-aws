@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_sagemaker_device")
@@ -34,7 +33,7 @@ func ResourceDevice() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -57,12 +56,12 @@ func ResourceDevice() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrDescription: {
+						"description": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(1, 40),
 						},
-						names.AttrDeviceName: {
+						"device_name": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -122,7 +121,7 @@ func resourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta interf
 	arn := aws.StringValue(device.DeviceArn)
 	d.Set("device_fleet_name", device.DeviceFleetName)
 	d.Set("agent_version", device.AgentVersion)
-	d.Set(names.AttrARN, arn)
+	d.Set("arn", arn)
 
 	if err := d.Set("device", flattenDevice(device)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting device for SageMaker Device (%s): %s", d.Id(), err)
@@ -187,11 +186,11 @@ func expandDevice(l []interface{}) []*sagemaker.Device {
 	m := l[0].(map[string]interface{})
 
 	config := &sagemaker.Device{
-		DeviceName: aws.String(m[names.AttrDeviceName].(string)),
+		DeviceName: aws.String(m["device_name"].(string)),
 	}
 
-	if v, ok := m[names.AttrDescription].(string); ok && v != "" {
-		config.Description = aws.String(m[names.AttrDescription].(string))
+	if v, ok := m["description"].(string); ok && v != "" {
+		config.Description = aws.String(m["description"].(string))
 	}
 
 	if v, ok := m["iot_thing_name"].(string); ok && v != "" {
@@ -207,11 +206,11 @@ func flattenDevice(config *sagemaker.DescribeDeviceOutput) []map[string]interfac
 	}
 
 	m := map[string]interface{}{
-		names.AttrDeviceName: aws.StringValue(config.DeviceName),
+		"device_name": aws.StringValue(config.DeviceName),
 	}
 
 	if config.Description != nil {
-		m[names.AttrDescription] = aws.StringValue(config.Description)
+		m["description"] = aws.StringValue(config.Description)
 	}
 
 	if config.IotThingName != nil {

@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_s3_bucket_ownership_controls", name="Bucket Ownership Controls")
@@ -36,13 +35,13 @@ func resourceBucketOwnershipControls() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrBucket: {
+			"bucket": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
-			names.AttrRule: {
+			"rule": {
 				Type:     schema.TypeList,
 				Required: true,
 				MinItems: 1,
@@ -65,11 +64,11 @@ func resourceBucketOwnershipControlsCreate(ctx context.Context, d *schema.Resour
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket := d.Get(names.AttrBucket).(string)
+	bucket := d.Get("bucket").(string)
 	input := &s3.PutBucketOwnershipControlsInput{
 		Bucket: aws.String(bucket),
 		OwnershipControls: &types.OwnershipControls{
-			Rules: expandOwnershipControlsRules(d.Get(names.AttrRule).([]interface{})),
+			Rules: expandOwnershipControlsRules(d.Get("rule").([]interface{})),
 		},
 	}
 
@@ -112,8 +111,8 @@ func resourceBucketOwnershipControlsRead(ctx context.Context, d *schema.Resource
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket Ownership Controls (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrBucket, d.Id())
-	if err := d.Set(names.AttrRule, flattenOwnershipControlsRules(oc.Rules)); err != nil {
+	d.Set("bucket", d.Id())
+	if err := d.Set("rule", flattenOwnershipControlsRules(oc.Rules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 	}
 
@@ -127,7 +126,7 @@ func resourceBucketOwnershipControlsUpdate(ctx context.Context, d *schema.Resour
 	input := &s3.PutBucketOwnershipControlsInput{
 		Bucket: aws.String(d.Id()),
 		OwnershipControls: &types.OwnershipControls{
-			Rules: expandOwnershipControlsRules(d.Get(names.AttrRule).([]interface{})),
+			Rules: expandOwnershipControlsRules(d.Get("rule").([]interface{})),
 		},
 	}
 

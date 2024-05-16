@@ -24,8 +24,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -579,7 +579,7 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		config.SharedConfigFiles = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
-	if v, null, _ := nullable.Bool(d.Get("skip_metadata_api_check").(string)).ValueBool(); !null {
+	if v, null, _ := nullable.Bool(d.Get("skip_metadata_api_check").(string)).Value(); !null {
 		if v {
 			config.EC2MetadataServiceEnableState = imds.ClientDisabled
 		} else {
@@ -941,13 +941,13 @@ func expandEndpoints(_ context.Context, tfList []interface{}) (map[string]string
 		}
 
 		// We only need to handle the services with custom envvars here before we hand off to `aws-sdk-go-base`
-		tfAwsEnvVar := names.TFAWSEnvVar(pkg)
+		tfAwsEnvVar := names.TfAwsEnvVar(pkg)
 		deprecatedEnvVar := names.DeprecatedEnvVar(pkg)
 		if tfAwsEnvVar == "" && deprecatedEnvVar == "" {
 			continue
 		}
 
-		awsEnvVar := names.AWSServiceEnvVar(pkg)
+		awsEnvVar := names.AwsServiceEnvVar(pkg)
 		if awsEnvVar != "" {
 			if v := os.Getenv(awsEnvVar); v != "" {
 				endpoints[pkg] = v

@@ -1,16 +1,13 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package cognitoidentity_test
+package cognitoidentity
 
 import (
 	"strings"
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentity/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfcognitoidentity "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidentity"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestValidIdentityPoolName(t *testing.T) {
@@ -28,7 +25,7 @@ func TestValidIdentityPoolName(t *testing.T) {
 	}
 
 	for _, s := range validValues {
-		_, errors := tfcognitoidentity.ValidIdentityPoolName(s, "identity_pool_name")
+		_, errors := validIdentityPoolName(s, "identity_pool_name")
 		if len(errors) > 0 {
 			t.Fatalf("%q should be a valid Cognito Identity Pool Name: %v", s, errors)
 		}
@@ -42,7 +39,7 @@ func TestValidIdentityPoolName(t *testing.T) {
 	}
 
 	for _, s := range invalidValues {
-		_, errors := tfcognitoidentity.ValidIdentityPoolName(s, "identity_pool_name")
+		_, errors := validIdentityPoolName(s, "identity_pool_name")
 		if len(errors) == 0 {
 			t.Fatalf("%q should not be a valid Cognito Identity Pool Name: %v", s, errors)
 		}
@@ -60,7 +57,7 @@ func TestValidIdentityProvidersClientID(t *testing.T) {
 	}
 
 	for _, s := range validValues {
-		_, errors := tfcognitoidentity.ValidIdentityProvidersClientID(s, names.AttrClientID)
+		_, errors := validIdentityProvidersClientID(s, "client_id")
 		if len(errors) > 0 {
 			t.Fatalf("%q should be a valid Cognito Identity Provider Client ID: %v", s, errors)
 		}
@@ -75,7 +72,7 @@ func TestValidIdentityProvidersClientID(t *testing.T) {
 	}
 
 	for _, s := range invalidValues {
-		_, errors := tfcognitoidentity.ValidIdentityProvidersClientID(s, names.AttrClientID)
+		_, errors := validIdentityProvidersClientID(s, "client_id")
 		if len(errors) == 0 {
 			t.Fatalf("%q should not be a valid Cognito Identity Provider Client ID: %v", s, errors)
 		}
@@ -97,7 +94,7 @@ func TestValidIdentityProvidersProviderName(t *testing.T) {
 	}
 
 	for _, s := range validValues {
-		_, errors := tfcognitoidentity.ValidIdentityProvidersProviderName(s, names.AttrProviderName)
+		_, errors := validIdentityProvidersProviderName(s, "provider_name")
 		if len(errors) > 0 {
 			t.Fatalf("%q should be a valid Cognito Identity Provider Name: %v", s, errors)
 		}
@@ -112,7 +109,7 @@ func TestValidIdentityProvidersProviderName(t *testing.T) {
 	}
 
 	for _, s := range invalidValues {
-		_, errors := tfcognitoidentity.ValidIdentityProvidersProviderName(s, names.AttrProviderName)
+		_, errors := validIdentityProvidersProviderName(s, "provider_name")
 		if len(errors) == 0 {
 			t.Fatalf("%q should not be a valid Cognito Identity Provider Name: %v", s, errors)
 		}
@@ -123,7 +120,7 @@ func TestValidProviderDeveloperName(t *testing.T) {
 	t.Parallel()
 
 	validValues := []string{
-		acctest.Ct1,
+		"1",
 		"foo",
 		"1.2",
 		"foo1-bar2-baz3",
@@ -131,7 +128,7 @@ func TestValidProviderDeveloperName(t *testing.T) {
 	}
 
 	for _, s := range validValues {
-		_, errors := tfcognitoidentity.ValidProviderDeveloperName(s, "developer_provider_name")
+		_, errors := validProviderDeveloperName(s, "developer_provider_name")
 		if len(errors) > 0 {
 			t.Fatalf("%q should be a valid Cognito Provider Developer Name: %v", s, errors)
 		}
@@ -145,7 +142,7 @@ func TestValidProviderDeveloperName(t *testing.T) {
 	}
 
 	for _, s := range invalidValues {
-		_, errors := tfcognitoidentity.ValidProviderDeveloperName(s, "developer_provider_name")
+		_, errors := validProviderDeveloperName(s, "developer_provider_name")
 		if len(errors) == 0 {
 			t.Fatalf("%q should not be a valid Cognito Provider Developer Name: %v", s, errors)
 		}
@@ -188,9 +185,9 @@ func TestValidRoleMappingsAmbiguousRoleResolutionAgainstType(t *testing.T) {
 		if tc.AmbiguousRoleResolution != nil {
 			m["ambiguous_role_resolution"] = tc.AmbiguousRoleResolution
 		}
-		m[names.AttrType] = tc.Type
+		m["type"] = tc.Type
 
-		errors := tfcognitoidentity.ValidRoleMappingsAmbiguousRoleResolutionAgainstType(m)
+		errors := validRoleMappingsAmbiguousRoleResolutionAgainstType(m)
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Cognito Role Mappings validation failed: %v, expected err count %d, got %d, for config %#v", errors, tc.ErrCount, len(errors), m)
 		}
@@ -247,9 +244,9 @@ func TestValidRoleMappingsRulesConfiguration(t *testing.T) {
 		if tc.MappingRule != nil {
 			m["mapping_rule"] = tc.MappingRule
 		}
-		m[names.AttrType] = tc.Type
+		m["type"] = tc.Type
 
-		errors := tfcognitoidentity.ValidRoleMappingsRulesConfiguration(m)
+		errors := validRoleMappingsRulesConfiguration(m)
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Cognito Role Mappings validation failed: %v, expected err count %d, got %d, for config %#v", errors, tc.ErrCount, len(errors), m)
 		}
@@ -266,7 +263,7 @@ func TestValidRoles(t *testing.T) {
 	}
 
 	for _, s := range validValues {
-		errors := tfcognitoidentity.ValidRoles(s)
+		errors := validRoles(s)
 		if len(errors) > 0 {
 			t.Fatalf("%q should be a valid Cognito Roles: %v", s, errors)
 		}
@@ -278,7 +275,7 @@ func TestValidRoles(t *testing.T) {
 	}
 
 	for _, s := range invalidValues {
-		errors := tfcognitoidentity.ValidRoles(s)
+		errors := validRoles(s)
 		if len(errors) == 0 {
 			t.Fatalf("%q should not be a valid Cognito Roles: %v", s, errors)
 		}
@@ -301,7 +298,7 @@ func TestValidSupportedLoginProviders(t *testing.T) {
 	}
 
 	for _, s := range validValues {
-		_, errors := tfcognitoidentity.ValidSupportedLoginProviders(s, "supported_login_providers")
+		_, errors := validSupportedLoginProviders(s, "supported_login_providers")
 		if len(errors) > 0 {
 			t.Fatalf("%q should be a valid Cognito Supported Login Providers: %v", s, errors)
 		}
@@ -316,7 +313,7 @@ func TestValidSupportedLoginProviders(t *testing.T) {
 	}
 
 	for _, s := range invalidValues {
-		_, errors := tfcognitoidentity.ValidSupportedLoginProviders(s, "supported_login_providers")
+		_, errors := validSupportedLoginProviders(s, "supported_login_providers")
 		if len(errors) == 0 {
 			t.Fatalf("%q should not be a valid Cognito Supported Login Providers: %v", s, errors)
 		}

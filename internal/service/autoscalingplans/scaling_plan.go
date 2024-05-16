@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_autoscalingplans_scaling_plan")
@@ -57,12 +56,12 @@ func ResourceScalingPlan() *schema.Resource {
 							MaxItems: 50,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrKey: {
+									"key": {
 										Type:     schema.TypeString,
 										Required: true,
 									},
 
-									names.AttrValues: {
+									"values": {
 										Type:     schema.TypeSet,
 										Optional: true,
 										MinItems: 0,
@@ -77,7 +76,7 @@ func ResourceScalingPlan() *schema.Resource {
 				},
 			},
 
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -107,12 +106,12 @@ func ResourceScalingPlan() *schema.Resource {
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
 
-									names.AttrMetricName: {
+									"metric_name": {
 										Type:     schema.TypeString,
 										Required: true,
 									},
 
-									names.AttrNamespace: {
+									"namespace": {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -123,7 +122,7 @@ func ResourceScalingPlan() *schema.Resource {
 										ValidateFunc: validation.StringInSlice(enum.Slice(awstypes.MetricStatisticSum), false),
 									},
 
-									names.AttrUnit: {
+									"unit": {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -137,7 +136,7 @@ func ResourceScalingPlan() *schema.Resource {
 							Default:  false,
 						},
 
-						names.AttrMaxCapacity: {
+						"max_capacity": {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
@@ -188,7 +187,7 @@ func ResourceScalingPlan() *schema.Resource {
 							ValidateDiagFunc: enum.Validate[awstypes.PredictiveScalingMode](),
 						},
 
-						names.AttrResourceID: {
+						"resource_id": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 1600),
@@ -239,12 +238,12 @@ func ResourceScalingPlan() *schema.Resource {
 													Elem:     &schema.Schema{Type: schema.TypeString},
 												},
 
-												names.AttrMetricName: {
+												"metric_name": {
 													Type:     schema.TypeString,
 													Required: true,
 												},
 
-												names.AttrNamespace: {
+												"namespace": {
 													Type:     schema.TypeString,
 													Required: true,
 												},
@@ -255,7 +254,7 @@ func ResourceScalingPlan() *schema.Resource {
 													ValidateDiagFunc: enum.Validate[awstypes.MetricStatistic](),
 												},
 
-												names.AttrUnit: {
+												"unit": {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
@@ -330,7 +329,7 @@ func resourceScalingPlanCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingPlansClient(ctx)
 
-	scalingPlanName := d.Get(names.AttrName).(string)
+	scalingPlanName := d.Get("name").(string)
 	input := &autoscalingplans.CreateScalingPlanInput{
 		ApplicationSource:   expandApplicationSource(d.Get("application_source").([]interface{})),
 		ScalingInstructions: expandScalingInstructions(d.Get("scaling_instruction").(*schema.Set)),
@@ -383,7 +382,7 @@ func resourceScalingPlanRead(ctx context.Context, d *schema.ResourceData, meta i
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting application_source: %s", err)
 	}
-	d.Set(names.AttrName, scalingPlan.ScalingPlanName)
+	d.Set("name", scalingPlan.ScalingPlanName)
 	err = d.Set("scaling_instruction", flattenScalingInstructions(scalingPlan.ScalingInstructions))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting scaling_instruction: %s", err)
@@ -464,7 +463,7 @@ func resourceScalingPlanImport(ctx context.Context, d *schema.ResourceData, meta
 	scalingPlanVersion := 1
 
 	d.SetId(scalingPlanCreateResourceID(scalingPlanName, scalingPlanVersion))
-	d.Set(names.AttrName, scalingPlanName)
+	d.Set("name", scalingPlanName)
 	d.Set("scaling_plan_version", scalingPlanVersion)
 
 	return []*schema.ResourceData{d}, nil
@@ -494,11 +493,11 @@ func expandApplicationSource(vApplicationSource []interface{}) *awstypes.Applica
 
 			mTagFilter := vTagFilter.(map[string]interface{})
 
-			if v, ok := mTagFilter[names.AttrKey].(string); ok && v != "" {
+			if v, ok := mTagFilter["key"].(string); ok && v != "" {
 				tagFilter.Key = aws.String(v)
 			}
 
-			if vValues, ok := mTagFilter[names.AttrValues].(*schema.Set); ok && vValues.Len() > 0 {
+			if vValues, ok := mTagFilter["values"].(*schema.Set); ok && vValues.Len() > 0 {
 				tagFilter.Values = flex.ExpandStringValueSet(vValues)
 			}
 
@@ -525,8 +524,8 @@ func flattenApplicationSource(applicationSource *awstypes.ApplicationSource) []i
 
 		for _, tagFilter := range tagFilters {
 			mTagFilter := map[string]interface{}{
-				names.AttrKey:    aws.ToString(tagFilter.Key),
-				names.AttrValues: flex.FlattenStringValueSet(tagFilter.Values),
+				"key":    aws.ToString(tagFilter.Key),
+				"values": flex.FlattenStringValueSet(tagFilter.Values),
 			}
 
 			vTagFilters = append(vTagFilters, mTagFilter)
@@ -561,7 +560,7 @@ func expandScalingInstructions(vScalingInstructions *schema.Set) []awstypes.Scal
 		if v, ok := mScalingInstruction["disable_dynamic_scaling"].(bool); ok {
 			scalingInstruction.DisableDynamicScaling = aws.Bool(v)
 		}
-		if v, ok := mScalingInstruction[names.AttrMaxCapacity].(int); ok {
+		if v, ok := mScalingInstruction["max_capacity"].(int); ok {
 			scalingInstruction.MaxCapacity = aws.Int32(int32(v))
 		}
 		if v, ok := mScalingInstruction["min_capacity"].(int); ok {
@@ -576,7 +575,7 @@ func expandScalingInstructions(vScalingInstructions *schema.Set) []awstypes.Scal
 		if v, ok := mScalingInstruction["predictive_scaling_mode"].(string); ok && v != "" {
 			scalingInstruction.PredictiveScalingMode = awstypes.PredictiveScalingMode(v)
 		}
-		if v, ok := mScalingInstruction[names.AttrResourceID].(string); ok && v != "" {
+		if v, ok := mScalingInstruction["resource_id"].(string); ok && v != "" {
 			scalingInstruction.ResourceId = aws.String(v)
 		}
 		if v, ok := mScalingInstruction["scalable_dimension"].(string); ok && v != "" {
@@ -608,16 +607,16 @@ func expandScalingInstructions(vScalingInstructions *schema.Set) []awstypes.Scal
 
 				customizedLoadMetricSpecification.Dimensions = dimensions
 			}
-			if v, ok := mCustomizedLoadMetricSpecification[names.AttrMetricName].(string); ok && v != "" {
+			if v, ok := mCustomizedLoadMetricSpecification["metric_name"].(string); ok && v != "" {
 				customizedLoadMetricSpecification.MetricName = aws.String(v)
 			}
-			if v, ok := mCustomizedLoadMetricSpecification[names.AttrNamespace].(string); ok && v != "" {
+			if v, ok := mCustomizedLoadMetricSpecification["namespace"].(string); ok && v != "" {
 				customizedLoadMetricSpecification.Namespace = aws.String(v)
 			}
 			if v, ok := mCustomizedLoadMetricSpecification["statistic"].(string); ok && v != "" {
 				customizedLoadMetricSpecification.Statistic = awstypes.MetricStatistic(v)
 			}
-			if v, ok := mCustomizedLoadMetricSpecification[names.AttrUnit].(string); ok && v != "" {
+			if v, ok := mCustomizedLoadMetricSpecification["unit"].(string); ok && v != "" {
 				customizedLoadMetricSpecification.Unit = aws.String(v)
 			}
 
@@ -682,16 +681,16 @@ func expandScalingInstructions(vScalingInstructions *schema.Set) []awstypes.Scal
 
 						customizedScalingMetricSpecification.Dimensions = dimensions
 					}
-					if v, ok := mCustomizedScalingMetricSpecification[names.AttrMetricName].(string); ok && v != "" {
+					if v, ok := mCustomizedScalingMetricSpecification["metric_name"].(string); ok && v != "" {
 						customizedScalingMetricSpecification.MetricName = aws.String(v)
 					}
-					if v, ok := mCustomizedScalingMetricSpecification[names.AttrNamespace].(string); ok && v != "" {
+					if v, ok := mCustomizedScalingMetricSpecification["namespace"].(string); ok && v != "" {
 						customizedScalingMetricSpecification.Namespace = aws.String(v)
 					}
 					if v, ok := mCustomizedScalingMetricSpecification["statistic"].(string); ok && v != "" {
 						customizedScalingMetricSpecification.Statistic = awstypes.MetricStatistic(v)
 					}
-					if v, ok := mCustomizedScalingMetricSpecification[names.AttrUnit].(string); ok && v != "" {
+					if v, ok := mCustomizedScalingMetricSpecification["unit"].(string); ok && v != "" {
 						customizedScalingMetricSpecification.Unit = aws.String(v)
 					}
 
@@ -731,12 +730,12 @@ func flattenScalingInstructions(scalingInstructions []awstypes.ScalingInstructio
 	for _, scalingInstruction := range scalingInstructions {
 		mScalingInstruction := map[string]interface{}{
 			"disable_dynamic_scaling":                  aws.ToBool(scalingInstruction.DisableDynamicScaling),
-			names.AttrMaxCapacity:                      int(aws.ToInt32(scalingInstruction.MaxCapacity)),
+			"max_capacity":                             int(aws.ToInt32(scalingInstruction.MaxCapacity)),
 			"min_capacity":                             int(aws.ToInt32(scalingInstruction.MinCapacity)),
 			"predictive_scaling_max_capacity_behavior": scalingInstruction.PredictiveScalingMaxCapacityBehavior,
 			"predictive_scaling_max_capacity_buffer":   int(aws.ToInt32(scalingInstruction.PredictiveScalingMaxCapacityBuffer)),
 			"predictive_scaling_mode":                  string(scalingInstruction.PredictiveScalingMode),
-			names.AttrResourceID:                       aws.ToString(scalingInstruction.ResourceId),
+			"resource_id":                              aws.ToString(scalingInstruction.ResourceId),
 			"scalable_dimension":                       string(scalingInstruction.ScalableDimension),
 			"scaling_policy_update_behavior":           string(scalingInstruction.ScalingPolicyUpdateBehavior),
 			"scheduled_action_buffer_time":             int(aws.ToInt32(scalingInstruction.ScheduledActionBufferTime)),
@@ -751,11 +750,11 @@ func flattenScalingInstructions(scalingInstructions []awstypes.ScalingInstructio
 
 			mScalingInstruction["customized_load_metric_specification"] = []interface{}{
 				map[string]interface{}{
-					"dimensions":         mDimensions,
-					names.AttrMetricName: aws.ToString(customizedLoadMetricSpecification.MetricName),
-					names.AttrNamespace:  aws.ToString(customizedLoadMetricSpecification.Namespace),
-					"statistic":          string(customizedLoadMetricSpecification.Statistic),
-					names.AttrUnit:       aws.ToString(customizedLoadMetricSpecification.Unit),
+					"dimensions":  mDimensions,
+					"metric_name": aws.ToString(customizedLoadMetricSpecification.MetricName),
+					"namespace":   aws.ToString(customizedLoadMetricSpecification.Namespace),
+					"statistic":   string(customizedLoadMetricSpecification.Statistic),
+					"unit":        aws.ToString(customizedLoadMetricSpecification.Unit),
 				},
 			}
 		}
@@ -789,11 +788,11 @@ func flattenScalingInstructions(scalingInstructions []awstypes.ScalingInstructio
 
 					mTargetTrackingConfiguration["customized_scaling_metric_specification"] = []interface{}{
 						map[string]interface{}{
-							"dimensions":         mDimensions,
-							names.AttrMetricName: aws.ToString(customizedScalingMetricSpecification.MetricName),
-							names.AttrNamespace:  aws.ToString(customizedScalingMetricSpecification.Namespace),
-							"statistic":          string(customizedScalingMetricSpecification.Statistic),
-							names.AttrUnit:       aws.ToString(customizedScalingMetricSpecification.Unit),
+							"dimensions":  mDimensions,
+							"metric_name": aws.ToString(customizedScalingMetricSpecification.MetricName),
+							"namespace":   aws.ToString(customizedScalingMetricSpecification.Namespace),
+							"statistic":   string(customizedScalingMetricSpecification.Statistic),
+							"unit":        aws.ToString(customizedScalingMetricSpecification.Unit),
 						},
 					}
 				}

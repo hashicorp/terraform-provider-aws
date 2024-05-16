@@ -41,7 +41,7 @@ func TestAccRedshiftDataShareAuthorization_basic(t *testing.T) {
 				Config: testAccDataShareAuthorizationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataShareAuthorizationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "consumer_identifier", callerIdentityDataSourceName, names.AttrAccountID),
+					resource.TestCheckResourceAttrPair(resourceName, "consumer_identifier", callerIdentityDataSourceName, "account_id"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "data_share_arn", "redshift", regexache.MustCompile(`datashare:+.`)),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "producer_arn", "redshift-serverless", regexache.MustCompile(`namespace/+.`)),
 				),

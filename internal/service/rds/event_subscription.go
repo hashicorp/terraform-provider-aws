@@ -47,7 +47,7 @@ func resourceEventSubscription() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -55,7 +55,7 @@ func resourceEventSubscription() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrEnabled: {
+			"enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
@@ -65,20 +65,20 @@ func resourceEventSubscription() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrName: {
+			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
+				ConflictsWith: []string{"name_prefix"},
 				ValidateFunc:  validEventSubscriptionName,
 			},
-			names.AttrNamePrefix: {
+			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
+				ConflictsWith: []string{"name"},
 				ValidateFunc:  validEventSubscriptionName,
 			},
 			"sns_topic": {
@@ -91,7 +91,7 @@ func resourceEventSubscription() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrSourceType: {
+			"source_type": {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[types.SourceType](),
@@ -108,9 +108,9 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &rds.CreateEventSubscriptionInput{
-		Enabled:          aws.Bool(d.Get(names.AttrEnabled).(bool)),
+		Enabled:          aws.Bool(d.Get("enabled").(bool)),
 		SnsTopicArn:      aws.String(d.Get("sns_topic").(string)),
 		SubscriptionName: aws.String(name),
 		Tags:             getTagsInV2(ctx),
@@ -124,7 +124,7 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 		input.SourceIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk(names.AttrSourceType); ok {
+	if v, ok := d.GetOk("source_type"); ok {
 		input.SourceType = aws.String(v.(string))
 	}
 
@@ -159,15 +159,15 @@ func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading RDS Event Subscription (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, sub.EventSubscriptionArn)
+	d.Set("arn", sub.EventSubscriptionArn)
 	d.Set("customer_aws_id", sub.CustomerAwsId)
-	d.Set(names.AttrEnabled, sub.Enabled)
+	d.Set("enabled", sub.Enabled)
 	d.Set("event_categories", sub.EventCategoriesList)
-	d.Set(names.AttrName, sub.CustSubscriptionId)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(sub.CustSubscriptionId)))
+	d.Set("name", sub.CustSubscriptionId)
+	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(sub.CustSubscriptionId)))
 	d.Set("sns_topic", sub.SnsTopicArn)
 	d.Set("source_ids", sub.SourceIdsList)
-	d.Set(names.AttrSourceType, sub.SourceType)
+	d.Set("source_type", sub.SourceType)
 
 	return diags
 }
@@ -176,20 +176,20 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, "source_ids") {
+	if d.HasChangesExcept("tags", "tags_all", "source_ids") {
 		input := &rds.ModifyEventSubscriptionInput{
 			SubscriptionName: aws.String(d.Id()),
 		}
 
-		input.Enabled = aws.Bool(d.Get(names.AttrEnabled).(bool))
+		input.Enabled = aws.Bool(d.Get("enabled").(bool))
 
 		if d.HasChange("event_categories") {
 			input.EventCategories = flex.ExpandStringValueSet(d.Get("event_categories").(*schema.Set))
-			input.SourceType = aws.String(d.Get(names.AttrSourceType).(string))
+			input.SourceType = aws.String(d.Get("source_type").(string))
 		}
 
-		if d.HasChange(names.AttrSourceType) {
-			input.SourceType = aws.String(d.Get(names.AttrSourceType).(string))
+		if d.HasChange("source_type") {
+			input.SourceType = aws.String(d.Get("source_type").(string))
 		}
 
 		if d.HasChange("sns_topic") {

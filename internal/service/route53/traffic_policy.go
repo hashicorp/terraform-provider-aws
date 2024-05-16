@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_route53_traffic_policy")
@@ -44,14 +43,14 @@ func ResourceTrafficPolicy() *schema.Resource {
 				}
 
 				d.SetId(parts[0])
-				d.Set(names.AttrVersion, version)
+				d.Set("version", version)
 
 				return []*schema.ResourceData{d}, nil
 			},
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrComment: {
+			"comment": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1024),
@@ -62,17 +61,17 @@ func ResourceTrafficPolicy() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(0, 102400),
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(0, 512),
 			},
-			names.AttrType: {
+			"type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrVersion: {
+			"version": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -83,13 +82,13 @@ func ResourceTrafficPolicy() *schema.Resource {
 func resourceTrafficPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &route53.CreateTrafficPolicyInput{
 		Document: aws.String(d.Get("document").(string)),
 		Name:     aws.String(name),
 	}
 
-	if v, ok := d.GetOk(names.AttrComment); ok {
+	if v, ok := d.GetOk("comment"); ok {
 		input.Comment = aws.String(v.(string))
 	}
 
@@ -122,11 +121,11 @@ func resourceTrafficPolicyRead(ctx context.Context, d *schema.ResourceData, meta
 		return diag.Errorf("reading Route53 Traffic Policy (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrComment, trafficPolicy.Comment)
+	d.Set("comment", trafficPolicy.Comment)
 	d.Set("document", trafficPolicy.Document)
-	d.Set(names.AttrName, trafficPolicy.Name)
-	d.Set(names.AttrType, trafficPolicy.Type)
-	d.Set(names.AttrVersion, trafficPolicy.Version)
+	d.Set("name", trafficPolicy.Name)
+	d.Set("type", trafficPolicy.Type)
+	d.Set("version", trafficPolicy.Version)
 
 	return nil
 }
@@ -136,11 +135,11 @@ func resourceTrafficPolicyUpdate(ctx context.Context, d *schema.ResourceData, me
 
 	input := &route53.UpdateTrafficPolicyCommentInput{
 		Id:      aws.String(d.Id()),
-		Version: aws.Int64(int64(d.Get(names.AttrVersion).(int))),
+		Version: aws.Int64(int64(d.Get("version").(int))),
 	}
 
-	if d.HasChange(names.AttrComment) {
-		input.Comment = aws.String(d.Get(names.AttrComment).(string))
+	if d.HasChange("comment") {
+		input.Comment = aws.String(d.Get("comment").(string))
 	}
 
 	log.Printf("[INFO] Updating Route53 Traffic Policy comment: %s", input)

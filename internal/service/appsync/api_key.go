@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_appsync_api_key")
@@ -33,7 +32,7 @@ func ResourceAPIKey() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "Managed by Terraform",
@@ -54,7 +53,7 @@ func ResourceAPIKey() *schema.Resource {
 				},
 				ValidateFunc: validation.IsRFC3339Time,
 			},
-			names.AttrKey: {
+			"key": {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
@@ -71,7 +70,7 @@ func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	params := &appsync.CreateApiKeyInput{
 		ApiId:       aws.String(apiID),
-		Description: aws.String(d.Get(names.AttrDescription).(string)),
+		Description: aws.String(d.Get("description").(string)),
 	}
 	if v, ok := d.GetOk("expires"); ok {
 		t, _ := time.Parse(time.RFC3339, v.(string))
@@ -106,8 +105,8 @@ func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.Set("api_id", apiID)
-	d.Set(names.AttrKey, key.Id)
-	d.Set(names.AttrDescription, key.Description)
+	d.Set("key", key.Id)
+	d.Set("description", key.Description)
 	d.Set("expires", time.Unix(aws.Int64Value(key.Expires), 0).UTC().Format(time.RFC3339))
 	return diags
 }
@@ -125,8 +124,8 @@ func resourceAPIKeyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		ApiId: aws.String(apiID),
 		Id:    aws.String(keyID),
 	}
-	if d.HasChange(names.AttrDescription) {
-		params.Description = aws.String(d.Get(names.AttrDescription).(string))
+	if d.HasChange("description") {
+		params.Description = aws.String(d.Get("description").(string))
 	}
 	if d.HasChange("expires") {
 		t, _ := time.Parse(time.RFC3339, d.Get("expires").(string))

@@ -8,13 +8,12 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func resourceStreamResourceV0() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -25,7 +24,7 @@ func resourceStreamResourceV0() *schema.Resource {
 				Required: true,
 			},
 
-			names.AttrRetentionPeriod: {
+			"retention_period": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  24,
@@ -44,17 +43,17 @@ func resourceStreamResourceV0() *schema.Resource {
 				Default:  "NONE",
 			},
 
-			names.AttrKMSKeyID: {
+			"kms_key_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsSchema(),
+			"tags": tftags.TagsSchema(),
 		},
 	}
 }

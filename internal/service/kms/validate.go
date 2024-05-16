@@ -13,14 +13,14 @@ import (
 )
 
 const (
-	aliasNamePattern        = aliasNamePrefix + `[0-9A-Za-z_/-]+`
-	multiRegionKeyIDPattern = `mrk-[0-9a-f]{32}`
+	aliasNameRegexPattern   = `alias/[0-9A-Za-z_/-]+`
+	multiRegionKeyIdPattern = `mrk-[0-9a-f]{32}`
 )
 
 var (
-	aliasNameRegex     = regexache.MustCompile(`^` + aliasNamePattern + `$`)
-	keyIDRegex         = regexache.MustCompile(`^` + verify.UUIDRegexPattern + `|` + multiRegionKeyIDPattern + `$`)
-	keyIDResourceRegex = regexache.MustCompile(`^key/(` + verify.UUIDRegexPattern + `|` + multiRegionKeyIDPattern + `)$`)
+	aliasNameRegex     = regexache.MustCompile(`^` + aliasNameRegexPattern + `$`)
+	keyIdRegex         = regexache.MustCompile(`^` + verify.UUIDRegexPattern + `|` + multiRegionKeyIdPattern + `$`)
+	keyIdResourceRegex = regexache.MustCompile(`^key/(` + verify.UUIDRegexPattern + `|` + multiRegionKeyIdPattern + `)$`)
 )
 
 func validGrantName(v interface{}, k string) (ws []string, es []error) {
@@ -50,7 +50,7 @@ func validNameForDataSource(v interface{}, k string) (ws []string, es []error) {
 func validNameForResource(v interface{}, k string) (ws []string, es []error) {
 	value := v.(string)
 
-	if regexache.MustCompile(`^(` + cmkAliasPrefix + `)`).MatchString(value) {
+	if regexache.MustCompile(`^(alias/aws/)`).MatchString(value) {
 		es = append(es, fmt.Errorf("%q cannot begin with reserved AWS CMK prefix 'alias/aws/'", k))
 	}
 
@@ -61,19 +61,19 @@ func validNameForResource(v interface{}, k string) (ws []string, es []error) {
 	return
 }
 
-var validateKey = validation.Any(
-	validateKeyID,
+var ValidateKey = validation.Any(
+	validateKeyId,
 	validateKeyARN,
 )
 
-var validateKeyOrAlias = validation.Any(
-	validateKeyID,
+var ValidateKeyOrAlias = validation.Any(
+	validateKeyId,
 	validateKeyARN,
 	validateKeyAliasName,
 	validateKeyAliasARN,
 )
 
-var validateKeyID = validation.StringMatch(keyIDRegex, "must be a KMS Key ID")
+var validateKeyId = validation.StringMatch(keyIdRegex, "must be a KMS Key ID")
 
 func validateKeyARN(v any, k string) (ws []string, errors []error) {
 	value, ok := v.(string)

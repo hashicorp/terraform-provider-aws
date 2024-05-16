@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_kinesis_firehose_delivery_stream")
@@ -20,11 +19,11 @@ func dataSourceDeliveryStream() *schema.Resource {
 		ReadWithoutTimeout: dataSourceDeliveryStreamRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -36,7 +35,7 @@ func dataSourceDeliveryStreamRead(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FirehoseClient(ctx)
 
-	sn := d.Get(names.AttrName).(string)
+	sn := d.Get("name").(string)
 	output, err := findDeliveryStreamByName(ctx, conn, sn)
 
 	if err != nil {
@@ -44,8 +43,8 @@ func dataSourceDeliveryStreamRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	d.SetId(aws.ToString(output.DeliveryStreamARN))
-	d.Set(names.AttrARN, output.DeliveryStreamARN)
-	d.Set(names.AttrName, output.DeliveryStreamName)
+	d.Set("arn", output.DeliveryStreamARN)
+	d.Set("name", output.DeliveryStreamName)
 
 	return diags
 }

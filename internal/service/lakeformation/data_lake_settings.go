@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_lakeformation_data_lake_settings")
@@ -67,7 +66,7 @@ func ResourceDataLakeSettings() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrCatalogID: {
+			"catalog_id": {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
@@ -79,7 +78,7 @@ func ResourceDataLakeSettings() *schema.Resource {
 				MaxItems: 3,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrPermissions: {
+						"permissions": {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Computed: true,
@@ -88,7 +87,7 @@ func ResourceDataLakeSettings() *schema.Resource {
 								ValidateDiagFunc: enum.Validate[awstypes.Permission](),
 							},
 						},
-						names.AttrPrincipal: {
+						"principal": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -104,7 +103,7 @@ func ResourceDataLakeSettings() *schema.Resource {
 				MaxItems: 3,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrPermissions: {
+						"permissions": {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Computed: true,
@@ -113,7 +112,7 @@ func ResourceDataLakeSettings() *schema.Resource {
 								ValidateDiagFunc: enum.Validate[awstypes.Permission](),
 							},
 						},
-						names.AttrPrincipal: {
+						"principal": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -150,7 +149,7 @@ func resourceDataLakeSettingsCreate(ctx context.Context, d *schema.ResourceData,
 
 	input := &lakeformation.PutDataLakeSettingsInput{}
 
-	if v, ok := d.GetOk(names.AttrCatalogID); ok {
+	if v, ok := d.GetOk("catalog_id"); ok {
 		input.CatalogId = aws.String(v.(string))
 	}
 
@@ -231,7 +230,7 @@ func resourceDataLakeSettingsRead(ctx context.Context, d *schema.ResourceData, m
 
 	input := &lakeformation.GetDataLakeSettingsInput{}
 
-	if v, ok := d.GetOk(names.AttrCatalogID); ok {
+	if v, ok := d.GetOk("catalog_id"); ok {
 		input.CatalogId = aws.String(v.(string))
 	}
 
@@ -279,7 +278,7 @@ func resourceDataLakeSettingsDelete(ctx context.Context, d *schema.ResourceData,
 		},
 	}
 
-	if v, ok := d.GetOk(names.AttrCatalogID); ok {
+	if v, ok := d.GetOk("catalog_id"); ok {
 		input.CatalogId = aws.String(v.(string))
 	}
 
@@ -309,9 +308,9 @@ func expandDataLakeSettingsCreateDefaultPermissions(tfMaps []interface{}) []awst
 
 func expandDataLakeSettingsCreateDefaultPermission(tfMap map[string]interface{}) awstypes.PrincipalPermissions {
 	apiObject := awstypes.PrincipalPermissions{
-		Permissions: flex.ExpandStringyValueList[awstypes.Permission](tfMap[names.AttrPermissions].(*schema.Set).List()),
+		Permissions: flex.ExpandStringyValueList[awstypes.Permission](tfMap["permissions"].(*schema.Set).List()),
 		Principal: &awstypes.DataLakePrincipal{
-			DataLakePrincipalIdentifier: aws.String(tfMap[names.AttrPrincipal].(string)),
+			DataLakePrincipalIdentifier: aws.String(tfMap["principal"].(string)),
 		},
 	}
 
@@ -340,11 +339,11 @@ func flattenDataLakeSettingsCreateDefaultPermission(apiObject awstypes.Principal
 
 	if apiObject.Permissions != nil {
 		// tfMap["permissions"] = flex.FlattenStringValueSet(flattenPermissions(apiObject.Permissions))
-		tfMap[names.AttrPermissions] = flex.FlattenStringyValueSet(apiObject.Permissions)
+		tfMap["permissions"] = flex.FlattenStringyValueSet(apiObject.Permissions)
 	}
 
 	if v := aws.ToString(apiObject.Principal.DataLakePrincipalIdentifier); v != "" {
-		tfMap[names.AttrPrincipal] = v
+		tfMap["principal"] = v
 	}
 
 	return tfMap

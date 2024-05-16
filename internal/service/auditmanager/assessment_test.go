@@ -40,14 +40,14 @@ func TestAccAuditManagerAssessment_basic(t *testing.T) {
 				Config: testAccAssessmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssessmentExists(ctx, resourceName, &assessment),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "assessment_reports_destination.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "assessment_reports_destination.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "assessment_reports_destination.0.destination_type", "S3"),
-					resource.TestCheckResourceAttrPair(resourceName, "framework_id", "aws_auditmanager_framework.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "scope.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "scope.0.aws_accounts.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "scope.0.aws_services.#", acctest.Ct1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "auditmanager", regexache.MustCompile(`assessment/+.`)),
+					resource.TestCheckResourceAttrPair(resourceName, "framework_id", "aws_auditmanager_framework.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "scope.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scope.0.aws_accounts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scope.0.aws_services.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "auditmanager", regexache.MustCompile(`assessment/+.`)),
 				),
 			},
 			{
@@ -103,12 +103,12 @@ func TestAccAuditManagerAssessment_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckAssessmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAssessmentConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccAssessmentConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssessmentExists(ctx, resourceName, &assessment),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -118,22 +118,22 @@ func TestAccAuditManagerAssessment_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"roles"},
 			},
 			{
-				Config: testAccAssessmentConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccAssessmentConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssessmentExists(ctx, resourceName, &assessment),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccAssessmentConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccAssessmentConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssessmentExists(ctx, resourceName, &assessment),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -159,8 +159,8 @@ func TestAccAuditManagerAssessment_optional(t *testing.T) {
 				Config: testAccAssessmentConfig_optional(rName, "text"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssessmentExists(ctx, resourceName, &assessment),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "text"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "description", "text"),
 				),
 			},
 			{
@@ -173,8 +173,8 @@ func TestAccAuditManagerAssessment_optional(t *testing.T) {
 				Config: testAccAssessmentConfig_optional(rName, "text updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssessmentExists(ctx, resourceName, &assessment),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "text updated"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "description", "text updated"),
 				),
 			},
 		},

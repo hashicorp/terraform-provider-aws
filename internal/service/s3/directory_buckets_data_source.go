@@ -36,7 +36,7 @@ func (d *directoryBucketsDataSource) Metadata(_ context.Context, request datasou
 func (d *directoryBucketsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARNs: schema.ListAttribute{
+			"arns": schema.ListAttribute{
 				ElementType: types.StringType,
 				Computed:    true,
 			},

@@ -39,12 +39,12 @@ func (d *dataSourceProducerDataShares) Metadata(_ context.Context, req datasourc
 func (d *dataSourceProducerDataShares) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
+			"id": framework.IDAttribute(),
 			"producer_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 			},
-			names.AttrStatus: schema.StringAttribute{
+			"status": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.DataShareStatusForProducer](),
 				Optional:   true,
 			},

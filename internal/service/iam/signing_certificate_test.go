@@ -38,10 +38,10 @@ func TestAccIAMSigningCertificate_basic(t *testing.T) {
 				Config: testAccSigningCertificateConfig_basic(rName, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningCertificateExists(ctx, resourceName, &cred),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrUserName, "aws_iam_user.test", names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, "user_name", "aws_iam_user.test", "name"),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_body"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Active"),
+					resource.TestCheckResourceAttr(resourceName, "status", "Active"),
 				),
 			},
 			{
@@ -72,7 +72,7 @@ func TestAccIAMSigningCertificate_status(t *testing.T) {
 				Config: testAccSigningCertificateConfig_status(rName, "Inactive", certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningCertificateExists(ctx, resourceName, &cred),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Inactive"),
+					resource.TestCheckResourceAttr(resourceName, "status", "Inactive"),
 				),
 			},
 			{
@@ -84,14 +84,14 @@ func TestAccIAMSigningCertificate_status(t *testing.T) {
 				Config: testAccSigningCertificateConfig_status(rName, "Active", certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningCertificateExists(ctx, resourceName, &cred),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Active"),
+					resource.TestCheckResourceAttr(resourceName, "status", "Active"),
 				),
 			},
 			{
 				Config: testAccSigningCertificateConfig_status(rName, "Inactive", certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningCertificateExists(ctx, resourceName, &cred),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Inactive"),
+					resource.TestCheckResourceAttr(resourceName, "status", "Inactive"),
 				),
 			},
 		},

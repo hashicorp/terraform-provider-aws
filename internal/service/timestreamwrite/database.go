@@ -37,11 +37,11 @@ func resourceDatabase() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDatabaseName: {
+			"database_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -50,7 +50,7 @@ func resourceDatabase() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must only include alphanumeric, underscore, period, or hyphen characters"),
 				),
 			},
-			names.AttrKMSKeyID: {
+			"kms_key_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -75,13 +75,13 @@ func resourceDatabase() *schema.Resource {
 func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).TimestreamWriteClient(ctx)
 
-	name := d.Get(names.AttrDatabaseName).(string)
+	name := d.Get("database_name").(string)
 	input := &timestreamwrite.CreateDatabaseInput{
 		DatabaseName: aws.String(name),
 		Tags:         getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
+	if v, ok := d.GetOk("kms_key_id"); ok {
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
@@ -111,9 +111,9 @@ func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag.Errorf("reading Timestream Database (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, db.Arn)
-	d.Set(names.AttrDatabaseName, db.DatabaseName)
-	d.Set(names.AttrKMSKeyID, db.KmsKeyId)
+	d.Set("arn", db.Arn)
+	d.Set("database_name", db.DatabaseName)
+	d.Set("kms_key_id", db.KmsKeyId)
 	d.Set("table_count", db.TableCount)
 
 	return nil
@@ -122,10 +122,10 @@ func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta inte
 func resourceDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).TimestreamWriteClient(ctx)
 
-	if d.HasChange(names.AttrKMSKeyID) {
+	if d.HasChange("kms_key_id") {
 		input := &timestreamwrite.UpdateDatabaseInput{
 			DatabaseName: aws.String(d.Id()),
-			KmsKeyId:     aws.String(d.Get(names.AttrKMSKeyID).(string)),
+			KmsKeyId:     aws.String(d.Get("kms_key_id").(string)),
 		}
 
 		_, err := conn.UpdateDatabase(ctx, input)

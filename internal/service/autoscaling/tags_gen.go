@@ -32,7 +32,7 @@ func findTag(ctx context.Context, conn *autoscaling.Client, identifier, resource
 				Values: []string{identifier},
 			},
 			{
-				Name:   aws.String(names.AttrKey),
+				Name:   aws.String("key"),
 				Values: []string{key},
 			},
 		},
@@ -110,8 +110,8 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 func listOfMap(tags tftags.KeyValueTags) []any {
 	return tfslices.ApplyToAll(tags.Keys(), func(key string) any {
 		return map[string]any{
-			names.AttrKey:         key,
-			names.AttrValue:       aws.ToString(tags.KeyValue(key)),
+			"key":                 key,
+			"value":               aws.ToString(tags.KeyValue(key)),
 			"propagate_at_launch": aws.ToBool(tags.KeyAdditionalBoolValue(key, "PropagateAtLaunch")),
 		}
 	})
@@ -192,7 +192,7 @@ func KeyValueTags(ctx context.Context, tags any, identifier, resourceType string
 				continue
 			}
 
-			key, ok := tfMap[names.AttrKey].(string)
+			key, ok := tfMap["key"].(string)
 
 			if !ok {
 				continue
@@ -200,7 +200,7 @@ func KeyValueTags(ctx context.Context, tags any, identifier, resourceType string
 
 			tagData := &tftags.TagData{}
 
-			if v, ok := tfMap[names.AttrValue].(string); ok {
+			if v, ok := tfMap["value"].(string); ok {
 				tagData.Value = &v
 			}
 

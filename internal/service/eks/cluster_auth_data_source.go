@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_eks_cluster_auth")
@@ -20,7 +19,7 @@ func dataSourceClusterAuth() *schema.Resource {
 		ReadWithoutTimeout: dataSourceClusterAuthRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.NoZeroValues,
@@ -38,7 +37,7 @@ func dataSourceClusterAuthRead(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).STSClient(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	generator, err := NewGenerator(false, false)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)

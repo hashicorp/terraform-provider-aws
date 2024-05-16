@@ -35,7 +35,7 @@ func ResourceUserHierarchyGroup() *schema.Resource {
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -71,7 +71,7 @@ func ResourceUserHierarchyGroup() *schema.Resource {
 					},
 				},
 			},
-			names.AttrInstanceID: {
+			"instance_id": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
@@ -80,7 +80,7 @@ func ResourceUserHierarchyGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
@@ -103,15 +103,15 @@ func userHierarchyPathLevelSchema() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				names.AttrARN: {
+				"arn": {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrID: {
+				"id": {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrName: {
+				"name": {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -125,8 +125,8 @@ func resourceUserHierarchyGroupCreate(ctx context.Context, d *schema.ResourceDat
 
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
-	instanceID := d.Get(names.AttrInstanceID).(string)
-	userHierarchyGroupName := d.Get(names.AttrName).(string)
+	instanceID := d.Get("instance_id").(string)
+	userHierarchyGroupName := d.Get("name").(string)
 	input := &connect.CreateUserHierarchyGroupInput{
 		InstanceId: aws.String(instanceID),
 		Name:       aws.String(userHierarchyGroupName),
@@ -183,11 +183,11 @@ func resourceUserHierarchyGroupRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "getting Connect User Hierarchy Group (%s): empty response", d.Id())
 	}
 
-	d.Set(names.AttrARN, resp.HierarchyGroup.Arn)
+	d.Set("arn", resp.HierarchyGroup.Arn)
 	d.Set("hierarchy_group_id", resp.HierarchyGroup.Id)
-	d.Set(names.AttrInstanceID, instanceID)
+	d.Set("instance_id", instanceID)
 	d.Set("level_id", resp.HierarchyGroup.LevelId)
-	d.Set(names.AttrName, resp.HierarchyGroup.Name)
+	d.Set("name", resp.HierarchyGroup.Name)
 
 	if err := d.Set("hierarchy_path", flattenUserHierarchyPath(resp.HierarchyGroup.HierarchyPath)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting Connect User Hierarchy Group hierarchy_path (%s): %s", d.Id(), err)
@@ -209,11 +209,11 @@ func resourceUserHierarchyGroupUpdate(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if d.HasChange(names.AttrName) {
+	if d.HasChange("name") {
 		_, err = conn.UpdateUserHierarchyGroupNameWithContext(ctx, &connect.UpdateUserHierarchyGroupNameInput{
 			HierarchyGroupId: aws.String(userHierarchyGroupID),
 			InstanceId:       aws.String(instanceID),
-			Name:             aws.String(d.Get(names.AttrName).(string)),
+			Name:             aws.String(d.Get("name").(string)),
 		})
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating User Hierarchy Group (%s): %s", d.Id(), err)
@@ -292,9 +292,9 @@ func flattenUserHierarchyPathLevel(userHierarchyPathLevel *connect.HierarchyGrou
 	}
 
 	level := map[string]interface{}{
-		names.AttrARN:  aws.StringValue(userHierarchyPathLevel.Arn),
-		names.AttrID:   aws.StringValue(userHierarchyPathLevel.Id),
-		names.AttrName: aws.StringValue(userHierarchyPathLevel.Name),
+		"arn":  aws.StringValue(userHierarchyPathLevel.Arn),
+		"id":   aws.StringValue(userHierarchyPathLevel.Id),
+		"name": aws.StringValue(userHierarchyPathLevel.Name),
 	}
 
 	return []interface{}{level}

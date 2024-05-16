@@ -27,10 +27,10 @@ func TestAccNetworkManagerGlobalNetworkDataSource_basic(t *testing.T) {
 			{
 				Config: testAccGlobalNetworkDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
-					resource.TestCheckResourceAttrPair(dataSourceName, "global_network_id", resourceName, names.AttrID),
-					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "global_network_id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
 				),
 			},
 		},

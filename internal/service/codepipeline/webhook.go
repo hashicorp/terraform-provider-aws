@@ -39,7 +39,7 @@ func resourceWebhook() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -73,7 +73,7 @@ func resourceWebhook() *schema.Resource {
 					},
 				},
 			},
-			names.AttrFilter: {
+			"filter": {
 				Type:     schema.TypeSet,
 				Required: true,
 				MinItems: 1,
@@ -93,7 +93,7 @@ func resourceWebhook() *schema.Resource {
 					},
 				},
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -114,7 +114,7 @@ func resourceWebhook() *schema.Resource {
 				ForceNew: true,
 				Required: true,
 			},
-			names.AttrURL: {
+			"url": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -129,14 +129,14 @@ func resourceWebhookCreate(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).CodePipelineClient(ctx)
 
 	authType := types.WebhookAuthenticationType(d.Get("authentication").(string))
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &codepipeline.PutWebhookInput{
 		Tags: getTagsIn(ctx),
 		Webhook: &types.WebhookDefinition{
 			Authentication: authType,
 			// "missing required field, PutWebhookInput.Webhook.AuthenticationConfiguration".
 			AuthenticationConfiguration: &types.WebhookAuthConfiguration{},
-			Filters:                     expandWebhookFilterRules(d.Get(names.AttrFilter).(*schema.Set)),
+			Filters:                     expandWebhookFilterRules(d.Get("filter").(*schema.Set)),
 			Name:                        aws.String(name),
 			TargetAction:                aws.String(d.Get("target_action").(string)),
 			TargetPipeline:              aws.String(d.Get("target_pipeline").(string)),
@@ -175,18 +175,18 @@ func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	webhookDef := webhook.Definition
-	d.Set(names.AttrARN, webhook.Arn)
+	d.Set("arn", webhook.Arn)
 	d.Set("authentication", webhookDef.Authentication)
 	if err := d.Set("authentication_configuration", flattenWebhookAuthConfiguration(webhookDef.AuthenticationConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting authentication_configuration: %s", err)
 	}
-	if err := d.Set(names.AttrFilter, flattenWebhookFilterRules(webhookDef.Filters)); err != nil {
+	if err := d.Set("filter", flattenWebhookFilterRules(webhookDef.Filters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting filter: %s", err)
 	}
-	d.Set(names.AttrName, webhookDef.Name)
+	d.Set("name", webhookDef.Name)
 	d.Set("target_action", webhookDef.TargetAction)
 	d.Set("target_pipeline", webhookDef.TargetPipeline)
-	d.Set(names.AttrURL, webhook.Url)
+	d.Set("url", webhook.Url)
 
 	setTagsOut(ctx, webhook.Tags)
 
@@ -197,15 +197,15 @@ func resourceWebhookUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodePipelineClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		authType := types.WebhookAuthenticationType(d.Get("authentication").(string))
 		input := &codepipeline.PutWebhookInput{
 			Webhook: &types.WebhookDefinition{
 				Authentication: authType,
 				// "missing required field, PutWebhookInput.Webhook.AuthenticationConfiguration".
 				AuthenticationConfiguration: &types.WebhookAuthConfiguration{},
-				Filters:                     expandWebhookFilterRules(d.Get(names.AttrFilter).(*schema.Set)),
-				Name:                        aws.String(d.Get(names.AttrName).(string)),
+				Filters:                     expandWebhookFilterRules(d.Get("filter").(*schema.Set)),
+				Name:                        aws.String(d.Get("name").(string)),
 				TargetAction:                aws.String(d.Get("target_action").(string)),
 				TargetPipeline:              aws.String(d.Get("target_pipeline").(string)),
 			},
@@ -231,7 +231,7 @@ func resourceWebhookDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 	log.Printf("[INFO] Deleting CodePipeline Webhook: %s", d.Id())
 	_, err := conn.DeleteWebhook(ctx, &codepipeline.DeleteWebhookInput{
-		Name: aws.String(d.Get(names.AttrName).(string)),
+		Name: aws.String(d.Get("name").(string)),
 	})
 
 	if errs.IsA[*types.WebhookNotFoundException](err) {

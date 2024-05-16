@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ses_domain_mail_from")
@@ -28,7 +27,7 @@ func ResourceDomainMailFrom() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrDomain: {
+			"domain": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -51,7 +50,7 @@ func resourceDomainMailFromSet(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	behaviorOnMxFailure := d.Get("behavior_on_mx_failure").(string)
-	domainName := d.Get(names.AttrDomain).(string)
+	domainName := d.Get("domain").(string)
 	mailFromDomain := d.Get("mail_from_domain").(string)
 
 	input := &ses.SetIdentityMailFromDomainInput{
@@ -101,7 +100,7 @@ func resourceDomainMailFromRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.Set("behavior_on_mx_failure", attributes.BehaviorOnMXFailure)
-	d.Set(names.AttrDomain, domainName)
+	d.Set("domain", domainName)
 	d.Set("mail_from_domain", attributes.MailFromDomain)
 
 	return diags

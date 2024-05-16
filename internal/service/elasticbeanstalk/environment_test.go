@@ -47,7 +47,7 @@ func TestAccElasticBeanstalkEnvironment_basic(t *testing.T) {
 				Config: testAccEnvironmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &app),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "elasticbeanstalk", fmt.Sprintf("environment/%s/%s", rName, rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "elasticbeanstalk", fmt.Sprintf("environment/%s/%s", rName, rName)),
 					resource.TestMatchResourceAttr(resourceName, "autoscaling_groups.0", beanstalkAsgNameRegexp),
 					resource.TestMatchResourceAttr(resourceName, "endpoint_url", beanstalkEndpointURL),
 					resource.TestMatchResourceAttr(resourceName, "instances.0", beanstalkInstancesNameRegexp),
@@ -175,7 +175,7 @@ func TestAccElasticBeanstalkEnvironment_beanstalkEnv(t *testing.T) {
 				Config: testAccEnvironmentConfig_template(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &app),
-					testAccCheckEnvironmentConfigValue(ctx, resourceName, acctest.Ct1),
+					testAccCheckEnvironmentConfigValue(ctx, resourceName, "1"),
 				),
 			},
 			{
@@ -192,14 +192,14 @@ func TestAccElasticBeanstalkEnvironment_beanstalkEnv(t *testing.T) {
 				Config: testAccEnvironmentConfig_template(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &app),
-					testAccCheckEnvironmentConfigValue(ctx, resourceName, acctest.Ct2),
+					testAccCheckEnvironmentConfigValue(ctx, resourceName, "2"),
 				),
 			},
 			{
 				Config: testAccEnvironmentConfig_template(rName, 3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &app),
-					testAccCheckEnvironmentConfigValue(ctx, resourceName, acctest.Ct3),
+					testAccCheckEnvironmentConfigValue(ctx, resourceName, "3"),
 				),
 			},
 		},
@@ -250,11 +250,11 @@ func TestAccElasticBeanstalkEnvironment_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccEnvironmentConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -267,20 +267,20 @@ func TestAccElasticBeanstalkEnvironment_tags(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccEnvironmentConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccEnvironmentConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccEnvironmentConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccEnvironmentConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -463,7 +463,7 @@ func TestAccElasticBeanstalkEnvironment_platformARN(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &app),
 					acctest.CheckResourceAttrRegionalARNNoAccount(resourceName, "platform_arn", "elasticbeanstalk", "platform/"+platformNameWithVersion1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "5"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "5"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", rValue1Str),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", rValue1Str),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", rValue1Str),
@@ -485,7 +485,7 @@ func TestAccElasticBeanstalkEnvironment_platformARN(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &app),
 					acctest.CheckResourceAttrRegionalARNNoAccount(resourceName, "platform_arn", "elasticbeanstalk", "platform/"+platformNameWithVersion2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "5"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "5"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", rValue2Str),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", rValue2Str),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", rValue2Str),
@@ -615,7 +615,7 @@ func testAccCheckEnvironmentConfigValue(ctx context.Context, n string, expectedV
 
 		resp, err := conn.DescribeConfigurationOptions(ctx, &elasticbeanstalk.DescribeConfigurationOptionsInput{
 			ApplicationName: aws.String(rs.Primary.Attributes["application"]),
-			EnvironmentName: aws.String(rs.Primary.Attributes[names.AttrName]),
+			EnvironmentName: aws.String(rs.Primary.Attributes["name"]),
 			Options: []awstypes.OptionSpecification{
 				{
 					Namespace:  aws.String("aws:elasticbeanstalk:application:environment"),

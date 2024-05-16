@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_iam_saml_provider", name="SAML Provider")
@@ -23,7 +22,7 @@ func dataSourceSAMLProvider() *schema.Resource {
 		ReadWithoutTimeout: dataSourceSAMLProviderRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -32,7 +31,7 @@ func dataSourceSAMLProvider() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -40,7 +39,7 @@ func dataSourceSAMLProvider() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 			"valid_until": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -55,7 +54,7 @@ func dataSourceSAMLProviderRead(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	arn := d.Get(names.AttrARN).(string)
+	arn := d.Get("arn").(string)
 	output, err := findSAMLProviderByARN(ctx, conn, arn)
 
 	if err != nil {
@@ -74,7 +73,7 @@ func dataSourceSAMLProviderRead(ctx context.Context, d *schema.ResourceData, met
 	} else {
 		d.Set("create_date", nil)
 	}
-	d.Set(names.AttrName, name)
+	d.Set("name", name)
 	d.Set("saml_metadata_document", output.SAMLMetadataDocument)
 	if output.ValidUntil != nil {
 		d.Set("valid_until", aws.ToTime(output.ValidUntil).Format(time.RFC3339))
@@ -85,7 +84,7 @@ func dataSourceSAMLProviderRead(ctx context.Context, d *schema.ResourceData, met
 	tags := KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
-	if err := d.Set(names.AttrTags, tags.Map()); err != nil {
+	if err := d.Set("tags", tags.Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

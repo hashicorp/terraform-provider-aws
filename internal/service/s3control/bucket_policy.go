@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_s3control_bucket_policy")
@@ -35,13 +34,13 @@ func resourceBucketPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrBucket: {
+			"bucket": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			names.AttrPolicy: {
+			"policy": {
 				Type:                  schema.TypeString,
 				Required:              true,
 				ValidateFunc:          validation.StringIsJSON,
@@ -59,9 +58,9 @@ func resourceBucketPolicy() *schema.Resource {
 func resourceBucketPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
-	bucket := d.Get(names.AttrBucket).(string)
+	bucket := d.Get("bucket").(string)
 
-	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
+	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -106,17 +105,17 @@ func resourceBucketPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.Errorf("reading S3 Control Bucket Policy (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrBucket, d.Id())
+	d.Set("bucket", d.Id())
 
 	if output.Policy != nil {
-		policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), aws.ToString(output.Policy))
+		policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.ToString(output.Policy))
 		if err != nil {
 			return diag.FromErr(err)
 		}
 
-		d.Set(names.AttrPolicy, policyToSet)
+		d.Set("policy", policyToSet)
 	} else {
-		d.Set(names.AttrPolicy, "")
+		d.Set("policy", "")
 	}
 
 	return nil
@@ -125,7 +124,7 @@ func resourceBucketPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 func resourceBucketPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
-	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
+	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 	if err != nil {
 		return diag.FromErr(err)
 	}

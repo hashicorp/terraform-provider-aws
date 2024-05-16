@@ -51,11 +51,9 @@ The following arguments are optional:
 * `containerRecipeArn` - (Optional) - Amazon Resource Name (ARN) of the container recipe.
 * `distributionConfigurationArn` - (Optional) Amazon Resource Name (ARN) of the Image Builder Distribution Configuration.
 * `enhancedImageMetadataEnabled` - (Optional) Whether additional information about the image being created is collected. Defaults to `true`.
-* `executionRole` - (Optional) Amazon Resource Name (ARN) of the service-linked role to be used by Image Builder to [execute workflows](https://docs.aws.amazon.com/imagebuilder/latest/userguide/manage-image-workflows.html).
 * `imageRecipeArn` - (Optional) Amazon Resource Name (ARN) of the image recipe.
 * `imageTestsConfiguration` - (Optional) Configuration block with image tests configuration. Detailed below.
 * `imageScanningConfiguration` - (Optional) Configuration block with image scanning configuration. Detailed below.
-* `workflow` - (Optional) Configuration block with the workflow configuration. Detailed below.
 * `tags` - (Optional) Key-value map of resource tags for the Image Builder Image. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### image_tests_configuration
@@ -78,25 +76,6 @@ The following arguments are optional:
 
 * `repositoryName` - (Optional) The name of the container repository that Amazon Inspector scans to identify findings for your container images.
 * `containerTags` - (Optional) Set of tags for Image Builder to apply to the output container image that that Amazon Inspector scans.
-
-### workflow
-
-The following arguments are required:
-
-* `workflowArn` - (Required) Amazon Resource Name (ARN) of the Image Builder Workflow.
-
-The following arguments are optional:
-
-* `onFailure` - (Optional) The action to take if the workflow fails. Must be one of `CONTINUE` or `ABORT`.
-* `parallelGroup` - (Optional) The parallel group in which to run a test Workflow.
-* `parameter` - (Optional) Configuration block for the workflow parameters. Detailed below.
-
-### parameter
-
-The following arguments are required:
-
-* `name` - (Required) The name of the Workflow parameter.
-* `value` - (Required) The value of the Workflow parameter.
 
 ## Attribute Reference
 
@@ -157,4 +136,4 @@ Using `terraform import`, import `aws_imagebuilder_image` resources using the Am
 % terraform import aws_imagebuilder_image.example arn:aws:imagebuilder:us-east-1:123456789012:image/example/1.0.0/1
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-cbb9db80d9b66120d07dffb432829c9d9219308f5d9c07fc66965f6a0724ebf8 -->
+<!-- cache-key: cdktf-0.20.1 input-1cfd36f8fabb6982d4f93c93832c07a2a2e26fd75759b9f073c07a7c18e7453f -->

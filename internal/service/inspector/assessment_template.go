@@ -40,11 +40,11 @@ func ResourceAssessmentTemplate() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDuration: {
+			"duration": {
 				Type:     schema.TypeInt,
 				Required: true,
 				ForceNew: true,
@@ -59,7 +59,7 @@ func ResourceAssessmentTemplate() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(inspector.Event_Values(), false),
 						},
-						names.AttrTopicARN: {
+						"topic_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
@@ -67,7 +67,7 @@ func ResourceAssessmentTemplate() *schema.Resource {
 					},
 				},
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -80,7 +80,7 @@ func ResourceAssessmentTemplate() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrTargetARN: {
+			"target_arn": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -95,11 +95,11 @@ func resourceAssessmentTemplateCreate(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).InspectorConn(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &inspector.CreateAssessmentTemplateInput{
-		AssessmentTargetArn:    aws.String(d.Get(names.AttrTargetARN).(string)),
+		AssessmentTargetArn:    aws.String(d.Get("target_arn").(string)),
 		AssessmentTemplateName: aws.String(name),
-		DurationInSeconds:      aws.Int64(int64(d.Get(names.AttrDuration).(int))),
+		DurationInSeconds:      aws.Int64(int64(d.Get("duration").(int))),
 		RulesPackageArns:       flex.ExpandStringSet(d.Get("rules_package_arns").(*schema.Set)),
 	}
 
@@ -146,11 +146,11 @@ func resourceAssessmentTemplateRead(ctx context.Context, d *schema.ResourceData,
 	template := resp.AssessmentTemplates[0]
 
 	arn := aws.StringValue(template.Arn)
-	d.Set(names.AttrARN, arn)
-	d.Set(names.AttrDuration, template.DurationInSeconds)
-	d.Set(names.AttrName, template.Name)
+	d.Set("arn", arn)
+	d.Set("duration", template.DurationInSeconds)
+	d.Set("name", template.Name)
 	d.Set("rules_package_arns", aws.StringValueSlice(template.RulesPackageArns))
-	d.Set(names.AttrTargetARN, template.AssessmentTargetArn)
+	d.Set("target_arn", template.AssessmentTargetArn)
 
 	output, err := findSubscriptionsByAssessmentTemplateARN(ctx, conn, arn)
 
@@ -240,7 +240,7 @@ func expandEventSubscription(tfMap map[string]interface{}, templateArn *string) 
 	eventSubscription := &inspector.SubscribeToEventInput{
 		Event:       aws.String(tfMap["event"].(string)),
 		ResourceArn: templateArn,
-		TopicArn:    aws.String(tfMap[names.AttrTopicARN].(string)),
+		TopicArn:    aws.String(tfMap["topic_arn"].(string)),
 	}
 
 	return eventSubscription
@@ -278,7 +278,7 @@ func flattenEventSubscription(eventSubscription *inspector.EventSubscription, to
 	tfMap := map[string]interface{}{}
 
 	tfMap["event"] = eventSubscription.Event
-	tfMap[names.AttrTopicARN] = topicArn
+	tfMap["topic_arn"] = topicArn
 
 	return tfMap
 }

@@ -14,40 +14,40 @@ func TestAccChime_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"VoiceConnector": {
-			acctest.CtBasic: testAccVoiceConnector_basic,
-			"disappears":    testAccVoiceConnector_disappears,
-			"update":        testAccVoiceConnector_update,
-			"tags":          testAccVoiceConnector_tags,
+			"basic":      testAccVoiceConnector_basic,
+			"disappears": testAccVoiceConnector_disappears,
+			"update":     testAccVoiceConnector_update,
+			"tags":       testAccVoiceConnector_tags,
 		},
 		"VoiceConnectorGroup": {
-			acctest.CtBasic: testAccVoiceConnectorGroup_basic,
-			"disappears":    testAccVoiceConnectorGroup_disappears,
-			"update":        testAccVoiceConnectorGroup_update,
+			"basic":      testAccVoiceConnectorGroup_basic,
+			"disappears": testAccVoiceConnectorGroup_disappears,
+			"update":     testAccVoiceConnectorGroup_update,
 		},
 		"VoiceConnectorLogging": {
-			acctest.CtBasic: testAccVoiceConnectorLogging_basic,
-			"disappears":    testAccVoiceConnectorLogging_disappears,
-			"update":        testAccVoiceConnectorLogging_update,
+			"basic":      testAccVoiceConnectorLogging_basic,
+			"disappears": testAccVoiceConnectorLogging_disappears,
+			"update":     testAccVoiceConnectorLogging_update,
 		},
 		"VoiceConnectorOrigination": {
-			acctest.CtBasic: testAccVoiceConnectorOrigination_basic,
-			"disappears":    testAccVoiceConnectorOrigination_disappears,
-			"update":        testAccVoiceConnectorOrigination_update,
+			"basic":      testAccVoiceConnectorOrigination_basic,
+			"disappears": testAccVoiceConnectorOrigination_disappears,
+			"update":     testAccVoiceConnectorOrigination_update,
 		},
 		"VoiceConnectorStreaming": {
-			acctest.CtBasic: testAccVoiceConnectorStreaming_basic,
-			"disappears":    testAccVoiceConnectorStreaming_disappears,
-			"update":        testAccVoiceConnectorStreaming_update,
+			"basic":      testAccVoiceConnectorStreaming_basic,
+			"disappears": testAccVoiceConnectorStreaming_disappears,
+			"update":     testAccVoiceConnectorStreaming_update,
 		},
 		"VoiceConnectorTermination": {
-			acctest.CtBasic: testAccVoiceConnectorTermination_basic,
-			"disappears":    testAccVoiceConnectorTermination_disappears,
-			"update":        testAccVoiceConnectorTermination_update,
+			"basic":      testAccVoiceConnectorTermination_basic,
+			"disappears": testAccVoiceConnectorTermination_disappears,
+			"update":     testAccVoiceConnectorTermination_update,
 		},
 		"VoiceConnectorTerminationCredentials": {
-			acctest.CtBasic: testAccVoiceConnectorTerminationCredentials_basic,
-			"disappears":    testAccVoiceConnectorTerminationCredentials_disappears,
-			"update":        testAccVoiceConnectorTerminationCredentials_update,
+			"basic":      testAccVoiceConnectorTerminationCredentials_basic,
+			"disappears": testAccVoiceConnectorTerminationCredentials_disappears,
+			"update":     testAccVoiceConnectorTerminationCredentials_update,
 		},
 	}
 

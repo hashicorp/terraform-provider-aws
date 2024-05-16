@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go/aws"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -34,17 +35,17 @@ func TestAccSSMAssociation_basic(t *testing.T) {
 				Config: testAccAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssociationExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ssm", regexache.MustCompile(`association/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ssm", regexache.MustCompile(`association/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "apply_only_at_cron_interval", "false"),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, "aws_instance.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "output_location.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "targets.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_instance.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "output_location.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "targets.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.key", "InstanceIds"),
-					resource.TestCheckResourceAttr(resourceName, "targets.0.values.#", acctest.Ct1),
-					resource.TestCheckResourceAttrPair(resourceName, "targets.0.values.0", "aws_instance.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "targets.0.values.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "targets.0.values.0", "aws_instance.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "document_version", "$DEFAULT"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
 			{
@@ -171,7 +172,7 @@ targets {
 				Config: testAccAssociationConfig_basicTargets(rName, oneTarget),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "targets.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "targets.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.key", "tag:Name"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.values.0", "acceptanceTest"),
 				),
@@ -185,7 +186,7 @@ targets {
 				Config: testAccAssociationConfig_basicTargets(rName, twoTargets),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "targets.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "targets.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.key", "tag:Name"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.values.0", "acceptanceTest"),
 					resource.TestCheckResourceAttr(resourceName, "targets.1.key", "tag:ExtraName"),
@@ -196,7 +197,7 @@ targets {
 				Config: testAccAssociationConfig_basicTargets(rName, oneTarget),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "targets.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "targets.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.key", "tag:Name"),
 					resource.TestCheckResourceAttr(resourceName, "targets.0.values.0", "acceptanceTest"),
 				),
@@ -227,7 +228,7 @@ func TestAccSSMAssociation_withParameters(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrParameters},
+				ImportStateVerifyIgnore: []string{"parameters"},
 			},
 			{
 				Config: testAccAssociationConfig_basicParametersUpdated(rName),
@@ -295,7 +296,7 @@ func TestAccSSMAssociation_withAssociationNameAndScheduleExpression(t *testing.T
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssociationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "association_name", assocName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrScheduleExpression, scheduleExpression1),
+					resource.TestCheckResourceAttr(resourceName, "schedule_expression", scheduleExpression1),
 				),
 			},
 			{
@@ -308,7 +309,7 @@ func TestAccSSMAssociation_withAssociationNameAndScheduleExpression(t *testing.T
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssociationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "association_name", assocName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrScheduleExpression, scheduleExpression2),
+					resource.TestCheckResourceAttr(resourceName, "schedule_expression", scheduleExpression2),
 				),
 			},
 		},
@@ -330,7 +331,7 @@ func TestAccSSMAssociation_withDocumentVersion(t *testing.T) {
 				Config: testAccAssociationConfig_basicDocumentVersion(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "document_version", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "document_version", "1"),
 				),
 			},
 			{
@@ -357,7 +358,7 @@ func TestAccSSMAssociation_withOutputLocation(t *testing.T) {
 				Config: testAccAssociationConfig_basicOutPutLocation(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "output_location.0.s3_bucket_name", "aws_s3_bucket.output_location", names.AttrBucket),
+					resource.TestCheckResourceAttrPair(resourceName, "output_location.0.s3_bucket_name", "aws_s3_bucket.output_location", "bucket"),
 					resource.TestCheckResourceAttr(resourceName, "output_location.0.s3_key_prefix", "SSMAssociation"),
 				),
 			},
@@ -370,7 +371,7 @@ func TestAccSSMAssociation_withOutputLocation(t *testing.T) {
 				Config: testAccAssociationConfig_basicOutPutLocationUpdateBucketName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "output_location.0.s3_bucket_name", "aws_s3_bucket.output_location_updated", names.AttrBucket),
+					resource.TestCheckResourceAttrPair(resourceName, "output_location.0.s3_bucket_name", "aws_s3_bucket.output_location_updated", "bucket"),
 					resource.TestCheckResourceAttr(resourceName, "output_location.0.s3_key_prefix", "SSMAssociation"),
 				),
 			},
@@ -378,7 +379,7 @@ func TestAccSSMAssociation_withOutputLocation(t *testing.T) {
 				Config: testAccAssociationConfig_basicOutPutLocationUpdateKeyPrefix(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "output_location.0.s3_bucket_name", "aws_s3_bucket.output_location_updated", names.AttrBucket),
+					resource.TestCheckResourceAttrPair(resourceName, "output_location.0.s3_bucket_name", "aws_s3_bucket.output_location_updated", "bucket"),
 					resource.TestCheckResourceAttr(resourceName, "output_location.0.s3_key_prefix", "UpdatedAssociation"),
 				),
 			},
@@ -401,7 +402,7 @@ func TestAccSSMAssociation_withOutputLocation_s3Region(t *testing.T) {
 				Config: testAccAssociationConfig_outputLocationS3Region(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "output_location.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "output_location.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "output_location.0.s3_bucket_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "output_location.0.s3_region", acctest.Region()),
 				),
@@ -415,7 +416,7 @@ func TestAccSSMAssociation_withOutputLocation_s3Region(t *testing.T) {
 				Config: testAccAssociationConfig_outputLocationUpdateS3Region(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "output_location.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "output_location.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "output_location.0.s3_bucket_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "output_location.0.s3_region", acctest.AlternateRegion()),
 				),
@@ -429,7 +430,7 @@ func TestAccSSMAssociation_withOutputLocation_s3Region(t *testing.T) {
 				Config: testAccAssociationConfig_outputLocationNoS3Region(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "output_location.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "output_location.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "output_location.0.s3_region", ""),
 				),
 			},
@@ -488,7 +489,7 @@ func TestAccSSMAssociation_withAutomationTargetParamName(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrParameters},
+				ImportStateVerifyIgnore: []string{"parameters"},
 			},
 			{
 				Config: testAccAssociationConfig_basicParametersUpdated(rName),
@@ -516,7 +517,7 @@ func TestAccSSMAssociation_withScheduleExpression(t *testing.T) {
 				Config: testAccAssociationConfig_basicScheduleExpression(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrScheduleExpression, "cron(0 16 ? * TUE *)"),
+					resource.TestCheckResourceAttr(resourceName, "schedule_expression", "cron(0 16 ? * TUE *)"),
 				),
 			},
 			{
@@ -528,7 +529,7 @@ func TestAccSSMAssociation_withScheduleExpression(t *testing.T) {
 				Config: testAccAssociationConfig_basicScheduleExpressionUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrScheduleExpression, "cron(0 16 ? * WED *)"),
+					resource.TestCheckResourceAttr(resourceName, "schedule_expression", "cron(0 16 ? * WED *)"),
 				),
 			},
 		},
@@ -646,9 +647,13 @@ func testAccCheckAssociationExists(ctx context.Context, n string) resource.TestC
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient(ctx)
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No SSM Assosciation ID is set")
+		}
 
-		_, err := tfssm.FindAssociationByID(ctx, conn, rs.Primary.ID)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn(ctx)
+
+		_, err := tfssm.FindAssociationById(ctx, conn, rs.Primary.ID)
 
 		return err
 	}
@@ -656,24 +661,26 @@ func testAccCheckAssociationExists(ctx context.Context, n string) resource.TestC
 
 func testAccCheckAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ssm_association" {
 				continue
 			}
 
-			_, err := tfssm.FindAssociationByID(ctx, conn, rs.Primary.ID)
+			assoc, err := tfssm.FindAssociationById(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
-				return err
+				return fmt.Errorf("error reading SSM Association (%s): %w", rs.Primary.ID, err)
 			}
 
-			return fmt.Errorf("SSM Association %s still exists", rs.Primary.ID)
+			if aws.StringValue(assoc.AssociationId) == rs.Primary.ID {
+				return fmt.Errorf("SSM Association %q still exists", rs.Primary.ID)
+			}
 		}
 
 		return nil

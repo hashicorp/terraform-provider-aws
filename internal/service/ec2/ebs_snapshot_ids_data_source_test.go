@@ -27,7 +27,7 @@ func TestAccEC2EBSSnapshotIDsDataSource_basic(t *testing.T) {
 				Config: testAccEBSSnapshotIdsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "ids.#", 0),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "ids.*", "aws_ebs_snapshot.test", names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "ids.*", "aws_ebs_snapshot.test", "id"),
 				),
 			},
 		},
@@ -49,9 +49,9 @@ func TestAccEC2EBSSnapshotIDsDataSource_sorted(t *testing.T) {
 			{
 				Config: testAccEBSSnapshotIdsDataSourceConfig_sorted(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "ids.#", acctest.Ct2),
-					resource.TestCheckResourceAttrPair(dataSourceName, "ids.0", resource2Name, names.AttrID),
-					resource.TestCheckResourceAttrPair(dataSourceName, "ids.1", resource1Name, names.AttrID),
+					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "2"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "ids.0", resource2Name, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "ids.1", resource1Name, "id"),
 				),
 			},
 		},
@@ -68,7 +68,7 @@ func TestAccEC2EBSSnapshotIDsDataSource_empty(t *testing.T) {
 			{
 				Config: testAccEBSSnapshotIdsDataSourceConfig_empty,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_ebs_snapshot_ids.empty", "ids.#", acctest.Ct0),
+					resource.TestCheckResourceAttr("data.aws_ebs_snapshot_ids.empty", "ids.#", "0"),
 				),
 			},
 		},

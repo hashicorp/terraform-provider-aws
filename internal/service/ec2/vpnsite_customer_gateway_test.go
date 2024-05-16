@@ -38,13 +38,13 @@ func TestAccSiteVPNCustomerGateway_basic(t *testing.T) {
 				Config: testAccSiteVPNCustomerGatewayConfig_basic(rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerGatewayExists(ctx, resourceName, &gateway),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`customer-gateway/cgw-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`customer-gateway/cgw-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn", strconv.Itoa(rBgpAsn)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrCertificateARN, ""),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDeviceName, ""),
-					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddress, "172.0.0.1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, "ipsec.1"),
+					resource.TestCheckResourceAttr(resourceName, "certificate_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "device_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "ip_address", "172.0.0.1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "type", "ipsec.1"),
 				),
 			},
 			{
@@ -93,11 +93,11 @@ func TestAccSiteVPNCustomerGateway_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckCustomerGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNCustomerGatewayConfig_tags1(rBgpAsn, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccSiteVPNCustomerGatewayConfig_tags1(rBgpAsn, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerGatewayExists(ctx, resourceName, &gateway),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1)),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1")),
 			},
 			{
 				ResourceName:      resourceName,
@@ -105,19 +105,19 @@ func TestAccSiteVPNCustomerGateway_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSiteVPNCustomerGatewayConfig_tags2(rBgpAsn, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccSiteVPNCustomerGatewayConfig_tags2(rBgpAsn, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerGatewayExists(ctx, resourceName, &gateway),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2)),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2")),
 			},
 			{
-				Config: testAccSiteVPNCustomerGatewayConfig_tags1(rBgpAsn, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccSiteVPNCustomerGatewayConfig_tags1(rBgpAsn, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerGatewayExists(ctx, resourceName, &gateway),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2)),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2")),
 			},
 		},
 	})
@@ -140,7 +140,7 @@ func TestAccSiteVPNCustomerGateway_deviceName(t *testing.T) {
 				Config: testAccSiteVPNCustomerGatewayConfig_deviceName(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerGatewayExists(ctx, resourceName, &gateway),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDeviceName, "test"),
+					resource.TestCheckResourceAttr(resourceName, "device_name", "test"),
 				),
 			},
 			{
@@ -216,8 +216,8 @@ func TestAccSiteVPNCustomerGateway_certificate(t *testing.T) {
 				Config: testAccSiteVPNCustomerGatewayConfig_certificate(rName, rBgpAsn, rootDomain, subDomain, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerGatewayExists(ctx, resourceName, &gateway),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateARN, acmCertificateResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddress, ""),
+					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", acmCertificateResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "ip_address", ""),
 				),
 			},
 			{

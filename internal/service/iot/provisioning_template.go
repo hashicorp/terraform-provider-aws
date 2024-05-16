@@ -47,7 +47,7 @@ func ResourceProvisioningTemplate() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -55,17 +55,17 @@ func ResourceProvisioningTemplate() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 500),
 			},
-			names.AttrEnabled: {
+			"enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -86,7 +86,7 @@ func ResourceProvisioningTemplate() *schema.Resource {
 							Default:      provisioningHookPayloadVersion2020_04_01,
 							ValidateFunc: validation.StringInSlice(provisioningHookPayloadVersion_Values(), false),
 						},
-						names.AttrTargetARN: {
+						"target_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
@@ -109,7 +109,7 @@ func ResourceProvisioningTemplate() *schema.Resource {
 					validation.StringLenBetween(0, 10240),
 				),
 			},
-			names.AttrType: {
+			"type": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -127,14 +127,14 @@ func resourceProvisioningTemplateCreate(ctx context.Context, d *schema.ResourceD
 
 	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &iot.CreateProvisioningTemplateInput{
-		Enabled:      aws.Bool(d.Get(names.AttrEnabled).(bool)),
+		Enabled:      aws.Bool(d.Get("enabled").(bool)),
 		Tags:         getTagsIn(ctx),
 		TemplateName: aws.String(name),
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -150,7 +150,7 @@ func resourceProvisioningTemplateCreate(ctx context.Context, d *schema.ResourceD
 		input.TemplateBody = aws.String(v.(string))
 	}
 
-	if v, ok := d.Get(names.AttrType).(string); ok && v != "" {
+	if v, ok := d.Get("type").(string); ok && v != "" {
 		input.Type = aws.String(v)
 	}
 
@@ -186,11 +186,11 @@ func resourceProvisioningTemplateRead(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "reading IoT Provisioning Template (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, output.TemplateArn)
+	d.Set("arn", output.TemplateArn)
 	d.Set("default_version_id", output.DefaultVersionId)
-	d.Set(names.AttrDescription, output.Description)
-	d.Set(names.AttrEnabled, output.Enabled)
-	d.Set(names.AttrName, output.TemplateName)
+	d.Set("description", output.Description)
+	d.Set("enabled", output.Enabled)
+	d.Set("name", output.TemplateName)
 	if output.PreProvisioningHook != nil {
 		if err := d.Set("pre_provisioning_hook", []interface{}{flattenProvisioningHook(output.PreProvisioningHook)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting pre_provisioning_hook: %s", err)
@@ -200,7 +200,7 @@ func resourceProvisioningTemplateRead(ctx context.Context, d *schema.ResourceDat
 	}
 	d.Set("provisioning_role_arn", output.ProvisioningRoleArn)
 	d.Set("template_body", output.TemplateBody)
-	d.Set(names.AttrType, output.Type)
+	d.Set("type", output.Type)
 
 	return diags
 }
@@ -225,10 +225,10 @@ func resourceProvisioningTemplateUpdate(ctx context.Context, d *schema.ResourceD
 		}
 	}
 
-	if d.HasChanges(names.AttrDescription, names.AttrEnabled, "provisioning_role_arn") {
+	if d.HasChanges("description", "enabled", "provisioning_role_arn") {
 		input := &iot.UpdateProvisioningTemplateInput{
-			Description:         aws.String(d.Get(names.AttrDescription).(string)),
-			Enabled:             aws.Bool(d.Get(names.AttrEnabled).(bool)),
+			Description:         aws.String(d.Get("description").(string)),
+			Enabled:             aws.Bool(d.Get("enabled").(bool)),
 			ProvisioningRoleArn: aws.String(d.Get("provisioning_role_arn").(string)),
 			TemplateName:        aws.String(d.Id()),
 		}
@@ -281,7 +281,7 @@ func flattenProvisioningHook(apiObject *iot.ProvisioningHook) map[string]interfa
 	}
 
 	if v := apiObject.TargetArn; v != nil {
-		tfMap[names.AttrTargetARN] = aws.StringValue(v)
+		tfMap["target_arn"] = aws.StringValue(v)
 	}
 
 	return tfMap
@@ -298,7 +298,7 @@ func expandProvisioningHook(tfMap map[string]interface{}) *iot.ProvisioningHook 
 		apiObject.PayloadVersion = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrTargetARN].(string); ok && v != "" {
+	if v, ok := tfMap["target_arn"].(string); ok && v != "" {
 		apiObject.TargetArn = aws.String(v)
 	}
 

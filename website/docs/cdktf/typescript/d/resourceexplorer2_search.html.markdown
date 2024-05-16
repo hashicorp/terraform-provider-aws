@@ -57,22 +57,22 @@ This data source exports the following attributes in addition to the arguments a
 ### `resourceCount` Attribute Reference
 
 * `complete` - Indicates whether the TotalResources value represents an exhaustive count of search results. If True, it indicates that the search was exhaustive. Every resource that matches the query was counted. If False, then the search reached the limit of 1,000 matching results, and stopped counting.
-* `total_resources` - Number of resources that match the search query. This value can't exceed 1,000. If there are more than 1,000 resources that match the query, then only 1,000 are counted and the Complete field is set to false. We recommend that you refine your query to return a smaller number of results.
+* `totalResources` - Number of resources that match the search query. This value can't exceed 1,000. If there are more than 1,000 resources that match the query, then only 1,000 are counted and the Complete field is set to false. We recommend that you refine your query to return a smaller number of results.
 
 ### `resources` Attribute Reference
 
 * `arn` - Amazon resource name of resource.
-* `last_reported_at` - Date and time that Resource Explorer last queried this resource and updated the index with the latest information about the resource.
+* `lastReportedAt` - Date and time that Resource Explorer last queried this resource and updated the index with the latest information about the resource.
 * `owningAccountId` - Amazon Web Services account that owns the resource.
-* `properties` - Structure with additional type-specific details about the resource.  See [`properties`](#properties-attribute-reference) below.
+* `resourceProperty` - Structure with additional type-specific details about the resource.  See [`resourceProperty`](#resource_property-attribute-reference) below.
 * `region` - Amazon Web Services Region in which the resource was created and exists.
 * `resourceType` - Type of the resource.
 * `service` - Amazon Web Service that owns the resource and is responsible for creating and updating it.
 
-### `properties` Attribute Reference
+### `resourceProperty` Attribute Reference
 
 * `data` - Details about this property. The content of this field is a JSON object that varies based on the resource type.
-* `last_reported_at` - The date and time that the information about this resource property was last updated.
+* `lastReportedAt` - The date and time that the information about this resource property was last updated.
 * `name` - Name of this property of the resource.
 
-<!-- cache-key: cdktf-0.20.1 input-31144e670d147dab0360ec85b762177c41b0aa457f05a33d9d6901423f901b80 -->
+<!-- cache-key: cdktf-0.20.1 input-cc1f3f318c0b3ff0f6a8fca9faab80288c443e768409cbd5f127cabc668e0151 -->

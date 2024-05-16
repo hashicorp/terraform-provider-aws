@@ -5,8 +5,9 @@ package waf
 import (
 	"context"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	waf_sdkv2 "github.com/aws/aws-sdk-go-v2/service/waf"
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	waf_sdkv1 "github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -25,29 +26,24 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceIPSet,
+			Factory:  DataSourceIPSet,
 			TypeName: "aws_waf_ipset",
-			Name:     "IPSet",
 		},
 		{
-			Factory:  dataSourceRateBasedRule,
+			Factory:  DataSourceRateBasedRule,
 			TypeName: "aws_waf_rate_based_rule",
-			Name:     "Rate Based Rule",
 		},
 		{
-			Factory:  dataSourceRule,
+			Factory:  DataSourceRule,
 			TypeName: "aws_waf_rule",
-			Name:     "Rule",
 		},
 		{
-			Factory:  dataSourceSubscribedRuleGroup,
+			Factory:  DataSourceSubscribedRuleGroup,
 			TypeName: "aws_waf_subscribed_rule_group",
-			Name:     "Subscribed Rule Group",
 		},
 		{
-			Factory:  dataSourceWebACL,
+			Factory:  DataSourceWebACL,
 			TypeName: "aws_waf_web_acl",
-			Name:     "Web ACL",
 		},
 	}
 }
@@ -55,76 +51,68 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  resourceByteMatchSet,
+			Factory:  ResourceByteMatchSet,
 			TypeName: "aws_waf_byte_match_set",
-			Name:     "ByteMatchSet",
 		},
 		{
-			Factory:  resourceGeoMatchSet,
+			Factory:  ResourceGeoMatchSet,
 			TypeName: "aws_waf_geo_match_set",
-			Name:     "GeoMatchSet",
 		},
 		{
-			Factory:  resourceIPSet,
+			Factory:  ResourceIPSet,
 			TypeName: "aws_waf_ipset",
-			Name:     "IPSet",
 		},
 		{
-			Factory:  resourceRateBasedRule,
+			Factory:  ResourceRateBasedRule,
 			TypeName: "aws_waf_rate_based_rule",
 			Name:     "Rate Based Rule",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "arn",
 			},
 		},
 		{
-			Factory:  resourceRegexMatchSet,
+			Factory:  ResourceRegexMatchSet,
 			TypeName: "aws_waf_regex_match_set",
-			Name:     "Regex Match Set",
 		},
 		{
-			Factory:  resourceRegexPatternSet,
+			Factory:  ResourceRegexPatternSet,
 			TypeName: "aws_waf_regex_pattern_set",
-			Name:     "Regex Pattern Set",
 		},
 		{
-			Factory:  resourceRule,
+			Factory:  ResourceRule,
 			TypeName: "aws_waf_rule",
 			Name:     "Rule",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "arn",
 			},
 		},
 		{
-			Factory:  resourceRuleGroup,
+			Factory:  ResourceRuleGroup,
 			TypeName: "aws_waf_rule_group",
 			Name:     "Rule Group",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "arn",
 			},
 		},
 		{
-			Factory:  resourceSizeConstraintSet,
+			Factory:  ResourceSizeConstraintSet,
 			TypeName: "aws_waf_size_constraint_set",
-			Name:     "Size Constraint Set",
 		},
 		{
-			Factory:  resourceSQLInjectionMatchSet,
+			Factory:  ResourceSQLInjectionMatchSet,
 			TypeName: "aws_waf_sql_injection_match_set",
-			Name:     "SqlInjectionMatchSet",
 		},
 		{
-			Factory:  resourceWebACL,
+			Factory:  ResourceWebACL,
 			TypeName: "aws_waf_web_acl",
 			Name:     "Web ACL",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "arn",
 			},
 		},
 		{
-			Factory:  resourceXSSMatchSet,
+			Factory:  ResourceXSSMatchSet,
 			TypeName: "aws_waf_xss_match_set",
-			Name:     "XSS Match Set",
 		},
 	}
 }
@@ -133,15 +121,11 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.WAF
 }
 
-// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*waf_sdkv2.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
+func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*waf_sdkv1.WAF, error) {
+	sess := config["session"].(*session_sdkv1.Session)
 
-	return waf_sdkv2.NewFromConfig(cfg, func(o *waf_sdkv2.Options) {
-		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
-			o.BaseEndpoint = aws_sdkv2.String(endpoint)
-		}
-	}), nil
+	return waf_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

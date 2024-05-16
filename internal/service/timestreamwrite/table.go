@@ -40,11 +40,11 @@ func resourceTable() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDatabaseName: {
+			"database_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -77,7 +77,7 @@ func resourceTable() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												names.AttrBucketName: {
+												"bucket_name": {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
@@ -86,7 +86,7 @@ func resourceTable() *schema.Resource {
 													Optional:         true,
 													ValidateDiagFunc: enum.Validate[types.S3EncryptionOption](),
 												},
-												names.AttrKMSKeyID: {
+												"kms_key_id": {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
@@ -124,7 +124,7 @@ func resourceTable() *schema.Resource {
 					},
 				},
 			},
-			names.AttrSchema: {
+			"schema": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
@@ -145,12 +145,12 @@ func resourceTable() *schema.Resource {
 										Optional:         true,
 										ValidateDiagFunc: enum.Validate[types.PartitionKeyEnforcementLevel](),
 									},
-									names.AttrName: {
+									"name": {
 										Type:     schema.TypeString,
 										Optional: true,
 										ForceNew: true,
 									},
-									names.AttrType: {
+									"type": {
 										Type:             schema.TypeString,
 										Required:         true,
 										ForceNew:         true,
@@ -162,7 +162,7 @@ func resourceTable() *schema.Resource {
 					},
 				},
 			},
-			names.AttrTableName: {
+			"table_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -182,8 +182,8 @@ func resourceTable() *schema.Resource {
 func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).TimestreamWriteClient(ctx)
 
-	databaseName := d.Get(names.AttrDatabaseName).(string)
-	tableName := d.Get(names.AttrTableName).(string)
+	databaseName := d.Get("database_name").(string)
+	tableName := d.Get("table_name").(string)
 	id := tableCreateResourceID(tableName, databaseName)
 	input := &timestreamwrite.CreateTableInput{
 		DatabaseName: aws.String(databaseName),
@@ -199,7 +199,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.RetentionProperties = expandRetentionProperties(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk(names.AttrSchema); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk("schema"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Schema = expandSchema(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -230,8 +230,8 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return nil
 	}
 
-	d.Set(names.AttrARN, table.Arn)
-	d.Set(names.AttrDatabaseName, table.DatabaseName)
+	d.Set("arn", table.Arn)
+	d.Set("database_name", table.DatabaseName)
 	if err := d.Set("magnetic_store_write_properties", flattenMagneticStoreWriteProperties(table.MagneticStoreWriteProperties)); err != nil {
 		return diag.Errorf("setting magnetic_store_write_properties: %s", err)
 	}
@@ -239,13 +239,13 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return diag.Errorf("setting retention_properties: %s", err)
 	}
 	if table.Schema != nil {
-		if err := d.Set(names.AttrSchema, []interface{}{flattenSchema(table.Schema)}); err != nil {
+		if err := d.Set("schema", []interface{}{flattenSchema(table.Schema)}); err != nil {
 			return diag.Errorf("setting schema: %s", err)
 		}
 	} else {
-		d.Set(names.AttrSchema, nil)
+		d.Set("schema", nil)
 	}
-	d.Set(names.AttrTableName, table.TableName)
+	d.Set("table_name", table.TableName)
 
 	return nil
 }
@@ -253,7 +253,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).TimestreamWriteClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		tableName, databaseName, err := tableParseResourceID(d.Id())
 		if err != nil {
 			return diag.FromErr(err)
@@ -272,8 +272,8 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.RetentionProperties = expandRetentionProperties(d.Get("retention_properties").([]interface{}))
 		}
 
-		if d.HasChange(names.AttrSchema) {
-			if v, ok := d.GetOk(names.AttrSchema); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if d.HasChange("schema") {
+			if v, ok := d.GetOk("schema"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.Schema = expandSchema(v.([]interface{})[0].(map[string]interface{}))
 			}
 		}
@@ -456,7 +456,7 @@ func expandS3Configuration(tfList []interface{}) *types.S3Configuration {
 
 	apiObject := &types.S3Configuration{}
 
-	if v, ok := tfMap[names.AttrBucketName].(string); ok && v != "" {
+	if v, ok := tfMap["bucket_name"].(string); ok && v != "" {
 		apiObject.BucketName = aws.String(v)
 	}
 
@@ -464,7 +464,7 @@ func expandS3Configuration(tfList []interface{}) *types.S3Configuration {
 		apiObject.EncryptionOption = types.S3EncryptionOption(v)
 	}
 
-	if v, ok := tfMap[names.AttrKMSKeyID].(string); ok && v != "" {
+	if v, ok := tfMap["kms_key_id"].(string); ok && v != "" {
 		apiObject.KmsKeyId = aws.String(v)
 	}
 
@@ -481,10 +481,10 @@ func flattenS3Configuration(apiObject *types.S3Configuration) []interface{} {
 	}
 
 	tfMap := map[string]interface{}{
-		names.AttrBucketName: aws.ToString(apiObject.BucketName),
-		"encryption_option":  string(apiObject.EncryptionOption),
-		names.AttrKMSKeyID:   aws.ToString(apiObject.KmsKeyId),
-		"object_key_prefix":  aws.ToString(apiObject.ObjectKeyPrefix),
+		"bucket_name":       aws.ToString(apiObject.BucketName),
+		"encryption_option": string(apiObject.EncryptionOption),
+		"kms_key_id":        aws.ToString(apiObject.KmsKeyId),
+		"object_key_prefix": aws.ToString(apiObject.ObjectKeyPrefix),
 	}
 
 	return []interface{}{tfMap}
@@ -515,11 +515,11 @@ func expandPartitionKey(tfMap map[string]interface{}) *types.PartitionKey {
 		apiObject.EnforcementInRecord = types.PartitionKeyEnforcementLevel(v)
 	}
 
-	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
+	if v, ok := tfMap["name"].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
+	if v, ok := tfMap["type"].(string); ok && v != "" {
 		apiObject.Type = types.PartitionKeyType(v)
 	}
 
@@ -573,11 +573,11 @@ func flattenPartitionKey(apiObject *types.PartitionKey) map[string]interface{} {
 
 	tfMap := map[string]interface{}{
 		"enforcement_in_record": apiObject.EnforcementInRecord,
-		names.AttrType:          apiObject.Type,
+		"type":                  apiObject.Type,
 	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap[names.AttrName] = aws.ToString(v)
+		tfMap["name"] = aws.ToString(v)
 	}
 
 	return tfMap

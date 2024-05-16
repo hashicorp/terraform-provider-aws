@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_msk_kafka_version", name="Kafka Version")
@@ -28,17 +27,17 @@ func dataSourceKafkaVersion() *schema.Resource { // nosemgrep:ci.kafka-in-func-n
 				Type:         schema.TypeList,
 				Optional:     true,
 				Elem:         &schema.Schema{Type: schema.TypeString},
-				ExactlyOneOf: []string{names.AttrVersion, "preferred_versions"},
+				ExactlyOneOf: []string{"version", "preferred_versions"},
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrVersion: {
+			"version": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{names.AttrVersion, "preferred_versions"},
+				ExactlyOneOf: []string{"version", "preferred_versions"},
 			},
 		},
 	}
@@ -51,7 +50,7 @@ func dataSourceKafkaVersionRead(ctx context.Context, d *schema.ResourceData, met
 	var preferredVersions []string
 	if v, ok := d.GetOk("preferred_versions"); ok && len(v.([]interface{})) > 0 {
 		preferredVersions = flex.ExpandStringValueList(v.([]interface{}))
-	} else if v, ok := d.GetOk(names.AttrVersion); ok {
+	} else if v, ok := d.GetOk("version"); ok {
 		preferredVersions = []string{v.(string)}
 	}
 
@@ -63,8 +62,8 @@ func dataSourceKafkaVersionRead(ctx context.Context, d *schema.ResourceData, met
 
 	version := aws.ToString(kafkaVersion.Version)
 	d.SetId(version)
-	d.Set(names.AttrStatus, kafkaVersion.Status)
-	d.Set(names.AttrVersion, version)
+	d.Set("status", kafkaVersion.Status)
+	d.Set("version", version)
 
 	return diags
 }

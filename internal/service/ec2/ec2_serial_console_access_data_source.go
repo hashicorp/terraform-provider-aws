@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ec2_serial_console_access")
@@ -25,7 +24,7 @@ func DataSourceSerialConsoleAccess() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrEnabled: {
+			"enabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -44,7 +43,7 @@ func dataSourceSerialConsoleAccessRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set(names.AttrEnabled, output.SerialConsoleAccessEnabled)
+	d.Set("enabled", output.SerialConsoleAccessEnabled)
 
 	return diags
 }

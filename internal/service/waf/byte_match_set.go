@@ -8,33 +8,33 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/waf"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_waf_byte_match_set", name="ByteMatchSet")
-func resourceByteMatchSet() *schema.Resource {
+// @SDKResource("aws_waf_byte_match_set")
+func ResourceByteMatchSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceByteMatchSetCreate,
 		ReadWithoutTimeout:   resourceByteMatchSetRead,
 		UpdateWithoutTimeout: resourceByteMatchSetUpdate,
 		DeleteWithoutTimeout: resourceByteMatchSetDelete,
-
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
 			"byte_match_tuples": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -50,10 +50,10 @@ func resourceByteMatchSet() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									names.AttrType: {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.MatchFieldType](),
+									"type": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(waf.MatchFieldType_Values(), false),
 									},
 								},
 							},
@@ -73,71 +73,71 @@ func resourceByteMatchSet() *schema.Resource {
 					},
 				},
 			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
 		},
 	}
 }
 
 func resourceByteMatchSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFClient(ctx)
+	conn := meta.(*conns.AWSClient).WAFConn(ctx)
 
-	name := d.Get(names.AttrName).(string)
-	output, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
-		input := &waf.CreateByteMatchSetInput{
+	log.Printf("[INFO] Creating WAF ByteMatchSet: %s", d.Get("name").(string))
+
+	wr := NewRetryer(conn)
+	out, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
+		params := &waf.CreateByteMatchSetInput{
 			ChangeToken: token,
-			Name:        aws.String(name),
+			Name:        aws.String(d.Get("name").(string)),
 		}
-
-		return conn.CreateByteMatchSet(ctx, input)
+		return conn.CreateByteMatchSetWithContext(ctx, params)
 	})
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating WAF ByteMatchSet (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating WAF ByteMatchSet: %s", err)
 	}
+	resp := out.(*waf.CreateByteMatchSetOutput)
 
-	d.SetId(aws.ToString(output.(*waf.CreateByteMatchSetOutput).ByteMatchSet.ByteMatchSetId))
+	d.SetId(aws.StringValue(resp.ByteMatchSet.ByteMatchSetId))
 
 	return append(diags, resourceByteMatchSetUpdate(ctx, d, meta)...)
 }
 
 func resourceByteMatchSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFClient(ctx)
-
-	byteMatchSet, err := findByteMatchSetByID(ctx, conn, d.Id())
-
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] WAF ByteMatchSet (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+	conn := meta.(*conns.AWSClient).WAFConn(ctx)
+	log.Printf("[INFO] Reading WAF ByteMatchSet: %s", d.Get("name").(string))
+	params := &waf.GetByteMatchSetInput{
+		ByteMatchSetId: aws.String(d.Id()),
 	}
 
+	resp, err := conn.GetByteMatchSetWithContext(ctx, params)
 	if err != nil {
-		return diag.Errorf("reading WAF ByteMatchSet (%s): %s", d.Id(), err)
+		if tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
+			log.Printf("[WARN] WAF ByteMatchSet (%s) not found, removing from state", d.Id())
+			d.SetId("")
+			return diags
+		}
+
+		return sdkdiag.AppendErrorf(diags, "reading WAF ByteMatchSet (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("byte_match_tuples", flattenByteMatchTuples(byteMatchSet.ByteMatchTuples)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting byte_match_tuples: %s", err)
-	}
-	d.Set(names.AttrName, byteMatchSet.Name)
+	d.Set("name", resp.ByteMatchSet.Name)
+	d.Set("byte_match_tuples", flattenByteMatchTuples(resp.ByteMatchSet.ByteMatchTuples))
 
 	return diags
 }
 
 func resourceByteMatchSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFClient(ctx)
+	conn := meta.(*conns.AWSClient).WAFConn(ctx)
+
+	log.Printf("[INFO] Updating WAF ByteMatchSet: %s", d.Get("name").(string))
 
 	if d.HasChange("byte_match_tuples") {
 		o, n := d.GetChange("byte_match_tuples")
 		oldT, newT := o.(*schema.Set).List(), n.(*schema.Set).List()
-		if err := updateByteMatchSet(ctx, conn, d.Id(), oldT, newT); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
+		err := updateByteMatchSetResource(ctx, d.Id(), oldT, newT, conn)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating WAF ByteMatchSet: %s", err)
 		}
 	}
 
@@ -146,98 +146,70 @@ func resourceByteMatchSetUpdate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceByteMatchSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFClient(ctx)
+	conn := meta.(*conns.AWSClient).WAFConn(ctx)
 
-	if oldTuples := d.Get("byte_match_tuples").(*schema.Set).List(); len(oldTuples) > 0 {
+	oldTuples := d.Get("byte_match_tuples").(*schema.Set).List()
+	if len(oldTuples) > 0 {
 		noTuples := []interface{}{}
-		if err := updateByteMatchSet(ctx, conn, d.Id(), oldTuples, noTuples); err != nil && !errs.IsA[*awstypes.WAFNonexistentItemException](err) && !errs.IsA[*awstypes.WAFNonexistentContainerException](err) {
-			return sdkdiag.AppendFromErr(diags, err)
+		err := updateByteMatchSetResource(ctx, d.Id(), oldTuples, noTuples, conn)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating WAF ByteMatchSet: %s", err)
 		}
 	}
 
-	log.Printf("[INFO] Deleting WAF ByteMatchSet: %s", d.Id())
-	_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
-		input := &waf.DeleteByteMatchSetInput{
-			ByteMatchSetId: aws.String(d.Id()),
+	wr := NewRetryer(conn)
+	_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
+		req := &waf.DeleteByteMatchSetInput{
 			ChangeToken:    token,
+			ByteMatchSetId: aws.String(d.Id()),
 		}
-
-		return conn.DeleteByteMatchSet(ctx, input)
+		log.Printf("[INFO] Deleting WAF ByteMatchSet: %s", req)
+		return conn.DeleteByteMatchSetWithContext(ctx, req)
 	})
-
-	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
-		return diags
-	}
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting WAF ByteMatchSet (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting WAF ByteMatchSet: %s", err)
 	}
 
 	return diags
 }
 
-func findByteMatchSetByID(ctx context.Context, conn *waf.Client, id string) (*awstypes.ByteMatchSet, error) {
-	input := &waf.GetByteMatchSetInput{
-		ByteMatchSetId: aws.String(id),
-	}
-
-	output, err := conn.GetByteMatchSet(ctx, input)
-
-	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.ByteMatchSet == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.ByteMatchSet, nil
-}
-
-func updateByteMatchSet(ctx context.Context, conn *waf.Client, id string, oldT, newT []interface{}) error {
-	_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
-		input := &waf.UpdateByteMatchSetInput{
-			ByteMatchSetId: aws.String(id),
+func updateByteMatchSetResource(ctx context.Context, id string, oldT, newT []interface{}, conn *waf.WAF) error {
+	wr := NewRetryer(conn)
+	_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
+		req := &waf.UpdateByteMatchSetInput{
 			ChangeToken:    token,
+			ByteMatchSetId: aws.String(id),
 			Updates:        diffByteMatchSetTuples(oldT, newT),
 		}
 
-		return conn.UpdateByteMatchSet(ctx, input)
+		return conn.UpdateByteMatchSetWithContext(ctx, req)
 	})
-
 	if err != nil {
-		return fmt.Errorf("updating WAF ByteMatchSet (%s): %w", id, err)
+		return fmt.Errorf("updating ByteMatchSet: %s", err)
 	}
 
 	return nil
 }
 
-func flattenByteMatchTuples(bmt []awstypes.ByteMatchTuple) []interface{} {
+func flattenByteMatchTuples(bmt []*waf.ByteMatchTuple) []interface{} {
 	out := make([]interface{}, len(bmt))
 	for i, t := range bmt {
 		m := make(map[string]interface{})
 
 		if t.FieldToMatch != nil {
-			m["field_to_match"] = flattenFieldToMatch(t.FieldToMatch)
+			m["field_to_match"] = FlattenFieldToMatch(t.FieldToMatch)
 		}
-		m["positional_constraint"] = t.PositionalConstraint
+		m["positional_constraint"] = aws.StringValue(t.PositionalConstraint)
 		m["target_string"] = string(t.TargetString)
-		m["text_transformation"] = t.TextTransformation
+		m["text_transformation"] = aws.StringValue(t.TextTransformation)
 
 		out[i] = m
 	}
 	return out
 }
 
-func diffByteMatchSetTuples(oldT, newT []interface{}) []awstypes.ByteMatchSetUpdate {
-	updates := make([]awstypes.ByteMatchSetUpdate, 0)
+func diffByteMatchSetTuples(oldT, newT []interface{}) []*waf.ByteMatchSetUpdate {
+	updates := make([]*waf.ByteMatchSetUpdate, 0)
 
 	for _, ot := range oldT {
 		tuple := ot.(map[string]interface{})
@@ -247,13 +219,13 @@ func diffByteMatchSetTuples(oldT, newT []interface{}) []awstypes.ByteMatchSetUpd
 			continue
 		}
 
-		updates = append(updates, awstypes.ByteMatchSetUpdate{
-			Action: awstypes.ChangeActionDelete,
-			ByteMatchTuple: &awstypes.ByteMatchTuple{
-				FieldToMatch:         expandFieldToMatch(tuple["field_to_match"].([]interface{})[0].(map[string]interface{})),
-				PositionalConstraint: awstypes.PositionalConstraint(tuple["positional_constraint"].(string)),
+		updates = append(updates, &waf.ByteMatchSetUpdate{
+			Action: aws.String(waf.ChangeActionDelete),
+			ByteMatchTuple: &waf.ByteMatchTuple{
+				FieldToMatch:         ExpandFieldToMatch(tuple["field_to_match"].([]interface{})[0].(map[string]interface{})),
+				PositionalConstraint: aws.String(tuple["positional_constraint"].(string)),
 				TargetString:         []byte(tuple["target_string"].(string)),
-				TextTransformation:   awstypes.TextTransformation(tuple["text_transformation"].(string)),
+				TextTransformation:   aws.String(tuple["text_transformation"].(string)),
 			},
 		})
 	}
@@ -261,13 +233,13 @@ func diffByteMatchSetTuples(oldT, newT []interface{}) []awstypes.ByteMatchSetUpd
 	for _, nt := range newT {
 		tuple := nt.(map[string]interface{})
 
-		updates = append(updates, awstypes.ByteMatchSetUpdate{
-			Action: awstypes.ChangeActionInsert,
-			ByteMatchTuple: &awstypes.ByteMatchTuple{
-				FieldToMatch:         expandFieldToMatch(tuple["field_to_match"].([]interface{})[0].(map[string]interface{})),
-				PositionalConstraint: awstypes.PositionalConstraint(tuple["positional_constraint"].(string)),
+		updates = append(updates, &waf.ByteMatchSetUpdate{
+			Action: aws.String(waf.ChangeActionInsert),
+			ByteMatchTuple: &waf.ByteMatchTuple{
+				FieldToMatch:         ExpandFieldToMatch(tuple["field_to_match"].([]interface{})[0].(map[string]interface{})),
+				PositionalConstraint: aws.String(tuple["positional_constraint"].(string)),
 				TargetString:         []byte(tuple["target_string"].(string)),
-				TextTransformation:   awstypes.TextTransformation(tuple["text_transformation"].(string)),
+				TextTransformation:   aws.String(tuple["text_transformation"].(string)),
 			},
 		})
 	}

@@ -9,16 +9,14 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
-	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -43,7 +41,7 @@ func ResourceEBSSnapshotImport() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -54,7 +52,7 @@ func ResourceEBSSnapshotImport() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrComment: {
+						"comment": {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -83,7 +81,7 @@ func ResourceEBSSnapshotImport() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 				Optional: true,
@@ -96,18 +94,18 @@ func ResourceEBSSnapshotImport() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrDescription: {
+						"description": {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						names.AttrFormat: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.DiskImageFormat](),
+						"format": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(ec2.DiskImageFormat_Values(), false),
 						},
-						names.AttrURL: {
+						"url": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
@@ -120,7 +118,7 @@ func ResourceEBSSnapshotImport() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrS3Bucket: {
+									"s3_bucket": {
 										Type:     schema.TypeString,
 										Required: true,
 										ForceNew: true,
@@ -137,12 +135,12 @@ func ResourceEBSSnapshotImport() *schema.Resource {
 					},
 				},
 			},
-			names.AttrEncrypted: {
+			"encrypted": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				ForceNew: true,
 			},
-			names.AttrKMSKeyID: {
+			"kms_key_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -155,7 +153,7 @@ func ResourceEBSSnapshotImport() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrOwnerID: {
+			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -173,7 +171,7 @@ func ResourceEBSSnapshotImport() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.StringInSlice(enum.Slice(append(awstypes.TargetStorageTier.Values(""), TargetStorageTierStandard)...), false),
+				ValidateFunc: validation.StringInSlice(append(ec2.TargetStorageTier_Values(), TargetStorageTierStandard), false),
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -185,7 +183,7 @@ func ResourceEBSSnapshotImport() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrVolumeSize: {
+			"volume_size": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -195,18 +193,18 @@ func ResourceEBSSnapshotImport() *schema.Resource {
 
 func resourceEBSSnapshotImportCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.ImportSnapshotInput{
 		ClientToken:       aws.String(id.UniqueId()),
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeImportSnapshotTask),
+		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeImportSnapshotTask),
 	}
 
 	if v, ok := d.GetOk("client_data"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.ClientData = expandClientData(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -214,11 +212,11 @@ func resourceEBSSnapshotImportCreate(ctx context.Context, d *schema.ResourceData
 		input.DiskContainer = expandSnapshotDiskContainer(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk(names.AttrEncrypted); ok {
+	if v, ok := d.GetOk("encrypted"); ok {
 		input.Encrypted = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
+	if v, ok := d.GetOk("kms_key_id"); ok {
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
@@ -228,7 +226,7 @@ func resourceEBSSnapshotImportCreate(ctx context.Context, d *schema.ResourceData
 
 	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, iamPropagationTimeout,
 		func() (interface{}, error) {
-			return conn.ImportSnapshot(ctx, input)
+			return conn.ImportSnapshotWithContext(ctx, input)
 		},
 		errCodeInvalidParameter, "provided does not exist or does not have sufficient permissions")
 
@@ -236,23 +234,23 @@ func resourceEBSSnapshotImportCreate(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "creating EBS Snapshot Import: %s", err)
 	}
 
-	taskID := aws.ToString(outputRaw.(*ec2.ImportSnapshotOutput).ImportTaskId)
+	taskID := aws.StringValue(outputRaw.(*ec2.ImportSnapshotOutput).ImportTaskId)
 	output, err := WaitEBSSnapshotImportComplete(ctx, conn, taskID, d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EBS Snapshot Import (%s) create: %s", taskID, err)
 	}
 
-	d.SetId(aws.ToString(output.SnapshotId))
+	d.SetId(aws.StringValue(output.SnapshotId))
 
-	if err := createTagsV2(ctx, conn, d.Id(), getTagsInV2(ctx)); err != nil {
+	if err := createTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting EBS Snapshot Import (%s) tags: %s", d.Id(), err)
 	}
 
-	if v, ok := d.GetOk("storage_tier"); ok && v.(string) == string(awstypes.TargetStorageTierArchive) {
-		_, err = conn.ModifySnapshotTier(ctx, &ec2.ModifySnapshotTierInput{
+	if v, ok := d.GetOk("storage_tier"); ok && v.(string) == ec2.TargetStorageTierArchive {
+		_, err = conn.ModifySnapshotTierWithContext(ctx, &ec2.ModifySnapshotTierInput{
 			SnapshotId:  aws.String(d.Id()),
-			StorageTier: awstypes.TargetStorageTier(v.(string)),
+			StorageTier: aws.String(v.(string)),
 		})
 
 		if err != nil {
@@ -271,7 +269,7 @@ func resourceEBSSnapshotImportCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceEBSSnapshotImportRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	snapshot, err := FindSnapshotByID(ctx, conn, d.Id())
 
@@ -287,33 +285,33 @@ func resourceEBSSnapshotImportRead(ctx context.Context, d *schema.ResourceData, 
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   names.EC2,
+		Service:   ec2.ServiceName,
 		Region:    meta.(*conns.AWSClient).Region,
 		Resource:  fmt.Sprintf("snapshot/%s", d.Id()),
 	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set("arn", arn)
 	d.Set("data_encryption_key_id", snapshot.DataEncryptionKeyId)
-	d.Set(names.AttrDescription, snapshot.Description)
-	d.Set(names.AttrEncrypted, snapshot.Encrypted)
-	d.Set(names.AttrKMSKeyID, snapshot.KmsKeyId)
+	d.Set("description", snapshot.Description)
+	d.Set("encrypted", snapshot.Encrypted)
+	d.Set("kms_key_id", snapshot.KmsKeyId)
 	d.Set("owner_alias", snapshot.OwnerAlias)
-	d.Set(names.AttrOwnerID, snapshot.OwnerId)
+	d.Set("owner_id", snapshot.OwnerId)
 	d.Set("storage_tier", snapshot.StorageTier)
-	d.Set(names.AttrVolumeSize, snapshot.VolumeSize)
+	d.Set("volume_size", snapshot.VolumeSize)
 
-	setTagsOutV2(ctx, snapshot.Tags)
+	setTagsOut(ctx, snapshot.Tags)
 
 	return diags
 }
 
-func expandClientData(tfMap map[string]interface{}) *awstypes.ClientData {
+func expandClientData(tfMap map[string]interface{}) *ec2.ClientData {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &awstypes.ClientData{}
+	apiObject := &ec2.ClientData{}
 
-	if v, ok := tfMap[names.AttrComment].(string); ok && v != "" {
+	if v, ok := tfMap["comment"].(string); ok && v != "" {
 		apiObject.Comment = aws.String(v)
 	}
 
@@ -336,22 +334,22 @@ func expandClientData(tfMap map[string]interface{}) *awstypes.ClientData {
 	return apiObject
 }
 
-func expandSnapshotDiskContainer(tfMap map[string]interface{}) *awstypes.SnapshotDiskContainer {
+func expandSnapshotDiskContainer(tfMap map[string]interface{}) *ec2.SnapshotDiskContainer {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &awstypes.SnapshotDiskContainer{}
+	apiObject := &ec2.SnapshotDiskContainer{}
 
-	if v, ok := tfMap[names.AttrDescription].(string); ok && v != "" {
+	if v, ok := tfMap["description"].(string); ok && v != "" {
 		apiObject.Description = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrFormat].(string); ok && v != "" {
+	if v, ok := tfMap["format"].(string); ok && v != "" {
 		apiObject.Format = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrURL].(string); ok && v != "" {
+	if v, ok := tfMap["url"].(string); ok && v != "" {
 		apiObject.Url = aws.String(v)
 	}
 
@@ -362,14 +360,14 @@ func expandSnapshotDiskContainer(tfMap map[string]interface{}) *awstypes.Snapsho
 	return apiObject
 }
 
-func expandUserBucket(tfMap map[string]interface{}) *awstypes.UserBucket {
+func expandUserBucket(tfMap map[string]interface{}) *ec2.UserBucket {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &awstypes.UserBucket{}
+	apiObject := &ec2.UserBucket{}
 
-	if v, ok := tfMap[names.AttrS3Bucket].(string); ok && v != "" {
+	if v, ok := tfMap["s3_bucket"].(string); ok && v != "" {
 		apiObject.S3Bucket = aws.String(v)
 	}
 

@@ -39,11 +39,11 @@ func TestAccLocationGeofenceCollection_basic(t *testing.T) {
 					testAccCheckGeofenceCollectionExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "collection_arn", "geo", fmt.Sprintf("geofence-collection/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "collection_name", rName),
-					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreateTime),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
+					acctest.CheckResourceAttrRFC3339(resourceName, "create_time"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
 					acctest.CheckResourceAttrRFC3339(resourceName, "update_time"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -93,7 +93,7 @@ func TestAccLocationGeofenceCollection_description(t *testing.T) {
 				Config: testAccGeofenceCollectionConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGeofenceCollectionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
+					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
 				),
 			},
 			{
@@ -105,7 +105,7 @@ func TestAccLocationGeofenceCollection_description(t *testing.T) {
 				Config: testAccGeofenceCollectionConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGeofenceCollectionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
+					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
 				),
 			},
 		},
@@ -127,7 +127,7 @@ func TestAccLocationGeofenceCollection_kmsKeyID(t *testing.T) {
 				Config: testAccGeofenceCollectionConfig_kmsKeyID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGeofenceCollectionExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, "aws_kms_key.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_key.test", "arn"),
 				),
 			},
 			{
@@ -151,11 +151,11 @@ func TestAccLocationGeofenceCollection_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckGeofenceCollectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGeofenceCollectionConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccGeofenceCollectionConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGeofenceCollectionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -164,20 +164,20 @@ func TestAccLocationGeofenceCollection_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGeofenceCollectionConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccGeofenceCollectionConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGeofenceCollectionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccGeofenceCollectionConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccGeofenceCollectionConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGeofenceCollectionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},

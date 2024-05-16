@@ -125,9 +125,6 @@ Elastic IP whose data will be exported as attributes.
 This data source exports the following attributes in addition to the arguments above:
 
 * `associationId` - ID representing the association of the address with an instance in a VPC.
-* `carrierIp` - Carrier IP address.
-* `customerOwnedIp` - Customer Owned IP.
-* `customerOwnedIpv4Pool` - The ID of a Customer Owned IP Pool. For more on customer owned IP addressed check out [Customer-owned IP addresses guide](https://docs.aws.amazon.com/outposts/latest/userguide/outposts-networking-components.html#ip-addressing)
 * `domain` - Whether the address is for use in EC2-Classic (standard) or in a VPC (vpc).
 * `id` - If VPC Elastic IP, the allocation identifier. If EC2-Classic Elastic IP, the public IP address.
 * `instanceId` - ID of the instance that the address is associated with (if any).
@@ -135,10 +132,12 @@ This data source exports the following attributes in addition to the arguments a
 * `networkInterfaceOwnerId` - The ID of the AWS account that owns the network interface.
 * `privateIp` - Private IP address associated with the Elastic IP address.
 * `privateDns` - Private DNS associated with the Elastic IP address.
-* `ptrRecord` - The DNS pointer (PTR) record for the IP address.
 * `publicIp` - Public IP address of Elastic IP.
 * `publicDns` - Public DNS associated with the Elastic IP address.
 * `publicIpv4Pool` - ID of an address pool.
+* `carrierIp` - Carrier IP address.
+* `customerOwnedIpv4Pool` - The ID of a Customer Owned IP Pool. For more on customer owned IP addressed check out [Customer-owned IP addresses guide](https://docs.aws.amazon.com/outposts/latest/userguide/outposts-networking-components.html#ip-addressing)
+* `customerOwnedIp` - Customer Owned IP.
 * `tags` - Key-value map of tags associated with Elastic IP.
 
 ~> **Note:** The data source computes the `publicDns` and `privateDns` attributes according to the [VPC DNS Guide](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-dns.html#vpc-dns-hostnames) as they are not available with the EC2 API.
@@ -149,4 +148,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.1 input-a3e7528dacde4846d7e05618958cba7c8f5884ccbf6f30720062dfd0069a7b9f -->
+<!-- cache-key: cdktf-0.20.1 input-7688d5e50a2996c50fe0c8917540205326f787fcf7c961bd9d79ba635401f620 -->

@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_kinesis_stream")
@@ -23,7 +22,7 @@ func DataSourceStream() *schema.Resource {
 		ReadWithoutTimeout: dataSourceStreamRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -36,7 +35,7 @@ func DataSourceStream() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -45,7 +44,7 @@ func DataSourceStream() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrRetentionPeriod: {
+			"retention_period": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -54,7 +53,7 @@ func DataSourceStream() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -70,7 +69,7 @@ func DataSourceStream() *schema.Resource {
 					},
 				},
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -80,7 +79,7 @@ func dataSourceStreamRead(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).KinesisClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	stream, err := findStreamByName(ctx, conn, name)
 
 	if err != nil {
@@ -112,18 +111,18 @@ func dataSourceStreamRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.SetId(aws.ToString(stream.StreamARN))
-	d.Set(names.AttrARN, stream.StreamARN)
+	d.Set("arn", stream.StreamARN)
 	d.Set("closed_shards", aws.ToStringSlice(closedShards))
 	d.Set("creation_timestamp", aws.ToTime(stream.StreamCreationTimestamp).Unix())
-	d.Set(names.AttrName, stream.StreamName)
+	d.Set("name", stream.StreamName)
 	d.Set("open_shards", aws.ToStringSlice(openShards))
-	d.Set(names.AttrRetentionPeriod, stream.RetentionPeriodHours)
+	d.Set("retention_period", stream.RetentionPeriodHours)
 	var shardLevelMetrics []types.MetricsName
 	for _, v := range stream.EnhancedMonitoring {
 		shardLevelMetrics = append(shardLevelMetrics, v.ShardLevelMetrics...)
 	}
 	d.Set("shard_level_metrics", shardLevelMetrics)
-	d.Set(names.AttrStatus, stream.StreamStatus)
+	d.Set("status", stream.StreamStatus)
 	if details := stream.StreamModeDetails; details != nil {
 		if err := d.Set("stream_mode_details", []interface{}{flattenStreamModeDetails(details)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting stream_mode_details: %s", err)
@@ -138,7 +137,7 @@ func dataSourceStreamRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "listing tags for Kinesis Stream (%s): %s", name, err)
 	}
 
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

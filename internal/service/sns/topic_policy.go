@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_sns_topic_policy")
@@ -35,17 +34,17 @@ func resourceTopicPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			names.AttrOwner: {
+			"owner": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrPolicy: {
+			"policy": {
 				Type:                  schema.TypeString,
 				Required:              true,
 				ValidateFunc:          validation.StringIsJSON,
@@ -63,12 +62,12 @@ func resourceTopicPolicy() *schema.Resource {
 func resourceTopicPolicyUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
-	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
+	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 	if err != nil {
-		return diag.Errorf("policy (%s) is invalid JSON: %s", d.Get(names.AttrPolicy).(string), err)
+		return diag.Errorf("policy (%s) is invalid JSON: %s", d.Get("policy").(string), err)
 	}
 
-	arn := d.Get(names.AttrARN).(string)
+	arn := d.Get("arn").(string)
 	err = putTopicPolicy(ctx, conn, arn, policy)
 
 	if err != nil {
@@ -107,15 +106,15 @@ func resourceTopicPolicyRead(ctx context.Context, d *schema.ResourceData, meta i
 		return diag.Errorf("reading SNS Topic Policy (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, attributes[topicAttributeNameTopicARN])
-	d.Set(names.AttrOwner, attributes[topicAttributeNameOwner])
+	d.Set("arn", attributes[topicAttributeNameTopicARN])
+	d.Set("owner", attributes[topicAttributeNameOwner])
 
-	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), policy)
+	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), policy)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	d.Set(names.AttrPolicy, policyToSet)
+	d.Set("policy", policyToSet)
 
 	return nil
 }
@@ -127,7 +126,7 @@ func resourceTopicPolicyDelete(ctx context.Context, d *schema.ResourceData, meta
 	// It is impossible to delete a policy or set to empty
 	// (confirmed by AWS Support representative)
 	// so we instead set it back to the default one.
-	err := putTopicPolicy(ctx, conn, d.Id(), defaultTopicPolicy(d.Id(), d.Get(names.AttrOwner).(string)))
+	err := putTopicPolicy(ctx, conn, d.Id(), defaultTopicPolicy(d.Id(), d.Get("owner").(string)))
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags

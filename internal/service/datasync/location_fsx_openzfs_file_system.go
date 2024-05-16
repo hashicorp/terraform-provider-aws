@@ -55,11 +55,11 @@ func resourceLocationFSxOpenZFSFileSystem() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrCreationTime: {
+			"creation_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -69,7 +69,7 @@ func resourceLocationFSxOpenZFSFileSystem() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			names.AttrProtocol: {
+			"protocol": {
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
@@ -90,7 +90,7 @@ func resourceLocationFSxOpenZFSFileSystem() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												names.AttrVersion: {
+												"version": {
 													Type:             schema.TypeString,
 													Default:          awstypes.NfsVersionAutomatic,
 													Optional:         true,
@@ -126,7 +126,7 @@ func resourceLocationFSxOpenZFSFileSystem() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrURI: {
+			"uri": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -142,7 +142,7 @@ func resourceLocationFSxOpenZFSFileSystemCreate(ctx context.Context, d *schema.R
 
 	input := &datasync.CreateLocationFsxOpenZfsInput{
 		FsxFilesystemArn:  aws.String(d.Get("fsx_filesystem_arn").(string)),
-		Protocol:          expandProtocol(d.Get(names.AttrProtocol).([]interface{})),
+		Protocol:          expandProtocol(d.Get("protocol").([]interface{})),
 		SecurityGroupArns: flex.ExpandStringValueSet(d.Get("security_group_arns").(*schema.Set)),
 		Tags:              getTagsIn(ctx),
 	}
@@ -184,15 +184,15 @@ func resourceLocationFSxOpenZFSFileSystemRead(ctx context.Context, d *schema.Res
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set(names.AttrARN, output.LocationArn)
-	d.Set(names.AttrCreationTime, output.CreationTime.Format(time.RFC3339))
+	d.Set("arn", output.LocationArn)
+	d.Set("creation_time", output.CreationTime.Format(time.RFC3339))
 	d.Set("fsx_filesystem_arn", d.Get("fsx_filesystem_arn"))
-	if err := d.Set(names.AttrProtocol, flattenProtocol(output.Protocol)); err != nil {
+	if err := d.Set("protocol", flattenProtocol(output.Protocol)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting protocol: %s", err)
 	}
 	d.Set("security_group_arns", output.SecurityGroupArns)
 	d.Set("subdirectory", subdirectory)
-	d.Set(names.AttrURI, uri)
+	d.Set("uri", uri)
 
 	return diags
 }

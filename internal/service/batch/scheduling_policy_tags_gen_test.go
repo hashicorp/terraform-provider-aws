@@ -6,11 +6,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/batch"
-	"github.com/hashicorp/terraform-plugin-testing/config"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/plancheck"
-	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -24,107 +21,57 @@ func TestAccBatchSchedulingPolicy_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
-		CheckDestroy:             testAccCheckSchedulingPolicyDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSchedulingPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/SchedulingPolicy/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
-					}),
-				},
+				Config: testAccSchedulingPolicyConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSchedulingPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/SchedulingPolicy/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
-					}),
-				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/SchedulingPolicy/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
-						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
-					}),
-				},
+				Config: testAccSchedulingPolicyConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSchedulingPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/SchedulingPolicy/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
-						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
-					}),
-				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/SchedulingPolicy/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
-					}),
-				},
+				Config: testAccSchedulingPolicyConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSchedulingPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/SchedulingPolicy/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
-					}),
-				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/SchedulingPolicy/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": nil,
-				},
+				Config: testAccSchedulingPolicyConfig_tags0(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSchedulingPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/SchedulingPolicy/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": nil,
-				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -142,40 +89,23 @@ func TestAccBatchSchedulingPolicy_tags_null(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
-		CheckDestroy:             testAccCheckSchedulingPolicyDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSchedulingPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/SchedulingPolicy/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: nil,
-					}),
-				},
+				Config: testAccSchedulingPolicyConfig_tagsNull(rName, "key1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSchedulingPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/SchedulingPolicy/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: nil,
-					}),
-				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/SchedulingPolicy/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": nil,
-				},
+				Config:             testAccSchedulingPolicyConfig_tags0(rName),
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: false,
 			},
@@ -192,42 +122,25 @@ func TestAccBatchSchedulingPolicy_tags_AddOnUpdate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
-		CheckDestroy:             testAccCheckSchedulingPolicyDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSchedulingPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/SchedulingPolicy/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": nil,
-				},
+				Config: testAccSchedulingPolicyConfig_tags0(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSchedulingPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/SchedulingPolicy/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
-					}),
-				},
+				Config: testAccSchedulingPolicyConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSchedulingPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/SchedulingPolicy/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
-					}),
-				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -245,52 +158,30 @@ func TestAccBatchSchedulingPolicy_tags_EmptyTag_OnCreate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
-		CheckDestroy:             testAccCheckSchedulingPolicyDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSchedulingPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/SchedulingPolicy/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(""),
-					}),
-				},
+				Config: testAccSchedulingPolicyConfig_tags1(rName, "key1", ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSchedulingPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, ""),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", ""),
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/SchedulingPolicy/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(""),
-					}),
-				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/SchedulingPolicy/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": nil,
-				},
+				Config: testAccSchedulingPolicyConfig_tags0(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSchedulingPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/SchedulingPolicy/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": nil,
-				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -308,74 +199,40 @@ func TestAccBatchSchedulingPolicy_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
-		CheckDestroy:             testAccCheckSchedulingPolicyDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSchedulingPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/SchedulingPolicy/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
-					}),
-				},
+				Config: testAccSchedulingPolicyConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSchedulingPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/SchedulingPolicy/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
-						acctest.CtKey2: config.StringVariable(""),
-					}),
-				},
+				Config: testAccSchedulingPolicyConfig_tags2(rName, "key1", "value1", "key2", ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSchedulingPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, ""),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", ""),
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/SchedulingPolicy/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
-						acctest.CtKey2: config.StringVariable(""),
-					}),
-				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/SchedulingPolicy/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
-					}),
-				},
+				Config: testAccSchedulingPolicyConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSchedulingPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/SchedulingPolicy/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
-					}),
-				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -393,45 +250,26 @@ func TestAccBatchSchedulingPolicy_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
-		CheckDestroy:             testAccCheckSchedulingPolicyDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSchedulingPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/SchedulingPolicy/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
-					}),
-				},
+				Config: testAccSchedulingPolicyConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSchedulingPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/SchedulingPolicy/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(""),
-					}),
-				},
+				Config: testAccSchedulingPolicyConfig_tags1(rName, "key1", ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSchedulingPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, ""),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", ""),
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/SchedulingPolicy/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(""),
-					}),
-				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -447,126 +285,75 @@ func TestAccBatchSchedulingPolicy_tags_DefaultTags_providerOnly(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.BatchServiceID),
-		CheckDestroy: testAccCheckSchedulingPolicyDestroy(ctx),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSchedulingPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/SchedulingPolicy/tags_defaults/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
-					}),
-					"resource_tags": nil,
-				},
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags1("key1", "value1"),
+					testAccSchedulingPolicyConfig_tags0(rName),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSchedulingPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
 				),
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/SchedulingPolicy/tags_defaults/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
-					}),
-					"resource_tags": nil,
-				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/SchedulingPolicy/tags_defaults/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
-						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
-					}),
-					"resource_tags": nil,
-				},
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags2("key1", "value1updated", "key2", "value2"),
+					testAccSchedulingPolicyConfig_tags0(rName),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSchedulingPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key2", "value2"),
 				),
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/SchedulingPolicy/tags_defaults/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
-						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
-					}),
-					"resource_tags": nil,
-				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/SchedulingPolicy/tags_defaults/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
-					}),
-					"resource_tags": nil,
-				},
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags1("key2", "value2"),
+					testAccSchedulingPolicyConfig_tags0(rName),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSchedulingPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key2", "value2"),
 				),
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/SchedulingPolicy/tags_defaults/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
-					}),
-					"resource_tags": nil,
-				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/SchedulingPolicy/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": nil,
-				},
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags0(),
+					testAccSchedulingPolicyConfig_tags0(rName),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSchedulingPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 				),
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/SchedulingPolicy/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": nil,
-				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -582,108 +369,63 @@ func TestAccBatchSchedulingPolicy_tags_DefaultTags_nonOverlapping(t *testing.T) 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.BatchServiceID),
-		CheckDestroy: testAccCheckSchedulingPolicyDestroy(ctx),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSchedulingPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/SchedulingPolicy/tags_defaults/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						"providerkey1": config.StringVariable(acctest.CtProviderValue1),
-					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"resourcekey1": config.StringVariable(acctest.CtResourceValue1),
-					}),
-				},
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
+					testAccSchedulingPolicyConfig_tags1(rName, "resourcekey1", "resourcevalue1"),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSchedulingPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tags.resourcekey1", acctest.CtResourceValue1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", acctest.CtProviderValue1),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.resourcekey1", acctest.CtResourceValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.resourcekey1", "resourcevalue1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.resourcekey1", "resourcevalue1"),
 				),
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/SchedulingPolicy/tags_defaults/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						"providerkey1": config.StringVariable(acctest.CtProviderValue1),
-					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"resourcekey1": config.StringVariable(acctest.CtResourceValue1),
-					}),
-				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/SchedulingPolicy/tags_defaults/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						"providerkey1": config.StringVariable("providervalue1updated"),
-					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"resourcekey1": config.StringVariable("resourcevalue1updated"),
-						"resourcekey2": config.StringVariable(acctest.CtResourceValue2),
-					}),
-				},
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1updated"),
+					testAccSchedulingPolicyConfig_tags2(rName, "resourcekey1", "resourcevalue1updated", "resourcekey2", "resourcevalue2"),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSchedulingPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.resourcekey1", "resourcevalue1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.resourcekey2", acctest.CtResourceValue2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "tags.resourcekey2", "resourcevalue2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.resourcekey1", "resourcevalue1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.resourcekey2", acctest.CtResourceValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.resourcekey2", "resourcevalue2"),
 				),
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/SchedulingPolicy/tags_defaults/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						"providerkey1": config.StringVariable("providervalue1updated"),
-					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"resourcekey1": config.StringVariable("resourcevalue1updated"),
-						"resourcekey2": config.StringVariable(acctest.CtResourceValue2),
-					}),
-				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/SchedulingPolicy/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": nil,
-				},
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags0(),
+					testAccSchedulingPolicyConfig_tags0(rName),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSchedulingPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 				),
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/SchedulingPolicy/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": nil,
-				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -699,120 +441,63 @@ func TestAccBatchSchedulingPolicy_tags_DefaultTags_overlapping(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.BatchServiceID),
-		CheckDestroy: testAccCheckSchedulingPolicyDestroy(ctx),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSchedulingPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/SchedulingPolicy/tags_defaults/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable(acctest.CtProviderValue1),
-					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable(acctest.CtResourceValue1),
-					}),
-				},
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags1("overlapkey1", "providervalue1"),
+					testAccSchedulingPolicyConfig_tags1(rName, "overlapkey1", "resourcevalue1"),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSchedulingPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey1", acctest.CtResourceValue1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.overlapkey1", acctest.CtResourceValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey1", "resourcevalue1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.overlapkey1", "resourcevalue1"),
 				),
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/SchedulingPolicy/tags_defaults/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable(acctest.CtProviderValue1),
-					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable(acctest.CtResourceValue1),
-					}),
-				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/SchedulingPolicy/tags_defaults/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable(acctest.CtProviderValue1),
-						"overlapkey2": config.StringVariable("providervalue2"),
-					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable(acctest.CtResourceValue1),
-						"overlapkey2": config.StringVariable(acctest.CtResourceValue2),
-					}),
-				},
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags2("overlapkey1", "providervalue1", "overlapkey2", "providervalue2"),
+					testAccSchedulingPolicyConfig_tags2(rName, "overlapkey1", "resourcevalue1", "overlapkey2", "resourcevalue2"),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSchedulingPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey1", acctest.CtResourceValue1),
-					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey2", acctest.CtResourceValue2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.overlapkey1", acctest.CtResourceValue1),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.overlapkey2", acctest.CtResourceValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey1", "resourcevalue1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey2", "resourcevalue2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.overlapkey1", "resourcevalue1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.overlapkey2", "resourcevalue2"),
 				),
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/SchedulingPolicy/tags_defaults/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable(acctest.CtProviderValue1),
-						"overlapkey2": config.StringVariable("providervalue2"),
-					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable(acctest.CtResourceValue1),
-						"overlapkey2": config.StringVariable(acctest.CtResourceValue2),
-					}),
-				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/SchedulingPolicy/tags_defaults/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable(acctest.CtProviderValue1),
-					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable(acctest.CtResourceValue2),
-					}),
-				},
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags1("overlapkey1", "providervalue1"),
+					testAccSchedulingPolicyConfig_tags1(rName, "overlapkey1", "resourcevalue2"),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSchedulingPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey1", acctest.CtResourceValue2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.overlapkey1", acctest.CtResourceValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey1", "resourcevalue2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.overlapkey1", "resourcevalue2"),
 				),
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/SchedulingPolicy/tags_defaults/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable(acctest.CtProviderValue1),
-					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable(acctest.CtResourceValue2),
-					}),
-				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -828,54 +513,34 @@ func TestAccBatchSchedulingPolicy_tags_DefaultTags_updateToProviderOnly(t *testi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.BatchServiceID),
-		CheckDestroy: testAccCheckSchedulingPolicyDestroy(ctx),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSchedulingPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/SchedulingPolicy/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
-					}),
-				},
+				Config: testAccSchedulingPolicyConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSchedulingPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
 				),
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/SchedulingPolicy/tags_defaults/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
-					}),
-					"resource_tags": nil,
-				},
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags1("key1", "value1"),
+					testAccSchedulingPolicyConfig_tags0(rName),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSchedulingPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
 				),
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/SchedulingPolicy/tags_defaults/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
-					}),
-					"resource_tags": nil,
-				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -891,53 +556,34 @@ func TestAccBatchSchedulingPolicy_tags_DefaultTags_updateToResourceOnly(t *testi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.BatchServiceID),
-		CheckDestroy: testAccCheckSchedulingPolicyDestroy(ctx),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSchedulingPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/SchedulingPolicy/tags_defaults/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
-					}),
-					"resource_tags": nil,
-				},
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags1("key1", "value1"),
+					testAccSchedulingPolicyConfig_tags0(rName),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSchedulingPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
 				),
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/SchedulingPolicy/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
-					}),
-				},
+				Config: testAccSchedulingPolicyConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSchedulingPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
 				),
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/SchedulingPolicy/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
-					}),
-				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -953,42 +599,25 @@ func TestAccBatchSchedulingPolicy_tags_DefaultTags_emptyResourceTag(t *testing.T
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.BatchServiceID),
-		CheckDestroy: testAccCheckSchedulingPolicyDestroy(ctx),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSchedulingPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/SchedulingPolicy/tags_defaults/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
-					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(""),
-					}),
-				},
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags1("key1", "value1"),
+					testAccSchedulingPolicyConfig_tags1(rName, "key1", ""),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSchedulingPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, ""),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", ""),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", ""),
 				),
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/SchedulingPolicy/tags_defaults/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
-					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(""),
-					}),
-				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -1004,41 +633,24 @@ func TestAccBatchSchedulingPolicy_tags_DefaultTags_nullOverlappingResourceTag(t 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.BatchServiceID),
-		CheckDestroy: testAccCheckSchedulingPolicyDestroy(ctx),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSchedulingPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/SchedulingPolicy/tags_defaults/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(acctest.CtProviderValue1),
-					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: nil,
-					}),
-				},
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags1("key1", "providervalue1"),
+					testAccSchedulingPolicyConfig_tagsNull(rName, "key1"),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSchedulingPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", acctest.CtProviderValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "providervalue1"),
 				),
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/SchedulingPolicy/tags_defaults/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(acctest.CtProviderValue1),
-					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: nil,
-					}),
-				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -1054,229 +666,24 @@ func TestAccBatchSchedulingPolicy_tags_DefaultTags_nullNonOverlappingResourceTag
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.BatchServiceID),
-		CheckDestroy: testAccCheckSchedulingPolicyDestroy(ctx),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSchedulingPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/SchedulingPolicy/tags_defaults/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						"providerkey1": config.StringVariable(acctest.CtProviderValue1),
-					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"resourcekey1": nil,
-					}),
-				},
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
+					testAccSchedulingPolicyConfig_tagsNull(rName, "resourcekey1"),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSchedulingPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", acctest.CtProviderValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1"),
 				),
 			},
 			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/SchedulingPolicy/tags_defaults/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						"providerkey1": config.StringVariable(acctest.CtProviderValue1),
-					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"resourcekey1": nil,
-					}),
-				},
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccBatchSchedulingPolicy_tags_ComputedTag_OnCreate(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v batch.SchedulingPolicyDetail
-	resourceName := "aws_batch_scheduling_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.BatchServiceID),
-		CheckDestroy: testAccCheckSchedulingPolicyDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/SchedulingPolicy/tagsComputed1/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"unknownTagKey": config.StringVariable("computedkey1"),
-				},
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSchedulingPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTags)),
-					},
-					PostApplyPreRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/SchedulingPolicy/tagsComputed1/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"unknownTagKey": config.StringVariable("computedkey1"),
-				},
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccBatchSchedulingPolicy_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v batch.SchedulingPolicyDetail
-	resourceName := "aws_batch_scheduling_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.BatchServiceID),
-		CheckDestroy: testAccCheckSchedulingPolicyDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/SchedulingPolicy/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
-					}),
-				},
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSchedulingPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/SchedulingPolicy/tagsComputed2/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"unknownTagKey": config.StringVariable("computedkey1"),
-					"knownTagKey":   config.StringVariable(acctest.CtKey1),
-					"knownTagValue": config.StringVariable(acctest.CtValue1),
-				},
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSchedulingPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTags)),
-					},
-					PostApplyPreRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/SchedulingPolicy/tagsComputed2/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"unknownTagKey": config.StringVariable("computedkey1"),
-					"knownTagKey":   config.StringVariable(acctest.CtKey1),
-					"knownTagValue": config.StringVariable(acctest.CtValue1),
-				},
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccBatchSchedulingPolicy_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v batch.SchedulingPolicyDetail
-	resourceName := "aws_batch_scheduling_policy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.BatchServiceID),
-		CheckDestroy: testAccCheckSchedulingPolicyDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/SchedulingPolicy/tags/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
-					}),
-				},
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSchedulingPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/SchedulingPolicy/tagsComputed1/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"unknownTagKey": config.StringVariable(acctest.CtKey1),
-				},
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSchedulingPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, "null_resource.test", names.AttrID),
-				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTags)),
-					},
-					PostApplyPreRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-					},
-				},
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/SchedulingPolicy/tagsComputed1/"),
-				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"unknownTagKey": config.StringVariable(acctest.CtKey1),
-				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,

@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_pinpoint_gcm_channel")
@@ -39,7 +38,7 @@ func ResourceGCMChannel() *schema.Resource {
 				Required:  true,
 				Sensitive: true,
 			},
-			names.AttrEnabled: {
+			"enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
@@ -57,7 +56,7 @@ func resourceGCMChannelUpsert(ctx context.Context, d *schema.ResourceData, meta 
 	params := &pinpoint.GCMChannelRequest{}
 
 	params.ApiKey = aws.String(d.Get("api_key").(string))
-	params.Enabled = aws.Bool(d.Get(names.AttrEnabled).(bool))
+	params.Enabled = aws.Bool(d.Get("enabled").(bool))
 
 	req := pinpoint.UpdateGcmChannelInput{
 		ApplicationId:     aws.String(applicationId),
@@ -94,7 +93,7 @@ func resourceGCMChannelRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	d.Set("application_id", output.GCMChannelResponse.ApplicationId)
-	d.Set(names.AttrEnabled, output.GCMChannelResponse.Enabled)
+	d.Set("enabled", output.GCMChannelResponse.Enabled)
 	// api_key is never returned
 
 	return diags

@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const propagationTimeout = 2 * time.Minute
@@ -235,7 +234,7 @@ func sweepJobQueues(region string) error {
 			id := aws.StringValue(v.JobQueueArn)
 
 			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceJobQueue, client,
-				framework.NewAttribute(names.AttrID, id),
+				framework.NewAttribute("id", id),
 			))
 		}
 

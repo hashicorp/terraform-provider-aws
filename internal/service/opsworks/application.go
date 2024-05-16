@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_opsworks_application")
@@ -35,7 +34,7 @@ func ResourceApplication() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -45,7 +44,7 @@ func ResourceApplication() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			names.AttrType: {
+			"type": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(opsworks.AppType_Values(), false),
@@ -80,23 +79,23 @@ func ResourceApplication() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrType: {
+						"type": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(append(opsworks.SourceType_Values(), "other"), false),
 						},
 
-						names.AttrURL: {
+						"url": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
 
-						names.AttrUsername: {
+						"username": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
 
-						names.AttrPassword: {
+						"password": {
 							Type:      schema.TypeString,
 							Optional:  true,
 							Sensitive: true,
@@ -134,7 +133,7 @@ func ResourceApplication() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -143,16 +142,16 @@ func ResourceApplication() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrEnvironment: {
+			"environment": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrKey: {
+						"key": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						names.AttrValue: {
+						"value": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -175,7 +174,7 @@ func ResourceApplication() *schema.Resource {
 				//Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrCertificate: {
+						"certificate": {
 							Type:     schema.TypeString,
 							Required: true,
 							StateFunc: func(v interface{}) string {
@@ -187,7 +186,7 @@ func ResourceApplication() *schema.Resource {
 								}
 							},
 						},
-						names.AttrPrivateKey: {
+						"private_key": {
 							Type:      schema.TypeString,
 							Required:  true,
 							Sensitive: true,
@@ -230,12 +229,12 @@ func resourceApplicationValidate(d *schema.ResourceData) error {
 		return fmt.Errorf("Only one ssl_configuration is permitted.")
 	}
 
-	if d.Get(names.AttrType) == opsworks.AppTypeNodejs || d.Get(names.AttrType) == opsworks.AppTypeJava {
+	if d.Get("type") == opsworks.AppTypeNodejs || d.Get("type") == opsworks.AppTypeJava {
 		// allowed attributes: none
 		if d.Get("document_root").(string) != "" || d.Get("rails_env").(string) != "" || d.Get("auto_bundle_on_deploy").(string) != "" || d.Get("aws_flow_ruby_settings").(string) != "" {
-			return fmt.Errorf("No additional attributes are allowed for app type '%s'.", d.Get(names.AttrType).(string))
+			return fmt.Errorf("No additional attributes are allowed for app type '%s'.", d.Get("type").(string))
 		}
-	} else if d.Get(names.AttrType) == opsworks.AppTypeRails {
+	} else if d.Get("type") == opsworks.AppTypeRails {
 		// allowed attributes: document_root, rails_env, auto_bundle_on_deploy
 		if d.Get("aws_flow_ruby_settings").(string) != "" {
 			return fmt.Errorf("Only 'document_root, rails_env, auto_bundle_on_deploy' are allowed for app type '%s'.", opsworks.AppTypeRails)
@@ -244,17 +243,17 @@ func resourceApplicationValidate(d *schema.ResourceData) error {
 		if _, ok := d.GetOk("rails_env"); !ok {
 			return fmt.Errorf("Set rails_env must be set if type is set to rails.")
 		}
-	} else if d.Get(names.AttrType) == opsworks.AppTypePhp || d.Get(names.AttrType) == opsworks.AppTypeStatic || d.Get(names.AttrType) == opsworks.AppTypeOther {
-		log.Printf("[DEBUG] the app type is : %s", d.Get(names.AttrType).(string))
+	} else if d.Get("type") == opsworks.AppTypePhp || d.Get("type") == opsworks.AppTypeStatic || d.Get("type") == opsworks.AppTypeOther {
+		log.Printf("[DEBUG] the app type is : %s", d.Get("type").(string))
 		log.Printf("[DEBUG] the attributes are: document_root '%s', rails_env '%s', auto_bundle_on_deploy '%s', aws_flow_ruby_settings '%s'", d.Get("document_root").(string), d.Get("rails_env").(string), d.Get("auto_bundle_on_deploy").(string), d.Get("aws_flow_ruby_settings").(string))
 		// allowed attributes: document_root
 		if d.Get("rails_env").(string) != "" || d.Get("auto_bundle_on_deploy").(string) != "" || d.Get("aws_flow_ruby_settings").(string) != "" {
-			return fmt.Errorf("Only 'document_root' is allowed for app type '%s'.", d.Get(names.AttrType).(string))
+			return fmt.Errorf("Only 'document_root' is allowed for app type '%s'.", d.Get("type").(string))
 		}
-	} else if d.Get(names.AttrType) == opsworks.AppTypeAwsFlowRuby {
+	} else if d.Get("type") == opsworks.AppTypeAwsFlowRuby {
 		// allowed attributes: aws_flow_ruby_settings
 		if d.Get("document_root").(string) != "" || d.Get("rails_env").(string) != "" || d.Get("auto_bundle_on_deploy").(string) != "" {
-			return fmt.Errorf("Only 'aws_flow_ruby_settings' is allowed for app type '%s'.", d.Get(names.AttrType).(string))
+			return fmt.Errorf("Only 'aws_flow_ruby_settings' is allowed for app type '%s'.", d.Get("type").(string))
 		}
 	}
 
@@ -288,10 +287,10 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 	app := resp.Apps[0]
 	log.Printf("[DEBUG] Opsworks Application: %#v", app)
 
-	d.Set(names.AttrName, app.Name)
+	d.Set("name", app.Name)
 	d.Set("stack_id", app.StackId)
-	d.Set(names.AttrType, app.Type)
-	d.Set(names.AttrDescription, app.Description)
+	d.Set("type", app.Type)
+	d.Set("description", app.Description)
 	d.Set("domains", flex.FlattenStringList(app.Domains))
 	d.Set("enable_ssl", app.EnableSsl)
 	err = resourceSetApplicationSSL(d, app.SslConfiguration)
@@ -319,11 +318,11 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	req := &opsworks.CreateAppInput{
-		Name:             aws.String(d.Get(names.AttrName).(string)),
+		Name:             aws.String(d.Get("name").(string)),
 		Shortname:        aws.String(d.Get("short_name").(string)),
 		StackId:          aws.String(d.Get("stack_id").(string)),
-		Type:             aws.String(d.Get(names.AttrType).(string)),
-		Description:      aws.String(d.Get(names.AttrDescription).(string)),
+		Type:             aws.String(d.Get("type").(string)),
+		Description:      aws.String(d.Get("description").(string)),
 		Domains:          flex.ExpandStringList(d.Get("domains").([]interface{})),
 		EnableSsl:        aws.Bool(d.Get("enable_ssl").(bool)),
 		SslConfiguration: resourceApplicationSSL(d),
@@ -354,9 +353,9 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	req := &opsworks.UpdateAppInput{
 		AppId:            aws.String(d.Id()),
-		Name:             aws.String(d.Get(names.AttrName).(string)),
-		Type:             aws.String(d.Get(names.AttrType).(string)),
-		Description:      aws.String(d.Get(names.AttrDescription).(string)),
+		Name:             aws.String(d.Get("name").(string)),
+		Type:             aws.String(d.Get("type").(string)),
+		Description:      aws.String(d.Get("description").(string)),
 		Domains:          flex.ExpandStringList(d.Get("domains").([]interface{})),
 		EnableSsl:        aws.Bool(d.Get("enable_ssl").(bool)),
 		SslConfiguration: resourceApplicationSSL(d),
@@ -407,22 +406,22 @@ func resourceFindEnvironmentVariable(key string, vs []*opsworks.EnvironmentVaria
 
 func resourceSetApplicationEnvironmentVariable(d *schema.ResourceData, vs []*opsworks.EnvironmentVariable) {
 	if len(vs) == 0 {
-		d.Set(names.AttrEnvironment, nil)
+		d.Set("environment", nil)
 		return
 	}
 
 	// sensitive variables are returned obfuscated from the API, this creates a
 	// permadiff between the obfuscated API response and the config value. We
 	// start with the existing state so it can passthrough when the key is secure
-	values := d.Get(names.AttrEnvironment).(*schema.Set).List()
+	values := d.Get("environment").(*schema.Set).List()
 
 	for i := 0; i < len(values); i++ {
 		value := values[i].(map[string]interface{})
-		if v := resourceFindEnvironmentVariable(value[names.AttrKey].(string), vs); v != nil {
+		if v := resourceFindEnvironmentVariable(value["key"].(string), vs); v != nil {
 			if !aws.BoolValue(v.Secure) {
 				value["secure"] = aws.BoolValue(v.Secure)
-				value[names.AttrKey] = aws.StringValue(v.Key)
-				value[names.AttrValue] = aws.StringValue(v.Value)
+				value["key"] = aws.StringValue(v.Key)
+				value["value"] = aws.StringValue(v.Value)
 				values[i] = value
 			}
 		} else {
@@ -431,19 +430,19 @@ func resourceSetApplicationEnvironmentVariable(d *schema.ResourceData, vs []*ops
 		}
 	}
 
-	d.Set(names.AttrEnvironment, values)
+	d.Set("environment", values)
 }
 
 func resourceApplicationEnvironmentVariable(d *schema.ResourceData) []*opsworks.EnvironmentVariable {
-	environmentVariables := d.Get(names.AttrEnvironment).(*schema.Set).List()
+	environmentVariables := d.Get("environment").(*schema.Set).List()
 	result := make([]*opsworks.EnvironmentVariable, len(environmentVariables))
 
 	for i := 0; i < len(environmentVariables); i++ {
 		env := environmentVariables[i].(map[string]interface{})
 
 		result[i] = &opsworks.EnvironmentVariable{
-			Key:    aws.String(env[names.AttrKey].(string)),
-			Value:  aws.String(env[names.AttrValue].(string)),
+			Key:    aws.String(env["key"].(string)),
+			Value:  aws.String(env["value"].(string)),
 			Secure: aws.Bool(env["secure"].(bool)),
 		}
 	}
@@ -471,13 +470,13 @@ func resourceSetApplicationSource(d *schema.ResourceData, v *opsworks.Source) er
 	if v != nil {
 		m := make(map[string]interface{})
 		if v.Type != nil {
-			m[names.AttrType] = aws.StringValue(v.Type)
+			m["type"] = aws.StringValue(v.Type)
 		}
 		if v.Url != nil {
-			m[names.AttrURL] = aws.StringValue(v.Url)
+			m["url"] = aws.StringValue(v.Url)
 		}
 		if v.Username != nil {
-			m[names.AttrUsername] = aws.StringValue(v.Username)
+			m["username"] = aws.StringValue(v.Username)
 		}
 		if v.Revision != nil {
 			m["revision"] = aws.StringValue(v.Revision)
@@ -486,7 +485,7 @@ func resourceSetApplicationSource(d *schema.ResourceData, v *opsworks.Source) er
 		// v.Password and v.SshKey will, on read, contain the placeholder string
 		// "*****FILTERED*****", so we ignore it on read and let persist
 		// the value already in the state.
-		m[names.AttrPassword] = d.Get("app_source.0.password").(string)
+		m["password"] = d.Get("app_source.0.password").(string)
 		m["ssh_key"] = d.Get("app_source.0.ssh_key").(string)
 
 		nv = append(nv, m)
@@ -545,11 +544,11 @@ func resourceSetApplicationSSL(d *schema.ResourceData, v *opsworks.SslConfigurat
 	if v != nil {
 		m := make(map[string]interface{})
 		if v.PrivateKey != nil {
-			m[names.AttrPrivateKey] = aws.StringValue(v.PrivateKey)
+			m["private_key"] = aws.StringValue(v.PrivateKey)
 			set = true
 		}
 		if v.Certificate != nil {
-			m[names.AttrCertificate] = aws.StringValue(v.Certificate)
+			m["certificate"] = aws.StringValue(v.Certificate)
 			set = true
 		}
 		if v.Chain != nil {
@@ -594,9 +593,9 @@ func resourceSetApplicationAttributes(d *schema.ResourceData, v map[string]*stri
 	d.Set("aws_flow_ruby_settings", nil)
 	d.Set("auto_bundle_on_deploy", nil)
 
-	if d.Get(names.AttrType) == opsworks.AppTypeNodejs || d.Get(names.AttrType) == opsworks.AppTypeJava {
+	if d.Get("type") == opsworks.AppTypeNodejs || d.Get("type") == opsworks.AppTypeJava {
 		return
-	} else if d.Get(names.AttrType) == opsworks.AppTypeRails {
+	} else if d.Get("type") == opsworks.AppTypeRails {
 		if val, ok := v[opsworks.AppAttributesKeysDocumentRoot]; ok {
 			d.Set("document_root", val)
 		}
@@ -607,12 +606,12 @@ func resourceSetApplicationAttributes(d *schema.ResourceData, v map[string]*stri
 			d.Set("auto_bundle_on_deploy", val)
 		}
 		return
-	} else if d.Get(names.AttrType) == opsworks.AppTypePhp || d.Get(names.AttrType) == opsworks.AppTypeStatic || d.Get(names.AttrType) == opsworks.AppTypeOther {
+	} else if d.Get("type") == opsworks.AppTypePhp || d.Get("type") == opsworks.AppTypeStatic || d.Get("type") == opsworks.AppTypeOther {
 		if val, ok := v[opsworks.AppAttributesKeysDocumentRoot]; ok {
 			d.Set("document_root", val)
 		}
 		return
-	} else if d.Get(names.AttrType) == opsworks.AppTypeAwsFlowRuby {
+	} else if d.Get("type") == opsworks.AppTypeAwsFlowRuby {
 		if val, ok := v[opsworks.AppAttributesKeysAwsFlowRubySettings]; ok {
 			d.Set("aws_flow_ruby_settings", val)
 		}

@@ -46,7 +46,7 @@ func ResourceRepository() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrRepositoryName: {
+			"repository_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -74,7 +74,7 @@ func ResourceRepository() *schema.Resource {
 								Type: schema.TypeString,
 							},
 						},
-						names.AttrDescription: {
+						"description": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(0, 1024),
@@ -101,7 +101,7 @@ func ResourceRepository() *schema.Resource {
 				},
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 			},
-			names.AttrForceDestroy: {
+			"force_destroy": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -110,7 +110,7 @@ func ResourceRepository() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -129,7 +129,7 @@ func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).ECRPublicClient(ctx)
 
 	input := ecrpublic.CreateRepositoryInput{
-		RepositoryName: aws.String(d.Get(names.AttrRepositoryName).(string)),
+		RepositoryName: aws.String(d.Get("repository_name").(string)),
 		Tags:           getTagsIn(ctx),
 	}
 
@@ -198,15 +198,15 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	repository := out.Repositories[0]
 
-	d.Set(names.AttrRepositoryName, d.Id())
+	d.Set("repository_name", d.Id())
 	d.Set("registry_id", repository.RegistryId)
-	d.Set(names.AttrARN, repository.RepositoryArn)
+	d.Set("arn", repository.RepositoryArn)
 	d.Set("repository_uri", repository.RepositoryUri)
 
-	if v, ok := d.GetOk(names.AttrForceDestroy); ok {
-		d.Set(names.AttrForceDestroy, v.(bool))
+	if v, ok := d.GetOk("force_destroy"); ok {
+		d.Set("force_destroy", v.(bool))
 	} else {
-		d.Set(names.AttrForceDestroy, false)
+		d.Set("force_destroy", false)
 	}
 
 	var catalogOut *ecrpublic.GetRepositoryCatalogDataOutput
@@ -246,7 +246,7 @@ func resourceRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta 
 		RegistryId:     aws.String(d.Get("registry_id").(string)),
 	}
 
-	if v, ok := d.GetOk(names.AttrForceDestroy); ok {
+	if v, ok := d.GetOk("force_destroy"); ok {
 		force := v.(bool)
 		deleteInput.Force = aws.ToBool(&force)
 	}
@@ -289,7 +289,7 @@ func resourceRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "deleting ECR Public repository: %s", err)
 	}
 
-	log.Printf("[DEBUG] repository %q deleted.", d.Get(names.AttrRepositoryName).(string))
+	log.Printf("[DEBUG] repository %q deleted.", d.Get("repository_name").(string))
 
 	return diags
 }
@@ -325,7 +325,7 @@ func flattenRepositoryCatalogData(apiObject *ecrpublic.GetRepositoryCatalogDataO
 	}
 
 	if v := catalogData.Description; v != nil {
-		tfMap[names.AttrDescription] = aws.ToString(v)
+		tfMap["description"] = aws.ToString(v)
 	}
 
 	if v := catalogData.OperatingSystems; v != nil {
@@ -358,7 +358,7 @@ func expandRepositoryCatalogData(tfMap map[string]interface{}) *awstypes.Reposit
 		repositoryCatalogDataInput.Architectures = architectures
 	}
 
-	if v, ok := tfMap[names.AttrDescription].(string); ok && v != "" {
+	if v, ok := tfMap["description"].(string); ok && v != "" {
 		repositoryCatalogDataInput.Description = aws.String(v)
 	}
 

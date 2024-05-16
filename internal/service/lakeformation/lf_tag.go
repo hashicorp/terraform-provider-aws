@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // This value is defined by AWS API
@@ -39,19 +38,19 @@ func ResourceLFTag() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrCatalogID: {
+			"catalog_id": {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
 				Computed: true,
 			},
-			names.AttrKey: {
+			"key": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
-			names.AttrValues: {
+			"values": {
 				Type:     schema.TypeSet,
 				Required: true,
 				MinItems: 1,
@@ -72,11 +71,11 @@ func resourceLFTagCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
-	tagKey := d.Get(names.AttrKey).(string)
-	tagValues := d.Get(names.AttrValues).(*schema.Set)
+	tagKey := d.Get("key").(string)
+	tagValues := d.Get("values").(*schema.Set)
 
 	var catalogID string
-	if v, ok := d.GetOk(names.AttrCatalogID); ok {
+	if v, ok := d.GetOk("catalog_id"); ok {
 		catalogID = v.(string)
 	} else {
 		catalogID = meta.(*conns.AWSClient).AccountID
@@ -144,9 +143,9 @@ func resourceLFTagRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading Lake Formation LF-Tag (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrKey, output.TagKey)
-	d.Set(names.AttrValues, flex.FlattenStringValueSet(output.TagValues))
-	d.Set(names.AttrCatalogID, output.CatalogId)
+	d.Set("key", output.TagKey)
+	d.Set("values", flex.FlattenStringValueSet(output.TagValues))
+	d.Set("catalog_id", output.CatalogId)
 
 	return diags
 }
@@ -160,7 +159,7 @@ func resourceLFTagUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "updating Lake Formation LF-Tag (%s): %s", d.Id(), err)
 	}
 
-	o, n := d.GetChange(names.AttrValues)
+	o, n := d.GetChange("values")
 	os := o.(*schema.Set)
 	ns := n.(*schema.Set)
 	toAdd := ns.Difference(os)

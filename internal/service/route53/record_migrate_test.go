@@ -7,9 +7,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestRecordMigrateState(t *testing.T) {
@@ -26,7 +24,7 @@ func TestRecordMigrateState(t *testing.T) {
 			StateVersion: 0,
 			ID:           "some_id",
 			Attributes: map[string]string{
-				names.AttrName: "www",
+				"name": "www",
 			},
 			Expected: "www",
 		},
@@ -34,7 +32,7 @@ func TestRecordMigrateState(t *testing.T) {
 			StateVersion: 0,
 			ID:           "some_id",
 			Attributes: map[string]string{
-				names.AttrName: "www.example.com.",
+				"name": "www.example.com.",
 			},
 			Expected: "www.example.com",
 		},
@@ -42,7 +40,7 @@ func TestRecordMigrateState(t *testing.T) {
 			StateVersion: 0,
 			ID:           "some_id",
 			Attributes: map[string]string{
-				names.AttrName: "www.example.com",
+				"name": "www.example.com",
 			},
 			Expected: "www.example.com",
 		},
@@ -60,8 +58,8 @@ func TestRecordMigrateState(t *testing.T) {
 			t.Fatalf("bad: %s, err: %#v", tn, err)
 		}
 
-		if is.Attributes[names.AttrName] != tc.Expected {
-			t.Fatalf("bad Route 53 Migrate: %s\n\n expected: %s", is.Attributes[names.AttrName], tc.Expected)
+		if is.Attributes["name"] != tc.Expected {
+			t.Fatalf("bad Route 53 Migrate: %s\n\n expected: %s", is.Attributes["name"], tc.Expected)
 		}
 	}
 }
@@ -78,20 +76,20 @@ func TestRecordMigrateStateV1toV2(t *testing.T) {
 		"v0_1": {
 			StateVersion: 1,
 			Attributes: map[string]string{
-				names.AttrWeight: acctest.Ct0,
-				"failover":       "PRIMARY",
+				"weight":   "0",
+				"failover": "PRIMARY",
 			},
 			Expected: map[string]string{
-				"weighted_routing_policy.#":        acctest.Ct1,
-				"weighted_routing_policy.0.weight": acctest.Ct0,
-				"failover_routing_policy.#":        acctest.Ct1,
+				"weighted_routing_policy.#":        "1",
+				"weighted_routing_policy.0.weight": "0",
+				"failover_routing_policy.#":        "1",
 				"failover_routing_policy.0.type":   "PRIMARY",
 			},
 		},
 		"v0_2": {
 			StateVersion: 0,
 			Attributes: map[string]string{
-				names.AttrWeight: "-1",
+				"weight": "-1",
 			},
 			Expected: map[string]string{},
 		},

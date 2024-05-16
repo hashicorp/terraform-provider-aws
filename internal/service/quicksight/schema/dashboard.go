@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func DashboardDefinitionSchema() *schema.Schema {
@@ -36,7 +35,7 @@ func DashboardDefinitionSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"column":               columnSchema(true),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 							"format_configuration": formatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FormatConfiguration.html
-							names.AttrRole:         stringSchema(false, validation.StringInSlice(quicksight.ColumnRole_Values(), false)),
+							"role":                 stringSchema(false, validation.StringInSlice(quicksight.ColumnRole_Values(), false)),
 						},
 					},
 				},
@@ -51,7 +50,7 @@ func DashboardDefinitionSchema() *schema.Schema {
 							"filter_group_id":     idSchema(),
 							"filters":             filtersSchema(),                  // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Filter.html
 							"scope_configuration": filterScopeConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterScopeConfiguration.html
-							names.AttrStatus:      stringSchema(false, validation.StringInSlice(quicksight.Status_Values(), false)),
+							"status":              stringSchema(false, validation.StringInSlice(quicksight.Status_Values(), false)),
 						},
 					},
 				},
@@ -77,16 +76,16 @@ func DashboardDefinitionSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"sheet_id": idSchema(),
-							names.AttrContentType: {
+							"content_type": {
 								Type:         schema.TypeString,
 								Optional:     true,
 								Computed:     true,
 								ValidateFunc: validation.StringInSlice(quicksight.SheetContentType_Values(), false),
 							},
-							names.AttrDescription:   stringSchema(false, validation.StringLenBetween(1, 1024)),
+							"description":           stringSchema(false, validation.StringLenBetween(1, 1024)),
 							"filter_controls":       filterControlsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterControl.html
 							"layouts":               layoutSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Layout.html
-							names.AttrName:          stringSchema(false, validation.StringLenBetween(1, 2048)),
+							"name":                  stringSchema(false, validation.StringLenBetween(1, 2048)),
 							"parameter_controls":    parameterControlsSchema(),   // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ParameterControl.html
 							"sheet_control_layouts": sheetControlLayoutsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetControlLayout.html
 							"text_boxes": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetTextBox.html
@@ -97,7 +96,7 @@ func DashboardDefinitionSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"sheet_text_box_id": idSchema(),
-										names.AttrContent:   stringSchema(false, validation.StringLenBetween(1, 150000)),
+										"content":           stringSchema(false, validation.StringLenBetween(1, 150000)),
 									},
 								},
 							},
@@ -283,7 +282,7 @@ func DashboardSourceEntitySchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							names.AttrARN: {
+							"arn": {
 								Type:         schema.TypeString,
 								Required:     true,
 								ValidateFunc: verify.ValidARN,
@@ -322,7 +321,7 @@ func expandDashboardSourceTemplate(tfMap map[string]interface{}) *quicksight.Das
 	}
 
 	sourceTemplate := &quicksight.DashboardSourceTemplate{}
-	if v, ok := tfMap[names.AttrARN].(string); ok && v != "" {
+	if v, ok := tfMap["arn"].(string); ok && v != "" {
 		sourceTemplate.Arn = aws.String(v)
 	}
 	if v, ok := tfMap["data_set_references"].([]interface{}); ok && len(v) > 0 {

@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func histogramVisualSchema() *schema.Schema {
@@ -42,7 +41,7 @@ func histogramVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													names.AttrValue: {
+													"value": {
 														Type:         schema.TypeInt,
 														Optional:     true,
 														ValidateFunc: validation.IntAtLeast(0),
@@ -62,7 +61,7 @@ func histogramVisualSchema() *schema.Schema {
 														Optional:     true,
 														ValidateFunc: validation.IntBetween(0, 1000),
 													},
-													names.AttrValue: {
+													"value": {
 														Type:         schema.TypeFloat,
 														Optional:     true,
 														ValidateFunc: validation.IntAtLeast(0),
@@ -93,7 +92,7 @@ func histogramVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													names.AttrValues: measureFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
+													"values": measureFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
 												},
 											},
 										},
@@ -217,7 +216,7 @@ func expandHistogramAggregatedFieldWells(tfList []interface{}) *quicksight.Histo
 
 	config := &quicksight.HistogramAggregatedFieldWells{}
 
-	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap["values"].([]interface{}); ok && len(v) > 0 {
 		config.Values = expandMeasureFields(v)
 	}
 
@@ -264,7 +263,7 @@ func expandBinCountOptions(tfList []interface{}) *quicksight.BinCountOptions {
 
 	options := &quicksight.BinCountOptions{}
 
-	if v, ok := tfMap[names.AttrValue].(int); ok {
+	if v, ok := tfMap["value"].(int); ok {
 		options.Value = aws.Int64(int64(v))
 	}
 
@@ -286,7 +285,7 @@ func expandBinWidthOptions(tfList []interface{}) *quicksight.BinWidthOptions {
 	if v, ok := tfMap["bin_count_limit"].(int); ok {
 		options.BinCountLimit = aws.Int64(int64(v))
 	}
-	if v, ok := tfMap[names.AttrValue].(float64); ok {
+	if v, ok := tfMap["value"].(float64); ok {
 		options.Value = aws.Float64(v)
 	}
 
@@ -380,7 +379,7 @@ func flattenBinCountOptions(apiObject *quicksight.BinCountOptions) []interface{}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Value != nil {
-		tfMap[names.AttrValue] = aws.Int64Value(apiObject.Value)
+		tfMap["value"] = aws.Int64Value(apiObject.Value)
 	}
 
 	return []interface{}{tfMap}
@@ -396,7 +395,7 @@ func flattenBinWidthOptions(apiObject *quicksight.BinWidthOptions) []interface{}
 		tfMap["bin_count_limit"] = aws.Int64Value(apiObject.BinCountLimit)
 	}
 	if apiObject.Value != nil {
-		tfMap[names.AttrValue] = aws.Float64Value(apiObject.Value)
+		tfMap["value"] = aws.Float64Value(apiObject.Value)
 	}
 
 	return []interface{}{tfMap}
@@ -422,7 +421,7 @@ func flattenHistogramAggregatedFieldWells(apiObject *quicksight.HistogramAggrega
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Values != nil {
-		tfMap[names.AttrValues] = flattenMeasureFields(apiObject.Values)
+		tfMap["values"] = flattenMeasureFields(apiObject.Values)
 	}
 
 	return []interface{}{tfMap}

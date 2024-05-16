@@ -36,7 +36,7 @@ func ResourceProfile() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -109,7 +109,7 @@ func resourceProfileRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading Transfer Profile (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, output.Arn)
+	d.Set("arn", output.Arn)
 	d.Set("as2_id", output.As2Id)
 	d.Set("certificate_ids", aws.StringValueSlice(output.CertificateIds))
 	d.Set("profile_id", output.ProfileId)
@@ -123,7 +123,7 @@ func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &transfer.UpdateProfileInput{
 			ProfileId: aws.String(d.Id()),
 		}

@@ -71,12 +71,12 @@ func resourcePoolRolesAttachment() *schema.Resource {
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[awstypes.MappingRuleMatchType](),
 									},
-									names.AttrRoleARN: {
+									"role_arn": {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
 									},
-									names.AttrValue: {
+									"value": {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 128),
@@ -84,7 +84,7 @@ func resourcePoolRolesAttachment() *schema.Resource {
 								},
 							},
 						},
-						names.AttrType: {
+						"type": {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.RoleMappingType](),

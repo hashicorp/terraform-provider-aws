@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccResponsePlan_basic(t *testing.T) {
+func testResponsePlan_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -28,6 +28,7 @@ func testAccResponsePlan_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rTitle := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rImpact := "3"
 
 	resourceName := "aws_ssmincidents_response_plan.test"
 
@@ -41,14 +42,14 @@ func testAccResponsePlan_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckResponsePlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResponsePlanConfig_basic(rName, rTitle, acctest.Ct3),
+				Config: testAccResponsePlanConfig_basic(rName, rTitle, rImpact),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.title", rTitle),
-					resource.TestCheckResourceAttr(resourceName, "incident_template.0.impact", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "incident_template.0.impact", rImpact),
 
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", fmt.Sprintf("response-plan/%s", rName)),
+					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", fmt.Sprintf("response-plan/%s", rName)),
 				),
 			},
 			{
@@ -68,7 +69,7 @@ func testAccResponsePlan_basic(t *testing.T) {
 	})
 }
 
-func testAccResponsePlan_updateRequiredFields(t *testing.T) {
+func testResponsePlan_updateRequiredFields(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -79,6 +80,7 @@ func testAccResponsePlan_updateRequiredFields(t *testing.T) {
 
 	iniTitle := "initialTitle"
 	updTitle := "updatedTitle"
+	iniImpact := "1"
 	updImpact := "5"
 
 	resourceName := "aws_ssmincidents_response_plan.test"
@@ -93,14 +95,14 @@ func testAccResponsePlan_updateRequiredFields(t *testing.T) {
 		CheckDestroy:             testAccCheckResponsePlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResponsePlanConfig_basic(iniName, iniTitle, acctest.Ct1),
+				Config: testAccResponsePlanConfig_basic(iniName, iniTitle, iniImpact),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, iniName),
+					resource.TestCheckResourceAttr(resourceName, "name", iniName),
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.title", iniTitle),
-					resource.TestCheckResourceAttr(resourceName, "incident_template.0.impact", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "incident_template.0.impact", iniImpact),
 
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", fmt.Sprintf("response-plan/%s", iniName)),
+					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", fmt.Sprintf("response-plan/%s", iniName)),
 				),
 			},
 			{
@@ -113,11 +115,11 @@ func testAccResponsePlan_updateRequiredFields(t *testing.T) {
 				Config: testAccResponsePlanConfig_basic(iniName, updTitle, updImpact),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, iniName),
+					resource.TestCheckResourceAttr(resourceName, "name", iniName),
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.title", updTitle),
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.impact", updImpact),
 
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", fmt.Sprintf("response-plan/%s", iniName)),
+					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", fmt.Sprintf("response-plan/%s", iniName)),
 				),
 			},
 			{
@@ -130,11 +132,11 @@ func testAccResponsePlan_updateRequiredFields(t *testing.T) {
 				Config: testAccResponsePlanConfig_basic(updName, updTitle, updImpact),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, updName),
+					resource.TestCheckResourceAttr(resourceName, "name", updName),
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.title", updTitle),
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.impact", updImpact),
 
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", fmt.Sprintf("response-plan/%s", updName)),
+					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", fmt.Sprintf("response-plan/%s", updName)),
 				),
 			},
 			{
@@ -147,7 +149,7 @@ func testAccResponsePlan_updateRequiredFields(t *testing.T) {
 	})
 }
 
-func testAccResponsePlan_updateTags(t *testing.T) {
+func testResponsePlan_updateTags(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -190,9 +192,9 @@ func testAccResponsePlan_updateTags(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, rVal1Ini),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all."+rProviderKey1, rProviderVal1Ini),
 				),
 			},
@@ -209,9 +211,9 @@ func testAccResponsePlan_updateTags(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, rVal1Upd),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all."+rProviderKey1, rProviderVal1Upd),
 				),
 			},
@@ -228,10 +230,10 @@ func testAccResponsePlan_updateTags(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey2, rVal2),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey3, rVal3),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "4"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all."+rProviderKey2, rProviderVal2),
 					resource.TestCheckResourceAttr(resourceName, "tags_all."+rProviderKey3, rProviderVal3),
 				),
@@ -246,7 +248,7 @@ func testAccResponsePlan_updateTags(t *testing.T) {
 	})
 }
 
-func testAccResponsePlan_updateEmptyTags(t *testing.T) {
+func testResponsePlan_updateEmptyTags(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -273,7 +275,7 @@ func testAccResponsePlan_updateEmptyTags(t *testing.T) {
 				Config: testAccResponsePlanConfig_oneTag(rName, rTitle, rKey1, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, ""),
 				),
 			},
@@ -287,7 +289,7 @@ func testAccResponsePlan_updateEmptyTags(t *testing.T) {
 				Config: testAccResponsePlanConfig_twoTags(rName, rTitle, rKey1, "", rKey2, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, ""),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey2, ""),
 				),
@@ -302,7 +304,7 @@ func testAccResponsePlan_updateEmptyTags(t *testing.T) {
 				Config: testAccResponsePlanConfig_oneTag(rName, rTitle, rKey1, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, ""),
 				),
 			},
@@ -316,7 +318,7 @@ func testAccResponsePlan_updateEmptyTags(t *testing.T) {
 	})
 }
 
-func testAccResponsePlan_disappears(t *testing.T) {
+func testResponsePlan_disappears(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -324,6 +326,7 @@ func testAccResponsePlan_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rTitle := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	impact := "3"
 	resourceName := "aws_ssmincidents_response_plan.test"
 
 	resource.Test(t, resource.TestCase{
@@ -336,7 +339,7 @@ func testAccResponsePlan_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckResponsePlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResponsePlanConfig_basic(rName, rTitle, acctest.Ct3),
+				Config: testAccResponsePlanConfig_basic(rName, rTitle, impact),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssmincidents.ResourceResponsePlan(), resourceName),
@@ -347,7 +350,7 @@ func testAccResponsePlan_disappears(t *testing.T) {
 	})
 }
 
-func testAccResponsePlan_incidentTemplateOptionalFields(t *testing.T) {
+func testResponsePlan_incidentTemplateOptionalFields(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -388,8 +391,8 @@ func testAccResponsePlan_incidentTemplateOptionalFields(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.dedupe_string", rDedupeStringIni),
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.summary", rSummaryIni),
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.incident_tags."+rTagKeyIni, rTagValIni),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "incident_template.0.notification_target.*.sns_topic_arn", snsTopic1, names.AttrARN),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "incident_template.0.notification_target.*.sns_topic_arn", snsTopic2, names.AttrARN),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "incident_template.0.notification_target.*.sns_topic_arn", snsTopic1, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "incident_template.0.notification_target.*.sns_topic_arn", snsTopic2, "arn"),
 				),
 			},
 			{
@@ -406,8 +409,8 @@ func testAccResponsePlan_incidentTemplateOptionalFields(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.dedupe_string", rDedupeStringUpd),
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.summary", rSummaryUpd),
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.incident_tags."+rTagKeyUpd, rTagValUpd),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "incident_template.0.notification_target.*.sns_topic_arn", snsTopic2, names.AttrARN),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "incident_template.0.notification_target.*.sns_topic_arn", snsTopic3, names.AttrARN),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "incident_template.0.notification_target.*.sns_topic_arn", snsTopic2, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "incident_template.0.notification_target.*.sns_topic_arn", snsTopic3, "arn"),
 				),
 			},
 			{
@@ -420,7 +423,7 @@ func testAccResponsePlan_incidentTemplateOptionalFields(t *testing.T) {
 	})
 }
 
-func testAccResponsePlan_displayName(t *testing.T) {
+func testResponsePlan_displayName(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -445,7 +448,7 @@ func testAccResponsePlan_displayName(t *testing.T) {
 				Config: testAccResponsePlanConfig_displayName(rName, oldDisplayName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, oldDisplayName),
+					resource.TestCheckResourceAttr(resourceName, "display_name", oldDisplayName),
 				),
 			},
 			{
@@ -458,7 +461,7 @@ func testAccResponsePlan_displayName(t *testing.T) {
 				Config: testAccResponsePlanConfig_displayName(rName, newDisplayName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, newDisplayName),
+					resource.TestCheckResourceAttr(resourceName, "display_name", newDisplayName),
 				),
 			},
 			{
@@ -471,7 +474,7 @@ func testAccResponsePlan_displayName(t *testing.T) {
 	})
 }
 
-func testAccResponsePlan_chatChannel(t *testing.T) {
+func testResponsePlan_chatChannel(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -496,8 +499,8 @@ func testAccResponsePlan_chatChannel(t *testing.T) {
 				Config: testAccResponsePlanConfig_chatChannel(rName, chatChannelTopic1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "chat_channel.#", acctest.Ct1),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "chat_channel.0", chatChannelTopic1, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "chat_channel.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "chat_channel.0", chatChannelTopic1, "arn"),
 				),
 			},
 			{
@@ -510,8 +513,8 @@ func testAccResponsePlan_chatChannel(t *testing.T) {
 				Config: testAccResponsePlanConfig_chatChannel(rName, chatChannelTopic2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "chat_channel.#", acctest.Ct1),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "chat_channel.0", chatChannelTopic2, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "chat_channel.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "chat_channel.0", chatChannelTopic2, "arn"),
 				),
 			},
 			{
@@ -524,9 +527,9 @@ func testAccResponsePlan_chatChannel(t *testing.T) {
 				Config: testAccResponsePlanConfig_twoChatChannels(rName, chatChannelTopic1, chatChannelTopic2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "chat_channel.#", acctest.Ct2),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "chat_channel.*", chatChannelTopic1, names.AttrARN),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "chat_channel.*", chatChannelTopic2, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "chat_channel.#", "2"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "chat_channel.*", chatChannelTopic1, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "chat_channel.*", chatChannelTopic2, "arn"),
 				),
 			},
 			{
@@ -539,7 +542,7 @@ func testAccResponsePlan_chatChannel(t *testing.T) {
 				Config: testAccResponsePlanConfig_emptyChatChannel(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "chat_channel.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "chat_channel.#", "0"),
 				),
 			},
 			{
@@ -552,7 +555,7 @@ func testAccResponsePlan_chatChannel(t *testing.T) {
 	})
 }
 
-func testAccResponsePlan_engagement(t *testing.T) {
+func testResponsePlan_engagement(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -581,7 +584,7 @@ func testAccResponsePlan_engagement(t *testing.T) {
 				Config: testAccResponsePlanConfig_engagement(rName, contactArn1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "engagements.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "engagements.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "engagements.0", contactArn1),
 				),
 			},
@@ -595,7 +598,7 @@ func testAccResponsePlan_engagement(t *testing.T) {
 				Config: testAccResponsePlanConfig_engagement(rName, contactArn2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "engagements.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "engagements.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "engagements.0", contactArn2),
 				),
 			},
@@ -609,7 +612,7 @@ func testAccResponsePlan_engagement(t *testing.T) {
 				Config: testAccResponsePlanConfig_twoEngagements(rName, contactArn1, contactArn2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "engagements.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "engagements.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "engagements.0", contactArn1),
 					resource.TestCheckResourceAttr(resourceName, "engagements.1", contactArn2),
 				),
@@ -624,7 +627,7 @@ func testAccResponsePlan_engagement(t *testing.T) {
 				Config: testAccResponsePlanConfig_emptyEngagements(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "engagements.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "engagements.#", "0"),
 				),
 			},
 			{
@@ -637,7 +640,7 @@ func testAccResponsePlan_engagement(t *testing.T) {
 	})
 }
 
-func testAccResponsePlan_action(t *testing.T) {
+func testResponsePlan_action(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -660,19 +663,19 @@ func testAccResponsePlan_action(t *testing.T) {
 				Config: testAccResponsePlanConfig_action1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "action.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "action.0.ssm_automation.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.ssm_automation.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(
 						resourceName,
 						"action.0.ssm_automation.0.document_name",
 						"aws_ssm_document.document1",
-						names.AttrName,
+						"name",
 					),
 					resource.TestCheckTypeSetElemAttrPair(
 						resourceName,
 						"action.0.ssm_automation.0.role_arn",
 						"aws_iam_role.role1",
-						names.AttrARN,
+						"arn",
 					),
 					resource.TestCheckResourceAttr(
 						resourceName,
@@ -687,22 +690,22 @@ func testAccResponsePlan_action(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"action.0.ssm_automation.0.parameter.0.name",
-						names.AttrKey,
+						"key",
 					),
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"action.0.ssm_automation.0.parameter.0.values.#",
-						acctest.Ct2,
+						"2",
 					),
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"action.0.ssm_automation.0.parameter.0.values.0",
-						acctest.CtValue1,
+						"value1",
 					),
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"action.0.ssm_automation.0.parameter.0.values.1",
-						acctest.CtValue2,
+						"value2",
 					),
 					resource.TestCheckResourceAttr(
 						resourceName,
@@ -721,19 +724,19 @@ func testAccResponsePlan_action(t *testing.T) {
 				Config: testAccResponsePlanConfig_action2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "action.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "action.0.ssm_automation.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.ssm_automation.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(
 						resourceName,
 						"action.0.ssm_automation.0.document_name",
 						"aws_ssm_document.document2",
-						names.AttrName,
+						"name",
 					),
 					resource.TestCheckTypeSetElemAttrPair(
 						resourceName,
 						"action.0.ssm_automation.0.role_arn",
 						"aws_iam_role.role2",
-						names.AttrARN,
+						"arn",
 					),
 					resource.TestCheckResourceAttr(
 						resourceName,
@@ -753,7 +756,7 @@ func testAccResponsePlan_action(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"action.0.ssm_automation.0.parameter.0.values.#",
-						acctest.Ct1,
+						"1",
 					),
 					resource.TestCheckResourceAttr(
 						resourceName,

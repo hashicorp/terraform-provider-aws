@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_dms_replication_subnet_group")
@@ -41,13 +40,13 @@ func DataSourceReplicationSubnetGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrSubnetIDs: {
+			"subnet_ids": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			names.AttrVPCID: {
+			"tags": tftags.TagsSchemaComputed(),
+			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -82,8 +81,8 @@ func dataSourceReplicationSubnetGroupRead(ctx context.Context, d *schema.Resourc
 	subnetIDs := tfslices.ApplyToAll(group.Subnets, func(sn *dms.Subnet) string {
 		return aws.StringValue(sn.SubnetIdentifier)
 	})
-	d.Set(names.AttrSubnetIDs, subnetIDs)
-	d.Set(names.AttrVPCID, group.VpcId)
+	d.Set("subnet_ids", subnetIDs)
+	d.Set("vpc_id", group.VpcId)
 
 	tags, err := listTags(ctx, conn, arn)
 
@@ -94,7 +93,7 @@ func dataSourceReplicationSubnetGroupRead(ctx context.Context, d *schema.Resourc
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
-	if err := d.Set(names.AttrTags, tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

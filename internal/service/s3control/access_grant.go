@@ -71,7 +71,7 @@ func (r *accessGrantResource) Schema(ctx context.Context, request resource.Schem
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrAccountID: schema.StringAttribute{
+			"account_id": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{

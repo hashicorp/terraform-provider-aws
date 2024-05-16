@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -189,7 +188,7 @@ func GetLocalGatewayRoute(ctx context.Context, conn *ec2.EC2, localGatewayRouteT
 	input := &ec2.SearchLocalGatewayRoutesInput{
 		Filters: []*ec2.Filter{
 			{
-				Name:   aws.String(names.AttrType),
+				Name:   aws.String("type"),
 				Values: aws.StringSlice([]string{"static"}),
 			},
 		},

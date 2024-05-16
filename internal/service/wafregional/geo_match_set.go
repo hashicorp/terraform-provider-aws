@@ -5,20 +5,17 @@ package wafregional
 
 import (
 	"context"
-	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/wafregional"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/wafregional/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/aws/aws-sdk-go/service/wafregional"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
+	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 )
 
 // @SDKResource("aws_wafregional_geo_match_set", name="Geo Match Set")
@@ -34,26 +31,26 @@ func resourceGeoMatchSet() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
 			"geo_match_constraint": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrType: {
+						"type": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						names.AttrValue: {
+						"value": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
 			},
 		},
 	}
@@ -61,62 +58,63 @@ func resourceGeoMatchSet() *schema.Resource {
 
 func resourceGeoMatchSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
+	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 	region := meta.(*conns.AWSClient).Region
 
-	name := d.Get(names.AttrName).(string)
-	outputRaw, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
-		input := &wafregional.CreateGeoMatchSetInput{
+	name := d.Get("name").(string)
+	outputRaw, err := NewRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+		input := &waf.CreateGeoMatchSetInput{
 			ChangeToken: token,
 			Name:        aws.String(name),
 		}
 
-		return conn.CreateGeoMatchSet(ctx, input)
+		return conn.CreateGeoMatchSetWithContext(ctx, input)
 	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating WAF Regional Geo Match Set (%s): %s", name, err)
 	}
 
-	d.SetId(aws.ToString(outputRaw.(*wafregional.CreateGeoMatchSetOutput).GeoMatchSet.GeoMatchSetId))
+	d.SetId(aws.StringValue(outputRaw.(*waf.CreateGeoMatchSetOutput).GeoMatchSet.GeoMatchSetId))
 
 	return append(diags, resourceGeoMatchSetUpdate(ctx, d, meta)...)
 }
 
 func resourceGeoMatchSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
+	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 
-	geoMatchSet, err := findGeoMatchSetByID(ctx, conn, d.Id())
+	params := &waf.GetGeoMatchSetInput{
+		GeoMatchSetId: aws.String(d.Id()),
+	}
+	resp, err := conn.GetGeoMatchSetWithContext(ctx, params)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] WAF Regional Geo Match Set (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
+		log.Printf("[WARN] WAF WAF Regional Geo Match Set (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
-
 	if err != nil {
-		return diag.Errorf("reading WAF Regional Geo Match Set (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "getting WAF Regional Geo Match Set (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("geo_match_constraint", flattenGeoMatchConstraint(geoMatchSet.GeoMatchConstraints)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting geo_match_constraint: %s", err)
-	}
-	d.Set(names.AttrName, geoMatchSet.Name)
+	d.Set("name", resp.GeoMatchSet.Name)
+	d.Set("geo_match_constraint", tfwaf.FlattenGeoMatchConstraint(resp.GeoMatchSet.GeoMatchConstraints))
 
 	return diags
 }
 
 func resourceGeoMatchSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
+	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 	region := meta.(*conns.AWSClient).Region
 
 	if d.HasChange("geo_match_constraint") {
 		o, n := d.GetChange("geo_match_constraint")
 		oldConstraints, newConstraints := o.(*schema.Set).List(), n.(*schema.Set).List()
-		if err := updateGeoMatchSet(ctx, conn, region, d.Id(), oldConstraints, newConstraints); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
+
+		if err := updateGeoMatchSetResourceWR(ctx, conn, region, d.Id(), oldConstraints, newConstraints); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating WAF Regional Geo Match Set (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -125,27 +123,34 @@ func resourceGeoMatchSetUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceGeoMatchSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
+	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 	region := meta.(*conns.AWSClient).Region
 
 	if oldConstraints := d.Get("geo_match_constraint").(*schema.Set).List(); len(oldConstraints) > 0 {
 		var newConstraints []interface{}
-		if err := updateGeoMatchSet(ctx, conn, region, d.Id(), oldConstraints, newConstraints); err != nil && !errs.IsA[*awstypes.WAFNonexistentItemException](err) && !errs.IsA[*awstypes.WAFNonexistentContainerException](err) {
-			return sdkdiag.AppendFromErr(diags, err)
+
+		err := updateGeoMatchSetResourceWR(ctx, conn, region, d.Id(), oldConstraints, newConstraints)
+
+		if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentContainerException, wafregional.ErrCodeWAFNonexistentItemException) {
+			return diags
+		}
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating WAF Regional Geo Match Set (%s): %s", d.Id(), err)
 		}
 	}
 
 	log.Printf("[INFO] Deleting WAF Regional Geo Match Set: %s", d.Id())
-	_, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
-		input := &wafregional.DeleteGeoMatchSetInput{
+	_, err := NewRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+		input := &waf.DeleteGeoMatchSetInput{
 			ChangeToken:   token,
 			GeoMatchSetId: aws.String(d.Id()),
 		}
 
-		return conn.DeleteGeoMatchSet(ctx, input)
+		return conn.DeleteGeoMatchSetWithContext(ctx, input)
 	})
 
-	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
+	if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 		return diags
 	}
 
@@ -156,90 +161,16 @@ func resourceGeoMatchSetDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func findGeoMatchSetByID(ctx context.Context, conn *wafregional.Client, id string) (*awstypes.GeoMatchSet, error) {
-	input := &wafregional.GetGeoMatchSetInput{
-		GeoMatchSetId: aws.String(id),
-	}
-
-	output, err := conn.GetGeoMatchSet(ctx, input)
-
-	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.GeoMatchSet == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.GeoMatchSet, nil
-}
-
-func updateGeoMatchSet(ctx context.Context, conn *wafregional.Client, region string, geoMatchSetID string, oldConstraints, newConstraints []interface{}) error {
-	_, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
-		input := &wafregional.UpdateGeoMatchSetInput{
+func updateGeoMatchSetResourceWR(ctx context.Context, conn *wafregional.WAFRegional, region string, geoMatchSetID string, oldConstraints, newConstraints []interface{}) error {
+	_, err := NewRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+		input := &waf.UpdateGeoMatchSetInput{
 			ChangeToken:   token,
 			GeoMatchSetId: aws.String(geoMatchSetID),
-			Updates:       diffGeoMatchSetConstraints(oldConstraints, newConstraints),
+			Updates:       tfwaf.DiffGeoMatchSetConstraints(oldConstraints, newConstraints),
 		}
 
-		return conn.UpdateGeoMatchSet(ctx, input)
+		return conn.UpdateGeoMatchSetWithContext(ctx, input)
 	})
 
-	if err != nil {
-		return fmt.Errorf("updating WAF Regional Geo Match Set (%s): %w", geoMatchSetID, err)
-	}
-
-	return nil
-}
-
-func flattenGeoMatchConstraint(ts []awstypes.GeoMatchConstraint) []interface{} {
-	out := make([]interface{}, len(ts))
-	for i, t := range ts {
-		m := make(map[string]interface{})
-		m[names.AttrType] = string(t.Type)
-		m[names.AttrValue] = string(t.Value)
-		out[i] = m
-	}
-	return out
-}
-
-func diffGeoMatchSetConstraints(oldT, newT []interface{}) []awstypes.GeoMatchSetUpdate {
-	updates := make([]awstypes.GeoMatchSetUpdate, 0)
-
-	for _, od := range oldT {
-		constraint := od.(map[string]interface{})
-
-		if idx, contains := sliceContainsMap(newT, constraint); contains {
-			newT = append(newT[:idx], newT[idx+1:]...)
-			continue
-		}
-
-		updates = append(updates, awstypes.GeoMatchSetUpdate{
-			Action: awstypes.ChangeActionDelete,
-			GeoMatchConstraint: &awstypes.GeoMatchConstraint{
-				Type:  awstypes.GeoMatchConstraintType(constraint[names.AttrType].(string)),
-				Value: awstypes.GeoMatchConstraintValue(constraint[names.AttrValue].(string)),
-			},
-		})
-	}
-
-	for _, nd := range newT {
-		constraint := nd.(map[string]interface{})
-
-		updates = append(updates, awstypes.GeoMatchSetUpdate{
-			Action: awstypes.ChangeActionInsert,
-			GeoMatchConstraint: &awstypes.GeoMatchConstraint{
-				Type:  awstypes.GeoMatchConstraintType(constraint[names.AttrType].(string)),
-				Value: awstypes.GeoMatchConstraintValue(constraint[names.AttrValue].(string)),
-			},
-		})
-	}
-	return updates
+	return err
 }

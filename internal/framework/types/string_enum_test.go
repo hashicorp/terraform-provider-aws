@@ -11,6 +11,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
@@ -55,27 +56,32 @@ func TestStringEnumTypeValueFromTerraform(t *testing.T) {
 	}
 }
 
-func TestStringEnumValidateAttribute(t *testing.T) {
+func TestStringEnumTypeValidate(t *testing.T) {
 	t.Parallel()
 
-	tests := map[string]struct {
-		val         fwtypes.StringEnum[awstypes.AclPermission]
+	type testCase struct {
+		val         tftypes.Value
 		expectError bool
-	}{
-		"null value": {
-			val: fwtypes.StringEnumNull[awstypes.AclPermission](),
+	}
+	tests := map[string]testCase{
+		"not a string": {
+			val:         tftypes.NewValue(tftypes.Bool, true),
+			expectError: true,
 		},
-		"unknown value": {
-			val: fwtypes.StringEnumUnknown[awstypes.AclPermission](),
+		"unknown string": {
+			val: tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
 		},
-		"zero value enum": {
-			val: fwtypes.StringEnumValue(awstypes.AclPermission("")),
+		"null string": {
+			val: tftypes.NewValue(tftypes.String, nil),
 		},
 		"valid enum": {
-			val: fwtypes.StringEnumValue(awstypes.AclPermissionRead),
+			val: tftypes.NewValue(tftypes.String, string(awstypes.AclPermissionWrite)),
+		},
+		"valid zero value": {
+			val: tftypes.NewValue(tftypes.String, ""),
 		},
 		"invalid enum": {
-			val:         fwtypes.StringEnumValue(awstypes.AclPermission("invalid")),
+			val:         tftypes.NewValue(tftypes.String, "LIST"),
 			expectError: true,
 		},
 	}
@@ -87,12 +93,14 @@ func TestStringEnumValidateAttribute(t *testing.T) {
 
 			ctx := context.Background()
 
-			req := xattr.ValidateAttributeRequest{}
-			resp := xattr.ValidateAttributeResponse{}
+			diags := fwtypes.StringEnumType[awstypes.AclPermission]().(xattr.TypeWithValidate).Validate(ctx, test.val, path.Root("test"))
 
-			test.val.ValidateAttribute(ctx, req, &resp)
-			if resp.Diagnostics.HasError() != test.expectError {
-				t.Errorf("resp.Diagnostics.HasError() = %t, want = %t", resp.Diagnostics.HasError(), test.expectError)
+			if !diags.HasError() && test.expectError {
+				t.Fatal("expected error, got no error")
+			}
+
+			if diags.HasError() && !test.expectError {
+				t.Fatalf("got unexpected error: %#v", diags)
 			}
 		})
 	}

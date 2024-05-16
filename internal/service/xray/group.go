@@ -24,7 +24,7 @@ import (
 
 // @SDKResource("aws_xray_group", name="Group")
 // @Tags(identifierAttribute="arn")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/xray/types;types.Group")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/xray/types.Group")
 func resourceGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGroupCreate,
@@ -39,11 +39,11 @@ func resourceGroup() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrGroupName: {
+			"group_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -81,7 +81,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).XRayClient(ctx)
 
-	name := d.Get(names.AttrGroupName).(string)
+	name := d.Get("group_name").(string)
 	input := &xray.CreateGroupInput{
 		GroupName:        aws.String(name),
 		FilterExpression: aws.String(d.Get("filter_expression").(string)),
@@ -119,9 +119,9 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading XRay Group (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, group.GroupARN)
+	d.Set("arn", group.GroupARN)
 	d.Set("filter_expression", group.FilterExpression)
-	d.Set(names.AttrGroupName, group.GroupName)
+	d.Set("group_name", group.GroupName)
 	if err := d.Set("insights_configuration", flattenInsightsConfig(group.InsightsConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting insights_configuration: %s", err)
 	}
@@ -133,7 +133,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).XRayClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &xray.UpdateGroupInput{GroupARN: aws.String(d.Id())}
 
 		if v, ok := d.GetOk("filter_expression"); ok {

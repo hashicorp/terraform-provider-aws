@@ -39,25 +39,25 @@ func ResourceDefaultSecurityGroup() *schema.Resource {
 		//   - name is Computed-only
 		//   - name_prefix is Computed-only
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"egress":  securityGroupRuleSetNestedBlock,
 			"ingress": securityGroupRuleSetNestedBlock,
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrNamePrefix: {
+			"name_prefix": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrOwnerID: {
+			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -69,7 +69,7 @@ func ResourceDefaultSecurityGroup() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVPCID: {
+			"vpc_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -94,7 +94,7 @@ func resourceDefaultSecurityGroupCreate(ctx context.Context, d *schema.ResourceD
 		),
 	}
 
-	if v, ok := d.GetOk(names.AttrVPCID); ok {
+	if v, ok := d.GetOk("vpc_id"); ok {
 		input.Filters = append(input.Filters, newAttributeFilterList(
 			map[string]string{
 				"vpc-id": v.(string),
@@ -103,7 +103,7 @@ func resourceDefaultSecurityGroupCreate(ctx context.Context, d *schema.ResourceD
 	} else {
 		input.Filters = append(input.Filters, newAttributeFilterList(
 			map[string]string{
-				names.AttrDescription: "default group",
+				"description": "default group",
 			},
 		)...)
 	}

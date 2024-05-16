@@ -46,7 +46,7 @@ func (r *resourceSnapshotCopy) Metadata(_ context.Context, req resource.Metadata
 func (r *resourceSnapshotCopy) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrClusterIdentifier: schema.StringAttribute{
+			"cluster_identifier": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -58,7 +58,7 @@ func (r *resourceSnapshotCopy) Schema(ctx context.Context, req resource.SchemaRe
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrID: framework.IDAttribute(),
+			"id": framework.IDAttribute(),
 			"manual_snapshot_retention_period": schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
@@ -67,7 +67,7 @@ func (r *resourceSnapshotCopy) Schema(ctx context.Context, req resource.SchemaRe
 					int64planmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrRetentionPeriod: schema.Int64Attribute{
+			"retention_period": schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
@@ -213,8 +213,8 @@ func (r *resourceSnapshotCopy) Delete(ctx context.Context, req resource.DeleteRe
 }
 
 func (r *resourceSnapshotCopy) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), req.ID)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrClusterIdentifier), req.ID)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), req.ID)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("cluster_identifier"), req.ID)...)
 }
 
 func findSnapshotCopyByID(ctx context.Context, conn *redshift.Client, id string) (*awstypes.ClusterSnapshotCopyStatus, error) {

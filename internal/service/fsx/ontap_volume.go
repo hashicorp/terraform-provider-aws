@@ -10,7 +10,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -21,8 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -32,7 +29,7 @@ import (
 
 // @SDKResource("aws_fsx_ontap_volume", name="ONTAP Volume")
 // @Tags(identifierAttribute="arn")
-func resourceONTAPVolume() *schema.Resource {
+func ResourceONTAPVolume() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceONTAPVolumeCreate,
 		ReadWithoutTimeout:   resourceONTAPVolumeRead,
@@ -55,39 +52,7 @@ func resourceONTAPVolume() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"aggregate_configuration": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"aggregates": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-							MaxItems: 12,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile("^(aggr[0-9]{1,2})$"), "Each value must be in the format aggrX, where X is a number between 1 and the number of ha_pairs"),
-							},
-						},
-						"constituents_per_aggregate": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Computed:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.IntBetween(1, 200),
-						},
-						"total_constituents": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-					},
-				},
-			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -101,7 +66,7 @@ func resourceONTAPVolume() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			names.AttrFileSystemID: {
+			"file_system_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -114,7 +79,7 @@ func resourceONTAPVolume() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -133,19 +98,10 @@ func resourceONTAPVolume() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(fsx.StorageVirtualMachineRootVolumeSecurityStyle_Values(), false),
 			},
-			"size_in_bytes": {
-				Type:         nullable.TypeNullableInt,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: nullable.ValidateTypeStringNullableIntBetween(0, 22517998000000000),
-				ExactlyOneOf: []string{"size_in_bytes", "size_in_megabytes"},
-			},
 			"size_in_megabytes": {
 				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
+				Required:     true,
 				ValidateFunc: validation.IntBetween(0, 2147483647),
-				ExactlyOneOf: []string{"size_in_bytes", "size_in_megabytes"},
 			},
 			"skip_final_backup": {
 				Type:     schema.TypeBool,
@@ -171,13 +127,13 @@ func resourceONTAPVolume() *schema.Resource {
 							MaxItems:         1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrType: {
+									"type": {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Computed:     true,
 										ValidateFunc: validation.StringInSlice(fsx.AutocommitPeriodType_Values(), false),
 									},
-									names.AttrValue: {
+									"value": {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										ValidateFunc: validation.IntBetween(1, 65535),
@@ -191,7 +147,7 @@ func resourceONTAPVolume() *schema.Resource {
 							Default:      fsx.PrivilegedDeleteDisabled,
 							ValidateFunc: validation.StringInSlice(fsx.PrivilegedDelete_Values(), false),
 						},
-						names.AttrRetentionPeriod: {
+						"retention_period": {
 							Type:             schema.TypeList,
 							Optional:         true,
 							Computed:         true,
@@ -206,13 +162,13 @@ func resourceONTAPVolume() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												names.AttrType: {
+												"type": {
 													Type:         schema.TypeString,
 													Optional:     true,
 													Computed:     true,
 													ValidateFunc: validation.StringInSlice(fsx.RetentionPeriodType_Values(), false),
 												},
-												names.AttrValue: {
+												"value": {
 													Type:         schema.TypeInt,
 													Optional:     true,
 													ValidateFunc: validation.IntBetween(0, 65535),
@@ -227,13 +183,13 @@ func resourceONTAPVolume() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												names.AttrType: {
+												"type": {
 													Type:         schema.TypeString,
 													Optional:     true,
 													Computed:     true,
 													ValidateFunc: validation.StringInSlice(fsx.RetentionPeriodType_Values(), false),
 												},
-												names.AttrValue: {
+												"value": {
 													Type:         schema.TypeInt,
 													Optional:     true,
 													ValidateFunc: validation.IntBetween(0, 65535),
@@ -248,13 +204,13 @@ func resourceONTAPVolume() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												names.AttrType: {
+												"type": {
 													Type:         schema.TypeString,
 													Optional:     true,
 													Computed:     true,
 													ValidateFunc: validation.StringInSlice(fsx.RetentionPeriodType_Values(), false),
 												},
-												names.AttrValue: {
+												"value": {
 													Type:         schema.TypeInt,
 													Optional:     true,
 													ValidateFunc: validation.IntBetween(0, 65535),
@@ -305,10 +261,9 @@ func resourceONTAPVolume() *schema.Resource {
 						"cooling_period": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							Computed:     true,
 							ValidateFunc: validation.IntBetween(2, 183),
 						},
-						names.AttrName: {
+						"name": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -323,14 +278,7 @@ func resourceONTAPVolume() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"volume_style": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(fsx.VolumeStyle_Values(), false),
-			},
-			names.AttrVolumeType: {
+			"volume_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -338,6 +286,7 @@ func resourceONTAPVolume() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(fsx.VolumeType_Values(), false),
 			},
 		},
+
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
@@ -347,11 +296,8 @@ func resourceONTAPVolumeCreate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	ontapConfig := &fsx.CreateOntapVolumeConfiguration{
+		SizeInMegabytes:         aws.Int64(int64(d.Get("size_in_megabytes").(int))),
 		StorageVirtualMachineId: aws.String(d.Get("storage_virtual_machine_id").(string)),
-	}
-
-	if v, ok := d.GetOk("aggregate_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		ontapConfig.AggregateConfiguration = expandAggregateConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("copy_tags_to_backups"); ok {
@@ -370,14 +316,6 @@ func resourceONTAPVolumeCreate(ctx context.Context, d *schema.ResourceData, meta
 		ontapConfig.SecurityStyle = aws.String(v.(string))
 	}
 
-	if v, null, _ := nullable.Int(d.Get("size_in_bytes").(string)).ValueInt64(); !null && v > 0 {
-		ontapConfig.SizeInBytes = aws.Int64(v)
-	}
-
-	if v, ok := d.GetOk("size_in_megabytes"); ok {
-		ontapConfig.SizeInMegabytes = aws.Int64(int64(v.(int)))
-	}
-
 	if v, ok := d.GetOk("snaplock_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		ontapConfig.SnaplockConfiguration = expandCreateSnaplockConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
@@ -394,16 +332,12 @@ func resourceONTAPVolumeCreate(ctx context.Context, d *schema.ResourceData, meta
 		ontapConfig.TieringPolicy = expandTieringPolicy(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("volume_style"); ok {
-		ontapConfig.VolumeStyle = aws.String(v.(string))
-	}
-
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &fsx.CreateVolumeInput{
 		Name:               aws.String(name),
 		OntapConfiguration: ontapConfig,
 		Tags:               getTagsIn(ctx),
-		VolumeType:         aws.String(d.Get(names.AttrVolumeType).(string)),
+		VolumeType:         aws.String(d.Get("volume_type").(string)),
 	}
 
 	output, err := conn.CreateVolumeWithContext(ctx, input)
@@ -425,7 +359,7 @@ func resourceONTAPVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	volume, err := findONTAPVolumeByID(ctx, conn, d.Id())
+	volume, err := FindONTAPVolumeByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FSx for NetApp ONTAP Volume (%s) not found, removing from state", d.Id())
@@ -439,21 +373,13 @@ func resourceONTAPVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	ontapConfig := volume.OntapConfiguration
 
-	if ontapConfig.AggregateConfiguration != nil {
-		if err := d.Set("aggregate_configuration", []interface{}{flattenAggregateConfiguration(ontapConfig.AggregateConfiguration)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting aggregate_configuration: %s", err)
-		}
-	} else {
-		d.Set("aggregate_configuration", nil)
-	}
-	d.Set(names.AttrARN, volume.ResourceARN)
+	d.Set("arn", volume.ResourceARN)
 	d.Set("copy_tags_to_backups", ontapConfig.CopyTagsToBackups)
-	d.Set(names.AttrFileSystemID, volume.FileSystemId)
+	d.Set("file_system_id", volume.FileSystemId)
 	d.Set("junction_path", ontapConfig.JunctionPath)
-	d.Set(names.AttrName, volume.Name)
+	d.Set("name", volume.Name)
 	d.Set("ontap_volume_type", ontapConfig.OntapVolumeType)
 	d.Set("security_style", ontapConfig.SecurityStyle)
-	d.Set("size_in_bytes", flex.Int64ToStringValue(ontapConfig.SizeInBytes))
 	d.Set("size_in_megabytes", ontapConfig.SizeInMegabytes)
 	if ontapConfig.SnaplockConfiguration != nil {
 		if err := d.Set("snaplock_configuration", []interface{}{flattenSnaplockConfiguration(ontapConfig.SnaplockConfiguration)}); err != nil {
@@ -473,11 +399,7 @@ func resourceONTAPVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 		d.Set("tiering_policy", nil)
 	}
 	d.Set("uuid", ontapConfig.UUID)
-	d.Set("volume_style", ontapConfig.VolumeStyle)
-	d.Set(names.AttrVolumeType, volume.VolumeType)
-
-	// Volume tags aren't set in the Describe response.
-	// setTagsOut(ctx, volume.Tags)
+	d.Set("volume_type", volume.VolumeType)
 
 	return diags
 }
@@ -486,7 +408,7 @@ func resourceONTAPVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		ontapConfig := &fsx.UpdateOntapVolumeConfiguration{}
 
 		if d.HasChange("copy_tags_to_backups") {
@@ -499,12 +421,6 @@ func resourceONTAPVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		if d.HasChange("security_style") {
 			ontapConfig.SecurityStyle = aws.String(d.Get("security_style").(string))
-		}
-
-		if d.HasChange("size_in_bytes") {
-			if v, null, _ := nullable.Int(d.Get("size_in_bytes").(string)).ValueInt64(); !null && v > 0 {
-				ontapConfig.SizeInBytes = aws.Int64(v)
-			}
 		}
 
 		if d.HasChange("size_in_megabytes") {
@@ -584,54 +500,6 @@ func resourceONTAPVolumeDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func expandAggregateConfiguration(tfMap map[string]interface{}) *fsx.CreateAggregateConfiguration {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &fsx.CreateAggregateConfiguration{}
-
-	if v, ok := tfMap["aggregates"].([]interface{}); ok && v != nil {
-		apiObject.Aggregates = flex.ExpandStringList(v)
-	}
-
-	if v, ok := tfMap["constituents_per_aggregate"].(int); ok && v != 0 {
-		apiObject.ConstituentsPerAggregate = aws.Int64(int64(v))
-	}
-
-	return apiObject
-}
-
-func flattenAggregateConfiguration(apiObject *fsx.AggregateConfiguration) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	var aggregates int64
-
-	if v := apiObject.Aggregates; v != nil {
-		if v := aws.StringValueSlice(v); v != nil {
-			tfMap["aggregates"] = v
-			//Need to get the count of aggregates for calculating constituents_per_aggregate
-			aggregates = int64(len(v))
-		}
-	}
-
-	if v := apiObject.TotalConstituents; v != nil {
-		tfMap["total_constituents"] = aws.Int64Value(v)
-		//Since the api only returns totalConstituents, need to calculate the value of ConstituentsPerAggregate so state will be consistent with config
-		if aggregates != 0 {
-			tfMap["constituents_per_aggregate"] = aws.Int64Value(v) / aggregates
-		} else {
-			tfMap["constituents_per_aggregate"] = aws.Int64Value(v)
-		}
-	}
-
-	return tfMap
-}
-
 const minTieringPolicyCoolingPeriod = 2
 
 func expandTieringPolicy(tfMap map[string]interface{}) *fsx.TieringPolicy {
@@ -643,13 +511,11 @@ func expandTieringPolicy(tfMap map[string]interface{}) *fsx.TieringPolicy {
 
 	// Cooling period only accepts a minimum of 2 but int will return 0 not nil if unset.
 	// Therefore we only set it if it is 2 or more.
-	if tfMap[names.AttrName].(string) == fsx.TieringPolicyNameAuto || tfMap[names.AttrName].(string) == fsx.TieringPolicyNameSnapshotOnly {
-		if v, ok := tfMap["cooling_period"].(int); ok && v >= minTieringPolicyCoolingPeriod {
-			apiObject.CoolingPeriod = aws.Int64(int64(v))
-		}
+	if v, ok := tfMap["cooling_period"].(int); ok && v >= minTieringPolicyCoolingPeriod {
+		apiObject.CoolingPeriod = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
+	if v, ok := tfMap["name"].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
@@ -670,7 +536,7 @@ func flattenTieringPolicy(apiObject *fsx.TieringPolicy) map[string]interface{} {
 	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap[names.AttrName] = aws.StringValue(v)
+		tfMap["name"] = aws.StringValue(v)
 	}
 
 	return tfMap
@@ -695,7 +561,7 @@ func expandCreateSnaplockConfiguration(tfMap map[string]interface{}) *fsx.Create
 		apiObject.PrivilegedDelete = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrRetentionPeriod].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap["retention_period"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.RetentionPeriod = expandSnaplockRetentionPeriod(v[0].(map[string]interface{}))
 	}
 
@@ -729,7 +595,7 @@ func expandUpdateSnaplockConfiguration(tfMap map[string]interface{}) *fsx.Update
 		apiObject.PrivilegedDelete = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrRetentionPeriod].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap["retention_period"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.RetentionPeriod = expandSnaplockRetentionPeriod(v[0].(map[string]interface{}))
 	}
 
@@ -747,11 +613,11 @@ func expandAutocommitPeriod(tfMap map[string]interface{}) *fsx.AutocommitPeriod 
 
 	apiObject := &fsx.AutocommitPeriod{}
 
-	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
+	if v, ok := tfMap["type"].(string); ok && v != "" {
 		apiObject.Type = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrValue].(int); ok && v != 0 {
+	if v, ok := tfMap["value"].(int); ok && v != 0 {
 		apiObject.Value = aws.Int64(int64(v))
 	}
 
@@ -787,11 +653,11 @@ func expandRetentionPeriod(tfMap map[string]interface{}) *fsx.RetentionPeriod {
 
 	apiObject := &fsx.RetentionPeriod{}
 
-	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
+	if v, ok := tfMap["type"].(string); ok && v != "" {
 		apiObject.Type = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrValue].(int); ok && v != 0 {
+	if v, ok := tfMap["value"].(int); ok && v != 0 {
 		apiObject.Value = aws.Int64(int64(v))
 	}
 
@@ -818,7 +684,7 @@ func flattenSnaplockConfiguration(apiObject *fsx.SnaplockConfiguration) map[stri
 	}
 
 	if v := apiObject.RetentionPeriod; v != nil {
-		tfMap[names.AttrRetentionPeriod] = []interface{}{flattenSnaplockRetentionPeriod(v)}
+		tfMap["retention_period"] = []interface{}{flattenSnaplockRetentionPeriod(v)}
 	}
 
 	if v := apiObject.SnaplockType; v != nil {
@@ -840,11 +706,11 @@ func flattenAutocommitPeriod(apiObject *fsx.AutocommitPeriod) map[string]interfa
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Type; v != nil {
-		tfMap[names.AttrType] = aws.StringValue(v)
+		tfMap["type"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Value; v != nil {
-		tfMap[names.AttrValue] = aws.Int64Value(v)
+		tfMap["value"] = aws.Int64Value(v)
 	}
 
 	return tfMap
@@ -880,17 +746,17 @@ func flattenRetentionPeriod(apiObject *fsx.RetentionPeriod) map[string]interface
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Type; v != nil {
-		tfMap[names.AttrType] = aws.StringValue(v)
+		tfMap["type"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Value; v != nil {
-		tfMap[names.AttrValue] = aws.Int64Value(v)
+		tfMap["value"] = aws.Int64Value(v)
 	}
 
 	return tfMap
 }
 
-func findONTAPVolumeByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.Volume, error) {
+func FindONTAPVolumeByID(ctx context.Context, conn *fsx.FSx, id string) (*fsx.Volume, error) {
 	output, err := findVolumeByIDAndType(ctx, conn, id, fsx.VolumeTypeOntap)
 
 	if err != nil {

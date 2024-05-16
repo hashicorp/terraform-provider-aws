@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_lakeformation_data_lake_settings")
@@ -46,7 +45,7 @@ func DataSourceDataLakeSettings() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrCatalogID: {
+			"catalog_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -55,12 +54,12 @@ func DataSourceDataLakeSettings() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrPermissions: {
+						"permissions": {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						names.AttrPrincipal: {
+						"principal": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -72,12 +71,12 @@ func DataSourceDataLakeSettings() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrPermissions: {
+						"permissions": {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						names.AttrPrincipal: {
+						"principal": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -104,7 +103,7 @@ func dataSourceDataLakeSettingsRead(ctx context.Context, d *schema.ResourceData,
 
 	input := &lakeformation.GetDataLakeSettingsInput{}
 
-	if v, ok := d.GetOk(names.AttrCatalogID); ok {
+	if v, ok := d.GetOk("catalog_id"); ok {
 		input.CatalogId = aws.String(v.(string))
 	}
 	d.SetId(fmt.Sprintf("%d", create.StringHashcode(prettify(input))))

@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_memorydb_subnet_group")
@@ -23,25 +22,25 @@ func DataSourceSubnetGroup() *schema.Resource {
 		ReadWithoutTimeout: dataSourceSubnetGroupRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrSubnetIDs: {
+			"subnet_ids": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			names.AttrVPCID: {
+			"tags": tftags.TagsSchemaComputed(),
+			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -55,7 +54,7 @@ func dataSourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 
 	group, err := FindSubnetGroupByName(ctx, conn, name)
 
@@ -70,19 +69,19 @@ func dataSourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 		subnetIds = append(subnetIds, subnet.Identifier)
 	}
 
-	d.Set(names.AttrARN, group.ARN)
-	d.Set(names.AttrDescription, group.Description)
-	d.Set(names.AttrSubnetIDs, flex.FlattenStringSet(subnetIds))
-	d.Set(names.AttrName, group.Name)
-	d.Set(names.AttrVPCID, group.VpcId)
+	d.Set("arn", group.ARN)
+	d.Set("description", group.Description)
+	d.Set("subnet_ids", flex.FlattenStringSet(subnetIds))
+	d.Set("name", group.Name)
+	d.Set("vpc_id", group.VpcId)
 
-	tags, err := listTags(ctx, conn, d.Get(names.AttrARN).(string))
+	tags, err := listTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for MemoryDB Subnet Group (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

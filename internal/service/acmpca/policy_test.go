@@ -31,7 +31,7 @@ func TestAccACMPCAPolicy_basic(t *testing.T) {
 				Config: testAccPolicyConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
+					resource.TestCheckResourceAttrSet(resourceName, "policy"),
 				),
 			},
 			{

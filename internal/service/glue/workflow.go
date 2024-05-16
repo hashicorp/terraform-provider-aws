@@ -38,7 +38,7 @@ func ResourceWorkflow() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -47,7 +47,7 @@ func ResourceWorkflow() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -55,7 +55,7 @@ func ResourceWorkflow() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -71,7 +71,7 @@ func resourceWorkflowCreate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &glue.CreateWorkflowInput{
 		Name: aws.String(name),
 		Tags: getTagsIn(ctx),
@@ -81,7 +81,7 @@ func resourceWorkflowCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.DefaultRunProperties = flex.ExpandStringMap(kv.(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -132,14 +132,14 @@ func resourceWorkflowRead(ctx context.Context, d *schema.ResourceData, meta inte
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("workflow/%s", d.Id()),
 	}.String()
-	d.Set(names.AttrARN, workFlowArn)
+	d.Set("arn", workFlowArn)
 
 	if err := d.Set("default_run_properties", aws.StringValueMap(workflow.DefaultRunProperties)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting default_run_properties: %s", err)
 	}
-	d.Set(names.AttrDescription, workflow.Description)
+	d.Set("description", workflow.Description)
 	d.Set("max_concurrent_runs", workflow.MaxConcurrentRuns)
-	d.Set(names.AttrName, workflow.Name)
+	d.Set("name", workflow.Name)
 
 	return diags
 }
@@ -148,16 +148,16 @@ func resourceWorkflowUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
-	if d.HasChanges("default_run_properties", names.AttrDescription, "max_concurrent_runs") {
+	if d.HasChanges("default_run_properties", "description", "max_concurrent_runs") {
 		input := &glue.UpdateWorkflowInput{
-			Name: aws.String(d.Get(names.AttrName).(string)),
+			Name: aws.String(d.Get("name").(string)),
 		}
 
 		if kv, ok := d.GetOk("default_run_properties"); ok {
 			input.DefaultRunProperties = flex.ExpandStringMap(kv.(map[string]interface{}))
 		}
 
-		if v, ok := d.GetOk(names.AttrDescription); ok {
+		if v, ok := d.GetOk("description"); ok {
 			input.Description = aws.String(v.(string))
 		}
 

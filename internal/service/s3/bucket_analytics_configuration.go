@@ -22,7 +22,6 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_s3_bucket_analytics_configuration", name="Bucket Analytics Configuration")
@@ -38,23 +37,23 @@ func resourceBucketAnalyticsConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrBucket: {
+			"bucket": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrFilter: {
+			"filter": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrPrefix: {
+						"prefix": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							AtLeastOneOf: []string{"filter.0.prefix", "filter.0.tags"},
 						},
-						names.AttrTags: {
+						"tags": {
 							Type:         schema.TypeMap,
 							Optional:     true,
 							Elem:         &schema.Schema{Type: schema.TypeString},
@@ -63,7 +62,7 @@ func resourceBucketAnalyticsConfiguration() *schema.Resource {
 					},
 				},
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -86,7 +85,7 @@ func resourceBucketAnalyticsConfiguration() *schema.Resource {
 										Default:          types.StorageClassAnalysisSchemaVersionV1,
 										ValidateDiagFunc: enum.Validate[types.StorageClassAnalysisSchemaVersion](),
 									},
-									names.AttrDestination: {
+									"destination": {
 										Type:     schema.TypeList,
 										Required: true,
 										MaxItems: 1,
@@ -108,13 +107,13 @@ func resourceBucketAnalyticsConfiguration() *schema.Resource {
 																Optional:     true,
 																ValidateFunc: verify.ValidAccountID,
 															},
-															names.AttrFormat: {
+															"format": {
 																Type:             schema.TypeString,
 																Optional:         true,
 																Default:          types.AnalyticsS3ExportFileFormatCsv,
 																ValidateDiagFunc: enum.Validate[types.AnalyticsS3ExportFileFormat](),
 															},
-															names.AttrPrefix: {
+															"prefix": {
 																Type:     schema.TypeString,
 																Optional: true,
 															},
@@ -138,17 +137,17 @@ func resourceBucketAnalyticsConfigurationPut(ctx context.Context, d *schema.Reso
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	analyticsConfiguration := &types.AnalyticsConfiguration{
 		Id:                   aws.String(name),
 		StorageClassAnalysis: expandStorageClassAnalysis(d.Get("storage_class_analysis").([]interface{})),
 	}
 
-	if v, ok := d.GetOk(names.AttrFilter); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk("filter"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		analyticsConfiguration.Filter = expandAnalyticsFilter(ctx, v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	bucket := d.Get(names.AttrBucket).(string)
+	bucket := d.Get("bucket").(string)
 	input := &s3.PutBucketAnalyticsConfigurationInput{
 		Bucket:                 aws.String(bucket),
 		Id:                     aws.String(name),
@@ -203,11 +202,11 @@ func resourceBucketAnalyticsConfigurationRead(ctx context.Context, d *schema.Res
 		return diag.Errorf("reading S3 Bucket Analytics Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrBucket, bucket)
-	if err := d.Set(names.AttrFilter, flattenAnalyticsFilter(ctx, ac.Filter)); err != nil {
+	d.Set("bucket", bucket)
+	if err := d.Set("filter", flattenAnalyticsFilter(ctx, ac.Filter)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting filter: %s", err)
 	}
-	d.Set(names.AttrName, name)
+	d.Set("name", name)
 	if err = d.Set("storage_class_analysis", flattenStorageClassAnalysis(ac.StorageClassAnalysis)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting storage_class_analysis: %s", err)
 	}
@@ -261,12 +260,12 @@ func BucketAnalyticsConfigurationParseID(id string) (string, string, error) {
 
 func expandAnalyticsFilter(ctx context.Context, m map[string]interface{}) types.AnalyticsFilter {
 	var prefix string
-	if v, ok := m[names.AttrPrefix]; ok {
+	if v, ok := m["prefix"]; ok {
 		prefix = v.(string)
 	}
 
 	var tags []types.Tag
-	if v, ok := m[names.AttrTags]; ok {
+	if v, ok := m["tags"]; ok {
 		tags = Tags(tftags.New(ctx, v).IgnoreAWS())
 	}
 
@@ -320,7 +319,7 @@ func expandStorageClassAnalysis(l []interface{}) *types.StorageClassAnalysis {
 				dataExport.OutputSchemaVersion = types.StorageClassAnalysisSchemaVersion(v.(string))
 			}
 
-			dataExport.Destination = expandAnalyticsExportDestination(bar[names.AttrDestination].([]interface{}))
+			dataExport.Destination = expandAnalyticsExportDestination(bar["destination"].([]interface{}))
 		}
 	}
 
@@ -343,13 +342,13 @@ func expandAnalyticsS3BucketDestination(bdl []interface{}) *types.AnalyticsS3Buc
 	if len(bdl) != 0 && bdl[0] != nil {
 		bdm := bdl[0].(map[string]interface{})
 		result.Bucket = aws.String(bdm["bucket_arn"].(string))
-		result.Format = types.AnalyticsS3ExportFileFormat(bdm[names.AttrFormat].(string))
+		result.Format = types.AnalyticsS3ExportFileFormat(bdm["format"].(string))
 
 		if v, ok := bdm["bucket_account_id"]; ok && v != "" {
 			result.BucketAccountId = aws.String(v.(string))
 		}
 
-		if v, ok := bdm[names.AttrPrefix]; ok && v != "" {
+		if v, ok := bdm["prefix"]; ok && v != "" {
 			result.Prefix = aws.String(v.(string))
 		}
 	}
@@ -363,18 +362,18 @@ func flattenAnalyticsFilter(ctx context.Context, analyticsFilter types.Analytics
 	switch v := analyticsFilter.(type) {
 	case *types.AnalyticsFilterMemberAnd:
 		if v := v.Value.Prefix; v != nil {
-			result[names.AttrPrefix] = aws.ToString(v)
+			result["prefix"] = aws.ToString(v)
 		}
 		if v := v.Value.Tags; v != nil {
-			result[names.AttrTags] = keyValueTags(ctx, v).IgnoreAWS().Map()
+			result["tags"] = keyValueTags(ctx, v).IgnoreAWS().Map()
 		}
 	case *types.AnalyticsFilterMemberPrefix:
-		result[names.AttrPrefix] = v.Value
+		result["prefix"] = v.Value
 	case *types.AnalyticsFilterMemberTag:
 		tags := []types.Tag{
 			v.Value,
 		}
-		result[names.AttrTags] = keyValueTags(ctx, tags).IgnoreAWS().Map()
+		result["tags"] = keyValueTags(ctx, tags).IgnoreAWS().Map()
 	default:
 		return nil
 	}
@@ -392,7 +391,7 @@ func flattenStorageClassAnalysis(storageClassAnalysis *types.StorageClassAnalysi
 		"output_schema_version": dataExport.OutputSchemaVersion,
 	}
 	if dataExport.Destination != nil {
-		de[names.AttrDestination] = flattenAnalyticsExportDestination(dataExport.Destination)
+		de["destination"] = flattenAnalyticsExportDestination(dataExport.Destination)
 	}
 	result := map[string]interface{}{
 		"data_export": []interface{}{de},
@@ -419,14 +418,14 @@ func flattenAnalyticsS3BucketDestination(bucketDestination *types.AnalyticsS3Buc
 	}
 
 	result := map[string]interface{}{
-		"bucket_arn":     aws.ToString(bucketDestination.Bucket),
-		names.AttrFormat: bucketDestination.Format,
+		"bucket_arn": aws.ToString(bucketDestination.Bucket),
+		"format":     bucketDestination.Format,
 	}
 	if bucketDestination.BucketAccountId != nil {
 		result["bucket_account_id"] = aws.ToString(bucketDestination.BucketAccountId)
 	}
 	if bucketDestination.Prefix != nil {
-		result[names.AttrPrefix] = aws.ToString(bucketDestination.Prefix)
+		result["prefix"] = aws.ToString(bucketDestination.Prefix)
 	}
 
 	return []interface{}{result}

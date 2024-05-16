@@ -39,17 +39,17 @@ func ResourceTransitGatewayPolicyTable() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrState: {
+			"state": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrTransitGatewayID: {
+			"transit_gateway_id": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -63,7 +63,7 @@ func resourceTransitGatewayPolicyTableCreate(ctx context.Context, d *schema.Reso
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	transitGatewayID := d.Get(names.AttrTransitGatewayID).(string)
+	transitGatewayID := d.Get("transit_gateway_id").(string)
 	input := &ec2.CreateTransitGatewayPolicyTableInput{
 		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeTransitGatewayPolicyTable),
 		TransitGatewayId:  aws.String(transitGatewayID),
@@ -108,9 +108,9 @@ func resourceTransitGatewayPolicyTableRead(ctx context.Context, d *schema.Resour
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("transit-gateway-policy-table/%s", d.Id()),
 	}.String()
-	d.Set(names.AttrARN, arn)
-	d.Set(names.AttrState, transitGatewayPolicyTable.State)
-	d.Set(names.AttrTransitGatewayID, transitGatewayPolicyTable.TransitGatewayId)
+	d.Set("arn", arn)
+	d.Set("state", transitGatewayPolicyTable.State)
+	d.Set("transit_gateway_id", transitGatewayPolicyTable.TransitGatewayId)
 
 	setTagsOut(ctx, transitGatewayPolicyTable.Tags)
 

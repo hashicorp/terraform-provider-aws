@@ -54,8 +54,8 @@ func TestAccSiteVPNGateway_basic(t *testing.T) {
 				Config: testAccSiteVPNGatewayConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNGatewayExists(ctx, resourceName, &v1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpn-gateway/vgw-.+`)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`vpn-gateway/vgw-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -91,14 +91,14 @@ func TestAccSiteVPNGateway_withAvailabilityZoneSetToState(t *testing.T) {
 				Config: testAccSiteVPNGatewayConfig_az(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNGatewayExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrAvailabilityZone, azDataSourceName, "names.0"),
+					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", azDataSourceName, "names.0"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrAvailabilityZone},
+				ImportStateVerifyIgnore: []string{"availability_zone"},
 			},
 		},
 	})
@@ -261,11 +261,11 @@ func TestAccSiteVPNGateway_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckVPNGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNGatewayConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccSiteVPNGatewayConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNGatewayExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -274,20 +274,20 @@ func TestAccSiteVPNGateway_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSiteVPNGatewayConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccSiteVPNGatewayConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNGatewayExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccSiteVPNGatewayConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccSiteVPNGatewayConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNGatewayExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},

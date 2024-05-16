@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_dx_gateway")
@@ -26,7 +25,7 @@ func DataSourceGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -41,7 +40,7 @@ func DataSourceGateway() *schema.Resource {
 func dataSourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 
 	gateways := make([]*directconnect.Gateway, 0)
 	// DescribeDirectConnectGatewaysInput does not have a name parameter for filtering

@@ -61,7 +61,7 @@ The following arguments are required:
 * `tableCatalogId` - (Required) The ID of the Data Catalog.
 * `tableName` - (Required) The name of the table.
 * `columnNames` - (Optional) A list of column names and/or nested column attributes.
-* `columnWildcard` - (Optional) A wildcard with exclusions. See [Column Wildcard](#column-wildcard) below for details.
+* `conlumn_wildcard` - (Optional) A wildcard with exclusions. See [Column Wildcard](#column-wildcard) below for details.
 * `rowFilter` - (Optional) A PartiQL predicate. See [Row Filter](#row-filter) below for details.
 * `versionId` - (Optional) ID of the data cells filter version.
 
@@ -118,4 +118,4 @@ Using `terraform import`, import Lake Formation Data Cells Filter using the `id`
 % terraform import aws_lakeformation_data_cells_filter.example database_name,name,table_catalog_id,table_name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-90a60f5519ebcb7059d4d20667167c76c44a101f6078b3622f7b7f6e54918452 -->
+<!-- cache-key: cdktf-0.20.1 input-cd16d0d38f027596ffc8e33175b92cbae310a9cd530793de889399282c9e67b2 -->

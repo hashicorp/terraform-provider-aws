@@ -8,14 +8,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/eventbridge"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfevents "github.com/hashicorp/terraform-provider-aws/internal/service/events"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -35,10 +35,10 @@ func TestAccEventsArchive_basic(t *testing.T) {
 				Config: testAccArchiveConfig_basic(archiveName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckArchiveExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, archiveName),
-					resource.TestCheckResourceAttr(resourceName, "retention_days", acctest.Ct0),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "events", fmt.Sprintf("archive/%s", archiveName)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, "name", archiveName),
+					resource.TestCheckResourceAttr(resourceName, "retention_days", "0"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "events", fmt.Sprintf("archive/%s", archiveName)),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "event_pattern", ""),
 				),
 			},
@@ -75,7 +75,7 @@ func TestAccEventsArchive_update(t *testing.T) {
 					testAccCheckArchiveExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "retention_days", "7"),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "event_pattern", "{\"source\":[\"company.team.service\"]}"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
+					resource.TestCheckResourceAttr(resourceName, "description", "test"),
 				),
 			},
 		},
@@ -108,24 +108,22 @@ func TestAccEventsArchive_disappears(t *testing.T) {
 
 func testAccCheckArchiveDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_event_archive" {
 				continue
 			}
 
-			_, err := tfevents.FindArchiveByName(ctx, conn, rs.Primary.ID)
-
-			if tfresource.NotFound(err) {
-				continue
+			params := eventbridge.DescribeArchiveInput{
+				ArchiveName: aws.String(rs.Primary.ID),
 			}
 
-			if err != nil {
-				return err
-			}
+			resp, err := conn.DescribeArchiveWithContext(ctx, &params)
 
-			return fmt.Errorf("EventBridge Archive %s still exists", rs.Primary.ID)
+			if err == nil {
+				return fmt.Errorf("EventBridge event bus (%s) still exists: %s", rs.Primary.ID, resp)
+			}
 		}
 
 		return nil
@@ -139,15 +137,21 @@ func testAccCheckArchiveExists(ctx context.Context, n string, v *eventbridge.Des
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn(ctx)
+		params := eventbridge.DescribeArchiveInput{
+			ArchiveName: aws.String(rs.Primary.ID),
+		}
 
-		output, err := tfevents.FindArchiveByName(ctx, conn, rs.Primary.ID)
-
+		resp, err := conn.DescribeArchiveWithContext(ctx, &params)
 		if err != nil {
 			return err
 		}
 
-		*v = *output
+		if resp == nil {
+			return fmt.Errorf("EventBridge archive (%s) not found", n)
+		}
+
+		*v = *resp
 
 		return nil
 	}
@@ -169,10 +173,10 @@ func TestAccEventsArchive_retentionSetOnCreation(t *testing.T) {
 				Config: testAccArchiveConfig_retentionOnCreation(archiveName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckArchiveExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, archiveName),
-					resource.TestCheckResourceAttr(resourceName, "retention_days", acctest.Ct1),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "events", fmt.Sprintf("archive/%s", archiveName)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, "name", archiveName),
+					resource.TestCheckResourceAttr(resourceName, "retention_days", "1"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "events", fmt.Sprintf("archive/%s", archiveName)),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "event_pattern", ""),
 				),
 			},

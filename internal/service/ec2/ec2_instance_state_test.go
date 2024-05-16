@@ -33,8 +33,8 @@ func TestAccEC2InstanceState_basic(t *testing.T) {
 				Config: testAccInstanceStateConfig_basic(state, force),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceStateExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
-					resource.TestCheckResourceAttr(resourceName, names.AttrState, state),
+					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
+					resource.TestCheckResourceAttr(resourceName, "state", state),
 				),
 			},
 		},
@@ -58,8 +58,8 @@ func TestAccEC2InstanceState_state(t *testing.T) {
 				Config: testAccInstanceStateConfig_basic(stateStopped, force),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceStateExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
-					resource.TestCheckResourceAttr(resourceName, names.AttrState, stateStopped),
+					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
+					resource.TestCheckResourceAttr(resourceName, "state", stateStopped),
 				),
 			},
 			{
@@ -71,8 +71,8 @@ func TestAccEC2InstanceState_state(t *testing.T) {
 				Config: testAccInstanceStateConfig_basic(stateRunning, force),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceStateExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
-					resource.TestCheckResourceAttr(resourceName, names.AttrState, stateRunning),
+					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
+					resource.TestCheckResourceAttr(resourceName, "state", stateRunning),
 				),
 			},
 		},

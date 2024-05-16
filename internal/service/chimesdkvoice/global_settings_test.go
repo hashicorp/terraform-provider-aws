@@ -26,9 +26,9 @@ func TestAccChimeSDKVoiceGlobalSettings_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic: testAccGlobalSettings_basic,
-		"disappears":    testAccGlobalSettings_disappears,
-		"update":        testAccGlobalSettings_update,
+		"basic":      testAccGlobalSettings_basic,
+		"disappears": testAccGlobalSettings_disappears,
+		"update":     testAccGlobalSettings_update,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -49,7 +49,7 @@ func testAccGlobalSettings_basic(t *testing.T) {
 			{
 				Config: testAccGlobalSettingsConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "voice_connector.0.cdr_bucket", bucketResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "voice_connector.0.cdr_bucket", bucketResourceName, "id"),
 				),
 			},
 			{
@@ -102,7 +102,7 @@ func testAccGlobalSettings_update(t *testing.T) {
 			{
 				Config: testAccGlobalSettingsConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "voice_connector.0.cdr_bucket", bucketResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "voice_connector.0.cdr_bucket", bucketResourceName, "id"),
 				),
 			},
 			// Note: due to eventual consistency, the read after update can occasionally
@@ -111,7 +111,7 @@ func testAccGlobalSettings_update(t *testing.T) {
 			{
 				Config: testAccGlobalSettingsConfig_basic(rNameUpdated),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "voice_connector.0.cdr_bucket", bucketResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "voice_connector.0.cdr_bucket", bucketResourceName, "id"),
 				),
 			},
 		},

@@ -39,20 +39,20 @@ func ResourceTrafficMirrorSession() *schema.Resource {
 
 		CustomizeDiff: verify.SetTagsDiff,
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			names.AttrNetworkInterfaceID: {
+			"network_interface_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrOwnerID: {
+			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -91,13 +91,13 @@ func resourceTrafficMirrorSessionCreate(ctx context.Context, d *schema.ResourceD
 
 	input := &ec2.CreateTrafficMirrorSessionInput{
 		ClientToken:           aws.String(id.UniqueId()),
-		NetworkInterfaceId:    aws.String(d.Get(names.AttrNetworkInterfaceID).(string)),
+		NetworkInterfaceId:    aws.String(d.Get("network_interface_id").(string)),
 		TagSpecifications:     getTagSpecificationsIn(ctx, ec2.ResourceTypeTrafficMirrorSession),
 		TrafficMirrorFilterId: aws.String(d.Get("traffic_mirror_filter_id").(string)),
 		TrafficMirrorTargetId: aws.String(d.Get("traffic_mirror_target_id").(string)),
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -148,10 +148,10 @@ func resourceTrafficMirrorSessionRead(ctx context.Context, d *schema.ResourceDat
 		AccountID: ownerID,
 		Resource:  fmt.Sprintf("traffic-mirror-session/%s", d.Id()),
 	}.String()
-	d.Set(names.AttrARN, arn)
-	d.Set(names.AttrDescription, session.Description)
-	d.Set(names.AttrNetworkInterfaceID, session.NetworkInterfaceId)
-	d.Set(names.AttrOwnerID, ownerID)
+	d.Set("arn", arn)
+	d.Set("description", session.Description)
+	d.Set("network_interface_id", session.NetworkInterfaceId)
+	d.Set("owner_id", ownerID)
 	d.Set("packet_length", session.PacketLength)
 	d.Set("session_number", session.SessionNumber)
 	d.Set("traffic_mirror_filter_id", session.TrafficMirrorFilterId)
@@ -167,7 +167,7 @@ func resourceTrafficMirrorSessionUpdate(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &ec2.ModifyTrafficMirrorSessionInput{
 			TrafficMirrorSessionId: aws.String(d.Id()),
 		}
@@ -186,8 +186,8 @@ func resourceTrafficMirrorSessionUpdate(ctx context.Context, d *schema.ResourceD
 
 		var removeFields []string
 
-		if d.HasChange(names.AttrDescription) {
-			if v := d.Get(names.AttrDescription).(string); v != "" {
+		if d.HasChange("description") {
+			if v := d.Get("description").(string); v != "" {
 				input.Description = aws.String(v)
 			} else {
 				removeFields = append(removeFields, ec2.TrafficMirrorSessionFieldDescription)

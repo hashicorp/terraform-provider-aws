@@ -39,7 +39,7 @@ func TestAccVPCPeeringConnection_basic(t *testing.T) {
 				Config: testAccVPCPeeringConnectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCPeeringConnectionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -91,11 +91,11 @@ func TestAccVPCPeeringConnection_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckVPCDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCPeeringConnectionConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccVPCPeeringConnectionConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCPeeringConnectionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -107,20 +107,20 @@ func TestAccVPCPeeringConnection_tags(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccVPCPeeringConnectionConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccVPCPeeringConnectionConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCPeeringConnectionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccVPCPeeringConnectionConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccVPCPeeringConnectionConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCPeeringConnectionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -163,7 +163,7 @@ func TestAccVPCPeeringConnection_options(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"requester.#",
-						acctest.Ct1,
+						"1",
 					),
 					resource.TestCheckResourceAttr(
 						resourceName,
@@ -174,7 +174,7 @@ func TestAccVPCPeeringConnection_options(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"accepter.#",
-						acctest.Ct1,
+						"1",
 					),
 					resource.TestCheckResourceAttr(
 						resourceName,
@@ -203,7 +203,7 @@ func TestAccVPCPeeringConnection_options(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"requester.#",
-						acctest.Ct1,
+						"1",
 					),
 					resource.TestCheckResourceAttr(
 						resourceName,
@@ -214,7 +214,7 @@ func TestAccVPCPeeringConnection_options(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"accepter.#",
-						acctest.Ct1,
+						"1",
 					),
 					resource.TestCheckResourceAttr(
 						resourceName,

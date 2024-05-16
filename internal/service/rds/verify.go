@@ -5,7 +5,6 @@ package rds
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // compareActualEngineVersion sets engine version related attributes
@@ -33,5 +32,5 @@ func compareActualEngineVersion(d *schema.ResourceData, oldVersion, newVersion, 
 		return
 	}
 
-	d.Set(names.AttrEngineVersion, newVersion)
+	d.Set("engine_version", newVersion)
 }

@@ -41,7 +41,7 @@ func resourceEnvironmentEC2() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -58,7 +58,7 @@ func resourceEnvironmentEC2() *schema.Resource {
 				Default:          types.ConnectionTypeConnectSsh,
 				ValidateDiagFunc: enum.Validate[types.ConnectionType](),
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 200),
@@ -80,12 +80,12 @@ func resourceEnvironmentEC2() *schema.Resource {
 					"resolve:ssm:/aws/service/cloud9/amis/ubuntu-22.04-x86_64",
 				}, false),
 			},
-			names.AttrInstanceType: {
+			"instance_type": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 60),
@@ -97,14 +97,14 @@ func resourceEnvironmentEC2() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			names.AttrSubnetID: {
+			"subnet_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrType: {
+			"type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -118,12 +118,12 @@ func resourceEnvironmentEC2Create(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Cloud9Client(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &cloud9.CreateEnvironmentEC2Input{
 		ClientRequestToken: aws.String(id.UniqueId()),
 		ConnectionType:     types.ConnectionType(d.Get("connection_type").(string)),
 		ImageId:            aws.String(d.Get("image_id").(string)),
-		InstanceType:       aws.String(d.Get(names.AttrInstanceType).(string)),
+		InstanceType:       aws.String(d.Get("instance_type").(string)),
 		Name:               aws.String(name),
 		Tags:               getTagsIn(ctx),
 	}
@@ -132,7 +132,7 @@ func resourceEnvironmentEC2Create(ctx context.Context, d *schema.ResourceData, m
 		input.AutomaticStopTimeMinutes = aws.Int32(int32(v.(int)))
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -140,7 +140,7 @@ func resourceEnvironmentEC2Create(ctx context.Context, d *schema.ResourceData, m
 		input.OwnerArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrSubnetID); ok {
+	if v, ok := d.GetOk("subnet_id"); ok {
 		input.SubnetId = aws.String(v.(string))
 	}
 
@@ -177,12 +177,12 @@ func resourceEnvironmentEC2Read(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading Cloud9 EC2 Environment (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, env.Arn)
+	d.Set("arn", env.Arn)
 	d.Set("connection_type", env.ConnectionType)
-	d.Set(names.AttrDescription, env.Description)
-	d.Set(names.AttrName, env.Name)
+	d.Set("description", env.Description)
+	d.Set("name", env.Name)
 	d.Set("owner_arn", env.OwnerArn)
-	d.Set(names.AttrType, env.Type)
+	d.Set("type", env.Type)
 
 	return diags
 }
@@ -191,11 +191,11 @@ func resourceEnvironmentEC2Update(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Cloud9Client(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := cloud9.UpdateEnvironmentInput{
-			Description:   aws.String(d.Get(names.AttrDescription).(string)),
+			Description:   aws.String(d.Get("description").(string)),
 			EnvironmentId: aws.String(d.Id()),
-			Name:          aws.String(d.Get(names.AttrName).(string)),
+			Name:          aws.String(d.Get("name").(string)),
 		}
 
 		_, err := conn.UpdateEnvironment(ctx, &input)

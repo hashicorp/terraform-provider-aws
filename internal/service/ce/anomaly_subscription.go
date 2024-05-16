@@ -5,60 +5,49 @@ package ce
 
 import (
 	"context"
-	"log"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/costexplorer"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/costexplorer/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/costexplorer"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const (
-	anomalySubscriptionRootElementSchemaLevel = 2
-)
-
 // @SDKResource("aws_ce_anomaly_subscription", name="Anomaly Subscription")
 // @Tags(identifierAttribute="id")
-func resourceAnomalySubscription() *schema.Resource {
+func ResourceAnomalySubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAnomalySubscriptionCreate,
 		ReadWithoutTimeout:   resourceAnomalySubscriptionRead,
 		UpdateWithoutTimeout: resourceAnomalySubscriptionUpdate,
 		DeleteWithoutTimeout: resourceAnomalySubscriptionDelete,
-
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-
 		Schema: map[string]*schema.Schema{
-			names.AttrAccountID: {
+			"account_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"frequency": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.AnomalySubscriptionFrequency](),
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(costexplorer.AnomalySubscriptionFrequency_Values(), false),
 			},
 			"monitor_arn_list": {
 				Type:     schema.TypeList,
@@ -68,7 +57,7 @@ func resourceAnomalySubscription() *schema.Resource {
 					ValidateFunc: verify.ValidARN,
 				},
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -81,27 +70,27 @@ func resourceAnomalySubscription() *schema.Resource {
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrAddress: {
+						"address": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.SubscriberType](),
+						"type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(costexplorer.SubscriberType_Values(), false),
 						},
 					},
 				},
 			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"threshold_expression": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Computed: true,
 				Optional: true,
-				Elem:     expressionElem(anomalySubscriptionRootElementSchemaLevel),
+				Elem:     schemaCostCategoryRule(),
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -110,62 +99,68 @@ func resourceAnomalySubscription() *schema.Resource {
 
 func resourceAnomalySubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CEClient(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	conn := meta.(*conns.AWSClient).CEConn(ctx)
+
 	input := &costexplorer.CreateAnomalySubscriptionInput{
-		AnomalySubscription: &awstypes.AnomalySubscription{
-			Frequency:        awstypes.AnomalySubscriptionFrequency(d.Get("frequency").(string)),
-			MonitorArnList:   flex.ExpandStringValueList(d.Get("monitor_arn_list").([]interface{})),
-			Subscribers:      expandSubscribers(d.Get("subscriber").(*schema.Set).List()),
-			SubscriptionName: aws.String(name),
+		AnomalySubscription: &costexplorer.AnomalySubscription{
+			SubscriptionName: aws.String(d.Get("name").(string)),
+			Frequency:        aws.String(d.Get("frequency").(string)),
+			MonitorArnList:   aws.StringSlice(expandAnomalySubscriptionMonitorARNList(d.Get("monitor_arn_list").([]interface{}))),
+			Subscribers:      expandAnomalySubscriptionSubscribers(d.Get("subscriber").(*schema.Set).List()),
 		},
 		ResourceTags: getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk(names.AttrAccountID); ok {
+	if v, ok := d.GetOk("account_id"); ok {
 		input.AnomalySubscription.AccountId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("threshold_expression"); ok {
-		input.AnomalySubscription.ThresholdExpression = expandExpression(v.([]interface{})[0].(map[string]interface{}))
+		input.AnomalySubscription.ThresholdExpression = expandCostExpression(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	output, err := conn.CreateAnomalySubscription(ctx, input)
+	resp, err := conn.CreateAnomalySubscriptionWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Cost Explorer Anomaly Subscription (%s): %s", name, err)
+		return create.AppendDiagError(diags, names.CE, create.ErrActionCreating, ResNameAnomalySubscription, d.Id(), err)
 	}
 
-	d.SetId(aws.ToString(output.SubscriptionArn))
+	if resp == nil || resp.SubscriptionArn == nil {
+		return sdkdiag.AppendErrorf(diags, "creating Cost Explorer Anomaly Subscription resource (%s): empty output", d.Get("name").(string))
+	}
+
+	d.SetId(aws.StringValue(resp.SubscriptionArn))
 
 	return append(diags, resourceAnomalySubscriptionRead(ctx, d, meta)...)
 }
 
 func resourceAnomalySubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CEClient(ctx)
 
-	subscription, err := findAnomalySubscriptionByARN(ctx, conn, d.Id())
+	conn := meta.(*conns.AWSClient).CEConn(ctx)
+
+	subscription, err := FindAnomalySubscriptionByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Cost Explorer Anomaly Subscription (%s) not found, removing from state", d.Id())
+		create.LogNotFoundRemoveState(names.CE, create.ErrActionReading, ResNameAnomalySubscription, d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Cost Explorer Anomaly Subscription (%s): %s", d.Id(), err)
+		return create.AppendDiagError(diags, names.CE, create.ErrActionReading, ResNameAnomalySubscription, d.Id(), err)
 	}
 
-	d.Set(names.AttrAccountID, subscription.AccountId)
-	d.Set(names.AttrARN, subscription.SubscriptionArn)
+	d.Set("account_id", subscription.AccountId)
+	d.Set("arn", subscription.SubscriptionArn)
 	d.Set("frequency", subscription.Frequency)
 	d.Set("monitor_arn_list", subscription.MonitorArnList)
-	d.Set(names.AttrName, subscription.SubscriptionName)
-	d.Set("subscriber", flattenSubscribers(subscription.Subscribers))
-	if err := d.Set("threshold_expression", []interface{}{flattenExpression(subscription.ThresholdExpression)}); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting threshold_expression: %s", err)
+	d.Set("subscriber", flattenAnomalySubscriptionSubscribers(subscription.Subscribers))
+	d.Set("name", subscription.SubscriptionName)
+
+	if err = d.Set("threshold_expression", []interface{}{flattenCostCategoryRuleExpression(subscription.ThresholdExpression)}); err != nil {
+		return create.AppendDiagError(diags, names.CE, "setting threshold_expression", ResNameAnomalySubscription, d.Id(), err)
 	}
 
 	return diags
@@ -174,33 +169,33 @@ func resourceAnomalySubscriptionRead(ctx context.Context, d *schema.ResourceData
 func resourceAnomalySubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).CEClient(ctx)
+	conn := meta.(*conns.AWSClient).CEConn(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_All") {
 		input := &costexplorer.UpdateAnomalySubscriptionInput{
 			SubscriptionArn: aws.String(d.Id()),
 		}
 
 		if d.HasChange("frequency") {
-			input.Frequency = awstypes.AnomalySubscriptionFrequency(d.Get("frequency").(string))
+			input.Frequency = aws.String(d.Get("frequency").(string))
 		}
 
 		if d.HasChange("monitor_arn_list") {
-			input.MonitorArnList = flex.ExpandStringValueList(d.Get("monitor_arn_list").([]interface{}))
+			input.MonitorArnList = aws.StringSlice(expandAnomalySubscriptionMonitorARNList(d.Get("monitor_arn_list").([]interface{})))
 		}
 
 		if d.HasChange("subscriber") {
-			input.Subscribers = expandSubscribers(d.Get("subscriber").(*schema.Set).List())
+			input.Subscribers = expandAnomalySubscriptionSubscribers(d.Get("subscriber").(*schema.Set).List())
 		}
 
 		if d.HasChange("threshold_expression") {
-			input.ThresholdExpression = expandExpression(d.Get("threshold_expression").([]interface{})[0].(map[string]interface{}))
+			input.ThresholdExpression = expandCostExpression(d.Get("threshold_expression").([]interface{})[0].(map[string]interface{}))
 		}
 
-		_, err := conn.UpdateAnomalySubscription(ctx, input)
+		_, err := conn.UpdateAnomalySubscriptionWithContext(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Cost Explorer Anomaly Subscription (%s): %s", d.Id(), err)
+			return create.AppendDiagError(diags, names.CE, create.ErrActionUpdating, ResNameAnomalySubscription, d.Id(), err)
 		}
 	}
 
@@ -209,85 +204,66 @@ func resourceAnomalySubscriptionUpdate(ctx context.Context, d *schema.ResourceDa
 
 func resourceAnomalySubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CEClient(ctx)
 
-	log.Printf("[DEBUG] Deleting Cost Explorer Anomaly Subscription: %s", d.Id())
-	_, err := conn.DeleteAnomalySubscription(ctx, &costexplorer.DeleteAnomalySubscriptionInput{
-		SubscriptionArn: aws.String(d.Id()),
-	})
+	conn := meta.(*conns.AWSClient).CEConn(ctx)
 
-	if errs.IsA[*awstypes.UnknownSubscriptionException](err) {
+	_, err := conn.DeleteAnomalySubscriptionWithContext(ctx, &costexplorer.DeleteAnomalySubscriptionInput{SubscriptionArn: aws.String(d.Id())})
+
+	if err != nil && tfawserr.ErrCodeEquals(err, costexplorer.ErrCodeResourceNotFoundException) {
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Cost Explorer Anomaly Subscription (%s): %s", d.Id(), err)
+		return create.AppendDiagError(diags, names.CE, create.ErrActionDeleting, ResNameAnomalySubscription, d.Id(), err)
 	}
 
 	return diags
 }
 
-func findAnomalySubscriptionByARN(ctx context.Context, conn *costexplorer.Client, arn string) (*awstypes.AnomalySubscription, error) {
-	input := &costexplorer.GetAnomalySubscriptionsInput{
-		SubscriptionArnList: []string{arn},
-		MaxResults:          aws.Int32(1),
-	}
-
-	output, err := conn.GetAnomalySubscriptions(ctx, input)
-
-	if errs.IsA[*awstypes.UnknownMonitorException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || len(output.AnomalySubscriptions) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return &output.AnomalySubscriptions[0], nil
-}
-
-func expandSubscribers(tfList []interface{}) []awstypes.Subscriber {
-	if len(tfList) == 0 {
+func expandAnomalySubscriptionMonitorARNList(rawMonitorArnList []interface{}) []string {
+	if len(rawMonitorArnList) == 0 {
 		return nil
 	}
 
-	var apiObjects []awstypes.Subscriber
+	var monitorArns []string
 
-	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
-		if !ok {
-			continue
-		}
-
-		apiObjects = append(apiObjects, awstypes.Subscriber{
-			Address: aws.String(tfMap[names.AttrAddress].(string)),
-			Type:    awstypes.SubscriberType(tfMap[names.AttrType].(string)),
-		})
+	for _, arn := range rawMonitorArnList {
+		monitorArns = append(monitorArns, arn.(string))
 	}
 
-	return apiObjects
+	return monitorArns
 }
 
-func flattenSubscribers(apiObjects []awstypes.Subscriber) []interface{} {
-	if len(apiObjects) == 0 {
+func expandAnomalySubscriptionSubscribers(rawSubscribers []interface{}) []*costexplorer.Subscriber {
+	if len(rawSubscribers) == 0 {
 		return nil
 	}
 
-	var tfList []interface{}
+	var subscribers []*costexplorer.Subscriber
 
-	for _, apiObject := range apiObjects {
-		tfList = append(tfList, map[string]interface{}{
-			names.AttrAddress: aws.ToString(apiObject.Address),
-			names.AttrType:    apiObject.Type,
-		})
+	for _, sub := range rawSubscribers {
+		rawSubMap := sub.(map[string]interface{})
+		subscriber := &costexplorer.Subscriber{Address: aws.String(rawSubMap["address"].(string)), Type: aws.String(rawSubMap["type"].(string))}
+		subscribers = append(subscribers, subscriber)
 	}
 
-	return tfList
+	return subscribers
+}
+
+func flattenAnomalySubscriptionSubscribers(subscribers []*costexplorer.Subscriber) []interface{} {
+	if subscribers == nil {
+		return []interface{}{}
+	}
+
+	var rawSubscribers []interface{}
+	for _, subscriber := range subscribers {
+		rawSubscriber := map[string]interface{}{
+			"address": aws.StringValue(subscriber.Address),
+			"type":    aws.StringValue(subscriber.Type),
+		}
+
+		rawSubscribers = append(rawSubscribers, rawSubscriber)
+	}
+
+	return rawSubscribers
 }

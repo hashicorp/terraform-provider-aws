@@ -44,12 +44,12 @@ func ResourceStream() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -62,7 +62,7 @@ func ResourceStream() *schema.Resource {
 				Default:  0,
 			},
 
-			names.AttrDeviceName: {
+			"device_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ValidateFunc: validation.All(
@@ -71,7 +71,7 @@ func ResourceStream() *schema.Resource {
 				),
 			},
 
-			names.AttrKMSKeyID: {
+			"kms_key_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -83,12 +83,12 @@ func ResourceStream() *schema.Resource {
 				Optional: true,
 			},
 
-			names.AttrCreationTime: {
+			"creation_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			names.AttrVersion: {
+			"version": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -104,16 +104,16 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).KinesisVideoConn(ctx)
 
 	input := &kinesisvideo.CreateStreamInput{
-		StreamName:           aws.String(d.Get(names.AttrName).(string)),
+		StreamName:           aws.String(d.Get("name").(string)),
 		DataRetentionInHours: aws.Int64(int64(d.Get("data_retention_in_hours").(int))),
 		Tags:                 getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk(names.AttrDeviceName); ok {
+	if v, ok := d.GetOk("device_name"); ok {
 		input.DeviceName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
+	if v, ok := d.GetOk("kms_key_id"); ok {
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
@@ -163,16 +163,16 @@ func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "describing Kinesis Video Stream (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrName, resp.StreamInfo.StreamName)
+	d.Set("name", resp.StreamInfo.StreamName)
 	d.Set("data_retention_in_hours", resp.StreamInfo.DataRetentionInHours)
-	d.Set(names.AttrDeviceName, resp.StreamInfo.DeviceName)
-	d.Set(names.AttrKMSKeyID, resp.StreamInfo.KmsKeyId)
+	d.Set("device_name", resp.StreamInfo.DeviceName)
+	d.Set("kms_key_id", resp.StreamInfo.KmsKeyId)
 	d.Set("media_type", resp.StreamInfo.MediaType)
-	d.Set(names.AttrARN, resp.StreamInfo.StreamARN)
-	if err := d.Set(names.AttrCreationTime, resp.StreamInfo.CreationTime.Format(time.RFC3339)); err != nil {
+	d.Set("arn", resp.StreamInfo.StreamARN)
+	if err := d.Set("creation_time", resp.StreamInfo.CreationTime.Format(time.RFC3339)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting creation_time: %s", err)
 	}
-	d.Set(names.AttrVersion, resp.StreamInfo.Version)
+	d.Set("version", resp.StreamInfo.Version)
 
 	return diags
 }
@@ -183,10 +183,10 @@ func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	updateOpts := &kinesisvideo.UpdateStreamInput{
 		StreamARN:      aws.String(d.Id()),
-		CurrentVersion: aws.String(d.Get(names.AttrVersion).(string)),
+		CurrentVersion: aws.String(d.Get("version").(string)),
 	}
 
-	if v, ok := d.GetOk(names.AttrDeviceName); ok {
+	if v, ok := d.GetOk("device_name"); ok {
 		updateOpts.DeviceName = aws.String(v.(string))
 	}
 
@@ -220,7 +220,7 @@ func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if _, err := conn.DeleteStreamWithContext(ctx, &kinesisvideo.DeleteStreamInput{
 		StreamARN:      aws.String(d.Id()),
-		CurrentVersion: aws.String(d.Get(names.AttrVersion).(string)),
+		CurrentVersion: aws.String(d.Get("version").(string)),
 	}); err != nil {
 		if tfawserr.ErrCodeEquals(err, kinesisvideo.ErrCodeResourceNotFoundException) {
 			return diags

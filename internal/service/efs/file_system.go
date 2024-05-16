@@ -42,7 +42,7 @@ func ResourceFileSystem() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -64,17 +64,17 @@ func ResourceFileSystem() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(0, 64),
 			},
-			names.AttrDNSName: {
+			"dns_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrEncrypted: {
+			"encrypted": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			names.AttrKMSKeyID: {
+			"kms_key_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -105,7 +105,7 @@ func ResourceFileSystem() *schema.Resource {
 					},
 				},
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -113,7 +113,7 @@ func ResourceFileSystem() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			names.AttrOwnerID: {
+			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -152,7 +152,7 @@ func ResourceFileSystem() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrValue: {
+						"value": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -209,8 +209,8 @@ func resourceFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.ProvisionedThroughputInMibps = aws.Float64(d.Get("provisioned_throughput_in_mibps").(float64))
 	}
 
-	encrypted, hasEncrypted := d.GetOk(names.AttrEncrypted)
-	kmsKeyId, hasKmsKeyId := d.GetOk(names.AttrKMSKeyID)
+	encrypted, hasEncrypted := d.GetOk("encrypted")
+	kmsKeyId, hasKmsKeyId := d.GetOk("kms_key_id")
 
 	if hasEncrypted {
 		input.Encrypted = aws.Bool(encrypted.(bool))
@@ -279,16 +279,16 @@ func resourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading EFS file system (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, fs.FileSystemArn)
+	d.Set("arn", fs.FileSystemArn)
 	d.Set("availability_zone_id", fs.AvailabilityZoneId)
 	d.Set("availability_zone_name", fs.AvailabilityZoneName)
 	d.Set("creation_token", fs.CreationToken)
-	d.Set(names.AttrDNSName, meta.(*conns.AWSClient).RegionalHostname(ctx, d.Id()+".efs"))
-	d.Set(names.AttrEncrypted, fs.Encrypted)
-	d.Set(names.AttrKMSKeyID, fs.KmsKeyId)
-	d.Set(names.AttrName, fs.Name)
+	d.Set("dns_name", meta.(*conns.AWSClient).RegionalHostname(ctx, d.Id()+".efs"))
+	d.Set("encrypted", fs.Encrypted)
+	d.Set("kms_key_id", fs.KmsKeyId)
+	d.Set("name", fs.Name)
 	d.Set("number_of_mount_targets", fs.NumberOfMountTargets)
-	d.Set(names.AttrOwnerID, fs.OwnerId)
+	d.Set("owner_id", fs.OwnerId)
 	d.Set("performance_mode", fs.PerformanceMode)
 	if err := d.Set("protection", flattenFileSystemProtection(fs.FileSystemProtection)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting protection: %s", err)
@@ -579,7 +579,7 @@ func flattenFileSystemSizeInBytes(sizeInBytes *efs.FileSystemSize) []interface{}
 	}
 
 	m := map[string]interface{}{
-		names.AttrValue: aws.Int64Value(sizeInBytes.Value),
+		"value": aws.Int64Value(sizeInBytes.Value),
 	}
 
 	if sizeInBytes.ValueInIA != nil {

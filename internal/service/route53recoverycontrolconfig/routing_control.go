@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_route53recoverycontrolconfig_routing_control")
@@ -29,7 +28,7 @@ func ResourceRoutingControl() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -43,11 +42,11 @@ func ResourceRoutingControl() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -62,7 +61,7 @@ func resourceRoutingControlCreate(ctx context.Context, d *schema.ResourceData, m
 	input := &r53rcc.CreateRoutingControlInput{
 		ClientToken:        aws.String(id.UniqueId()),
 		ClusterArn:         aws.String(d.Get("cluster_arn").(string)),
-		RoutingControlName: aws.String(d.Get(names.AttrName).(string)),
+		RoutingControlName: aws.String(d.Get("name").(string)),
 	}
 
 	if v, ok := d.GetOk("control_panel_arn"); ok {
@@ -114,10 +113,10 @@ func resourceRoutingControlRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	result := output.RoutingControl
-	d.Set(names.AttrARN, result.RoutingControlArn)
+	d.Set("arn", result.RoutingControlArn)
 	d.Set("control_panel_arn", result.ControlPanelArn)
-	d.Set(names.AttrName, result.Name)
-	d.Set(names.AttrStatus, result.Status)
+	d.Set("name", result.Name)
+	d.Set("status", result.Status)
 
 	return diags
 }
@@ -127,8 +126,8 @@ func resourceRoutingControlUpdate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn(ctx)
 
 	input := &r53rcc.UpdateRoutingControlInput{
-		RoutingControlName: aws.String(d.Get(names.AttrName).(string)),
-		RoutingControlArn:  aws.String(d.Get(names.AttrARN).(string)),
+		RoutingControlName: aws.String(d.Get("name").(string)),
+		RoutingControlArn:  aws.String(d.Get("arn").(string)),
 	}
 
 	_, err := conn.UpdateRoutingControlWithContext(ctx, input)

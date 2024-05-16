@@ -46,9 +46,9 @@ func TestAccRedshiftSnapshotCopy_basic(t *testing.T) {
 				Config: testAccSnapshotCopyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotCopyExists(ctx, resourceName, &snap),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrClusterIdentifier, clusterResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "cluster_identifier", clusterResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "destination_region", acctest.AlternateRegion()),
-					resource.TestCheckResourceAttr(resourceName, names.AttrRetentionPeriod, "7"),
+					resource.TestCheckResourceAttr(resourceName, "retention_period", "7"),
 				),
 			},
 			{
@@ -147,9 +147,9 @@ func TestAccRedshiftSnapshotCopy_retentionPeriod(t *testing.T) {
 				Config: testAccSnapshotCopyConfig_retentionPeriod(rName, 10),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotCopyExists(ctx, resourceName, &snap),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrClusterIdentifier, clusterResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "cluster_identifier", clusterResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "destination_region", acctest.AlternateRegion()),
-					resource.TestCheckResourceAttr(resourceName, names.AttrRetentionPeriod, acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "retention_period", "10"),
 				),
 			},
 			{
@@ -161,9 +161,9 @@ func TestAccRedshiftSnapshotCopy_retentionPeriod(t *testing.T) {
 				Config: testAccSnapshotCopyConfig_retentionPeriod(rName, 20),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotCopyExists(ctx, resourceName, &snap),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrClusterIdentifier, clusterResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "cluster_identifier", clusterResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "destination_region", acctest.AlternateRegion()),
-					resource.TestCheckResourceAttr(resourceName, names.AttrRetentionPeriod, "20"),
+					resource.TestCheckResourceAttr(resourceName, "retention_period", "20"),
 				),
 			},
 		},

@@ -26,13 +26,13 @@ func jobQueueSchema0(ctx context.Context) schema.Schema {
 	return schema.Schema{
 		Version: 0,
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			"arn": framework.ARNAttributeComputedOnly(),
 			"compute_environments": schema.ListAttribute{
 				ElementType: types.StringType,
 				Required:    true,
 			},
-			names.AttrID: framework.IDAttribute(),
-			names.AttrName: schema.StringAttribute{
+			"id": framework.IDAttribute(),
+			"name": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -42,7 +42,7 @@ func jobQueueSchema0(ctx context.Context) schema.Schema {
 						"must be up to 128 letters (uppercase and lowercase), numbers, underscores and dashes, and must start with an alphanumeric"),
 				},
 			},
-			names.AttrPriority: schema.Int64Attribute{
+			"priority": schema.Int64Attribute{
 				Required: true,
 			},
 			"scheduling_policy_arn": schema.StringAttribute{
@@ -51,7 +51,7 @@ func jobQueueSchema0(ctx context.Context) schema.Schema {
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrState: schema.StringAttribute{
+			"state": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.OneOfCaseInsensitive(batch.JQState_Values()...),
@@ -61,7 +61,7 @@ func jobQueueSchema0(ctx context.Context) schema.Schema {
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+			"timeouts": timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,

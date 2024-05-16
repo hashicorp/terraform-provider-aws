@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_redshiftserverless_snapshot", name="Snapshot")
@@ -50,11 +49,11 @@ func resourceSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrKMSKeyID: {
+			"kms_key_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -71,7 +70,7 @@ func resourceSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrRetentionPeriod: {
+			"retention_period": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  -1,
@@ -94,7 +93,7 @@ func resourceSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta in
 		SnapshotName:  aws.String(d.Get("snapshot_name").(string)),
 	}
 
-	if v, ok := d.GetOk(names.AttrRetentionPeriod); ok {
+	if v, ok := d.GetOk("retention_period"); ok {
 		input.RetentionPeriod = aws.Int64(int64(v.(int)))
 	}
 
@@ -128,13 +127,13 @@ func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading Redshift Serverless Snapshot (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, out.SnapshotArn)
+	d.Set("arn", out.SnapshotArn)
 	d.Set("snapshot_name", out.SnapshotName)
 	d.Set("namespace_name", out.NamespaceName)
 	d.Set("namespace_arn", out.NamespaceArn)
-	d.Set(names.AttrRetentionPeriod, out.SnapshotRetentionPeriod)
+	d.Set("retention_period", out.SnapshotRetentionPeriod)
 	d.Set("admin_username", out.AdminUsername)
-	d.Set(names.AttrKMSKeyID, out.KmsKeyId)
+	d.Set("kms_key_id", out.KmsKeyId)
 	d.Set("owner_account", out.OwnerAccount)
 	d.Set("accounts_with_provisioned_restore_access", flex.FlattenStringSet(out.AccountsWithRestoreAccess))
 	d.Set("accounts_with_restore_access", flex.FlattenStringSet(out.AccountsWithRestoreAccess))
@@ -148,7 +147,7 @@ func resourceSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 	input := &redshiftserverless.UpdateSnapshotInput{
 		SnapshotName:    aws.String(d.Id()),
-		RetentionPeriod: aws.Int64(int64(d.Get(names.AttrRetentionPeriod).(int))),
+		RetentionPeriod: aws.Int64(int64(d.Get("retention_period").(int))),
 	}
 
 	_, err := conn.UpdateSnapshotWithContext(ctx, input)

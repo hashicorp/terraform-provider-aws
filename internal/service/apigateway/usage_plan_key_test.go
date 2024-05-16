@@ -37,11 +37,11 @@ func TestAccAPIGatewayUsagePlanKey_basic(t *testing.T) {
 				Config: testAccUsagePlanKeyConfig_typeAPI(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsagePlanKeyExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrKeyID, apiGatewayApiKeyResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "key_id", apiGatewayApiKeyResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "key_type", "API_KEY"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrName),
-					resource.TestCheckResourceAttrPair(resourceName, "usage_plan_id", apiGatewayUsagePlanResourceName, names.AttrID),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrValue),
+					resource.TestCheckResourceAttrSet(resourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "usage_plan_id", apiGatewayUsagePlanResourceName, "id"),
+					resource.TestCheckResourceAttrSet(resourceName, "value"),
 				),
 			},
 			{
@@ -117,7 +117,7 @@ func testAccCheckUsagePlanKeyExists(ctx context.Context, n string, v *apigateway
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
-		output, err := tfapigateway.FindUsagePlanKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes["usage_plan_id"], rs.Primary.Attributes[names.AttrKeyID])
+		output, err := tfapigateway.FindUsagePlanKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes["usage_plan_id"], rs.Primary.Attributes["key_id"])
 
 		if err != nil {
 			return err
@@ -138,7 +138,7 @@ func testAccCheckUsagePlanKeyDestroy(ctx context.Context) resource.TestCheckFunc
 				continue
 			}
 
-			_, err := tfapigateway.FindUsagePlanKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes["usage_plan_id"], rs.Primary.Attributes[names.AttrKeyID])
+			_, err := tfapigateway.FindUsagePlanKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes["usage_plan_id"], rs.Primary.Attributes["key_id"])
 
 			if tfresource.NotFound(err) {
 				continue

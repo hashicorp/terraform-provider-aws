@@ -10,12 +10,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource
 func newDataSourcePartition(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourcePartition{}
+	d.SetMigratedFromPluginSDK(true)
 
 	return d, nil
 }
@@ -37,7 +37,7 @@ func (d *dataSourcePartition) Schema(ctx context.Context, req datasource.SchemaR
 			"dns_suffix": schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrID: schema.StringAttribute{
+			"id": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},

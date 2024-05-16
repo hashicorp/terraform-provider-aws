@@ -23,7 +23,7 @@ func dataSourceAPIKey() *schema.Resource {
 		ReadWithoutTimeout: dataSourceAPIKeyRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrCreatedDate: {
+			"created_date": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -31,28 +31,28 @@ func dataSourceAPIKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrEnabled: {
+			"enabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			names.AttrID: {
+			"id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrLastUpdatedDate: {
+			"last_updated_date": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
-			names.AttrValue: {
+			"value": {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
@@ -65,7 +65,7 @@ func dataSourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	id := d.Get(names.AttrID).(string)
+	id := d.Get("id").(string)
 	apiKey, err := findAPIKeyByID(ctx, conn, id)
 
 	if err != nil {
@@ -73,13 +73,13 @@ func dataSourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.SetId(aws.ToString(apiKey.Id))
-	d.Set(names.AttrCreatedDate, aws.ToTime(apiKey.CreatedDate).Format(time.RFC3339))
+	d.Set("created_date", aws.ToTime(apiKey.CreatedDate).Format(time.RFC3339))
 	d.Set("customer_id", apiKey.CustomerId)
-	d.Set(names.AttrDescription, apiKey.Description)
-	d.Set(names.AttrEnabled, apiKey.Enabled)
-	d.Set(names.AttrLastUpdatedDate, aws.ToTime(apiKey.LastUpdatedDate).Format(time.RFC3339))
-	d.Set(names.AttrName, apiKey.Name)
-	d.Set(names.AttrValue, apiKey.Value)
+	d.Set("description", apiKey.Description)
+	d.Set("enabled", apiKey.Enabled)
+	d.Set("last_updated_date", aws.ToTime(apiKey.LastUpdatedDate).Format(time.RFC3339))
+	d.Set("name", apiKey.Name)
+	d.Set("value", apiKey.Value)
 
 	setTagsOut(ctx, apiKey.Tags)
 

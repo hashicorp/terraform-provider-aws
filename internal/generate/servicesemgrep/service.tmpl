@@ -7,8 +7,6 @@
     paths:
       include:
         - internal/service/{{ .ProviderPackage }}
-      exclude:
-        - internal/service/{{ .ProviderPackage }}/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -35,8 +33,15 @@
             {{- if eq .ServiceAlias "RAM" }}
             - pattern-not-regex: Framework
             {{- end }}
+            {{- if eq .ServiceAlias "SSM" }}
+            - pattern-not-regex: ^testAccSSMDefaultPatchBaseline_.+
+            - pattern-not-regex: ^testAccSSMPatchBaseline_.+
+            {{- end }}
+            {{- if eq .ServiceAlias "WAF" }}
+            - pattern-not-regex: ^testAccWAFRateBasedRule.+
+            {{- end }}
+            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
-      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
 {{- end }}
 {{- if .MainAlias }}

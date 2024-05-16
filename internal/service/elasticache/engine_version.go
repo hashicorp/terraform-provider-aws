@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	gversion "github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -56,9 +55,9 @@ func validRedisVersionString(v any, k string) (ws []string, errors []error) {
 	return
 }
 
-// customizeDiffValidateClusterEngineVersion validates the correct format for `engine_version`, based on `engine`
-func customizeDiffValidateClusterEngineVersion(_ context.Context, diff *schema.ResourceDiff, _ any) error {
-	engineVersion, ok := diff.GetOk(names.AttrEngineVersion)
+// CustomizeDiffValidateClusterEngineVersion validates the correct format for `engine_version`, based on `engine`
+func CustomizeDiffValidateClusterEngineVersion(_ context.Context, diff *schema.ResourceDiff, _ any) error {
+	engineVersion, ok := diff.GetOk("engine_version")
 	if !ok {
 		return nil
 	}
@@ -77,7 +76,7 @@ func validateClusterEngineVersion(engine, engineVersion string) error {
 		validator = validRedisVersionString
 	}
 
-	_, errs := validator(engineVersion, names.AttrEngineVersion)
+	_, errs := validator(engineVersion, "engine_version")
 
 	return errors.Join(errs...)
 }
@@ -93,7 +92,7 @@ type getChangeDiffer interface {
 }
 
 func engineVersionIsDowngrade(diff getChangeDiffer) (bool, error) {
-	o, n := diff.GetChange(names.AttrEngineVersion)
+	o, n := diff.GetChange("engine_version")
 	if o == "6.x" {
 		actual := diff.Get("engine_version_actual")
 		aVersion, err := gversion.NewVersion(actual.(string))
@@ -135,7 +134,7 @@ type forceNewDiffer interface {
 }
 
 func engineVersionForceNewOnDowngrade(diff forceNewDiffer) error {
-	if diff.Id() == "" || !diff.HasChange(names.AttrEngineVersion) {
+	if diff.Id() == "" || !diff.HasChange("engine_version") {
 		return nil
 	}
 
@@ -145,7 +144,7 @@ func engineVersionForceNewOnDowngrade(diff forceNewDiffer) error {
 		return nil
 	}
 
-	return diff.ForceNew(names.AttrEngineVersion)
+	return diff.ForceNew("engine_version")
 }
 
 // normalizeEngineVersion returns a github.com/hashicorp/go-version Version from:
@@ -162,7 +161,7 @@ func normalizeEngineVersion(version string) (*gversion.Version, error) {
 }
 
 func setEngineVersionMemcached(d *schema.ResourceData, version *string) {
-	d.Set(names.AttrEngineVersion, version)
+	d.Set("engine_version", version)
 	d.Set("engine_version_actual", version)
 }
 
@@ -172,14 +171,14 @@ func setEngineVersionRedis(d *schema.ResourceData, version *string) error {
 		return fmt.Errorf("reading engine version: %w", err)
 	}
 	if engineVersion.Segments()[0] < 6 {
-		d.Set(names.AttrEngineVersion, engineVersion.String())
+		d.Set("engine_version", engineVersion.String())
 	} else {
 		// Handle major-only version number
-		configVersion := d.Get(names.AttrEngineVersion).(string)
+		configVersion := d.Get("engine_version").(string)
 		if t, _ := regexp.MatchString(`[6-9]\.x`, configVersion); t {
-			d.Set(names.AttrEngineVersion, fmt.Sprintf("%d.x", engineVersion.Segments()[0]))
+			d.Set("engine_version", fmt.Sprintf("%d.x", engineVersion.Segments()[0]))
 		} else {
-			d.Set(names.AttrEngineVersion, fmt.Sprintf("%d.%d", engineVersion.Segments()[0], engineVersion.Segments()[1]))
+			d.Set("engine_version", fmt.Sprintf("%d.%d", engineVersion.Segments()[0], engineVersion.Segments()[1]))
 		}
 	}
 	d.Set("engine_version_actual", engineVersion.String())
@@ -187,11 +186,11 @@ func setEngineVersionRedis(d *schema.ResourceData, version *string) error {
 	return nil
 }
 
-type VersionDiff [3]int
+type versionDiff [3]int
 
 // diffVersion returns a diff of the versions, component by component.
 // Only reports the first diff, since subsequent segments are unimportant for us.
-func diffVersion(n, o *gversion.Version) (result VersionDiff) {
+func diffVersion(n, o *gversion.Version) (result versionDiff) {
 	if n.String() == o.String() {
 		return
 	}

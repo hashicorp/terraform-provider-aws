@@ -56,7 +56,7 @@ func ResourceApplication() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
-						names.AttrServiceRole: {
+						"service_role": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
@@ -64,15 +64,15 @@ func ResourceApplication() *schema.Resource {
 					},
 				},
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -88,10 +88,10 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &elasticbeanstalk.CreateApplicationInput{
 		ApplicationName: aws.String(name),
-		Description:     aws.String(d.Get(names.AttrDescription).(string)),
+		Description:     aws.String(d.Get("description").(string)),
 		Tags:            getTagsIn(ctx),
 	}
 
@@ -146,9 +146,9 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 	if err := d.Set("appversion_lifecycle", flattenApplicationResourceLifecycleConfig(app.ResourceLifecycleConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting appversion_lifecycle: %s", err)
 	}
-	d.Set(names.AttrARN, app.ApplicationArn)
-	d.Set(names.AttrDescription, app.Description)
-	d.Set(names.AttrName, app.ApplicationName)
+	d.Set("arn", app.ApplicationArn)
+	d.Set("description", app.Description)
+	d.Set("name", app.ApplicationName)
 
 	return diags
 }
@@ -157,10 +157,10 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 
-	if d.HasChange(names.AttrDescription) {
+	if d.HasChange("description") {
 		input := &elasticbeanstalk.UpdateApplicationInput{
 			ApplicationName: aws.String(d.Id()),
-			Description:     aws.String(d.Get(names.AttrDescription).(string)),
+			Description:     aws.String(d.Get("description").(string)),
 		}
 
 		_, err := conn.UpdateApplication(ctx, input)
@@ -256,7 +256,7 @@ func expandApplicationResourceLifecycleConfig(tfMap map[string]interface{}) *aws
 		},
 	}
 
-	if v, ok := tfMap[names.AttrServiceRole].(string); ok && v != "" {
+	if v, ok := tfMap["service_role"].(string); ok && v != "" {
 		apiObject.ServiceRole = aws.String(v)
 	}
 
@@ -313,7 +313,7 @@ func flattenApplicationResourceLifecycleConfig(apiObject *awstypes.ApplicationRe
 	}
 
 	if v := apiObject.ServiceRole; v != nil {
-		tfMap[names.AttrServiceRole] = aws.ToString(v)
+		tfMap["service_role"] = aws.ToString(v)
 	}
 
 	return []interface{}{tfMap}

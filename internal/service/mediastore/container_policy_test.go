@@ -37,7 +37,7 @@ func TestAccMediaStoreContainerPolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "container_name"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
+					resource.TestCheckResourceAttrSet(resourceName, "policy"),
 				),
 			},
 			{
@@ -50,7 +50,7 @@ func TestAccMediaStoreContainerPolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "container_name"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
+					resource.TestCheckResourceAttrSet(resourceName, "policy"),
 				),
 			},
 		},

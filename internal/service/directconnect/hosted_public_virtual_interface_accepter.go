@@ -34,7 +34,7 @@ func ResourceHostedPublicVirtualInterfaceAccepter() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -79,7 +79,7 @@ func resourceHostedPublicVirtualInterfaceAccepterCreate(ctx context.Context, d *
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("dxvif/%s", d.Id()),
 	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set("arn", arn)
 
 	if err := hostedPublicVirtualInterfaceAccepterWaitUntilAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -158,7 +158,7 @@ func resourceHostedPublicVirtualInterfaceAccepterImport(ctx context.Context, d *
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("dxvif/%s", d.Id()),
 	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set("arn", arn)
 
 	return []*schema.ResourceData{d}, nil
 }

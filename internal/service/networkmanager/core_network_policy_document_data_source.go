@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_networkmanager_core_network_policy_document")
@@ -45,7 +44,7 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 								"or",
 							}, false),
 						},
-						names.AttrDescription: {
+						"description": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -61,7 +60,7 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 							MinItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrType: {
+									"type": {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.StringInSlice([]string{
@@ -70,7 +69,7 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 											"tag-value",
 											"tag-exists",
 											"resource-id",
-											names.AttrRegion,
+											"region",
 											"attachment-type",
 										}, false),
 									},
@@ -84,18 +83,18 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 											"begins-with",
 										}, false),
 									},
-									names.AttrKey: {
+									"key": {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									names.AttrValue: {
+									"value": {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
 								},
 							},
 						},
-						names.AttrAction: {
+						"action": {
 							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 1,
@@ -182,7 +181,7 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 					},
 				},
 			},
-			names.AttrJSON: {
+			"json": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -210,13 +209,13 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 									"must begin with a letter and contain only alphanumeric characters"),
 							},
 						},
-						names.AttrName: {
+						"name": {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[A-Za-z][0-9A-Za-z]{0,63}$`),
 								"must begin with a letter and contain only alphanumeric characters"),
 						},
-						names.AttrDescription: {
+						"description": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -246,11 +245,11 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrDescription: {
+						"description": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						names.AttrAction: {
+						"action": {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.StringInSlice([]string{
@@ -284,7 +283,7 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 								),
 							},
 						},
-						names.AttrMode: {
+						"mode": {
 							Type:     schema.TypeString,
 							Optional: true,
 							ValidateFunc: validation.StringInSlice([]string{
@@ -302,7 +301,7 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 					},
 				},
 			},
-			names.AttrVersion: {
+			"version": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "2021.12",
@@ -317,7 +316,7 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 func dataSourceCoreNetworkPolicyDocumentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	mergedDoc := &CoreNetworkPolicyDoc{
-		Version: d.Get(names.AttrVersion).(string),
+		Version: d.Get("version").(string),
 	}
 
 	// CoreNetworkConfiguration
@@ -355,7 +354,7 @@ func dataSourceCoreNetworkPolicyDocumentRead(ctx context.Context, d *schema.Reso
 	}
 	jsonString := string(jsonDoc)
 
-	d.Set(names.AttrJSON, jsonString)
+	d.Set("json", jsonString)
 	d.SetId(strconv.Itoa(create.StringHashcode(jsonString)))
 
 	return diags
@@ -366,12 +365,12 @@ func expandDataCoreNetworkPolicySegmentActions(cfgSegmentActionsIntf []interface
 	for i, sgmtActionI := range cfgSegmentActionsIntf {
 		cfgSA := sgmtActionI.(map[string]interface{})
 		sgmtAction := &CoreNetworkPolicySegmentAction{}
-		action := cfgSA[names.AttrAction].(string)
+		action := cfgSA["action"].(string)
 		sgmtAction.Action = action
 		var shareWith, shareWithExcept interface{}
 
 		if action == "share" {
-			if mode, ok := cfgSA[names.AttrMode]; ok {
+			if mode, ok := cfgSA["mode"]; ok {
 				sgmtAction.Mode = mode.(string)
 			}
 
@@ -395,7 +394,7 @@ func expandDataCoreNetworkPolicySegmentActions(cfgSegmentActionsIntf []interface
 		}
 
 		if action == "create-route" {
-			if mode := cfgSA[names.AttrMode]; mode != "" {
+			if mode := cfgSA["mode"]; mode != "" {
 				return nil, fmt.Errorf("Cannot specify \"mode\" if action = \"create-route\". See segment_actions[%s].", strconv.Itoa(i))
 			}
 
@@ -433,14 +432,14 @@ func expandDataCoreNetworkPolicyAttachmentPolicies(cfgAttachmentPolicyIntf []int
 		policy.RuleNumber = rule
 		ruleMap[ruleStr] = struct{}{}
 
-		if desc, ok := cfgPol[names.AttrDescription]; ok {
+		if desc, ok := cfgPol["description"]; ok {
 			policy.Description = desc.(string)
 		}
 		if cL, ok := cfgPol["condition_logic"]; ok {
 			policy.ConditionLogic = cL.(string)
 		}
 
-		action, err := expandDataCoreNetworkPolicyAttachmentPoliciesAction(cfgPol[names.AttrAction].([]interface{}))
+		action, err := expandDataCoreNetworkPolicyAttachmentPoliciesAction(cfgPol["action"].([]interface{}))
 		if err != nil {
 			return nil, fmt.Errorf("Problem with attachment policy rule number (%s). See attachment_policy[%s].action: %q", ruleStr, strconv.Itoa(i), err)
 		}
@@ -466,24 +465,24 @@ func expandDataCoreNetworkPolicyAttachmentPoliciesConditions(tfList []interface{
 		cfgCond := condI.(map[string]interface{})
 		condition := &CoreNetworkAttachmentPolicyCondition{}
 		k := map[string]bool{
-			"operator":      false,
-			names.AttrKey:   false,
-			names.AttrValue: false,
+			"operator": false,
+			"key":      false,
+			"value":    false,
 		}
 
-		t := cfgCond[names.AttrType].(string)
+		t := cfgCond["type"].(string)
 		condition.Type = t
 
 		if o := cfgCond["operator"]; o != "" {
 			k["operator"] = true
 			condition.Operator = o.(string)
 		}
-		if key := cfgCond[names.AttrKey]; key != "" {
-			k[names.AttrKey] = true
+		if key := cfgCond["key"]; key != "" {
+			k["key"] = true
 			condition.Key = key.(string)
 		}
-		if v := cfgCond[names.AttrValue]; v != "" {
-			k[names.AttrValue] = true
+		if v := cfgCond["value"]; v != "" {
+			k["value"] = true
 			condition.Value = v.(string)
 		}
 
@@ -495,22 +494,22 @@ func expandDataCoreNetworkPolicyAttachmentPoliciesConditions(tfList []interface{
 			}
 		}
 		if t == "tag-exists" {
-			if !k[names.AttrKey] || k["operator"] || k[names.AttrValue] {
+			if !k["key"] || k["operator"] || k["value"] {
 				return nil, fmt.Errorf("Conditions %s: You must set \"key\" and cannot set \"operator\", or \"value\" if type = \"tag-exists\".", strconv.Itoa(i))
 			}
 		}
 		if t == "tag-value" {
-			if !k[names.AttrKey] || !k["operator"] || !k[names.AttrValue] {
+			if !k["key"] || !k["operator"] || !k["value"] {
 				return nil, fmt.Errorf("Conditions %s: You must set \"key\", \"operator\", and \"value\" if type = \"tag-value\".", strconv.Itoa(i))
 			}
 		}
-		if t == names.AttrRegion || t == "resource-id" || t == "account-id" {
-			if k[names.AttrKey] || !k["operator"] || !k[names.AttrValue] {
+		if t == "region" || t == "resource-id" || t == "account-id" {
+			if k["key"] || !k["operator"] || !k["value"] {
 				return nil, fmt.Errorf("Conditions %s: You must set \"value\" and \"operator\" and cannot set \"key\" if type = \"region\", \"resource-id\", or \"account-id\".", strconv.Itoa(i))
 			}
 		}
 		if t == "attachment-type" {
-			if k[names.AttrKey] || !k[names.AttrValue] || cfgCond["operator"].(string) != "equals" {
+			if k["key"] || !k["value"] || cfgCond["operator"].(string) != "equals" {
 				return nil, fmt.Errorf("Conditions %s: You must set \"value\", cannot set \"key\" and \"operator\" must be \"equals\" if type = \"attachment-type\".", strconv.Itoa(i))
 			}
 		}
@@ -552,7 +551,7 @@ func expandDataCoreNetworkPolicySegments(cfgSgmtIntf []interface{}) ([]*CoreNetw
 		cfgSgmt := sgmtI.(map[string]interface{})
 		sgmt := &CoreNetworkPolicySegment{}
 
-		if name, ok := cfgSgmt[names.AttrName]; ok {
+		if name, ok := cfgSgmt["name"]; ok {
 			if _, ok := nameMap[name.(string)]; ok {
 				return nil, fmt.Errorf("duplicate Name (%s). Remove the Name or ensure the Name is unique.", name.(string))
 			}
@@ -561,7 +560,7 @@ func expandDataCoreNetworkPolicySegments(cfgSgmtIntf []interface{}) ([]*CoreNetw
 				nameMap[sgmt.Name] = struct{}{}
 			}
 		}
-		if description, ok := cfgSgmt[names.AttrDescription]; ok {
+		if description, ok := cfgSgmt["description"]; ok {
 			sgmt.Description = description.(string)
 		}
 		if actions := cfgSgmt["allow_filter"].(*schema.Set).List(); len(actions) > 0 {

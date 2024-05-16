@@ -84,7 +84,7 @@ func testAccCheckThingPrincipalAttachmentDestroy(ctx context.Context) resource.T
 				continue
 			}
 
-			principal := rs.Primary.Attributes[names.AttrPrincipal]
+			principal := rs.Primary.Attributes["principal"]
 			thing := rs.Primary.Attributes["thing"]
 
 			found, err := tfiot.GetThingPricipalAttachment(ctx, conn, thing, principal)
@@ -97,7 +97,7 @@ func testAccCheckThingPrincipalAttachmentDestroy(ctx context.Context) resource.T
 				continue
 			}
 
-			return fmt.Errorf("IOT Thing Principal Attachment (%s) still exists", rs.Primary.Attributes[names.AttrID])
+			return fmt.Errorf("IOT Thing Principal Attachment (%s) still exists", rs.Primary.Attributes["id"])
 		}
 
 		return nil
@@ -117,7 +117,7 @@ func testAccCheckThingPrincipalAttachmentExists(ctx context.Context, n string) r
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn(ctx)
 		thing := rs.Primary.Attributes["thing"]
-		principal := rs.Primary.Attributes[names.AttrPrincipal]
+		principal := rs.Primary.Attributes["principal"]
 
 		found, err := tfiot.GetThingPricipalAttachment(ctx, conn, thing, principal)
 
@@ -144,7 +144,7 @@ func testAccCheckThingPrincipalAttachmentStatus(ctx context.Context, thingName s
 			if !ok {
 				return fmt.Errorf("Not found: %s", p)
 			}
-			principalARNs[pr.Primary.Attributes[names.AttrARN]] = p
+			principalARNs[pr.Primary.Attributes["arn"]] = p
 		}
 
 		thing, err := conn.DescribeThingWithContext(ctx, &iot.DescribeThingInput{

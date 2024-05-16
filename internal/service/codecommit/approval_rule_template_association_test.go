@@ -35,8 +35,8 @@ func TestAccCodeCommitApprovalRuleTemplateAssociation_basic(t *testing.T) {
 				Config: testAccApprovalRuleTemplateAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApprovalRuleTemplateAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "approval_rule_template_name", templateResourceName, names.AttrName),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrRepositoryName, repoResourceName, names.AttrRepositoryName),
+					resource.TestCheckResourceAttrPair(resourceName, "approval_rule_template_name", templateResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "repository_name", repoResourceName, "repository_name"),
 				),
 			},
 			{
@@ -104,7 +104,7 @@ func testAccCheckApprovalRuleTemplateAssociationExists(ctx context.Context, n st
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeCommitClient(ctx)
 
-		_, err := tfcodecommit.FindApprovalRuleTemplateAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["approval_rule_template_name"], rs.Primary.Attributes[names.AttrRepositoryName])
+		_, err := tfcodecommit.FindApprovalRuleTemplateAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["approval_rule_template_name"], rs.Primary.Attributes["repository_name"])
 
 		return err
 	}
@@ -119,7 +119,7 @@ func testAccCheckApprovalRuleTemplateAssociationDestroy(ctx context.Context) res
 				continue
 			}
 
-			_, err := tfcodecommit.FindApprovalRuleTemplateAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["approval_rule_template_name"], rs.Primary.Attributes[names.AttrRepositoryName])
+			_, err := tfcodecommit.FindApprovalRuleTemplateAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["approval_rule_template_name"], rs.Primary.Attributes["repository_name"])
 
 			if tfresource.NotFound(err) {
 				continue

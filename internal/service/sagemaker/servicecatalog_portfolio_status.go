@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_sagemaker_servicecatalog_portfolio_status")
@@ -27,7 +26,7 @@ func ResourceServicecatalogPortfolioStatus() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrStatus: {
+			"status": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(sagemaker.SagemakerServicecatalogStatus_Values(), false),
@@ -40,7 +39,7 @@ func resourceServicecatalogPortfolioStatusPut(ctx context.Context, d *schema.Res
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
-	status := d.Get(names.AttrStatus).(string)
+	status := d.Get("status").(string)
 	var err error
 	if status == sagemaker.SagemakerServicecatalogStatusEnabled {
 		_, err = conn.EnableSagemakerServicecatalogPortfolioWithContext(ctx, &sagemaker.EnableSagemakerServicecatalogPortfolioInput{})
@@ -66,7 +65,7 @@ func resourceServicecatalogPortfolioStatusRead(ctx context.Context, d *schema.Re
 		return sdkdiag.AppendErrorf(diags, "Getting SageMaker Servicecatalog Portfolio Status: %s", err)
 	}
 
-	d.Set(names.AttrStatus, resp.Status)
+	d.Set("status", resp.Status)
 
 	return diags
 }

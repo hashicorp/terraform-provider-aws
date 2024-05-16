@@ -20,11 +20,11 @@ func DataSourceResourcePolicy() *schema.Resource {
 		ReadWithoutTimeout: dataSourceResourcePolicyRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrPolicy: {
+			"policy": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrResourceARN: {
+			"resource_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -40,7 +40,7 @@ const (
 func dataSourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
-	resourceArn := d.Get(names.AttrResourceARN).(string)
+	resourceArn := d.Get("resource_arn").(string)
 
 	out, err := findResourcePolicyByID(ctx, conn, resourceArn)
 	if err != nil {
@@ -52,7 +52,7 @@ func dataSourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	d.SetId(resourceArn)
-	d.Set(names.AttrPolicy, out.Policy)
+	d.Set("policy", out.Policy)
 
 	return nil
 }

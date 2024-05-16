@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_availability_zones")
@@ -43,18 +42,18 @@ func DataSourceAvailabilityZones() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrFilter: customFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"group_names": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrNames: {
+			"names": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrState: {
+			"state": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(ec2.AvailabilityZoneState_Values(), false),
@@ -80,16 +79,16 @@ func dataSourceAvailabilityZonesRead(ctx context.Context, d *schema.ResourceData
 		request.AllAvailabilityZones = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk(names.AttrState); ok {
+	if v, ok := d.GetOk("state"); ok {
 		request.Filters = []*ec2.Filter{
 			{
-				Name:   aws.String(names.AttrState),
+				Name:   aws.String("state"),
 				Values: []*string{aws.String(v.(string))},
 			},
 		}
 	}
 
-	if filters, filtersOk := d.GetOk(names.AttrFilter); filtersOk {
+	if filters, filtersOk := d.GetOk("filter"); filtersOk {
 		request.Filters = append(request.Filters, newCustomFilterList(
 			filters.(*schema.Set),
 		)...)
@@ -114,7 +113,7 @@ func dataSourceAvailabilityZonesRead(ctx context.Context, d *schema.ResourceData
 	excludeZoneIDs := d.Get("exclude_zone_ids").(*schema.Set)
 
 	groupNames := schema.NewSet(schema.HashString, nil)
-	nms := []string{}
+	names := []string{}
 	zoneIds := []string{}
 	for _, v := range resp.AvailabilityZones {
 		groupName := aws.StringValue(v.GroupName)
@@ -133,7 +132,7 @@ func dataSourceAvailabilityZonesRead(ctx context.Context, d *schema.ResourceData
 			groupNames.Add(groupName)
 		}
 
-		nms = append(nms, name)
+		names = append(names, name)
 		zoneIds = append(zoneIds, zoneID)
 	}
 
@@ -142,7 +141,7 @@ func dataSourceAvailabilityZonesRead(ctx context.Context, d *schema.ResourceData
 	if err := d.Set("group_names", groupNames); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting group_names: %s", err)
 	}
-	if err := d.Set(names.AttrNames, nms); err != nil {
+	if err := d.Set("names", names); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting Availability Zone names: %s", err)
 	}
 	if err := d.Set("zone_ids", zoneIds); err != nil {

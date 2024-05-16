@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_iam_instance_profiles", name="Instance Profiles")
@@ -25,12 +24,12 @@ func dataSourceInstanceProfiles() *schema.Resource {
 		ReadWithoutTimeout: dataSourceInstanceProfilesRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARNs: {
+			"arns": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrNames: {
+			"names": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -61,17 +60,17 @@ func dataSourceInstanceProfilesRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "reading IAM Instance Profiles for Role (%s): %s", roleName, err)
 	}
 
-	var arns, nms, paths []string
+	var arns, names, paths []string
 
 	for _, v := range instanceProfiles {
 		arns = append(arns, aws.ToString(v.Arn))
-		nms = append(nms, aws.ToString(v.InstanceProfileName))
+		names = append(names, aws.ToString(v.InstanceProfileName))
 		paths = append(paths, aws.ToString(v.Path))
 	}
 
 	d.SetId(roleName)
-	d.Set(names.AttrARNs, arns)
-	d.Set(names.AttrNames, nms)
+	d.Set("arns", arns)
+	d.Set("names", names)
 	d.Set("paths", paths)
 
 	return diags

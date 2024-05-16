@@ -46,11 +46,11 @@ func ResourceScheduleGroup() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrCreationDate: {
+			"creation_date": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -58,29 +58,29 @@ func ResourceScheduleGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
+				ConflictsWith: []string{"name_prefix"},
 				ValidateDiagFunc: validation.ToDiagFunc(validation.All(
 					validation.StringLenBetween(1, 64),
 					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), `The name must consist of alphanumerics, hyphens, and underscores.`),
 				)),
 			},
-			names.AttrNamePrefix: {
+			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
+				ConflictsWith: []string{"name"},
 				ValidateDiagFunc: validation.ToDiagFunc(validation.All(
 					validation.StringLenBetween(1, 64-id.UniqueIDSuffixLength),
 					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), `The name must consist of alphanumerics, hyphens, and underscores.`),
 				)),
 			},
-			names.AttrState: {
+			"state": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -97,7 +97,7 @@ const (
 func resourceScheduleGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SchedulerClient(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 
 	in := &scheduler.CreateScheduleGroupInput{
 		Name: aws.String(name),
@@ -137,12 +137,12 @@ func resourceScheduleGroupRead(ctx context.Context, d *schema.ResourceData, meta
 		return create.DiagError(names.Scheduler, create.ErrActionReading, ResNameScheduleGroup, d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, out.Arn)
-	d.Set(names.AttrCreationDate, aws.ToTime(out.CreationDate).Format(time.RFC3339))
+	d.Set("arn", out.Arn)
+	d.Set("creation_date", aws.ToTime(out.CreationDate).Format(time.RFC3339))
 	d.Set("last_modification_date", aws.ToTime(out.LastModificationDate).Format(time.RFC3339))
-	d.Set(names.AttrName, out.Name)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(out.Name)))
-	d.Set(names.AttrState, out.State)
+	d.Set("name", out.Name)
+	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(out.Name)))
+	d.Set("state", out.State)
 
 	return nil
 }

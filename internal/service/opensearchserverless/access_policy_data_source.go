@@ -39,23 +39,23 @@ func (d *dataSourceAccessPolicy) Metadata(_ context.Context, req datasource.Meta
 func (d *dataSourceAccessPolicy) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrDescription: schema.StringAttribute{
+			"description": schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrID: framework.IDAttribute(),
-			names.AttrName: schema.StringAttribute{
+			"id": framework.IDAttribute(),
+			"name": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 32),
 				},
 			},
-			names.AttrPolicy: schema.StringAttribute{
+			"policy": schema.StringAttribute{
 				Computed: true,
 			},
 			"policy_version": schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrType: schema.StringAttribute{
+			"type": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					enum.FrameworkValidate[awstypes.AccessPolicyType](),
@@ -82,12 +82,23 @@ func (d *dataSourceAccessPolicy) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
+	data.ID = flex.StringToFramework(ctx, out.Name)
+	data.Description = flex.StringToFramework(ctx, out.Description)
+	data.Name = flex.StringToFramework(ctx, out.Name)
+	data.Type = flex.StringValueToFramework(ctx, out.Type)
+	data.PolicyVersion = flex.StringToFramework(ctx, out.PolicyVersion)
+
+	policyBytes, err := out.Policy.MarshalSmithyDocument()
+
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, DSNameAccessPolicy, data.Name.String(), err),
+			err.Error(),
+		)
 	}
 
-	data.ID = flex.StringToFramework(ctx, out.Name)
+	pb := string(policyBytes)
+	data.Policy = flex.StringToFramework(ctx, &pb)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

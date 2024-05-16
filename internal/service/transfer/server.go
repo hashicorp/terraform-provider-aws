@@ -54,11 +54,11 @@ func resourceServer() *schema.Resource {
 		),
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrCertificate: {
+			"certificate": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
@@ -67,14 +67,14 @@ func resourceServer() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			names.AttrDomain: {
+			"domain": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				Default:      transfer.DomainS3,
 				ValidateFunc: validation.StringInSlice(transfer.Domain_Values(), false),
 			},
-			names.AttrEndpoint: {
+			"endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -90,26 +90,26 @@ func resourceServer() *schema.Resource {
 							Elem:          &schema.Schema{Type: schema.TypeString},
 							ConflictsWith: []string{"endpoint_details.0.vpc_endpoint_id"},
 						},
-						names.AttrSecurityGroupIDs: {
+						"security_group_ids": {
 							Type:          schema.TypeSet,
 							Optional:      true,
 							Computed:      true,
 							Elem:          &schema.Schema{Type: schema.TypeString},
 							ConflictsWith: []string{"endpoint_details.0.vpc_endpoint_id"},
 						},
-						names.AttrSubnetIDs: {
+						"subnet_ids": {
 							Type:          schema.TypeSet,
 							Optional:      true,
 							Elem:          &schema.Schema{Type: schema.TypeString},
 							ConflictsWith: []string{"endpoint_details.0.vpc_endpoint_id"},
 						},
-						names.AttrVPCEndpointID: {
+						"vpc_endpoint_id": {
 							Type:          schema.TypeString,
 							Optional:      true,
 							Computed:      true,
 							ConflictsWith: []string{"endpoint_details.0.address_allocation_ids", "endpoint_details.0.security_group_ids", "endpoint_details.0.subnet_ids", "endpoint_details.0.vpc_id"},
 						},
-						names.AttrVPCID: {
+						"vpc_id": {
 							Type:          schema.TypeString,
 							Optional:      true,
 							ValidateFunc:  validation.NoZeroValues,
@@ -118,13 +118,13 @@ func resourceServer() *schema.Resource {
 					},
 				},
 			},
-			names.AttrEndpointType: {
+			"endpoint_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      transfer.EndpointTypePublic,
 				ValidateFunc: validation.StringInSlice(transfer.EndpointType_Values(), false),
 			},
-			names.AttrForceDestroy: {
+			"force_destroy": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -243,12 +243,6 @@ func resourceServer() *schema.Resource {
 				Default:      SecurityPolicyName2018_11,
 				ValidateFunc: validation.StringInSlice(SecurityPolicyName_Values(), false),
 			},
-			"sftp_authentication_methods": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(transfer.SftpAuthenticationMethods_Values(), false),
-			},
 			"structured_log_destinations": {
 				Type: schema.TypeSet,
 				Elem: &schema.Schema{
@@ -260,7 +254,7 @@ func resourceServer() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrURL: {
+			"url": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -323,7 +317,7 @@ func resourceServerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		Tags: getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk(names.AttrCertificate); ok {
+	if v, ok := d.GetOk("certificate"); ok {
 		input.Certificate = aws.String(v.(string))
 	}
 
@@ -335,7 +329,7 @@ func resourceServerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.IdentityProviderDetails.DirectoryId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrDomain); ok {
+	if v, ok := d.GetOk("domain"); ok {
 		input.Domain = aws.String(v.(string))
 	}
 
@@ -350,7 +344,7 @@ func resourceServerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.EndpointDetails.AddressAllocationIds = nil
 	}
 
-	if v, ok := d.GetOk(names.AttrEndpointType); ok {
+	if v, ok := d.GetOk("endpoint_type"); ok {
 		input.EndpointType = aws.String(v.(string))
 	}
 
@@ -376,14 +370,6 @@ func resourceServerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		input.IdentityProviderDetails.InvocationRole = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("sftp_authentication_methods"); ok {
-		if input.IdentityProviderDetails == nil {
-			input.IdentityProviderDetails = &transfer.IdentityProviderDetails{}
-		}
-
-		input.IdentityProviderDetails.SftpAuthenticationMethods = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("logging_role"); ok {
@@ -418,7 +404,7 @@ func resourceServerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.StructuredLogDestinations = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk(names.AttrURL); ok {
+	if v, ok := d.GetOk("url"); ok {
 		if input.IdentityProviderDetails == nil {
 			input.IdentityProviderDetails = &transfer.IdentityProviderDetails{}
 		}
@@ -483,15 +469,15 @@ func resourceServerRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading Transfer Server (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, output.Arn)
-	d.Set(names.AttrCertificate, output.Certificate)
+	d.Set("arn", output.Arn)
+	d.Set("certificate", output.Certificate)
 	if output.IdentityProviderDetails != nil {
 		d.Set("directory_id", output.IdentityProviderDetails.DirectoryId)
 	} else {
 		d.Set("directory_id", "")
 	}
-	d.Set(names.AttrDomain, output.Domain)
-	d.Set(names.AttrEndpoint, meta.(*conns.AWSClient).RegionalHostname(ctx, fmt.Sprintf("%s.server.transfer", d.Id())))
+	d.Set("domain", output.Domain)
+	d.Set("endpoint", meta.(*conns.AWSClient).RegionalHostname(ctx, fmt.Sprintf("%s.server.transfer", d.Id())))
 	if output.EndpointDetails != nil {
 		securityGroupIDs := make([]*string, 0)
 
@@ -515,7 +501,7 @@ func resourceServerRead(ctx context.Context, d *schema.ResourceData, meta interf
 	} else {
 		d.Set("endpoint_details", nil)
 	}
-	d.Set(names.AttrEndpointType, output.EndpointType)
+	d.Set("endpoint_type", output.EndpointType)
 	if output.IdentityProviderDetails != nil {
 		d.Set("function", output.IdentityProviderDetails.Function)
 	} else {
@@ -527,11 +513,6 @@ func resourceServerRead(ctx context.Context, d *schema.ResourceData, meta interf
 		d.Set("invocation_role", output.IdentityProviderDetails.InvocationRole)
 	} else {
 		d.Set("invocation_role", "")
-	}
-	if output.IdentityProviderDetails != nil {
-		d.Set("sftp_authentication_methods", output.IdentityProviderDetails.SftpAuthenticationMethods)
-	} else {
-		d.Set("sftp_authentication_methods", "")
 	}
 	d.Set("logging_role", output.LoggingRole)
 	d.Set("post_authentication_login_banner", output.PostAuthenticationLoginBanner)
@@ -546,9 +527,9 @@ func resourceServerRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("security_policy_name", output.SecurityPolicyName)
 	d.Set("structured_log_destinations", aws.StringValueSlice(output.StructuredLogDestinations))
 	if output.IdentityProviderDetails != nil {
-		d.Set(names.AttrURL, output.IdentityProviderDetails.Url)
+		d.Set("url", output.IdentityProviderDetails.Url)
 	} else {
-		d.Set(names.AttrURL, "")
+		d.Set("url", "")
 	}
 	if err := d.Set("workflow_details", flattenWorkflowDetails(output.WorkflowDetails)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting workflow_details: %s", err)
@@ -563,11 +544,11 @@ func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		var newEndpointTypeVpc bool
 		var oldEndpointTypeVpc bool
 
-		old, new := d.GetChange(names.AttrEndpointType)
+		old, new := d.GetChange("endpoint_type")
 
 		if old, new := old.(string), new.(string); new == transfer.EndpointTypeVpc {
 			newEndpointTypeVpc = true
@@ -582,8 +563,8 @@ func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			ServerId: aws.String(d.Id()),
 		}
 
-		if d.HasChange(names.AttrCertificate) {
-			input.Certificate = aws.String(d.Get(names.AttrCertificate).(string))
+		if d.HasChange("certificate") {
+			input.Certificate = aws.String(d.Get("certificate").(string))
 		}
 
 		if d.HasChange("endpoint_details") {
@@ -663,8 +644,8 @@ func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			}
 		}
 
-		if d.HasChange(names.AttrEndpointType) {
-			input.EndpointType = aws.String(d.Get(names.AttrEndpointType).(string))
+		if d.HasChange("endpoint_type") {
+			input.EndpointType = aws.String(d.Get("endpoint_type").(string))
 
 			// Prevent the following error: InvalidRequestException: Server must be OFFLINE to change EndpointType
 			offlineUpdate = true
@@ -676,7 +657,7 @@ func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			}
 		}
 
-		if d.HasChanges("directory_id", "function", "invocation_role", "sftp_authentication_methods", names.AttrURL) {
+		if d.HasChanges("directory_id", "function", "invocation_role", "url") {
 			identityProviderDetails := &transfer.IdentityProviderDetails{}
 
 			if attr, ok := d.GetOk("directory_id"); ok {
@@ -691,11 +672,7 @@ func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 				identityProviderDetails.InvocationRole = aws.String(attr.(string))
 			}
 
-			if attr, ok := d.GetOk("sftp_authentication_methods"); ok {
-				identityProviderDetails.SftpAuthenticationMethods = aws.String(attr.(string))
-			}
-
-			if attr, ok := d.GetOk(names.AttrURL); ok {
+			if attr, ok := d.GetOk("url"); ok {
 				identityProviderDetails.Url = aws.String(attr.(string))
 			}
 
@@ -789,7 +766,7 @@ func resourceServerDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
-	if d.Get(names.AttrForceDestroy).(bool) && d.Get("identity_provider_type").(string) == transfer.IdentityProviderTypeServiceManaged {
+	if d.Get("force_destroy").(bool) && d.Get("identity_provider_type").(string) == transfer.IdentityProviderTypeServiceManaged {
 		input := &transfer.ListUsersInput{
 			ServerId: aws.String(d.Id()),
 		}
@@ -859,19 +836,19 @@ func expandEndpointDetails(tfMap map[string]interface{}) *transfer.EndpointDetai
 		apiObject.AddressAllocationIds = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := tfMap[names.AttrSecurityGroupIDs].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SecurityGroupIds = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := tfMap[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap["subnet_ids"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SubnetIds = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := tfMap[names.AttrVPCEndpointID].(string); ok && v != "" {
+	if v, ok := tfMap["vpc_endpoint_id"].(string); ok && v != "" {
 		apiObject.VpcEndpointId = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrVPCID].(string); ok && v != "" {
+	if v, ok := tfMap["vpc_id"].(string); ok && v != "" {
 		apiObject.VpcId = aws.String(v)
 	}
 
@@ -890,21 +867,21 @@ func flattenEndpointDetails(apiObject *transfer.EndpointDetails, securityGroupID
 	}
 
 	if v := apiObject.SecurityGroupIds; len(v) > 0 {
-		tfMap[names.AttrSecurityGroupIDs] = aws.StringValueSlice(v)
+		tfMap["security_group_ids"] = aws.StringValueSlice(v)
 	} else if len(securityGroupIDs) > 0 {
-		tfMap[names.AttrSecurityGroupIDs] = aws.StringValueSlice(securityGroupIDs)
+		tfMap["security_group_ids"] = aws.StringValueSlice(securityGroupIDs)
 	}
 
 	if v := apiObject.SubnetIds; v != nil {
-		tfMap[names.AttrSubnetIDs] = aws.StringValueSlice(v)
+		tfMap["subnet_ids"] = aws.StringValueSlice(v)
 	}
 
 	if v := apiObject.VpcEndpointId; v != nil {
-		tfMap[names.AttrVPCEndpointID] = aws.StringValue(v)
+		tfMap["vpc_endpoint_id"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.VpcId; v != nil {
-		tfMap[names.AttrVPCID] = aws.StringValue(v)
+		tfMap["vpc_id"] = aws.StringValue(v)
 	}
 
 	return tfMap

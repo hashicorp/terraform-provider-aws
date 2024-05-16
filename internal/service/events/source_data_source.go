@@ -5,25 +5,31 @@ package events
 
 import (
 	"context"
+	"log"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
-	"github.com/aws/aws-sdk-go-v2/service/eventbridge/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/eventbridge"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_cloudwatch_event_source", name="Source")
-func dataSourceSource() *schema.Resource {
+// @SDKDataSource("aws_cloudwatch_event_source")
+func DataSourceSource() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSourceRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"name_prefix": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -31,15 +37,7 @@ func dataSourceSource() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrNamePrefix: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrState: {
+			"state": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -49,55 +47,34 @@ func dataSourceSource() *schema.Resource {
 
 func dataSourceSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EventsClient(ctx)
+	conn := meta.(*conns.AWSClient).EventsConn(ctx)
 
 	input := &eventbridge.ListEventSourcesInput{}
-
-	if v, ok := d.GetOk(names.AttrNamePrefix); ok {
+	if v, ok := d.GetOk("name_prefix"); ok {
 		input.NamePrefix = aws.String(v.(string))
 	}
 
-	es, err := findEventSource(ctx, conn, input)
+	log.Printf("[DEBUG] Listing EventBridge sources: %s", input)
 
+	resp, err := conn.ListEventSourcesWithContext(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EventBridge Source", err))
+		return sdkdiag.AppendErrorf(diags, "listing EventBridge sources: %s", err)
 	}
 
-	d.SetId(aws.ToString(es.Name))
-	d.Set(names.AttrARN, es.Arn)
+	if resp == nil || len(resp.EventSources) == 0 {
+		return sdkdiag.AppendErrorf(diags, "no matching partner event source")
+	}
+	if len(resp.EventSources) > 1 {
+		return sdkdiag.AppendErrorf(diags, "multiple event sources matched; use additional constraints to reduce matches to a single event source")
+	}
+
+	es := resp.EventSources[0]
+
+	d.SetId(aws.StringValue(es.Name))
+	d.Set("arn", es.Arn)
 	d.Set("created_by", es.CreatedBy)
-	d.Set(names.AttrName, es.Name)
-	d.Set(names.AttrState, es.State)
+	d.Set("name", es.Name)
+	d.Set("state", es.State)
 
 	return diags
-}
-
-func findEventSource(ctx context.Context, conn *eventbridge.Client, input *eventbridge.ListEventSourcesInput) (*types.EventSource, error) { // nosemgrep:ci.events-in-func-name
-	output, err := findEventSources(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSingleValueResult(output)
-}
-
-func findEventSources(ctx context.Context, conn *eventbridge.Client, input *eventbridge.ListEventSourcesInput) ([]types.EventSource, error) { // nosemgrep:ci.events-in-func-name
-	var output []types.EventSource
-
-	err := listEventSourcesPages(ctx, conn, input, func(page *eventbridge.ListEventSourcesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		output = append(output, page.EventSources...)
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
 }

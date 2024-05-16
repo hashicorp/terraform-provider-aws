@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_sns_topic")
@@ -24,11 +23,11 @@ func dataSourceTopic() *schema.Resource {
 		ReadWithoutTimeout: dataSourceTopicRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -39,7 +38,7 @@ func dataSourceTopic() *schema.Resource {
 func dataSourceTopicRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	topic, err := findTopicByName(ctx, conn, name)
 
 	if err != nil {
@@ -48,7 +47,7 @@ func dataSourceTopicRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	topicARN := aws.ToString(topic.TopicArn)
 	d.SetId(topicARN)
-	d.Set(names.AttrARN, topicARN)
+	d.Set("arn", topicARN)
 
 	return nil
 }

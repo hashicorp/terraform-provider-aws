@@ -36,7 +36,7 @@ const (
 
 // @SDKResource("aws_iam_policy", name="Policy")
 // @Tags(identifierAttribute="id", resourceType="Policy")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.Policy")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types.Policy")
 func resourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyCreate,
@@ -49,42 +49,38 @@ func resourcePolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"attachment_count": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
+				ConflictsWith: []string{"name_prefix"},
 				ValidateFunc:  validResourceName(policyNameMaxLen),
 			},
-			names.AttrNamePrefix: {
+			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
+				ConflictsWith: []string{"name"},
 				ValidateFunc:  validResourceName(policyNamePrefixMaxLen),
 			},
-			names.AttrPath: {
+			"path": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "/",
 				ForceNew: true,
 			},
-			names.AttrPolicy: {
+			"policy": {
 				Type:                  schema.TypeString,
 				Required:              true,
 				ValidateFunc:          verify.ValidIAMPolicyJSON,
@@ -111,15 +107,15 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
+	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
 	}
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &iam.CreatePolicyInput{
-		Description:    aws.String(d.Get(names.AttrDescription).(string)),
-		Path:           aws.String(d.Get(names.AttrPath).(string)),
+		Description:    aws.String(d.Get("description").(string)),
+		Path:           aws.String(d.Get("path").(string)),
 		PolicyDocument: aws.String(policy),
 		PolicyName:     aws.String(name),
 		Tags:           getTagsIn(ctx),
@@ -197,12 +193,11 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	output := outputRaw.(*policyWithVersion)
 	policy := output.policy
 
-	d.Set(names.AttrARN, policy.Arn)
-	d.Set("attachment_count", policy.AttachmentCount)
-	d.Set(names.AttrDescription, policy.Description)
-	d.Set(names.AttrName, policy.PolicyName)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(policy.PolicyName)))
-	d.Set(names.AttrPath, policy.Path)
+	d.Set("arn", policy.Arn)
+	d.Set("description", policy.Description)
+	d.Set("name", policy.PolicyName)
+	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(policy.PolicyName)))
+	d.Set("path", policy.Path)
 	d.Set("policy_id", policy.PolicyId)
 
 	setTagsOut(ctx, policy.Tags)
@@ -213,12 +208,12 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "parsing IAM Policy (%s) document: %s", d.Id(), err)
 	}
 
-	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), policyDocument)
+	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), policyDocument)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "while setting policy (%s), encountered: %s", policyToSet, err)
 	}
 
-	d.Set(names.AttrPolicy, policyToSet)
+	d.Set("policy", policyToSet)
 
 	return diags
 }
@@ -227,12 +222,12 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		if err := policyPruneVersions(ctx, conn, d.Id()); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
-		policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
+		policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
 		}

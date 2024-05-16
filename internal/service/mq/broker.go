@@ -30,9 +30,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/mitchellh/copystructure"
@@ -58,12 +58,12 @@ func resourceBroker() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrApplyImmediately: {
+			"apply_immediately": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -73,7 +73,7 @@ func resourceBroker() *schema.Resource {
 				Computed:         true,
 				ValidateDiagFunc: enum.ValidateIgnoreCase[types.AuthenticationStrategy](),
 			},
-			names.AttrAutoMinorVersionUpgrade: {
+			"auto_minor_version_upgrade": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -84,14 +84,14 @@ func resourceBroker() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: ValidateBrokerName,
 			},
-			names.AttrConfiguration: {
+			"configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrID: {
+						"id": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -141,7 +141,7 @@ func resourceBroker() *schema.Resource {
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrKMSKeyID: {
+						"kms_key_id": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -163,7 +163,7 @@ func resourceBroker() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: enum.ValidateIgnoreCase[types.EngineType](),
 			},
-			names.AttrEngineVersion: {
+			"engine_version": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -180,12 +180,12 @@ func resourceBroker() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrEndpoints: {
+						"endpoints": {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						names.AttrIPAddress: {
+						"ip_address": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -295,25 +295,25 @@ func resourceBroker() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrPubliclyAccessible: {
+			"publicly_accessible": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				ForceNew: true,
 				Default:  false,
 			},
-			names.AttrSecurityGroups: {
+			"security_groups": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				MaxItems: 5,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrStorageType: {
+			"storage_type": {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
 				ValidateDiagFunc: enum.ValidateIgnoreCase[types.BrokerStorageType](),
 			},
-			names.AttrSubnetIDs: {
+			"subnet_ids": {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
@@ -330,7 +330,7 @@ func resourceBroker() *schema.Resource {
 					// AWS currently does not support updating the RabbitMQ users beyond resource creation.
 					// User list is not returned back after creation.
 					// Updates to users can only be in the RabbitMQ UI.
-					if v := d.Get("engine_type").(string); strings.EqualFold(v, string(types.EngineTypeRabbitmq)) && d.Get(names.AttrARN).(string) != "" {
+					if v := d.Get("engine_type").(string); strings.EqualFold(v, string(types.EngineTypeRabbitmq)) && d.Get("arn").(string) != "" {
 						return true
 					}
 
@@ -352,7 +352,7 @@ func resourceBroker() *schema.Resource {
 								ValidateFunc: validation.StringLenBetween(2, 100),
 							},
 						},
-						names.AttrPassword: {
+						"password": {
 							Type:         schema.TypeString,
 							Required:     true,
 							Sensitive:    true,
@@ -363,7 +363,7 @@ func resourceBroker() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
-						names.AttrUsername: {
+						"username": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(2, 100),
@@ -378,7 +378,7 @@ func resourceBroker() *schema.Resource {
 			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 				if strings.EqualFold(diff.Get("engine_type").(string), string(types.EngineTypeRabbitmq)) {
 					if v, ok := diff.GetOk("logs.0.audit"); ok {
-						if v, _, _ := nullable.Bool(v.(string)).ValueBool(); v {
+						if v, _, _ := nullable.Bool(v.(string)).Value(); v {
 							return errors.New("logs.audit: Can not be configured when engine is RabbitMQ")
 						}
 					}
@@ -398,13 +398,13 @@ func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	name := d.Get("broker_name").(string)
 	engineType := d.Get("engine_type").(string)
 	input := &mq.CreateBrokerInput{
-		AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
+		AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
 		BrokerName:              aws.String(name),
 		CreatorRequestId:        aws.String(id.PrefixedUniqueId(fmt.Sprintf("tf-%s", name))),
 		EngineType:              types.EngineType(engineType),
-		EngineVersion:           aws.String(d.Get(names.AttrEngineVersion).(string)),
+		EngineVersion:           aws.String(d.Get("engine_version").(string)),
 		HostInstanceType:        aws.String(d.Get("host_instance_type").(string)),
-		PubliclyAccessible:      aws.Bool(d.Get(names.AttrPubliclyAccessible).(bool)),
+		PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
 		Tags:                    getTagsIn(ctx),
 		Users:                   expandUsers(d.Get("user").(*schema.Set).List()),
 	}
@@ -412,7 +412,7 @@ func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	if v, ok := d.GetOk("authentication_strategy"); ok {
 		input.AuthenticationStrategy = types.AuthenticationStrategy(v.(string))
 	}
-	if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk("configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Configuration = expandConfigurationId(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("deployment_mode"); ok {
@@ -436,13 +436,13 @@ func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	if v, ok := d.GetOk("maintenance_window_start_time"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.MaintenanceWindowStartTime = expandWeeklyStartTime(v.([]interface{}))
 	}
-	if v, ok := d.GetOk(names.AttrSecurityGroups); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk("security_groups"); ok && v.(*schema.Set).Len() > 0 {
 		input.SecurityGroups = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
-	if v, ok := d.GetOk(names.AttrStorageType); ok {
+	if v, ok := d.GetOk("storage_type"); ok {
 		input.StorageType = types.BrokerStorageType(v.(string))
 	}
-	if v, ok := d.GetOk(names.AttrSubnetIDs); ok {
+	if v, ok := d.GetOk("subnet_ids"); ok {
 		input.SubnetIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
@@ -453,7 +453,7 @@ func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.SetId(aws.ToString(output.BrokerId))
-	d.Set(names.AttrARN, output.BrokerArn)
+	d.Set("arn", output.BrokerArn)
 
 	if _, err := waitBrokerCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for MQ Broker (%s) create: %s", d.Id(), err)
@@ -479,23 +479,23 @@ func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading MQ Broker (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, output.BrokerArn)
+	d.Set("arn", output.BrokerArn)
 	d.Set("authentication_strategy", output.AuthenticationStrategy)
-	d.Set(names.AttrAutoMinorVersionUpgrade, output.AutoMinorVersionUpgrade)
+	d.Set("auto_minor_version_upgrade", output.AutoMinorVersionUpgrade)
 	d.Set("broker_name", output.BrokerName)
 	d.Set("data_replication_mode", output.DataReplicationMode)
 	d.Set("deployment_mode", output.DeploymentMode)
 	d.Set("engine_type", output.EngineType)
-	d.Set(names.AttrEngineVersion, output.EngineVersion)
+	d.Set("engine_version", output.EngineVersion)
 	d.Set("host_instance_type", output.HostInstanceType)
 	d.Set("instances", flattenBrokerInstances(output.BrokerInstances))
 	d.Set("pending_data_replication_mode", output.PendingDataReplicationMode)
-	d.Set(names.AttrPubliclyAccessible, output.PubliclyAccessible)
-	d.Set(names.AttrSecurityGroups, output.SecurityGroups)
-	d.Set(names.AttrStorageType, output.StorageType)
-	d.Set(names.AttrSubnetIDs, output.SubnetIds)
+	d.Set("publicly_accessible", output.PubliclyAccessible)
+	d.Set("security_groups", output.SecurityGroups)
+	d.Set("storage_type", output.StorageType)
+	d.Set("subnet_ids", output.SubnetIds)
 
-	if err := d.Set(names.AttrConfiguration, flattenConfiguration(output.Configurations)); err != nil {
+	if err := d.Set("configuration", flattenConfiguration(output.Configurations)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting configuration: %s", err)
 	}
 
@@ -542,10 +542,10 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	requiresReboot := false
 
-	if d.HasChange(names.AttrSecurityGroups) {
+	if d.HasChange("security_groups") {
 		input := &mq.UpdateBrokerInput{
 			BrokerId:       aws.String(d.Id()),
-			SecurityGroups: flex.ExpandStringValueSet(d.Get(names.AttrSecurityGroups).(*schema.Set)),
+			SecurityGroups: flex.ExpandStringValueSet(d.Get("security_groups").(*schema.Set)),
 		}
 
 		_, err := conn.UpdateBroker(ctx, input)
@@ -555,11 +555,11 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	if d.HasChanges(names.AttrConfiguration, "logs", names.AttrEngineVersion) {
+	if d.HasChanges("configuration", "logs", "engine_version") {
 		input := &mq.UpdateBrokerInput{
 			BrokerId:      aws.String(d.Id()),
-			Configuration: expandConfigurationId(d.Get(names.AttrConfiguration).([]interface{})),
-			EngineVersion: aws.String(d.Get(names.AttrEngineVersion).(string)),
+			Configuration: expandConfigurationId(d.Get("configuration").([]interface{})),
+			EngineVersion: aws.String(d.Get("engine_version").(string)),
 			Logs:          expandLogs(d.Get("engine_type").(string), d.Get("logs").([]interface{})),
 		}
 
@@ -604,9 +604,9 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		requiresReboot = true
 	}
 
-	if d.HasChange(names.AttrAutoMinorVersionUpgrade) {
+	if d.HasChange("auto_minor_version_upgrade") {
 		input := &mq.UpdateBrokerInput{
-			AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
+			AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
 			BrokerId:                aws.String(d.Id()),
 		}
 
@@ -649,7 +649,7 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		requiresReboot = true
 	}
 
-	if d.Get(names.AttrApplyImmediately).(bool) && requiresReboot {
+	if d.Get("apply_immediately").(bool) && requiresReboot {
 		_, err := conn.RebootBroker(ctx, &mq.RebootBrokerInput{
 			BrokerId: aws.String(d.Id()),
 		})
@@ -797,10 +797,10 @@ func resourceUserHash(v interface{}) int {
 	if g, ok := m["groups"]; ok {
 		buf.WriteString(fmt.Sprintf("%v-", g.(*schema.Set).List()))
 	}
-	if p, ok := m[names.AttrPassword]; ok {
+	if p, ok := m["password"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", p.(string)))
 	}
-	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrUsername].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m["username"].(string)))
 
 	return create.StringHashcode(buf.String())
 }
@@ -843,7 +843,7 @@ func DiffBrokerUsers(bId string, oldUsers, newUsers []interface{}) (cr []*mq.Cre
 	existingUsers := make(map[string]interface{})
 	for _, ou := range oldUsers {
 		u := ou.(map[string]interface{})
-		username := u[names.AttrUsername].(string)
+		username := u["username"].(string)
 		// Convert Set to slice to allow easier comparison
 		if g, ok := u["groups"]; ok {
 			groups := g.(*schema.Set).List()
@@ -866,7 +866,7 @@ func DiffBrokerUsers(bId string, oldUsers, newUsers []interface{}) (cr []*mq.Cre
 		}
 
 		newUserMap := newUser.(map[string]interface{})
-		username := newUserMap[names.AttrUsername].(string)
+		username := newUserMap["username"].(string)
 
 		// Convert Set to slice to allow easier comparison
 		var ng []interface{}
@@ -884,7 +884,7 @@ func DiffBrokerUsers(bId string, oldUsers, newUsers []interface{}) (cr []*mq.Cre
 					ConsoleAccess:   aws.Bool(newUserMap["console_access"].(bool)),
 					Groups:          flex.ExpandStringValueList(ng),
 					ReplicationUser: aws.Bool(newUserMap["replication_user"].(bool)),
-					Password:        aws.String(newUserMap[names.AttrPassword].(string)),
+					Password:        aws.String(newUserMap["password"].(string)),
 					Username:        aws.String(username),
 				})
 			}
@@ -895,7 +895,7 @@ func DiffBrokerUsers(bId string, oldUsers, newUsers []interface{}) (cr []*mq.Cre
 			cur := &mq.CreateUserInput{
 				BrokerId:        aws.String(bId),
 				ConsoleAccess:   aws.Bool(newUserMap["console_access"].(bool)),
-				Password:        aws.String(newUserMap[names.AttrPassword].(string)),
+				Password:        aws.String(newUserMap["password"].(string)),
 				ReplicationUser: aws.Bool(newUserMap["replication_user"].(bool)),
 				Username:        aws.String(username),
 			}
@@ -927,7 +927,7 @@ func expandEncryptionOptions(l []interface{}) *types.EncryptionOptions {
 		UseAwsOwnedKey: aws.Bool(m["use_aws_owned_key"].(bool)),
 	}
 
-	if v, ok := m[names.AttrKMSKeyID].(string); ok && v != "" {
+	if v, ok := m["kms_key_id"].(string); ok && v != "" {
 		encryptionOptions.KmsKeyId = aws.String(v)
 	}
 
@@ -940,7 +940,7 @@ func flattenEncryptionOptions(encryptionOptions *types.EncryptionOptions) []inte
 	}
 
 	m := map[string]interface{}{
-		names.AttrKMSKeyID:  aws.ToString(encryptionOptions.KmsKeyId),
+		"kms_key_id":        aws.ToString(encryptionOptions.KmsKeyId),
 		"use_aws_owned_key": aws.ToBool(encryptionOptions.UseAwsOwnedKey),
 	}
 
@@ -977,8 +977,8 @@ func expandUsers(cfg []interface{}) []types.User {
 	for i, m := range cfg {
 		u := m.(map[string]interface{})
 		user := types.User{
-			Username: aws.String(u[names.AttrUsername].(string)),
-			Password: aws.String(u[names.AttrPassword].(string)),
+			Username: aws.String(u["username"].(string)),
+			Password: aws.String(u["password"].(string)),
 		}
 		if v, ok := u["console_access"]; ok {
 			user.ConsoleAccess = aws.Bool(v.(bool))
@@ -1025,21 +1025,21 @@ func flattenUsers(users []*types.User, cfgUsers []interface{}) *schema.Set {
 	existingPairs := make(map[string]string)
 	for _, u := range cfgUsers {
 		user := u.(map[string]interface{})
-		username := user[names.AttrUsername].(string)
-		existingPairs[username] = user[names.AttrPassword].(string)
+		username := user["username"].(string)
+		existingPairs[username] = user["password"].(string)
 	}
 
 	out := make([]interface{}, 0)
 	for _, u := range users {
 		m := map[string]interface{}{
-			names.AttrUsername: aws.ToString(u.Username),
+			"username": aws.ToString(u.Username),
 		}
 		password := ""
 		if p, ok := existingPairs[aws.ToString(u.Username)]; ok {
 			password = p
 		}
 		if password != "" {
-			m[names.AttrPassword] = password
+			m["password"] = password
 		}
 		if u.ConsoleAccess != nil {
 			m["console_access"] = aws.ToBool(u.ConsoleAccess)
@@ -1092,7 +1092,7 @@ func expandConfigurationId(cfg []interface{}) *types.ConfigurationId {
 
 	m := cfg[0].(map[string]interface{})
 	out := types.ConfigurationId{
-		Id: aws.String(m[names.AttrID].(string)),
+		Id: aws.String(m["id"].(string)),
 	}
 	if v, ok := m["revision"].(int); ok && v > 0 {
 		out.Revision = aws.Int32(int32(v))
@@ -1107,8 +1107,8 @@ func flattenConfiguration(config *types.Configurations) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		names.AttrID: aws.ToString(config.Current.Id),
-		"revision":   aws.ToInt32(config.Current.Revision),
+		"id":       aws.ToString(config.Current.Id),
+		"revision": aws.ToInt32(config.Current.Revision),
 	}
 
 	return []interface{}{m}
@@ -1125,10 +1125,10 @@ func flattenBrokerInstances(instances []types.BrokerInstance) []interface{} {
 			m["console_url"] = aws.ToString(instance.ConsoleURL)
 		}
 		if len(instance.Endpoints) > 0 {
-			m[names.AttrEndpoints] = instance.Endpoints
+			m["endpoints"] = instance.Endpoints
 		}
 		if instance.IpAddress != nil {
-			m[names.AttrIPAddress] = aws.ToString(instance.IpAddress)
+			m["ip_address"] = aws.ToString(instance.IpAddress)
 		}
 		l[i] = m
 	}
@@ -1169,7 +1169,7 @@ func expandLogs(engineType string, l []interface{}) *types.Logs {
 
 	// When the engine type is "RabbitMQ", the parameter audit cannot be set at all.
 	if v, ok := m["audit"]; ok {
-		if v, null, _ := nullable.Bool(v.(string)).ValueBool(); !null {
+		if v, null, _ := nullable.Bool(v.(string)).Value(); !null {
 			if !strings.EqualFold(engineType, string(types.EngineTypeRabbitmq)) {
 				logs.Audit = aws.Bool(v)
 			}

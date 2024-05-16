@@ -69,14 +69,14 @@ func (r *resourceVpcEndpoint) Metadata(_ context.Context, request resource.Metad
 func (r *resourceVpcEndpoint) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
-			names.AttrName: schema.StringAttribute{
+			"id": framework.IDAttribute(),
+			"name": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 32),
 				},
 			},
-			names.AttrSecurityGroupIDs: schema.SetAttribute{
+			"security_group_ids": schema.SetAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
 				Computed:    true,
@@ -87,14 +87,14 @@ func (r *resourceVpcEndpoint) Schema(ctx context.Context, req resource.SchemaReq
 					setplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrSubnetIDs: schema.SetAttribute{
+			"subnet_ids": schema.SetAttribute{
 				ElementType: types.StringType,
 				Required:    true,
 				Validators: []validator.Set{
 					setvalidator.SizeBetween(1, 6),
 				},
 			},
-			names.AttrVPCID: schema.StringAttribute{
+			"vpc_id": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 255),
@@ -102,7 +102,7 @@ func (r *resourceVpcEndpoint) Schema(ctx context.Context, req resource.SchemaReq
 			},
 		},
 		Blocks: map[string]schema.Block{
-			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+			"timeouts": timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -307,7 +307,7 @@ func (r *resourceVpcEndpoint) Delete(ctx context.Context, req resource.DeleteReq
 }
 
 func (r *resourceVpcEndpoint) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 // refreshFromOutput writes state data from an AWS response object

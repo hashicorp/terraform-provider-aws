@@ -118,7 +118,7 @@ func TestAccPinpointAPNSVoIPSandboxChannel_basicCertificate(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrCertificate, names.AttrPrivateKey},
+				ImportStateVerifyIgnore: []string{"certificate", "private_key"},
 			},
 			{
 				Config: testAccAPNSVoIPSandboxChannelConfig_basicCertificate(configuration),

@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ec2_transit_gateway_route_table")
@@ -30,7 +29,7 @@ func DataSourceTransitGatewayRouteTable() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -42,17 +41,17 @@ func DataSourceTransitGatewayRouteTable() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			names.AttrFilter: customFiltersSchema(),
-			names.AttrID: {
+			"filter": customFiltersSchema(),
+			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			names.AttrTransitGatewayID: {
+			"transit_gateway_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -65,7 +64,7 @@ func dataSourceTransitGatewayRouteTableRead(ctx context.Context, d *schema.Resou
 	input := &ec2.DescribeTransitGatewayRouteTablesInput{}
 
 	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get(names.AttrFilter).(*schema.Set),
+		d.Get("filter").(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {
@@ -73,7 +72,7 @@ func dataSourceTransitGatewayRouteTableRead(ctx context.Context, d *schema.Resou
 		input.Filters = nil
 	}
 
-	if v, ok := d.GetOk(names.AttrID); ok {
+	if v, ok := d.GetOk("id"); ok {
 		input.TransitGatewayRouteTableIds = aws.StringSlice([]string{v.(string)})
 	}
 
@@ -91,12 +90,12 @@ func dataSourceTransitGatewayRouteTableRead(ctx context.Context, d *schema.Resou
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("transit-gateway-route-table/%s", d.Id()),
 	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set("arn", arn)
 	d.Set("default_association_route_table", transitGatewayRouteTable.DefaultAssociationRouteTable)
 	d.Set("default_propagation_route_table", transitGatewayRouteTable.DefaultPropagationRouteTable)
-	d.Set(names.AttrTransitGatewayID, transitGatewayRouteTable.TransitGatewayId)
+	d.Set("transit_gateway_id", transitGatewayRouteTable.TransitGatewayId)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, transitGatewayRouteTable.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, transitGatewayRouteTable.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

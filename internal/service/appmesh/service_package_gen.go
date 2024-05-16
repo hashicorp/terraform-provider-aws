@@ -26,39 +26,32 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceGatewayRoute,
+			Factory:  DataSourceGatewayRoute,
 			TypeName: "aws_appmesh_gateway_route",
-			Name:     "Gateway Route",
 		},
 		{
-			Factory:  dataSourceMesh,
+			Factory:  DataSourceMesh,
 			TypeName: "aws_appmesh_mesh",
-			Name:     "Service Mesh",
 		},
 		{
-			Factory:  dataSourceRoute,
+			Factory:  DataSourceRoute,
 			TypeName: "aws_appmesh_route",
-			Name:     "Route",
 		},
 		{
-			Factory:  dataSourceVirtualGateway,
+			Factory:  DataSourceVirtualGateway,
 			TypeName: "aws_appmesh_virtual_gateway",
-			Name:     "Virtual Gateway",
 		},
 		{
-			Factory:  dataSourceVirtualNode,
+			Factory:  DataSourceVirtualNode,
 			TypeName: "aws_appmesh_virtual_node",
-			Name:     "Virtual Node",
 		},
 		{
-			Factory:  dataSourceVirtualRouter,
+			Factory:  DataSourceVirtualRouter,
 			TypeName: "aws_appmesh_virtual_router",
-			Name:     "Virtual Router",
 		},
 		{
-			Factory:  dataSourceVirtualService,
+			Factory:  DataSourceVirtualService,
 			TypeName: "aws_appmesh_virtual_service",
-			Name:     "Virtual Service",
 		},
 	}
 }
@@ -66,59 +59,59 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  resourceGatewayRoute,
+			Factory:  ResourceGatewayRoute,
 			TypeName: "aws_appmesh_gateway_route",
 			Name:     "Gateway Route",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "arn",
 			},
 		},
 		{
-			Factory:  resourceMesh,
+			Factory:  ResourceMesh,
 			TypeName: "aws_appmesh_mesh",
 			Name:     "Service Mesh",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "arn",
 			},
 		},
 		{
-			Factory:  resourceRoute,
+			Factory:  ResourceRoute,
 			TypeName: "aws_appmesh_route",
 			Name:     "Route",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "arn",
 			},
 		},
 		{
-			Factory:  resourceVirtualGateway,
+			Factory:  ResourceVirtualGateway,
 			TypeName: "aws_appmesh_virtual_gateway",
 			Name:     "Virtual Gateway",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "arn",
 			},
 		},
 		{
-			Factory:  resourceVirtualNode,
+			Factory:  ResourceVirtualNode,
 			TypeName: "aws_appmesh_virtual_node",
 			Name:     "Virtual Node",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "arn",
 			},
 		},
 		{
-			Factory:  resourceVirtualRouter,
+			Factory:  ResourceVirtualRouter,
 			TypeName: "aws_appmesh_virtual_router",
 			Name:     "Virtual Router",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "arn",
 			},
 		},
 		{
-			Factory:  resourceVirtualService,
+			Factory:  ResourceVirtualService,
 			TypeName: "aws_appmesh_virtual_service",
 			Name:     "Virtual Service",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
+				IdentifierAttribute: "arn",
 			},
 		},
 	}
@@ -130,9 +123,9 @@ func (p *servicePackage) ServicePackageName() string {
 
 // NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
 func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*appmesh_sdkv1.AppMesh, error) {
-	sess := config[names.AttrSession].(*session_sdkv1.Session)
+	sess := config["session"].(*session_sdkv1.Session)
 
-	return appmesh_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config[names.AttrEndpoint].(string))})), nil
+	return appmesh_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

@@ -96,7 +96,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 					},
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
-							names.AttrDefaultValue: schema.StringAttribute{
+							"default_value": schema.StringAttribute{
 								Required: true,
 								Validators: []validator.String{
 									stringvalidator.LengthBetween(1, 202),
@@ -118,7 +118,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 				CustomType: fwtypes.NewListNestedObjectTypeOf[CustomPayload](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						names.AttrValue: schema.StringAttribute{
+						"value": schema.StringAttribute{
 							Required: true,
 						},
 					},
@@ -149,7 +149,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 									"text": schema.StringAttribute{
 										Required: true,
 									},
-									names.AttrValue: schema.StringAttribute{
+									"value": schema.StringAttribute{
 										Required: true,
 									},
 								},
@@ -165,7 +165,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 				CustomType: fwtypes.NewListNestedObjectTypeOf[PlainTextMessage](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						names.AttrValue: schema.StringAttribute{
+						"value": schema.StringAttribute{
 							Required: true,
 						},
 					},
@@ -178,7 +178,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 				CustomType: fwtypes.NewListNestedObjectTypeOf[SSMLMessage](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						names.AttrValue: schema.StringAttribute{
+						"value": schema.StringAttribute{
 							Required: true,
 						},
 					},
@@ -194,7 +194,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 		CustomType: fwtypes.NewListNestedObjectTypeOf[MessageGroup](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
-				names.AttrMessage: schema.ListNestedBlock{
+				"message": schema.ListNestedBlock{
 					Validators: []validator.List{
 						listvalidator.SizeBetween(1, 1),
 					},
@@ -488,10 +488,10 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrDescription: schema.StringAttribute{
+			"description": schema.StringAttribute{
 				Optional: true,
 			},
-			names.AttrID: framework.IDAttribute(),
+			"id": framework.IDAttribute(),
 			"intent_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -510,7 +510,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrName: schema.StringAttribute{
+			"name": schema.StringAttribute{
 				Required: true,
 			},
 			"slot_type_id": schema.StringAttribute{
@@ -522,7 +522,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 			"obfuscation_setting":       obfuscationSettingLNB,
 			"value_elicitation_setting": valueElicitationSettingLNB,
 			//sub_slot_setting
-			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+			"timeouts": timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,

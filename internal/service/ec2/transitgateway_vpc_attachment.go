@@ -56,7 +56,7 @@ func ResourceTransitGatewayVPCAttachment() *schema.Resource {
 				Default:      ec2.Ipv6SupportValueDisable,
 				ValidateFunc: validation.StringInSlice(ec2.Ipv6SupportValue_Values(), false),
 			},
-			names.AttrSubnetIDs: {
+			"subnet_ids": {
 				Type:     schema.TypeSet,
 				Required: true,
 				MinItems: 1,
@@ -74,13 +74,13 @@ func ResourceTransitGatewayVPCAttachment() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			names.AttrTransitGatewayID: {
+			"transit_gateway_id": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
-			names.AttrVPCID: {
+			"vpc_id": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -98,17 +98,17 @@ func resourceTransitGatewayVPCAttachmentCreate(ctx context.Context, d *schema.Re
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	transitGatewayID := d.Get(names.AttrTransitGatewayID).(string)
+	transitGatewayID := d.Get("transit_gateway_id").(string)
 	input := &ec2.CreateTransitGatewayVpcAttachmentInput{
 		Options: &ec2.CreateTransitGatewayVpcAttachmentRequestOptions{
 			ApplianceModeSupport: aws.String(d.Get("appliance_mode_support").(string)),
 			DnsSupport:           aws.String(d.Get("dns_support").(string)),
 			Ipv6Support:          aws.String(d.Get("ipv6_support").(string)),
 		},
-		SubnetIds:         flex.ExpandStringSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
+		SubnetIds:         flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
 		TransitGatewayId:  aws.String(transitGatewayID),
 		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeTransitGatewayAttachment),
-		VpcId:             aws.String(d.Get(names.AttrVPCID).(string)),
+		VpcId:             aws.String(d.Get("vpc_id").(string)),
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Transit Gateway VPC Attachment: %s", input)
@@ -211,11 +211,11 @@ func resourceTransitGatewayVPCAttachmentRead(ctx context.Context, d *schema.Reso
 	d.Set("appliance_mode_support", transitGatewayVPCAttachment.Options.ApplianceModeSupport)
 	d.Set("dns_support", transitGatewayVPCAttachment.Options.DnsSupport)
 	d.Set("ipv6_support", transitGatewayVPCAttachment.Options.Ipv6Support)
-	d.Set(names.AttrSubnetIDs, aws.StringValueSlice(transitGatewayVPCAttachment.SubnetIds))
+	d.Set("subnet_ids", aws.StringValueSlice(transitGatewayVPCAttachment.SubnetIds))
 	d.Set("transit_gateway_default_route_table_association", transitGatewayDefaultRouteTableAssociation)
 	d.Set("transit_gateway_default_route_table_propagation", transitGatewayDefaultRouteTablePropagation)
-	d.Set(names.AttrTransitGatewayID, transitGatewayVPCAttachment.TransitGatewayId)
-	d.Set(names.AttrVPCID, transitGatewayVPCAttachment.VpcId)
+	d.Set("transit_gateway_id", transitGatewayVPCAttachment.TransitGatewayId)
+	d.Set("vpc_id", transitGatewayVPCAttachment.VpcId)
 	d.Set("vpc_owner_id", transitGatewayVPCAttachment.VpcOwnerId)
 
 	setTagsOut(ctx, transitGatewayVPCAttachment.Tags)
@@ -227,7 +227,7 @@ func resourceTransitGatewayVPCAttachmentUpdate(ctx context.Context, d *schema.Re
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	if d.HasChanges("appliance_mode_support", "dns_support", "ipv6_support", names.AttrSubnetIDs) {
+	if d.HasChanges("appliance_mode_support", "dns_support", "ipv6_support", "subnet_ids") {
 		input := &ec2.ModifyTransitGatewayVpcAttachmentInput{
 			Options: &ec2.ModifyTransitGatewayVpcAttachmentRequestOptions{
 				ApplianceModeSupport: aws.String(d.Get("appliance_mode_support").(string)),
@@ -237,7 +237,7 @@ func resourceTransitGatewayVPCAttachmentUpdate(ctx context.Context, d *schema.Re
 			TransitGatewayAttachmentId: aws.String(d.Id()),
 		}
 
-		o, n := d.GetChange(names.AttrSubnetIDs)
+		o, n := d.GetChange("subnet_ids")
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
 
@@ -259,7 +259,7 @@ func resourceTransitGatewayVPCAttachmentUpdate(ctx context.Context, d *schema.Re
 	}
 
 	if d.HasChanges("transit_gateway_default_route_table_association", "transit_gateway_default_route_table_propagation") {
-		transitGatewayID := d.Get(names.AttrTransitGatewayID).(string)
+		transitGatewayID := d.Get("transit_gateway_id").(string)
 		transitGateway, err := FindTransitGatewayByID(ctx, conn, transitGatewayID)
 
 		if err != nil {

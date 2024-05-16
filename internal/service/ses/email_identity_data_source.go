@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ses_email_identity")
@@ -23,11 +22,11 @@ func DataSourceEmailIdentity() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEmailIdentityRead,
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrEmail: {
+			"email": {
 				Type:     schema.TypeString,
 				Required: true,
 				StateFunc: func(v interface{}) string {
@@ -42,11 +41,11 @@ func dataSourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
-	email := d.Get(names.AttrEmail).(string)
+	email := d.Get("email").(string)
 	email = strings.TrimSuffix(email, ".")
 
 	d.SetId(email)
-	d.Set(names.AttrEmail, email)
+	d.Set("email", email)
 
 	readOpts := &ses.GetIdentityVerificationAttributesInput{
 		Identities: []*string{
@@ -71,6 +70,6 @@ func dataSourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, me
 		Resource:  fmt.Sprintf("identity/%s", email),
 		Service:   "ses",
 	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set("arn", arn)
 	return diags
 }

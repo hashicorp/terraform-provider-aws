@@ -24,7 +24,7 @@ func DataSourcePlan() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrStage: {
+			"stage": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -33,7 +33,7 @@ func DataSourcePlan() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						names.AttrTarget: {
+						"target": {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{

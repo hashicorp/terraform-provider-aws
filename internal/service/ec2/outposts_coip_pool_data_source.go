@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ec2_coip_pool")
@@ -47,14 +46,14 @@ func DataSourceCoIPPool() *schema.Resource {
 				Computed: true,
 			},
 
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 
-			names.AttrFilter: customFiltersSchema(),
+			"filter": customFiltersSchema(),
 		},
 	}
 }
@@ -78,14 +77,14 @@ func dataSourceCoIPPoolRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	req.Filters = newAttributeFilterList(filters)
 
-	if tags, tagsOk := d.GetOk(names.AttrTags); tagsOk {
+	if tags, tagsOk := d.GetOk("tags"); tagsOk {
 		req.Filters = append(req.Filters, newTagFilterList(
 			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
 	}
 
 	req.Filters = append(req.Filters, newCustomFilterList(
-		d.Get(names.AttrFilter).(*schema.Set),
+		d.Get("filter").(*schema.Set),
 	)...)
 	if len(req.Filters) == 0 {
 		// Don't send an empty filters list; the EC2 API won't accept it.
@@ -109,7 +108,7 @@ func dataSourceCoIPPoolRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.SetId(aws.StringValue(coip.PoolId))
 
 	d.Set("local_gateway_route_table_id", coip.LocalGatewayRouteTableId)
-	d.Set(names.AttrARN, coip.PoolArn)
+	d.Set("arn", coip.PoolArn)
 
 	if err := d.Set("pool_cidrs", aws.StringValueSlice(coip.PoolCidrs)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting pool_cidrs: %s", err)
@@ -117,7 +116,7 @@ func dataSourceCoIPPoolRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.Set("pool_id", coip.PoolId)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, coip.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, coip.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

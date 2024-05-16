@@ -4,15 +4,12 @@
 package flex
 
 import (
-	"encoding/json"
 	"time"
 
-	smithydocument "github.com/aws/smithy-go/document"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	smithyjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 )
 
 type TestFlex00 struct{}
@@ -313,51 +310,4 @@ type TestFlexMapBlockKeyTF05 struct {
 	MapBlockKey fwtypes.StringEnum[TestEnum] `tfsdk:"map_block_key"`
 	Attr1       types.String                 `tfsdk:"attr1"`
 	Attr2       types.String                 `tfsdk:"attr2"`
-}
-
-var _ smithyjson.JSONStringer = (*testJSONDocument)(nil)
-var _ smithydocument.Marshaler = (*testJSONDocument)(nil)
-
-type testJSONDocument struct {
-	Value any
-}
-
-func newTestJSONDocument(v any) smithyjson.JSONStringer {
-	return &testJSONDocument{Value: v}
-}
-
-func (m *testJSONDocument) UnmarshalSmithyDocument(v interface{}) error {
-	data, err := json.Marshal(m.Value)
-	if err != nil {
-		return err
-	}
-	return json.Unmarshal(data, v)
-}
-
-func (m *testJSONDocument) MarshalSmithyDocument() ([]byte, error) {
-	return json.Marshal(m.Value)
-}
-
-type TestFlexAWS19 struct {
-	Field1 smithyjson.JSONStringer `json:"field1"`
-}
-
-type TestFlexTF19 struct {
-	Field1 types.String `tfsdk:"field1"`
-}
-
-type TestFlexTF20 struct {
-	Field1 fwtypes.SmithyJSON[smithyjson.JSONStringer] `tfsdk:"field1"`
-}
-
-type TestFlexTF21 struct {
-	Field1 fwtypes.MapValueOf[fwtypes.MapValueOf[types.String]] `tfsdk:"field1"`
-}
-
-type TestFlexAWS21 struct {
-	Field1 map[string]map[string]string
-}
-
-type TestFlexAWS22 struct {
-	Field1 map[string]map[string]*string
 }

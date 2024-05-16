@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ram/types"
+	"github.com/aws/aws-sdk-go/service/ram"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -53,11 +53,11 @@ func TestAccRAMResourceShareAccepter_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "share_arn", principalAssociationResourceName, "resource_share_arn"),
 					acctest.MatchResourceAttrRegionalARNAccountID(resourceName, "invitation_arn", "ram", `\d{12}`, regexache.MustCompile(fmt.Sprintf("resource-share-invitation/%s$", verify.UUIDRegexPattern))),
 					resource.TestMatchResourceAttr(resourceName, "share_id", regexache.MustCompile(fmt.Sprintf(`^rs-%s$`, verify.UUIDRegexPattern))),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.ResourceShareStatusActive)),
+					resource.TestCheckResourceAttr(resourceName, "status", ram.ResourceShareStatusActive),
 					acctest.CheckResourceAttrAccountID(resourceName, "receiver_account_id"),
 					resource.TestMatchResourceAttr(resourceName, "sender_account_id", regexache.MustCompile(`\d{12}`)),
 					resource.TestCheckResourceAttr(resourceName, "share_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "resources.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "resources.%", "0"),
 				),
 			},
 			{
@@ -118,11 +118,11 @@ func TestAccRAMResourceShareAccepter_resourceAssociation(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "share_arn", principalAssociationResourceName, "resource_share_arn"),
 					acctest.MatchResourceAttrRegionalARNAccountID(resourceName, "invitation_arn", "ram", `\d{12}`, regexache.MustCompile(fmt.Sprintf("resource-share-invitation/%s$", verify.UUIDRegexPattern))),
 					resource.TestMatchResourceAttr(resourceName, "share_id", regexache.MustCompile(fmt.Sprintf(`^rs-%s$`, verify.UUIDRegexPattern))),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.ResourceShareStatusActive)),
+					resource.TestCheckResourceAttr(resourceName, "status", ram.ResourceShareStatusActive),
 					acctest.CheckResourceAttrAccountID(resourceName, "receiver_account_id"),
 					resource.TestMatchResourceAttr(resourceName, "sender_account_id", regexache.MustCompile(`\d{12}`)),
 					resource.TestCheckResourceAttr(resourceName, "share_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "resources.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "resources.%", "0"),
 				),
 			},
 		},
@@ -131,7 +131,7 @@ func TestAccRAMResourceShareAccepter_resourceAssociation(t *testing.T) {
 
 func testAccCheckResourceShareAccepterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ram_resource_share_accepter" {
@@ -162,7 +162,7 @@ func testAccCheckResourceShareAccepterExists(ctx context.Context, n string) reso
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn(ctx)
 
 		_, err := tfram.FindResourceShareOwnerOtherAccountsByARN(ctx, conn, rs.Primary.ID)
 

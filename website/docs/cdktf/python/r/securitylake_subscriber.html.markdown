@@ -12,8 +12,6 @@ description: |-
 
 Terraform resource for managing an AWS Security Lake Subscriber.
 
-~> **NOTE:** The underlying `aws_securitylake_data_lake` must be configured before creating the `aws_securitylake_subscriber`. Use a `depends_on` statement.
-
 ## Example Usage
 
 ```python
@@ -30,7 +28,6 @@ class MyConvertedCode(TerraformStack):
         super().__init__(scope, name)
         SecuritylakeSubscriber(self, "example",
             access_type="S3",
-            depends_on=[aws_securitylake_data_lake_example],
             source=[SecuritylakeSubscriberSource(
                 aws_log_source_resource=[SecuritylakeSubscriberSourceAwsLogSourceResource(
                     source_name="ROUTE53",
@@ -39,6 +36,7 @@ class MyConvertedCode(TerraformStack):
                 ]
             )
             ],
+            source_version="1.0",
             subscriber_identity=[SecuritylakeSubscriberSubscriberIdentity(
                 external_id="example",
                 principal="1234567890"
@@ -68,14 +66,14 @@ Sources support the following:
 * `aws_log_source_resource` - (Optional) Amazon Security Lake supports log and event collection for natively supported AWS services.
 * `custom_log_source_resource` - (Optional) Amazon Security Lake supports custom source types.
 
-AWS Log Source Resource support the following:
+Aws Log Source Resource support the following:
 
-* `source_name` - (Required) Provides data expiration details of Amazon Security Lake object.
+* `source_name` - (Optional) Provides data expiration details of Amazon Security Lake object.
 * `source_version` - (Optional) Provides data storage transition details of Amazon Security Lake object.
 
 Custom Log Source Resource support the following:
 
-* `source_name` - (Required) The name for a third-party custom source. This must be a Regionally unique value.
+* `source_name` - (Optional) The name for a third-party custom source. This must be a Regionally unique value.
 * `source_version` - (Optional) The version for a third-party custom source. This must be a Regionally unique value.
 
 ## Attribute Reference
@@ -83,7 +81,6 @@ Custom Log Source Resource support the following:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Data Lake.
-* `id` - The Subscriber ID of the subscriber.
 * `s3_bucket_arn` - The ARN for the Amazon Security Lake Amazon S3 bucket.
 * `resource_share_arn` - The Amazon Resource Name (ARN) which uniquely defines the AWS RAM resource share. Before accepting the RAM resource share invitation, you can view details related to the RAM resource share.
 * `role_arn` - The Amazon Resource Name (ARN) specifying the role of the subscriber.
@@ -132,4 +129,4 @@ Using `terraform import`, import Security Lake subscriber using the subscriber I
 % terraform import aws_securitylake_subscriber.example 9f3bfe79-d543-474d-a93c-f3846805d208
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-adae7fb43bec9bf95f06899477ef90c1e3a86066153b0c369bea3746f16d0e49 -->
+<!-- cache-key: cdktf-0.20.1 input-236327fbc88412ff27daff6b466e14ddcb0a303883525382815bf68f46262e47 -->

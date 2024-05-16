@@ -47,15 +47,15 @@ func ResourceProject() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			names.AttrDisplayName: {
+			"display_name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -73,18 +73,18 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).CodeCatalystClient(ctx)
 
 	in := &codecatalyst.CreateProjectInput{
-		DisplayName: aws.String(d.Get(names.AttrDisplayName).(string)),
+		DisplayName: aws.String(d.Get("display_name").(string)),
 		SpaceName:   aws.String(d.Get("space_name").(string)),
-		Description: aws.String(d.Get(names.AttrDescription).(string)),
+		Description: aws.String(d.Get("description").(string)),
 	}
 
 	out, err := conn.CreateProject(ctx, in)
 	if err != nil {
-		return create.AppendDiagError(diags, names.CodeCatalyst, create.ErrActionCreating, ResNameProject, d.Get(names.AttrDisplayName).(string), err)
+		return create.AppendDiagError(diags, names.CodeCatalyst, create.ErrActionCreating, ResNameProject, d.Get("display_name").(string), err)
 	}
 
 	if out == nil || out.Name == nil {
-		return create.AppendDiagError(diags, names.CodeCatalyst, create.ErrActionCreating, ResNameProject, d.Get(names.AttrDisplayName).(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.CodeCatalyst, create.ErrActionCreating, ResNameProject, d.Get("display_name").(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.Name))
@@ -110,9 +110,9 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return create.AppendDiagError(diags, names.CodeCatalyst, create.ErrActionReading, ResNameProject, d.Id(), err)
 	}
 
-	d.Set(names.AttrName, out.Name)
+	d.Set("name", out.Name)
 	d.Set("space_name", out.SpaceName)
-	d.Set(names.AttrDescription, out.Description)
+	d.Set("description", out.Description)
 
 	return diags
 }
@@ -125,13 +125,13 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	update := false
 
 	in := &codecatalyst.UpdateProjectInput{
-		Name:        aws.String(d.Get(names.AttrDisplayName).(string)),
+		Name:        aws.String(d.Get("display_name").(string)),
 		SpaceName:   aws.String(d.Get("space_name").(string)),
-		Description: aws.String(d.Get(names.AttrDescription).(string)),
+		Description: aws.String(d.Get("description").(string)),
 	}
 
-	if d.HasChanges(names.AttrDescription) {
-		in.Description = aws.String(d.Get(names.AttrDescription).(string))
+	if d.HasChanges("description") {
+		in.Description = aws.String(d.Get("description").(string))
 		update = true
 	}
 

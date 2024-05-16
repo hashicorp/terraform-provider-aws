@@ -30,7 +30,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"App": {
-			acctest.CtBasic:         testAccApp_basic,
+			"basic":                 testAccApp_basic,
 			"disappears":            testAccApp_disappears,
 			"tags":                  testAccApp_tags,
 			"resourceSpec":          testAccApp_resourceSpec,
@@ -38,7 +38,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"space":                 testAccApp_space,
 		},
 		"Domain": {
-			acctest.CtBasic:                            testAccDomain_basic,
+			"basic":                                    testAccDomain_basic,
 			"disappears":                               testAccDomain_tags,
 			"tags":                                     testAccDomain_disappears,
 			"tensorboardAppSettings":                   testAccDomain_tensorboardAppSettings,
@@ -70,14 +70,14 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"spaceStorageSettings":                                   testAccDomain_spaceStorageSettings,
 		},
 		"FlowDefinition": {
-			acctest.CtBasic:                  testAccFlowDefinition_basic,
+			"basic":                          testAccFlowDefinition_basic,
 			"disappears":                     testAccFlowDefinition_disappears,
 			"tags":                           testAccFlowDefinition_tags,
 			"HumanLoopConfigPublicWorkforce": testAccFlowDefinition_humanLoopConfig_publicWorkforce,
 			"HumanLoopRequestSource":         testAccFlowDefinition_humanLoopRequestSource,
 		},
 		"Space": {
-			acctest.CtBasic:            testAccSpace_basic,
+			"basic":                    testAccSpace_basic,
 			"disappears":               testAccSpace_tags,
 			"tags":                     testAccSpace_disappears,
 			"kernelGatewayAppSettings": testAccSpace_kernelGatewayAppSettings,
@@ -90,7 +90,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"customFileSystem":                         testAccSpace_customFileSystem,
 		},
 		"UserProfile": {
-			acctest.CtBasic:                   testAccUserProfile_basic,
+			"basic":                           testAccUserProfile_basic,
 			"disappears":                      testAccUserProfile_tags,
 			"tags":                            testAccUserProfile_disappears,
 			"tensorboardAppSettings":          testAccUserProfile_tensorboardAppSettings,
@@ -115,7 +115,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"OidcConfig":         testAccWorkteam_oidcConfig,
 		},
 		"Servicecatalog": {
-			acctest.CtBasic: testAccServicecatalogPortfolioStatus_basic,
+			"basic": testAccServicecatalogPortfolioStatus_basic,
 		},
 	}
 

@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_pinpoint_adm_channel")
@@ -34,17 +33,17 @@ func ResourceADMChannel() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrClientID: {
+			"client_id": {
 				Type:      schema.TypeString,
 				Required:  true,
 				Sensitive: true,
 			},
-			names.AttrClientSecret: {
+			"client_secret": {
 				Type:      schema.TypeString,
 				Required:  true,
 				Sensitive: true,
 			},
-			names.AttrEnabled: {
+			"enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
@@ -61,9 +60,9 @@ func resourceADMChannelUpsert(ctx context.Context, d *schema.ResourceData, meta 
 
 	params := &pinpoint.ADMChannelRequest{}
 
-	params.ClientId = aws.String(d.Get(names.AttrClientID).(string))
-	params.ClientSecret = aws.String(d.Get(names.AttrClientSecret).(string))
-	params.Enabled = aws.Bool(d.Get(names.AttrEnabled).(bool))
+	params.ClientId = aws.String(d.Get("client_id").(string))
+	params.ClientSecret = aws.String(d.Get("client_secret").(string))
+	params.Enabled = aws.Bool(d.Get("enabled").(bool))
 
 	req := pinpoint.UpdateAdmChannelInput{
 		ApplicationId:     aws.String(applicationId),
@@ -100,7 +99,7 @@ func resourceADMChannelRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	d.Set("application_id", channel.ADMChannelResponse.ApplicationId)
-	d.Set(names.AttrEnabled, channel.ADMChannelResponse.Enabled)
+	d.Set("enabled", channel.ADMChannelResponse.Enabled)
 	// client_id and client_secret are never returned
 
 	return diags

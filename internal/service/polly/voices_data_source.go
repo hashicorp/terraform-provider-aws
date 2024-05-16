@@ -42,11 +42,11 @@ func (d *dataSourceVoices) Schema(ctx context.Context, req datasource.SchemaRequ
 				CustomType: fwtypes.StringEnumType[awstypes.Engine](),
 				Optional:   true,
 			},
-			names.AttrID: framework.IDAttribute(),
+			"id": framework.IDAttribute(),
 			"include_additional_language_codes": schema.BoolAttribute{
 				Optional: true,
 			},
-			names.AttrLanguageCode: schema.StringAttribute{
+			"language_code": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.LanguageCode](),
 				Optional:   true,
 			},
@@ -64,16 +64,16 @@ func (d *dataSourceVoices) Schema(ctx context.Context, req datasource.SchemaRequ
 						"gender": schema.StringAttribute{
 							Computed: true,
 						},
-						names.AttrID: schema.StringAttribute{
+						"id": schema.StringAttribute{
 							Computed: true,
 						},
-						names.AttrLanguageCode: schema.StringAttribute{
+						"language_code": schema.StringAttribute{
 							Computed: true,
 						},
 						"language_name": schema.StringAttribute{
 							Computed: true,
 						},
-						names.AttrName: schema.StringAttribute{
+						"name": schema.StringAttribute{
 							Computed: true,
 						},
 						"supported_engines": schema.ListAttribute{

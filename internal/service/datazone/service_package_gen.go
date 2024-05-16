@@ -15,28 +15,11 @@ import (
 type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{
-		{
-			Factory: newDataSourceEnvironmentBlueprint,
-			Name:    "Environment Blueprint",
-		},
-	}
+	return []*types.ServicePackageFrameworkDataSource{}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{
-		{
-			Factory: newResourceDomain,
-			Name:    "Domain",
-			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			},
-		},
-		{
-			Factory: newResourceEnvironmentBlueprintConfiguration,
-			Name:    "Environment Blueprint Configuration",
-		},
-	}
+	return []*types.ServicePackageFrameworkResource{}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
@@ -56,7 +39,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
 	return datazone_sdkv2.NewFromConfig(cfg, func(o *datazone_sdkv2.Options) {
-		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
+		if endpoint := config["endpoint"].(string); endpoint != "" {
 			o.BaseEndpoint = aws_sdkv2.String(endpoint)
 		}
 	}), nil

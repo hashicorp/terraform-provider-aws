@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // See https://docs.aws.amazon.com/general/latest/gr/elasticbeanstalk.html
@@ -51,7 +50,7 @@ func DataSourceHostedZone() *schema.Resource {
 		ReadWithoutTimeout: dataSourceHostedZoneRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrRegion: {
+			"region": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -62,7 +61,7 @@ func DataSourceHostedZone() *schema.Resource {
 func dataSourceHostedZoneRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	region := meta.(*conns.AWSClient).Region
-	if v, ok := d.GetOk(names.AttrRegion); ok {
+	if v, ok := d.GetOk("region"); ok {
 		region = v.(string)
 	}
 
@@ -73,6 +72,6 @@ func dataSourceHostedZoneRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.SetId(zoneID)
-	d.Set(names.AttrRegion, region)
+	d.Set("region", region)
 	return diags
 }

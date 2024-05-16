@@ -78,14 +78,14 @@ func (r *resourceExportTask) Schema(ctx context.Context, req resource.SchemaRequ
 			"failure_cause": schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrIAMRoleARN: schema.StringAttribute{
+			"iam_role_arn": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 			},
-			names.AttrID: framework.IDAttribute(),
-			names.AttrKMSKeyID: schema.StringAttribute{
+			"id": framework.IDAttribute(),
+			"kms_key_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplaceIfConfigured(),
@@ -94,7 +94,7 @@ func (r *resourceExportTask) Schema(ctx context.Context, req resource.SchemaRequ
 			"percent_progress": schema.Int64Attribute{
 				Computed: true,
 			},
-			names.AttrS3BucketName: schema.StringAttribute{
+			"s3_bucket_name": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplaceIfConfigured(),
@@ -117,10 +117,10 @@ func (r *resourceExportTask) Schema(ctx context.Context, req resource.SchemaRequ
 					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 			},
-			names.AttrSourceType: schema.StringAttribute{
+			"source_type": schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrStatus: schema.StringAttribute{
+			"status": schema.StringAttribute{
 				Computed: true,
 			},
 			"task_end_time": schema.StringAttribute{
@@ -134,7 +134,7 @@ func (r *resourceExportTask) Schema(ctx context.Context, req resource.SchemaRequ
 			},
 		},
 		Blocks: map[string]schema.Block{
-			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+			"timeouts": timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Delete: true,
 			}),
@@ -266,7 +266,7 @@ func (r *resourceExportTask) Delete(ctx context.Context, req resource.DeleteRequ
 }
 
 func (r *resourceExportTask) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func FindExportTaskByID(ctx context.Context, conn *rds.Client, id string) (*awstypes.ExportTask, error) {

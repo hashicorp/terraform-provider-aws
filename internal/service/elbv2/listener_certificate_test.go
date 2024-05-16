@@ -41,8 +41,8 @@ func TestAccELBV2ListenerCertificate_basic(t *testing.T) {
 				Config: testAccListenerCertificateConfig_basic(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerCertificateExists(resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateARN, iamServerCertificateResourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", lbListenerResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", iamServerCertificateResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", lbListenerResourceName, "arn"),
 				),
 			},
 			{
@@ -74,8 +74,8 @@ func TestAccELBV2ListenerCertificate_CertificateARN_underscores(t *testing.T) {
 				Config: testAccListenerCertificateConfig_arnUnderscores(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerCertificateExists(resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateARN, iamServerCertificateResourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", lbListenerResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", iamServerCertificateResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", lbListenerResourceName, "arn"),
 				),
 			},
 			{
@@ -112,11 +112,11 @@ func TestAccELBV2ListenerCertificate_multiple(t *testing.T) {
 					testAccCheckListenerCertificateExists("aws_lb_listener_certificate.additional_1"),
 					testAccCheckListenerCertificateExists("aws_lb_listener_certificate.additional_2"),
 					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.default", "listener_arn"),
-					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.default", names.AttrCertificateARN),
+					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.default", "certificate_arn"),
 					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.additional_1", "listener_arn"),
-					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.additional_1", names.AttrCertificateARN),
+					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.additional_1", "certificate_arn"),
 					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.additional_2", "listener_arn"),
-					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.additional_2", names.AttrCertificateARN),
+					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.additional_2", "certificate_arn"),
 				),
 			},
 			{
@@ -132,13 +132,13 @@ func TestAccELBV2ListenerCertificate_multiple(t *testing.T) {
 					testAccCheckListenerCertificateExists("aws_lb_listener_certificate.additional_2"),
 					testAccCheckListenerCertificateExists("aws_lb_listener_certificate.additional_3"),
 					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.default", "listener_arn"),
-					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.default", names.AttrCertificateARN),
+					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.default", "certificate_arn"),
 					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.additional_1", "listener_arn"),
-					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.additional_1", names.AttrCertificateARN),
+					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.additional_1", "certificate_arn"),
 					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.additional_2", "listener_arn"),
-					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.additional_2", names.AttrCertificateARN),
+					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.additional_2", "certificate_arn"),
 					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.additional_3", "listener_arn"),
-					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.additional_3", names.AttrCertificateARN),
+					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.additional_3", "certificate_arn"),
 				),
 			},
 			{
@@ -149,11 +149,11 @@ func TestAccELBV2ListenerCertificate_multiple(t *testing.T) {
 					testAccCheckListenerCertificateExists("aws_lb_listener_certificate.additional_2"),
 					testAccCheckListenerCertificateNotExists("aws_lb_listener_certificate.additional_3"),
 					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.default", "listener_arn"),
-					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.default", names.AttrCertificateARN),
+					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.default", "certificate_arn"),
 					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.additional_1", "listener_arn"),
-					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.additional_1", names.AttrCertificateARN),
+					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.additional_1", "certificate_arn"),
 					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.additional_2", "listener_arn"),
-					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.additional_2", names.AttrCertificateARN),
+					resource.TestCheckResourceAttrSet("aws_lb_listener_certificate.additional_2", "certificate_arn"),
 				),
 			},
 		},
@@ -239,7 +239,7 @@ func testAccCheckListenerCertificateDestroy(ctx context.Context) resource.TestCh
 					continue
 				}
 
-				if aws.ToString(cert.CertificateArn) == rs.Primary.Attributes[names.AttrCertificateARN] {
+				if aws.ToString(cert.CertificateArn) == rs.Primary.Attributes["certificate_arn"] {
 					return errors.New("LB listener certificate not destroyed")
 				}
 			}

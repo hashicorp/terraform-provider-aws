@@ -42,7 +42,7 @@ class MyConvertedCode extends TerraformStack {
     const awsLightsailInstanceTest = new LightsailInstance(this, "test_2", {
       availabilityZone: "us-east-1b",
       blueprintId: "amazon_linux_2",
-      bundleId: "nano_3_0",
+      bundleId: "nano_1_0",
       name: "mytestinstance",
     });
     /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
@@ -97,4 +97,4 @@ Using `terraform import`, import `aws_lightsail_bucket_resource_access` using th
 % terraform import aws_lightsail_bucket_resource_access.test example-bucket,example-instance
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-11d161bb3c5191460b3ab1be6d53678d62712049e854a8f1218a3be8610b0749 -->
+<!-- cache-key: cdktf-0.20.1 input-e66e2caf6e37ed190e4f20bfc333ee8f9ffb8ca628a14ba9a473ab2aa2e22e18 -->

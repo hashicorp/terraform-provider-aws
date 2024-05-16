@@ -110,8 +110,8 @@ func TestAccVPCLatticeServiceNetwork_basic(t *testing.T) {
 				Config: testAccServiceNetworkConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceNetworkExists(ctx, resourceName, &servicenetwork),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("servicenetwork/.+$")),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexache.MustCompile("servicenetwork/.+$")),
 				),
 			},
 			{
@@ -171,9 +171,9 @@ func TestAccVPCLatticeServiceNetwork_full(t *testing.T) {
 				Config: testAccServiceNetworkConfig_full(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceNetworkExists(ctx, resourceName, &servicenetwork),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", "AWS_IAM"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("servicenetwork/.+$")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexache.MustCompile("servicenetwork/.+$")),
 				),
 			},
 			{
@@ -198,11 +198,11 @@ func TestAccVPCLatticeServiceNetwork_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckServiceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceNetworkConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccServiceNetworkConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceNetworkExists(ctx, resourceName, &serviceNetwork1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -211,20 +211,20 @@ func TestAccVPCLatticeServiceNetwork_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccServiceNetworkConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccServiceNetworkConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceNetworkExists(ctx, resourceName, &serviceNetwork2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccServiceNetworkConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccServiceNetworkConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceNetworkExists(ctx, resourceName, &serviceNetwork3),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},

@@ -7,27 +7,24 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_cloudfront_monitoring_subscription", name="Monitoring Subscription")
-func resourceMonitoringSubscription() *schema.Resource {
+// @SDKResource("aws_cloudfront_monitoring_subscription")
+func ResourceMonitoringSubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMonitoringSubscriptionCreate,
 		ReadWithoutTimeout:   resourceMonitoringSubscriptionRead,
 		UpdateWithoutTimeout: resourceMonitoringSubscriptionCreate,
 		DeleteWithoutTimeout: resourceMonitoringSubscriptionDelete,
-
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceMonitoringSubscriptionImport,
 		},
@@ -53,9 +50,9 @@ func resourceMonitoringSubscription() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"realtime_metrics_subscription_status": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.RealtimeMetricsSubscriptionStatus](),
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(cloudfront.RealtimeMetricsSubscriptionStatus_Values(), false),
 									},
 								},
 							},
@@ -69,7 +66,7 @@ func resourceMonitoringSubscription() *schema.Resource {
 
 func resourceMonitoringSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	id := d.Get("distribution_id").(string)
 	input := &cloudfront.CreateMonitoringSubscriptionInput{
@@ -80,24 +77,23 @@ func resourceMonitoringSubscriptionCreate(ctx context.Context, d *schema.Resourc
 		input.MonitoringSubscription = expandMonitoringSubscription(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	_, err := conn.CreateMonitoringSubscription(ctx, input)
+	log.Printf("[DEBUG] Creating CloudFront Monitoring Subscription: %s", input)
+	_, err := conn.CreateMonitoringSubscriptionWithContext(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating CloudFront Monitoring Subscription (%s): %s", id, err)
 	}
 
-	if d.IsNewResource() {
-		d.SetId(id)
-	}
+	d.SetId(id)
 
 	return append(diags, resourceMonitoringSubscriptionRead(ctx, d, meta)...)
 }
 
 func resourceMonitoringSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
-	output, err := findMonitoringSubscriptionByDistributionID(ctx, conn, d.Id())
+	output, err := FindMonitoringSubscriptionByDistributionID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudFront Monitoring Subscription (%s) not found, removing from state", d.Id())
@@ -122,14 +118,14 @@ func resourceMonitoringSubscriptionRead(ctx context.Context, d *schema.ResourceD
 
 func resourceMonitoringSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
-	log.Printf("[DEBUG] Deleting CloudFront Monitoring Subscription: %s", d.Id())
-	_, err := conn.DeleteMonitoringSubscription(ctx, &cloudfront.DeleteMonitoringSubscriptionInput{
+	log.Printf("[DEBUG] Deleting CloudFront Monitoring Subscription (%s)", d.Id())
+	_, err := conn.DeleteMonitoringSubscriptionWithContext(ctx, &cloudfront.DeleteMonitoringSubscriptionInput{
 		DistributionId: aws.String(d.Id()),
 	})
 
-	if errs.IsA[*awstypes.NoSuchDistribution](err) || errs.IsA[*awstypes.NoSuchMonitoringSubscription](err) {
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution) {
 		return diags
 	}
 
@@ -145,37 +141,12 @@ func resourceMonitoringSubscriptionImport(ctx context.Context, d *schema.Resourc
 	return []*schema.ResourceData{d}, nil
 }
 
-func findMonitoringSubscriptionByDistributionID(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetMonitoringSubscriptionOutput, error) {
-	input := &cloudfront.GetMonitoringSubscriptionInput{
-		DistributionId: aws.String(id),
-	}
-
-	output, err := conn.GetMonitoringSubscription(ctx, input)
-
-	if errs.IsA[*awstypes.NoSuchDistribution](err) || errs.IsA[*awstypes.NoSuchMonitoringSubscription](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
-}
-
-func expandMonitoringSubscription(tfMap map[string]interface{}) *awstypes.MonitoringSubscription {
+func expandMonitoringSubscription(tfMap map[string]interface{}) *cloudfront.MonitoringSubscription {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &awstypes.MonitoringSubscription{}
+	apiObject := &cloudfront.MonitoringSubscription{}
 
 	if v, ok := tfMap["realtime_metrics_subscription_config"].([]interface{}); ok && len(v) > 0 {
 		apiObject.RealtimeMetricsSubscriptionConfig = expandRealtimeMetricsSubscriptionConfig(v[0].(map[string]interface{}))
@@ -184,21 +155,21 @@ func expandMonitoringSubscription(tfMap map[string]interface{}) *awstypes.Monito
 	return apiObject
 }
 
-func expandRealtimeMetricsSubscriptionConfig(tfMap map[string]interface{}) *awstypes.RealtimeMetricsSubscriptionConfig {
+func expandRealtimeMetricsSubscriptionConfig(tfMap map[string]interface{}) *cloudfront.RealtimeMetricsSubscriptionConfig {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &awstypes.RealtimeMetricsSubscriptionConfig{}
+	apiObject := &cloudfront.RealtimeMetricsSubscriptionConfig{}
 
 	if v, ok := tfMap["realtime_metrics_subscription_status"].(string); ok && v != "" {
-		apiObject.RealtimeMetricsSubscriptionStatus = awstypes.RealtimeMetricsSubscriptionStatus(v)
+		apiObject.RealtimeMetricsSubscriptionStatus = aws.String(v)
 	}
 
 	return apiObject
 }
 
-func flattenMonitoringSubscription(apiObject *awstypes.MonitoringSubscription) map[string]interface{} {
+func flattenMonitoringSubscription(apiObject *cloudfront.MonitoringSubscription) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -212,13 +183,15 @@ func flattenMonitoringSubscription(apiObject *awstypes.MonitoringSubscription) m
 	return tfMap
 }
 
-func flattenRealtimeMetricsSubscriptionConfig(apiObject *awstypes.RealtimeMetricsSubscriptionConfig) map[string]interface{} {
+func flattenRealtimeMetricsSubscriptionConfig(apiObject *cloudfront.RealtimeMetricsSubscriptionConfig) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
-		"realtime_metrics_subscription_status": apiObject.RealtimeMetricsSubscriptionStatus,
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.RealtimeMetricsSubscriptionStatus; v != nil {
+		tfMap["realtime_metrics_subscription_status"] = aws.StringValue(v)
 	}
 
 	return tfMap

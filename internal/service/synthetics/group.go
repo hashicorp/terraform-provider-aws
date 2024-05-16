@@ -35,7 +35,7 @@ func ResourceGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -43,7 +43,7 @@ func ResourceGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -60,7 +60,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SyntheticsClient(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	in := &synthetics.CreateGroupInput{
 		Name: aws.String(name),
 		Tags: getTagsIn(ctx),
@@ -97,9 +97,9 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading Synthetics Group (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, group.Arn)
+	d.Set("arn", group.Arn)
 	d.Set("group_id", group.Id)
-	d.Set(names.AttrName, group.Name)
+	d.Set("name", group.Name)
 
 	setTagsOut(ctx, group.Tags)
 

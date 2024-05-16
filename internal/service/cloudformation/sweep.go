@@ -8,17 +8,14 @@ import (
 	"log"
 	"slices"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
 func RegisterSweepers() {
@@ -50,25 +47,16 @@ func sweepStackSetInstances(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.CloudFormationClient(ctx)
+	conn := client.CloudFormationConn(ctx)
 	input := &cloudformation.ListStackSetsInput{
-		Status: awstypes.StackSetStatusActive,
+		Status: aws.String(cloudformation.StackSetStatusActive),
 	}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := cloudformation.NewListStackSetsPaginator(conn, input)
-
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping CloudFormation StackSet Instance sweep for %s: %s", region, err)
-			return nil
-		}
-
-		if err != nil {
-			return fmt.Errorf("error listing CloudFormation StackSets (%s): %w", region, err)
+	err = conn.ListStackSetsPagesWithContext(ctx, input, func(page *cloudformation.ListStackSetsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
 		for _, v := range page.Summaries {
@@ -76,48 +64,61 @@ func sweepStackSetInstances(region string) error {
 				StackSetName: v.StackSetName,
 			}
 
-			pages := cloudformation.NewListStackInstancesPaginator(conn, input)
-
-			for pages.HasMorePages() {
-				page, err := pages.NextPage(ctx)
-
-				if awsv2.SkipSweepError(err) {
-					continue
-				}
-
-				if err != nil {
-					sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing CloudFormation StackSet Instances (%s): %w", region, err))
+			err := conn.ListStackInstancesPagesWithContext(ctx, input, func(page *cloudformation.ListStackInstancesOutput, lastPage bool) bool {
+				if page == nil {
+					return !lastPage
 				}
 
 				for _, v := range page.Summaries {
-					stackSetID := aws.ToString(v.StackSetId)
+					stackSetID := aws.StringValue(v.StackSetId)
 
 					if v.StackInstanceStatus != nil {
-						if v.StackInstanceStatus.DetailedStatus == awstypes.StackInstanceDetailedStatusSkippedSuspendedAccount {
-							log.Printf("[INFO] Skipping CloudFormation StackSet Instance %s: DetailedStatus=%s", stackSetID, v.StackInstanceStatus.DetailedStatus)
+						if status := aws.StringValue(v.StackInstanceStatus.DetailedStatus); status == cloudformation.StackInstanceDetailedStatusSkippedSuspendedAccount {
+							log.Printf("[INFO] Skipping CloudFormation StackSet Instance %s: DetailedStatus=%s", stackSetID, status)
 							continue
 						}
 					}
 
-					ouID := aws.ToString(v.OrganizationalUnitId)
-					accountOrOrgID := aws.ToString(v.Account)
+					ouID := aws.StringValue(v.OrganizationalUnitId)
+					accountOrOrgID := aws.StringValue(v.Account)
 					if ouID != "" {
 						accountOrOrgID = ouID
 					}
 
-					r := resourceStackSetInstance()
+					r := ResourceStackSetInstance()
 					d := r.Data(nil)
-					id := errs.Must(flex.FlattenResourceId([]string{stackSetID, accountOrOrgID, aws.ToString(v.Region)}, stackSetInstanceResourceIDPartCount, false))
+					id := StackSetInstanceCreateResourceID(stackSetID, accountOrOrgID, aws.StringValue(v.Region))
 					d.SetId(id)
-					d.Set("call_as", awstypes.CallAsSelf)
+					d.Set("call_as", cloudformation.CallAsSelf)
 					if ouID != "" {
 						d.Set("deployment_targets", []interface{}{map[string]interface{}{"organizational_unit_ids": schema.NewSet(schema.HashString, []interface{}{ouID})}})
 					}
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
+
+				return !lastPage
+			})
+
+			if awsv1.SkipSweepError(err) {
+				continue
+			}
+
+			if err != nil {
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing CloudFormation StackSet Instances (%s): %w", region, err))
 			}
 		}
+
+		return !lastPage
+	})
+
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping CloudFormation StackSet Instance sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing CloudFormation StackSets (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -135,52 +136,54 @@ func sweepStackSets(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.CloudFormationClient(ctx)
+	conn := client.CloudFormationConn(ctx)
 	input := &cloudformation.ListStackSetsInput{
-		Status: awstypes.StackSetStatusActive,
+		Status: aws.String(cloudformation.StackSetStatusActive),
 	}
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	// Attempt to determine whether or not Organizations access is enabled.
 	orgAccessEnabled := false
-	if servicePrincipalNames, err := tforganizations.FindEnabledServicePrincipalNames(ctx, client.OrganizationsClient(ctx)); err == nil {
+	if servicePrincipalNames, err := tforganizations.FindEnabledServicePrincipalNames(ctx, client.OrganizationsConn(ctx)); err == nil {
 		orgAccessEnabled = slices.Contains(servicePrincipalNames, "member.org.stacksets.cloudformation.amazonaws.com")
 	}
 
-	pages := cloudformation.NewListStackSetsPaginator(conn, input)
-
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping CloudFormation StackSet sweep for %s: %s", region, err)
-			return nil
-		}
-
-		if err != nil {
-			return fmt.Errorf("error listing CloudFormation StackSets (%s): %w", region, err)
+	err = conn.ListStackSetsPagesWithContext(ctx, input, func(page *cloudformation.ListStackSetsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
 		for _, v := range page.Summaries {
-			name := aws.ToString(v.StackSetName)
+			name := aws.StringValue(v.StackSetName)
 
-			if v.Status == awstypes.StackSetStatusDeleted {
-				log.Printf("[INFO] SkippingCloudFormation StackSet %s: Status=%s", name, v.Status)
+			if status := aws.StringValue(v.Status); status == cloudformation.StackSetStatusDeleted {
+				log.Printf("[INFO] SkippingCloudFormation StackSet %s: Status=%s", name, status)
 				continue
 			}
 
-			if v.PermissionModel == awstypes.PermissionModelsServiceManaged && !orgAccessEnabled {
-				log.Printf("[INFO] SkippingCloudFormation StackSet %s: PermissionModel=%s", name, v.PermissionModel)
+			if permissionModel := aws.StringValue(v.PermissionModel); permissionModel == cloudformation.PermissionModelsServiceManaged && !orgAccessEnabled {
+				log.Printf("[INFO] SkippingCloudFormation StackSet %s: PermissionModel=%s", name, permissionModel)
 				continue
 			}
 
-			r := resourceStackSet()
+			r := ResourceStackSet()
 			d := r.Data(nil)
 			d.SetId(name)
-			d.Set("call_as", awstypes.CallAsSelf)
+			d.Set("call_as", cloudformation.CallAsSelf)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
+
+		return !lastPage
+	})
+
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping CloudFormation StackSet sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing CloudFormation StackSets (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -198,52 +201,54 @@ func sweepStacks(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.CloudFormationClient(ctx)
+	conn := client.CloudFormationConn(ctx)
 	input := &cloudformation.ListStacksInput{
-		StackStatusFilter: []awstypes.StackStatus{
-			awstypes.StackStatusCreateComplete,
-			awstypes.StackStatusImportComplete,
-			awstypes.StackStatusRollbackComplete,
-			awstypes.StackStatusUpdateComplete,
-		},
+		StackStatusFilter: aws.StringSlice([]string{
+			cloudformation.StackStatusCreateComplete,
+			cloudformation.StackStatusImportComplete,
+			cloudformation.StackStatusRollbackComplete,
+			cloudformation.StackStatusUpdateComplete,
+		}),
 	}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := cloudformation.NewListStacksPaginator(conn, input)
-
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping CloudFormation Stack sweep for %s: %s", region, err)
-			return nil
-		}
-
-		if err != nil {
-			return fmt.Errorf("error listing CloudFormation Stacks: %s", err)
+	err = conn.ListStacksPagesWithContext(ctx, input, func(page *cloudformation.ListStacksOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
 		for _, v := range page.StackSummaries {
-			name := aws.ToString(v.StackName)
+			name := aws.StringValue(v.StackName)
 			inputU := &cloudformation.UpdateTerminationProtectionInput{
 				EnableTerminationProtection: aws.Bool(false),
 				StackName:                   aws.String(name),
 			}
 
 			log.Printf("[INFO] Disabling termination protection for CloudFormation Stack: %s", name)
-			_, err := conn.UpdateTerminationProtection(ctx, inputU)
+			_, err := conn.UpdateTerminationProtectionWithContext(ctx, inputU)
 
 			if err != nil {
 				log.Printf("[ERROR] Disabling termination protection for CloudFormation Stack (%s): %s", name, err)
 				continue
 			}
 
-			r := resourceStack()
+			r := ResourceStack()
 			d := r.Data(nil)
 			d.SetId(name)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
+
+		return !lastPage
+	})
+
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping CloudFormation Stack sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing CloudFormation Stacks: %s", err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)

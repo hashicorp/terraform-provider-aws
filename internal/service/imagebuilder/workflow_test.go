@@ -36,17 +36,17 @@ func TestAccImageBuilderWorkflow_basic(t *testing.T) {
 				Config: testAccWorkflowConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkflowExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "imagebuilder", regexache.MustCompile(fmt.Sprintf("workflow/test/%s/1.0.0/[1-9][0-9]*", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "imagebuilder", regexache.MustCompile(fmt.Sprintf("workflow/test/%s/1.0.0/[1-9][0-9]*", rName))),
 					resource.TestCheckResourceAttr(resourceName, "change_description", ""),
 					resource.TestMatchResourceAttr(resourceName, "data", regexache.MustCompile(`schemaVersion`)),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_created"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwner),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, imagebuilder.WorkflowTypeTest),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1.0.0"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "type", imagebuilder.WorkflowTypeTest),
+					resource.TestCheckResourceAttr(resourceName, "version", "1.0.0"),
 				),
 			},
 			{
@@ -123,7 +123,7 @@ func TestAccImageBuilderWorkflow_description(t *testing.T) {
 				Config: testAccWorkflowConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkflowExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
+					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
 				),
 			},
 			{
@@ -151,7 +151,7 @@ func TestAccImageBuilderWorkflow_kmsKeyID(t *testing.T) {
 				Config: testAccWorkflowConfig_kmsKeyID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkflowExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, kmsKeyResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "arn"),
 				),
 			},
 			{
@@ -175,11 +175,11 @@ func TestAccImageBuilderWorkflow_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckWorkflowDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkflowConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Config: testAccWorkflowConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkflowExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -188,20 +188,20 @@ func TestAccImageBuilderWorkflow_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccWorkflowConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccWorkflowConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkflowExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccWorkflowConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccWorkflowConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkflowExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -224,14 +224,14 @@ func TestAccImageBuilderWorkflow_uri(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkflowExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "data"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrURI),
+					resource.TestCheckResourceAttrSet(resourceName, "uri"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrURI},
+				ImportStateVerifyIgnore: []string{"uri"},
 			},
 		},
 	})

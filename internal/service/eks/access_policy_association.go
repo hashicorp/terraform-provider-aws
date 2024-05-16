@@ -23,7 +23,6 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_eks_access_policy_association", name="Access Policy Association")
@@ -59,7 +58,7 @@ func resourceAccessPolicyAssociation() *schema.Resource {
 								Type: schema.TypeString,
 							},
 						},
-						names.AttrType: {
+						"type": {
 							Type:     schema.TypeString,
 							ForceNew: true,
 							Required: true,
@@ -71,7 +70,7 @@ func resourceAccessPolicyAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrClusterName: {
+			"cluster_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -101,7 +100,7 @@ func resourceAccessPolicyAssociationCreate(ctx context.Context, d *schema.Resour
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
-	clusterName := d.Get(names.AttrClusterName).(string)
+	clusterName := d.Get("cluster_name").(string)
 	principalARN := d.Get("principal_arn").(string)
 	policyARN := d.Get("policy_arn").(string)
 	id := accessPolicyAssociationCreateResourceID(clusterName, principalARN, policyARN)
@@ -148,7 +147,7 @@ func resourceAccessPolicyAssociationRead(ctx context.Context, d *schema.Resource
 
 	d.Set("access_scope", flattenAccessScope(output.AccessScope))
 	d.Set("associated_at", aws.ToTime(output.AssociatedAt).String())
-	d.Set(names.AttrClusterName, clusterName)
+	d.Set("cluster_name", clusterName)
 	d.Set("modified_at", aws.ToTime(output.ModifiedAt).String())
 	d.Set("policy_arn", policyARN)
 	d.Set("principal_arn", principalARN)
@@ -260,7 +259,7 @@ func expandAccessScope(l []interface{}) *types.AccessScope {
 
 	accessScope := &types.AccessScope{}
 
-	if v, ok := m[names.AttrType].(string); ok && v != "" {
+	if v, ok := m["type"].(string); ok && v != "" {
 		accessScope.Type = types.AccessScopeType(v)
 	}
 
@@ -277,8 +276,8 @@ func flattenAccessScope(apiObject *types.AccessScope) []interface{} {
 	}
 
 	tfMap := map[string]interface{}{
-		names.AttrType: (*string)(&apiObject.Type),
-		"namespaces":   apiObject.Namespaces,
+		"type":       (*string)(&apiObject.Type),
+		"namespaces": apiObject.Namespaces,
 	}
 
 	return []interface{}{tfMap}

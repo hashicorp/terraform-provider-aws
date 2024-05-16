@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ses_domain_identity_verification")
@@ -31,11 +30,11 @@ func ResourceDomainIdentityVerification() *schema.Resource {
 		DeleteWithoutTimeout: resourceDomainIdentityVerificationDelete,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDomain: {
+			"domain": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -66,7 +65,7 @@ func getIdentityVerificationAttributes(ctx context.Context, conn *ses.SES, domai
 func resourceDomainIdentityVerificationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESConn(ctx)
-	domainName := d.Get(names.AttrDomain).(string)
+	domainName := d.Get("domain").(string)
 	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 		att, err := getIdentityVerificationAttributes(ctx, conn, domainName)
 		if err != nil {
@@ -105,7 +104,7 @@ func resourceDomainIdentityVerificationRead(ctx context.Context, d *schema.Resou
 	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	domainName := d.Id()
-	d.Set(names.AttrDomain, domainName)
+	d.Set("domain", domainName)
 
 	att, err := getIdentityVerificationAttributes(ctx, conn, domainName)
 	if err != nil {
@@ -131,7 +130,7 @@ func resourceDomainIdentityVerificationRead(ctx context.Context, d *schema.Resou
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("identity/%s", d.Id()),
 	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set("arn", arn)
 
 	return diags
 }

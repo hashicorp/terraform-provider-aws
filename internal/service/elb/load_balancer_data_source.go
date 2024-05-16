@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_elb")
@@ -25,12 +24,12 @@ func DataSourceLoadBalancer() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLoadBalancerRead,
 		Schema: map[string]*schema.Schema{
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
 
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -40,19 +39,19 @@ func DataSourceLoadBalancer() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrInterval: {
+						"interval": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						names.AttrBucket: {
+						"bucket": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrBucketPrefix: {
+						"bucket_prefix": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrEnabled: {
+						"enabled": {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
@@ -60,7 +59,7 @@ func DataSourceLoadBalancer() *schema.Resource {
 				},
 			},
 
-			names.AttrAvailabilityZones: {
+			"availability_zones": {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
@@ -81,12 +80,12 @@ func DataSourceLoadBalancer() *schema.Resource {
 				Computed: true,
 			},
 
-			names.AttrDNSName: {
+			"dns_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			names.AttrHealthCheck: {
+			"health_check": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -101,17 +100,17 @@ func DataSourceLoadBalancer() *schema.Resource {
 							Computed: true,
 						},
 
-						names.AttrTarget: {
+						"target": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 
-						names.AttrInterval: {
+						"interval": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
 
-						names.AttrTimeout: {
+						"timeout": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -169,7 +168,7 @@ func DataSourceLoadBalancer() *schema.Resource {
 				Set: ListenerHash,
 			},
 
-			names.AttrSecurityGroups: {
+			"security_groups": {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
@@ -185,7 +184,7 @@ func DataSourceLoadBalancer() *schema.Resource {
 				Computed: true,
 			},
 
-			names.AttrSubnets: {
+			"subnets": {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
@@ -196,7 +195,7 @@ func DataSourceLoadBalancer() *schema.Resource {
 				Computed: true,
 			},
 
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 
 			"zone_id": {
 				Type:     schema.TypeString,
@@ -212,7 +211,7 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 	ec2conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	lbName := d.Get(names.AttrName).(string)
+	lbName := d.Get("name").(string)
 	lb, err := FindLoadBalancerByName(ctx, conn, lbName)
 
 	if err != nil {
@@ -240,9 +239,9 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("loadbalancer/%s", d.Id()),
 	}
-	d.Set(names.AttrARN, arn.String())
-	d.Set(names.AttrName, lb.LoadBalancerName)
-	d.Set(names.AttrDNSName, lb.DNSName)
+	d.Set("arn", arn.String())
+	d.Set("name", lb.LoadBalancerName)
+	d.Set("dns_name", lb.DNSName)
 	d.Set("zone_id", lb.CanonicalHostedZoneNameID)
 
 	var scheme bool
@@ -250,10 +249,10 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 		scheme = aws.StringValue(lb.Scheme) == "internal"
 	}
 	d.Set("internal", scheme)
-	d.Set(names.AttrAvailabilityZones, flex.FlattenStringList(lb.AvailabilityZones))
+	d.Set("availability_zones", flex.FlattenStringList(lb.AvailabilityZones))
 	d.Set("instances", flattenInstances(lb.Instances))
 	d.Set("listener", flattenListeners(lb.ListenerDescriptions))
-	d.Set(names.AttrSecurityGroups, flex.FlattenStringList(lb.SecurityGroups))
+	d.Set("security_groups", flex.FlattenStringList(lb.SecurityGroups))
 	if lb.SourceSecurityGroup != nil {
 		group := lb.SourceSecurityGroup.GroupName
 		if lb.SourceSecurityGroup.OwnerAlias != nil && aws.StringValue(lb.SourceSecurityGroup.OwnerAlias) != "" {
@@ -273,7 +272,7 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 			}
 		}
 	}
-	d.Set(names.AttrSubnets, flex.FlattenStringList(lb.Subnets))
+	d.Set("subnets", flex.FlattenStringList(lb.Subnets))
 	if lbAttrs.ConnectionSettings != nil {
 		d.Set("idle_timeout", lbAttrs.ConnectionSettings.IdleTimeout)
 	}
@@ -318,14 +317,14 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "listing tags for ELB (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	// There's only one health check, so save that to state as we
 	// currently can
 	if aws.StringValue(lb.HealthCheck.Target) != "" {
-		d.Set(names.AttrHealthCheck, FlattenHealthCheck(lb.HealthCheck))
+		d.Set("health_check", FlattenHealthCheck(lb.HealthCheck))
 	}
 
 	return diags

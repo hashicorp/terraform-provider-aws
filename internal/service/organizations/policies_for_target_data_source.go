@@ -6,28 +6,25 @@ package organizations
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/organizations"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_organizations_policies_for_target", name="Policies For Target")
-func dataSourcePoliciesForTarget() *schema.Resource {
+// @SDKDataSource("aws_organizations_policies_for_target")
+func DataSourcePoliciesForTarget() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePoliciesForTargetRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrFilter: {
+			"filter": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrIDs: {
+			"ids": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -42,40 +39,45 @@ func dataSourcePoliciesForTarget() *schema.Resource {
 
 func dataSourcePoliciesForTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
+
+	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	targetID := d.Get("target_id").(string)
-	filter := d.Get(names.AttrFilter).(string)
-	input := &organizations.ListPoliciesForTargetInput{
-		Filter:   awstypes.PolicyType(filter),
-		TargetId: aws.String(targetID),
-	}
-	policies, err := findPoliciesForTarget(ctx, conn, input)
+	filter := d.Get("filter").(string)
+	policies, err := findPoliciesForTarget(ctx, conn, targetID, filter)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Organizations Policies (%s) for target (%s): %s", filter, targetID, err)
+		return sdkdiag.AppendErrorf(diags, "listing Organizations Policies (%s) for target (%s): %s", filter, targetID, err)
+	}
+
+	var policyIDs []string
+
+	for _, v := range policies {
+		policyIDs = append(policyIDs, aws.StringValue(v.Id))
 	}
 
 	d.SetId(targetID)
-	d.Set(names.AttrIDs, tfslices.ApplyToAll(policies, func(v awstypes.PolicySummary) string {
-		return aws.ToString(v.Id)
-	}))
+
+	d.Set("ids", policyIDs)
 
 	return diags
 }
 
-func findPoliciesForTarget(ctx context.Context, conn *organizations.Client, input *organizations.ListPoliciesForTargetInput) ([]awstypes.PolicySummary, error) {
-	var output []awstypes.PolicySummary
+func findPoliciesForTarget(ctx context.Context, conn *organizations.Organizations, targetID string, filter string) ([]*organizations.PolicySummary, error) {
+	input := &organizations.ListPoliciesForTargetInput{
+		Filter:   aws.String(filter),
+		TargetId: aws.String(targetID),
+	}
+	var output []*organizations.PolicySummary
 
-	pages := organizations.NewListPoliciesForTargetPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if err != nil {
-			return nil, err
-		}
-
+	err := conn.ListPoliciesForTargetPagesWithContext(ctx, input, func(page *organizations.ListPoliciesForTargetOutput, lastPage bool) bool {
 		output = append(output, page.Policies...)
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
 	}
 
 	return output, nil

@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_iam_group_membership", name="Group Membership")
@@ -31,7 +30,7 @@ func resourceGroupMembership() *schema.Resource {
 		DeleteWithoutTimeout: resourceGroupMembershipDelete,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -61,10 +60,10 @@ func resourceGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, 
 	userList := flex.ExpandStringValueSet(d.Get("users").(*schema.Set))
 
 	if err := addUsersToGroup(ctx, conn, userList, group); err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating IAM Group Membership (%s): %s", d.Get(names.AttrName).(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating IAM Group Membership (%s): %s", d.Get("name").(string), err)
 	}
 
-	d.SetId(d.Get(names.AttrName).(string))
+	d.SetId(d.Get("name").(string))
 
 	return append(diags, resourceGroupMembershipRead(ctx, d, meta)...)
 }
@@ -159,11 +158,11 @@ func resourceGroupMembershipUpdate(ctx context.Context, d *schema.ResourceData, 
 		add := flex.ExpandStringValueSet(ns.Difference(os))
 
 		if err := removeUsersFromGroup(ctx, conn, remove, group); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating IAM Group Membership (%s): %s", d.Get(names.AttrName).(string), err)
+			return sdkdiag.AppendErrorf(diags, "updating IAM Group Membership (%s): %s", d.Get("name").(string), err)
 		}
 
 		if err := addUsersToGroup(ctx, conn, add, group); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating IAM Group Membership (%s): %s", d.Get(names.AttrName).(string), err)
+			return sdkdiag.AppendErrorf(diags, "updating IAM Group Membership (%s): %s", d.Get("name").(string), err)
 		}
 	}
 
@@ -177,7 +176,7 @@ func resourceGroupMembershipDelete(ctx context.Context, d *schema.ResourceData, 
 	group := d.Get("group").(string)
 
 	if err := removeUsersFromGroup(ctx, conn, userList, group); err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting IAM Group Membership (%s): %s", d.Get(names.AttrName).(string), err)
+		return sdkdiag.AppendErrorf(diags, "deleting IAM Group Membership (%s): %s", d.Get("name").(string), err)
 	}
 	return diags
 }

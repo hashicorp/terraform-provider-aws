@@ -42,22 +42,22 @@ func resourceVPCLink() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
-			names.AttrSecurityGroupIDs: {
+			"security_group_ids": {
 				Type:     schema.TypeSet,
 				Required: true,
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrSubnetIDs: {
+			"subnet_ids": {
 				Type:     schema.TypeSet,
 				Required: true,
 				ForceNew: true,
@@ -75,11 +75,11 @@ func resourceVPCLinkCreate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &apigatewayv2.CreateVpcLinkInput{
 		Name:             aws.String(name),
-		SecurityGroupIds: flex.ExpandStringValueSet(d.Get(names.AttrSecurityGroupIDs).(*schema.Set)),
-		SubnetIds:        flex.ExpandStringValueSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
+		SecurityGroupIds: flex.ExpandStringValueSet(d.Get("security_group_ids").(*schema.Set)),
+		SubnetIds:        flex.ExpandStringValueSet(d.Get("subnet_ids").(*schema.Set)),
 		Tags:             getTagsIn(ctx),
 	}
 
@@ -114,10 +114,10 @@ func resourceVPCLinkRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway v2 VPC Link (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, vpcLinkARN(meta.(*conns.AWSClient), d.Id()))
-	d.Set(names.AttrName, output.Name)
-	d.Set(names.AttrSecurityGroupIDs, output.SecurityGroupIds)
-	d.Set(names.AttrSubnetIDs, output.SubnetIds)
+	d.Set("arn", vpcLinkARN(meta.(*conns.AWSClient), d.Id()))
+	d.Set("name", output.Name)
+	d.Set("security_group_ids", output.SecurityGroupIds)
+	d.Set("subnet_ids", output.SubnetIds)
 
 	setTagsOut(ctx, output.Tags)
 
@@ -128,9 +128,9 @@ func resourceVPCLinkUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &apigatewayv2.UpdateVpcLinkInput{
-			Name:      aws.String(d.Get(names.AttrName).(string)),
+			Name:      aws.String(d.Get("name").(string)),
 			VpcLinkId: aws.String(d.Id()),
 		}
 

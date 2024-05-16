@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_glue_script")
@@ -27,11 +26,11 @@ func DataSourceScript() *schema.Resource {
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrSource: {
+						"source": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						names.AttrTarget: {
+						"target": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -53,7 +52,7 @@ func DataSourceScript() *schema.Resource {
 							MinItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrName: {
+									"name": {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -61,14 +60,14 @@ func DataSourceScript() *schema.Resource {
 										Type:     schema.TypeBool,
 										Optional: true,
 									},
-									names.AttrValue: {
+									"value": {
 										Type:     schema.TypeString,
 										Required: true,
 									},
 								},
 							},
 						},
-						names.AttrID: {
+						"id": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -143,9 +142,9 @@ func expandCodeGenNodeArgs(l []interface{}) []*glue.CodeGenNodeArg {
 	for _, mRaw := range l {
 		m := mRaw.(map[string]interface{})
 		arg := &glue.CodeGenNodeArg{
-			Name:  aws.String(m[names.AttrName].(string)),
+			Name:  aws.String(m["name"].(string)),
 			Param: aws.Bool(m["param"].(bool)),
-			Value: aws.String(m[names.AttrValue].(string)),
+			Value: aws.String(m["value"].(string)),
 		}
 		args = append(args, arg)
 	}
@@ -159,8 +158,8 @@ func expandCodeGenEdges(l []interface{}) []*glue.CodeGenEdge {
 	for _, mRaw := range l {
 		m := mRaw.(map[string]interface{})
 		edge := &glue.CodeGenEdge{
-			Source: aws.String(m[names.AttrSource].(string)),
-			Target: aws.String(m[names.AttrTarget].(string)),
+			Source: aws.String(m["source"].(string)),
+			Target: aws.String(m["target"].(string)),
 		}
 		if v, ok := m["target_parameter"]; ok && v.(string) != "" {
 			edge.TargetParameter = aws.String(v.(string))
@@ -178,7 +177,7 @@ func expandCodeGenNodes(l []interface{}) []*glue.CodeGenNode {
 		m := mRaw.(map[string]interface{})
 		node := &glue.CodeGenNode{
 			Args:     expandCodeGenNodeArgs(m["args"].([]interface{})),
-			Id:       aws.String(m[names.AttrID].(string)),
+			Id:       aws.String(m["id"].(string)),
 			NodeType: aws.String(m["node_type"].(string)),
 		}
 		if v, ok := m["line_number"]; ok && v.(int) != 0 {

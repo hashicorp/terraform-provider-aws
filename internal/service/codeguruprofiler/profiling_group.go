@@ -55,7 +55,7 @@ func (r *resourceProfilingGroup) Schema(ctx context.Context, req resource.Schema
 
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			"arn": framework.ARNAttributeComputedOnly(),
 			"compute_platform": schema.StringAttribute{
 				CustomType: computePlatform,
 				Optional:   true,
@@ -65,8 +65,8 @@ func (r *resourceProfilingGroup) Schema(ctx context.Context, req resource.Schema
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrID: framework.IDAttribute(),
-			names.AttrName: schema.StringAttribute{
+			"id": framework.IDAttribute(),
+			"name": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -242,7 +242,7 @@ func (r *resourceProfilingGroup) Delete(ctx context.Context, req resource.Delete
 }
 
 func (r *resourceProfilingGroup) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *resourceProfilingGroup) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {

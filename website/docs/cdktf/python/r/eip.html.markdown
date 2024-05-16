@@ -167,7 +167,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - Contains the EIP allocation ID.
 * `private_dns` - The Private DNS associated with the Elastic IP address (if in VPC).
 * `private_ip` - Contains the private IP address (if in VPC).
-* `ptr_record` - The DNS pointer (PTR) record for the IP address.
 * `public_dns` - Public DNS associated with the Elastic IP address.
 * `public_ip` - Contains the public IP address.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
@@ -209,4 +208,4 @@ Using `terraform import`, import EIPs in a VPC using their Allocation ID. For ex
 
 [1]: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_AssociateAddress.html
 
-<!-- cache-key: cdktf-0.20.1 input-6a89493038dac99cec86f1a49c272bbfc44ff7c12140dc474c2d8eeb9f23298a -->
+<!-- cache-key: cdktf-0.20.1 input-2894d9bbbc820133a7e6582361d7e5ae944dbddb77332e6b8487b7c5fcf90efe -->

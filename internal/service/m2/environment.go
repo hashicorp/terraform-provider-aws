@@ -71,7 +71,7 @@ func (r *environmentResource) Schema(ctx context.Context, request resource.Schem
 				Optional: true,
 			},
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrDescription: schema.StringAttribute{
+			"description": schema.StringAttribute{
 				Optional: true,
 				Validators: []validator.String{
 					stringvalidator.LengthAtMost(500),
@@ -87,7 +87,7 @@ func (r *environmentResource) Schema(ctx context.Context, request resource.Schem
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrEngineVersion: schema.StringAttribute{
+			"engine_version": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				Validators: []validator.String{
@@ -102,13 +102,13 @@ func (r *environmentResource) Schema(ctx context.Context, request resource.Schem
 				Optional: true,
 			},
 			names.AttrID: framework.IDAttribute(),
-			names.AttrInstanceType: schema.StringAttribute{
+			"instance_type": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.RegexMatches(regexache.MustCompile(`^\S{1,20}$`), ""),
 				},
 			},
-			names.AttrKMSKeyID: schema.StringAttribute{
+			"kms_key_id": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Optional:   true,
 				PlanModifiers: []planmodifier.String{
@@ -121,7 +121,7 @@ func (r *environmentResource) Schema(ctx context.Context, request resource.Schem
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrName: schema.StringAttribute{
+			"name": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_\-]{1,59}$`), ""),
@@ -130,7 +130,7 @@ func (r *environmentResource) Schema(ctx context.Context, request resource.Schem
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrPreferredMaintenanceWindow: schema.StringAttribute{
+			"preferred_maintenance_window": schema.StringAttribute{
 				CustomType: fwtypes.OnceAWeekWindowType,
 				Optional:   true,
 				Computed:   true,
@@ -138,7 +138,7 @@ func (r *environmentResource) Schema(ctx context.Context, request resource.Schem
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrPubliclyAccessible: schema.BoolAttribute{
+			"publicly_accessible": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
@@ -146,7 +146,7 @@ func (r *environmentResource) Schema(ctx context.Context, request resource.Schem
 					boolplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrSecurityGroupIDs: schema.SetAttribute{
+			"security_group_ids": schema.SetAttribute{
 				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
 				Optional:    true,
@@ -159,7 +159,7 @@ func (r *environmentResource) Schema(ctx context.Context, request resource.Schem
 					setplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrSubnetIDs: schema.SetAttribute{
+			"subnet_ids": schema.SetAttribute{
 				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
 				Optional:    true,
@@ -216,7 +216,7 @@ func (r *environmentResource) Schema(ctx context.Context, request resource.Schem
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									names.AttrFileSystemID: schema.StringAttribute{
+									"file_system_id": schema.StringAttribute{
 										Required: true,
 										PlanModifiers: []planmodifier.String{
 											stringplanmodifier.RequiresReplace(),
@@ -241,7 +241,7 @@ func (r *environmentResource) Schema(ctx context.Context, request resource.Schem
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									names.AttrFileSystemID: schema.StringAttribute{
+									"file_system_id": schema.StringAttribute{
 										Required: true,
 										PlanModifiers: []planmodifier.String{
 											stringplanmodifier.RequiresReplace(),
@@ -259,7 +259,7 @@ func (r *environmentResource) Schema(ctx context.Context, request resource.Schem
 					},
 				},
 			},
-			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+			"timeouts": timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,

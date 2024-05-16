@@ -63,11 +63,11 @@ func (r *resourceModelInvocationLoggingConfiguration) Schema(ctx context.Context
 					"cloudwatch_config": schema.SingleNestedBlock{
 						CustomType: fwtypes.NewObjectTypeOf[cloudWatchConfigModel](ctx),
 						Attributes: map[string]schema.Attribute{
-							names.AttrLogGroupName: schema.StringAttribute{
+							"log_group_name": schema.StringAttribute{
 								// Required: true,
 								Optional: true,
 							},
-							names.AttrRoleARN: schema.StringAttribute{
+							"role_arn": schema.StringAttribute{
 								CustomType: fwtypes.ARNType,
 								Optional:   true,
 							},
@@ -76,7 +76,7 @@ func (r *resourceModelInvocationLoggingConfiguration) Schema(ctx context.Context
 							"large_data_delivery_s3_config": schema.SingleNestedBlock{
 								CustomType: fwtypes.NewObjectTypeOf[s3ConfigModel](ctx),
 								Attributes: map[string]schema.Attribute{
-									names.AttrBucketName: schema.StringAttribute{
+									"bucket_name": schema.StringAttribute{
 										// Required: true,
 										Optional: true,
 									},
@@ -90,7 +90,7 @@ func (r *resourceModelInvocationLoggingConfiguration) Schema(ctx context.Context
 					"s3_config": schema.SingleNestedBlock{
 						CustomType: fwtypes.NewObjectTypeOf[s3ConfigModel](ctx),
 						Attributes: map[string]schema.Attribute{
-							names.AttrBucketName: schema.StringAttribute{
+							"bucket_name": schema.StringAttribute{
 								// Required: true,
 								Optional: true,
 							},

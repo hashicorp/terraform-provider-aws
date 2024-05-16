@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_securityhub_insight", name="Insight")
@@ -35,7 +34,7 @@ func resourceInsight() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -45,23 +44,23 @@ func resourceInsight() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"aws_account_id":                              stringFilterSchema(),
-						"company_name":                                stringFilterSchema(),
-						"compliance_status":                           stringFilterSchema(),
-						"confidence":                                  numberFilterSchema(),
-						names.AttrCreatedAt:                           dateFilterSchema(),
-						"criticality":                                 numberFilterSchema(),
-						names.AttrDescription:                         stringFilterSchema(),
-						"finding_provider_fields_confidence":          numberFilterSchema(),
-						"finding_provider_fields_criticality":         numberFilterSchema(),
-						"finding_provider_fields_related_findings_id": stringFilterSchema(),
+						"aws_account_id":                      stringFilterSchema(),
+						"company_name":                        stringFilterSchema(),
+						"compliance_status":                   stringFilterSchema(),
+						"confidence":                          numberFilterSchema(),
+						"created_at":                          dateFilterSchema(),
+						"criticality":                         numberFilterSchema(),
+						"description":                         stringFilterSchema(),
+						"finding_provider_fields_confidence":  numberFilterSchema(),
+						"finding_provider_fields_criticality": numberFilterSchema(),
+						"finding_provider_fields_related_findings_id":          stringFilterSchema(),
 						"finding_provider_fields_related_findings_product_arn": stringFilterSchema(),
 						"finding_provider_fields_severity_label":               stringFilterSchema(),
 						"finding_provider_fields_severity_original":            stringFilterSchema(),
 						"finding_provider_fields_types":                        stringFilterSchema(),
 						"first_observed_at":                                    dateFilterSchema(),
 						"generator_id":                                         stringFilterSchema(),
-						names.AttrID:                                           stringFilterSchema(),
+						"id":                                                   stringFilterSchema(),
 						"keyword":                                              keywordFilterSchema(),
 						"last_observed_at":                                     dateFilterSchema(),
 						"malware_name":                                         stringFilterSchema(),
@@ -114,11 +113,11 @@ func resourceInsight() *schema.Resource {
 						"resource_container_launched_at":                     dateFilterSchema(),
 						"resource_container_name":                            stringFilterSchema(),
 						"resource_details_other":                             mapFilterSchema(),
-						names.AttrResourceID:                                 stringFilterSchema(),
+						"resource_id":                                        stringFilterSchema(),
 						"resource_partition":                                 stringFilterSchema(),
 						"resource_region":                                    stringFilterSchema(),
-						names.AttrResourceTags:                               mapFilterSchema(),
-						names.AttrResourceType:                               stringFilterSchema(),
+						"resource_tags":                                      mapFilterSchema(),
+						"resource_type":                                      stringFilterSchema(),
 						"severity_label":                                     stringFilterSchema(),
 						"source_url":                                         stringFilterSchema(),
 						"threat_intel_indicator_category":                    stringFilterSchema(),
@@ -128,7 +127,7 @@ func resourceInsight() *schema.Resource {
 						"threat_intel_indicator_type":                        stringFilterSchema(),
 						"threat_intel_indicator_value":                       stringFilterSchema(),
 						"title":                                              stringFilterSchema(),
-						names.AttrType:                                       stringFilterSchema(),
+						"type":                                               stringFilterSchema(),
 						"updated_at":                                         dateFilterSchema(),
 						"user_defined_values":                                mapFilterSchema(),
 						"verification_state":                                 stringFilterSchema(),
@@ -140,7 +139,7 @@ func resourceInsight() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -151,7 +150,7 @@ func resourceInsight() *schema.Resource {
 func resourceInsightCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &securityhub.CreateInsightInput{
 		GroupByAttribute: aws.String(d.Get("group_by_attribute").(string)),
 		Name:             aws.String(name),
@@ -187,12 +186,12 @@ func resourceInsightRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.Errorf("reading Security Hub Insight (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, insight.InsightArn)
+	d.Set("arn", insight.InsightArn)
 	if err := d.Set("filters", flattenSecurityFindingFilters(insight.Filters)); err != nil {
 		return diag.Errorf("setting filters: %s", err)
 	}
 	d.Set("group_by_attribute", insight.GroupByAttribute)
-	d.Set(names.AttrName, insight.Name)
+	d.Set("name", insight.Name)
 
 	return nil
 }
@@ -212,7 +211,7 @@ func resourceInsightUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		input.GroupByAttribute = aws.String(d.Get("group_by_attribute").(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrName); ok {
+	if v, ok := d.GetOk("name"); ok {
 		input.Name = aws.String(v.(string))
 	}
 
@@ -299,12 +298,12 @@ func dateFilterSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							names.AttrUnit: {
+							"unit": {
 								Type:             schema.TypeString,
 								Required:         true,
 								ValidateDiagFunc: enum.Validate[types.DateRangeUnit](),
 							},
-							names.AttrValue: {
+							"value": {
 								Type:     schema.TypeInt,
 								Required: true,
 							},
@@ -348,7 +347,7 @@ func keywordFilterSchema() *schema.Schema {
 		MaxItems: 20,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				names.AttrValue: {
+				"value": {
 					Type:     schema.TypeString,
 					Required: true,
 				},
@@ -369,11 +368,11 @@ func mapFilterSchema() *schema.Schema {
 					Required:         true,
 					ValidateDiagFunc: enum.Validate[types.MapFilterComparison](),
 				},
-				names.AttrKey: {
+				"key": {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				names.AttrValue: {
+				"value": {
 					Type:     schema.TypeString,
 					Required: true,
 				},
@@ -421,7 +420,7 @@ func stringFilterSchema() *schema.Schema {
 					Required:         true,
 					ValidateDiagFunc: enum.Validate[types.StringFilterComparison](),
 				},
-				names.AttrValue: {
+				"value": {
 					Type:     schema.TypeString,
 					Required: true,
 				},
@@ -433,7 +432,7 @@ func stringFilterSchema() *schema.Schema {
 func workflowStatusSchema() *schema.Schema {
 	s := stringFilterSchema()
 
-	s.Elem.(*schema.Resource).Schema[names.AttrValue].ValidateDiagFunc = enum.Validate[types.WorkflowStatus]()
+	s.Elem.(*schema.Resource).Schema["value"].ValidateDiagFunc = enum.Validate[types.WorkflowStatus]()
 
 	return s
 }
@@ -450,11 +449,11 @@ func expandDateFilterDateRange(l []interface{}) *types.DateRange {
 
 	dr := &types.DateRange{}
 
-	if v, ok := tfMap[names.AttrUnit].(string); ok && v != "" {
+	if v, ok := tfMap["unit"].(string); ok && v != "" {
 		dr.Unit = types.DateRangeUnit(v)
 	}
 
-	if v, ok := tfMap[names.AttrValue].(int); ok {
+	if v, ok := tfMap["value"].(int); ok {
 		dr.Value = aws.Int32(int32(v))
 	}
 
@@ -522,7 +521,7 @@ func expandSecurityFindingFilters(l []interface{}) *types.AwsSecurityFindingFilt
 		filters.Confidence = expandNumberFilters(v.List())
 	}
 
-	if v, ok := tfMap[names.AttrCreatedAt].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap["created_at"].(*schema.Set); ok && v.Len() > 0 {
 		filters.CreatedAt = expandDateFilters(v.List())
 	}
 
@@ -530,7 +529,7 @@ func expandSecurityFindingFilters(l []interface{}) *types.AwsSecurityFindingFilt
 		filters.Criticality = expandNumberFilters(v.List())
 	}
 
-	if v, ok := tfMap[names.AttrDescription].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap["description"].(*schema.Set); ok && v.Len() > 0 {
 		filters.Description = expandStringFilters(v.List())
 	}
 
@@ -570,7 +569,7 @@ func expandSecurityFindingFilters(l []interface{}) *types.AwsSecurityFindingFilt
 		filters.GeneratorId = expandStringFilters(v.List())
 	}
 
-	if v, ok := tfMap[names.AttrID].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap["id"].(*schema.Set); ok && v.Len() > 0 {
 		filters.Id = expandStringFilters(v.List())
 	}
 
@@ -782,7 +781,7 @@ func expandSecurityFindingFilters(l []interface{}) *types.AwsSecurityFindingFilt
 		filters.ResourceDetailsOther = expandMapFilters(v.List())
 	}
 
-	if v, ok := tfMap[names.AttrResourceID].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap["resource_id"].(*schema.Set); ok && v.Len() > 0 {
 		filters.ResourceId = expandStringFilters(v.List())
 	}
 
@@ -794,11 +793,11 @@ func expandSecurityFindingFilters(l []interface{}) *types.AwsSecurityFindingFilt
 		filters.ResourceRegion = expandStringFilters(v.List())
 	}
 
-	if v, ok := tfMap[names.AttrResourceTags].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap["resource_tags"].(*schema.Set); ok && v.Len() > 0 {
 		filters.ResourceTags = expandMapFilters(v.List())
 	}
 
-	if v, ok := tfMap[names.AttrResourceType].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap["resource_type"].(*schema.Set); ok && v.Len() > 0 {
 		filters.ResourceType = expandStringFilters(v.List())
 	}
 
@@ -838,7 +837,7 @@ func expandSecurityFindingFilters(l []interface{}) *types.AwsSecurityFindingFilt
 		filters.Title = expandStringFilters(v.List())
 	}
 
-	if v, ok := tfMap[names.AttrType].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap["type"].(*schema.Set); ok && v.Len() > 0 {
 		filters.Type = expandStringFilters(v.List())
 	}
 
@@ -901,7 +900,7 @@ func expandKeywordFilters(l []interface{}) []types.KeywordFilter {
 
 		kf := types.KeywordFilter{}
 
-		if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
+		if v, ok := tfMap["value"].(string); ok && v != "" {
 			kf.Value = aws.String(v)
 		}
 
@@ -930,11 +929,11 @@ func expandMapFilters(l []interface{}) []types.MapFilter {
 			mf.Comparison = types.MapFilterComparison(v)
 		}
 
-		if v, ok := tfMap[names.AttrKey].(string); ok && v != "" {
+		if v, ok := tfMap["key"].(string); ok && v != "" {
 			mf.Key = aws.String(v)
 		}
 
-		if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
+		if v, ok := tfMap["value"].(string); ok && v != "" {
 			mf.Value = aws.String(v)
 		}
 
@@ -1005,7 +1004,7 @@ func expandStringFilters(l []interface{}) []types.StringFilter {
 			sf.Comparison = types.StringFilterComparison(v)
 		}
 
-		if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
+		if v, ok := tfMap["value"].(string); ok && v != "" {
 			sf.Value = aws.String(v)
 		}
 
@@ -1021,8 +1020,8 @@ func flattenDateFilterDateRange(dateRange *types.DateRange) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		names.AttrUnit:  string(dateRange.Unit),
-		names.AttrValue: aws.ToInt32((dateRange.Value)),
+		"unit":  string(dateRange.Unit),
+		"value": aws.ToInt32((dateRange.Value)),
 	}
 
 	return []interface{}{m}
@@ -1075,7 +1074,7 @@ func flattenKeywordFilters(filters []types.KeywordFilter) []interface{} {
 
 	for _, filter := range filters {
 		m := map[string]interface{}{
-			names.AttrValue: aws.ToString(filter.Value),
+			"value": aws.ToString(filter.Value),
 		}
 
 		keywordFilters = append(keywordFilters, m)
@@ -1093,9 +1092,9 @@ func flattenMapFilters(filters []types.MapFilter) []interface{} {
 
 	for _, filter := range filters {
 		m := map[string]interface{}{
-			"comparison":    string(filter.Comparison),
-			names.AttrKey:   aws.ToString(filter.Key),
-			names.AttrValue: aws.ToString(filter.Value),
+			"comparison": string(filter.Comparison),
+			"key":        aws.ToString(filter.Key),
+			"value":      aws.ToString(filter.Value),
 		}
 
 		mapFilters = append(mapFilters, m)
@@ -1138,23 +1137,23 @@ func flattenSecurityFindingFilters(filters *types.AwsSecurityFindingFilters) []i
 	}
 
 	m := map[string]interface{}{
-		"aws_account_id":                              flattenStringFilters(filters.AwsAccountId),
-		"company_name":                                flattenStringFilters(filters.CompanyName),
-		"compliance_status":                           flattenStringFilters(filters.ComplianceStatus),
-		"confidence":                                  flattenNumberFilters(filters.Confidence),
-		names.AttrCreatedAt:                           flattenDateFilters(filters.CreatedAt),
-		"criticality":                                 flattenNumberFilters(filters.Criticality),
-		names.AttrDescription:                         flattenStringFilters(filters.Description),
-		"finding_provider_fields_confidence":          flattenNumberFilters(filters.FindingProviderFieldsConfidence),
-		"finding_provider_fields_criticality":         flattenNumberFilters(filters.FindingProviderFieldsCriticality),
-		"finding_provider_fields_related_findings_id": flattenStringFilters(filters.FindingProviderFieldsRelatedFindingsId),
+		"aws_account_id":                      flattenStringFilters(filters.AwsAccountId),
+		"company_name":                        flattenStringFilters(filters.CompanyName),
+		"compliance_status":                   flattenStringFilters(filters.ComplianceStatus),
+		"confidence":                          flattenNumberFilters(filters.Confidence),
+		"created_at":                          flattenDateFilters(filters.CreatedAt),
+		"criticality":                         flattenNumberFilters(filters.Criticality),
+		"description":                         flattenStringFilters(filters.Description),
+		"finding_provider_fields_confidence":  flattenNumberFilters(filters.FindingProviderFieldsConfidence),
+		"finding_provider_fields_criticality": flattenNumberFilters(filters.FindingProviderFieldsCriticality),
+		"finding_provider_fields_related_findings_id":          flattenStringFilters(filters.FindingProviderFieldsRelatedFindingsId),
 		"finding_provider_fields_related_findings_product_arn": flattenStringFilters(filters.FindingProviderFieldsRelatedFindingsProductArn),
 		"finding_provider_fields_severity_label":               flattenStringFilters(filters.FindingProviderFieldsSeverityLabel),
 		"finding_provider_fields_severity_original":            flattenStringFilters(filters.FindingProviderFieldsSeverityOriginal),
 		"finding_provider_fields_types":                        flattenStringFilters(filters.FindingProviderFieldsTypes),
 		"first_observed_at":                                    flattenDateFilters(filters.FirstObservedAt),
 		"generator_id":                                         flattenStringFilters(filters.GeneratorId),
-		names.AttrID:                                           flattenStringFilters(filters.Id),
+		"id":                                                   flattenStringFilters(filters.Id),
 		"keyword":                                              flattenKeywordFilters(filters.Keyword),
 		"last_observed_at":                                     flattenDateFilters(filters.LastObservedAt),
 		"malware_name":                                         flattenStringFilters(filters.MalwareName),
@@ -1207,11 +1206,11 @@ func flattenSecurityFindingFilters(filters *types.AwsSecurityFindingFilters) []i
 		"resource_container_launched_at":                     flattenDateFilters(filters.ResourceContainerLaunchedAt),
 		"resource_container_name":                            flattenStringFilters(filters.ResourceContainerName),
 		"resource_details_other":                             flattenMapFilters(filters.ResourceDetailsOther),
-		names.AttrResourceID:                                 flattenStringFilters(filters.ResourceId),
+		"resource_id":                                        flattenStringFilters(filters.ResourceId),
 		"resource_partition":                                 flattenStringFilters(filters.ResourcePartition),
 		"resource_region":                                    flattenStringFilters(filters.ResourceRegion),
-		names.AttrResourceTags:                               flattenMapFilters(filters.ResourceTags),
-		names.AttrResourceType:                               flattenStringFilters(filters.ResourceType),
+		"resource_tags":                                      flattenMapFilters(filters.ResourceTags),
+		"resource_type":                                      flattenStringFilters(filters.ResourceType),
 		"severity_label":                                     flattenStringFilters(filters.SeverityLabel),
 		"source_url":                                         flattenStringFilters(filters.ThreatIntelIndicatorSourceUrl),
 		"threat_intel_indicator_category":                    flattenStringFilters(filters.ThreatIntelIndicatorCategory),
@@ -1221,7 +1220,7 @@ func flattenSecurityFindingFilters(filters *types.AwsSecurityFindingFilters) []i
 		"threat_intel_indicator_type":                        flattenStringFilters(filters.ThreatIntelIndicatorType),
 		"threat_intel_indicator_value":                       flattenStringFilters(filters.ThreatIntelIndicatorValue),
 		"title":                                              flattenStringFilters(filters.Title),
-		names.AttrType:                                       flattenStringFilters(filters.Type),
+		"type":                                               flattenStringFilters(filters.Type),
 		"updated_at":                                         flattenDateFilters(filters.UpdatedAt),
 		"user_defined_values":                                flattenMapFilters(filters.UserDefinedFields),
 		"verification_state":                                 flattenStringFilters(filters.VerificationState),
@@ -1240,8 +1239,8 @@ func flattenStringFilters(filters []types.StringFilter) []interface{} {
 
 	for _, filter := range filters {
 		m := map[string]interface{}{
-			"comparison":    string(filter.Comparison),
-			names.AttrValue: aws.ToString(filter.Value),
+			"comparison": string(filter.Comparison),
+			"value":      aws.ToString(filter.Value),
 		}
 
 		stringFilters = append(stringFilters, m)

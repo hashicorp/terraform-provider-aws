@@ -23,7 +23,7 @@ func dataSourceVPCConnection() *schema.Resource {
 		ReadWithoutTimeout: dataSourceVPCConnectionRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -36,7 +36,7 @@ func dataSourceVPCConnection() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrSecurityGroups: {
+			"security_groups": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -46,7 +46,7 @@ func dataSourceVPCConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrVPCID: {
+			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -58,7 +58,7 @@ func dataSourceVPCConnectionRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
-	arn := d.Get(names.AttrARN).(string)
+	arn := d.Get("arn").(string)
 	output, err := findVPCConnectionByARN(ctx, conn, arn)
 
 	if err != nil {
@@ -66,12 +66,12 @@ func dataSourceVPCConnectionRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	d.SetId(aws.ToString(output.VpcConnectionArn))
-	d.Set(names.AttrARN, output.VpcConnectionArn)
+	d.Set("arn", output.VpcConnectionArn)
 	d.Set("authentication", output.Authentication)
 	d.Set("client_subnets", flex.FlattenStringValueSet(output.Subnets))
-	d.Set(names.AttrSecurityGroups, flex.FlattenStringValueSet(output.SecurityGroups))
+	d.Set("security_groups", flex.FlattenStringValueSet(output.SecurityGroups))
 	d.Set("target_cluster_arn", output.TargetClusterArn)
-	d.Set(names.AttrVPCID, output.VpcId)
+	d.Set("vpc_id", output.VpcId)
 
 	setTagsOut(ctx, output.Tags)
 

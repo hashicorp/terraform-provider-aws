@@ -47,7 +47,7 @@ func resourceLocationEFS() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -112,7 +112,7 @@ func resourceLocationEFS() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrURI: {
+			"uri": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -188,7 +188,7 @@ func resourceLocationEFSRead(ctx context.Context, d *schema.ResourceData, meta i
 	globalIDParts := strings.Split(globalID, ".") // Global ID format for EFS location is <region>.<efs_file_system_id>
 
 	d.Set("access_point_arn", output.AccessPointArn)
-	d.Set(names.AttrARN, output.LocationArn)
+	d.Set("arn", output.LocationArn)
 	if err := d.Set("ec2_config", flattenEC2Config(output.Ec2Config)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ec2_config: %s", err)
 	}
@@ -197,7 +197,7 @@ func resourceLocationEFSRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("file_system_access_role_arn", output.FileSystemAccessRoleArn)
 	d.Set("in_transit_encryption", output.InTransitEncryption)
 	d.Set("subdirectory", subdirectory)
-	d.Set(names.AttrURI, uri)
+	d.Set("uri", uri)
 
 	return diags
 }

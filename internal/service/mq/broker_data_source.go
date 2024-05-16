@@ -13,11 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 )
 
 // @SDKDataSource("aws_mq_broker", name="Broker")
@@ -26,7 +25,7 @@ func dataSourceBroker() *schema.Resource {
 		ReadWithoutTimeout: dataSourceBrokerRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -34,7 +33,7 @@ func dataSourceBroker() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrAutoMinorVersionUpgrade: {
+			"auto_minor_version_upgrade": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -50,12 +49,12 @@ func dataSourceBroker() *schema.Resource {
 				Computed:      true,
 				ConflictsWith: []string{"broker_id"},
 			},
-			names.AttrConfiguration: {
+			"configuration": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrID: {
+						"id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -75,7 +74,7 @@ func dataSourceBroker() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrKMSKeyID: {
+						"kms_key_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -90,7 +89,7 @@ func dataSourceBroker() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrEngineVersion: {
+			"engine_version": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -107,12 +106,12 @@ func dataSourceBroker() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrEndpoints: {
+						"endpoints": {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						names.AttrIPAddress: {
+						"ip_address": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -208,25 +207,25 @@ func dataSourceBroker() *schema.Resource {
 					},
 				},
 			},
-			names.AttrPubliclyAccessible: {
+			"publicly_accessible": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			names.AttrSecurityGroups: {
+			"security_groups": {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
 			},
-			names.AttrStorageType: {
+			"storage_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrSubnetIDs: {
+			"subnet_ids": {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 			"user": {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -245,7 +244,7 @@ func dataSourceBroker() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						names.AttrUsername: {
+						"username": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -287,22 +286,22 @@ func dataSourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.SetId(brokerID)
-	d.Set(names.AttrARN, output.BrokerArn)
+	d.Set("arn", output.BrokerArn)
 	d.Set("authentication_strategy", output.AuthenticationStrategy)
-	d.Set(names.AttrAutoMinorVersionUpgrade, output.AutoMinorVersionUpgrade)
+	d.Set("auto_minor_version_upgrade", output.AutoMinorVersionUpgrade)
 	d.Set("broker_id", brokerID)
 	d.Set("broker_name", output.BrokerName)
 	d.Set("deployment_mode", output.DeploymentMode)
 	d.Set("engine_type", output.EngineType)
-	d.Set(names.AttrEngineVersion, output.EngineVersion)
+	d.Set("engine_version", output.EngineVersion)
 	d.Set("host_instance_type", output.HostInstanceType)
 	d.Set("instances", flattenBrokerInstances(output.BrokerInstances))
-	d.Set(names.AttrPubliclyAccessible, output.PubliclyAccessible)
-	d.Set(names.AttrSecurityGroups, output.SecurityGroups)
-	d.Set(names.AttrStorageType, output.StorageType)
-	d.Set(names.AttrSubnetIDs, output.SubnetIds)
+	d.Set("publicly_accessible", output.PubliclyAccessible)
+	d.Set("security_groups", output.SecurityGroups)
+	d.Set("storage_type", output.StorageType)
+	d.Set("subnet_ids", output.SubnetIds)
 
-	if err := d.Set(names.AttrConfiguration, flattenConfiguration(output.Configurations)); err != nil {
+	if err := d.Set("configuration", flattenConfiguration(output.Configurations)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting configuration: %s", err)
 	}
 
@@ -337,7 +336,7 @@ func dataSourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "setting user: %s", err)
 	}
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

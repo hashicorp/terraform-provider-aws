@@ -7,7 +7,6 @@ import (
 	"context"
 	"log"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -41,7 +40,7 @@ func ResourceConnector() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -99,15 +98,6 @@ func ResourceConnector() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"security_policy_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(0, 100),
-					validation.StringMatch(regexache.MustCompile(`^TransferSFTPConnectorSecurityPolicy-[A-Za-z0-9-]+$`), "must be in the format matching TransferSFTPConnectorSecurityPolicy-[A-Za-z0-9-]+"),
-				),
-			},
 			"sftp_config": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -134,7 +124,7 @@ func ResourceConnector() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrURL: {
+			"url": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -151,7 +141,7 @@ func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta i
 	input := &transfer.CreateConnectorInput{
 		AccessRole: aws.String(d.Get("access_role").(string)),
 		Tags:       getTagsIn(ctx),
-		Url:        aws.String(d.Get(names.AttrURL).(string)),
+		Url:        aws.String(d.Get("url").(string)),
 	}
 
 	if v, ok := d.GetOk("as2_config"); ok {
@@ -160,10 +150,6 @@ func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	if v, ok := d.GetOk("logging_role"); ok {
 		input.LoggingRole = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("security_policy_name"); ok {
-		input.SecurityPolicyName = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("sftp_config"); ok {
@@ -198,17 +184,16 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	d.Set("access_role", output.AccessRole)
-	d.Set(names.AttrARN, output.Arn)
+	d.Set("arn", output.Arn)
 	if err := d.Set("as2_config", flattenAs2Config(output.As2Config)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting as2_config: %s", err)
 	}
 	d.Set("connector_id", output.ConnectorId)
 	d.Set("logging_role", output.LoggingRole)
-	d.Set("security_policy_name", output.SecurityPolicyName)
 	if err := d.Set("sftp_config", flattenSftpConfig(output.SftpConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting sftp_config: %s", err)
 	}
-	d.Set(names.AttrURL, output.Url)
+	d.Set("url", output.Url)
 	setTagsOut(ctx, output.Tags)
 
 	return diags
@@ -218,7 +203,7 @@ func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &transfer.UpdateConnectorInput{
 			ConnectorId: aws.String(d.Id()),
 		}
@@ -235,16 +220,12 @@ func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			input.LoggingRole = aws.String(d.Get("logging_role").(string))
 		}
 
-		if d.HasChange("security_policy_name") {
-			input.SecurityPolicyName = aws.String(d.Get("security_policy_name").(string))
-		}
-
 		if d.HasChange("sftp_config") {
 			input.SftpConfig = expandSftpConfig(d.Get("sftp_config").([]interface{}))
 		}
 
-		if d.HasChange(names.AttrURL) {
-			input.Url = aws.String(d.Get(names.AttrURL).(string))
+		if d.HasChange("url") {
+			input.Url = aws.String(d.Get("url").(string))
 		}
 
 		_, err := conn.UpdateConnectorWithContext(ctx, input)

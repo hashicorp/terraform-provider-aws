@@ -4,10 +4,8 @@
 package ec2
 
 import (
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -98,11 +96,6 @@ const (
 	CustomerGatewayStatePending   = "pending"
 )
 
-// See https://docs.aws.amazon.com/cli/latest/reference/ec2/modify-address-attribute.html#examples.
-const (
-	PTRUpdateStatusPending = "PENDING"
-)
-
 const (
 	managedPrefixListAddressFamilyIPv4 = "IPv4"
 	managedPrefixListAddressFamilyIPv6 = "IPv6"
@@ -142,13 +135,13 @@ func vpnTunnelOptionsIKEVersion_Values() []string {
 }
 
 const (
-	vpnTunnelCloudWatchLogOutputFormatJSON = names.AttrJSON
+	vpnTunnelCloudWatchLogOutputFormatJSON = "json"
 	vpnTunnelCloudWatchLogOutputFormatText = "text"
 )
 
 func vpnTunnelCloudWatchLogOutputFormat_Values() []string {
 	return []string{
-		names.AttrJSON,
+		vpnTunnelCloudWatchLogOutputFormatJSON,
 		vpnTunnelCloudWatchLogOutputFormatText,
 	}
 }
@@ -268,7 +261,7 @@ const (
 )
 
 const (
-	TargetStorageTierStandard awstypes.TargetStorageTier = "standard"
+	TargetStorageTierStandard = "standard"
 )
 
 const (
@@ -283,15 +276,13 @@ func outsideIPAddressType_Values() []string {
 	}
 }
 
-type securityGroupRuleType string
-
 const (
-	securityGroupRuleTypeEgress  securityGroupRuleType = "egress"
-	securityGroupRuleTypeIngress securityGroupRuleType = "ingress"
+	securityGroupRuleTypeEgress  = "egress"
+	securityGroupRuleTypeIngress = "ingress"
 )
 
-func (securityGroupRuleType) Values() []securityGroupRuleType {
-	return []securityGroupRuleType{
+func securityGroupRuleType_Values() []string {
+	return []string{
 		securityGroupRuleTypeEgress,
 		securityGroupRuleTypeIngress,
 	}

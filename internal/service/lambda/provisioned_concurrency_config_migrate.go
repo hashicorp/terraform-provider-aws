@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func resourceProvisionedConcurrencyConfigV0() *schema.Resource {
@@ -33,7 +32,7 @@ func resourceProvisionedConcurrencyConfigV0() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
-			names.AttrSkipDestroy: {
+			"skip_destroy": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -53,11 +52,11 @@ func provisionedConcurrencyConfigStateUpgradeV0(ctx context.Context, rawState ma
 		rawState["qualifier"].(string),
 	}
 
-	id, err := flex.FlattenResourceId(parts, provisionedConcurrencyConfigResourceIDPartCount, false)
+	id, err := flex.FlattenResourceId(parts, ProvisionedConcurrencyIDPartCount, false)
 	if err != nil {
 		return rawState, err
 	}
-	rawState[names.AttrID] = id
+	rawState["id"] = id
 
 	return rawState, nil
 }

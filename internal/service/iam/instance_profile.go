@@ -33,7 +33,7 @@ const (
 
 // @SDKResource("aws_iam_instance_profile", name="Instance Profile")
 // @Tags(identifierAttribute="id", resourceType="InstanceProfile")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.InstanceProfile")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types.InstanceProfile")
 func resourceInstanceProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceProfileCreate,
@@ -46,7 +46,7 @@ func resourceInstanceProfile() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -54,29 +54,29 @@ func resourceInstanceProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
+				ConflictsWith: []string{"name_prefix"},
 				ValidateFunc:  validResourceName(instanceProfileNameMaxLen),
 			},
-			names.AttrNamePrefix: {
+			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
+				ConflictsWith: []string{"name"},
 				ValidateFunc:  validResourceName(instanceProfileNamePrefixMaxLen),
 			},
-			names.AttrPath: {
+			"path": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "/",
 				ForceNew: true,
 			},
-			names.AttrRole: {
+			"role": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -96,10 +96,10 @@ func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
+	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &iam.CreateInstanceProfileInput{
 		InstanceProfileName: aws.String(name),
-		Path:                aws.String(d.Get(names.AttrPath).(string)),
+		Path:                aws.String(d.Get("path").(string)),
 		Tags:                getTagsIn(ctx),
 	}
 
@@ -127,7 +127,7 @@ func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "waiting for IAM Instance Profile (%s) create: %s", d.Id(), err)
 	}
 
-	if v, ok := d.GetOk(names.AttrRole); ok {
+	if v, ok := d.GetOk("role"); ok {
 		err := instanceProfileAddRole(ctx, conn, d.Id(), v.(string))
 
 		if err != nil {
@@ -185,17 +185,17 @@ func resourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, me
 		}
 	}
 
-	d.Set(names.AttrARN, instanceProfile.Arn)
+	d.Set("arn", instanceProfile.Arn)
 	d.Set("create_date", instanceProfile.CreateDate.Format(time.RFC3339))
-	d.Set(names.AttrName, instanceProfile.InstanceProfileName)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(instanceProfile.InstanceProfileName)))
-	d.Set(names.AttrPath, instanceProfile.Path)
+	d.Set("name", instanceProfile.InstanceProfileName)
+	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(instanceProfile.InstanceProfileName)))
+	d.Set("path", instanceProfile.Path)
 
-	if d.Get(names.AttrRole) != "" {
-		d.Set(names.AttrRole, nil)
+	if d.Get("role") != "" {
+		d.Set("role", nil)
 	}
 	if len(instanceProfile.Roles) > 0 {
-		d.Set(names.AttrRole, instanceProfile.Roles[0].RoleName) //there will only be 1 role returned
+		d.Set("role", instanceProfile.Roles[0].RoleName) //there will only be 1 role returned
 	}
 
 	d.Set("unique_id", instanceProfile.InstanceProfileId)
@@ -209,8 +209,8 @@ func resourceInstanceProfileUpdate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	if d.HasChange(names.AttrRole) {
-		o, n := d.GetChange(names.AttrRole)
+	if d.HasChange("role") {
+		o, n := d.GetChange("role")
 
 		if o := o.(string); o != "" {
 			err := instanceProfileRemoveRole(ctx, conn, d.Id(), o)
@@ -236,7 +236,7 @@ func resourceInstanceProfileDelete(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	if v, ok := d.GetOk(names.AttrRole); ok {
+	if v, ok := d.GetOk("role"); ok {
 		err := instanceProfileRemoveRole(ctx, conn, d.Id(), v.(string))
 
 		if err != nil {

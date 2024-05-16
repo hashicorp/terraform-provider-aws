@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_servicecatalog_portfolio_constraints")
@@ -41,11 +40,11 @@ func DataSourcePortfolioConstraints() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrDescription: {
+						"description": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrOwner: {
+						"owner": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -57,7 +56,7 @@ func DataSourcePortfolioConstraints() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrType: {
+						"type": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -121,11 +120,11 @@ func flattenConstraintDetail(apiObject *servicecatalog.ConstraintDetail) map[str
 	}
 
 	if v := apiObject.Description; v != nil {
-		tfMap[names.AttrDescription] = aws.StringValue(v)
+		tfMap["description"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Owner; v != nil {
-		tfMap[names.AttrOwner] = aws.StringValue(v)
+		tfMap["owner"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.PortfolioId; v != nil {
@@ -137,7 +136,7 @@ func flattenConstraintDetail(apiObject *servicecatalog.ConstraintDetail) map[str
 	}
 
 	if v := apiObject.Type; v != nil {
-		tfMap[names.AttrType] = aws.StringValue(v)
+		tfMap["type"] = aws.StringValue(v)
 	}
 
 	return tfMap

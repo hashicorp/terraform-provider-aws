@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_securityhub_action_target", name="Action Target")
@@ -36,15 +35,15 @@ func resourceActionTarget() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrIdentifier: {
+			"identifier": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -53,7 +52,7 @@ func resourceActionTarget() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]+$`), "must contain only alphanumeric characters"),
 				),
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
@@ -68,11 +67,11 @@ func resourceActionTargetCreate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	id := d.Get(names.AttrIdentifier).(string)
+	id := d.Get("identifier").(string)
 	input := &securityhub.CreateActionTargetInput{
-		Description: aws.String(d.Get(names.AttrDescription).(string)),
+		Description: aws.String(d.Get("description").(string)),
 		Id:          aws.String(id),
-		Name:        aws.String(d.Get(names.AttrName).(string)),
+		Name:        aws.String(d.Get("name").(string)),
 	}
 
 	output, err := conn.CreateActionTarget(ctx, input)
@@ -107,10 +106,10 @@ func resourceActionTargetRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading Security Hub Action Target (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, output.ActionTargetArn)
-	d.Set(names.AttrDescription, output.Description)
-	d.Set(names.AttrIdentifier, actionTargetIdentifier)
-	d.Set(names.AttrName, output.Name)
+	d.Set("arn", output.ActionTargetArn)
+	d.Set("description", output.Description)
+	d.Set("identifier", actionTargetIdentifier)
+	d.Set("name", output.Name)
 
 	return diags
 }
@@ -121,8 +120,8 @@ func resourceActionTargetUpdate(ctx context.Context, d *schema.ResourceData, met
 
 	input := &securityhub.UpdateActionTargetInput{
 		ActionTargetArn: aws.String(d.Id()),
-		Description:     aws.String(d.Get(names.AttrDescription).(string)),
-		Name:            aws.String(d.Get(names.AttrName).(string)),
+		Description:     aws.String(d.Get("description").(string)),
+		Name:            aws.String(d.Get("name").(string)),
 	}
 
 	if _, err := conn.UpdateActionTarget(ctx, input); err != nil {

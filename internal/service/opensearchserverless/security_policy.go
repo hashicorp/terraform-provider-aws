@@ -59,14 +59,14 @@ func (r *resourceSecurityPolicy) Metadata(_ context.Context, request resource.Me
 func (r *resourceSecurityPolicy) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrDescription: schema.StringAttribute{
+			"description": schema.StringAttribute{
 				Optional: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 1000),
 				},
 			},
-			names.AttrID: framework.IDAttribute(),
-			names.AttrName: schema.StringAttribute{
+			"id": framework.IDAttribute(),
+			"name": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 32),
@@ -75,7 +75,7 @@ func (r *resourceSecurityPolicy) Schema(ctx context.Context, req resource.Schema
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrPolicy: schema.StringAttribute{
+			"policy": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 20480),
@@ -84,7 +84,7 @@ func (r *resourceSecurityPolicy) Schema(ctx context.Context, req resource.Schema
 			"policy_version": schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrType: schema.StringAttribute{
+			"type": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					enum.FrameworkValidate[awstypes.SecurityPolicyType](),

@@ -15,30 +15,20 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newAcceleratorDataSource,
-			Name:    "Accelerator",
+			Factory: newDataSourceAccelerator,
 		},
 	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{
-		{
-			Factory: newCrossAccountAttachmentResource,
-			Name:    "Cross-account Attachment",
-			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
-			},
-		},
-	}
+	return []*types.ServicePackageFrameworkResource{}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceCustomRoutingAccelerator,
+			Factory:  DataSourceCustomRoutingAccelerator,
 			TypeName: "aws_globalaccelerator_custom_routing_accelerator",
-			Name:     "Custom Routing Accelerator",
 		},
 	}
 }
@@ -46,40 +36,36 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  resourceAccelerator,
+			Factory:  ResourceAccelerator,
 			TypeName: "aws_globalaccelerator_accelerator",
 			Name:     "Accelerator",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
+				IdentifierAttribute: "id",
 			},
 		},
 		{
-			Factory:  resourceCustomRoutingAccelerator,
+			Factory:  ResourceCustomRoutingAccelerator,
 			TypeName: "aws_globalaccelerator_custom_routing_accelerator",
 			Name:     "Custom Routing Accelerator",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
+				IdentifierAttribute: "id",
 			},
 		},
 		{
-			Factory:  resourceCustomRoutingEndpointGroup,
+			Factory:  ResourceCustomRoutingEndpointGroup,
 			TypeName: "aws_globalaccelerator_custom_routing_endpoint_group",
-			Name:     "Custom Routing Endpoint Group",
 		},
 		{
-			Factory:  resourceCustomRoutingListener,
+			Factory:  ResourceCustomRoutingListener,
 			TypeName: "aws_globalaccelerator_custom_routing_listener",
-			Name:     "Custom Routing Listener",
 		},
 		{
-			Factory:  resourceEndpointGroup,
+			Factory:  ResourceEndpointGroup,
 			TypeName: "aws_globalaccelerator_endpoint_group",
-			Name:     "Endpoint Group",
 		},
 		{
-			Factory:  resourceListener,
+			Factory:  ResourceListener,
 			TypeName: "aws_globalaccelerator_listener",
-			Name:     "Listener",
 		},
 	}
 }

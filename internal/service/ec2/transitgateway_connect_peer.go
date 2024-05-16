@@ -49,7 +49,7 @@ func ResourceTransitGatewayConnectPeer() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -105,7 +105,7 @@ func ResourceTransitGatewayConnectPeer() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.IsIPAddress,
 			},
-			names.AttrTransitGatewayAttachmentID: {
+			"transit_gateway_attachment_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -123,7 +123,7 @@ func resourceTransitGatewayConnectPeerCreate(ctx context.Context, d *schema.Reso
 		InsideCidrBlocks:           flex.ExpandStringSet(d.Get("inside_cidr_blocks").(*schema.Set)),
 		PeerAddress:                aws.String(d.Get("peer_address").(string)),
 		TagSpecifications:          getTagSpecificationsIn(ctx, ec2.ResourceTypeTransitGatewayConnectPeer),
-		TransitGatewayAttachmentId: aws.String(d.Get(names.AttrTransitGatewayAttachmentID).(string)),
+		TransitGatewayAttachmentId: aws.String(d.Get("transit_gateway_attachment_id").(string)),
 	}
 
 	if v, ok := d.GetOk("bgp_asn"); ok {
@@ -183,7 +183,7 @@ func resourceTransitGatewayConnectPeerRead(ctx context.Context, d *schema.Resour
 		Resource:  fmt.Sprintf("transit-gateway-connect-peer/%s", d.Id()),
 	}.String()
 	bgpConfigurations := transitGatewayConnectPeer.ConnectPeerConfiguration.BgpConfigurations
-	d.Set(names.AttrARN, arn)
+	d.Set("arn", arn)
 	d.Set("bgp_asn", strconv.FormatInt(aws.Int64Value(bgpConfigurations[0].PeerAsn), 10))
 	d.Set("bgp_peer_address", bgpConfigurations[0].PeerAddress)
 	d.Set("bgp_transit_gateway_addresses", slices.ApplyToAll(bgpConfigurations, func(v *ec2.TransitGatewayAttachmentBgpConfiguration) string {
@@ -192,7 +192,7 @@ func resourceTransitGatewayConnectPeerRead(ctx context.Context, d *schema.Resour
 	d.Set("inside_cidr_blocks", aws.StringValueSlice(transitGatewayConnectPeer.ConnectPeerConfiguration.InsideCidrBlocks))
 	d.Set("peer_address", transitGatewayConnectPeer.ConnectPeerConfiguration.PeerAddress)
 	d.Set("transit_gateway_address", transitGatewayConnectPeer.ConnectPeerConfiguration.TransitGatewayAddress)
-	d.Set(names.AttrTransitGatewayAttachmentID, transitGatewayConnectPeer.TransitGatewayAttachmentId)
+	d.Set("transit_gateway_attachment_id", transitGatewayConnectPeer.TransitGatewayAttachmentId)
 
 	setTagsOut(ctx, transitGatewayConnectPeer.Tags)
 

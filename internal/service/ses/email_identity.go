@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ses_email_identity")
@@ -30,11 +29,11 @@ func ResourceEmailIdentity() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrEmail: {
+			"email": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -50,7 +49,7 @@ func resourceEmailIdentityCreate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
-	email := d.Get(names.AttrEmail).(string)
+	email := d.Get("email").(string)
 	email = strings.TrimSuffix(email, ".")
 
 	createOpts := &ses.VerifyEmailIdentityInput{
@@ -72,7 +71,7 @@ func resourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	email := d.Id()
-	d.Set(names.AttrEmail, email)
+	d.Set("email", email)
 
 	readOpts := &ses.GetIdentityVerificationAttributesInput{
 		Identities: []*string{
@@ -99,7 +98,7 @@ func resourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta
 		Resource:  fmt.Sprintf("identity/%s", d.Id()),
 		Service:   "ses",
 	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set("arn", arn)
 	return diags
 }
 
@@ -107,7 +106,7 @@ func resourceEmailIdentityDelete(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
-	email := d.Get(names.AttrEmail).(string)
+	email := d.Get("email").(string)
 
 	deleteOpts := &ses.DeleteIdentityInput{
 		Identity: aws.String(email),

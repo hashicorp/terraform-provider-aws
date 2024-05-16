@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -44,23 +43,23 @@ func resourceRolePolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrName: {
+			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
+				ConflictsWith: []string{"name_prefix"},
 				ValidateFunc:  validRolePolicyName,
 			},
-			names.AttrNamePrefix: {
+			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
+				ConflictsWith: []string{"name"},
 				ValidateFunc:  validResourceName(rolePolicyNamePrefixMaxLen),
 			},
-			names.AttrPolicy: {
+			"policy": {
 				Type:                  schema.TypeString,
 				Required:              true,
 				ValidateFunc:          verify.ValidIAMPolicyJSON,
@@ -71,7 +70,7 @@ func resourceRolePolicy() *schema.Resource {
 					return json
 				},
 			},
-			names.AttrRole: {
+			"role": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -85,13 +84,13 @@ func resourceRolePolicyPut(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	policy, err := verify.LegacyPolicyNormalize(d.Get(names.AttrPolicy).(string))
+	policy, err := verify.LegacyPolicyNormalize(d.Get("policy").(string))
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	policyName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
-	roleName := d.Get(names.AttrRole).(string)
+	policyName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	roleName := d.Get("role").(string)
 	input := &iam.PutRolePolicyInput{
 		PolicyDocument: aws.String(policy),
 		PolicyName:     aws.String(policyName),
@@ -145,15 +144,15 @@ func resourceRolePolicyRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	policyToSet, err := verify.LegacyPolicyToSet(d.Get(names.AttrPolicy).(string), policy)
+	policyToSet, err := verify.LegacyPolicyToSet(d.Get("policy").(string), policy)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set(names.AttrName, policyName)
-	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(policyName))
-	d.Set(names.AttrPolicy, policyToSet)
-	d.Set(names.AttrRole, roleName)
+	d.Set("name", policyName)
+	d.Set("name_prefix", create.NamePrefixFromName(policyName))
+	d.Set("policy", policyToSet)
+	d.Set("role", roleName)
 
 	return diags
 }

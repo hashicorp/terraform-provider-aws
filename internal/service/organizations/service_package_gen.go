@@ -5,6 +5,9 @@ package organizations
 import (
 	"context"
 
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	organizations_sdkv1 "github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,59 +26,49 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  dataSourceDelegatedAdministrators,
+			Factory:  DataSourceDelegatedAdministrators,
 			TypeName: "aws_organizations_delegated_administrators",
-			Name:     "Delegated Administrators",
 		},
 		{
-			Factory:  dataSourceDelegatedServices,
+			Factory:  DataSourceDelegatedServices,
 			TypeName: "aws_organizations_delegated_services",
-			Name:     "Delegated Services",
 		},
 		{
-			Factory:  dataSourceOrganization,
+			Factory:  DataSourceOrganization,
 			TypeName: "aws_organizations_organization",
-			Name:     "Organization",
 		},
 		{
-			Factory:  dataSourceOrganizationalUnit,
+			Factory:  DataSourceOrganizationalUnit,
 			TypeName: "aws_organizations_organizational_unit",
 			Name:     "Organizational Unit",
 		},
 		{
-			Factory:  dataSourceOrganizationalUnitChildAccounts,
+			Factory:  DataSourceOrganizationalUnitChildAccounts,
 			TypeName: "aws_organizations_organizational_unit_child_accounts",
-			Name:     "Organizational Unit Child Accounts",
 		},
 		{
-			Factory:  dataSourceOrganizationalUnitDescendantAccounts,
+			Factory:  DataSourceOrganizationalUnitDescendantAccounts,
 			TypeName: "aws_organizations_organizational_unit_descendant_accounts",
-			Name:     "Organizational Unit Descendant Accounts",
 		},
 		{
-			Factory:  dataSourceOrganizationalUnits,
+			Factory:  DataSourceOrganizationalUnits,
 			TypeName: "aws_organizations_organizational_units",
-			Name:     "Organizational Unit",
 		},
 		{
-			Factory:  dataSourcePolicies,
+			Factory:  DataSourcePolicies,
 			TypeName: "aws_organizations_policies",
-			Name:     "Policies",
 		},
 		{
-			Factory:  dataSourcePoliciesForTarget,
+			Factory:  DataSourcePoliciesForTarget,
 			TypeName: "aws_organizations_policies_for_target",
-			Name:     "Policies For Target",
 		},
 		{
-			Factory:  dataSourcePolicy,
+			Factory:  DataSourcePolicy,
 			TypeName: "aws_organizations_policy",
-			Name:     "Policy",
 		},
 		{
-			Factory:  dataSourceResourceTags,
+			Factory:  DataSourceResourceTags,
 			TypeName: "aws_organizations_resource_tags",
-			Name:     "Resource Tags",
 		},
 	}
 }
@@ -83,50 +76,47 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  resourceAccount,
+			Factory:  ResourceAccount,
 			TypeName: "aws_organizations_account",
 			Name:     "Account",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
+				IdentifierAttribute: "id",
 			},
 		},
 		{
-			Factory:  resourceDelegatedAdministrator,
+			Factory:  ResourceDelegatedAdministrator,
 			TypeName: "aws_organizations_delegated_administrator",
-			Name:     "Delegated Administrator",
 		},
 		{
-			Factory:  resourceOrganization,
+			Factory:  ResourceOrganization,
 			TypeName: "aws_organizations_organization",
-			Name:     "Organization",
 		},
 		{
-			Factory:  resourceOrganizationalUnit,
+			Factory:  ResourceOrganizationalUnit,
 			TypeName: "aws_organizations_organizational_unit",
 			Name:     "Organizational Unit",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
+				IdentifierAttribute: "id",
 			},
 		},
 		{
-			Factory:  resourcePolicy,
+			Factory:  ResourcePolicy,
 			TypeName: "aws_organizations_policy",
 			Name:     "Policy",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
+				IdentifierAttribute: "id",
 			},
 		},
 		{
-			Factory:  resourcePolicyAttachment,
+			Factory:  ResourcePolicyAttachment,
 			TypeName: "aws_organizations_policy_attachment",
-			Name:     "Policy Attachment",
 		},
 		{
-			Factory:  resourceResourcePolicy,
+			Factory:  ResourceResourcePolicy,
 			TypeName: "aws_organizations_resource_policy",
 			Name:     "Resource Policy",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
+				IdentifierAttribute: "id",
 			},
 		},
 	}
@@ -134,6 +124,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 
 func (p *servicePackage) ServicePackageName() string {
 	return names.Organizations
+}
+
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
+func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*organizations_sdkv1.Organizations, error) {
+	sess := config["session"].(*session_sdkv1.Session)
+
+	return organizations_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

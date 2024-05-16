@@ -27,23 +27,23 @@ func TestAccSSMDocumentDataSource_basic(t *testing.T) {
 			{
 				Config: testAccDocumentDataSourceConfig_basic(rName, "JSON"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "document_format", resourceName, "document_format"),
-					resource.TestCheckResourceAttr(dataSourceName, "document_version", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "document_version", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "document_type", resourceName, "document_type"),
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrContent, resourceName, names.AttrContent),
+					resource.TestCheckResourceAttrPair(dataSourceName, "content", resourceName, "content"),
 				),
 			},
 			{
 				Config: testAccDocumentDataSourceConfig_basic(rName, "YAML"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttr(dataSourceName, "document_format", "YAML"),
-					resource.TestCheckResourceAttr(dataSourceName, "document_version", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "document_version", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "document_type", resourceName, "document_type"),
-					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrContent),
+					resource.TestCheckResourceAttrSet(dataSourceName, "content"),
 				),
 			},
 		},
@@ -62,8 +62,8 @@ func TestAccSSMDocumentDataSource_managed(t *testing.T) {
 			{
 				Config: testAccDocumentDataSourceConfig_managed(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, "AWS-StartEC2Instance"),
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrARN, "AWS-StartEC2Instance"),
+					resource.TestCheckResourceAttr(dataSourceName, "name", "AWS-StartEC2Instance"),
+					resource.TestCheckResourceAttr(dataSourceName, "arn", "AWS-StartEC2Instance"),
 				),
 			},
 		},

@@ -43,8 +43,8 @@ func TestAccQuickSightAnalysis_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnalysisExists(ctx, resourceName, &analysis),
 					resource.TestCheckResourceAttr(resourceName, "analysis_id", rId),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, quicksight.ResourceStatusCreationSuccessful),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "status", quicksight.ResourceStatusCreationSuccessful),
 				),
 			},
 			{
@@ -107,8 +107,8 @@ func TestAccQuickSightAnalysis_sourceEntity(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnalysisExists(ctx, resourceName, &analysis),
 					resource.TestCheckResourceAttr(resourceName, "analysis_id", rId),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, quicksight.ResourceStatusCreationSuccessful),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "status", quicksight.ResourceStatusCreationSuccessful),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "source_entity.0.source_template.0.arn", "quicksight", fmt.Sprintf("template/%s", sourceId)),
 				),
 			},
@@ -144,8 +144,8 @@ func TestAccQuickSightAnalysis_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnalysisExists(ctx, resourceName, &analysis),
 					resource.TestCheckResourceAttr(resourceName, "analysis_id", rId),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, quicksight.ResourceStatusCreationSuccessful),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "status", quicksight.ResourceStatusCreationSuccessful),
 				),
 			},
 			{
@@ -153,8 +153,8 @@ func TestAccQuickSightAnalysis_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnalysisExists(ctx, resourceName, &analysis),
 					resource.TestCheckResourceAttr(resourceName, "analysis_id", rId),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, quicksight.ResourceStatusUpdateSuccessful),
+					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
+					resource.TestCheckResourceAttr(resourceName, "status", quicksight.ResourceStatusUpdateSuccessful),
 				),
 			},
 		},
@@ -182,15 +182,15 @@ func TestAccQuickSightAnalysis_parametersConfig(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnalysisExists(ctx, resourceName, &analysis),
 					resource.TestCheckResourceAttr(resourceName, "analysis_id", rId),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, quicksight.ResourceStatusCreationSuccessful),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "status", quicksight.ResourceStatusCreationSuccessful),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrParameters},
+				ImportStateVerifyIgnore: []string{"parameters"},
 			},
 		},
 	})
@@ -217,8 +217,8 @@ func TestAccQuickSightAnalysis_forceDelete(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnalysisExists(ctx, resourceName, &analysis),
 					resource.TestCheckResourceAttr(resourceName, "analysis_id", rId),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, quicksight.ResourceStatusCreationSuccessful),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "status", quicksight.ResourceStatusCreationSuccessful),
 				),
 			},
 		},
@@ -246,19 +246,19 @@ func TestAccQuickSightAnalysis_Definition_calculatedFields(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnalysisExists(ctx, resourceName, &analysis),
 					resource.TestCheckResourceAttr(resourceName, "analysis_id", rId),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, quicksight.ResourceStatusCreationSuccessful),
-					resource.TestCheckResourceAttr(resourceName, "definition.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "definition.0.calculated_fields.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "status", quicksight.ResourceStatusCreationSuccessful),
+					resource.TestCheckResourceAttr(resourceName, "definition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.calculated_fields.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "definition.0.calculated_fields.*", map[string]string{
-						"data_set_identifier": acctest.Ct1,
-						names.AttrExpression:  acctest.Ct1,
-						names.AttrName:        "test1",
+						"data_set_identifier": "1",
+						"expression":          "1",
+						"name":                "test1",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "definition.0.calculated_fields.*", map[string]string{
-						"data_set_identifier": acctest.Ct1,
-						names.AttrExpression:  acctest.Ct2,
-						names.AttrName:        "test2",
+						"data_set_identifier": "1",
+						"expression":          "2",
+						"name":                "test2",
 					}),
 				),
 			},

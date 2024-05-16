@@ -52,11 +52,11 @@ func ResourceProject() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrCreatedTime: {
+			"created_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -95,7 +95,7 @@ func ResourceProject() *schema.Resource {
 							ConflictsWith: []string{"data_delivery.0.cloudwatch_logs"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									names.AttrBucket: {
+									"bucket": {
 										Type:     schema.TypeString,
 										Optional: true,
 										ValidateFunc: validation.All(
@@ -103,7 +103,7 @@ func ResourceProject() *schema.Resource {
 											validation.StringMatch(regexache.MustCompile(`^[0-9a-z][0-9a-z-]*[0-9a-z]$`), "must be a valid Bucket name"),
 										),
 									},
-									names.AttrPrefix: {
+									"prefix": {
 										Type:     schema.TypeString,
 										Optional: true,
 										ValidateFunc: validation.All(
@@ -117,7 +117,7 @@ func ResourceProject() *schema.Resource {
 					},
 				},
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 160),
@@ -138,7 +138,7 @@ func ResourceProject() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -147,7 +147,7 @@ func ResourceProject() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
 				),
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -164,13 +164,13 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	conn := meta.(*conns.AWSClient).EvidentlyClient(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	input := &evidently.CreateProjectInput{
 		Name: aws.String(name),
 		Tags: getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -216,15 +216,15 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.Set("active_experiment_count", project.ActiveExperimentCount)
 	d.Set("active_launch_count", project.ActiveLaunchCount)
-	d.Set(names.AttrARN, project.Arn)
-	d.Set(names.AttrCreatedTime, aws.ToTime(project.CreatedTime).Format(time.RFC3339))
-	d.Set(names.AttrDescription, project.Description)
+	d.Set("arn", project.Arn)
+	d.Set("created_time", aws.ToTime(project.CreatedTime).Format(time.RFC3339))
+	d.Set("description", project.Description)
 	d.Set("experiment_count", project.ExperimentCount)
 	d.Set("feature_count", project.FeatureCount)
 	d.Set("last_updated_time", aws.ToTime(project.LastUpdatedTime).Format(time.RFC3339))
 	d.Set("launch_count", project.LaunchCount)
-	d.Set(names.AttrName, project.Name)
-	d.Set(names.AttrStatus, project.Status)
+	d.Set("name", project.Name)
+	d.Set("status", project.Status)
 
 	setTagsOut(ctx, project.Tags)
 
@@ -240,9 +240,9 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	// UpdateProjectWithContext: Updates the description of an existing project.
 	// UpdateProjectDataDeliveryWithContext: Updates the data storage options for this project.
 
-	if d.HasChanges(names.AttrDescription) {
+	if d.HasChanges("description") {
 		_, err := conn.UpdateProject(ctx, &evidently.UpdateProjectInput{
-			Description: aws.String(d.Get(names.AttrDescription).(string)),
+			Description: aws.String(d.Get("description").(string)),
 			Project:     aws.String(d.Id()),
 		})
 
@@ -370,11 +370,11 @@ func expandS3Destination(s3Destination []interface{}) *awstypes.S3DestinationCon
 
 	result := &awstypes.S3DestinationConfig{}
 
-	if v, ok := tfMap[names.AttrBucket].(string); ok && v != "" {
+	if v, ok := tfMap["bucket"].(string); ok && v != "" {
 		result.Bucket = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrPrefix].(string); ok && v != "" {
+	if v, ok := tfMap["prefix"].(string); ok && v != "" {
 		result.Prefix = aws.String(v)
 	}
 
@@ -421,11 +421,11 @@ func flattenS3Destination(s3Destination *awstypes.S3Destination) []interface{} {
 	values := map[string]interface{}{}
 
 	if s3Destination.Bucket != nil {
-		values[names.AttrBucket] = aws.ToString(s3Destination.Bucket)
+		values["bucket"] = aws.ToString(s3Destination.Bucket)
 	}
 
 	if s3Destination.Prefix != nil {
-		values[names.AttrPrefix] = aws.ToString(s3Destination.Prefix)
+		values["prefix"] = aws.ToString(s3Destination.Prefix)
 	}
 
 	return []interface{}{values}

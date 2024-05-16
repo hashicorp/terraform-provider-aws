@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_rds_cluster")
@@ -21,11 +20,11 @@ func DataSourceCluster() *schema.Resource {
 		ReadWithoutTimeout: dataSourceClusterRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrAvailabilityZones: {
+			"availability_zones": {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
@@ -38,7 +37,7 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			names.AttrClusterIdentifier: {
+			"cluster_identifier": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -51,7 +50,7 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDatabaseName: {
+			"database_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -72,7 +71,7 @@ func DataSourceCluster() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrEndpoint: {
+			"endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -84,7 +83,7 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrEngineVersion: {
+			"engine_version": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -92,7 +91,7 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrHostedZoneID: {
+			"hosted_zone_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -105,7 +104,7 @@ func DataSourceCluster() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrKMSKeyID: {
+			"kms_key_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -114,7 +113,7 @@ func DataSourceCluster() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrKMSKeyID: {
+						"kms_key_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -137,7 +136,7 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrPort: {
+			"port": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -145,7 +144,7 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrPreferredMaintenanceWindow: {
+			"preferred_maintenance_window": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -161,8 +160,8 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			names.AttrVPCSecurityGroupIDs: {
+			"tags": tftags.TagsSchemaComputed(),
+			"vpc_security_group_ids": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -176,7 +175,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	dbClusterID := d.Get(names.AttrClusterIdentifier).(string)
+	dbClusterID := d.Get("cluster_identifier").(string)
 	dbc, err := FindDBClusterByID(ctx, conn, dbClusterID)
 
 	if err != nil {
@@ -186,11 +185,11 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.SetId(aws.StringValue(dbc.DBClusterIdentifier))
 
 	clusterARN := aws.StringValue(dbc.DBClusterArn)
-	d.Set(names.AttrARN, clusterARN)
-	d.Set(names.AttrAvailabilityZones, aws.StringValueSlice(dbc.AvailabilityZones))
+	d.Set("arn", clusterARN)
+	d.Set("availability_zones", aws.StringValueSlice(dbc.AvailabilityZones))
 	d.Set("backtrack_window", dbc.BacktrackWindow)
 	d.Set("backup_retention_period", dbc.BackupRetentionPeriod)
-	d.Set(names.AttrClusterIdentifier, dbc.DBClusterIdentifier)
+	d.Set("cluster_identifier", dbc.DBClusterIdentifier)
 	var clusterMembers []string
 	for _, v := range dbc.DBClusterMembers {
 		clusterMembers = append(clusterMembers, aws.StringValue(v.DBInstanceIdentifier))
@@ -202,24 +201,24 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	// diff.
 	//	See https://github.com/hashicorp/terraform/issues/4671 for backstory
 	if dbc.DatabaseName != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
-		d.Set(names.AttrDatabaseName, dbc.DatabaseName)
+		d.Set("database_name", dbc.DatabaseName)
 	}
 	d.Set("db_cluster_parameter_group_name", dbc.DBClusterParameterGroup)
 	d.Set("db_subnet_group_name", dbc.DBSubnetGroup)
 	d.Set("db_system_id", dbc.DBSystemId)
 	d.Set("enabled_cloudwatch_logs_exports", aws.StringValueSlice(dbc.EnabledCloudwatchLogsExports))
-	d.Set(names.AttrEndpoint, dbc.Endpoint)
+	d.Set("endpoint", dbc.Endpoint)
 	d.Set("engine", dbc.Engine)
 	d.Set("engine_mode", dbc.EngineMode)
-	d.Set(names.AttrEngineVersion, dbc.EngineVersion)
-	d.Set(names.AttrHostedZoneID, dbc.HostedZoneId)
+	d.Set("engine_version", dbc.EngineVersion)
+	d.Set("hosted_zone_id", dbc.HostedZoneId)
 	d.Set("iam_database_authentication_enabled", dbc.IAMDatabaseAuthenticationEnabled)
 	var iamRoleARNs []string
 	for _, v := range dbc.AssociatedRoles {
 		iamRoleARNs = append(iamRoleARNs, aws.StringValue(v.RoleArn))
 	}
 	d.Set("iam_roles", iamRoleARNs)
-	d.Set(names.AttrKMSKeyID, dbc.KmsKeyId)
+	d.Set("kms_key_id", dbc.KmsKeyId)
 	if dbc.MasterUserSecret != nil {
 		if err := d.Set("master_user_secret", []interface{}{flattenManagedMasterUserSecret(dbc.MasterUserSecret)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting master_user_secret: %s", err)
@@ -227,9 +226,9 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	d.Set("master_username", dbc.MasterUsername)
 	d.Set("network_type", dbc.NetworkType)
-	d.Set(names.AttrPort, dbc.Port)
+	d.Set("port", dbc.Port)
 	d.Set("preferred_backup_window", dbc.PreferredBackupWindow)
-	d.Set(names.AttrPreferredMaintenanceWindow, dbc.PreferredMaintenanceWindow)
+	d.Set("preferred_maintenance_window", dbc.PreferredMaintenanceWindow)
 	d.Set("reader_endpoint", dbc.ReaderEndpoint)
 	d.Set("replication_source_identifier", dbc.ReplicationSourceIdentifier)
 	d.Set("storage_encrypted", dbc.StorageEncrypted)
@@ -237,11 +236,11 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	for _, v := range dbc.VpcSecurityGroups {
 		securityGroupIDs = append(securityGroupIDs, aws.StringValue(v.VpcSecurityGroupId))
 	}
-	d.Set(names.AttrVPCSecurityGroupIDs, securityGroupIDs)
+	d.Set("vpc_security_group_ids", securityGroupIDs)
 
 	tags := KeyValueTags(ctx, dbc.TagList)
 
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

@@ -7,8 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
-	"regexp"
-	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -22,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/timestamp"
 )
@@ -385,9 +382,20 @@ func ValidOnceAWeekWindowFormat(v interface{}, k string) (ws []string, errors []
 	return
 }
 
-var (
-	ValidRegionName = validation.StringMatch(regionRegexp, "must be a valid AWS Region Code")
-)
+func ValidRegionName(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	if value == "" {
+		return ws, errors
+	}
+	if !regionRegexp.MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q region name is malformed(%q): %q",
+			k, regionRegexp, value))
+	}
+
+	return
+}
 
 func ValidStringIsJSONOrYAML(v interface{}, k string) (ws []string, errors []error) {
 	if looksLikeJSONString(v) {
@@ -508,34 +516,6 @@ func IsServicePrincipal(value string) (valid bool) {
 	return servicePrincipalRegexp.MatchString(value)
 }
 
-func MapKeyNoMatch(r *regexp.Regexp, message string) schema.SchemaValidateDiagFunc {
-	return func(v interface{}, path cty.Path) diag.Diagnostics {
-		var diags diag.Diagnostics
-		m := v.(map[string]interface{})
-		keys := tfmaps.Keys(m)
-
-		slices.Sort(keys)
-		for _, k := range keys {
-			if ok := r.MatchString(k); ok {
-				var detail string
-				if message != "" {
-					detail = fmt.Sprintf("Map key '%s' %s", k, message)
-				} else {
-					detail = fmt.Sprintf("Map key '%s' must not match regular expression '%s'", k, r)
-				}
-				diags = append(diags, diag.Diagnostic{
-					Severity:      diag.Error,
-					Summary:       "Bad map key",
-					Detail:        detail,
-					AttributePath: path,
-				})
-			}
-		}
-
-		return diags
-	}
-}
-
 func MapKeysAre(keyValidators ...schema.SchemaValidateDiagFunc) schema.SchemaValidateDiagFunc {
 	return func(v interface{}, path cty.Path) diag.Diagnostics {
 		var diags diag.Diagnostics
@@ -550,25 +530,7 @@ func MapKeysAre(keyValidators ...schema.SchemaValidateDiagFunc) schema.SchemaVal
 	}
 }
 
-func MapSizeAtMost(max int) schema.SchemaValidateDiagFunc {
-	return func(v interface{}, path cty.Path) diag.Diagnostics {
-		var diags diag.Diagnostics
-		m := v.(map[string]interface{})
-
-		if l := len(m); l > max {
-			diags = append(diags, diag.Diagnostic{
-				Severity:      diag.Error,
-				Summary:       "Bad map size",
-				Detail:        fmt.Sprintf("Map must contain at most %d elements: length=%d", max, l),
-				AttributePath: path,
-			})
-		}
-
-		return diags
-	}
-}
-
-func MapSizeBetween(min, max int) schema.SchemaValidateDiagFunc {
+func MapLenBetween(min, max int) schema.SchemaValidateDiagFunc {
 	return func(v interface{}, path cty.Path) diag.Diagnostics {
 		var diags diag.Diagnostics
 		m := v.(map[string]interface{})
@@ -576,7 +538,7 @@ func MapSizeBetween(min, max int) schema.SchemaValidateDiagFunc {
 		if l := len(m); l < min || l > max {
 			diags = append(diags, diag.Diagnostic{
 				Severity:      diag.Error,
-				Summary:       "Bad map size",
+				Summary:       "Bad map length",
 				Detail:        fmt.Sprintf("Map must contain at least %d elements and at most %d elements: length=%d", min, max, l),
 				AttributePath: path,
 			})

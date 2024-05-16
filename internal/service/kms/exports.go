@@ -5,11 +5,5 @@ package kms
 
 // Exports for use in other modules.
 var (
-	DiffSuppressKey             = diffSuppressKey
-	DiffSuppressKeyOrAlias      = diffSuppressKeyOrAlias
-	FindAliasByName             = findAliasByName
-	FindDefaultKeyARNForService = findDefaultKeyARNForService
-	FindKeyByID                 = findKeyByID
-	ValidateKey                 = validateKey
-	ValidateKeyOrAlias          = validateKeyOrAlias
+	FindDefaultKey = findDefaultKey
 )

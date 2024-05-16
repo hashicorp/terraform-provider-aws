@@ -56,7 +56,7 @@ func ResourceVerifiedAccessEndpoint() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(verifiedAccessAttachmentType_Values(), false),
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -79,7 +79,7 @@ func ResourceVerifiedAccessEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrEndpointType: {
+			"endpoint_type": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -97,17 +97,17 @@ func ResourceVerifiedAccessEndpoint() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						names.AttrPort: {
+						"port": {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							ValidateFunc: validation.IsPortNumber,
 						},
-						names.AttrProtocol: {
+						"protocol": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice(verifiedAccessEndpointProtocol_Values(), false),
 						},
-						names.AttrSubnetIDs: {
+						"subnet_ids": {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -121,17 +121,17 @@ func ResourceVerifiedAccessEndpoint() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrNetworkInterfaceID: {
+						"network_interface_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						names.AttrPort: {
+						"port": {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							ValidateFunc: validation.IsPortNumber,
 						},
-						names.AttrProtocol: {
+						"protocol": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice(verifiedAccessEndpointProtocol_Values(), false),
@@ -143,7 +143,7 @@ func ResourceVerifiedAccessEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			names.AttrSecurityGroupIDs: {
+			"security_group_ids": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
@@ -160,7 +160,7 @@ func ResourceVerifiedAccessEndpoint() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
-						names.AttrKMSKeyARN: {
+						"kms_key_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
@@ -195,12 +195,12 @@ func resourceVerifiedAccessEndpointCreate(ctx context.Context, d *schema.Resourc
 		ClientToken:           aws.String(id.UniqueId()),
 		DomainCertificateArn:  aws.String(d.Get("domain_certificate_arn").(string)),
 		EndpointDomainPrefix:  aws.String(d.Get("endpoint_domain_prefix").(string)),
-		EndpointType:          types.VerifiedAccessEndpointType(d.Get(names.AttrEndpointType).(string)),
+		EndpointType:          types.VerifiedAccessEndpointType(d.Get("endpoint_type").(string)),
 		TagSpecifications:     getTagSpecificationsInV2(ctx, types.ResourceTypeVerifiedAccessEndpoint),
 		VerifiedAccessGroupId: aws.String(d.Get("verified_access_group_id").(string)),
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
+	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -216,7 +216,7 @@ func resourceVerifiedAccessEndpointCreate(ctx context.Context, d *schema.Resourc
 		input.PolicyDocument = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk("security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
 		input.SecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
@@ -258,18 +258,18 @@ func resourceVerifiedAccessEndpointRead(ctx context.Context, d *schema.ResourceD
 
 	d.Set("application_domain", ep.ApplicationDomain)
 	d.Set("attachment_type", ep.AttachmentType)
-	d.Set(names.AttrDescription, ep.Description)
+	d.Set("description", ep.Description)
 	d.Set("device_validation_domain", ep.DeviceValidationDomain)
 	d.Set("domain_certificate_arn", ep.DomainCertificateArn)
 	d.Set("endpoint_domain", ep.EndpointDomain)
-	d.Set(names.AttrEndpointType, ep.EndpointType)
+	d.Set("endpoint_type", ep.EndpointType)
 	if err := d.Set("load_balancer_options", flattenVerifiedAccessEndpointLoadBalancerOptions(ep.LoadBalancerOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting load_balancer_options: %s", err)
 	}
 	if err := d.Set("network_interface_options", flattenVerifiedAccessEndpointEniOptions(ep.NetworkInterfaceOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting network_interface_options: %s", err)
 	}
-	d.Set(names.AttrSecurityGroupIDs, aws.StringSlice(ep.SecurityGroupIds))
+	d.Set("security_group_ids", aws.StringSlice(ep.SecurityGroupIds))
 	if err := d.Set("sse_specification", flattenVerifiedAccessSseSpecificationRequest(ep.SseSpecification)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting sse_specification: %s", err)
 	}
@@ -291,14 +291,14 @@ func resourceVerifiedAccessEndpointUpdate(ctx context.Context, d *schema.Resourc
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	if d.HasChangesExcept("policy_document", names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("policy_document", "tags", "tags_all") {
 		input := &ec2.ModifyVerifiedAccessEndpointInput{
 			ClientToken:              aws.String(id.UniqueId()),
 			VerifiedAccessEndpointId: aws.String(d.Id()),
 		}
 
-		if d.HasChanges(names.AttrDescription) {
-			input.Description = aws.String(d.Get(names.AttrDescription).(string))
+		if d.HasChanges("description") {
+			input.Description = aws.String(d.Get("description").(string))
 		}
 
 		if d.HasChanges("load_balancer_options") {
@@ -383,15 +383,15 @@ func flattenVerifiedAccessEndpointLoadBalancerOptions(apiObject *types.VerifiedA
 	}
 
 	if v := apiObject.Port; v != nil {
-		tfmap[names.AttrPort] = aws.ToInt32(v)
+		tfmap["port"] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.Protocol; v != "" {
-		tfmap[names.AttrProtocol] = v
+		tfmap["protocol"] = v
 	}
 
 	if v := apiObject.SubnetIds; v != nil {
-		tfmap[names.AttrSubnetIDs] = aws.StringSlice(v)
+		tfmap["subnet_ids"] = aws.StringSlice(v)
 	}
 
 	return []interface{}{tfmap}
@@ -405,15 +405,15 @@ func flattenVerifiedAccessEndpointEniOptions(apiObject *types.VerifiedAccessEndp
 	tfmap := map[string]interface{}{}
 
 	if v := apiObject.NetworkInterfaceId; v != nil {
-		tfmap[names.AttrNetworkInterfaceID] = aws.ToString(v)
+		tfmap["network_interface_id"] = aws.ToString(v)
 	}
 
 	if v := apiObject.Port; v != nil {
-		tfmap[names.AttrPort] = aws.ToInt32(v)
+		tfmap["port"] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.Protocol; v != "" {
-		tfmap[names.AttrProtocol] = v
+		tfmap["protocol"] = v
 	}
 
 	return []interface{}{tfmap}
@@ -431,7 +431,7 @@ func flattenVerifiedAccessSseSpecificationRequest(apiObject *types.VerifiedAcces
 	}
 
 	if v := apiObject.KmsKeyArn; v != nil {
-		tfmap[names.AttrKMSKeyARN] = aws.ToString(v)
+		tfmap["kms_key_arn"] = aws.ToString(v)
 	}
 
 	return []interface{}{tfmap}
@@ -448,15 +448,15 @@ func expandCreateVerifiedAccessEndpointLoadBalancerOptions(tfMap map[string]inte
 		apiobject.LoadBalancerArn = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrPort].(int); ok {
+	if v, ok := tfMap["port"].(int); ok {
 		apiobject.Port = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
+	if v, ok := tfMap["protocol"].(string); ok && v != "" {
 		apiobject.Protocol = types.VerifiedAccessEndpointProtocol(v)
 	}
 
-	if v, ok := tfMap[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap["subnet_ids"].(*schema.Set); ok && v.Len() > 0 {
 		apiobject.SubnetIds = flex.ExpandStringValueSet(v)
 	}
 
@@ -470,15 +470,15 @@ func expandCreateVerifiedAccessEndpointEniOptions(tfMap map[string]interface{}) 
 
 	apiobject := &types.CreateVerifiedAccessEndpointEniOptions{}
 
-	if v, ok := tfMap[names.AttrNetworkInterfaceID].(string); ok && v != "" {
+	if v, ok := tfMap["network_interface_id"].(string); ok && v != "" {
 		apiobject.NetworkInterfaceId = aws.String(v)
 	}
 
-	if v, ok := tfMap[names.AttrPort].(int); ok {
+	if v, ok := tfMap["port"].(int); ok {
 		apiobject.Port = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
+	if v, ok := tfMap["protocol"].(string); ok && v != "" {
 		apiobject.Protocol = types.VerifiedAccessEndpointProtocol(v)
 	}
 	return apiobject
@@ -491,15 +491,15 @@ func expandModifyVerifiedAccessEndpointLoadBalancerOptions(tfMap map[string]inte
 
 	apiObject := &types.ModifyVerifiedAccessEndpointLoadBalancerOptions{}
 
-	if v, ok := tfMap[names.AttrPort].(int); ok {
+	if v, ok := tfMap["port"].(int); ok {
 		apiObject.Port = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
+	if v, ok := tfMap["protocol"].(string); ok && v != "" {
 		apiObject.Protocol = types.VerifiedAccessEndpointProtocol(v)
 	}
 
-	if v, ok := tfMap[names.AttrSubnetIDs]; ok {
+	if v, ok := tfMap["subnet_ids"]; ok {
 		apiObject.SubnetIds = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
@@ -513,11 +513,11 @@ func expandModifyVerifiedAccessEndpointEniOptions(tfMap map[string]interface{}) 
 
 	apiObject := &types.ModifyVerifiedAccessEndpointEniOptions{}
 
-	if v, ok := tfMap[names.AttrPort].(int); ok {
+	if v, ok := tfMap["port"].(int); ok {
 		apiObject.Port = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
+	if v, ok := tfMap["protocol"].(string); ok && v != "" {
 		apiObject.Protocol = types.VerifiedAccessEndpointProtocol(v)
 	}
 	return apiObject
@@ -534,7 +534,7 @@ func expandCreateVerifiedAccessEndpointSseSpecification(tfMap map[string]interfa
 		apiObject.CustomerManagedKeyEnabled = aws.Bool(v)
 	}
 
-	if v, ok := tfMap[names.AttrKMSKeyARN].(string); ok && v != "" {
+	if v, ok := tfMap["kms_key_arn"].(string); ok && v != "" {
 		apiObject.KmsKeyArn = aws.String(v)
 	}
 	return apiObject

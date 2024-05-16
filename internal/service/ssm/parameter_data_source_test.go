@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"testing"
 
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
+	"github.com/aws/aws-sdk-go/service/ssm"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -25,23 +25,23 @@ func TestAccSSMParameterDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccParameterDataSourceConfig_basic(name, false),
+				Config: testAccParameterDataSourceConfig_basic(name, "false"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, "aws_ssm_parameter.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "TestValue"),
+					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_ssm_parameter.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "type", "String"),
+					resource.TestCheckResourceAttr(resourceName, "value", "TestValue"),
 					resource.TestCheckResourceAttr(resourceName, "with_decryption", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
+					resource.TestCheckResourceAttrSet(resourceName, "version"),
 				),
 			},
 			{
-				Config: testAccParameterDataSourceConfig_basic(name, true),
+				Config: testAccParameterDataSourceConfig_basic(name, "true"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, "aws_ssm_parameter.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "TestValue"),
+					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_ssm_parameter.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "type", "String"),
+					resource.TestCheckResourceAttr(resourceName, "value", "TestValue"),
 					resource.TestCheckResourceAttr(resourceName, "with_decryption", "true"),
 				),
 			},
@@ -60,12 +60,12 @@ func TestAccSSMParameterDataSource_fullPath(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccParameterDataSourceConfig_basic(name, false),
+				Config: testAccParameterDataSourceConfig_basic(name, "false"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, "aws_ssm_parameter.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "TestValue"),
+					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_ssm_parameter.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "type", "String"),
+					resource.TestCheckResourceAttr(resourceName, "value", "TestValue"),
 					resource.TestCheckResourceAttr(resourceName, "with_decryption", "false"),
 				),
 			},
@@ -75,7 +75,7 @@ func TestAccSSMParameterDataSource_fullPath(t *testing.T) {
 
 func TestAccSSMParameterDataSource_insecureValue(t *testing.T) {
 	ctx := acctest.Context(t)
-	var param awstypes.Parameter
+	var param ssm.Parameter
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssm_parameter.test"
 	dataSourceName := "data.aws_ssm_parameter.test"
@@ -97,17 +97,17 @@ func TestAccSSMParameterDataSource_insecureValue(t *testing.T) {
 	})
 }
 
-func testAccParameterDataSourceConfig_basic(name string, withDecryption bool) string {
+func testAccParameterDataSourceConfig_basic(name string, withDecryption string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_parameter" "test" {
-  name  = %[1]q
+  name  = "%s"
   type  = "String"
   value = "TestValue"
 }
 
 data "aws_ssm_parameter" "test" {
   name            = aws_ssm_parameter.test.name
-  with_decryption = %[2]t
+  with_decryption = %s
 }
 `, name, withDecryption)
 }

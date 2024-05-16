@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_vpc_endpoint_security_group_association")
@@ -38,7 +37,7 @@ func ResourceVPCEndpointSecurityGroupAssociation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrVPCEndpointID: {
+			"vpc_endpoint_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -51,7 +50,7 @@ func resourceVPCEndpointSecurityGroupAssociationCreate(ctx context.Context, d *s
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	vpcEndpointID := d.Get(names.AttrVPCEndpointID).(string)
+	vpcEndpointID := d.Get("vpc_endpoint_id").(string)
 	securityGroupID := d.Get("security_group_id").(string)
 	replaceDefaultAssociation := d.Get("replace_default_association").(bool)
 
@@ -113,7 +112,7 @@ func resourceVPCEndpointSecurityGroupAssociationRead(ctx context.Context, d *sch
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	vpcEndpointID := d.Get(names.AttrVPCEndpointID).(string)
+	vpcEndpointID := d.Get("vpc_endpoint_id").(string)
 	securityGroupID := d.Get("security_group_id").(string)
 	// Human friendly ID for error messages since d.Id() is non-descriptive
 	id := fmt.Sprintf("%s/%s", vpcEndpointID, securityGroupID)
@@ -137,7 +136,7 @@ func resourceVPCEndpointSecurityGroupAssociationDelete(ctx context.Context, d *s
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	vpcEndpointID := d.Get(names.AttrVPCEndpointID).(string)
+	vpcEndpointID := d.Get("vpc_endpoint_id").(string)
 	securityGroupID := d.Get("security_group_id").(string)
 	replaceDefaultAssociation := d.Get("replace_default_association").(bool)
 

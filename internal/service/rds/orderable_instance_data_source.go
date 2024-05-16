@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_rds_orderable_db_instance")
@@ -29,7 +28,7 @@ func DataSourceOrderableInstance() *schema.Resource {
 				Computed: true,
 			},
 
-			names.AttrAvailabilityZones: {
+			"availability_zones": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -40,7 +39,7 @@ func DataSourceOrderableInstance() *schema.Resource {
 				Required: true,
 			},
 
-			names.AttrEngineVersion: {
+			"engine_version": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -121,7 +120,7 @@ func DataSourceOrderableInstance() *schema.Resource {
 				Computed: true,
 			},
 
-			names.AttrStorageType: {
+			"storage_type": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -215,7 +214,7 @@ func dataSourceOrderableInstanceRead(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	input := &rds.DescribeOrderableDBInstanceOptionsInput{
-		MaxRecords: aws.Int64(1000),
+		MaxRecords: aws.Int64(3412),
 	}
 
 	if v, ok := d.GetOk("availability_zone_group"); ok {
@@ -230,7 +229,7 @@ func dataSourceOrderableInstanceRead(ctx context.Context, d *schema.ResourceData
 		input.Engine = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrEngineVersion); ok {
+	if v, ok := d.GetOk("engine_version"); ok {
 		input.EngineVersion = aws.String(v.(string))
 	}
 
@@ -256,7 +255,7 @@ func dataSourceOrderableInstanceRead(ctx context.Context, d *schema.ResourceData
 				}
 			}
 
-			if v, ok := d.GetOk(names.AttrStorageType); ok {
+			if v, ok := d.GetOk("storage_type"); ok {
 				if aws.StringValue(instanceOption.StorageType) != v.(string) {
 					continue
 				}
@@ -472,9 +471,9 @@ func dataSourceOrderableInstanceRead(ctx context.Context, d *schema.ResourceData
 	for _, v := range found.AvailabilityZones {
 		availabilityZones = append(availabilityZones, aws.StringValue(v.Name))
 	}
-	d.Set(names.AttrAvailabilityZones, availabilityZones)
+	d.Set("availability_zones", availabilityZones)
 	d.Set("engine", found.Engine)
-	d.Set(names.AttrEngineVersion, found.EngineVersion)
+	d.Set("engine_version", found.EngineVersion)
 	d.Set("instance_class", found.DBInstanceClass)
 	d.Set("license_model", found.LicenseModel)
 	d.Set("max_iops_per_db_instance", found.MaxIopsPerDbInstance)
@@ -486,7 +485,7 @@ func dataSourceOrderableInstanceRead(ctx context.Context, d *schema.ResourceData
 	d.Set("multi_az_capable", found.MultiAZCapable)
 	d.Set("outpost_capable", found.OutpostCapable)
 	d.Set("read_replica_capable", found.ReadReplicaCapable)
-	d.Set(names.AttrStorageType, found.StorageType)
+	d.Set("storage_type", found.StorageType)
 	d.Set("supported_engine_modes", aws.StringValueSlice(found.SupportedEngineModes))
 	d.Set("supported_network_types", aws.StringValueSlice(found.SupportedNetworkTypes))
 	d.Set("supports_clusters", found.SupportsClusters)

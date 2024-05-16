@@ -50,7 +50,7 @@ func ResourceDefaultVPC() *schema.Resource {
 		//   - existing_default_vpc Computed-only, set in resourceDefaultVPCCreate
 		//   - force_destroy Optional
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -98,7 +98,7 @@ func ResourceDefaultVPC() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			names.AttrForceDestroy: {
+			"force_destroy": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -143,7 +143,7 @@ func ResourceDefaultVPC() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrOwnerID: {
+			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -285,7 +285,7 @@ func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceDefaultVPCDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	if d.Get(names.AttrForceDestroy).(bool) {
+	if d.Get("force_destroy").(bool) {
 		return append(diags, resourceVPCDelete(ctx, d, meta)...)
 	}
 

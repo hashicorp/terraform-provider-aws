@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_elastic_beanstalk_application")
@@ -36,22 +35,22 @@ func DataSourceApplication() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						names.AttrServiceRole: {
+						"service_role": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -63,7 +62,7 @@ func dataSourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 	app, err := FindApplicationByName(ctx, conn, name)
 
 	if err != nil {
@@ -74,9 +73,9 @@ func dataSourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta
 	if err := d.Set("appversion_lifecycle", flattenApplicationResourceLifecycleConfig(app.ResourceLifecycleConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting appversion_lifecycle: %s", err)
 	}
-	d.Set(names.AttrARN, app.ApplicationArn)
-	d.Set(names.AttrDescription, app.Description)
-	d.Set(names.AttrName, app.ApplicationName)
+	d.Set("arn", app.ApplicationArn)
+	d.Set("description", app.Description)
+	d.Set("name", app.ApplicationName)
 
 	return diags
 }

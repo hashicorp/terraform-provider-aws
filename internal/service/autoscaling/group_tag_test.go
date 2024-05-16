@@ -29,11 +29,11 @@ func TestAccAutoScalingGroupTag_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckGroupTagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupTagConfig_basic(acctest.CtKey1, acctest.CtValue1),
+				Config: testAccGroupTagConfig_basic("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupTagExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tag.0.key", acctest.CtKey1),
-					resource.TestCheckResourceAttr(resourceName, "tag.0.value", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tag.0.key", "key1"),
+					resource.TestCheckResourceAttr(resourceName, "tag.0.value", "value1"),
 				),
 			},
 			{
@@ -56,7 +56,7 @@ func TestAccAutoScalingGroupTag_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckGroupTagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupTagConfig_basic(acctest.CtKey1, acctest.CtValue1),
+				Config: testAccGroupTagConfig_basic("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupTagExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfautoscaling.ResourceGroupTag(), resourceName),
@@ -78,11 +78,11 @@ func TestAccAutoScalingGroupTag_value(t *testing.T) {
 		CheckDestroy:             testAccCheckGroupTagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupTagConfig_basic(acctest.CtKey1, acctest.CtValue1),
+				Config: testAccGroupTagConfig_basic("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupTagExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tag.0.key", acctest.CtKey1),
-					resource.TestCheckResourceAttr(resourceName, "tag.0.value", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tag.0.key", "key1"),
+					resource.TestCheckResourceAttr(resourceName, "tag.0.value", "value1"),
 				),
 			},
 			{
@@ -91,11 +91,11 @@ func TestAccAutoScalingGroupTag_value(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGroupTagConfig_basic(acctest.CtKey1, acctest.CtValue1Updated),
+				Config: testAccGroupTagConfig_basic("key1", "value1updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupTagExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tag.0.key", acctest.CtKey1),
-					resource.TestCheckResourceAttr(resourceName, "tag.0.value", acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, "tag.0.key", "key1"),
+					resource.TestCheckResourceAttr(resourceName, "tag.0.value", "value1updated"),
 				),
 			},
 		},

@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ses_template")
@@ -33,11 +32,11 @@ func ResourceTemplate() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -64,7 +63,7 @@ func resourceTemplateCreate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
-	templateName := d.Get(names.AttrName).(string)
+	templateName := d.Get("name").(string)
 
 	template := ses.Template{
 		TemplateName: aws.String(templateName),
@@ -115,7 +114,7 @@ func resourceTemplateRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.Set("html", gto.Template.HtmlPart)
-	d.Set(names.AttrName, gto.Template.TemplateName)
+	d.Set("name", gto.Template.TemplateName)
 	d.Set("subject", gto.Template.SubjectPart)
 	d.Set("text", gto.Template.TextPart)
 
@@ -126,7 +125,7 @@ func resourceTemplateRead(ctx context.Context, d *schema.ResourceData, meta inte
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("template/%s", d.Id()),
 	}.String()
-	d.Set(names.AttrARN, arn)
+	d.Set("arn", arn)
 
 	return diags
 }

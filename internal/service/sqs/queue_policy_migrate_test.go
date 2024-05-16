@@ -8,7 +8,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	tfsqs "github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestQueuePolicyMigrateState(t *testing.T) {
@@ -25,8 +24,8 @@ func TestQueuePolicyMigrateState(t *testing.T) {
 			StateVersion: 0,
 			ID:           "sqs-policy-https://queue.amazonaws.com/0123456789012/myqueue",
 			Attributes: map[string]string{
-				names.AttrPolicy: "{}",
-				"queue_url":      "https://queue.amazonaws.com/0123456789012/myqueue",
+				"policy":    "{}",
+				"queue_url": "https://queue.amazonaws.com/0123456789012/myqueue",
 			},
 			Expected: "https://queue.amazonaws.com/0123456789012/myqueue",
 		},

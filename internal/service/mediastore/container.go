@@ -38,17 +38,17 @@ func ResourceContainer() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^\w+$`), "must contain alphanumeric characters or underscores"),
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrEndpoint: {
+			"endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -65,7 +65,7 @@ func resourceContainerCreate(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).MediaStoreClient(ctx)
 
 	input := &mediastore.CreateContainerInput{
-		ContainerName: aws.String(d.Get(names.AttrName).(string)),
+		ContainerName: aws.String(d.Get("name").(string)),
 		Tags:          getTagsIn(ctx),
 	}
 
@@ -102,9 +102,9 @@ func resourceContainerRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	arn := aws.ToString(resp.ARN)
-	d.Set(names.AttrARN, arn)
-	d.Set(names.AttrName, resp.Name)
-	d.Set(names.AttrEndpoint, resp.Endpoint)
+	d.Set("arn", arn)
+	d.Set("name", resp.Name)
+	d.Set("endpoint", resp.Endpoint)
 
 	return diags
 }

@@ -57,7 +57,7 @@ func resourceService() *schema.Resource {
 				Computed:         true,
 				ValidateDiagFunc: enum.Validate[types.AuthType](),
 			},
-			names.AttrCertificateARN: {
+			"certificate_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
@@ -73,24 +73,24 @@ func resourceService() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrDomainName: {
+						"domain_name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrHostedZoneID: {
+						"hosted_zone_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(3, 40),
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -111,7 +111,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	in := &vpclattice.CreateServiceInput{
 		ClientToken: aws.String(id.UniqueId()),
-		Name:        aws.String(d.Get(names.AttrName).(string)),
+		Name:        aws.String(d.Get("name").(string)),
 		Tags:        getTagsIn(ctx),
 	}
 
@@ -119,7 +119,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 		in.AuthType = types.AuthType(v.(string))
 	}
 
-	if v, ok := d.GetOk(names.AttrCertificateARN); ok {
+	if v, ok := d.GetOk("certificate_arn"); ok {
 		in.CertificateArn = aws.String(v.(string))
 	}
 
@@ -130,7 +130,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 	out, err := conn.CreateService(ctx, in)
 
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameService, d.Get(names.AttrName).(string), err)
+		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameService, d.Get("name").(string), err)
 	}
 
 	d.SetId(aws.ToString(out.Id))
@@ -157,9 +157,9 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return create.DiagError(names.VPCLattice, create.ErrActionReading, ResNameService, d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, out.Arn)
+	d.Set("arn", out.Arn)
 	d.Set("auth_type", out.AuthType)
-	d.Set(names.AttrCertificateARN, out.CertificateArn)
+	d.Set("certificate_arn", out.CertificateArn)
 	d.Set("custom_domain_name", out.CustomDomainName)
 	if out.DnsEntry != nil {
 		if err := d.Set("dns_entry", []interface{}{flattenDNSEntry(out.DnsEntry)}); err != nil {
@@ -168,8 +168,8 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	} else {
 		d.Set("dns_entry", nil)
 	}
-	d.Set(names.AttrName, out.Name)
-	d.Set(names.AttrStatus, out.Status)
+	d.Set("name", out.Name)
+	d.Set("status", out.Status)
 
 	return nil
 }
@@ -177,7 +177,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept("tags", "tags_all") {
 		in := &vpclattice.UpdateServiceInput{
 			ServiceIdentifier: aws.String(d.Id()),
 		}
@@ -186,8 +186,8 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			in.AuthType = types.AuthType(d.Get("auth_type").(string))
 		}
 
-		if d.HasChanges(names.AttrCertificateARN) {
-			in.CertificateArn = aws.String(d.Get(names.AttrCertificateARN).(string))
+		if d.HasChanges("certificate_arn") {
+			in.CertificateArn = aws.String(d.Get("certificate_arn").(string))
 		}
 
 		_, err := conn.UpdateService(ctx, in)
@@ -339,11 +339,11 @@ func flattenDNSEntry(apiObject *types.DnsEntry) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.DomainName; v != nil {
-		tfMap[names.AttrDomainName] = aws.ToString(v)
+		tfMap["domain_name"] = aws.ToString(v)
 	}
 
 	if v := apiObject.HostedZoneId; v != nil {
-		tfMap[names.AttrHostedZoneID] = aws.ToString(v)
+		tfMap["hosted_zone_id"] = aws.ToString(v)
 	}
 
 	return tfMap

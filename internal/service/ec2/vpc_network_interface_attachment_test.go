@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"testing"
 
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -16,7 +16,7 @@ import (
 
 func TestAccVPCNetworkInterfaceAttachment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf awstypes.NetworkInterface
+	var conf ec2.NetworkInterface
 	resourceName := "aws_network_interface_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -31,10 +31,10 @@ func TestAccVPCNetworkInterfaceAttachment_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckENIExists(ctx, "aws_network_interface.test", &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "attachment_id"),
-					resource.TestCheckResourceAttr(resourceName, "device_index", acctest.Ct1),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrNetworkInterfaceID),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
+					resource.TestCheckResourceAttr(resourceName, "device_index", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "network_interface_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "status"),
 				),
 			},
 			{

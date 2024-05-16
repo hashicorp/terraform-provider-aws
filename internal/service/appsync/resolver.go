@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_appsync_resolver", name="Resolver)
@@ -42,7 +41,7 @@ func ResourceResolver() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -78,7 +77,7 @@ func ResourceResolver() *schema.Resource {
 				Optional:      true,
 				ConflictsWith: []string{"pipeline_config"},
 			},
-			names.AttrField: {
+			"field": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -126,7 +125,7 @@ func ResourceResolver() *schema.Resource {
 				RequiredWith: []string{"code"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrName: {
+						"name": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(appsync.RuntimeName_Values(), false),
@@ -171,7 +170,7 @@ func ResourceResolver() *schema.Resource {
 					},
 				},
 			},
-			names.AttrType: {
+			"type": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -184,7 +183,7 @@ func resourceResolverCreate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
-	apiID, typeName, fieldName := d.Get("api_id").(string), d.Get(names.AttrType).(string), d.Get(names.AttrField).(string)
+	apiID, typeName, fieldName := d.Get("api_id").(string), d.Get("type").(string), d.Get("field").(string)
 	input := &appsync.CreateResolverInput{
 		ApiId:     aws.String(apiID),
 		FieldName: aws.String(fieldName),
@@ -274,9 +273,9 @@ func resourceResolverRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	resolver := resp.Resolver
 	d.Set("api_id", apiID)
-	d.Set(names.AttrARN, resolver.ResolverArn)
-	d.Set(names.AttrType, resolver.TypeName)
-	d.Set(names.AttrField, resolver.FieldName)
+	d.Set("arn", resolver.ResolverArn)
+	d.Set("type", resolver.TypeName)
+	d.Set("field", resolver.FieldName)
 	d.Set("data_source", resolver.DataSourceName)
 	d.Set("request_template", resolver.RequestMappingTemplate)
 	d.Set("response_template", resolver.ResponseMappingTemplate)

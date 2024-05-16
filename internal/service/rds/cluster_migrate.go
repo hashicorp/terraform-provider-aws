@@ -26,16 +26,16 @@ func resourceClusterResourceV0() *schema.Resource {
 			},
 			// apply_immediately is used to determine when the update modifications take place.
 			// See http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.DBInstance.Modifying.html
-			names.AttrApplyImmediately: {
+			"apply_immediately": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrAvailabilityZones: {
+			"availability_zones": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
@@ -51,7 +51,7 @@ func resourceClusterResourceV0() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
-			names.AttrClusterIdentifier: {
+			"cluster_identifier": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -78,7 +78,7 @@ func resourceClusterResourceV0() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			names.AttrDatabaseName: {
+			"database_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -130,7 +130,7 @@ func resourceClusterResourceV0() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			names.AttrEndpoint: {
+			"endpoint": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -145,7 +145,7 @@ func resourceClusterResourceV0() *schema.Resource {
 				ForceNew: true,
 				Default:  EngineModeProvisioned,
 			},
-			names.AttrEngineVersion: {
+			"engine_version": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -162,7 +162,7 @@ func resourceClusterResourceV0() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			names.AttrHostedZoneID: {
+			"hosted_zone_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -176,11 +176,11 @@ func resourceClusterResourceV0() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrIOPS: {
+			"iops": {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
-			names.AttrKMSKeyID: {
+			"kms_key_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -195,7 +195,7 @@ func resourceClusterResourceV0() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrKMSKeyID: {
+						"kms_key_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -231,7 +231,7 @@ func resourceClusterResourceV0() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			names.AttrPort: {
+			"port": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -241,7 +241,7 @@ func resourceClusterResourceV0() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			names.AttrPreferredMaintenanceWindow: {
+			"preferred_maintenance_window": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -290,12 +290,12 @@ func resourceClusterResourceV0() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrBucketName: {
+						"bucket_name": {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
 						},
-						names.AttrBucketPrefix: {
+						"bucket_prefix": {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -329,7 +329,7 @@ func resourceClusterResourceV0() *schema.Resource {
 							Optional: true,
 							Default:  true,
 						},
-						names.AttrMaxCapacity: {
+						"max_capacity": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Default:  clusterScalingConfiguration_DefaultMaxCapacity,
@@ -358,7 +358,7 @@ func resourceClusterResourceV0() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrMaxCapacity: {
+						"max_capacity": {
 							Type:     schema.TypeFloat,
 							Required: true,
 						},
@@ -390,14 +390,14 @@ func resourceClusterResourceV0() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			names.AttrStorageType: {
+			"storage_type": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVPCSecurityGroupIDs: {
+			"vpc_security_group_ids": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,

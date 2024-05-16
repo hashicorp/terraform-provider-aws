@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_lex_bot")
@@ -22,7 +21,7 @@ func DataSourceBot() *schema.Resource {
 		ReadWithoutTimeout: dataSourceBotRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -34,11 +33,11 @@ func DataSourceBot() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			names.AttrCreatedDate: {
+			"created_date": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
+			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -58,7 +57,7 @@ func DataSourceBot() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			names.AttrLastUpdatedDate: {
+			"last_updated_date": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -66,7 +65,7 @@ func DataSourceBot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validBotName,
@@ -75,11 +74,11 @@ func DataSourceBot() *schema.Resource {
 				Type:     schema.TypeFloat,
 				Computed: true,
 			},
-			names.AttrStatus: {
+			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrVersion: {
+			"version": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      BotVersionLatest,
@@ -97,8 +96,8 @@ func dataSourceBotRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LexModelsConn(ctx)
 
-	name := d.Get(names.AttrName).(string)
-	version := d.Get(names.AttrVersion).(string)
+	name := d.Get("name").(string)
+	version := d.Get("version").(string)
 	output, err := FindBotVersionByName(ctx, conn, name, version)
 
 	if err != nil {
@@ -112,21 +111,21 @@ func dataSourceBotRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("bot:%s", name),
 	}
-	d.Set(names.AttrARN, arn.String())
+	d.Set("arn", arn.String())
 	d.Set("checksum", output.Checksum)
 	d.Set("child_directed", output.ChildDirected)
-	d.Set(names.AttrCreatedDate, output.CreatedDate.Format(time.RFC3339))
-	d.Set(names.AttrDescription, output.Description)
+	d.Set("created_date", output.CreatedDate.Format(time.RFC3339))
+	d.Set("description", output.Description)
 	d.Set("detect_sentiment", output.DetectSentiment)
 	d.Set("enable_model_improvements", output.EnableModelImprovements)
 	d.Set("failure_reason", output.FailureReason)
 	d.Set("idle_session_ttl_in_seconds", output.IdleSessionTTLInSeconds)
-	d.Set(names.AttrLastUpdatedDate, output.LastUpdatedDate.Format(time.RFC3339))
+	d.Set("last_updated_date", output.LastUpdatedDate.Format(time.RFC3339))
 	d.Set("locale", output.Locale)
-	d.Set(names.AttrName, output.Name)
+	d.Set("name", output.Name)
 	d.Set("nlu_intent_confidence_threshold", output.NluIntentConfidenceThreshold)
-	d.Set(names.AttrStatus, output.Status)
-	d.Set(names.AttrVersion, output.Version)
+	d.Set("status", output.Status)
+	d.Set("version", output.Version)
 	d.Set("voice_id", output.VoiceId)
 
 	d.SetId(name)

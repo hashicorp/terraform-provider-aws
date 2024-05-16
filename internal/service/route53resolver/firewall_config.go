@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_route53_resolver_firewall_config")
@@ -37,11 +36,11 @@ func ResourceFirewallConfig() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(route53resolver.FirewallFailOpenStatus_Values(), false),
 			},
-			names.AttrOwnerID: {
+			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrResourceID: {
+			"resource_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -54,7 +53,7 @@ func resourceFirewallConfigCreate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	input := &route53resolver.UpdateFirewallConfigInput{
-		ResourceId: aws.String(d.Get(names.AttrResourceID).(string)),
+		ResourceId: aws.String(d.Get("resource_id").(string)),
 	}
 
 	if v, ok := d.GetOk("firewall_fail_open"); ok {
@@ -88,8 +87,8 @@ func resourceFirewallConfigRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.Set("firewall_fail_open", firewallConfig.FirewallFailOpen)
-	d.Set(names.AttrOwnerID, firewallConfig.OwnerId)
-	d.Set(names.AttrResourceID, firewallConfig.ResourceId)
+	d.Set("owner_id", firewallConfig.OwnerId)
+	d.Set("resource_id", firewallConfig.ResourceId)
 
 	return nil
 }
@@ -98,7 +97,7 @@ func resourceFirewallConfigUpdate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
 	input := &route53resolver.UpdateFirewallConfigInput{
-		ResourceId: aws.String(d.Get(names.AttrResourceID).(string)),
+		ResourceId: aws.String(d.Get("resource_id").(string)),
 	}
 
 	if v, ok := d.GetOk("firewall_fail_open"); ok {
@@ -119,7 +118,7 @@ func resourceFirewallConfigDelete(ctx context.Context, d *schema.ResourceData, m
 
 	log.Printf("[DEBUG] Deleting Route53 Resolver Firewall Config: %s", d.Id())
 	_, err := conn.UpdateFirewallConfigWithContext(ctx, &route53resolver.UpdateFirewallConfigInput{
-		ResourceId:       aws.String(d.Get(names.AttrResourceID).(string)),
+		ResourceId:       aws.String(d.Get("resource_id").(string)),
 		FirewallFailOpen: aws.String(route53resolver.FirewallFailOpenStatusDisabled),
 	})
 

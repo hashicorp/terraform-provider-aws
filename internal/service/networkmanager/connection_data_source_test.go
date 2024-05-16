@@ -26,14 +26,14 @@ func TestAccNetworkManagerConnectionDataSource_basic(t *testing.T) {
 			{
 				Config: testAccConnectionDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "connected_device_id", resourceName, "connected_device_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "connected_link_id", resourceName, "connected_link_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "connection_id", resourceName, names.AttrID),
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(dataSourceName, "connection_id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "global_network_id", resourceName, "global_network_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "link_id", resourceName, "link_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
+					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
 				),
 			},
 		},

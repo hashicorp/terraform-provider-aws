@@ -29,8 +29,8 @@ func dataSourceTransitGatewayPeeringAttachment() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			names.AttrFilter: customFiltersSchema(),
-			names.AttrID: {
+			"filter": customFiltersSchema(),
+			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -47,12 +47,12 @@ func dataSourceTransitGatewayPeeringAttachment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrState: {
+			"state": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
-			names.AttrTransitGatewayID: {
+			"transit_gateway_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -67,14 +67,14 @@ func dataSourceTransitGatewayPeeringAttachmentRead(ctx context.Context, d *schem
 	input := &ec2.DescribeTransitGatewayPeeringAttachmentsInput{}
 
 	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get(names.AttrFilter).(*schema.Set),
+		d.Get("filter").(*schema.Set),
 	)...)
 
-	if v, ok := d.GetOk(names.AttrID); ok {
+	if v, ok := d.GetOk("id"); ok {
 		input.TransitGatewayAttachmentIds = aws.StringSlice([]string{v.(string)})
 	}
 
-	if v, ok := d.GetOk(names.AttrTags); ok {
+	if v, ok := d.GetOk("tags"); ok {
 		input.Filters = append(input.Filters, newTagFilterList(
 			Tags(tftags.New(ctx, v.(map[string]interface{}))),
 		)...)
@@ -104,8 +104,8 @@ func dataSourceTransitGatewayPeeringAttachmentRead(ctx context.Context, d *schem
 	d.Set("peer_account_id", peer.OwnerId)
 	d.Set("peer_region", peer.Region)
 	d.Set("peer_transit_gateway_id", peer.TransitGatewayId)
-	d.Set(names.AttrState, transitGatewayPeeringAttachment.State)
-	d.Set(names.AttrTransitGatewayID, local.TransitGatewayId)
+	d.Set("state", transitGatewayPeeringAttachment.State)
+	d.Set("transit_gateway_id", local.TransitGatewayId)
 
 	setTagsOut(ctx, transitGatewayPeeringAttachment.Tags)
 

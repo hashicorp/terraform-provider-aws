@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_cognito_user_pool_signing_certificate", name="User Pool Signing Certificate")
@@ -21,7 +20,7 @@ func dataSourceUserPoolSigningCertificate() *schema.Resource {
 		ReadWithoutTimeout: dataSourceUserPoolSigningCertificateRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrCertificate: {
+			"certificate": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -49,7 +48,7 @@ func dataSourceUserPoolSigningCertificateRead(ctx context.Context, d *schema.Res
 	}
 
 	d.SetId(userPoolID)
-	d.Set(names.AttrCertificate, output.Certificate)
+	d.Set("certificate", output.Certificate)
 
 	return diags
 }

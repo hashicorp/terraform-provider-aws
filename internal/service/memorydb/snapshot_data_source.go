@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_memorydb_snapshot")
@@ -22,7 +21,7 @@ func DataSourceSnapshot() *schema.Resource {
 		ReadWithoutTimeout: dataSourceSnapshotRead,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -31,11 +30,11 @@ func DataSourceSnapshot() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						names.AttrDescription: {
+						"description": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrEngineVersion: {
+						"engine_version": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -43,7 +42,7 @@ func DataSourceSnapshot() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrName: {
+						"name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -59,7 +58,7 @@ func DataSourceSnapshot() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrPort: {
+						"port": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -75,34 +74,34 @@ func DataSourceSnapshot() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrTopicARN: {
+						"topic_arn": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrVPCID: {
+						"vpc_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			names.AttrClusterName: {
+			"cluster_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrKMSKeyARN: {
+			"kms_key_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrName: {
+			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			names.AttrSource: {
+			"source": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -113,7 +112,7 @@ func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	name := d.Get(names.AttrName).(string)
+	name := d.Get("name").(string)
 
 	snapshot, err := FindSnapshotByName(ctx, conn, name)
 
@@ -123,22 +122,22 @@ func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.SetId(aws.StringValue(snapshot.Name))
 
-	d.Set(names.AttrARN, snapshot.ARN)
+	d.Set("arn", snapshot.ARN)
 	if err := d.Set("cluster_configuration", flattenClusterConfiguration(snapshot.ClusterConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "failed to set cluster_configuration for MemoryDB Snapshot (%s): %s", d.Id(), err)
 	}
-	d.Set(names.AttrClusterName, snapshot.ClusterConfiguration.Name)
-	d.Set(names.AttrKMSKeyARN, snapshot.KmsKeyId)
-	d.Set(names.AttrName, snapshot.Name)
-	d.Set(names.AttrSource, snapshot.Source)
+	d.Set("cluster_name", snapshot.ClusterConfiguration.Name)
+	d.Set("kms_key_arn", snapshot.KmsKeyId)
+	d.Set("name", snapshot.Name)
+	d.Set("source", snapshot.Source)
 
-	tags, err := listTags(ctx, conn, d.Get(names.AttrARN).(string))
+	tags, err := listTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for MemoryDB Snapshot (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
