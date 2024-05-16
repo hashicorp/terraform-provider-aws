@@ -114,7 +114,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.37.2
 	github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.27.6
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.13.2
-	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.28.5
+	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.28.6
 	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.53.2
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.52.1
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.30.6
