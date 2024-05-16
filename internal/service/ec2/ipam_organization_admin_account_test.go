@@ -9,7 +9,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
+	organizationstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -20,9 +21,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// Prerequisites:
+// * Organizations management account
+// * Organization member account
+// Authenticate with management account as target account and member account as alternate.
 func TestAccIPAMOrganizationAdminAccount_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var organization awstypes.DelegatedAdministrator
+	providers := make(map[string]*schema.Provider)
+	var organization organizationstypes.DelegatedAdministrator
 	resourceName := "aws_vpc_ipam_organization_admin_account.test"
 	dataSourceIdentity := "data.aws_caller_identity.delegated"
 
@@ -30,24 +36,69 @@ func TestAccIPAMOrganizationAdminAccount_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 		CheckDestroy:             testAccCheckIPAMOrganizationAdminAccountDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIPAMOrganizationAdminAccountConfig_basic(),
-				Check: resource.ComposeTestCheckFunc(
+				// Run a simple configuration to initialize the alternate providers.
+				Config: testAccIPAMOrganizationAdminAccountConfig_init,
+			},
+			{
+				PreConfig: func() {
+					// Can only run check here because the provider is not available until the previous step.
+					acctest.PreCheckOrganizationMemberAccountWithProvider(ctx, t, acctest.NamedProviderFunc(acctest.ProviderNameAlternate, providers))
+				},
+				Config: testAccIPAMOrganizationAdminAccountConfig_basic,
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPAMOrganizationAdminAccountExists(ctx, resourceName, &organization),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "organizations", regexache.MustCompile("account/.+")),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, dataSourceIdentity, names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "service_principal", tfec2.IPAMServicePrincipal),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "organizations", regexache.MustCompile("account/.+")),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccIPAMOrganizationAdminAccount_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	providers := make(map[string]*schema.Provider)
+	var organization organizationstypes.DelegatedAdministrator
+	resourceName := "aws_vpc_ipam_organization_admin_account.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckAlternateAccount(t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
+		CheckDestroy:             testAccCheckIPAMOrganizationAdminAccountDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				// Run a simple configuration to initialize the alternate providers.
+				Config: testAccIPAMOrganizationAdminAccountConfig_init,
+			},
+			{
+				PreConfig: func() {
+					// Can only run check here because the provider is not available until the previous step.
+					acctest.PreCheckOrganizationMemberAccountWithProvider(ctx, t, acctest.NamedProviderFunc(acctest.ProviderNameAlternate, providers))
+				},
+				Config: testAccIPAMOrganizationAdminAccountConfig_basic,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIPAMOrganizationAdminAccountExists(ctx, resourceName, &organization),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceIPAMPoolCIDRAllocation(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -79,7 +130,7 @@ func testAccCheckIPAMOrganizationAdminAccountDestroy(ctx context.Context) resour
 	}
 }
 
-func testAccCheckIPAMOrganizationAdminAccountExists(ctx context.Context, n string, v *awstypes.DelegatedAdministrator) resource.TestCheckFunc {
+func testAccCheckIPAMOrganizationAdminAccountExists(ctx context.Context, n string, v *organizationstypes.DelegatedAdministrator) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -100,14 +151,15 @@ func testAccCheckIPAMOrganizationAdminAccountExists(ctx context.Context, n strin
 	}
 }
 
-func testAccIPAMOrganizationAdminAccountConfig_basic() string {
-	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), `
+// Initialize all the providers used by organization administrator acceptance tests.
+var testAccIPAMOrganizationAdminAccountConfig_init = acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), `
 data "aws_caller_identity" "delegated" {
   provider = "awsalternate"
 }
+`)
 
+var testAccIPAMOrganizationAdminAccountConfig_basic = acctest.ConfigCompose(testAccIPAMOrganizationAdminAccountConfig_init, `
 resource "aws_vpc_ipam_organization_admin_account" "test" {
   delegated_admin_account_id = data.aws_caller_identity.delegated.account_id
 }
 `)
-}

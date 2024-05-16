@@ -29,6 +29,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	inspector2types "github.com/aws/aws-sdk-go-v2/service/inspector2/types"
+	organizationstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	ssoadmintypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
@@ -204,21 +205,25 @@ func protoV5ProviderFactoriesPlusProvidersInit(ctx context.Context, t *testing.T
 // For cross-account testing: Typically paired with PreCheckAlternateAccount and ConfigAlternateAccountProvider.
 func ProtoV5FactoriesPlusProvidersAlternate(ctx context.Context, t *testing.T, providers *[]*schema.Provider) map[string]func() (tfprotov5.ProviderServer, error) {
 	t.Helper()
+
 	return protoV5ProviderFactoriesPlusProvidersInit(ctx, t, providers, ProviderName, ProviderNameAlternate)
 }
 
 func ProtoV5FactoriesNamedAlternate(ctx context.Context, t *testing.T, providers map[string]*schema.Provider) map[string]func() (tfprotov5.ProviderServer, error) {
 	t.Helper()
+
 	return ProtoV5FactoriesNamed(ctx, t, providers, ProviderName, ProviderNameAlternate)
 }
 
 func ProtoV5FactoriesNamed(ctx context.Context, t *testing.T, providers map[string]*schema.Provider, providerNames ...string) map[string]func() (tfprotov5.ProviderServer, error) {
 	t.Helper()
+
 	return protoV5ProviderFactoriesNamedInit(ctx, t, providers, providerNames...)
 }
 
 func ProtoV5FactoriesAlternate(ctx context.Context, t *testing.T) map[string]func() (tfprotov5.ProviderServer, error) {
 	t.Helper()
+
 	return protoV5ProviderFactoriesInit(ctx, ProviderName, ProviderNameAlternate)
 }
 
@@ -228,6 +233,7 @@ func ProtoV5FactoriesAlternate(ctx context.Context, t *testing.T) map[string]fun
 // and ConfigAlternateAccountAndAlternateRegionProvider.
 func ProtoV5FactoriesAlternateAccountAndAlternateRegion(ctx context.Context, t *testing.T) map[string]func() (tfprotov5.ProviderServer, error) {
 	t.Helper()
+
 	return protoV5ProviderFactoriesInit(
 		ctx,
 		ProviderName,
@@ -242,6 +248,7 @@ func ProtoV5FactoriesAlternateAccountAndAlternateRegion(ctx context.Context, t *
 // Usage typically paired with PreCheckMultipleRegion and ConfigMultipleRegionProvider.
 func ProtoV5FactoriesMultipleRegions(ctx context.Context, t *testing.T, n int) map[string]func() (tfprotov5.ProviderServer, error) {
 	t.Helper()
+
 	switch n {
 	case 2:
 		return protoV5ProviderFactoriesInit(ctx, ProviderName, ProviderNameAlternate)
@@ -1014,10 +1021,16 @@ func PreCheckOrganizationsAccount(ctx context.Context, t *testing.T) {
 	t.Skip("skipping tests; this AWS account must not be an existing member of an AWS Organization")
 }
 
-func PreCheckOrganizationsEnabled(ctx context.Context, t *testing.T) {
+func PreCheckOrganizationsEnabled(ctx context.Context, t *testing.T) *organizationstypes.Organization {
 	t.Helper()
 
-	_, err := tforganizations.FindOrganization(ctx, Provider.Meta().(*conns.AWSClient).OrganizationsClient(ctx))
+	return PreCheckOrganizationsEnabledWithProvider(ctx, t, func() *schema.Provider { return Provider })
+}
+
+func PreCheckOrganizationsEnabledWithProvider(ctx context.Context, t *testing.T, providerF ProviderFunc) *organizationstypes.Organization {
+	t.Helper()
+
+	organization, err := tforganizations.FindOrganization(ctx, providerF().Meta().(*conns.AWSClient).OrganizationsClient(ctx))
 
 	if tfresource.NotFound(err) {
 		t.Skip("this AWS account must be an existing member of an AWS Organization")
@@ -1026,28 +1039,22 @@ func PreCheckOrganizationsEnabled(ctx context.Context, t *testing.T) {
 	if err != nil {
 		t.Fatalf("describing AWS Organization: %s", err)
 	}
+
+	return organization
 }
 
 func PreCheckOrganizationManagementAccount(ctx context.Context, t *testing.T) {
 	t.Helper()
+
 	PreCheckOrganizationManagementAccountWithProvider(ctx, t, func() *schema.Provider { return Provider })
 }
 
 func PreCheckOrganizationManagementAccountWithProvider(ctx context.Context, t *testing.T, providerF ProviderFunc) {
 	t.Helper()
 
-	awsClient := providerF().Meta().(*conns.AWSClient)
-	organization, err := tforganizations.FindOrganization(ctx, awsClient.OrganizationsClient(ctx))
+	organization := PreCheckOrganizationsEnabledWithProvider(ctx, t, providerF)
 
-	if tfresource.NotFound(err) {
-		t.Skip("this AWS account must be an existing member of an AWS Organization")
-	}
-
-	if err != nil {
-		t.Fatalf("describing AWS Organization: %s", err)
-	}
-
-	callerIdentity, err := tfsts.FindCallerIdentity(ctx, awsClient.STSClient(ctx))
+	callerIdentity, err := tfsts.FindCallerIdentity(ctx, providerF().Meta().(*conns.AWSClient).STSClient(ctx))
 
 	if err != nil {
 		t.Fatalf("getting current identity: %s", err)
@@ -1060,24 +1067,16 @@ func PreCheckOrganizationManagementAccountWithProvider(ctx context.Context, t *t
 
 func PreCheckOrganizationMemberAccount(ctx context.Context, t *testing.T) {
 	t.Helper()
+
 	PreCheckOrganizationMemberAccountWithProvider(ctx, t, func() *schema.Provider { return Provider })
 }
 
 func PreCheckOrganizationMemberAccountWithProvider(ctx context.Context, t *testing.T, providerF ProviderFunc) {
 	t.Helper()
 
-	awsClient := providerF().Meta().(*conns.AWSClient)
-	organization, err := tforganizations.FindOrganization(ctx, awsClient.OrganizationsClient(ctx))
+	organization := PreCheckOrganizationsEnabledWithProvider(ctx, t, providerF)
 
-	if tfresource.NotFound(err) {
-		t.Skip("this AWS account must be an existing member of an AWS Organization")
-	}
-
-	if err != nil {
-		t.Fatalf("describing AWS Organization: %s", err)
-	}
-
-	callerIdentity, err := tfsts.FindCallerIdentity(ctx, awsClient.STSClient(ctx))
+	callerIdentity, err := tfsts.FindCallerIdentity(ctx, providerF().Meta().(*conns.AWSClient).STSClient(ctx))
 
 	if err != nil {
 		t.Fatalf("getting current identity: %s", err)
@@ -1149,6 +1148,7 @@ func PreCheckHasIAMRole(ctx context.Context, t *testing.T, roleName string) {
 
 func PreCheckIAMServiceLinkedRole(ctx context.Context, t *testing.T, pathPrefix string) {
 	t.Helper()
+
 	PreCheckIAMServiceLinkedRoleWithProvider(ctx, t, func() *schema.Provider { return Provider }, pathPrefix)
 }
 

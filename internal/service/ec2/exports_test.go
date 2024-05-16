@@ -14,6 +14,7 @@ var (
 	ResourceEIPDomainName                   = newEIPDomainNameResource
 	ResourceInstanceConnectEndpoint         = newInstanceConnectEndpointResource
 	ResourceInstanceMetadataDefaults        = newInstanceMetadataDefaultsResource
+	ResourceIPAMOrganizationAdminAccount    = resourceIPAMOrganizationAdminAccount
 	ResourceKeyPair                         = resourceKeyPair
 	ResourceNetworkACL                      = resourceNetworkACL
 	ResourceNetworkACLRule                  = resourceNetworkACLRule
