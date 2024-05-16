@@ -9,10 +9,10 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/route53"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/route53"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -21,31 +21,33 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource
-func newResourceCIDRCollection(context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceCIDRCollection{}
+func newCIDRCollectionResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &cidrCollectionResource{}
 
 	return r, nil
 }
 
-type resourceCIDRCollection struct {
+type cidrCollectionResource struct {
 	framework.ResourceWithConfigure
+	framework.WithNoUpdate
+	framework.WithImportByID
 }
 
-func (r *resourceCIDRCollection) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+func (*cidrCollectionResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
 	response.TypeName = "aws_route53_cidr_collection"
 }
 
-func (r *resourceCIDRCollection) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *cidrCollectionResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrID:  framework.IDAttribute(),
@@ -66,16 +68,14 @@ func (r *resourceCIDRCollection) Schema(ctx context.Context, req resource.Schema
 	}
 }
 
-func (r *resourceCIDRCollection) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	var data resourceCIDRCollectionData
-
+func (r *cidrCollectionResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data cidrCollectionResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	conn := r.Meta().Route53Conn(ctx)
+	conn := r.Meta().Route53Client(ctx)
 
 	name := data.Name.ValueString()
 	input := &route53.CreateCidrCollectionInput{
@@ -83,9 +83,9 @@ func (r *resourceCIDRCollection) Create(ctx context.Context, request resource.Cr
 		Name:            aws.String(name),
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
-		return conn.CreateCidrCollectionWithContext(ctx, input)
-	}, route53.ErrCodeConcurrentModification)
+	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModification](ctx, 2*time.Minute, func() (interface{}, error) {
+		return conn.CreateCidrCollection(ctx, input)
+	})
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("creating Route 53 CIDR Collection (%s)", name), err.Error())
@@ -101,16 +101,14 @@ func (r *resourceCIDRCollection) Create(ctx context.Context, request resource.Cr
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceCIDRCollection) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var data resourceCIDRCollectionData
-
+func (r *cidrCollectionResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data cidrCollectionResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	conn := r.Meta().Route53Conn(ctx)
+	conn := r.Meta().Route53Client(ctx)
 
 	output, err := findCIDRCollectionByID(ctx, conn, data.ID.ValueString())
 
@@ -134,26 +132,20 @@ func (r *resourceCIDRCollection) Read(ctx context.Context, request resource.Read
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceCIDRCollection) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	// Noop.
-}
-
-func (r *resourceCIDRCollection) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	var data resourceCIDRCollectionData
-
+func (r *cidrCollectionResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data cidrCollectionResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	conn := r.Meta().Route53Conn(ctx)
+	conn := r.Meta().Route53Client(ctx)
 
 	tflog.Debug(ctx, "deleting Route 53 CIDR Collection", map[string]interface{}{
 		names.AttrID: data.ID.ValueString(),
 	})
 
-	_, err := conn.DeleteCidrCollectionWithContext(ctx, &route53.DeleteCidrCollectionInput{
+	_, err := conn.DeleteCidrCollection(ctx, &route53.DeleteCidrCollectionInput{
 		Id: flex.StringFromFramework(ctx, data.ID),
 	})
 
@@ -164,47 +156,47 @@ func (r *resourceCIDRCollection) Delete(ctx context.Context, request resource.De
 	}
 }
 
-func (r *resourceCIDRCollection) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
-}
-
-type resourceCIDRCollectionData struct {
+type cidrCollectionResourceModel struct {
 	ARN     types.String `tfsdk:"arn"`
 	ID      types.String `tfsdk:"id"`
 	Name    types.String `tfsdk:"name"`
 	Version types.Int64  `tfsdk:"version"`
 }
 
-func findCIDRCollectionByID(ctx context.Context, conn *route53.Route53, id string) (*route53.CollectionSummary, error) {
+func findCIDRCollectionByID(ctx context.Context, conn *route53.Client, id string) (*awstypes.CollectionSummary, error) {
 	input := &route53.ListCidrCollectionsInput{}
-	var output *route53.CollectionSummary
 
-	err := conn.ListCidrCollectionsPagesWithContext(ctx, input, func(page *route53.ListCidrCollectionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, v := range page.CidrCollections {
-			if v == nil {
-				continue
-			}
-
-			if aws.StringValue(v.Id) == id {
-				output = v
-
-				return false
-			}
-		}
-
-		return !lastPage
+	return findCIDRCollection(ctx, conn, input, func(v *awstypes.CollectionSummary) bool {
+		return aws.ToString(v.Id) == id
 	})
+}
+
+func findCIDRCollection(ctx context.Context, conn *route53.Client, input *route53.ListCidrCollectionsInput, filter tfslices.Predicate[*awstypes.CollectionSummary]) (*awstypes.CollectionSummary, error) {
+	output, err := findCIDRCollections(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil {
-		return nil, &retry.NotFoundError{}
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findCIDRCollections(ctx context.Context, conn *route53.Client, input *route53.ListCidrCollectionsInput, filter tfslices.Predicate[*awstypes.CollectionSummary]) ([]awstypes.CollectionSummary, error) {
+	var output []awstypes.CollectionSummary
+
+	pages := route53.NewListCidrCollectionsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.CidrCollections {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
 	}
 
 	return output, nil

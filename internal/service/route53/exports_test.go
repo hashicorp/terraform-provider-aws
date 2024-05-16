@@ -5,7 +5,7 @@ package route53
 
 // Exports for use in tests only.
 var (
-	ResourceCIDRCollection   = newResourceCIDRCollection
+	ResourceCIDRCollection   = newCIDRCollectionResource
 	ResourceCIDRLocation     = newResourceCIDRLocation
 	ResourceHealthCheck      = resourceHealthCheck
 	ResourceHostedZoneDNSSEC = resourceHostedZoneDNSSEC
