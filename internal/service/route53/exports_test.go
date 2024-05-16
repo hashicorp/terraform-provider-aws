@@ -11,6 +11,7 @@ var (
 	ResourceHealthCheck      = resourceHealthCheck
 	ResourceHostedZoneDNSSEC = resourceHostedZoneDNSSEC
 	ResourceKeySigningKey    = resourceKeySigningKey
+	ResourceQueryLog         = resourceQueryLog
 
 	CleanDelegationSetID          = cleanDelegationSetID
 	FindCIDRCollectionByID        = findCIDRCollectionByID
@@ -19,6 +20,7 @@ var (
 	FindHealthCheckByID           = findHealthCheckByID
 	FindHostedZoneDNSSECByZoneID  = findHostedZoneDNSSECByZoneID
 	FindKeySigningKeyByTwoPartKey = findKeySigningKeyByTwoPartKey
+	FindQueryLoggingConfigByID    = findQueryLoggingConfigByID
 	KeySigningKeyStatusActive     = keySigningKeyStatusActive
 	KeySigningKeyStatusInactive   = keySigningKeyStatusInactive
 	ServeSignatureNotSigning      = serveSignatureNotSigning

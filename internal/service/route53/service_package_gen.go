@@ -72,8 +72,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Key Signing Key",
 		},
 		{
-			Factory:  ResourceQueryLog,
+			Factory:  resourceQueryLog,
 			TypeName: "aws_route53_query_log",
+			Name:     "Query Logging Config",
 		},
 		{
 			Factory:  ResourceRecord,
