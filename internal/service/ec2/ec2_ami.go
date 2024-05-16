@@ -458,7 +458,7 @@ func resourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return sdkdiag.AppendErrorf(diags, "setting ephemeral_block_device: %s", err)
 	}
 
-	setTagsOut(ctx, image.Tags)
+	setTagsOutV2(ctx, image.Tags)
 
 	return diags
 }

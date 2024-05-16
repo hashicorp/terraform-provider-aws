@@ -215,7 +215,7 @@ func resourceCapacityReservationRead(ctx context.Context, d *schema.ResourceData
 	d.Set("placement_group_arn", reservation.PlacementGroupArn)
 	d.Set("tenancy", reservation.Tenancy)
 
-	setTagsOut(ctx, reservation.Tags)
+	setTagsOutV2(ctx, reservation.Tags)
 
 	return diags
 }
