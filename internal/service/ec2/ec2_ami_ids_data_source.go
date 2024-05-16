@@ -10,8 +10,9 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -73,19 +74,19 @@ func DataSourceAMIIDs() *schema.Resource {
 
 func dataSourceAMIIDsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeImagesInput{
 		IncludeDeprecated: aws.Bool(d.Get("include_deprecated").(bool)),
-		Owners:            flex.ExpandStringList(d.Get("owners").([]interface{})),
+		Owners:            flex.ExpandStringValueList(d.Get("owners").([]interface{})),
 	}
 
 	if v, ok := d.GetOk("executable_users"); ok {
-		input.ExecutableUsers = flex.ExpandStringList(v.([]interface{}))
+		input.ExecutableUsers = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk(names.AttrFilter); ok {
-		input.Filters = newCustomFilterList(v.(*schema.Set))
+		input.Filters = newCustomFilterListV2(v.(*schema.Set))
 	}
 
 	images, err := FindImages(ctx, conn, input)
@@ -94,13 +95,13 @@ func dataSourceAMIIDsRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading EC2 AMIs: %s", err)
 	}
 
-	var filteredImages []*ec2.Image
+	var filteredImages []awstypes.Image
 	imageIDs := make([]string, 0)
 
 	if v, ok := d.GetOk("name_regex"); ok {
 		r := regexache.MustCompile(v.(string))
 		for _, image := range images {
-			name := aws.StringValue(image.Name)
+			name := aws.ToString(image.Name)
 
 			// Check for a very rare case where the response would include no
 			// image name. No name means nothing to attempt a match against,
@@ -118,18 +119,18 @@ func dataSourceAMIIDsRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	sort.Slice(filteredImages, func(i, j int) bool {
-		itime, _ := time.Parse(time.RFC3339, aws.StringValue(filteredImages[i].CreationDate))
-		jtime, _ := time.Parse(time.RFC3339, aws.StringValue(filteredImages[j].CreationDate))
+		itime, _ := time.Parse(time.RFC3339, aws.ToString(filteredImages[i].CreationDate))
+		jtime, _ := time.Parse(time.RFC3339, aws.ToString(filteredImages[j].CreationDate))
 		if d.Get("sort_ascending").(bool) {
 			return itime.Unix() < jtime.Unix()
 		}
 		return itime.Unix() > jtime.Unix()
 	})
 	for _, image := range filteredImages {
-		imageIDs = append(imageIDs, aws.StringValue(image.ImageId))
+		imageIDs = append(imageIDs, aws.ToString(image.ImageId))
 	}
 
-	d.SetId(fmt.Sprintf("%d", create.StringHashcode(input.String())))
+	d.SetId(fmt.Sprintf("%d", create.StringHashcode(fmt.Sprintf("%#v", input))))
 	d.Set(names.AttrIDs, imageIDs)
 
 	return diags
