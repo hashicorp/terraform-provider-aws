@@ -21,9 +21,8 @@ func (p *servicePackage) NewConn(ctx context.Context, m map[string]any) (*route5
 	// Force "global" services to correct Regions.
 	switch m["partition"].(string) {
 	case endpoints_sdkv1.AwsPartitionID:
-		if aws_sdkv1.StringValue(config.Endpoint) == "" {
-			config.Region = aws_sdkv1.String(endpoints_sdkv1.UsWest2RegionID)
-		}
+		// https://docs.aws.amazon.com/general/latest/gr/r53.html Setting default to us-east-1
+		config.Region = aws_sdkv1.String(endpoints_sdkv1.UsEast1RegionID)
 	case endpoints_sdkv1.AwsCnPartitionID:
 		// The AWS Go SDK is missing endpoint information for Route 53 in the AWS China partition.
 		// This can likely be removed in the future.
