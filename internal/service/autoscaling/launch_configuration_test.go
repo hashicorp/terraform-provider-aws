@@ -11,7 +11,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	ec2awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -200,7 +200,7 @@ func TestAccAutoScalingLaunchConfiguration_withBlockDevices(t *testing.T) {
 
 func TestAccAutoScalingLaunchConfiguration_RootBlockDevice_amiDisappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ami ec2.Image
+	var ami ec2awstypes.Image
 	var conf awstypes.LaunchConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	amiCopyResourceName := "aws_ami_copy.test"
@@ -789,14 +789,14 @@ func testAccCheckLaunchConfigurationExists(ctx context.Context, n string, v *aws
 	}
 }
 
-func testAccCheckAMIExists(ctx context.Context, n string, v *ec2.Image) resource.TestCheckFunc {
+func testAccCheckAMIExists(ctx context.Context, n string, v *ec2awstypes.Image) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindImageByID(ctx, conn, rs.Primary.ID)
 
