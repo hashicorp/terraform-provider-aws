@@ -36,47 +36,6 @@ func FindAvailabilityZones(ctx context.Context, conn *ec2.EC2, input *ec2.Descri
 	return output.AvailabilityZones, nil
 }
 
-func FindAvailabilityZone(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeAvailabilityZonesInput) (*ec2.AvailabilityZone, error) {
-	output, err := FindAvailabilityZones(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSinglePtrResult(output)
-}
-
-func FindAvailabilityZoneGroupByName(ctx context.Context, conn *ec2.EC2, name string) (*ec2.AvailabilityZone, error) {
-	input := &ec2.DescribeAvailabilityZonesInput{
-		AllAvailabilityZones: aws.Bool(true),
-		Filters: newAttributeFilterList(map[string]string{
-			"group-name": name,
-		}),
-	}
-
-	output, err := FindAvailabilityZones(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if len(output) == 0 || output[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	// An AZ group may contain more than one AZ.
-	availabilityZone := output[0]
-
-	// Eventual consistency check.
-	if aws.StringValue(availabilityZone.GroupName) != name {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
-	}
-
-	return availabilityZone, nil
-}
-
 func FindCapacityReservation(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeCapacityReservationsInput) (*ec2.CapacityReservation, error) {
 	output, err := FindCapacityReservations(ctx, conn, input)
 

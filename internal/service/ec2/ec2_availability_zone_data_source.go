@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -86,7 +86,7 @@ func DataSourceAvailabilityZone() *schema.Resource {
 
 func dataSourceAvailabilityZoneRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeAvailabilityZonesInput{}
 
@@ -95,20 +95,20 @@ func dataSourceAvailabilityZoneRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if v, ok := d.GetOk("zone_id"); ok {
-		input.ZoneIds = aws.StringSlice([]string{v.(string)})
+		input.ZoneIds = []string{v.(string)}
 	}
 
 	if v, ok := d.GetOk(names.AttrName); ok {
-		input.ZoneNames = aws.StringSlice([]string{v.(string)})
+		input.ZoneNames = []string{v.(string)}
 	}
 
-	input.Filters = newAttributeFilterList(
+	input.Filters = newAttributeFilterListV2(
 		map[string]string{
 			names.AttrState: d.Get(names.AttrState).(string),
 		},
 	)
 
-	input.Filters = append(input.Filters, newCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterListV2(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
@@ -127,11 +127,11 @@ func dataSourceAvailabilityZoneRead(ctx context.Context, d *schema.ResourceData,
 	// the AZ suffix alone, without the region name.
 	// This can be used e.g. to create lookup tables by AZ letter that
 	// work regardless of region.
-	nameSuffix := aws.StringValue(az.ZoneName)[len(aws.StringValue(az.RegionName)):]
+	nameSuffix := aws.ToString(az.ZoneName)[len(aws.ToString(az.RegionName)):]
 	// For Local and Wavelength zones, remove any leading "-".
 	nameSuffix = strings.TrimLeft(nameSuffix, "-")
 
-	d.SetId(aws.StringValue(az.ZoneName))
+	d.SetId(aws.ToString(az.ZoneName))
 	d.Set(names.AttrGroupName, az.GroupName)
 	d.Set(names.AttrName, az.ZoneName)
 	d.Set("name_suffix", nameSuffix)

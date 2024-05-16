@@ -18,6 +18,61 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func FindAvailabilityZonesV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeAvailabilityZonesInput) ([]awstypes.AvailabilityZone, error) {
+	output, err := conn.DescribeAvailabilityZones(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.AvailabilityZones, nil
+}
+
+func FindAvailabilityZone(ctx context.Context, conn *ec2.Client, input *ec2.DescribeAvailabilityZonesInput) (*awstypes.AvailabilityZone, error) {
+	output, err := FindAvailabilityZones(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func FindAvailabilityZoneGroupByName(ctx context.Context, conn *ec2.Client, name string) (*awstypes.AvailabilityZone, error) {
+	input := &ec2.DescribeAvailabilityZonesInput{
+		AllAvailabilityZones: aws.Bool(true),
+		Filters: newAttributeFilterListV2(map[string]string{
+			"group-name": name,
+		}),
+	}
+
+	output, err := FindAvailabilityZones(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	// An AZ group may contain more than one AZ.
+	availabilityZone := output[0]
+
+	// Eventual consistency check.
+	if aws.ToString(availabilityZone.GroupName) != name {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return &availabilityZone, nil
+}
+
 func findVPCAttributeV2(ctx context.Context, conn *ec2.Client, vpcID string, attribute awstypes.VpcAttributeName) (bool, error) {
 	input := &ec2.DescribeVpcAttributeInput{
 		Attribute: attribute,

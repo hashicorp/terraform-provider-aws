@@ -9,8 +9,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -35,7 +36,7 @@ func TestAccEC2AvailabilityZoneDataSource_allAvailabilityZones(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, availabilityZonesDataSourceName, "names.0"),
 					resource.TestMatchResourceAttr(dataSourceName, "name_suffix", regexache.MustCompile(`^[a-z]$`)),
 					resource.TestCheckResourceAttr(dataSourceName, "network_border_group", acctest.Region()),
-					resource.TestCheckResourceAttr(dataSourceName, "opt_in_status", ec2.AvailabilityZoneOptInStatusOptInNotRequired),
+					resource.TestCheckResourceAttr(dataSourceName, "opt_in_status", string(awstypes.AvailabilityZoneOptInStatusOptInNotRequired)),
 					resource.TestCheckResourceAttr(dataSourceName, "parent_zone_id", ""),
 					resource.TestCheckResourceAttr(dataSourceName, "parent_zone_name", ""),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrRegion, acctest.Region()),
@@ -64,7 +65,7 @@ func TestAccEC2AvailabilityZoneDataSource_filter(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, availabilityZonesDataSourceName, "names.0"),
 					resource.TestMatchResourceAttr(dataSourceName, "name_suffix", regexache.MustCompile(`^[a-z]$`)),
 					resource.TestCheckResourceAttr(dataSourceName, "network_border_group", acctest.Region()),
-					resource.TestCheckResourceAttr(dataSourceName, "opt_in_status", ec2.AvailabilityZoneOptInStatusOptInNotRequired),
+					resource.TestCheckResourceAttr(dataSourceName, "opt_in_status", string(awstypes.AvailabilityZoneOptInStatusOptInNotRequired)),
 					resource.TestCheckResourceAttr(dataSourceName, "parent_zone_id", ""),
 					resource.TestCheckResourceAttr(dataSourceName, "parent_zone_name", ""),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrRegion, acctest.Region()),
@@ -93,7 +94,7 @@ func TestAccEC2AvailabilityZoneDataSource_localZone(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, availabilityZonesDataSourceName, "names.0"),
 					resource.TestMatchResourceAttr(dataSourceName, "name_suffix", regexache.MustCompile(`^[0-9a-z][0-9a-z-]+$`)),
 					resource.TestCheckResourceAttrSet(dataSourceName, "network_border_group"),
-					resource.TestCheckResourceAttr(dataSourceName, "opt_in_status", ec2.AvailabilityZoneOptInStatusOptedIn),
+					resource.TestCheckResourceAttr(dataSourceName, "opt_in_status", string(awstypes.AvailabilityZoneOptInStatusOptedIn)),
 					resource.TestCheckResourceAttrSet(dataSourceName, "parent_zone_id"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "parent_zone_name"),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrRegion, acctest.Region()),
@@ -122,7 +123,7 @@ func TestAccEC2AvailabilityZoneDataSource_name(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, availabilityZonesDataSourceName, "names.0"),
 					resource.TestMatchResourceAttr(dataSourceName, "name_suffix", regexache.MustCompile(`^[a-z]$`)),
 					resource.TestCheckResourceAttr(dataSourceName, "network_border_group", acctest.Region()),
-					resource.TestCheckResourceAttr(dataSourceName, "opt_in_status", ec2.AvailabilityZoneOptInStatusOptInNotRequired),
+					resource.TestCheckResourceAttr(dataSourceName, "opt_in_status", string(awstypes.AvailabilityZoneOptInStatusOptInNotRequired)),
 					resource.TestCheckResourceAttr(dataSourceName, "parent_zone_id", ""),
 					resource.TestCheckResourceAttr(dataSourceName, "parent_zone_name", ""),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrRegion, acctest.Region()),
@@ -151,7 +152,7 @@ func TestAccEC2AvailabilityZoneDataSource_wavelengthZone(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, availabilityZonesDataSourceName, "names.0"),
 					resource.TestMatchResourceAttr(dataSourceName, "name_suffix", regexache.MustCompile(`^[0-9a-z][0-9a-z-]+$`)),
 					resource.TestCheckResourceAttrSet(dataSourceName, "network_border_group"),
-					resource.TestCheckResourceAttr(dataSourceName, "opt_in_status", ec2.AvailabilityZoneOptInStatusOptedIn),
+					resource.TestCheckResourceAttr(dataSourceName, "opt_in_status", string(awstypes.AvailabilityZoneOptInStatusOptedIn)),
 					resource.TestCheckResourceAttrSet(dataSourceName, "parent_zone_id"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "parent_zone_name"),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrRegion, acctest.Region()),
@@ -180,7 +181,7 @@ func TestAccEC2AvailabilityZoneDataSource_zoneID(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, availabilityZonesDataSourceName, "names.0"),
 					resource.TestMatchResourceAttr(dataSourceName, "name_suffix", regexache.MustCompile(`^[a-z]$`)),
 					resource.TestCheckResourceAttr(dataSourceName, "network_border_group", acctest.Region()),
-					resource.TestCheckResourceAttr(dataSourceName, "opt_in_status", ec2.AvailabilityZoneOptInStatusOptInNotRequired),
+					resource.TestCheckResourceAttr(dataSourceName, "opt_in_status", string(awstypes.AvailabilityZoneOptInStatusOptInNotRequired)),
 					resource.TestCheckResourceAttr(dataSourceName, "parent_zone_id", ""),
 					resource.TestCheckResourceAttr(dataSourceName, "parent_zone_name", ""),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrRegion, acctest.Region()),
@@ -193,23 +194,23 @@ func TestAccEC2AvailabilityZoneDataSource_zoneID(t *testing.T) {
 }
 
 func testAccPreCheckLocalZoneAvailable(ctx context.Context, t *testing.T, groupNames ...string) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeAvailabilityZonesInput{
-		Filters: tfec2.NewAttributeFilterList(map[string]string{
+		Filters: tfec2.NewAttributeFilterListV2(map[string]string{
 			"zone-type":     "local-zone",
 			"opt-in-status": "opted-in",
 		}),
 	}
 
 	if len(groupNames) > 0 {
-		input.Filters = append(input.Filters, &ec2.Filter{
+		input.Filters = append(input.Filters, awstypes.Filter{
 			Name:   aws.String("group-name"),
-			Values: aws.StringSlice(groupNames),
+			Values: groupNames,
 		})
 	}
 
-	output, err := tfec2.FindAvailabilityZones(ctx, conn, input)
+	output, err := tfec2.FindAvailabilityZonesV2(ctx, conn, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

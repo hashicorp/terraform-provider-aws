@@ -7,8 +7,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -39,8 +40,8 @@ func ResourceAvailabilityZoneGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.StringInSlice([]string{
-					ec2.AvailabilityZoneOptInStatusOptedIn,
-					ec2.AvailabilityZoneOptInStatusNotOptedIn,
+					string(awstypes.AvailabilityZoneOptInStatusOptedIn),
+					string(awstypes.AvailabilityZoneOptInStatusNotOptedIn),
 				}, false),
 			},
 		},
@@ -49,7 +50,7 @@ func ResourceAvailabilityZoneGroup() *schema.Resource {
 
 func resourceAvailabilityZoneGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	groupName := d.Get(names.AttrGroupName).(string)
 	availabilityZone, err := FindAvailabilityZoneGroupByName(ctx, conn, groupName)
@@ -58,7 +59,7 @@ func resourceAvailabilityZoneGroupCreate(ctx context.Context, d *schema.Resource
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Availability Zone Group (%s): %s", groupName, err)
 	}
 
-	if v := d.Get("opt_in_status").(string); v != aws.StringValue(availabilityZone.OptInStatus) {
+	if v := d.Get("opt_in_status").(string); v != string(availabilityZone.OptInStatus) {
 		if err := modifyAvailabilityZoneOptInStatus(ctx, conn, groupName, v); err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating EC2 Availability Zone Group (%s): %s", groupName, err)
 		}
@@ -71,7 +72,7 @@ func resourceAvailabilityZoneGroupCreate(ctx context.Context, d *schema.Resource
 
 func resourceAvailabilityZoneGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	availabilityZone, err := FindAvailabilityZoneGroupByName(ctx, conn, d.Id())
 
@@ -79,8 +80,8 @@ func resourceAvailabilityZoneGroupRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Availability Zone Group (%s): %s", d.Id(), err)
 	}
 
-	if aws.StringValue(availabilityZone.OptInStatus) == ec2.AvailabilityZoneOptInStatusOptInNotRequired {
-		return sdkdiag.AppendErrorf(diags, "unnecessary handling of EC2 Availability Zone Group (%s), status: %s", d.Id(), ec2.AvailabilityZoneOptInStatusOptInNotRequired)
+	if availabilityZone.OptInStatus == awstypes.AvailabilityZoneOptInStatusOptInNotRequired {
+		return sdkdiag.AppendErrorf(diags, "unnecessary handling of EC2 Availability Zone Group (%s), status: %s", d.Id(), awstypes.AvailabilityZoneOptInStatusOptInNotRequired)
 	}
 
 	d.Set(names.AttrGroupName, availabilityZone.GroupName)
@@ -91,7 +92,7 @@ func resourceAvailabilityZoneGroupRead(ctx context.Context, d *schema.ResourceDa
 
 func resourceAvailabilityZoneGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	if err := modifyAvailabilityZoneOptInStatus(ctx, conn, d.Id(), d.Get("opt_in_status").(string)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating EC2 Availability Zone Group (%s): %s", d.Id(), err)
@@ -100,19 +101,19 @@ func resourceAvailabilityZoneGroupUpdate(ctx context.Context, d *schema.Resource
 	return append(diags, resourceAvailabilityZoneGroupRead(ctx, d, meta)...)
 }
 
-func modifyAvailabilityZoneOptInStatus(ctx context.Context, conn *ec2.EC2, groupName, optInStatus string) error {
+func modifyAvailabilityZoneOptInStatus(ctx context.Context, conn *ec2.Client, groupName, optInStatus string) error {
 	input := &ec2.ModifyAvailabilityZoneGroupInput{
 		GroupName:   aws.String(groupName),
-		OptInStatus: aws.String(optInStatus),
+		OptInStatus: awstypes.ModifyAvailabilityZoneOptInStatus(optInStatus),
 	}
 
-	if _, err := conn.ModifyAvailabilityZoneGroupWithContext(ctx, input); err != nil {
+	if _, err := conn.ModifyAvailabilityZoneGroup(ctx, input); err != nil {
 		return err
 	}
 
-	waiter := WaitAvailabilityZoneGroupOptedIn
-	if optInStatus == ec2.AvailabilityZoneOptInStatusNotOptedIn {
-		waiter = WaitAvailabilityZoneGroupNotOptedIn
+	waiter := waitAvailabilityZoneGroupOptedIn
+	if optInStatus == string(awstypes.AvailabilityZoneOptInStatusNotOptedIn) {
+		waiter = waitAvailabilityZoneGroupNotOptedIn
 	}
 
 	if _, err := waiter(ctx, conn, groupName); err != nil {

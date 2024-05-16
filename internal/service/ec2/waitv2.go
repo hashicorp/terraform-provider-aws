@@ -18,6 +18,44 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+const (
+	AvailabilityZoneGroupOptInStatusTimeout = 10 * time.Minute
+)
+
+func waitAvailabilityZoneGroupOptedIn(ctx context.Context, conn *ec2.Client, name string) (*types.AvailabilityZone, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.AvailabilityZoneOptInStatusNotOptedIn),
+		Target:  enum.Slice(types.AvailabilityZoneOptInStatusOptedIn),
+		Refresh: statusAvailabilityZoneGroupOptInStatus(ctx, conn, name),
+		Timeout: AvailabilityZoneGroupOptInStatusTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.AvailabilityZone); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitAvailabilityZoneGroupNotOptedIn(ctx context.Context, conn *ec2.Client, name string) (*types.AvailabilityZone, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.AvailabilityZoneOptInStatusOptedIn),
+		Target:  enum.Slice(types.AvailabilityZoneOptInStatusNotOptedIn),
+		Refresh: statusAvailabilityZoneGroupOptInStatus(ctx, conn, name),
+		Timeout: AvailabilityZoneGroupOptInStatusTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.AvailabilityZone); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitVPCCreatedV2(ctx context.Context, conn *ec2.Client, id string) (*types.Vpc, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.VpcStatePending),
