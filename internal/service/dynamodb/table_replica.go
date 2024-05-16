@@ -296,6 +296,12 @@ func resourceTableReplicaReadReplica(ctx context.Context, d *schema.ResourceData
 	if err != nil && !tfawserr.ErrCodeEquals(err, errCodeUnknownOperationException, errCodeTableNotFoundException) {
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionReading, resNameTableReplica, d.Id(), fmt.Errorf("continuous backups: %w", err))
 	}
+	
+	if d.Get(names.AttrKMSKeyARN) == nil {
+		if table.SSEDescription.KMSMasterKeyArn != nil {
+			d.Set(names.AttrKMSKeyARN, table.SSEDescription.KMSMasterKeyArn)
+		}
+	}
 
 	if pitrOut != nil && pitrOut.ContinuousBackupsDescription != nil && pitrOut.ContinuousBackupsDescription.PointInTimeRecoveryDescription != nil {
 		d.Set("point_in_time_recovery", pitrOut.ContinuousBackupsDescription.PointInTimeRecoveryDescription.PointInTimeRecoveryStatus == awstypes.PointInTimeRecoveryStatusEnabled)
