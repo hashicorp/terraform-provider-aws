@@ -34,8 +34,8 @@ func TestAccSecretsManagerSecretsDataSource_filter(t *testing.T) {
 			{
 				Config: testAccSecretsDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "arns.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(dataSourceName, "names.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(dataSourceName, "arns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "names.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(dataSourceName, "arns.0", resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "names.0", resourceName, names.AttrName),
 				),

@@ -28,8 +28,8 @@ func TestAccImageBuilderImageRecipesDataSource_owner(t *testing.T) {
 			{
 				Config: testAccImageRecipesDataSourceConfig_owner(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceNameOwnerAmazon, "arns.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(dataSourceNameOwnerAmazon, "names.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(dataSourceNameOwnerAmazon, "arns.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceNameOwnerAmazon, "names.#", acctest.Ct0),
 					acctest.CheckResourceAttrGreaterThanOrEqualValue(dataSourceNameOwnerSelf, "arns.#", 1),
 					acctest.CheckResourceAttrGreaterThanOrEqualValue(dataSourceNameOwnerSelf, "names.#", 1),
 				),
@@ -53,7 +53,7 @@ func TestAccImageBuilderImageRecipesDataSource_filter(t *testing.T) {
 			{
 				Config: testAccImageRecipesDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "names.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(dataSourceName, "names.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(dataSourceName, "names.0", resourceName, names.AttrName),
 				),
 			},

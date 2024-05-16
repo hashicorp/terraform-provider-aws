@@ -43,7 +43,12 @@ variable "rName" {
   type        = string
   nullable    = false
 }
-
+{{ range .AdditionalTfVars }}
+variable "{{ . }}" {
+  type     = string
+  nullable = false
+}
+{{ end }}
 {{ if eq .Tags "tags" -}}
 variable "resource_tags" {
   description = "Tags to set on resource. To specify no tags, set to `null`"

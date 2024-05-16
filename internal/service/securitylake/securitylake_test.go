@@ -18,7 +18,6 @@ import (
 	tfsts "github.com/hashicorp/terraform-provider-aws/internal/service/sts"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Prerequisite: the current account must be either:
@@ -29,34 +28,34 @@ func TestAccSecurityLake_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"AWSLogSource": {
-			"basic":         testAccAWSLogSource_basic,
+			acctest.CtBasic: testAccAWSLogSource_basic,
 			"disappears":    testAccAWSLogSource_disappears,
 			"multiple":      testAccAWSLogSource_multiple,
 			"multiRegion":   testAccAWSLogSource_multiRegion,
 			"sourceVersion": testAccAWSLogSource_sourceVersion,
 		},
 		"CustomLogSource": {
-			"basic":         testAccCustomLogSource_basic,
+			acctest.CtBasic: testAccCustomLogSource_basic,
 			"disappears":    testAccCustomLogSource_disappears,
 			"eventClasses":  testAccCustomLogSource_eventClasses,
 			"multiple":      testAccCustomLogSource_multiple,
 			"sourceVersion": testAccCustomLogSource_sourceVersion,
 		},
 		"DataLake": {
-			"basic":           testAccDataLake_basic,
+			acctest.CtBasic:   testAccDataLake_basic,
 			"disappears":      testAccDataLake_disappears,
-			names.AttrTags:    testAccDataLake_tags,
+			"tags":            testAccDataLake_tags,
 			"lifecycle":       testAccDataLake_lifeCycle,
 			"lifecycleUpdate": testAccDataLake_lifeCycleUpdate,
 			"replication":     testAccDataLake_replication,
 		},
 		"Subscriber": {
 			"accessType":      testAccSubscriber_accessType,
-			"basic":           testAccSubscriber_basic,
+			acctest.CtBasic:   testAccSubscriber_basic,
 			"customLogs":      testAccSubscriber_customLogSource,
 			"disappears":      testAccSubscriber_disappears,
 			"multipleSources": testAccSubscriber_multipleSources,
-			names.AttrTags:    testAccSubscriber_tags,
+			"tags":            testAccSubscriber_tags,
 			"updated":         testAccSubscriber_update,
 			"migrateSource":   testAccSubscriber_migrate_source,
 		},

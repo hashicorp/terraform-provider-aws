@@ -26,7 +26,7 @@ func TestAccS3ControlAccountPublicAccessBlock_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"PublicAccessBlock": {
-			"basic":                 testAccAccountPublicAccessBlock_basic,
+			acctest.CtBasic:         testAccAccountPublicAccessBlock_basic,
 			"disappears":            testAccAccountPublicAccessBlock_disappears,
 			"AccountId":             testAccAccountPublicAccessBlock_AccountID,
 			"BlockPublicAcls":       testAccAccountPublicAccessBlock_BlockPublicACLs,

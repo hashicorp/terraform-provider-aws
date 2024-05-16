@@ -29,7 +29,7 @@ func TestAccSQSQueueDataSource_basic(t *testing.T) {
 				Config: testAccQueueDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccQueueCheckDataSource(datasourceName, resourceName),
-					resource.TestCheckResourceAttr(datasourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(datasourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 		},
@@ -51,7 +51,7 @@ func TestAccSQSQueueDataSource_tags(t *testing.T) {
 				Config: testAccQueueDataSourceConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccQueueCheckDataSource(datasourceName, resourceName),
-					resource.TestCheckResourceAttr(datasourceName, acctest.CtTagsPercent, acctest.CtThree),
+					resource.TestCheckResourceAttr(datasourceName, acctest.CtTagsPercent, acctest.Ct3),
 					resource.TestCheckResourceAttr(datasourceName, "tags.Environment", "Production"),
 					resource.TestCheckResourceAttr(datasourceName, "tags.Foo", "Bar"),
 					resource.TestCheckResourceAttr(datasourceName, "tags.Empty", ""),

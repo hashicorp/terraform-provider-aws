@@ -78,7 +78,7 @@ func ResourceHostedConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"provider_name": {
+			names.AttrProviderName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -153,7 +153,7 @@ func resourceHostedConnectionRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set(names.AttrName, connection.ConnectionName)
 	d.Set("owner_account_id", connection.OwnerAccount)
 	d.Set("partner_name", connection.PartnerName)
-	d.Set("provider_name", connection.ProviderName)
+	d.Set(names.AttrProviderName, connection.ProviderName)
 	d.Set(names.AttrRegion, connection.Region)
 	d.Set(names.AttrState, connection.ConnectionState)
 	d.Set("vlan", connection.Vlan)

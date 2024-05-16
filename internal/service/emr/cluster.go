@@ -682,7 +682,7 @@ func resourceCluster() *schema.Resource {
 					ForceNew: true,
 					Optional: true,
 				},
-				"service_role": {
+				names.AttrServiceRole: {
 					Type:     schema.TypeString,
 					ForceNew: true,
 					Required: true,
@@ -918,7 +918,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		Applications: emrApps,
 
 		ReleaseLabel:      aws.String(d.Get("release_label").(string)),
-		ServiceRole:       aws.String(d.Get("service_role").(string)),
+		ServiceRole:       aws.String(d.Get(names.AttrServiceRole).(string)),
 		VisibleToAllUsers: aws.Bool(d.Get("visible_to_all_users").(bool)),
 		Tags:              getTagsIn(ctx),
 	}
@@ -1117,7 +1117,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.Set(names.AttrName, cluster.Name)
 
-	d.Set("service_role", cluster.ServiceRole)
+	d.Set(names.AttrServiceRole, cluster.ServiceRole)
 	d.Set("security_configuration", cluster.SecurityConfiguration)
 	d.Set("autoscaling_role", cluster.AutoScalingRole)
 	d.Set("release_label", cluster.ReleaseLabel)

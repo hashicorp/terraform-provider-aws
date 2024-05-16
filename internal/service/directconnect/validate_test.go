@@ -37,7 +37,7 @@ func TestValidConnectionBandWidth(t *testing.T) {
 		"1Tbps",
 		"10GBpS",
 		"42Mbps",
-		acctest.CtZero,
+		acctest.Ct0,
 		"???",
 		"a lot",
 	}

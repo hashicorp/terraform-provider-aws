@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccS3ControlAccessGrants_serial(t *testing.T) {
@@ -15,26 +14,26 @@ func TestAccS3ControlAccessGrants_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Instance": {
-			"basic":          testAccAccessGrantsInstance_basic,
+			acctest.CtBasic:  testAccAccessGrantsInstance_basic,
 			"disappears":     testAccAccessGrantsInstance_disappears,
-			names.AttrTags:   testAccAccessGrantsInstance_tags,
+			"tags":           testAccAccessGrantsInstance_tags,
 			"identityCenter": testAccAccessGrantsInstance_identityCenter,
 		},
 		"Location": {
-			"basic":        testAccAccessGrantsLocation_basic,
-			"disappears":   testAccAccessGrantsLocation_disappears,
-			names.AttrTags: testAccAccessGrantsLocation_tags,
-			"update":       testAccAccessGrantsLocation_update,
+			acctest.CtBasic: testAccAccessGrantsLocation_basic,
+			"disappears":    testAccAccessGrantsLocation_disappears,
+			"tags":          testAccAccessGrantsLocation_tags,
+			"update":        testAccAccessGrantsLocation_update,
 		},
 		"Grant": {
-			"basic":                 testAccAccessGrant_basic,
+			acctest.CtBasic:         testAccAccessGrant_basic,
 			"disappears":            testAccAccessGrant_disappears,
-			names.AttrTags:          testAccAccessGrant_tags,
+			"tags":                  testAccAccessGrant_tags,
 			"locationConfiguration": testAccAccessGrant_locationConfiguration,
 		},
 		"InstanceResourcePolicy": {
-			"basic":      testAccAccessGrantsInstanceResourcePolicy_basic,
-			"disappears": testAccAccessGrantsInstanceResourcePolicy_disappears,
+			acctest.CtBasic: testAccAccessGrantsInstanceResourcePolicy_basic,
+			"disappears":    testAccAccessGrantsInstanceResourcePolicy_disappears,
 		},
 	}
 

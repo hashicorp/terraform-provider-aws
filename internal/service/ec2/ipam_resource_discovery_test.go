@@ -24,15 +24,15 @@ func TestAccIPAMResourceDiscovery_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"ResourceDiscovery": {
-			"basic":        testAccIPAMResourceDiscovery_basic,
-			"modify":       testAccIPAMResourceDiscovery_modify,
-			"disappears":   testAccIPAMResourceDiscovery_disappears,
-			names.AttrTags: testAccIPAMResourceDiscovery_tags,
+			acctest.CtBasic: testAccIPAMResourceDiscovery_basic,
+			"modify":        testAccIPAMResourceDiscovery_modify,
+			"disappears":    testAccIPAMResourceDiscovery_disappears,
+			"tags":          testAccIPAMResourceDiscovery_tags,
 		},
 		"ResourceDiscoveryAssociation": {
-			"basic":        testAccIPAMResourceDiscoveryAssociation_basic,
-			"disappears":   testAccIPAMResourceDiscoveryAssociation_disappears,
-			names.AttrTags: testAccIPAMResourceDiscoveryAssociation_tags,
+			acctest.CtBasic: testAccIPAMResourceDiscoveryAssociation_basic,
+			"disappears":    testAccIPAMResourceDiscoveryAssociation_disappears,
+			"tags":          testAccIPAMResourceDiscoveryAssociation_tags,
 		},
 	}
 
@@ -59,9 +59,9 @@ func testAccIPAMResourceDiscovery_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
 					resource.TestCheckResourceAttrPair(resourceName, "ipam_resource_discovery_region", dataSourceRegion, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "is_default", "false"),
-					resource.TestCheckResourceAttr(resourceName, "operating_regions.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "operating_regions.#", acctest.Ct1),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -159,7 +159,7 @@ func testAccIPAMResourceDiscovery_tags(t *testing.T) {
 				Config: testAccIPAMResourceDiscoveryConfig_tags(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMResourceDiscoveryExists(ctx, resourceName, &rd),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -171,7 +171,7 @@ func testAccIPAMResourceDiscovery_tags(t *testing.T) {
 			{
 				Config: testAccIPAMResourceDiscoveryConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -179,7 +179,7 @@ func testAccIPAMResourceDiscovery_tags(t *testing.T) {
 			{
 				Config: testAccIPAMResourceDiscoveryConfig_tags(acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},

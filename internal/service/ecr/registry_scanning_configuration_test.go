@@ -21,8 +21,8 @@ func TestAccECRScanningConfiguration_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		"basic":  testAccRegistryScanningConfiguration_basic,
-		"update": testAccRegistryScanningConfiguration_update,
+		acctest.CtBasic: testAccRegistryScanningConfiguration_basic,
+		"update":        testAccRegistryScanningConfiguration_update,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -44,7 +44,7 @@ func testAccRegistryScanningConfiguration_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccRegistryScanningConfigurationExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "scan_type", "BASIC"),
 				),
 			},
@@ -73,7 +73,7 @@ func testAccRegistryScanningConfiguration_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccRegistryScanningConfigurationExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"scan_frequency": "SCAN_ON_PUSH",
 					}),
@@ -93,7 +93,7 @@ func testAccRegistryScanningConfiguration_update(t *testing.T) {
 				Config: testAccRegistryScanningConfigurationConfig_twoRules(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccRegistryScanningConfigurationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"scan_frequency": "CONTINUOUS_SCAN",
 					}),
@@ -116,7 +116,7 @@ func testAccRegistryScanningConfiguration_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccRegistryScanningConfigurationExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "scan_type", "BASIC"),
 				),
 			},
