@@ -148,7 +148,7 @@ func resourceDefaultRouteTableCreate(ctx context.Context, d *schema.ResourceData
 
 	routeTableID := d.Get("default_route_table_id").(string)
 
-	routeTable, err := findRouteTableByIDV2(ctx, conn, routeTableID)
+	routeTable, err := findRouteTableByID(ctx, conn, routeTableID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Default Route Table (%s): %s", routeTableID, err)

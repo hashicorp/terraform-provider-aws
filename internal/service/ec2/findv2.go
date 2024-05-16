@@ -599,7 +599,7 @@ func findVPCEndpointServiceConfigurationsV2(ctx context.Context, conn *ec2.Clien
 
 // findRouteTableByIDV2 returns the route table corresponding to the specified identifier.
 // Returns NotFoundError if no route table is found.
-func findRouteTableByIDV2(ctx context.Context, conn *ec2.Client, routeTableID string) (*awstypes.RouteTable, error) {
+func findRouteTableByID(ctx context.Context, conn *ec2.Client, routeTableID string) (*awstypes.RouteTable, error) {
 	input := &ec2.DescribeRouteTablesInput{
 		RouteTableIds: []string{routeTableID},
 	}
@@ -614,7 +614,7 @@ type routeFinderV2 func(context.Context, *ec2.Client, string, string) (*awstypes
 // findRouteByIPv4DestinationV2 returns the route corresponding to the specified IPv4 destination.
 // Returns NotFoundError if no route is found.
 func findRouteByIPv4DestinationV2(ctx context.Context, conn *ec2.Client, routeTableID, destinationCidr string) (*awstypes.Route, error) {
-	routeTable, err := findRouteTableByIDV2(ctx, conn, routeTableID)
+	routeTable, err := findRouteTableByID(ctx, conn, routeTableID)
 
 	if err != nil {
 		return nil, err
@@ -634,7 +634,7 @@ func findRouteByIPv4DestinationV2(ctx context.Context, conn *ec2.Client, routeTa
 // findRouteByIPv6DestinationV2 returns the route corresponding to the specified IPv6 destination.
 // Returns NotFoundError if no route is found.
 func findRouteByIPv6DestinationV2(ctx context.Context, conn *ec2.Client, routeTableID, destinationIpv6Cidr string) (*awstypes.Route, error) {
-	routeTable, err := findRouteTableByIDV2(ctx, conn, routeTableID)
+	routeTable, err := findRouteTableByID(ctx, conn, routeTableID)
 
 	if err != nil {
 		return nil, err
@@ -654,7 +654,7 @@ func findRouteByIPv6DestinationV2(ctx context.Context, conn *ec2.Client, routeTa
 // findRouteByPrefixListIDDestinationV2 returns the route corresponding to the specified prefix list destination.
 // Returns NotFoundError if no route is found.
 func findRouteByPrefixListIDDestinationV2(ctx context.Context, conn *ec2.Client, routeTableID, prefixListID string) (*awstypes.Route, error) {
-	routeTable, err := findRouteTableByIDV2(ctx, conn, routeTableID)
+	routeTable, err := findRouteTableByID(ctx, conn, routeTableID)
 	if err != nil {
 		return nil, err
 	}
@@ -715,7 +715,7 @@ func findMainRouteTableByVPCIDV2(ctx context.Context, conn *ec2.Client, vpcID st
 
 // findVPNGatewayRoutePropagationExistsV2 returns NotFoundError if no route propagation for the specified VPN gateway is found.
 func findVPNGatewayRoutePropagationExistsV2(ctx context.Context, conn *ec2.Client, routeTableID, gatewayID string) error {
-	routeTable, err := findRouteTableByIDV2(ctx, conn, routeTableID)
+	routeTable, err := findRouteTableByID(ctx, conn, routeTableID)
 
 	if err != nil {
 		return err
@@ -1172,43 +1172,6 @@ func FindVPNGateways(ctx context.Context, conn *ec2.Client, input *ec2.DescribeV
 	}
 
 	return output.VpnGateways, nil
-}
-
-// FindRouteTableByID returns the route table corresponding to the specified identifier.
-// Returns NotFoundError if no route table is found.
-func findRouteTableByID(ctx context.Context, conn *ec2.Client, routeTableID string) (*awstypes.RouteTable, error) {
-	input := &ec2.DescribeRouteTablesInput{
-		RouteTableIds: []string{routeTableID},
-	}
-
-	return findRouteTable(ctx, conn, input)
-}
-
-func findRouteTable(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRouteTablesInput) (*awstypes.RouteTable, error) {
-	output, err := findRouteTables(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSingleValueResult(output)
-}
-
-func findRouteTables(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRouteTablesInput) ([]awstypes.RouteTable, error) {
-	output, err := conn.DescribeRouteTables(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return output.RouteTables, nil
 }
 
 func FindTransitGatewayAttachmentV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayAttachmentsInput) (*awstypes.TransitGatewayAttachment, error) {

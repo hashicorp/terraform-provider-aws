@@ -126,9 +126,9 @@ func statusRouteV2(ctx context.Context, conn *ec2.Client, routeFinder routeFinde
 	}
 }
 
-func statusRouteTableV2(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusRouteTable(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findRouteTableByIDV2(ctx, conn, id)
+		output, err := findRouteTableByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

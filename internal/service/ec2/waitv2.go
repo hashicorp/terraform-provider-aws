@@ -276,11 +276,11 @@ func waitRouteReadyV2(ctx context.Context, conn *ec2.Client, routeFinder routeFi
 	return nil, err
 }
 
-func waitRouteTableReadyV2(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.RouteTable, error) {
+func waitRouteTableReady(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.RouteTable, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{RouteTableStatusReady},
-		Refresh:                   statusRouteTableV2(ctx, conn, id),
+		Refresh:                   statusRouteTable(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            RouteTableNotFoundChecks,
 		ContinuousTargetOccurence: 2,
@@ -295,11 +295,11 @@ func waitRouteTableReadyV2(ctx context.Context, conn *ec2.Client, id string, tim
 	return nil, err
 }
 
-func waitRouteTableDeletedV2(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.RouteTable, error) {
+func waitRouteTableDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.RouteTable, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{RouteTableStatusReady},
 		Target:                    []string{},
-		Refresh:                   statusRouteTableV2(ctx, conn, id),
+		Refresh:                   statusRouteTable(ctx, conn, id),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}

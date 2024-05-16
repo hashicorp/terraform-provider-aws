@@ -45,7 +45,7 @@ var (
 	FindRouteByIPv6DestinationV2                           = findRouteByIPv6DestinationV2
 	FindRouteByPrefixListIDDestinationV2                   = findRouteByPrefixListIDDestinationV2
 	FindRouteTableAssociationByIDV2                        = findRouteTableAssociationByIDV2
-	FindRouteTableByIDV2                                   = findRouteTableByIDV2
+	FindRouteTableByIDV2                                   = findRouteTableByID
 	FindVolumeAttachmentInstanceByID                       = findVolumeAttachmentInstanceByID
 	FindVPCEndpointByIDV2                                  = findVPCEndpointByIDV2
 	FindVPCEndpointConnectionByServiceIDAndVPCEndpointIDV2 = findVPCEndpointConnectionByServiceIDAndVPCEndpointIDV2
