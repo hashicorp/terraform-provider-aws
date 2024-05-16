@@ -37,7 +37,7 @@ jobs:
 
   tflint:
     name: Validate Acceptance Tests
-    runs-on: [custom, linux, xl]
+    runs-on: custom-linux-xl
     strategy:
       matrix:
         path: ['[a-f]', '[g-z]']
