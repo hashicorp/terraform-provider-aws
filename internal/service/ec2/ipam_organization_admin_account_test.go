@@ -21,11 +21,22 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func TestAccIPAMOrganizationAdminAccount_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic: testAccIPAMOrganizationAdminAccount_basic,
+		"disappears":    testAccIPAMOrganizationAdminAccount_disappears,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
 // Prerequisites:
 // * Organizations management account
 // * Organization member account
 // Authenticate with management account as target account and member account as alternate.
-func TestAccIPAMOrganizationAdminAccount_basic(t *testing.T) {
+func testAccIPAMOrganizationAdminAccount_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	providers := make(map[string]*schema.Provider)
 	var organization organizationstypes.DelegatedAdministrator
@@ -68,7 +79,7 @@ func TestAccIPAMOrganizationAdminAccount_basic(t *testing.T) {
 	})
 }
 
-func TestAccIPAMOrganizationAdminAccount_disappears(t *testing.T) {
+func testAccIPAMOrganizationAdminAccount_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	providers := make(map[string]*schema.Provider)
 	var organization organizationstypes.DelegatedAdministrator
