@@ -4,7 +4,7 @@ Continuous integration (CI) includes processes we run when you submit a pull req
 
 ## CI: Enrichment
 
-The focus of this guide is on CI testing, but for completeness, we also mention enrichment processes. These include generating the [changelog](changelog-process.md) when a PR is merged, releasing new versions, labeling the PR based on its size and the AWS service it relates to, and adding helpful automated comments to the PR.
+The focus of this guide is on CI _testing_, but for completeness, we also mention enrichment processes. These include generating the [changelog](changelog-process.md) when a PR is merged, releasing new versions, labeling a PR based on its size and the AWS service it relates to, and adding automated comments to the PR.
 
 These processes will not usually produce the dreaded red X signifying that a PR has failed CI. For this reason, we shift our focus to CI testing.
 
