@@ -42,7 +42,7 @@ Use the `tools` target before running Acceptance Test Linting:
 % make tools
 ```
 
-Use the `acctestlint` target to run all the Acceptance Test Linting checks using both `terrafmt` and `tflint`: 
+Use the `acctestlint` target to run all the Acceptance Test Linting checks using both `terrafmt` and `tflint`:
 
 ```sh
 % make acctestlint
@@ -152,7 +152,17 @@ You can limit the scan to a service package by using the `PKG_NAME` environment 
 % PKG=rds make semcodequality
 ```
 
-#### 
+#### Naming Scan Caps/AWS/EC2
+
+Coming soon
+
+#### Test Configs Scan
+
+Coming soon
+
+#### Service Name Scan A-Z
+
+Coming soon
 
 ### YAML Linting / yamllint
 
@@ -311,4 +321,9 @@ Use the `provcheckmarkdownlint` target to run this test:
 This process generates the Terraform AWS Provider schema for use by the `tfproviderdocs` check.
 
 #### tfproviderdocs
+
+Coming soon
+
 #### validate_sweepers_unlinked
+
+Coming soon
