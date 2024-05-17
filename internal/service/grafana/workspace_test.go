@@ -506,6 +506,14 @@ func testAccWorkspace_version(t *testing.T) {
 					testAccCheckWorkspaceNotRecreated(&v2, &v1),
 				),
 			},
+			{
+				Config: testAccWorkspaceConfig_version(rName, "10.4"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWorkspaceExists(ctx, resourceName, &v2),
+					resource.TestCheckResourceAttr(resourceName, "grafana_version", "10.4"),
+					testAccCheckWorkspaceNotRecreated(&v2, &v1),
+				),
+			},
 		},
 	})
 }
