@@ -170,7 +170,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/swf v1.22.7
 	github.com/aws/aws-sdk-go-v2/service/synthetics v1.24.7
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.25.8
-	github.com/aws/aws-sdk-go-v2/service/transcribe v1.37.2
+	github.com/aws/aws-sdk-go-v2/service/transcribe v1.37.3
 	github.com/aws/aws-sdk-go-v2/service/transfer v1.47.4
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.14.1
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.8.1
