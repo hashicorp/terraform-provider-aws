@@ -204,8 +204,8 @@ github.com/aws/aws-sdk-go-v2/service/firehose v1.28.9 h1:kxjpxgqndr2SC5ImyAve/NM
 github.com/aws/aws-sdk-go-v2/service/firehose v1.28.9/go.mod h1:OR8yuOpz93vNK/cSUQLUWGU5N1uDYoevC6YM5dxbjkM=
 github.com/aws/aws-sdk-go-v2/service/fis v1.24.5 h1:STt3rooLw27vxpUtLVgU7SiN/xYtiJqWkfJbC+bh2y0=
 github.com/aws/aws-sdk-go-v2/service/fis v1.24.5/go.mod h1:j8AvJlRMDxGRW+UI6xN9qR4GEReBNk9t7mDKAOZTqQI=
-github.com/aws/aws-sdk-go-v2/service/fms v1.33.3 h1:YHjpYQ8ClMBUItB4jLKUrG+UcHmh1aiJtDTcOu4eZPI=
-github.com/aws/aws-sdk-go-v2/service/fms v1.33.3/go.mod h1:wB6B/2FGr8fChjKwGEiBqIqIJAw0Xa9VakOlsD8zC4c=
+github.com/aws/aws-sdk-go-v2/service/fms v1.33.4 h1:FaN/NuVBxmYuij6w8UL2Ggs633BCjIJ3Tn3h/rQHfUk=
+github.com/aws/aws-sdk-go-v2/service/fms v1.33.4/go.mod h1:etnMpUUcYO47k603JmvL2W3REA7Md99b5CkBWUarvvc=
 github.com/aws/aws-sdk-go-v2/service/glacier v1.22.6 h1:5Ao5DKXi4xHkBCs1rKaR7EQN8OT/hjkL7AkI+yl1Clc=
 github.com/aws/aws-sdk-go-v2/service/glacier v1.22.6/go.mod h1:d71R9gxjTEZ2g0RSTuQgsL02Ny3kakBs24pDIPZCaCQ=
 github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.23.3 h1:gaUdtNMWyJzBZhqShlqRTk18kHc5kM4XAb31ZejKBFA=
