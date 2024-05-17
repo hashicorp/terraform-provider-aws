@@ -149,7 +149,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/route53profiles v1.0.4
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.54.2
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.44.9
-	github.com/aws/aws-sdk-go-v2/service/scheduler v1.8.6
+	github.com/aws/aws-sdk-go-v2/service/scheduler v1.8.7
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.28.8
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.48.2
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.13.5
