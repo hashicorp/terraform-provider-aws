@@ -270,8 +270,8 @@ github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.11.3 h1:Bbe8Zed6ndNiIfLrY
 github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.11.3/go.mod h1:6rAvaSzeO/gSRPPpvOjd/2kmEXAyhcQQuNk3dJe4y9s=
 github.com/aws/aws-sdk-go-v2/service/mediastore v1.20.7 h1:2019w4m9jiPF5HbHmivhGVeEkKZ3JVUaZU6tJZKTTic=
 github.com/aws/aws-sdk-go-v2/service/mediastore v1.20.7/go.mod h1:Kam67qFdFiqwkuO/iD5G6ZGuIINDrl9RdgY9MpRvdqM=
-github.com/aws/aws-sdk-go-v2/service/mq v1.22.6 h1:rwApXoMbX0BYN3oi8fmH0eY1/w3AoyRlbpe3LHNxDZA=
-github.com/aws/aws-sdk-go-v2/service/mq v1.22.6/go.mod h1:ZM32vWpXf8VPxOmJqs7HFv70/JN1nY41dM8Ji+ZVfOo=
+github.com/aws/aws-sdk-go-v2/service/mq v1.22.7 h1:VSO1m5L4w7x0/E+Qg/Dui5RD2p7A7ypxC2iX5o5Qn44=
+github.com/aws/aws-sdk-go-v2/service/mq v1.22.7/go.mod h1:wmEf/L2+omBAvfktOJCSvtojwXp+g30ALIoZ0afuaCk=
 github.com/aws/aws-sdk-go-v2/service/mwaa v1.26.7 h1:IyB1EOxKiEeidyPWiC26VPGakyHUDI4UxLthzjE6OTE=
 github.com/aws/aws-sdk-go-v2/service/mwaa v1.26.7/go.mod h1:aUbpNRDKcxkg17TSfGG1ilWNGWnz/B/pGAevvVwzgSc=
 github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.8.3 h1:WOLw2aV71AeCnJhfOBQcmDpKGR+5qiLkU7P1NxtuSxQ=
