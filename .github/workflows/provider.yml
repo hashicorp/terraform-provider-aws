@@ -290,7 +290,7 @@ jobs:
       - name: tfproviderdocs check
         run: |
           terraform -v
-          cat terraform-providers-schema/schema.json
+          make tfproviderdocs
           tfproviderdocs check \
             -allowed-resource-subcategories-file website/allowed-subcategories.txt \
             -enable-contents-check \
