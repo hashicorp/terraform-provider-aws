@@ -155,7 +155,7 @@ func resourceTrafficPolicyInstanceDelete(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
-	log.Printf("[INFO] Delete Route53 Traffic Policy Instance: %s", d.Id())
+	log.Printf("[INFO] Deleting Route53 Traffic Policy Instance: %s", d.Id())
 	_, err := conn.DeleteTrafficPolicyInstance(ctx, &route53.DeleteTrafficPolicyInstanceInput{
 		Id: aws.String(d.Id()),
 	})

@@ -15,6 +15,7 @@ var (
 	ResourceTrafficPolicy               = resourceTrafficPolicy
 	ResourceTrafficPolicyInstance       = resourceTrafficPolicyInstance
 	ResourceVPCAssociationAuthorization = resourceVPCAssociationAuthorization
+	ResourceZoneAssociation             = resourceZoneAssociation
 
 	CleanDelegationSetID                        = cleanDelegationSetID
 	FindCIDRCollectionByID                      = findCIDRCollectionByID
@@ -27,6 +28,7 @@ var (
 	FindTrafficPolicyByID                       = findTrafficPolicyByID
 	FindTrafficPolicyInstanceByID               = findTrafficPolicyInstanceByID
 	FindVPCAssociationAuthorizationByTwoPartKey = findVPCAssociationAuthorizationByTwoPartKey
+	FindZoneAssociationByThreePartKey           = findZoneAssociationByThreePartKey
 	KeySigningKeyStatusActive                   = keySigningKeyStatusActive
 	KeySigningKeyStatusInactive                 = keySigningKeyStatusInactive
 	ServeSignatureNotSigning                    = serveSignatureNotSigning

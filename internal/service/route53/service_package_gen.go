@@ -106,8 +106,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceZoneAssociation,
+			Factory:  resourceZoneAssociation,
 			TypeName: "aws_route53_zone_association",
+			Name:     "Zone Association",
 		},
 	}
 }

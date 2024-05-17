@@ -125,16 +125,15 @@ func resourceVPCAssociationAuthorizationDelete(ctx context.Context, d *schema.Re
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &route53.DeleteVPCAssociationAuthorizationInput{
-		HostedZoneId: aws.String(zoneID),
-		VPC: &awstypes.VPC{
-			VPCId:     aws.String(vpcID),
-			VPCRegion: awstypes.VPCRegion(d.Get("vpc_region").(string)),
-		},
-	}
-
+	log.Printf("[INFO] Deleting Route53 VPC Association Authorization: %s", d.Id())
 	_, err = tfresource.RetryWhenIsA[*awstypes.ConcurrentModification](ctx, d.Timeout(schema.TimeoutCreate), func() (any, error) {
-		return conn.DeleteVPCAssociationAuthorization(ctx, input)
+		return conn.DeleteVPCAssociationAuthorization(ctx, &route53.DeleteVPCAssociationAuthorizationInput{
+			HostedZoneId: aws.String(zoneID),
+			VPC: &awstypes.VPC{
+				VPCId:     aws.String(vpcID),
+				VPCRegion: awstypes.VPCRegion(d.Get("vpc_region").(string)),
+			},
+		})
 	})
 
 	if errs.IsA[*awstypes.NoSuchHostedZone](err) || errs.IsA[*awstypes.VPCAssociationAuthorizationNotFound](err) {
@@ -148,7 +147,7 @@ func resourceVPCAssociationAuthorizationDelete(ctx context.Context, d *schema.Re
 	return diags
 }
 
-const vpcAssociationAuthorizationResourceIDSeparator = "/"
+const vpcAssociationAuthorizationResourceIDSeparator = ":"
 
 func vpcAssociationAuthorizationCreateResourceID(zoneID, vpcID string) string {
 	parts := []string{zoneID, vpcID}

@@ -8,20 +8,19 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccRoute53ZoneAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_route53_zone_association.test"
-
 	domainName := acctest.RandomFQDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -48,7 +47,6 @@ func TestAccRoute53ZoneAssociation_basic(t *testing.T) {
 func TestAccRoute53ZoneAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_route53_zone_association.test"
-
 	domainName := acctest.RandomFQDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -73,7 +71,6 @@ func TestAccRoute53ZoneAssociation_Disappears_vpc(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_route53_zone_association.test"
 	vpcResourceName := "aws_vpc.bar"
-
 	domainName := acctest.RandomFQDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -98,7 +95,6 @@ func TestAccRoute53ZoneAssociation_Disappears_zone(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_route53_zone_association.test"
 	route53ZoneResourceName := "aws_route53_zone.foo"
-
 	domainName := acctest.RandomFQDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -211,21 +207,15 @@ func TestAccRoute53ZoneAssociation_crossAccountAndRegion(t *testing.T) {
 
 func testAccCheckZoneAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Client(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route53_zone_association" {
 				continue
 			}
 
-			zoneID, vpcID, vpcRegion, err := tfroute53.ZoneAssociationParseID(rs.Primary.ID)
+			_, err := tfroute53.FindZoneAssociationByThreePartKey(ctx, conn, rs.Primary.Attributes["zone_id"], rs.Primary.Attributes[names.AttrVPCID], rs.Primary.Attributes["vpc_region"])
 
-			if err != nil {
-				return err
-			}
-
-			hostedZoneSummary, err := tfroute53.GetZoneAssociation(ctx, conn, zoneID, vpcID, vpcRegion)
-
-			if tfawserr.ErrMessageContains(err, "AccessDenied", "is not owned by you") {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
@@ -233,44 +223,25 @@ func testAccCheckZoneAssociationDestroy(ctx context.Context) resource.TestCheckF
 				return err
 			}
 
-			if hostedZoneSummary != nil {
-				return fmt.Errorf("Route 53 Zone Association (%s) still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("Route53 Zone Association %s still exists", rs.Primary.ID)
 		}
+
 		return nil
 	}
 }
 
-func testAccCheckZoneAssociationExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckZoneAssociationExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No zone association ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Client(ctx)
 
-		zoneID, vpcID, vpcRegion, err := tfroute53.ZoneAssociationParseID(rs.Primary.ID)
+		_, err := tfroute53.FindZoneAssociationByThreePartKey(ctx, conn, rs.Primary.Attributes["zone_id"], rs.Primary.Attributes[names.AttrVPCID], rs.Primary.Attributes["vpc_region"])
 
-		if err != nil {
-			return err
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn(ctx)
-
-		hostedZoneSummary, err := tfroute53.GetZoneAssociation(ctx, conn, zoneID, vpcID, vpcRegion)
-
-		if err != nil {
-			return err
-		}
-
-		if hostedZoneSummary == nil {
-			return fmt.Errorf("Route 53 Hosted Zone (%s) Association (%s) not found", zoneID, vpcID)
-		}
-
-		return nil
+		return err
 	}
 }
 
