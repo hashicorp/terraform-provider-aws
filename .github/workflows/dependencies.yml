@@ -76,8 +76,5 @@ jobs:
           go-version-file: .go-version
       - name: go mod
         run: |
-          gover=go`cat .go-version | xargs`
-          go install golang.org/dl/${gover}@latest
-          ${gover} download
           echo "Using make to check dependencies"
           make depscheck
