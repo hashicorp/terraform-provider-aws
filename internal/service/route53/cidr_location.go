@@ -266,6 +266,10 @@ func (r *cidrLocationResource) Delete(ctx context.Context, request resource.Dele
 
 	_, err = conn.ChangeCidrCollection(ctx, input)
 
+	if errs.IsA[*awstypes.NoSuchCidrCollectionException](err) {
+		return
+	}
+
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("deleting Route 53 CIDR Location (%s)", data.ID.ValueString()), err.Error())
 
