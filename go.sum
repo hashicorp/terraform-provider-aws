@@ -376,8 +376,8 @@ github.com/aws/aws-sdk-go-v2/service/transcribe v1.37.3 h1:SFKhOYZnDaUla9fgigwik
 github.com/aws/aws-sdk-go-v2/service/transcribe v1.37.3/go.mod h1:ezM39vAKqOdux9YuHDfBZnG/KjaCCiEFrvSJBvrAuak=
 github.com/aws/aws-sdk-go-v2/service/transfer v1.47.5 h1:bbRMPHoCMRYm6UJ1dzgNNL883kWFY+wAMxGgFxMQPLg=
 github.com/aws/aws-sdk-go-v2/service/transfer v1.47.5/go.mod h1:cs0gPVEigSXa5mLO0WqW8g5vcdjWsYpQ3rEXFr+ADnc=
-github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.14.1 h1:L1vO1LKz1HRCynAnMlVzmGQqI4f+7Zp21B/XTMlcWeE=
-github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.14.1/go.mod h1:Wn0tIafKt/X8NP1Mbzyk7Tj4ODsTANuljNbOSY1jc1g=
+github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.14.2 h1:mkdcezBJNGkhX57FxwCKHsOrUlhX15eD9pz7ZH6+or0=
+github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.14.2/go.mod h1:zKWdFygk+MFl/ctPFdC1bmymXNo/VLfGNVXOlBGVvrc=
 github.com/aws/aws-sdk-go-v2/service/vpclattice v1.8.1 h1:gGgt01IV6Cnm4+K3OUipSMD1P69Kq9RCgvE2a29yEms=
 github.com/aws/aws-sdk-go-v2/service/vpclattice v1.8.1/go.mod h1:dmDy8QoPVif5XqCVNcdW2ik2flVaRwHkHpLwPpqZJsQ=
 github.com/aws/aws-sdk-go-v2/service/waf v1.20.6 h1:HX/oapKPElhd1bqJ5nwUmPVKnIcdB6NVHVnWTugbrXQ=
