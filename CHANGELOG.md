@@ -4,6 +4,10 @@ FEATURES:
 
 * **New Resource:** `aws_vpc_endpoint_service_private_dns_verification` ([#37176](https://github.com/hashicorp/terraform-provider-aws/issues/37176))
 
+BUG FIXES:
+
+* resource/aws_m2_deployment: Fix `state` error on `deployment_id` during start/stop update ([#37581](https://github.com/hashicorp/terraform-provider-aws/issues/37581))
+
 ## 5.50.0 (May 17, 2024)
 
 ENHANCEMENTS:
