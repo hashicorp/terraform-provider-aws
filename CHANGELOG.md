@@ -1,4 +1,9 @@
 ## 5.51.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_vpc_endpoint_service_private_dns_verification` ([#37176](https://github.com/hashicorp/terraform-provider-aws/issues/37176))
+
 ## 5.50.0 (May 17, 2024)
 
 ENHANCEMENTS:
