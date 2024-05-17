@@ -79,8 +79,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Query Logging Config",
 		},
 		{
-			Factory:  ResourceRecord,
+			Factory:  resourceRecord,
 			TypeName: "aws_route53_record",
+			Name:     "Record",
 		},
 		{
 			Factory:  resourceTrafficPolicy,

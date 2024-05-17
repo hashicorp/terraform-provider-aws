@@ -151,7 +151,3 @@ func findDelegationSetByID(ctx context.Context, conn *route53.Client, id string)
 
 	return output.DelegationSet, nil
 }
-
-func cleanDelegationSetID(id string) string {
-	return strings.TrimPrefix(id, "/delegationset/")
-}

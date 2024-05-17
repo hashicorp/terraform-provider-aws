@@ -10,7 +10,6 @@ import (
 	"log"
 	"slices"
 	"sort"
-	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
@@ -389,11 +388,11 @@ func deleteAllResourceRecordsFromHostedZone(ctx context.Context, conn *route53.C
 			}
 		})
 		input := &route53.ChangeResourceRecordSetsInput{
-			HostedZoneId: aws.String(hostedZoneID),
 			ChangeBatch: &awstypes.ChangeBatch{
 				Changes: changes,
 				Comment: aws.String("Deleted by Terraform"),
 			},
+			HostedZoneId: aws.String(hostedZoneID),
 		}
 
 		output, err := conn.ChangeResourceRecordSets(ctx, input)
@@ -414,34 +413,6 @@ func deleteAllResourceRecordsFromHostedZone(ctx context.Context, conn *route53.C
 	}
 
 	return nil
-}
-
-func findResourceRecordSets(ctx context.Context, conn *route53.Client, input *route53.ListResourceRecordSetsInput, filter tfslices.Predicate[*awstypes.ResourceRecordSet]) ([]awstypes.ResourceRecordSet, error) {
-	var output []awstypes.ResourceRecordSet
-
-	pages := route53.NewListResourceRecordSetsPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if errs.IsA[*awstypes.NoSuchHostedZone](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
-			}
-		}
-
-		if err != nil {
-			return nil, err
-		}
-
-		for _, v := range page.ResourceRecordSets {
-			if filter(&v) {
-				output = append(output, v)
-			}
-		}
-	}
-
-	return output, nil
 }
 
 func findNameServersByZone(ctx context.Context, conn *route53.Client, zoneID, zoneName string) ([]string, error) {
@@ -547,39 +518,4 @@ func flattenVPCs(apiObjects []awstypes.VPC) []interface{} {
 	}
 
 	return tfList
-}
-
-// CleanChangeID is used to remove the leading /change/
-func CleanChangeID(ID string) string {
-	return strings.TrimPrefix(ID, "/change/")
-}
-
-// CleanZoneID is used to remove the leading /hostedzone/
-func CleanZoneID(ID string) string {
-	return strings.TrimPrefix(ID, "/hostedzone/")
-}
-
-// NormalizeZoneName is used to remove the trailing period
-// and apply consistent casing to "name" or "domain name"
-// attributes returned from the Route53 API or provided as
-// user input.
-//
-// The single dot (".") domain name is returned as-is.
-// Uppercase letters are converted to lowercase.
-func NormalizeZoneName(v interface{}) string {
-	var str string
-	switch value := v.(type) {
-	case *string:
-		str = aws.ToString(value)
-	case string:
-		str = value
-	default:
-		return ""
-	}
-
-	if str == "." {
-		return str
-	}
-
-	return strings.ToLower(strings.TrimSuffix(str, "."))
 }

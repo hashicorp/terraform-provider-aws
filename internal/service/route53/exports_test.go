@@ -12,6 +12,7 @@ var (
 	ResourceHostedZoneDNSSEC            = resourceHostedZoneDNSSEC
 	ResourceKeySigningKey               = resourceKeySigningKey
 	ResourceQueryLog                    = resourceQueryLog
+	ResourceRecord                      = resourceRecord
 	ResourceTrafficPolicy               = resourceTrafficPolicy
 	ResourceTrafficPolicyInstance       = resourceTrafficPolicyInstance
 	ResourceVPCAssociationAuthorization = resourceVPCAssociationAuthorization
@@ -19,6 +20,7 @@ var (
 	ResourceZoneAssociation             = resourceZoneAssociation
 
 	CleanDelegationSetID                        = cleanDelegationSetID
+	ExpandRecordName                            = expandRecordName
 	FindCIDRCollectionByID                      = findCIDRCollectionByID
 	FindCIDRLocationByTwoPartKey                = findCIDRLocationByTwoPartKey
 	FindDelegationSetByID                       = findDelegationSetByID
@@ -27,12 +29,14 @@ var (
 	FindHostedZoneDNSSECByZoneID                = findHostedZoneDNSSECByZoneID
 	FindKeySigningKeyByTwoPartKey               = findKeySigningKeyByTwoPartKey
 	FindQueryLoggingConfigByID                  = findQueryLoggingConfigByID
+	FindResourceRecordSetByFourPartKey          = findResourceRecordSetByFourPartKey
 	FindTrafficPolicyByID                       = findTrafficPolicyByID
 	FindTrafficPolicyInstanceByID               = findTrafficPolicyInstanceByID
 	FindVPCAssociationAuthorizationByTwoPartKey = findVPCAssociationAuthorizationByTwoPartKey
 	FindZoneAssociationByThreePartKey           = findZoneAssociationByThreePartKey
 	KeySigningKeyStatusActive                   = keySigningKeyStatusActive
 	KeySigningKeyStatusInactive                 = keySigningKeyStatusInactive
+	RecordParseResourceID                       = recordParseResourceID
 	ServeSignatureNotSigning                    = serveSignatureNotSigning
 	ServeSignatureSigning                       = serveSignatureSigning
 	WaitChangeInsync                            = waitChangeInsync
