@@ -297,7 +297,7 @@ func resourceTableReplicaReadReplica(ctx context.Context, d *schema.ResourceData
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionReading, resNameTableReplica, d.Id(), fmt.Errorf("continuous backups: %w", err))
 	}
 
-	if table.SSEDescription.KMSMasterKeyArn != nil {
+	if table.SSEDescription != nil && table.SSEDescription.KMSMasterKeyArn != nil {
 		d.Set(names.AttrKMSKeyARN, table.SSEDescription.KMSMasterKeyArn)
 	}
 
