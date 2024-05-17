@@ -167,13 +167,15 @@ func hostedZoneDNSSECDisable(ctx context.Context, conn *route53.Client, hostedZo
 		HostedZoneId: aws.String(hostedZoneID),
 	}
 
-	output, err := conn.DisableHostedZoneDNSSEC(ctx, input)
+	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.KeySigningKeyInParentDSRecord](ctx, 5*time.Minute, func() (interface{}, error) {
+		return conn.DisableHostedZoneDNSSEC(ctx, input)
+	})
 
 	if err != nil {
 		return fmt.Errorf("disabling Route 53 Hosted Zone DNSSEC (%s): %w", hostedZoneID, err)
 	}
 
-	if output.ChangeInfo != nil {
+	if output := outputRaw.(*route53.DisableHostedZoneDNSSECOutput); output.ChangeInfo != nil {
 		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id)); err != nil {
 			return fmt.Errorf("waiting for Route 53 Hosted Zone DNSSEC (%s) synchronize: %w", hostedZoneID, err)
 		}

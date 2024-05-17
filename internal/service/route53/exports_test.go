@@ -15,6 +15,7 @@ var (
 	ResourceTrafficPolicy               = resourceTrafficPolicy
 	ResourceTrafficPolicyInstance       = resourceTrafficPolicyInstance
 	ResourceVPCAssociationAuthorization = resourceVPCAssociationAuthorization
+	ResourceZone                        = resourceZone
 	ResourceZoneAssociation             = resourceZoneAssociation
 
 	CleanDelegationSetID                        = cleanDelegationSetID
@@ -22,6 +23,7 @@ var (
 	FindCIDRLocationByTwoPartKey                = findCIDRLocationByTwoPartKey
 	FindDelegationSetByID                       = findDelegationSetByID
 	FindHealthCheckByID                         = findHealthCheckByID
+	FindHostedZoneByID                          = findHostedZoneByID
 	FindHostedZoneDNSSECByZoneID                = findHostedZoneDNSSECByZoneID
 	FindKeySigningKeyByTwoPartKey               = findKeySigningKeyByTwoPartKey
 	FindQueryLoggingConfigByID                  = findQueryLoggingConfigByID
@@ -33,6 +35,7 @@ var (
 	KeySigningKeyStatusInactive                 = keySigningKeyStatusInactive
 	ServeSignatureNotSigning                    = serveSignatureNotSigning
 	ServeSignatureSigning                       = serveSignatureSigning
+	WaitChangeInsync                            = waitChangeInsync
 )
 
 type Route53TrafficPolicyDoc = route53TrafficPolicyDoc

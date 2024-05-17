@@ -97,7 +97,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "VPC Association Authorization",
 		},
 		{
-			Factory:  ResourceZone,
+			Factory:  resourceZone,
 			TypeName: "aws_route53_zone",
 			Name:     "Hosted Zone",
 			Tags: &types.ServicePackageResourceTags{
