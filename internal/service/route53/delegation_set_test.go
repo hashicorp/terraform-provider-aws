@@ -178,16 +178,15 @@ func testAccCheckNameServersMatch(ctx context.Context, delegationSetResourceName
 			return err
 		}
 
-		hostedZone, err := conn.GetHostedZoneWithContext(ctx, &route53.GetHostedZoneInput{
-			Id: aws.String(rsHostedZone.Primary.ID),
-		})
+		hostedZone, err := tfroute53.FindHostedZoneByID(ctx, conn, rsHostedZone.Primary.ID)
+
 		if err != nil {
-			return fmt.Errorf("Delegation set does not exist: %#v", rsHostedZone.Primary.ID)
+			return err
 		}
 
-		if !reflect.DeepEqual(delegationSet.DelegationSet.NameServers, hostedZone.DelegationSet.NameServers) {
+		if !reflect.DeepEqual(delegationSet.NameServers, hostedZone.DelegationSet.NameServers) {
 			return fmt.Errorf("Name servers do not match:\nDelegation Set: %#v\nHosted Zone:%#v",
-				delegationSet.DelegationSet.NameServers, hostedZone.DelegationSet.NameServers)
+				delegationSet.NameServers, hostedZone.DelegationSet.NameServers)
 		}
 
 		return nil

@@ -40,8 +40,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Traffic Policy Document",
 		},
 		{
-			Factory:  DataSourceZone,
+			Factory:  dataSourceZone,
 			TypeName: "aws_route53_zone",
+			Name:     "Hosted Zone",
 		},
 	}
 }

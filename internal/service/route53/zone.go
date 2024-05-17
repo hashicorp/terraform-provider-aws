@@ -217,7 +217,6 @@ func resourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		d.Set(names.AttrComment, output.HostedZone.Config.Comment)
 
 		if output.HostedZone.Config.PrivateZone {
-			var err error
 			nameServers, err = findNameServersByZone(ctx, conn, d.Id(), d.Get(names.AttrName).(string))
 
 			if err != nil {
