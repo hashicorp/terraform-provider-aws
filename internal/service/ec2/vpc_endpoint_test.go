@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func TestAccVPCEndpoint_gatewayBasic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var endpoint ec2.VpcEndpoint
+	var endpoint awstypes.VpcEndpoint
 	resourceName := "aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -65,7 +65,7 @@ func TestAccVPCEndpoint_gatewayBasic(t *testing.T) {
 
 func TestAccVPCEndpoint_interfaceBasic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var endpoint ec2.VpcEndpoint
+	var endpoint awstypes.VpcEndpoint
 	resourceName := "aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -110,7 +110,7 @@ func TestAccVPCEndpoint_interfaceBasic(t *testing.T) {
 
 func TestAccVPCEndpoint_interfacePrivateDNS(t *testing.T) {
 	ctx := acctest.Context(t)
-	var endpoint ec2.VpcEndpoint
+	var endpoint awstypes.VpcEndpoint
 	resourceName := "aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -155,7 +155,7 @@ func TestAccVPCEndpoint_interfacePrivateDNS(t *testing.T) {
 
 func TestAccVPCEndpoint_interfacePrivateDNSNoGateway(t *testing.T) {
 	ctx := acctest.Context(t)
-	var endpoint ec2.VpcEndpoint
+	var endpoint awstypes.VpcEndpoint
 	resourceName := "aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -188,7 +188,7 @@ func TestAccVPCEndpoint_interfacePrivateDNSNoGateway(t *testing.T) {
 
 func TestAccVPCEndpoint_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var endpoint ec2.VpcEndpoint
+	var endpoint awstypes.VpcEndpoint
 	resourceName := "aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -212,7 +212,7 @@ func TestAccVPCEndpoint_disappears(t *testing.T) {
 
 func TestAccVPCEndpoint_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var endpoint ec2.VpcEndpoint
+	var endpoint awstypes.VpcEndpoint
 	resourceName := "aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -258,7 +258,7 @@ func TestAccVPCEndpoint_tags(t *testing.T) {
 
 func TestAccVPCEndpoint_gatewayWithRouteTableAndPolicy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var endpoint ec2.VpcEndpoint
+	var endpoint awstypes.VpcEndpoint
 	resourceName := "aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -295,7 +295,7 @@ func TestAccVPCEndpoint_gatewayWithRouteTableAndPolicy(t *testing.T) {
 
 func TestAccVPCEndpoint_gatewayPolicy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var endpoint ec2.VpcEndpoint
+	var endpoint awstypes.VpcEndpoint
 	// This policy checks the DiffSuppressFunc
 	policy1 := `
 {
@@ -364,7 +364,7 @@ func TestAccVPCEndpoint_gatewayPolicy(t *testing.T) {
 
 func TestAccVPCEndpoint_ignoreEquivalent(t *testing.T) {
 	ctx := acctest.Context(t)
-	var endpoint ec2.VpcEndpoint
+	var endpoint awstypes.VpcEndpoint
 	resourceName := "aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -390,7 +390,7 @@ func TestAccVPCEndpoint_ignoreEquivalent(t *testing.T) {
 
 func TestAccVPCEndpoint_ipAddressType(t *testing.T) {
 	ctx := acctest.Context(t)
-	var endpoint ec2.VpcEndpoint
+	var endpoint awstypes.VpcEndpoint
 	resourceName := "aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -432,7 +432,7 @@ func TestAccVPCEndpoint_ipAddressType(t *testing.T) {
 
 func TestAccVPCEndpoint_interfaceWithSubnetAndSecurityGroup(t *testing.T) {
 	ctx := acctest.Context(t)
-	var endpoint ec2.VpcEndpoint
+	var endpoint awstypes.VpcEndpoint
 	resourceName := "aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -464,6 +464,13 @@ func TestAccVPCEndpoint_interfaceWithSubnetAndSecurityGroup(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					// There is a known issue with import verification of computed sets with
+					// terraform-plugin-testing > 1.6. The only current workaround is ignoring
+					// the impacted attribute.
+					// Ref: https://github.com/hashicorp/terraform-plugin-testing/issues/269
+					"network_interface_ids",
+				},
 			},
 		},
 	})
@@ -471,7 +478,7 @@ func TestAccVPCEndpoint_interfaceWithSubnetAndSecurityGroup(t *testing.T) {
 
 func TestAccVPCEndpoint_interfaceNonAWSServiceAcceptOnCreate(t *testing.T) { // nosempgrep:aws-in-func-name
 	ctx := acctest.Context(t)
-	var endpoint ec2.VpcEndpoint
+	var endpoint awstypes.VpcEndpoint
 	resourceName := "aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -500,7 +507,7 @@ func TestAccVPCEndpoint_interfaceNonAWSServiceAcceptOnCreate(t *testing.T) { // 
 
 func TestAccVPCEndpoint_interfaceNonAWSServiceAcceptOnUpdate(t *testing.T) { // nosempgrep:aws-in-func-name
 	ctx := acctest.Context(t)
-	var endpoint ec2.VpcEndpoint
+	var endpoint awstypes.VpcEndpoint
 	resourceName := "aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -536,7 +543,7 @@ func TestAccVPCEndpoint_interfaceNonAWSServiceAcceptOnUpdate(t *testing.T) { // 
 
 func TestAccVPCEndpoint_VPCEndpointType_gatewayLoadBalancer(t *testing.T) {
 	ctx := acctest.Context(t)
-	var endpoint ec2.VpcEndpoint
+	var endpoint awstypes.VpcEndpoint
 	vpcEndpointServiceResourceName := "aws_vpc_endpoint_service.test"
 	resourceName := "aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -565,14 +572,14 @@ func TestAccVPCEndpoint_VPCEndpointType_gatewayLoadBalancer(t *testing.T) {
 
 func testAccCheckVPCEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpc_endpoint" {
 				continue
 			}
 
-			_, err := tfec2.FindVPCEndpointByID(ctx, conn, rs.Primary.ID)
+			_, err := tfec2.FindVPCEndpointByIDV2(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -587,7 +594,7 @@ func testAccCheckVPCEndpointDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckVPCEndpointExists(ctx context.Context, n string, v *ec2.VpcEndpoint) resource.TestCheckFunc {
+func testAccCheckVPCEndpointExists(ctx context.Context, n string, v *awstypes.VpcEndpoint) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -598,9 +605,9 @@ func testAccCheckVPCEndpointExists(ctx context.Context, n string, v *ec2.VpcEndp
 			return fmt.Errorf("No EC2 VPC Endpoint ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		output, err := tfec2.FindVPCEndpointByID(ctx, conn, rs.Primary.ID)
+		output, err := tfec2.FindVPCEndpointByIDV2(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

@@ -9,9 +9,9 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -47,7 +47,7 @@ func ResourceVPCEndpointRouteTableAssociation() *schema.Resource {
 
 func resourceVPCEndpointRouteTableAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	endpointID := d.Get(names.AttrVPCEndpointID).(string)
 	routeTableID := d.Get("route_table_id").(string)
@@ -56,18 +56,18 @@ func resourceVPCEndpointRouteTableAssociationCreate(ctx context.Context, d *sche
 
 	input := &ec2.ModifyVpcEndpointInput{
 		VpcEndpointId:    aws.String(endpointID),
-		AddRouteTableIds: aws.StringSlice([]string{routeTableID}),
+		AddRouteTableIds: []string{routeTableID},
 	}
 
-	log.Printf("[DEBUG] Creating VPC Endpoint Route Table Association: %s", input)
-	_, err := conn.ModifyVpcEndpointWithContext(ctx, input)
+	log.Printf("[DEBUG] Creating VPC Endpoint Route Table Association: %v", input)
+	_, err := conn.ModifyVpcEndpoint(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating VPC Endpoint Route Table Association (%s): %s", id, err)
 	}
 
 	d.SetId(VPCEndpointRouteTableAssociationCreateID(endpointID, routeTableID))
 
-	err = WaitVPCEndpointRouteTableAssociationReady(ctx, conn, endpointID, routeTableID)
+	err = waitVPCEndpointRouteTableAssociationReadyV2(ctx, conn, endpointID, routeTableID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for VPC Endpoint Route Table Association (%s) to become available: %s", id, err)
@@ -78,7 +78,7 @@ func resourceVPCEndpointRouteTableAssociationCreate(ctx context.Context, d *sche
 
 func resourceVPCEndpointRouteTableAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	endpointID := d.Get(names.AttrVPCEndpointID).(string)
 	routeTableID := d.Get("route_table_id").(string)
@@ -86,7 +86,7 @@ func resourceVPCEndpointRouteTableAssociationRead(ctx context.Context, d *schema
 	id := fmt.Sprintf("%s/%s", endpointID, routeTableID)
 
 	_, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
-		return nil, FindVPCEndpointRouteTableAssociationExists(ctx, conn, endpointID, routeTableID)
+		return nil, findVPCEndpointRouteTableAssociationExistsV2(ctx, conn, endpointID, routeTableID)
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -104,7 +104,7 @@ func resourceVPCEndpointRouteTableAssociationRead(ctx context.Context, d *schema
 
 func resourceVPCEndpointRouteTableAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	endpointID := d.Get(names.AttrVPCEndpointID).(string)
 	routeTableID := d.Get("route_table_id").(string)
@@ -113,11 +113,11 @@ func resourceVPCEndpointRouteTableAssociationDelete(ctx context.Context, d *sche
 
 	input := &ec2.ModifyVpcEndpointInput{
 		VpcEndpointId:       aws.String(endpointID),
-		RemoveRouteTableIds: aws.StringSlice([]string{routeTableID}),
+		RemoveRouteTableIds: []string{routeTableID},
 	}
 
 	log.Printf("[DEBUG] Deleting VPC Endpoint Route Table Association: %s", id)
-	_, err := conn.ModifyVpcEndpointWithContext(ctx, input)
+	_, err := conn.ModifyVpcEndpoint(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointIdNotFound) || tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIdNotFound) || tfawserr.ErrCodeEquals(err, errCodeInvalidParameter) {
 		return diags
@@ -127,7 +127,7 @@ func resourceVPCEndpointRouteTableAssociationDelete(ctx context.Context, d *sche
 		return sdkdiag.AppendErrorf(diags, "deleting VPC Endpoint Route Table Association (%s): %s", id, err)
 	}
 
-	err = WaitVPCEndpointRouteTableAssociationDeleted(ctx, conn, endpointID, routeTableID)
+	err = waitVPCEndpointRouteTableAssociationDeletedV2(ctx, conn, endpointID, routeTableID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for VPC Endpoint Route Table Association (%s) to delete: %s", id, err)

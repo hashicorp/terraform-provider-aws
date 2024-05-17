@@ -9,14 +9,15 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -79,10 +80,10 @@ func DataSourceVPCEndpointService() *schema.Resource {
 				ConflictsWith: []string{"service"},
 			},
 			"service_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(ec2.ServiceType_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.ServiceType](),
 			},
 			"supported_ip_address_types": {
 				Type:     schema.TypeSet,
@@ -100,11 +101,11 @@ func DataSourceVPCEndpointService() *schema.Resource {
 
 func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeVpcEndpointServicesInput{
-		Filters: newAttributeFilterList(
+		Filters: newAttributeFilterListV2(
 			map[string]string{
 				"service-type": d.Get("service_type").(string),
 			},
@@ -120,25 +121,23 @@ func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if serviceName != "" {
-		input.ServiceNames = aws.StringSlice([]string{serviceName})
+		input.ServiceNames = []string{serviceName}
 	}
 
 	if v, ok := d.GetOk(names.AttrTags); ok {
-		input.Filters = append(input.Filters, newTagFilterList(
-			Tags(tftags.New(ctx, v.(map[string]interface{}))),
-		)...)
+		input.Filters = append(input.Filters, newTagFilterListV2(
+			TagsV2(tftags.New(ctx, v.(map[string]interface{}))))...)
 	}
 
-	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get(names.AttrFilter).(*schema.Set),
-	)...)
+	input.Filters = append(input.Filters, newCustomFilterListV2(
+		d.Get(names.AttrFilter).(*schema.Set))...)
 
 	if len(input.Filters) == 0 {
 		// Don't send an empty filters list; the EC2 API won't accept it.
 		input.Filters = nil
 	}
 
-	serviceDetails, serviceNames, err := FindVPCEndpointServices(ctx, conn, input)
+	serviceDetails, serviceNames, err := findVPCEndpointServicesV2(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC Endpoint Services: %s", err)
@@ -168,23 +167,23 @@ func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	sd := serviceDetails[0]
-	serviceID := aws.StringValue(sd.ServiceId)
-	serviceName = aws.StringValue(sd.ServiceName)
+	serviceID := aws.ToString(sd.ServiceId)
+	serviceName = aws.ToString(sd.ServiceName)
 
 	d.SetId(strconv.Itoa(create.StringHashcode(serviceName)))
 
 	d.Set("acceptance_required", sd.AcceptanceRequired)
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   ec2.ServiceName,
+		Service:   names.EC2,
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("vpc-endpoint-service/%s", serviceID),
 	}.String()
 	d.Set(names.AttrARN, arn)
 
-	d.Set(names.AttrAvailabilityZones, aws.StringValueSlice(sd.AvailabilityZones))
-	d.Set("base_endpoint_dns_names", aws.StringValueSlice(sd.BaseEndpointDnsNames))
+	d.Set(names.AttrAvailabilityZones, sd.AvailabilityZones)
+	d.Set("base_endpoint_dns_names", sd.BaseEndpointDnsNames)
 	d.Set("manages_vpc_endpoints", sd.ManagesVpcEndpoints)
 	d.Set(names.AttrOwner, sd.Owner)
 	d.Set("private_dns_name", sd.PrivateDnsName)
@@ -195,10 +194,10 @@ func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceDat
 	} else {
 		d.Set("service_type", nil)
 	}
-	d.Set("supported_ip_address_types", aws.StringValueSlice(sd.SupportedIpAddressTypes))
+	d.Set("supported_ip_address_types", sd.SupportedIpAddressTypes)
 	d.Set("vpc_endpoint_policy_supported", sd.VpcEndpointPolicySupported)
 
-	err = d.Set(names.AttrTags, KeyValueTags(ctx, sd.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
+	err = d.Set(names.AttrTags, keyValueTagsV2(ctx, sd.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)

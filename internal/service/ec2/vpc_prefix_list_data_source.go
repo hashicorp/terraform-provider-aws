@@ -7,8 +7,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -48,32 +48,32 @@ func DataSourcePrefixList() *schema.Resource {
 
 func dataSourcePrefixListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribePrefixListsInput{}
 
 	if v, ok := d.GetOk(names.AttrName); ok {
-		input.Filters = append(input.Filters, newAttributeFilterList(map[string]string{
+		input.Filters = append(input.Filters, newAttributeFilterListV2(map[string]string{
 			"prefix-list-name": v.(string),
 		})...)
 	}
 
 	if v, ok := d.GetOk("prefix_list_id"); ok {
-		input.PrefixListIds = aws.StringSlice([]string{v.(string)})
+		input.PrefixListIds = []string{v.(string)}
 	}
 
-	input.Filters = append(input.Filters, newCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterListV2(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
-	pl, err := FindPrefixList(ctx, conn, input)
+	pl, err := findPrefixListV2(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Prefix List", err))
 	}
 
-	d.SetId(aws.StringValue(pl.PrefixListId))
-	d.Set("cidr_blocks", aws.StringValueSlice(pl.Cidrs))
+	d.SetId(aws.ToString(pl.PrefixListId))
+	d.Set("cidr_blocks", pl.Cidrs)
 	d.Set(names.AttrName, pl.PrefixListName)
 
 	return diags
