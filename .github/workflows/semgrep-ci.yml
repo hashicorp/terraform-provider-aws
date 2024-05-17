@@ -15,7 +15,7 @@ env:
   SEMGREP_SEND_METRICS: "off"
   SEMGREP_ENABLE_VERSION_CHECK: false
   SEMGREP_TIMEOUT: 300
-  COMMON_PARAMS: --error --quiet
+  SEMGREP_ARGS: --error --quiet
 
 jobs:
   semgrep:
@@ -25,24 +25,7 @@ jobs:
       image: "returntocorp/semgrep:1.52.0"
     steps:
       - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
-      - run: |
-          semgrep --validate \
-            --config .ci/.semgrep.yml \
-            --config .ci/.semgrep-constants.yml \
-            --config .ci/.semgrep-test-constants.yml \
-            --config .ci/semgrep/
-      - run: |
-          semgrep $COMMON_PARAMS \
-            --config .ci/.semgrep.yml \
-            --config .ci/.semgrep-constants.yml \
-            --config .ci/.semgrep-test-constants.yml \
-            --config .ci/semgrep/ \
-            --config 'r/dgryski.semgrep-go.badnilguard' \
-            --config 'r/dgryski.semgrep-go.errnilcheck' \
-            --config 'r/dgryski.semgrep-go.marshaljson' \
-            --config 'r/dgryski.semgrep-go.nilerr' \
-            --config 'r/dgryski.semgrep-go.oddifsequence' \
-            --config 'r/dgryski.semgrep-go.oserrors'
+      - run: make semcodequality
 
   naming_cae:
     name: Naming Scan Caps/AWS/EC2
