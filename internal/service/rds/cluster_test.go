@@ -508,6 +508,33 @@ func TestAccRDSCluster_storageTypeIo1(t *testing.T) {
 	})
 }
 
+func TestAccRDSCluster_storageTypeIo2(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var dbCluster rds.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_storageType(rName, "io2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "io2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRDSCluster_storageTypeGeneralPurposeToProvisionedIops(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
