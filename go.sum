@@ -310,8 +310,8 @@ github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.25.7 h1:N8RS+VtQvQK08/8HGtf
 github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.25.7/go.mod h1:pQhhoLWIg8JpA9LKC3Nd8IsFMrTSYS6DT06Tf/rT0hg=
 github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.18.3 h1:PEF1fyWvczgDhpMKWR2KxZcM36ObxXIQjPcvqBp3T3w=
 github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.18.3/go.mod h1:E9qW3bK8dfB37zHY+iCjHjIOkBRKdLDCtVLiaQgLkrg=
-github.com/aws/aws-sdk-go-v2/service/rekognition v1.40.2 h1:2rwmWxawMQ/053iRMQZz4rlOkSl7RX6KuFayTjQMRpU=
-github.com/aws/aws-sdk-go-v2/service/rekognition v1.40.2/go.mod h1:WkMYwOwpkJFIKrJBMGRrE5KK1SRcIcpnebhuMYaGyB8=
+github.com/aws/aws-sdk-go-v2/service/rekognition v1.40.3 h1:dT+mqR9YurtFaPCYvu0cFo874+BMhZKxk1wa2g0HWzg=
+github.com/aws/aws-sdk-go-v2/service/rekognition v1.40.3/go.mod h1:2FPAnAa3YzcYKurNNINNAZ9o/gz2FTk2EwVIwng6E3E=
 github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.10.7 h1:IBamoGIfmWJK52Wz53GUFdnqHGWRHq1cnW9Y6G7UsFs=
 github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.10.7/go.mod h1:/n18EH1LQ/BoZV7mk3tsFG3NMB0zwQlXFY7YEMlQoxE=
 github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.22.2 h1:BLYcRtZSidELsfvhMGYyUb8s/JIJ/Tb2+5GvLg0tdLc=
