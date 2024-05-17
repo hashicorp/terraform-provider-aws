@@ -1,14 +1,19 @@
-SWEEP               ?= us-west-2,us-east-1,us-east-2,us-west-1
-TEST                ?= ./...
-SWEEP_DIR           ?= ./internal/sweep
-PKG_NAME            ?= internal
-SVC_DIR             ?= ./internal/service
-TEST_COUNT          ?= 1
-ACCTEST_TIMEOUT     ?= 360m
-ACCTEST_PARALLELISM ?= 20
-P                   ?= 20
-GO_VER              ?= $(shell echo go`cat .go-version | xargs`)
-SWEEP_TIMEOUT       ?= 360m
+SWEEP                        ?= us-west-2,us-east-1,us-east-2,us-west-1
+TEST                         ?= ./...
+SWEEP_DIR                    ?= ./internal/sweep
+PKG_NAME                     ?= internal
+SVC_DIR                      ?= ./internal/service
+TEST_COUNT                   ?= 1
+ACCTEST_TIMEOUT              ?= 360m
+ACCTEST_PARALLELISM          ?= 20
+P                            ?= 20
+GO_VER                       ?= $(shell echo go`cat .go-version | xargs`)
+SWEEP_TIMEOUT                ?= 360m
+SEMGREP_ARGS		         ?= --error
+SEMGREP_SEND_METRICS         ?= off
+SEMGREP_ENABLE_VERSION_CHECK ?= false
+SEMGREP_TIMEOUT              ?= 900 # 15 minutes, some runs go over 5 minutes
+BASE_REF					 ?= main
 
 ifneq ($(origin PKG), undefined)
 	PKG_NAME = internal/service/$(PKG)
@@ -75,6 +80,8 @@ default: build
 
 # Please keep targets in alphabetical order
 
+acctestlint: testacc-lint testacc-tflint
+
 awssdkpatch-apply: awssdkpatch-gen ## Apply a patch generated with awssdkpatch
 	@echo "Applying patch for $(PKG)..."
 	@gopatch -p awssdk.patch ./$(PKG_NAME)/...
@@ -91,8 +98,8 @@ awssdkpatch: prereq-go ## Install awssdkpatch
 	cd tools/awssdkpatch && $(GO_VER) install github.com/hashicorp/terraform-provider-aws/tools/awssdkpatch
 
 build: prereq-go fmtcheck ## Build provider
-	$(GO_VER) install
-	@echo "make: build complete"
+	@echo "make: building provider..."
+	@$(GO_VER) install
 
 cleango: prereq-go ## Clean up Go cache
 	@echo "make: cleaning Go..."
@@ -130,7 +137,12 @@ cleantidy: prereq-go ## Clean up tidy
 	$$gover mod tidy
 	@echo "make: Go mods tidied"
 
-clean: cleango cleantidy build tools ## Clean up Go cache, tidy and re-install tools
+cleanplugin: ## Clean up provider plugin
+	@echo "make: cleaning provider plugin..."
+	@rm -rf terraform-plugin-dir
+	@rm -rf .terraform/providers
+
+clean: cleanplugin cleango cleantidy build tools ## Clean up Go cache, tidy and re-install tools
 	@echo "make: clean complete"
 
 copyright: ## Run copywrite (generate source code headers)
@@ -165,7 +177,6 @@ docscheck: ## Check provider documentation
 		-ignore-file-missing-resources aws_alb,aws_alb_listener,aws_alb_listener_certificate,aws_alb_listener_rule,aws_alb_target_group,aws_alb_target_group_attachment \
 		-provider-name=aws \
 		-require-resource-subcategory
-	@misspell -error -source text CHANGELOG.md .changelog
 
 fixconstants: fiximports fmt semconstants fiximports fmt
 
@@ -186,6 +197,7 @@ fumpt: ## Run gofumpt
 	gofumpt -w ./$(PKG_NAME) ./names $(filter-out ./.ci/providerlint/go% ./.ci/providerlint/README.md ./.ci/providerlint/vendor, $(wildcard ./.ci/providerlint/*))
 
 gen: prereq-go ## Run all Go generators
+	@echo "make: running Go generators..."
 	rm -f .github/labeler-issue-triage.yml
 	rm -f .github/labeler-pr-triage.yml
 	rm -f infrastructure/repository/labels-service.tf
@@ -206,9 +218,9 @@ gen: prereq-go ## Run all Go generators
 	$(GO_VER) generate ./internal/provider
 	$(GO_VER) generate ./internal/sweep
 
-gencheck: ## Verify generated code is synched
-	@echo "make: checking generated source code..."
-	@$(MAKE) gen
+gencheck: gen
+	@echo "make: Provider Checks / go_generate..."
+	@echo "make: NOTE: commit any changes before running this check"
 	@git diff --compact-summary --exit-code || \
 		(echo; echo "Unexpected difference in directories after code generation. Run 'make gen' command and commit."; exit 1)
 
@@ -220,12 +232,24 @@ gh-workflows-lint: ## Lint github workflows (via actionlint)
 	@echo "make: checking github workflows with actionlint..."
 	@actionlint
 
-golangci-lint: ## Lint Go source (via golangci-lint)
-	@echo "make: checking source code with golangci-lint..."
+go_build: ## Build provider
+	@os_arch=`go env GOOS`_`go env GOARCH` ; \
+		echo "make: Provider Checks / go_build ($$os_arch)..." ; \
+		go build -o terraform-plugin-dir/registry.terraform.io/hashicorp/aws/99.99.99/$$os_arch/terraform-provider-aws .
+
+golangci-lint1: ## Lint Go source (via golangci-lint)
+	@echo "make: golangci-lint Checks / 1 of 2..."
 	@golangci-lint run \
 		--config .ci/.golangci.yml \
+		$(TEST)
+
+golangci-lint2: ## Lint Go source (via golangci-lint)
+	@echo "make: golangci-lint Checks / 2 of 2..."
+	@golangci-lint run \
 		--config .ci/.golangci2.yml \
-		./$(PKG_NAME)/...
+		$(TEST)
+
+golangci-lint: golangci-lint1 golangci-lint2 ## Run golangci-lint
 
 help:
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-23s\033[0m %s\n", $$1, $$2}'
@@ -233,12 +257,23 @@ help:
 install: build
 
 importlint: ## Lint imports (via impi)
-	@echo "make: checking source code with importlint..."
+	@echo "make: Provider Checks / importlint..."
 	@impi --local . --scheme stdThirdPartyLocal ./internal/...
 
 lint: golangci-lint providerlint importlint ## Run all linters
 
 lint-fix: testacc-lint-fix website-lint-fix docs-lint-fix ## Fix all linter findings
+
+misspell:
+	@echo: "make: Checking the spelling of the codebase..."
+	@misspell -error -source text CHANGELOG.md .changelog
+
+preferredlib:
+	@found=`git diff origin/$(BASE_REF) internal/ | grep '^\+\s*"github.com/aws/aws-sdk-go/'` ; \
+	if [ "$$found" != "" ] ; then \
+		echo "Found a new reference to github.com/aws/aws-sdk-go in the codebase. Please use the preferred library github.com/aws/aws-sdk-go-v2 instead." ; \
+		exit 1 ; \
+	fi
 
 prereq-go: ## if $(GO_VER) is not installed, install it
 	@if ! type "$(GO_VER)" > /dev/null 2>&1 ; then \
@@ -250,8 +285,21 @@ prereq-go: ## if $(GO_VER) is not installed, install it
 		echo "make: $(GO_VER) ready" ;\
 	fi
 
+provcheckmarkdownlint: ## Check provider markdown files (via markdownlint)
+	@echo "make: Provider Check / markdown-lint..."
+	@docker run --rm \
+		-v "$(PWD):/markdown" \
+		avtodev/markdown-lint:v1.5.0 \
+		--config markdown/.markdownlint.yml \
+		--ignore markdown/docs \
+		--ignore markdown/website/docs \
+		--ignore markdown/CHANGELOG.md \
+		--ignore markdown/internal/service/cloudformation/test-fixtures/examplecompany-exampleservice-exampleresource/docs \
+		/markdown/**/*.md
+
 providerlint: ## Lint provider (via providerlint)
 	@echo "make: checking source code with providerlint..."
+	@cd .ci/providerlint && go install -buildvcs=false .
 	@providerlint \
 		-c 1 \
 		-AT001.ignored-filename-suffixes=_data_source_test.go \
@@ -340,7 +388,7 @@ sanity: prereq-go ## Run sanity checks with failures allowed
 
 semall: semgrep-validate ## Run semgrep on all files
 	@echo "make: running Semgrep checks locally (must have semgrep installed)..."
-	@SEMGREP_TIMEOUT=300 semgrep --error --metrics=off \
+	@semgrep $(SEMGREP_ARGS) \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
 		--config .ci/.semgrep.yml \
 		--config .ci/.semgrep-constants.yml \
@@ -359,11 +407,27 @@ semall: semgrep-validate ## Run semgrep on all files
 		--config 'r/dgryski.semgrep-go.oddifsequence' \
 		--config 'r/dgryski.semgrep-go.oserrors'
 
+semcodequality: semgrep-validate
+	@echo "make: Semgrep Checks / Code Quality Scan..."
+	@echo "make: running Semgrep checks locally (must have semgrep installed)"
+	semgrep $(SEMGREP_ARGS) \
+		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
+		--config .ci/.semgrep.yml \
+		--config .ci/.semgrep-constants.yml \
+		--config .ci/.semgrep-test-constants.yml \
+		--config .ci/semgrep/ \
+		--config 'r/dgryski.semgrep-go.badnilguard' \
+		--config 'r/dgryski.semgrep-go.errnilcheck' \
+		--config 'r/dgryski.semgrep-go.marshaljson' \
+		--config 'r/dgryski.semgrep-go.nilerr' \
+		--config 'r/dgryski.semgrep-go.oddifsequence' \
+		--config 'r/dgryski.semgrep-go.oserrors'
+
 semfix: semgrep-validate ## Run semgrep on all files
 	@echo "make: running Semgrep checks locally (must have semgrep installed)..."
 	@echo "make: applying fixes with --autofix"
 	@echo "make: WARNING: This will not fix rules that don't have autofixes"
-	@SEMGREP_TIMEOUT=300 semgrep --error --metrics=off --autofix \
+	@semgrep $(SEMGREP_ARGS) --autofix \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
 		--config .ci/.semgrep.yml \
 		--config .ci/.semgrep-constants.yml \
@@ -384,7 +448,7 @@ semfix: semgrep-validate ## Run semgrep on all files
 
 semconstants: semgrep-validate
 	@echo "make: applying constants fixes locally with Semgrep --autofix"
-	@SEMGREP_TIMEOUT=300 semgrep --error --metrics=off --autofix \
+	@semgrep $(SEMGREP_ARGS) --autofix \
 		--config .ci/.semgrep-constants.yml \
 		--config .ci/.semgrep-test-constants.yml
 
@@ -447,20 +511,43 @@ testacc: prereq-go fmtcheck ## Run acceptance tests
 	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
 
 testacc-lint: ## Lint acceptance tests (via terrafmt)
-	@echo "Checking acceptance tests with terrafmt"
-	find $(SVC_DIR) -type f -name '*_test.go' \
-    | sort -u \
-    | xargs -I {} terrafmt diff --check --fmtcompat {}
+	@echo "make: Acceptance Test Linting / terrafmt..."
+	@find $(SVC_DIR) -type f -name '*_test.go' \
+    	| sort -u \
+    	| xargs -I {} terrafmt diff --check --fmtcompat {}
 
 testacc-lint-fix: ## Fix acceptance test linter findings
-	@echo "Fixing acceptance tests with terrafmt"
-	find $(SVC_DIR) -type f -name '*_test.go' \
-	| sort -u \
-	| xargs -I {} terrafmt fmt  --fmtcompat {}
+	@echo "make: fixing Acceptance Test Linting / terrafmt..."
+	@find $(SVC_DIR) -type f -name '*_test.go' \
+		| sort -u \
+		| xargs -I {} terrafmt fmt  --fmtcompat {}
 
 testacc-short: prereq-go fmtcheck ## Run acceptace tests with the -short flag
 	@echo "Running acceptance tests with -short flag"
 	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -short -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
+
+testacc-tflint: ## Lint acceptance tests (via tflint)
+	@echo "make: Acceptance Test Linting / tflint..."
+	@tflint --config .ci/.tflint.hcl --init
+	@find $(SVC_DIR) -type f -name '*_test.go' \
+		| .ci/scripts/validate-terraform.sh
+
+tfproviderdocs: go_build
+	@echo "make: Provider Checks / tfproviderdocs..."
+	echo 'data "aws_partition" "example" {}' > example.tf ; \
+	terraform init -plugin-dir terraform-plugin-dir ; \
+	mkdir -p terraform-providers-schema ; \
+	trap 'rm -rf terraform-providers-schema example.tf' EXIT ; \
+	terraform providers schema -json > terraform-providers-schema/schema.json ; \
+	tfproviderdocs check \
+		-allowed-resource-subcategories-file website/allowed-subcategories.txt \
+		-enable-contents-check \
+		-ignore-file-missing-data-sources aws_alb,aws_alb_listener,aws_alb_target_group,aws_alb_trust_store,aws_alb_trust_store_revocation,aws_albs \
+		-ignore-file-missing-resources aws_alb,aws_alb_listener,aws_alb_listener_certificate,aws_alb_listener_rule,aws_alb_target_group,aws_alb_target_group_attachment,aws_alb_trust_store,aws_alb_trust_store_revocation \
+		-provider-source registry.terraform.io/hashicorp/aws \
+		-providers-schema-json terraform-providers-schema/schema.json \
+		-require-resource-subcategory \
+		-ignore-cdktf-missing-files
 
 tfsdk2fw: prereq-go ## Install tfsdk2fw
 	cd tools/tfsdk2fw && $(GO_VER) install github.com/hashicorp/terraform-provider-aws/tools/tfsdk2fw
@@ -516,6 +603,7 @@ yamllint: ## Lint YAML files (via yamllint)
 
 # Please keep targets in alphabetical order
 .PHONY: \
+	acctestlint \
 	build \
 	clean \
 	cleango \
@@ -559,6 +647,7 @@ yamllint: ## Lint YAML files (via yamllint)
 	testacc-lint \
 	testacc-lint-fix \
 	testacc-short \
+	testacc-tflint \
 	tfsdk2fw \
 	tools \
 	ts \
