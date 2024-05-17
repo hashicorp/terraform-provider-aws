@@ -104,8 +104,8 @@ github.com/aws/aws-sdk-go-v2/service/cloud9 v1.24.7 h1:uLaKov/pRr7h9NbXsJXl52OTD
 github.com/aws/aws-sdk-go-v2/service/cloud9 v1.24.7/go.mod h1:hmIFON8EPK0sfpwnF0zh3rXMhPsxQGqS5hK1fwJvp9U=
 github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.18.7 h1:n7HOQEQtoSxrTAZnzb8HvGlXAeCYHP01jN5T2QDi/OI=
 github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.18.7/go.mod h1:zCyMxElWkb54XL6p1I3RVf8FQk1gsrchGiPAV2BUYiA=
-github.com/aws/aws-sdk-go-v2/service/cloudformation v1.50.2 h1:MSdKnM1Aeeu/UlBecMpeEQFxjSujyoJ9tI9oV9yxO/A=
-github.com/aws/aws-sdk-go-v2/service/cloudformation v1.50.2/go.mod h1:xd+NddDuj7zimHxyGYcHFP5xTpAG0jnIWoW9L2Dciag=
+github.com/aws/aws-sdk-go-v2/service/cloudformation v1.50.3 h1:HSUOtDjXyUYXZ7Ftksev54CsRZw36pOVZ0NKPAkSbWE=
+github.com/aws/aws-sdk-go-v2/service/cloudformation v1.50.3/go.mod h1:zWXw0IobzgdsOmcWX6dMCA1IV+zmS0QAbiFiHpxPo6Y=
 github.com/aws/aws-sdk-go-v2/service/cloudfront v1.36.2 h1:vmxyUmIrNmIHaOxDWmPYCik+XJudxugLuKWizGcnEEU=
 github.com/aws/aws-sdk-go-v2/service/cloudfront v1.36.2/go.mod h1:+/qRdYWUYsG4f4JHep4Bl3NZ3DzuHMBxJ+wgy1WcO6Y=
 github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore v1.4.6 h1:IBZa7BZ/FILnPD6qTvYBfpkOZ+TDxMzjlwJrRgWjUYk=
