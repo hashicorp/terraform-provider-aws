@@ -134,7 +134,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.28.4
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.6.3
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.21.7
-	github.com/aws/aws-sdk-go-v2/service/ram v1.25.6
+	github.com/aws/aws-sdk-go-v2/service/ram v1.25.7
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.16.6
 	github.com/aws/aws-sdk-go-v2/service/rds v1.78.2
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.44.2
