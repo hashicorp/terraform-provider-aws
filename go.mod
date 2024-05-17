@@ -101,7 +101,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.23.8
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.26.3
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.14.3
-	github.com/aws/aws-sdk-go-v2/service/ivschat v1.12.7
+	github.com/aws/aws-sdk-go-v2/service/ivschat v1.12.8
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.31.5
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.50.3
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.10.6
