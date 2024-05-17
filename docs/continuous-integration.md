@@ -260,7 +260,7 @@ Use the `gencheck` target to run the check:
 % make gencheck
 ```
 
-Use the `gen` target to run all the generators associated with the provider. Unless you're working on the generators or have inadventently edited generated code, there should be no changes to the codebase after the generators finish:
+Use the `gen` target to run all the generators associated with the provider. Unless you're working on the generators or have inadvertently edited generated code, there should be no changes to the codebase after the generators finish:
 
 ```sh
 % make gen
