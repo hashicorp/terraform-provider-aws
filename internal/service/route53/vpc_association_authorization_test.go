@@ -8,15 +8,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/route53"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -77,10 +75,8 @@ func TestAccRoute53VPCAssociationAuthorization_disappears(t *testing.T) {
 
 func TestAccRoute53VPCAssociationAuthorization_concurrent(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	resourceNameAlternate := "aws_route53_vpc_association_authorization.alternate"
 	resourceNameThird := "aws_route53_vpc_association_authorization.third"
-
 	providers := make(map[string]*schema.Provider)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -136,36 +132,26 @@ func TestAccRoute53VPCAssociationAuthorization_crossRegion(t *testing.T) {
 
 func testAccCheckVPCAssociationAuthorizationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route53_vpc_association_authorization" {
 				continue
 			}
 
-			zone_id, vpc_id, err := tfroute53.VPCAssociationAuthorizationParseID(rs.Primary.ID)
+			_, err := tfroute53.FindVPCAssociationAuthorizationByTwoPartKey(ctx, conn, rs.Primary.Attributes["zone_id"], rs.Primary.Attributes[names.AttrVPCID])
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
 				return err
 			}
 
-			req := route53.ListVPCAssociationAuthorizationsInput{
-				HostedZoneId: aws.String(zone_id),
-			}
-
-			res, err := conn.ListVPCAssociationAuthorizationsWithContext(ctx, &req)
-			if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchHostedZone) {
-				return nil
-			}
-			if err != nil {
-				return err
-			}
-
-			for _, vpc := range res.VPCs {
-				if vpc_id == aws.StringValue(vpc.VPCId) {
-					return fmt.Errorf("VPC association authorization for zone %v with %v still exists", zone_id, vpc_id)
-				}
-			}
+			return fmt.Errorf("Route53 VPC Association Authorization %s still exists", rs.Primary.ID)
 		}
+
 		return nil
 	}
 }
@@ -177,39 +163,16 @@ func testAccCheckVPCAssociationAuthorizationExists(ctx context.Context, n string
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No VPC association authorization ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Client(ctx)
 
-		zone_id, vpc_id, err := tfroute53.VPCAssociationAuthorizationParseID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
+		_, err := tfroute53.FindVPCAssociationAuthorizationByTwoPartKey(ctx, conn, rs.Primary.Attributes["zone_id"], rs.Primary.Attributes[names.AttrVPCID])
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn(ctx)
-
-		req := route53.ListVPCAssociationAuthorizationsInput{
-			HostedZoneId: aws.String(zone_id),
-		}
-
-		res, err := conn.ListVPCAssociationAuthorizationsWithContext(ctx, &req)
-		if err != nil {
-			return err
-		}
-
-		for _, vpc := range res.VPCs {
-			if vpc_id == aws.StringValue(vpc.VPCId) {
-				return nil
-			}
-		}
-
-		return fmt.Errorf("VPC association authorization not found")
+		return err
 	}
 }
 
 func testAccVPCAssociationAuthorizationConfig_basic() string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAlternateAccountProvider(), `
+	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), `
 resource "aws_route53_vpc_association_authorization" "test" {
   zone_id = aws_route53_zone.test.id
   vpc_id  = aws_vpc.alternate.id
@@ -239,8 +202,7 @@ resource "aws_vpc" "test" {
 }
 
 func testAccVPCAssociationAuthorizationConfig_concurrent(t *testing.T) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigMultipleAccountProvider(t, 3), `
+	return acctest.ConfigCompose(acctest.ConfigMultipleAccountProvider(t, 3), `
 resource "aws_route53_vpc_association_authorization" "alternate" {
   zone_id = aws_route53_zone.test.id
   vpc_id  = aws_vpc.alternate.id
@@ -294,8 +256,7 @@ resource "aws_vpc" "third" {
 }
 
 func testAccVPCAssociationAuthorizationConfig_crossRegion() string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAlternateAccountAlternateRegionProvider(), `
+	return acctest.ConfigCompose(acctest.ConfigAlternateAccountAlternateRegionProvider(), `
 resource "aws_route53_vpc_association_authorization" "test" {
   zone_id    = aws_route53_zone.test.id
   vpc_id     = aws_vpc.alternate.id

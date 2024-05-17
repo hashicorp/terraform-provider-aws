@@ -1,3 +1,7 @@
 ```release-note:enhancement
 resource/aws_route53_health_check: Add plan-time validation of `cloudwatch_alarm_region`
 ```
+
+```release-note:enhancement
+resource/aws_route53_vpc_association_authorization: Add plan-time validation of `vpc_region`
+```
