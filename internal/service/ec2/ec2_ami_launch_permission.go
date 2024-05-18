@@ -92,7 +92,7 @@ func resourceAMILaunchPermissionCreate(ctx context.Context, d *schema.ResourceDa
 		},
 	}
 
-	log.Printf("[DEBUG] Creating AMI Launch Permission: %s", input)
+	log.Printf("[DEBUG] Creating AMI Launch Permission: %s", d.Id())
 	_, err := conn.ModifyImageAttribute(ctx, input)
 
 	if err != nil {

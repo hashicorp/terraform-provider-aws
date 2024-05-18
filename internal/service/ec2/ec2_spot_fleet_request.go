@@ -927,7 +927,7 @@ func resourceSpotFleetRequestCreate(ctx context.Context, d *schema.ResourceData,
 	// InvalidSpotFleetConfig: SpotMaintenanceStrategies option is only available with the spot fleet type maintain.
 	if d.Get("fleet_type").(string) != string(awstypes.FleetTypeMaintain) {
 		if spotFleetConfig.SpotMaintenanceStrategies != nil {
-			log.Printf("[WARN] Spot Fleet (%s) has an invalid configuration and can not be requested. Capacity Rebalance maintenance strategies can only be specified for spot fleets of type maintain.", spotFleetConfig)
+			log.Printf("[WARN] Spot Fleet (%s) has an invalid configuration and can not be requested. Capacity Rebalance maintenance strategies can only be specified for spot fleets of type maintain.", d.Id())
 			return diags
 		}
 	}
@@ -997,7 +997,7 @@ func resourceSpotFleetRequestCreate(ctx context.Context, d *schema.ResourceData,
 		SpotFleetRequestConfig: spotFleetConfig,
 	}
 
-	log.Printf("[DEBUG] Creating EC2 Spot Fleet Request: %s", input)
+	log.Printf("[DEBUG] Creating EC2 Spot Fleet Request: %s", d.Id())
 	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, iamPropagationTimeout,
 		func() (interface{}, error) {
 			return conn.RequestSpotFleet(ctx, input)
@@ -1134,7 +1134,7 @@ func resourceSpotFleetRequestUpdate(ctx context.Context, d *schema.ResourceData,
 			}
 		}
 
-		log.Printf("[DEBUG] Modifying EC2 Spot Fleet Request: %s", input)
+		log.Printf("[DEBUG] Modifying EC2 Spot Fleet Request: %s", d.Id())
 		if _, err := conn.ModifySpotFleetRequest(ctx, input); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EC2 Spot Fleet Request (%s): %s", d.Id(), err)
 		}

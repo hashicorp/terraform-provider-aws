@@ -101,7 +101,7 @@ func dataSourceAvailabilityZonesRead(ctx context.Context, d *schema.ResourceData
 		request.Filters = nil
 	}
 
-	log.Printf("[DEBUG] Reading Availability Zones: %s", request)
+	log.Printf("[DEBUG] Reading Availability Zones: %s", d.Id())
 	resp, err := conn.DescribeAvailabilityZones(ctx, request)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "fetching Availability Zones: %s", err)

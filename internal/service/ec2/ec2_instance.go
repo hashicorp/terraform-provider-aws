@@ -1015,7 +1015,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.DisableApiStop = instanceOpts.DisableAPIStop
 	}
 
-	log.Printf("[DEBUG] Creating EC2 Instance: %s", input)
+	log.Printf("[DEBUG] Creating EC2 Instance: %s", d.Id())
 	outputRaw, err := tfresource.RetryWhen(ctx, iamPropagationTimeout,
 		func() (interface{}, error) {
 			return conn.RunInstances(ctx, input)
@@ -1909,7 +1909,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				InstanceCreditSpecifications: []awstypes.InstanceCreditSpecificationRequest{instanceCreditSpecification},
 			}
 
-			log.Printf("[DEBUG] Modifying EC2 Instance credit specification: %s", input)
+			log.Printf("[DEBUG] Modifying EC2 Instance credit specification: %s", d.Id())
 			_, err := conn.ModifyInstanceCreditSpecification(ctx, input)
 
 			if err != nil {
@@ -1997,7 +1997,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 		}
 		if modifyVolume {
-			log.Printf("[DEBUG] Modifying volume: %s", input)
+			log.Printf("[DEBUG] Modifying volume: %s", d.Id())
 			_, err := conn.ModifyVolume(ctx, input)
 
 			if err != nil {
