@@ -2081,7 +2081,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 					InstanceId:                       aws.String(d.Id()),
 				}
 
-				log.Printf("[DEBUG] Modifying EC2 Instance capacity reservation attributes: %s", input)
+				log.Printf("[DEBUG] Modifying EC2 Instance capacity reservation attributes: %s", d.Id())
 
 				_, err := conn.ModifyInstanceCapacityReservationAttributes(ctx, input)
 
