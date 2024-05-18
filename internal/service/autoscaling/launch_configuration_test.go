@@ -812,7 +812,7 @@ func testAccCheckAMIExists(ctx context.Context, n string, v *ec2awstypes.Image) 
 
 func testAccCheckInstanceHasPublicIPAddress(ctx context.Context, group *awstypes.AutoScalingGroup, idx int, expected bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		instanceID := aws.ToString(group.Instances[idx].InstanceId)
 		instance, err := tfec2.FindInstanceByID(ctx, conn, instanceID)
