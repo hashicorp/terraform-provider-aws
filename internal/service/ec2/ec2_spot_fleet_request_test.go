@@ -13,8 +13,9 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -27,7 +28,7 @@ import (
 
 func TestAccEC2SpotFleetRequest_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sfr ec2.SpotFleetRequestConfig
+	var sfr awstypes.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
@@ -96,7 +97,7 @@ func TestAccEC2SpotFleetRequest_context(t *testing.T) {
 
 func TestAccEC2SpotFleetRequest_targetCapacityUnitType(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sfr ec2.SpotFleetRequestConfig
+	var sfr awstypes.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
@@ -136,7 +137,7 @@ func TestAccEC2SpotFleetRequest_targetCapacityUnitType(t *testing.T) {
 
 func TestAccEC2SpotFleetRequest_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sfr ec2.SpotFleetRequestConfig
+	var sfr awstypes.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
@@ -166,7 +167,7 @@ func TestAccEC2SpotFleetRequest_disappears(t *testing.T) {
 
 func TestAccEC2SpotFleetRequest_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sfr ec2.SpotFleetRequestConfig
+	var sfr awstypes.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
@@ -219,7 +220,7 @@ func TestAccEC2SpotFleetRequest_tags(t *testing.T) {
 
 func TestAccEC2SpotFleetRequest_associatePublicIPAddress(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sfr ec2.SpotFleetRequestConfig
+	var sfr awstypes.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
@@ -258,7 +259,7 @@ func TestAccEC2SpotFleetRequest_associatePublicIPAddress(t *testing.T) {
 
 func TestAccEC2SpotFleetRequest_launchTemplate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sfr ec2.SpotFleetRequestConfig
+	var sfr awstypes.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
@@ -295,7 +296,7 @@ func TestAccEC2SpotFleetRequest_launchTemplate(t *testing.T) {
 
 func TestAccEC2SpotFleetRequest_LaunchTemplate_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sfr ec2.SpotFleetRequestConfig
+	var sfr awstypes.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
@@ -326,7 +327,7 @@ func TestAccEC2SpotFleetRequest_LaunchTemplate_multiple(t *testing.T) {
 
 func TestAccEC2SpotFleetRequest_launchTemplateWithInstanceTypeOverrides(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sfr ec2.SpotFleetRequestConfig
+	var sfr awstypes.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
@@ -377,7 +378,7 @@ func TestAccEC2SpotFleetRequest_launchTemplateWithInstanceTypeOverrides(t *testi
 
 func TestAccEC2SpotFleetRequest_launchTemplateWithInstanceRequirementsOverrides(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sfr ec2.SpotFleetRequestConfig
+	var sfr awstypes.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
@@ -428,7 +429,7 @@ func TestAccEC2SpotFleetRequest_launchTemplateWithInstanceRequirementsOverrides(
 
 func TestAccEC2SpotFleetRequest_launchTemplateToLaunchSpec(t *testing.T) {
 	ctx := acctest.Context(t)
-	var before, after ec2.SpotFleetRequestConfig
+	var before, after awstypes.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
@@ -475,7 +476,7 @@ func TestAccEC2SpotFleetRequest_launchTemplateToLaunchSpec(t *testing.T) {
 
 func TestAccEC2SpotFleetRequest_launchSpecToLaunchTemplate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var before, after ec2.SpotFleetRequestConfig
+	var before, after awstypes.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
@@ -516,7 +517,7 @@ func TestAccEC2SpotFleetRequest_launchSpecToLaunchTemplate(t *testing.T) {
 
 func TestAccEC2SpotFleetRequest_onDemandTargetCapacity(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sfr ec2.SpotFleetRequestConfig
+	var sfr awstypes.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
@@ -565,7 +566,7 @@ func TestAccEC2SpotFleetRequest_onDemandTargetCapacity(t *testing.T) {
 
 func TestAccEC2SpotFleetRequest_onDemandMaxTotalPrice(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sfr ec2.SpotFleetRequestConfig
+	var sfr awstypes.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
@@ -600,7 +601,7 @@ func TestAccEC2SpotFleetRequest_onDemandMaxTotalPrice(t *testing.T) {
 
 func TestAccEC2SpotFleetRequest_onDemandAllocationStrategy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sfr ec2.SpotFleetRequestConfig
+	var sfr awstypes.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
@@ -635,7 +636,7 @@ func TestAccEC2SpotFleetRequest_onDemandAllocationStrategy(t *testing.T) {
 
 func TestAccEC2SpotFleetRequest_instanceInterruptionBehavior(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sfr ec2.SpotFleetRequestConfig
+	var sfr awstypes.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
@@ -671,7 +672,7 @@ func TestAccEC2SpotFleetRequest_instanceInterruptionBehavior(t *testing.T) {
 
 func TestAccEC2SpotFleetRequest_fleetType(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sfr ec2.SpotFleetRequestConfig
+	var sfr awstypes.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
@@ -707,7 +708,7 @@ func TestAccEC2SpotFleetRequest_fleetType(t *testing.T) {
 
 func TestAccEC2SpotFleetRequest_iamInstanceProfileARN(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sfr ec2.SpotFleetRequestConfig
+	var sfr awstypes.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
@@ -743,7 +744,7 @@ func TestAccEC2SpotFleetRequest_iamInstanceProfileARN(t *testing.T) {
 
 func TestAccEC2SpotFleetRequest_changePriceForcesNewRequest(t *testing.T) {
 	ctx := acctest.Context(t)
-	var before, after ec2.SpotFleetRequestConfig
+	var before, after awstypes.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
@@ -790,7 +791,7 @@ func TestAccEC2SpotFleetRequest_changePriceForcesNewRequest(t *testing.T) {
 
 func TestAccEC2SpotFleetRequest_updateTargetCapacity(t *testing.T) {
 	ctx := acctest.Context(t)
-	var before, after ec2.SpotFleetRequestConfig
+	var before, after awstypes.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
@@ -841,7 +842,7 @@ func TestAccEC2SpotFleetRequest_updateTargetCapacity(t *testing.T) {
 
 func TestAccEC2SpotFleetRequest_updateExcessCapacityTerminationPolicy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var before, after ec2.SpotFleetRequestConfig
+	var before, after awstypes.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
@@ -884,7 +885,7 @@ func TestAccEC2SpotFleetRequest_updateExcessCapacityTerminationPolicy(t *testing
 
 func TestAccEC2SpotFleetRequest_lowestPriceAzOrSubnetInRegion(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sfr ec2.SpotFleetRequestConfig
+	var sfr awstypes.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
@@ -920,7 +921,7 @@ func TestAccEC2SpotFleetRequest_lowestPriceAzOrSubnetInRegion(t *testing.T) {
 
 func TestAccEC2SpotFleetRequest_lowestPriceAzInGivenList(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sfr ec2.SpotFleetRequestConfig
+	var sfr awstypes.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
@@ -959,7 +960,7 @@ func TestAccEC2SpotFleetRequest_lowestPriceAzInGivenList(t *testing.T) {
 
 func TestAccEC2SpotFleetRequest_lowestPriceSubnetInGivenList(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sfr ec2.SpotFleetRequestConfig
+	var sfr awstypes.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
@@ -995,7 +996,7 @@ func TestAccEC2SpotFleetRequest_lowestPriceSubnetInGivenList(t *testing.T) {
 
 func TestAccEC2SpotFleetRequest_multipleInstanceTypesInSameAz(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sfr ec2.SpotFleetRequestConfig
+	var sfr awstypes.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
@@ -1038,7 +1039,7 @@ func TestAccEC2SpotFleetRequest_multipleInstanceTypesInSameAz(t *testing.T) {
 
 func TestAccEC2SpotFleetRequest_multipleInstanceTypesInSameSubnet(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sfr ec2.SpotFleetRequestConfig
+	var sfr awstypes.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
@@ -1074,7 +1075,7 @@ func TestAccEC2SpotFleetRequest_multipleInstanceTypesInSameSubnet(t *testing.T) 
 
 func TestAccEC2SpotFleetRequest_overridingSpotPrice(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sfr ec2.SpotFleetRequestConfig
+	var sfr awstypes.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
@@ -1117,7 +1118,7 @@ func TestAccEC2SpotFleetRequest_overridingSpotPrice(t *testing.T) {
 
 func TestAccEC2SpotFleetRequest_withoutSpotPrice(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sfr ec2.SpotFleetRequestConfig
+	var sfr awstypes.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
@@ -1153,7 +1154,7 @@ func TestAccEC2SpotFleetRequest_withoutSpotPrice(t *testing.T) {
 
 func TestAccEC2SpotFleetRequest_diversifiedAllocation(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sfr ec2.SpotFleetRequestConfig
+	var sfr awstypes.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
@@ -1190,7 +1191,7 @@ func TestAccEC2SpotFleetRequest_diversifiedAllocation(t *testing.T) {
 
 func TestAccEC2SpotFleetRequest_multipleInstancePools(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sfr ec2.SpotFleetRequestConfig
+	var sfr awstypes.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
@@ -1228,7 +1229,7 @@ func TestAccEC2SpotFleetRequest_multipleInstancePools(t *testing.T) {
 
 func TestAccEC2SpotFleetRequest_withWeightedCapacity(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sfr ec2.SpotFleetRequestConfig
+	var sfr awstypes.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
@@ -1287,7 +1288,7 @@ func TestAccEC2SpotFleetRequest_withWeightedCapacity(t *testing.T) {
 
 func TestAccEC2SpotFleetRequest_withEBSDisk(t *testing.T) {
 	ctx := acctest.Context(t)
-	var config ec2.SpotFleetRequestConfig
+	var config awstypes.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
@@ -1322,7 +1323,7 @@ func TestAccEC2SpotFleetRequest_withEBSDisk(t *testing.T) {
 
 func TestAccEC2SpotFleetRequest_LaunchSpecificationEBSBlockDevice_kmsKeyID(t *testing.T) {
 	ctx := acctest.Context(t)
-	var config ec2.SpotFleetRequestConfig
+	var config awstypes.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
@@ -1356,7 +1357,7 @@ func TestAccEC2SpotFleetRequest_LaunchSpecificationEBSBlockDevice_kmsKeyID(t *te
 
 func TestAccEC2SpotFleetRequest_LaunchSpecificationRootBlockDevice_kmsKeyID(t *testing.T) {
 	ctx := acctest.Context(t)
-	var config ec2.SpotFleetRequestConfig
+	var config awstypes.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
@@ -1390,7 +1391,7 @@ func TestAccEC2SpotFleetRequest_LaunchSpecificationRootBlockDevice_kmsKeyID(t *t
 
 func TestAccEC2SpotFleetRequest_LaunchSpecification_ebsBlockDeviceGP3(t *testing.T) {
 	ctx := acctest.Context(t)
-	var config ec2.SpotFleetRequestConfig
+	var config awstypes.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_spot_fleet_request.test"
 
@@ -1430,7 +1431,7 @@ func TestAccEC2SpotFleetRequest_LaunchSpecification_ebsBlockDeviceGP3(t *testing
 
 func TestAccEC2SpotFleetRequest_LaunchSpecification_rootBlockDeviceGP3(t *testing.T) {
 	ctx := acctest.Context(t)
-	var config ec2.SpotFleetRequestConfig
+	var config awstypes.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_spot_fleet_request.test"
 
@@ -1469,7 +1470,7 @@ func TestAccEC2SpotFleetRequest_LaunchSpecification_rootBlockDeviceGP3(t *testin
 
 func TestAccEC2SpotFleetRequest_withTags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var config ec2.SpotFleetRequestConfig
+	var config awstypes.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
@@ -1509,7 +1510,7 @@ func TestAccEC2SpotFleetRequest_withTags(t *testing.T) {
 
 func TestAccEC2SpotFleetRequest_placementTenancyAndGroup(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sfr ec2.SpotFleetRequestConfig
+	var sfr awstypes.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
@@ -1545,7 +1546,7 @@ func TestAccEC2SpotFleetRequest_placementTenancyAndGroup(t *testing.T) {
 
 func TestAccEC2SpotFleetRequest_withELBs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sfr ec2.SpotFleetRequestConfig
+	var sfr awstypes.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
@@ -1582,7 +1583,7 @@ func TestAccEC2SpotFleetRequest_withELBs(t *testing.T) {
 
 func TestAccEC2SpotFleetRequest_withTargetGroups(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sfr ec2.SpotFleetRequestConfig
+	var sfr awstypes.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
@@ -1619,7 +1620,7 @@ func TestAccEC2SpotFleetRequest_withTargetGroups(t *testing.T) {
 
 func TestAccEC2SpotFleetRequest_Zero_capacity(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sfr ec2.SpotFleetRequestConfig
+	var sfr awstypes.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
@@ -1668,7 +1669,7 @@ func TestAccEC2SpotFleetRequest_Zero_capacity(t *testing.T) {
 
 func TestAccEC2SpotFleetRequest_capacityRebalance(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sfr ec2.SpotFleetRequestConfig
+	var sfr awstypes.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
@@ -1703,7 +1704,7 @@ func TestAccEC2SpotFleetRequest_capacityRebalance(t *testing.T) {
 
 func TestAccEC2SpotFleetRequest_instanceStoreAMI(t *testing.T) {
 	ctx := acctest.Context(t)
-	var config ec2.SpotFleetRequestConfig
+	var config awstypes.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
@@ -1741,7 +1742,7 @@ func TestAccEC2SpotFleetRequest_instanceStoreAMI(t *testing.T) {
 
 func TestAccEC2SpotFleetRequest_noTerminateInstancesWithExpiration(t *testing.T) {
 	ctx := acctest.Context(t)
-	var sfr ec2.SpotFleetRequestConfig
+	var sfr awstypes.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
@@ -1776,7 +1777,7 @@ func TestAccEC2SpotFleetRequest_noTerminateInstancesWithExpiration(t *testing.T)
 }
 
 func testAccCheckSpotFleetRequestRecreatedConfig(t *testing.T,
-	before, after *ec2.SpotFleetRequestConfig) resource.TestCheckFunc {
+	before, after *awstypes.SpotFleetRequestConfig) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if before.SpotFleetRequestId == after.SpotFleetRequestId {
 			t.Fatalf("Expected change of Spot Fleet Request IDs, but both were %v", before.SpotFleetRequestId)
@@ -1785,7 +1786,7 @@ func testAccCheckSpotFleetRequestRecreatedConfig(t *testing.T,
 	}
 }
 
-func testAccCheckSpotFleetRequestExists(ctx context.Context, n string, v *ec2.SpotFleetRequestConfig) resource.TestCheckFunc {
+func testAccCheckSpotFleetRequestExists(ctx context.Context, n string, v *awstypes.SpotFleetRequestConfig) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1796,7 +1797,7 @@ func testAccCheckSpotFleetRequestExists(ctx context.Context, n string, v *ec2.Sp
 			return errors.New("No EC2 Spot Fleet Request ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindSpotFleetRequestByID(ctx, conn, rs.Primary.ID)
 
@@ -1812,7 +1813,7 @@ func testAccCheckSpotFleetRequestExists(ctx context.Context, n string, v *ec2.Sp
 
 func testAccCheckSpotFleetRequestDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_spot_fleet_request" {
@@ -1836,13 +1837,13 @@ func testAccCheckSpotFleetRequestDestroy(ctx context.Context) resource.TestCheck
 	}
 }
 
-func testAccCheckSpotFleetRequest_EBSAttributes(sfr *ec2.SpotFleetRequestConfig) resource.TestCheckFunc {
+func testAccCheckSpotFleetRequest_EBSAttributes(sfr *awstypes.SpotFleetRequestConfig) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if len(sfr.SpotFleetRequestConfig.LaunchSpecifications) == 0 {
 			return errors.New("Missing launch specification")
 		}
 
-		spec := *sfr.SpotFleetRequestConfig.LaunchSpecifications[0]
+		spec := sfr.SpotFleetRequestConfig.LaunchSpecifications[0]
 
 		ebs := spec.BlockDeviceMappings
 		if len(ebs) < 2 {
@@ -1861,24 +1862,24 @@ func testAccCheckSpotFleetRequest_EBSAttributes(sfr *ec2.SpotFleetRequestConfig)
 }
 
 func testAccCheckSpotFleetRequest_PlacementAttributes(
-	sfr *ec2.SpotFleetRequestConfig, rName string) resource.TestCheckFunc {
+	sfr *awstypes.SpotFleetRequestConfig, rName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if len(sfr.SpotFleetRequestConfig.LaunchSpecifications) == 0 {
 			return errors.New("Missing launch specification")
 		}
 
-		spec := *sfr.SpotFleetRequestConfig.LaunchSpecifications[0]
+		spec := sfr.SpotFleetRequestConfig.LaunchSpecifications[0]
 
 		placement := spec.Placement
 		if placement == nil {
 			return fmt.Errorf("Expected placement to be set, got nil")
 		}
-		if *placement.Tenancy != ec2.TenancyDedicated {
-			return fmt.Errorf("Expected placement tenancy to be %q, got %q", "dedicated", *placement.Tenancy)
+		if placement.Tenancy != awstypes.TenancyDedicated {
+			return fmt.Errorf("Expected placement tenancy to be %q, got %q", "dedicated", placement.Tenancy)
 		}
 
-		if aws.StringValue(placement.GroupName) != rName {
-			return fmt.Errorf("Expected placement group to be %q, got %q", rName, aws.StringValue(placement.GroupName))
+		if aws.ToString(placement.GroupName) != rName {
+			return fmt.Errorf("Expected placement group to be %q, got %q", rName, aws.ToString(placement.GroupName))
 		}
 
 		return nil
@@ -1886,7 +1887,7 @@ func testAccCheckSpotFleetRequest_PlacementAttributes(
 }
 
 func testAccPreCheckSpotFleetRequest(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 	_, err := tfec2.FindSpotFleetRequests(ctx, conn, &ec2.DescribeSpotFleetRequestsInput{})
 
@@ -1899,13 +1900,13 @@ func testAccPreCheckSpotFleetRequest(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCheckSpotFleetRequest_IAMInstanceProfileARN(sfr *ec2.SpotFleetRequestConfig) resource.TestCheckFunc {
+func testAccCheckSpotFleetRequest_IAMInstanceProfileARN(sfr *awstypes.SpotFleetRequestConfig) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if len(sfr.SpotFleetRequestConfig.LaunchSpecifications) == 0 {
 			return errors.New("Missing launch specification")
 		}
 
-		spec := *sfr.SpotFleetRequestConfig.LaunchSpecifications[0]
+		spec := sfr.SpotFleetRequestConfig.LaunchSpecifications[0]
 
 		profile := spec.IamInstanceProfile
 		if profile == nil {
