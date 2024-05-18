@@ -7,7 +7,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -299,15 +299,15 @@ func DataSourceInstanceType() *schema.Resource {
 
 func dataSourceInstanceTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	v, err := FindInstanceTypeByName(ctx, conn, d.Get(names.AttrInstanceType).(string))
+	v, err := findInstanceTypeByName(ctx, conn, d.Get(names.AttrInstanceType).(string))
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Instance Type", err))
 	}
 
-	d.SetId(aws.StringValue(v.InstanceType))
+	d.SetId(string(v.InstanceType))
 	d.Set("auto_recovery_supported", v.AutoRecoverySupported)
 	d.Set("bare_metal", v.BareMetal)
 	d.Set("burstable_performance_supported", v.BurstablePerformanceSupported)
@@ -334,10 +334,10 @@ func dataSourceInstanceTypeRead(ctx context.Context, d *schema.ResourceData, met
 		fpgaList := make([]interface{}, len(v.FpgaInfo.Fpgas))
 		for i, fpg := range v.FpgaInfo.Fpgas {
 			fpga := map[string]interface{}{
-				"count":        aws.Int64Value(fpg.Count),
-				"manufacturer": aws.StringValue(fpg.Manufacturer),
-				"memory_size":  aws.Int64Value(fpg.MemoryInfo.SizeInMiB),
-				names.AttrName: aws.StringValue(fpg.Name),
+				"count":        aws.ToInt32(fpg.Count),
+				"manufacturer": aws.ToString(fpg.Manufacturer),
+				"memory_size":  aws.ToInt32(fpg.MemoryInfo.SizeInMiB),
+				names.AttrName: aws.ToString(fpg.Name),
 			}
 			fpgaList[i] = fpga
 		}
@@ -349,10 +349,10 @@ func dataSourceInstanceTypeRead(ctx context.Context, d *schema.ResourceData, met
 		gpuList := make([]interface{}, len(v.GpuInfo.Gpus))
 		for i, gp := range v.GpuInfo.Gpus {
 			gpu := map[string]interface{}{
-				"count":        aws.Int64Value(gp.Count),
-				"manufacturer": aws.StringValue(gp.Manufacturer),
-				"memory_size":  aws.Int64Value(gp.MemoryInfo.SizeInMiB),
-				names.AttrName: aws.StringValue(gp.Name),
+				"count":        aws.ToInt32(gp.Count),
+				"manufacturer": aws.ToString(gp.Manufacturer),
+				"memory_size":  aws.ToInt32(gp.MemoryInfo.SizeInMiB),
+				names.AttrName: aws.ToString(gp.Name),
 			}
 			gpuList[i] = gpu
 		}
@@ -365,9 +365,9 @@ func dataSourceInstanceTypeRead(ctx context.Context, d *schema.ResourceData, met
 		acceleratorList := make([]interface{}, len(v.InferenceAcceleratorInfo.Accelerators))
 		for i, accl := range v.InferenceAcceleratorInfo.Accelerators {
 			accelerator := map[string]interface{}{
-				"count":        aws.Int64Value(accl.Count),
-				"manufacturer": aws.StringValue(accl.Manufacturer),
-				names.AttrName: aws.StringValue(accl.Name),
+				"count":        aws.ToInt32(accl.Count),
+				"manufacturer": aws.ToString(accl.Manufacturer),
+				names.AttrName: aws.ToString(accl.Name),
 			}
 			acceleratorList[i] = accelerator
 		}
@@ -378,9 +378,9 @@ func dataSourceInstanceTypeRead(ctx context.Context, d *schema.ResourceData, met
 			diskList := make([]interface{}, len(v.InstanceStorageInfo.Disks))
 			for i, dk := range v.InstanceStorageInfo.Disks {
 				disk := map[string]interface{}{
-					"count":        aws.Int64Value(dk.Count),
-					names.AttrSize: aws.Int64Value(dk.SizeInGB),
-					names.AttrType: aws.StringValue(dk.Type),
+					"count":        aws.ToInt32(dk.Count),
+					names.AttrSize: aws.ToInt64(dk.SizeInGB),
+					names.AttrType: dk.Type,
 				}
 				diskList[i] = disk
 			}
