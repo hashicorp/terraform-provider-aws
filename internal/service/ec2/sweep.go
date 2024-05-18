@@ -9,14 +9,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -465,11 +466,11 @@ func sweepCapacityReservations(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.EC2Conn(ctx)
+	conn := client.EC2Client(ctx)
 
-	resp, err := conn.DescribeCapacityReservationsWithContext(ctx, &ec2.DescribeCapacityReservationsInput{})
+	resp, err := conn.DescribeCapacityReservations(ctx, &ec2.DescribeCapacityReservationsInput{})
 
-	if awsv1.SkipSweepError(err) {
+	if awsv2.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 Capacity Reservation sweep for %s: %s", region, err)
 		return nil
 	}
@@ -484,8 +485,8 @@ func sweepCapacityReservations(region string) error {
 	}
 
 	for _, r := range resp.CapacityReservations {
-		if aws.StringValue(r.State) != ec2.CapacityReservationStateCancelled && aws.StringValue(r.State) != ec2.CapacityReservationStateExpired {
-			id := aws.StringValue(r.CapacityReservationId)
+		if r.State != awstypes.CapacityReservationStateCancelled && r.State != awstypes.CapacityReservationStateExpired {
+			id := aws.ToString(r.CapacityReservationId)
 
 			log.Printf("[INFO] Cancelling EC2 Capacity Reservation EC2 Instance: %s", id)
 
@@ -493,7 +494,7 @@ func sweepCapacityReservations(region string) error {
 				CapacityReservationId: aws.String(id),
 			}
 
-			_, err := conn.CancelCapacityReservationWithContext(ctx, opts)
+			_, err := conn.CancelCapacityReservation(ctx, opts)
 
 			if err != nil {
 				log.Printf("[ERROR] Error cancelling EC2 Capacity Reservation (%s): %s", id, err)
@@ -510,33 +511,30 @@ func sweepCarrierGateways(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.EC2Conn(ctx)
+	conn := client.EC2Client(ctx)
 	input := &ec2.DescribeCarrierGatewaysInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeCarrierGatewaysPagesWithContext(ctx, input, func(page *ec2.DescribeCarrierGatewaysOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ec2.NewDescribeCarrierGatewaysPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 Carrier Gateway sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing EC2 Carrier Gateways (%s): %w", region, err)
 		}
 
 		for _, v := range page.CarrierGateways {
 			r := ResourceCarrierGateway()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.CarrierGatewayId))
+			d.SetId(aws.ToString(v.CarrierGatewayId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 Carrier Gateway sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing EC2 Carrier Gateways (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -554,33 +552,30 @@ func sweepClientVPNEndpoints(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.EC2Conn(ctx)
+	conn := client.EC2Client(ctx)
 	input := &ec2.DescribeClientVpnEndpointsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeClientVpnEndpointsPagesWithContext(ctx, input, func(page *ec2.DescribeClientVpnEndpointsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ec2.NewDescribeClientVpnEndpointsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 Client VPN Endpoint sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing EC2 Client VPN Endpoints (%s): %w", region, err)
 		}
 
 		for _, v := range page.ClientVpnEndpoints {
 			r := ResourceClientVPNEndpoint()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.ClientVpnEndpointId))
+			d.SetId(aws.ToString(v.ClientVpnEndpointId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 Client VPN Endpoint sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing EC2 Client VPN Endpoints (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -598,14 +593,22 @@ func sweepClientVPNNetworkAssociations(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.EC2Conn(ctx)
+	conn := client.EC2Client(ctx)
 	input := &ec2.DescribeClientVpnEndpointsInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeClientVpnEndpointsPagesWithContext(ctx, input, func(page *ec2.DescribeClientVpnEndpointsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ec2.NewDescribeClientVpnEndpointsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 Client VPN Network Association sweep for %s: %s", region, err)
+			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+		}
+
+		if err != nil {
+			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EC2 Client VPN Endpoints (%s): %w", region, err))
 		}
 
 		for _, v := range page.ClientVpnEndpoints {
@@ -613,42 +616,28 @@ func sweepClientVPNNetworkAssociations(region string) error {
 				ClientVpnEndpointId: v.ClientVpnEndpointId,
 			}
 
-			err := conn.DescribeClientVpnTargetNetworksPagesWithContext(ctx, input, func(page *ec2.DescribeClientVpnTargetNetworksOutput, lastPage bool) bool {
-				if page == nil {
-					return !lastPage
+			pages := ec2.NewDescribeClientVpnTargetNetworksPaginator(conn, input)
+			for pages.HasMorePages() {
+				page, err := pages.NextPage(ctx)
+
+				if awsv2.SkipSweepError(err) {
+					continue
+				}
+
+				if err != nil {
+					sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EC2 Client VPN Network Associations (%s): %w", region, err))
 				}
 
 				for _, v := range page.ClientVpnTargetNetworks {
 					r := ResourceClientVPNNetworkAssociation()
 					d := r.Data(nil)
-					d.SetId(aws.StringValue(v.AssociationId))
+					d.SetId(aws.ToString(v.AssociationId))
 					d.Set("client_vpn_endpoint_id", v.ClientVpnEndpointId)
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
-
-				return !lastPage
-			})
-
-			if awsv1.SkipSweepError(err) {
-				continue
-			}
-
-			if err != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EC2 Client VPN Network Associations (%s): %w", region, err))
 			}
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 Client VPN Network Association sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EC2 Client VPN Endpoints (%s): %w", region, err))
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -666,41 +655,40 @@ func sweepFleets(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.EC2Conn(ctx)
+	conn := client.EC2Client(ctx)
 
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeFleetsPagesWithContext(ctx, &ec2.DescribeFleetsInput{}, func(page *ec2.DescribeFleetsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ec2.NewDescribeFleetsPaginator(conn, &ec2.DescribeFleetsInput{})
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 Fleet sweep for %s: %s", region, err)
+			return sweeperErrs.ErrorOrNil()
+		}
+		if err != nil {
+			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("retrieving EC2 Fleets: %w", err))
 		}
 
 		for _, fleet := range page.Fleets {
-			if aws.StringValue(fleet.FleetState) == ec2.FleetStateCodeDeleted || aws.StringValue(fleet.FleetState) == ec2.FleetStateCodeDeletedTerminating {
+			if fleet.FleetState == awstypes.FleetStateCodeDeleted || fleet.FleetState == awstypes.FleetStateCodeDeletedTerminatingInstances {
 				continue
 			}
 
 			r := ResourceFleet()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(fleet.FleetId))
+			d.SetId(aws.ToString(fleet.FleetId))
 			d.Set("terminate_instances", true)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 Fleet sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil()
 	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("retrieving EC2 Fleets: %w", err))
-	}
-
-	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping EC2 Fleets for %s: %w", region, err))
 	}
 
@@ -713,20 +701,28 @@ func sweepEBSVolumes(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.EC2Conn(ctx)
+	conn := client.EC2Client(ctx)
 	input := &ec2.DescribeVolumesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeVolumesPagesWithContext(ctx, input, func(page *ec2.DescribeVolumesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ec2.NewDescribeVolumesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 EBS Volume sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing EC2 EBS Volumes (%s): %w", region, err)
 		}
 
 		for _, v := range page.Volumes {
-			id := aws.StringValue(v.VolumeId)
+			id := aws.ToString(v.VolumeId)
 
-			if state := aws.StringValue(v.State); state != ec2.VolumeStateAvailable {
-				log.Printf("[INFO] Skipping EC2 EBS Volume (%s): %s", state, id)
+			if v.State != awstypes.VolumeStateAvailable {
+				log.Printf("[INFO] Skipping EC2 EBS Volume (%s): %s", v.State, id)
 				continue
 			}
 
@@ -737,16 +733,6 @@ func sweepEBSVolumes(region string) error {
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 EBS Volume sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing EC2 EBS Volumes (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -765,34 +751,31 @@ func sweepEBSSnapshots(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	input := &ec2.DescribeSnapshotsInput{
-		OwnerIds: aws.StringSlice([]string{"self"}),
+		OwnerIds: []string{"self"},
 	}
-	conn := client.EC2Conn(ctx)
+	conn := client.EC2Client(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeSnapshotsPagesWithContext(ctx, input, func(page *ec2.DescribeSnapshotsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ec2.NewDescribeSnapshotsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EBS Snapshot sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing EBS Snapshots (%s): %w", region, err)
 		}
 
 		for _, v := range page.Snapshots {
 			r := ResourceEBSSnapshot()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.SnapshotId))
+			d.SetId(aws.ToString(v.SnapshotId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EBS Snapshot sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing EBS Snapshots (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -811,32 +794,29 @@ func sweepEgressOnlyInternetGateways(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	input := &ec2.DescribeEgressOnlyInternetGatewaysInput{}
-	conn := client.EC2Conn(ctx)
+	conn := client.EC2Client(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeEgressOnlyInternetGatewaysPagesWithContext(ctx, input, func(page *ec2.DescribeEgressOnlyInternetGatewaysOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ec2.NewDescribeEgressOnlyInternetGatewaysPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 Egress-only Internet Gateway sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing EC2 Egress-only Internet Gateways (%s): %w", region, err)
 		}
 
 		for _, v := range page.EgressOnlyInternetGateways {
 			r := ResourceEgressOnlyInternetGateway()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.EgressOnlyInternetGatewayId))
+			d.SetId(aws.ToString(v.EgressOnlyInternetGatewayId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 Egress-only Internet Gateway sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing EC2 Egress-only Internet Gateways (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -856,12 +836,12 @@ func sweepEIPs(region string) error {
 	}
 	// There is currently no paginator or Marker/NextToken
 	input := &ec2.DescribeAddressesInput{}
-	conn := client.EC2Conn(ctx)
+	conn := client.EC2Client(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	output, err := conn.DescribeAddressesWithContext(ctx, input)
+	output, err := conn.DescribeAddresses(ctx, input)
 
-	if awsv1.SkipSweepError(err) {
+	if awsv2.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 EIP sweep for %s: %s", region, err)
 		return nil
 	}
@@ -871,19 +851,19 @@ func sweepEIPs(region string) error {
 	}
 
 	for _, v := range output.Addresses {
-		publicIP := aws.StringValue(v.PublicIp)
+		publicIP := aws.ToString(v.PublicIp)
 
 		if v.AssociationId != nil {
-			log.Printf("[INFO] Skipping EC2 EIP (%s) with association: %s", publicIP, aws.StringValue(v.AssociationId))
+			log.Printf("[INFO] Skipping EC2 EIP (%s) with association: %s", publicIP, aws.ToString(v.AssociationId))
 			continue
 		}
 
 		r := resourceEIP()
 		d := r.Data(nil)
 		if v.AllocationId != nil {
-			d.SetId(aws.StringValue(v.AllocationId))
+			d.SetId(aws.ToString(v.AllocationId))
 		} else {
-			d.SetId(aws.StringValue(v.PublicIp))
+			d.SetId(aws.ToString(v.PublicIp))
 		}
 
 		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
@@ -904,33 +884,30 @@ func sweepEIPDomainNames(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.EC2Conn(ctx)
+	conn := client.EC2Client(ctx)
 	input := &ec2.DescribeAddressesAttributeInput{
-		Attribute: aws.String(ec2.AddressAttributeNameDomainName),
+		Attribute: awstypes.AddressAttributeNameDomainName,
 	}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeAddressesAttributePagesWithContext(ctx, input, func(page *ec2.DescribeAddressesAttributeOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ec2.NewDescribeAddressesAttributePaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EIP Domain Name sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing EIP Domain Names (%s): %w", region, err)
 		}
 
 		for _, v := range page.Addresses {
 			sweepResources = append(sweepResources, framework.NewSweepResource(newEIPDomainNameResource, client,
-				framework.NewAttribute(names.AttrID, aws.StringValue(v.AllocationId)),
+				framework.NewAttribute(names.AttrID, aws.ToString(v.AllocationId)),
 			))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EIP Domain Name sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing EIP Domain Names (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -948,33 +925,30 @@ func sweepFlowLogs(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.EC2Conn(ctx)
+	conn := client.EC2Client(ctx)
 	input := &ec2.DescribeFlowLogsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeFlowLogsPagesWithContext(ctx, input, func(page *ec2.DescribeFlowLogsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ec2.NewDescribeFlowLogsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Flow Log sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing Flow Logs (%s): %w", region, err)
 		}
 
 		for _, flowLog := range page.FlowLogs {
 			r := ResourceFlowLog()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(flowLog.FlowLogId))
+			d.SetId(aws.ToString(flowLog.FlowLogId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Flow Log sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing Flow Logs (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -992,33 +966,30 @@ func sweepHosts(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.EC2Conn(ctx)
+	conn := client.EC2Client(ctx)
 	input := &ec2.DescribeHostsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeHostsPagesWithContext(ctx, input, func(page *ec2.DescribeHostsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ec2.NewDescribeHostsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 Host sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing EC2 Hosts (%s): %w", region, err)
 		}
 
 		for _, host := range page.Hosts {
 			r := ResourceHost()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(host.HostId))
+			d.SetId(aws.ToString(host.HostId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 Host sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing EC2 Hosts (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -1036,24 +1007,28 @@ func sweepInstances(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.EC2Conn(ctx)
+	conn := client.EC2Client(ctx)
 	input := &ec2.DescribeInstancesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeInstancesPagesWithContext(ctx, input, func(page *ec2.DescribeInstancesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ec2.NewDescribeInstancesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 Instance sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing EC2 Instances (%s): %w", region, err)
 		}
 
 		for _, v := range page.Reservations {
-			if v == nil {
-				continue
-			}
-
 			for _, v := range v.Instances {
-				id := aws.StringValue(v.InstanceId)
+				id := aws.ToString(v.InstanceId)
 
-				if v.State != nil && aws.StringValue(v.State.Name) == ec2.InstanceStateNameTerminated {
+				if v.State != nil && v.State.Name == awstypes.InstanceStateNameTerminated {
 					log.Printf("[INFO] Skipping terminated EC2 Instance: %s", id)
 					continue
 				}
@@ -1069,17 +1044,6 @@ func sweepInstances(region string) error {
 				sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 			}
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 Instance sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing EC2 Instances (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -1097,42 +1061,50 @@ func sweepInternetGateways(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.EC2Conn(ctx)
+	conn := client.EC2Client(ctx)
 
 	defaultVPCID := ""
 	describeVpcsInput := &ec2.DescribeVpcsInput{
-		Filters: []*ec2.Filter{
+		Filters: []awstypes.Filter{
 			{
 				Name:   aws.String("isDefault"),
-				Values: aws.StringSlice([]string{"true"}),
+				Values: []string{"true"},
 			},
 		},
 	}
 
-	describeVpcsOutput, err := conn.DescribeVpcsWithContext(ctx, describeVpcsInput)
+	describeVpcsOutput, err := conn.DescribeVpcs(ctx, describeVpcsInput)
 
 	if err != nil {
 		return fmt.Errorf("error describing VPCs: %w", err)
 	}
 
 	if describeVpcsOutput != nil && len(describeVpcsOutput.Vpcs) == 1 {
-		defaultVPCID = aws.StringValue(describeVpcsOutput.Vpcs[0].VpcId)
+		defaultVPCID = aws.ToString(describeVpcsOutput.Vpcs[0].VpcId)
 	}
 
 	input := &ec2.DescribeInternetGatewaysInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeInternetGatewaysPagesWithContext(ctx, input, func(page *ec2.DescribeInternetGatewaysOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ec2.NewDescribeInternetGatewaysPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 Internet Gateway sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing EC2 Internet Gateways (%s): %w", region, err)
 		}
 
 		for _, internetGateway := range page.InternetGateways {
-			internetGatewayID := aws.StringValue(internetGateway.InternetGatewayId)
+			internetGatewayID := aws.ToString(internetGateway.InternetGatewayId)
 			isDefaultVPCInternetGateway := false
 
 			for _, attachment := range internetGateway.Attachments {
-				if aws.StringValue(attachment.VpcId) == defaultVPCID {
+				if aws.ToString(attachment.VpcId) == defaultVPCID {
 					isDefaultVPCInternetGateway = true
 					break
 				}
@@ -1152,17 +1124,6 @@ func sweepInternetGateways(region string) error {
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 Internet Gateway sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing EC2 Internet Gateways (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -1180,13 +1141,13 @@ func sweepKeyPairs(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.EC2Conn(ctx)
+	conn := client.EC2Client(ctx)
 	input := &ec2.DescribeKeyPairsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	output, err := conn.DescribeKeyPairsWithContext(ctx, input)
+	output, err := conn.DescribeKeyPairs(ctx, input)
 
-	if awsv1.SkipSweepError(err) {
+	if awsv2.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 Key Pair sweep for %s: %s", region, err)
 		return nil
 	}
@@ -1198,7 +1159,7 @@ func sweepKeyPairs(region string) error {
 	for _, v := range output.KeyPairs {
 		r := resourceKeyPair()
 		d := r.Data(nil)
-		d.SetId(aws.StringValue(v.KeyName))
+		d.SetId(aws.ToString(v.KeyName))
 
 		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
@@ -1218,33 +1179,30 @@ func sweepLaunchTemplates(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.EC2Conn(ctx)
+	conn := client.EC2Client(ctx)
 	input := &ec2.DescribeLaunchTemplatesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeLaunchTemplatesPagesWithContext(ctx, input, func(page *ec2.DescribeLaunchTemplatesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ec2.NewDescribeLaunchTemplatesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 Launch Template sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing EC2 Launch Templates (%s): %w", region, err)
 		}
 
 		for _, v := range page.LaunchTemplates {
 			r := ResourceLaunchTemplate()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.LaunchTemplateId))
+			d.SetId(aws.ToString(v.LaunchTemplateId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 Launch Template sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing EC2 Launch Templates (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -1263,32 +1221,29 @@ func sweepNATGateways(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	input := &ec2.DescribeNatGatewaysInput{}
-	conn := client.EC2Conn(ctx)
+	conn := client.EC2Client(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeNatGatewaysPagesWithContext(ctx, input, func(page *ec2.DescribeNatGatewaysOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ec2.NewDescribeNatGatewaysPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 NAT Gateway sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing EC2 NAT Gateways (%s): %w", region, err)
 		}
 
 		for _, v := range page.NatGateways {
 			r := ResourceNATGateway()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.NatGatewayId))
+			d.SetId(aws.ToString(v.NatGatewayId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 NAT Gateway sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing EC2 NAT Gateways (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -1307,26 +1262,34 @@ func sweepNetworkACLs(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	input := &ec2.DescribeNetworkAclsInput{}
-	conn := client.EC2Conn(ctx)
+	conn := client.EC2Client(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeNetworkAclsPagesWithContext(ctx, input, func(page *ec2.DescribeNetworkAclsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ec2.NewDescribeNetworkAclsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 Network ACL sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing EC2 Network ACLs (%s): %w", region, err)
 		}
 
 		for _, v := range page.NetworkAcls {
-			if aws.BoolValue(v.IsDefault) {
+			if aws.ToBool(v.IsDefault) {
 				continue
 			}
 
 			r := resourceNetworkACL()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.NetworkAclId))
+			d.SetId(aws.ToString(v.NetworkAclId))
 
 			var subnetIDs []string
 			for _, v := range v.Associations {
-				subnetIDs = append(subnetIDs, aws.StringValue(v.SubnetId))
+				subnetIDs = append(subnetIDs, aws.ToString(v.SubnetId))
 			}
 			d.Set(names.AttrSubnetIDs, subnetIDs)
 
@@ -1334,17 +1297,6 @@ func sweepNetworkACLs(region string) error {
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 Network ACL sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing EC2 Network ACLs (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -1362,20 +1314,28 @@ func sweepNetworkInterfaces(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.EC2Conn(ctx)
+	conn := client.EC2Client(ctx)
 	input := &ec2.DescribeNetworkInterfacesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeNetworkInterfacesPagesWithContext(ctx, input, func(page *ec2.DescribeNetworkInterfacesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ec2.NewDescribeNetworkInterfacesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 Network Interface sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing EC2 Network Interfaces (%s): %w", region, err)
 		}
 
 		for _, v := range page.NetworkInterfaces {
-			id := aws.StringValue(v.NetworkInterfaceId)
+			id := aws.ToString(v.NetworkInterfaceId)
 
-			if status := aws.StringValue(v.Status); status != ec2.NetworkInterfaceStatusAvailable {
-				log.Printf("[INFO] Skipping EC2 Network Interface (%s): %s", status, id)
+			if v.Status != awstypes.NetworkInterfaceStatusAvailable {
+				log.Printf("[INFO] Skipping EC2 Network Interface (%s): %s", v.Status, id)
 				continue
 			}
 
@@ -1385,17 +1345,6 @@ func sweepNetworkInterfaces(region string) error {
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 Network Interface sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing EC2 Network Interfaces (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -1413,17 +1362,25 @@ func sweepNetworkInsightsPaths(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.EC2Conn(ctx)
+	conn := client.EC2Client(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
-	err = conn.DescribeNetworkInsightsPathsPagesWithContext(ctx, &ec2.DescribeNetworkInsightsPathsInput{}, func(page *ec2.DescribeNetworkInsightsPathsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ec2.NewDescribeNetworkInsightsPathsPaginator(conn, &ec2.DescribeNetworkInsightsPathsInput{})
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Network Insights Path sweep for %s: %s", region, errs)
+			return nil
+		}
+
+		if err != nil {
+			errs = multierror.Append(errs, fmt.Errorf("error listing Network Insights Paths for %s: %w", region, err))
 		}
 
 		for _, nip := range page.NetworkInsightsPaths {
-			id := aws.StringValue(nip.NetworkInsightsPathId)
+			id := aws.ToString(nip.NetworkInsightsPathId)
 
 			r := ResourceNetworkInsightsPath()
 			d := r.Data(nil)
@@ -1431,19 +1388,14 @@ func sweepNetworkInsightsPaths(region string) error {
 			d.SetId(id)
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing Network Insights Paths for %s: %w", region, err))
 	}
-	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Network Insights Paths for %s: %w", region, err))
 	}
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Network Insights Path sweep for %s: %s", region, errs)
-		return nil
-	}
+
 	return errs.ErrorOrNil()
 }
 
@@ -1453,13 +1405,13 @@ func sweepPlacementGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.EC2Conn(ctx)
+	conn := client.EC2Client(ctx)
 	input := &ec2.DescribePlacementGroupsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	output, err := conn.DescribePlacementGroupsWithContext(ctx, input)
+	output, err := conn.DescribePlacementGroups(ctx, input)
 
-	if awsv1.SkipSweepError(err) {
+	if awsv2.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 Placement Group sweep for %s: %s", region, err)
 		return nil
 	}
@@ -1471,7 +1423,7 @@ func sweepPlacementGroups(region string) error {
 	for _, placementGroup := range output.PlacementGroups {
 		r := ResourcePlacementGroup()
 		d := r.Data(nil)
-		d.SetId(aws.StringValue(placementGroup.GroupName))
+		d.SetId(aws.ToString(placementGroup.GroupName))
 
 		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
@@ -1493,43 +1445,41 @@ func sweepRouteTables(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.EC2Conn(ctx)
-
+	conn := client.EC2Client(ctx)
 	var sweeperErrs *multierror.Error
-
 	input := &ec2.DescribeRouteTablesInput{}
 
-	err = conn.DescribeRouteTablesPagesWithContext(ctx, input, func(page *ec2.DescribeRouteTablesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ec2.NewDescribeRouteTablesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 Route Table sweep for %s: %s", region, err)
+			return sweeperErrs.ErrorOrNil()
+		}
+
+		if err != nil {
+			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EC2 Route Tables: %w", err))
 		}
 
 		for _, routeTable := range page.RouteTables {
-			if routeTable == nil {
-				continue
-			}
-
-			id := aws.StringValue(routeTable.RouteTableId)
+			id := aws.ToString(routeTable.RouteTableId)
 			isMainRouteTableAssociation := false
 
 			for _, routeTableAssociation := range routeTable.Associations {
-				if routeTableAssociation == nil {
-					continue
-				}
-
-				if aws.BoolValue(routeTableAssociation.Main) {
+				if aws.ToBool(routeTableAssociation.Main) {
 					isMainRouteTableAssociation = true
 					break
 				}
 
-				associationID := aws.StringValue(routeTableAssociation.RouteTableAssociationId)
+				associationID := aws.ToString(routeTableAssociation.RouteTableAssociationId)
 
 				input := &ec2.DisassociateRouteTableInput{
 					AssociationId: routeTableAssociation.RouteTableAssociationId,
 				}
 
 				log.Printf("[DEBUG] Deleting EC2 Route Table Association: %s", associationID)
-				_, err := conn.DisassociateRouteTableWithContext(ctx, input)
+				_, err := conn.DisassociateRouteTable(ctx, input)
 
 				if err != nil {
 					sweeperErr := fmt.Errorf("error deleting EC2 Route Table (%s) Association (%s): %w", id, associationID, err)
@@ -1541,17 +1491,13 @@ func sweepRouteTables(region string) error {
 
 			if isMainRouteTableAssociation {
 				for _, route := range routeTable.Routes {
-					if route == nil {
-						continue
-					}
-
-					if gatewayID := aws.StringValue(route.GatewayId); gatewayID == gatewayIDLocal || gatewayID == gatewayIDVPCLattice {
+					if gatewayID := aws.ToString(route.GatewayId); gatewayID == gatewayIDLocal || gatewayID == gatewayIDVPCLattice {
 						continue
 					}
 
 					// Prevent deleting default VPC route for Internet Gateway
 					// which some testing is still reliant on operating correctly
-					if strings.HasPrefix(aws.StringValue(route.GatewayId), "igw-") && aws.StringValue(route.DestinationCidrBlock) == "0.0.0.0/0" {
+					if strings.HasPrefix(aws.ToString(route.GatewayId), "igw-") && aws.ToString(route.DestinationCidrBlock) == "0.0.0.0/0" {
 						continue
 					}
 
@@ -1562,7 +1508,7 @@ func sweepRouteTables(region string) error {
 					}
 
 					log.Printf("[DEBUG] Deleting EC2 Route Table (%s) Route", id)
-					_, err := conn.DeleteRouteWithContext(ctx, input)
+					_, err := conn.DeleteRoute(ctx, input)
 
 					if err != nil {
 						sweeperErr := fmt.Errorf("error deleting EC2 Route Table (%s) Route: %w", id, err)
@@ -1580,7 +1526,7 @@ func sweepRouteTables(region string) error {
 			}
 
 			log.Printf("[DEBUG] Deleting EC2 Route Table: %s", id)
-			_, err := conn.DeleteRouteTableWithContext(ctx, input)
+			_, err := conn.DeleteRouteTable(ctx, input)
 
 			if err != nil {
 				sweeperErr := fmt.Errorf("error deleting EC2 Route Table (%s): %w", id, err)
@@ -1589,17 +1535,6 @@ func sweepRouteTables(region string) error {
 				continue
 			}
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 Route Table sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil()
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EC2 Route Tables: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
@@ -1608,18 +1543,31 @@ func sweepRouteTables(region string) error {
 func sweepSecurityGroups(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.EC2Conn(ctx)
 
+	conn := client.EC2Client(ctx)
 	input := &ec2.DescribeSecurityGroupsInput{}
 
 	// Delete all non-default EC2 Security Group Rules to prevent DependencyViolation errors
-	err = conn.DescribeSecurityGroupsPagesWithContext(ctx, input, func(page *ec2.DescribeSecurityGroupsOutput, lastPage bool) bool {
+	pages := ec2.NewDescribeSecurityGroupsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 Security Group sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("Error retrieving EC2 Security Groups: %w", err)
+		}
+
 		for _, sg := range page.SecurityGroups {
-			if aws.StringValue(sg.GroupName) == "default" {
-				log.Printf("[DEBUG] Skipping default EC2 Security Group: %s", aws.StringValue(sg.GroupId))
+			if aws.ToString(sg.GroupName) == "default" {
+				log.Printf("[DEBUG] Skipping default EC2 Security Group: %s", aws.ToString(sg.GroupId))
 				continue
 			}
 
@@ -1629,8 +1577,8 @@ func sweepSecurityGroups(region string) error {
 					IpPermissions: sg.IpPermissions,
 				}
 
-				if _, err = conn.RevokeSecurityGroupIngressWithContext(ctx, req); err != nil {
-					log.Printf("[ERROR] Error revoking ingress rule for Security Group (%s): %s", aws.StringValue(sg.GroupId), err)
+				if _, err = conn.RevokeSecurityGroupIngress(ctx, req); err != nil {
+					log.Printf("[ERROR] Error revoking ingress rule for Security Group (%s): %s", aws.ToString(sg.GroupId), err)
 				}
 			}
 
@@ -1640,28 +1588,29 @@ func sweepSecurityGroups(region string) error {
 					IpPermissions: sg.IpPermissionsEgress,
 				}
 
-				if _, err = conn.RevokeSecurityGroupEgressWithContext(ctx, req); err != nil {
-					log.Printf("[ERROR] Error revoking egress rule for Security Group (%s): %s", aws.StringValue(sg.GroupId), err)
+				if _, err = conn.RevokeSecurityGroupEgress(ctx, req); err != nil {
+					log.Printf("[ERROR] Error revoking egress rule for Security Group (%s): %s", aws.ToString(sg.GroupId), err)
 				}
 			}
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 Security Group sweep for %s: %s", region, err)
-		return nil
 	}
 
-	if err != nil {
-		return fmt.Errorf("Error retrieving EC2 Security Groups: %w", err)
-	}
+	pages = ec2.NewDescribeSecurityGroupsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-	err = conn.DescribeSecurityGroupsPagesWithContext(ctx, input, func(page *ec2.DescribeSecurityGroupsOutput, lastPage bool) bool {
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 Security Group sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("Error retrieving EC2 Security Groups: %w", err)
+		}
+
 		for _, sg := range page.SecurityGroups {
-			if aws.StringValue(sg.GroupName) == "default" {
-				log.Printf("[DEBUG] Skipping default EC2 Security Group: %s", aws.StringValue(sg.GroupId))
+			if aws.ToString(sg.GroupName) == "default" {
+				log.Printf("[DEBUG] Skipping default EC2 Security Group: %s", aws.ToString(sg.GroupId))
 				continue
 			}
 
@@ -1671,7 +1620,7 @@ func sweepSecurityGroups(region string) error {
 
 			// Handle EC2 eventual consistency
 			err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
-				_, err := conn.DeleteSecurityGroupWithContext(ctx, input)
+				_, err := conn.DeleteSecurityGroup(ctx, input)
 
 				if tfawserr.ErrCodeEquals(err, "DependencyViolation") {
 					return retry.RetryableError(err)
@@ -1683,12 +1632,10 @@ func sweepSecurityGroups(region string) error {
 			})
 
 			if err != nil {
-				log.Printf("[ERROR] Error deleting Security Group (%s): %s", aws.StringValue(sg.GroupId), err)
+				log.Printf("[ERROR] Error deleting Security Group (%s): %s", aws.ToString(sg.GroupId), err)
 			}
 		}
-
-		return !lastPage
-	})
+	}
 
 	if err != nil {
 		return fmt.Errorf("Error retrieving EC2 Security Groups: %w", err)
@@ -1705,22 +1652,30 @@ func sweepSpotFleetRequests(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.EC2Conn(ctx)
+	conn := client.EC2Client(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
-	err = conn.DescribeSpotFleetRequestsPagesWithContext(ctx, &ec2.DescribeSpotFleetRequestsInput{}, func(page *ec2.DescribeSpotFleetRequestsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ec2.NewDescribeSpotFleetRequestsPaginator(conn, &ec2.DescribeSpotFleetRequestsInput{})
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(errs.ErrorOrNil()) {
+			log.Printf("[WARN] Skipping EC2 Spot Fleet Requests sweep for %s: %s", region, errs)
+			return nil
+		}
+
+		if err != nil {
+			errs = multierror.Append(errs, fmt.Errorf("error describing EC2 Spot Fleet Requests for %s: %w", region, err))
 		}
 
 		if len(page.SpotFleetRequestConfigs) == 0 {
 			log.Print("[DEBUG] No Spot Fleet Requests to sweep")
-			return false
+			return nil
 		}
 
 		for _, config := range page.SpotFleetRequestConfigs {
-			id := aws.StringValue(config.SpotFleetRequestId)
+			id := aws.ToString(config.SpotFleetRequestId)
 
 			r := ResourceSpotFleetRequest()
 			d := r.Data(nil)
@@ -1729,21 +1684,12 @@ func sweepSpotFleetRequests(region string) error {
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
+	}
 
-		return !lastPage
-	})
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error describing EC2 Spot Fleet Requests for %s: %w", region, err))
-	}
-
-	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping EC2 Spot Fleet Requests for %s: %w", region, err))
-	}
-
-	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping EC2 Spot Fleet Requests sweep for %s: %s", region, errs)
-		return nil
 	}
 
 	return errs.ErrorOrNil()
@@ -1757,22 +1703,30 @@ func sweepSpotInstanceRequests(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.EC2Conn(ctx)
+	conn := client.EC2Client(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
-	err = conn.DescribeSpotInstanceRequestsPagesWithContext(ctx, &ec2.DescribeSpotInstanceRequestsInput{}, func(page *ec2.DescribeSpotInstanceRequestsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ec2.NewDescribeSpotInstanceRequestsPaginator(conn, &ec2.DescribeSpotInstanceRequestsInput{})
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(errs.ErrorOrNil()) {
+			log.Printf("[WARN] Skipping EC2 Spot Instance Requests sweep for %s: %s", region, errs)
+			return nil
+		}
+
+		if err != nil {
+			errs = multierror.Append(errs, fmt.Errorf("error describing EC2 Spot Instance Requests for %s: %w", region, err))
 		}
 
 		if len(page.SpotInstanceRequests) == 0 {
 			log.Print("[DEBUG] No Spot Instance Requests to sweep")
-			return false
+			return nil
 		}
 
 		for _, config := range page.SpotInstanceRequests {
-			id := aws.StringValue(config.SpotInstanceRequestId)
+			id := aws.ToString(config.SpotInstanceRequestId)
 
 			r := ResourceSpotInstanceRequest()
 			d := r.Data(nil)
@@ -1781,21 +1735,12 @@ func sweepSpotInstanceRequests(region string) error {
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
+	}
 
-		return !lastPage
-	})
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error describing EC2 Spot Instance Requests for %s: %w", region, err))
-	}
-
-	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping EC2 Spot Instance Requests for %s: %w", region, err))
-	}
-
-	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping EC2 Spot Instance Requests sweep for %s: %s", region, errs)
-		return nil
 	}
 
 	return errs.ErrorOrNil()
@@ -1807,38 +1752,35 @@ func sweepSubnets(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.EC2Conn(ctx)
+	conn := client.EC2Client(ctx)
 	input := &ec2.DescribeSubnetsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeSubnetsPagesWithContext(ctx, input, func(page *ec2.DescribeSubnetsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ec2.NewDescribeSubnetsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 Subnet sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing EC2 Subnets (%s): %w", region, err)
 		}
 
 		for _, v := range page.Subnets {
 			// Skip default subnets.
-			if aws.BoolValue(v.DefaultForAz) {
+			if aws.ToBool(v.DefaultForAz) {
 				continue
 			}
 
 			r := ResourceSubnet()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.SubnetId))
+			d.SetId(aws.ToString(v.SubnetId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 Subnet sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing EC2 Subnets (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -1856,33 +1798,30 @@ func sweepTrafficMirrorFilters(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.EC2Conn(ctx)
+	conn := client.EC2Client(ctx)
 	input := &ec2.DescribeTrafficMirrorFiltersInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeTrafficMirrorFiltersPagesWithContext(ctx, input, func(page *ec2.DescribeTrafficMirrorFiltersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ec2.NewDescribeTrafficMirrorFiltersPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 Traffic Mirror Filter sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing EC2 Traffic Mirror Filters (%s): %w", region, err)
 		}
 
 		for _, v := range page.TrafficMirrorFilters {
 			r := ResourceTrafficMirrorFilter()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.TrafficMirrorFilterId))
+			d.SetId(aws.ToString(v.TrafficMirrorFilterId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 Traffic Mirror Filter sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing EC2 Traffic Mirror Filters (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -1900,33 +1839,30 @@ func sweepTrafficMirrorSessions(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.EC2Conn(ctx)
+	conn := client.EC2Client(ctx)
 	input := &ec2.DescribeTrafficMirrorSessionsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeTrafficMirrorSessionsPagesWithContext(ctx, input, func(page *ec2.DescribeTrafficMirrorSessionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ec2.NewDescribeTrafficMirrorSessionsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 Traffic Mirror Session sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing EC2 Traffic Mirror Sessions (%s): %w", region, err)
 		}
 
 		for _, v := range page.TrafficMirrorSessions {
 			r := ResourceTrafficMirrorSession()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.TrafficMirrorSessionId))
+			d.SetId(aws.ToString(v.TrafficMirrorSessionId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 Traffic Mirror Session sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing EC2 Traffic Mirror Sessions (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -1944,33 +1880,30 @@ func sweepTrafficMirrorTargets(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.EC2Conn(ctx)
+	conn := client.EC2Client(ctx)
 	input := &ec2.DescribeTrafficMirrorTargetsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeTrafficMirrorTargetsPagesWithContext(ctx, input, func(page *ec2.DescribeTrafficMirrorTargetsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ec2.NewDescribeTrafficMirrorTargetsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 Traffic Mirror Target sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing EC2 Traffic Mirror Targets (%s): %w", region, err)
 		}
 
 		for _, v := range page.TrafficMirrorTargets {
 			r := ResourceTrafficMirrorTarget()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.TrafficMirrorTargetId))
+			d.SetId(aws.ToString(v.TrafficMirrorTargetId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 Traffic Mirror Target sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing EC2 Traffic Mirror Targets (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -1988,37 +1921,34 @@ func sweepTransitGateways(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.EC2Conn(ctx)
+	conn := client.EC2Client(ctx)
 	input := &ec2.DescribeTransitGatewaysInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeTransitGatewaysPagesWithContext(ctx, input, func(page *ec2.DescribeTransitGatewaysOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ec2.NewDescribeTransitGatewaysPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 Transit Gateway sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing EC2 Transit Gateways (%s): %w", region, err)
 		}
 
 		for _, v := range page.TransitGateways {
-			if aws.StringValue(v.State) == ec2.TransitGatewayStateDeleted {
+			if v.State == awstypes.TransitGatewayStateDeleted {
 				continue
 			}
 
 			r := ResourceTransitGateway()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.TransitGatewayId))
+			d.SetId(aws.ToString(v.TransitGatewayId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 Transit Gateway sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing EC2 Transit Gateways (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -2036,37 +1966,34 @@ func sweepTransitGatewayConnectPeers(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.EC2Conn(ctx)
+	conn := client.EC2Client(ctx)
 	input := &ec2.DescribeTransitGatewayConnectPeersInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeTransitGatewayConnectPeersPagesWithContext(ctx, input, func(page *ec2.DescribeTransitGatewayConnectPeersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ec2.NewDescribeTransitGatewayConnectPeersPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 Transit Gateway Connect Peer sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing EC2 Transit Gateway Connect Peers (%s): %w", region, err)
 		}
 
 		for _, v := range page.TransitGatewayConnectPeers {
-			if aws.StringValue(v.State) == ec2.TransitGatewayConnectPeerStateDeleted {
+			if v.State == awstypes.TransitGatewayConnectPeerStateDeleted {
 				continue
 			}
 
 			r := ResourceTransitGatewayConnectPeer()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.TransitGatewayConnectPeerId))
+			d.SetId(aws.ToString(v.TransitGatewayConnectPeerId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 Transit Gateway Connect Peer sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing EC2 Transit Gateway Connect Peers (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -2084,37 +2011,34 @@ func sweepTransitGatewayConnects(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.EC2Conn(ctx)
+	conn := client.EC2Client(ctx)
 	input := &ec2.DescribeTransitGatewayConnectsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeTransitGatewayConnectsPagesWithContext(ctx, input, func(page *ec2.DescribeTransitGatewayConnectsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ec2.NewDescribeTransitGatewayConnectsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 Transit Gateway Connect sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing EC2 Transit Gateway Connects (%s): %w", region, err)
 		}
 
 		for _, v := range page.TransitGatewayConnects {
-			if aws.StringValue(v.State) == ec2.TransitGatewayAttachmentStateDeleted {
+			if v.State == awstypes.TransitGatewayAttachmentStateDeleted {
 				continue
 			}
 
 			r := ResourceTransitGatewayConnect()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.TransitGatewayAttachmentId))
+			d.SetId(aws.ToString(v.TransitGatewayAttachmentId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 Transit Gateway Connect sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing EC2 Transit Gateway Connects (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -2132,37 +2056,34 @@ func sweepTransitGatewayMulticastDomains(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.EC2Conn(ctx)
+	conn := client.EC2Client(ctx)
 	input := &ec2.DescribeTransitGatewayMulticastDomainsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeTransitGatewayMulticastDomainsPagesWithContext(ctx, input, func(page *ec2.DescribeTransitGatewayMulticastDomainsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ec2.NewDescribeTransitGatewayMulticastDomainsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 Transit Gateway Multicast Domain sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing EC2 Transit Gateway Multicast Domains (%s): %w", region, err)
 		}
 
 		for _, v := range page.TransitGatewayMulticastDomains {
-			if aws.StringValue(v.State) == ec2.TransitGatewayMulticastDomainStateDeleted {
+			if v.State == awstypes.TransitGatewayMulticastDomainStateDeleted {
 				continue
 			}
 
 			r := ResourceTransitGatewayMulticastDomain()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.TransitGatewayMulticastDomainId))
+			d.SetId(aws.ToString(v.TransitGatewayMulticastDomainId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 Transit Gateway Multicast Domain sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing EC2 Transit Gateway Multicast Domains (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -2180,37 +2101,34 @@ func sweepTransitGatewayPeeringAttachments(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.EC2Conn(ctx)
+	conn := client.EC2Client(ctx)
 	input := &ec2.DescribeTransitGatewayPeeringAttachmentsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeTransitGatewayPeeringAttachmentsPagesWithContext(ctx, input, func(page *ec2.DescribeTransitGatewayPeeringAttachmentsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ec2.NewDescribeTransitGatewayPeeringAttachmentsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 Transit Gateway Peering Attachment sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing EC2 Transit Gateway Peering Attachments (%s): %w", region, err)
 		}
 
 		for _, v := range page.TransitGatewayPeeringAttachments {
-			if aws.StringValue(v.State) == ec2.TransitGatewayAttachmentStateDeleted {
+			if v.State == awstypes.TransitGatewayAttachmentStateDeleted {
 				continue
 			}
 
 			r := resourceTransitGatewayPeeringAttachment()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.TransitGatewayAttachmentId))
+			d.SetId(aws.ToString(v.TransitGatewayAttachmentId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 Transit Gateway Peering Attachment sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing EC2 Transit Gateway Peering Attachments (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -2228,37 +2146,34 @@ func sweepTransitGatewayVPCAttachments(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.EC2Conn(ctx)
+	conn := client.EC2Client(ctx)
 	input := &ec2.DescribeTransitGatewayVpcAttachmentsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeTransitGatewayVpcAttachmentsPagesWithContext(ctx, input, func(page *ec2.DescribeTransitGatewayVpcAttachmentsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ec2.NewDescribeTransitGatewayVpcAttachmentsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 Transit Gateway VPC Attachment sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing EC2 Transit Gateway VPC Attachments (%s): %w", region, err)
 		}
 
 		for _, v := range page.TransitGatewayVpcAttachments {
-			if aws.StringValue(v.State) == ec2.TransitGatewayAttachmentStateDeleted {
+			if v.State == awstypes.TransitGatewayAttachmentStateDeleted {
 				continue
 			}
 
 			r := ResourceTransitGatewayVPCAttachment()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.TransitGatewayAttachmentId))
+			d.SetId(aws.ToString(v.TransitGatewayAttachmentId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 Transit Gateway VPC Attachment sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing EC2 Transit Gateway VPC Attachments (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -2273,16 +2188,26 @@ func sweepTransitGatewayVPCAttachments(region string) error {
 func sweepVPCDHCPOptions(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
+
 	input := &ec2.DescribeDhcpOptionsInput{}
-	conn := client.EC2Conn(ctx)
+	conn := client.EC2Client(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeDhcpOptionsPagesWithContext(ctx, input, func(page *ec2.DescribeDhcpOptionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ec2.NewDescribeDhcpOptionsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 DHCP Options Set sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing EC2 DHCP Options Sets (%s): %w", region, err)
 		}
 
 		for _, v := range page.DhcpOptions {
@@ -2290,20 +2215,20 @@ func sweepVPCDHCPOptions(region string) error {
 			var defaultDomainNameFound, defaultDomainNameServersFound bool
 
 			for _, v := range v.DhcpConfigurations {
-				if aws.StringValue(v.Key) == "domain-name" {
-					if len(v.Values) != 1 || v.Values[0] == nil {
+				if aws.ToString(v.Key) == "domain-name" {
+					if len(v.Values) != 1 {
 						continue
 					}
 
-					if aws.StringValue(v.Values[0].Value) == client.EC2RegionalPrivateDNSSuffix(ctx) {
+					if aws.ToString(v.Values[0].Value) == client.EC2RegionalPrivateDNSSuffix(ctx) {
 						defaultDomainNameFound = true
 					}
-				} else if aws.StringValue(v.Key) == "domain-name-servers" {
-					if len(v.Values) != 1 || v.Values[0] == nil {
+				} else if aws.ToString(v.Key) == "domain-name-servers" {
+					if len(v.Values) != 1 {
 						continue
 					}
 
-					if aws.StringValue(v.Values[0].Value) == "AmazonProvidedDNS" {
+					if aws.ToString(v.Values[0].Value) == "AmazonProvidedDNS" {
 						defaultDomainNameServersFound = true
 					}
 				}
@@ -2315,21 +2240,10 @@ func sweepVPCDHCPOptions(region string) error {
 
 			r := ResourceVPCDHCPOptions()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.DhcpOptionsId))
+			d.SetId(aws.ToString(v.DhcpOptionsId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 DHCP Options Set sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing EC2 DHCP Options Sets (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -2344,27 +2258,37 @@ func sweepVPCDHCPOptions(region string) error {
 func sweepVPCEndpoints(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.EC2Conn(ctx)
+
+	conn := client.EC2Client(ctx)
 	input := &ec2.DescribeVpcEndpointsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeVpcEndpointsPagesWithContext(ctx, input, func(page *ec2.DescribeVpcEndpointsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ec2.NewDescribeVpcEndpointsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 VPC Endpoint sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing EC2 VPC Endpoints (%s): %w", region, err)
 		}
 
 		for _, v := range page.VpcEndpoints {
-			id := aws.StringValue(v.VpcEndpointId)
+			id := aws.ToString(v.VpcEndpointId)
 
-			if state := aws.StringValue(v.State); state == vpcEndpointStateDeleted {
-				log.Printf("[INFO] Skipping EC2 VPC Endpoint %s: State=%s", id, state)
+			if v.State == vpcEndpointStateDeleted {
+				log.Printf("[INFO] Skipping EC2 VPC Endpoint %s: State=%s", id, v.State)
 				continue
 			}
 
-			if requesterManaged := aws.BoolValue(v.RequesterManaged); requesterManaged {
+			if requesterManaged := aws.ToBool(v.RequesterManaged); requesterManaged {
 				log.Printf("[INFO] Skipping EC2 VPC Endpoint %s: RequesterManaged=%t", id, requesterManaged)
 				continue
 			}
@@ -2375,17 +2299,6 @@ func sweepVPCEndpoints(region string) error {
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 VPC Endpoint sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing EC2 VPC Endpoints (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -2400,20 +2313,30 @@ func sweepVPCEndpoints(region string) error {
 func sweepVPCEndpointConnectionAccepters(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.EC2Conn(ctx)
+
+	conn := client.EC2Client(ctx)
 	input := &ec2.DescribeVpcEndpointConnectionsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeVpcEndpointConnectionsPagesWithContext(ctx, input, func(page *ec2.DescribeVpcEndpointConnectionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ec2.NewDescribeVpcEndpointConnectionsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 VPC Endpoint Connection sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing EC2 VPC Endpoint Connections (%s): %w", region, err)
 		}
 
 		for _, v := range page.VpcEndpointConnections {
-			id := VPCEndpointConnectionAccepterCreateResourceID(aws.StringValue(v.ServiceId), aws.StringValue(v.VpcEndpointId))
+			id := VPCEndpointConnectionAccepterCreateResourceID(aws.ToString(v.ServiceId), aws.ToString(v.VpcEndpointId))
 
 			r := ResourceVPCEndpointConnectionAccepter()
 			d := r.Data(nil)
@@ -2421,17 +2344,6 @@ func sweepVPCEndpointConnectionAccepters(region string) error {
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 VPC Endpoint Connection sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing EC2 VPC Endpoint Connections (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -2446,23 +2358,33 @@ func sweepVPCEndpointConnectionAccepters(region string) error {
 func sweepVPCEndpointServices(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.EC2Conn(ctx)
+
+	conn := client.EC2Client(ctx)
 	input := &ec2.DescribeVpcEndpointServiceConfigurationsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeVpcEndpointServiceConfigurationsPagesWithContext(ctx, input, func(page *ec2.DescribeVpcEndpointServiceConfigurationsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ec2.NewDescribeVpcEndpointServiceConfigurationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 VPC Endpoint Service sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing EC2 VPC Endpoint Services (%s): %w", region, err)
 		}
 
 		for _, v := range page.ServiceConfigurations {
-			id := aws.StringValue(v.ServiceId)
+			id := aws.ToString(v.ServiceId)
 
-			if state := aws.StringValue(v.ServiceState); state == ec2.ServiceStateDeleted {
-				log.Printf("[INFO] Skipping EC2 VPC Endpoint Service %s: ServiceState=%s", id, state)
+			if v.ServiceState == awstypes.ServiceStateDeleted {
+				log.Printf("[INFO] Skipping EC2 VPC Endpoint Service %s: ServiceState=%s", id, v.ServiceState)
 				continue
 			}
 
@@ -2472,17 +2394,6 @@ func sweepVPCEndpointServices(region string) error {
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 VPC Endpoint Service sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing EC2 VPC Endpoint Services (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -2497,36 +2408,35 @@ func sweepVPCEndpointServices(region string) error {
 func sweepVPCPeeringConnections(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
+
 	input := &ec2.DescribeVpcPeeringConnectionsInput{}
-	conn := client.EC2Conn(ctx)
+	conn := client.EC2Client(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeVpcPeeringConnectionsPagesWithContext(ctx, input, func(page *ec2.DescribeVpcPeeringConnectionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ec2.NewDescribeVpcPeeringConnectionsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 VPC Peering Connection sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing EC2 VPC Peering Connections (%s): %w", region, err)
 		}
 
 		for _, v := range page.VpcPeeringConnections {
 			r := ResourceVPCPeeringConnection()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.VpcPeeringConnectionId))
+			d.SetId(aws.ToString(v.VpcPeeringConnectionId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 VPC Peering Connection sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing EC2 VPC Peering Connections (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -2541,41 +2451,40 @@ func sweepVPCPeeringConnections(region string) error {
 func sweepVPCs(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.EC2Conn(ctx)
+
+	conn := client.EC2Client(ctx)
 	input := &ec2.DescribeVpcsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeVpcsPagesWithContext(ctx, input, func(page *ec2.DescribeVpcsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ec2.NewDescribeVpcsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 VPC sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing EC2 VPCs (%s): %w", region, err)
 		}
 
 		for _, v := range page.Vpcs {
 			// Skip default VPCs.
-			if aws.BoolValue(v.IsDefault) {
+			if aws.ToBool(v.IsDefault) {
 				continue
 			}
 
 			r := ResourceVPC()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.VpcId))
+			d.SetId(aws.ToString(v.VpcId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 VPC sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing EC2 VPCs (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -2590,16 +2499,18 @@ func sweepVPCs(region string) error {
 func sweepVPNConnections(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.EC2Conn(ctx)
+
+	conn := client.EC2Client(ctx)
 	input := &ec2.DescribeVpnConnectionsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	output, err := conn.DescribeVpnConnectionsWithContext(ctx, input)
+	output, err := conn.DescribeVpnConnections(ctx, input)
 
-	if awsv1.SkipSweepError(err) {
+	if awsv2.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 VPN Connection sweep for %s: %s", region, err)
 		return nil
 	}
@@ -2609,13 +2520,13 @@ func sweepVPNConnections(region string) error {
 	}
 
 	for _, v := range output.VpnConnections {
-		if aws.StringValue(v.State) == ec2.VpnStateDeleted {
+		if v.State == awstypes.VpnStateDeleted {
 			continue
 		}
 
 		r := resourceVPNConnection()
 		d := r.Data(nil)
-		d.SetId(aws.StringValue(v.VpnConnectionId))
+		d.SetId(aws.ToString(v.VpnConnectionId))
 
 		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
@@ -2635,13 +2546,13 @@ func sweepVPNGateways(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.EC2Conn(ctx)
+	conn := client.EC2Client(ctx)
 	input := &ec2.DescribeVpnGatewaysInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	output, err := conn.DescribeVpnGatewaysWithContext(ctx, input)
+	output, err := conn.DescribeVpnGateways(ctx, input)
 
-	if awsv1.SkipSweepError(err) {
+	if awsv2.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 VPN Gateway sweep for %s: %s", region, err)
 		return nil
 	}
@@ -2651,16 +2562,16 @@ func sweepVPNGateways(region string) error {
 	}
 
 	for _, v := range output.VpnGateways {
-		if aws.StringValue(v.State) == ec2.VpnStateDeleted {
+		if v.State == awstypes.VpnStateDeleted {
 			continue
 		}
 
 		r := resourceVPNGateway()
 		d := r.Data(nil)
-		d.SetId(aws.StringValue(v.VpnGatewayId))
+		d.SetId(aws.ToString(v.VpnGatewayId))
 
 		for _, v := range v.VpcAttachments {
-			if aws.StringValue(v.State) != ec2.AttachmentStatusDetached {
+			if v.State != awstypes.AttachmentStatusDetached {
 				d.Set(names.AttrVPCID, v.VpcId)
 
 				break
@@ -2685,13 +2596,13 @@ func sweepCustomerGateways(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.EC2Conn(ctx)
+	conn := client.EC2Client(ctx)
 	input := &ec2.DescribeCustomerGatewaysInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	output, err := conn.DescribeCustomerGatewaysWithContext(ctx, input)
+	output, err := conn.DescribeCustomerGateways(ctx, input)
 
-	if awsv1.SkipSweepError(err) {
+	if awsv2.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EC2 Customer Gateway sweep for %s: %s", region, err)
 		return nil
 	}
@@ -2701,13 +2612,13 @@ func sweepCustomerGateways(region string) error {
 	}
 
 	for _, v := range output.CustomerGateways {
-		if aws.StringValue(v.State) == CustomerGatewayStateDeleted {
+		if aws.ToString(v.State) == CustomerGatewayStateDeleted {
 			continue
 		}
 
 		r := resourceCustomerGateway()
 		d := r.Data(nil)
-		d.SetId(aws.StringValue(v.CustomerGatewayId))
+		d.SetId(aws.ToString(v.CustomerGatewayId))
 
 		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
@@ -2724,37 +2635,36 @@ func sweepCustomerGateways(region string) error {
 func sweepIPAMs(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.EC2Conn(ctx)
+
+	conn := client.EC2Client(ctx)
 	input := &ec2.DescribeIpamsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeIpamsPagesWithContext(ctx, input, func(page *ec2.DescribeIpamsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ec2.NewDescribeIpamsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping IPAM sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing IPAMs (%s): %w", region, err)
 		}
 
 		for _, v := range page.Ipams {
 			r := ResourceIPAM()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.IpamId))
+			d.SetId(aws.ToString(v.IpamId))
 			d.Set("cascade", true)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping IPAM sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing IPAMs (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -2769,39 +2679,38 @@ func sweepIPAMs(region string) error {
 func sweepIPAMResourceDiscoveries(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.EC2Conn(ctx)
+
+	conn := client.EC2Client(ctx)
 	input := &ec2.DescribeIpamResourceDiscoveriesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeIpamResourceDiscoveriesPagesWithContext(ctx, input, func(page *ec2.DescribeIpamResourceDiscoveriesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ec2.NewDescribeIpamResourceDiscoveriesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping IPAM Resource Discovery sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing IPAM Resource Discoveries (%s): %w", region, err)
 		}
 
 		for _, v := range page.IpamResourceDiscoveries {
 			// do not attempt to delete default resource created by each ipam
-			if !aws.BoolValue(v.IsDefault) {
+			if !aws.ToBool(v.IsDefault) {
 				r := ResourceIPAMResourceDiscovery()
 				d := r.Data(nil)
-				d.SetId(aws.StringValue(v.IpamResourceDiscoveryId))
+				d.SetId(aws.ToString(v.IpamResourceDiscoveryId))
 
 				sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 			}
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping IPAM Resource Discovery sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing IPAM Resource Discoveries (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -2816,38 +2725,38 @@ func sweepIPAMResourceDiscoveries(region string) error {
 func sweepAMIs(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
+
 	input := &ec2.DescribeImagesInput{
-		Owners: aws.StringSlice([]string{"self"}),
+		Owners: []string{"self"},
 	}
-	conn := client.EC2Conn(ctx)
+	conn := client.EC2Client(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeImagesPagesWithContext(ctx, input, func(page *ec2.DescribeImagesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ec2.NewDescribeImagesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping AMI sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing AMIs (%s): %w", region, err)
 		}
 
 		for _, v := range page.Images {
 			r := ResourceAMI()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.ImageId))
+			d.SetId(aws.ToString(v.ImageId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping AMI sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing AMIs (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -2862,37 +2771,36 @@ func sweepAMIs(region string) error {
 func sweepNetworkPerformanceMetricSubscriptions(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.EC2Conn(ctx)
+
+	conn := client.EC2Client(ctx)
 	input := &ec2.DescribeAwsNetworkPerformanceMetricSubscriptionsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeAwsNetworkPerformanceMetricSubscriptionsPagesWithContext(ctx, input, func(page *ec2.DescribeAwsNetworkPerformanceMetricSubscriptionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ec2.NewDescribeAwsNetworkPerformanceMetricSubscriptionsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 AWS Network Performance Metric Subscription sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing EC2 AWS Network Performance Metric Subscriptions (%s): %w", region, err)
 		}
 
 		for _, v := range page.Subscriptions {
 			r := ResourceNetworkPerformanceMetricSubscription()
-			id := NetworkPerformanceMetricSubscriptionCreateResourceID(aws.StringValue(v.Source), aws.StringValue(v.Destination), aws.StringValue(v.Metric), aws.StringValue(v.Statistic))
+			id := NetworkPerformanceMetricSubscriptionCreateResourceID(aws.ToString(v.Source), aws.ToString(v.Destination), string(v.Metric), string(v.Statistic))
 			d := r.Data(nil)
 			d.SetId(id)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 AWS Network Performance Metric Subscription sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing EC2 AWS Network Performance Metric Subscriptions (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -2910,35 +2818,32 @@ func sweepInstanceConnectEndpoints(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.EC2Conn(ctx)
+	conn := client.EC2Client(ctx)
 	input := &ec2.DescribeInstanceConnectEndpointsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeInstanceConnectEndpointsPagesWithContext(ctx, input, func(page *ec2.DescribeInstanceConnectEndpointsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ec2.NewDescribeInstanceConnectEndpointsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EC2 Instance Connect Endpoint sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing EC2 Instance Connect Endpoints (%s): %w", region, err)
 		}
 
 		for _, v := range page.InstanceConnectEndpoints {
-			if aws.StringValue(v.State) == ec2.Ec2InstanceConnectEndpointStateDeleteComplete {
+			if v.State == awstypes.Ec2InstanceConnectEndpointStateDeleteComplete {
 				continue
 			}
 
 			sweepResources = append(sweepResources, framework.NewSweepResource(newInstanceConnectEndpointResource, client,
-				framework.NewAttribute(names.AttrID, aws.StringValue(v.InstanceConnectEndpointId)),
+				framework.NewAttribute(names.AttrID, aws.ToString(v.InstanceConnectEndpointId)),
 			))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 Instance Connect Endpoint sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing EC2 Instance Connect Endpoints (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -2953,36 +2858,35 @@ func sweepInstanceConnectEndpoints(region string) error {
 func sweepVerifiedAccessEndpoints(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.EC2Conn(ctx)
+
+	conn := client.EC2Client(ctx)
 	input := &ec2.DescribeVerifiedAccessEndpointsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeVerifiedAccessEndpointsPagesWithContext(ctx, input, func(page *ec2.DescribeVerifiedAccessEndpointsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ec2.NewDescribeVerifiedAccessEndpointsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Verified Access Endpoint sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing Verified Access Endpoints (%s): %w", region, err)
 		}
 
 		for _, v := range page.VerifiedAccessEndpoints {
 			r := ResourceVerifiedAccessEndpoint()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.VerifiedAccessEndpointId))
+			d.SetId(aws.ToString(v.VerifiedAccessEndpointId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Verified Access Endpoint sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing Verified Access Endpoints (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -2997,36 +2901,35 @@ func sweepVerifiedAccessEndpoints(region string) error {
 func sweepVerifiedAccessGroups(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.EC2Conn(ctx)
+
+	conn := client.EC2Client(ctx)
 	input := &ec2.DescribeVerifiedAccessGroupsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeVerifiedAccessGroupsPagesWithContext(ctx, input, func(page *ec2.DescribeVerifiedAccessGroupsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ec2.NewDescribeVerifiedAccessGroupsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Verified Access Group sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing Verified Access Groups (%s): %w", region, err)
 		}
 
 		for _, v := range page.VerifiedAccessGroups {
 			r := ResourceVerifiedAccessGroup()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.VerifiedAccessGroupId))
+			d.SetId(aws.ToString(v.VerifiedAccessGroupId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Verified Access Group sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing Verified Access Groups (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -3041,36 +2944,35 @@ func sweepVerifiedAccessGroups(region string) error {
 func sweepVerifiedAccessInstances(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.EC2Conn(ctx)
+
+	conn := client.EC2Client(ctx)
 	input := &ec2.DescribeVerifiedAccessInstancesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeVerifiedAccessInstancesPagesWithContext(ctx, input, func(page *ec2.DescribeVerifiedAccessInstancesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ec2.NewDescribeVerifiedAccessInstancesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Verified Access Instance sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing Verified Access Instances (%s): %w", region, err)
 		}
 
 		for _, v := range page.VerifiedAccessInstances {
 			r := ResourceVerifiedAccessInstance()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.VerifiedAccessInstanceId))
+			d.SetId(aws.ToString(v.VerifiedAccessInstanceId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Verified Access Instance sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing Verified Access Instances (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -3085,36 +2987,35 @@ func sweepVerifiedAccessInstances(region string) error {
 func sweepVerifiedAccessTrustProviders(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.EC2Conn(ctx)
+
+	conn := client.EC2Client(ctx)
 	input := &ec2.DescribeVerifiedAccessTrustProvidersInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeVerifiedAccessTrustProvidersPagesWithContext(ctx, input, func(page *ec2.DescribeVerifiedAccessTrustProvidersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ec2.NewDescribeVerifiedAccessTrustProvidersPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Verified Access Trust Provider sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing Verified Access Trust Providers (%s): %w", region, err)
 		}
 
 		for _, v := range page.VerifiedAccessTrustProviders {
 			r := ResourceVerifiedAccessTrustProvider()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.VerifiedAccessTrustProviderId))
+			d.SetId(aws.ToString(v.VerifiedAccessTrustProviderId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Verified Access Trust Provider sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing Verified Access Trust Providers (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -3129,23 +3030,33 @@ func sweepVerifiedAccessTrustProviders(region string) error {
 func sweepVerifiedAccessTrustProviderAttachments(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.EC2Conn(ctx)
+
+	conn := client.EC2Client(ctx)
 	input := &ec2.DescribeVerifiedAccessInstancesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeVerifiedAccessInstancesPagesWithContext(ctx, input, func(page *ec2.DescribeVerifiedAccessInstancesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ec2.NewDescribeVerifiedAccessInstancesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Verified Access Instance Trust Provider Attachment sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing Verified Access Instance Trust Provider Attachments (%s): %w", region, err)
 		}
 
 		for _, v := range page.VerifiedAccessInstances {
-			vaiID := aws.StringValue(v.VerifiedAccessInstanceId)
+			vaiID := aws.ToString(v.VerifiedAccessInstanceId)
 
 			for _, v := range v.VerifiedAccessTrustProviders {
-				vatpID := aws.StringValue(v.VerifiedAccessTrustProviderId)
+				vatpID := aws.ToString(v.VerifiedAccessTrustProviderId)
 
 				r := ResourceVerifiedAccessInstanceTrustProviderAttachment()
 				d := r.Data(nil)
@@ -3154,17 +3065,6 @@ func sweepVerifiedAccessTrustProviderAttachments(region string) error {
 				sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 			}
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Verified Access Instance Trust Provider Attachment sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing Verified Access Instance Trust Provider Attachments (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
