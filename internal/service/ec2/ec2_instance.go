@@ -16,10 +16,11 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -29,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -95,10 +97,10 @@ func ResourceInstance() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"capacity_reservation_preference": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice(ec2.CapacityReservationPreference_Values(), false),
-							ExactlyOneOf: []string{"capacity_reservation_specification.0.capacity_reservation_preference", "capacity_reservation_specification.0.capacity_reservation_target"},
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.CapacityReservationPreference](),
+							ExactlyOneOf:     []string{"capacity_reservation_specification.0.capacity_reservation_preference", "capacity_reservation_specification.0.capacity_reservation_target"},
 						},
 						"capacity_reservation_target": {
 							Type:     schema.TypeList,
@@ -132,15 +134,15 @@ func ResourceInstance() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"amd_sev_snp": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice(ec2.AmdSevSnpSpecification_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ForceNew:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.AmdSevSnpSpecification](),
 							// prevents ForceNew for the case where users launch EC2 instances without cpu_options
 							// then in a second apply set cpu_options.0.amd_sev_snp to "disabled"
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if d.Id() != "" && old == "" && new == ec2.AmdSevSnpSpecificationDisabled {
+								if d.Id() != "" && old == "" && new == string(awstypes.AmdSevSnpSpecificationDisabled) {
 									return true
 								}
 								return false
@@ -286,11 +288,11 @@ func ResourceInstance() *schema.Resource {
 							ForceNew: true,
 						},
 						names.AttrVolumeType: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice(ec2.VolumeType_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ForceNew:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.VolumeType](),
 						},
 					},
 				},
@@ -401,11 +403,11 @@ func ResourceInstance() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"market_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice(ec2.MarketType_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ForceNew:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.MarketType](),
 						},
 						"spot_options": {
 							Type:     schema.TypeList,
@@ -416,11 +418,11 @@ func ResourceInstance() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"instance_interruption_behavior": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Computed:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.StringInSlice(ec2.InstanceInterruptionBehavior_Values(), false),
+										Type:             schema.TypeString,
+										Optional:         true,
+										Computed:         true,
+										ForceNew:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.InstanceInterruptionBehavior](),
 									},
 									"max_price": {
 										Type:     schema.TypeString,
@@ -435,11 +437,11 @@ func ResourceInstance() *schema.Resource {
 										},
 									},
 									"spot_instance_type": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Computed:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.StringInSlice(ec2.SpotInstanceType_Values(), false),
+										Type:             schema.TypeString,
+										Optional:         true,
+										Computed:         true,
+										ForceNew:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.SpotInstanceType](),
 									},
 									"valid_until": {
 										Type:         schema.TypeString,
@@ -528,10 +530,10 @@ func ResourceInstance() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"auto_recovery": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.StringInSlice(ec2.InstanceAutoRecoveryState_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.InstanceAutoRecoveryState](),
 						},
 					},
 				},
@@ -544,16 +546,16 @@ func ResourceInstance() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"http_endpoint": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      ec2.InstanceMetadataEndpointStateEnabled,
-							ValidateFunc: validation.StringInSlice(ec2.InstanceMetadataEndpointState_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          awstypes.InstanceMetadataEndpointStateEnabled,
+							ValidateDiagFunc: enum.Validate[awstypes.InstanceMetadataEndpointState](),
 						},
 						"http_protocol_ipv6": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      ec2.InstanceMetadataProtocolStateDisabled,
-							ValidateFunc: validation.StringInSlice(ec2.InstanceMetadataProtocolState_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          awstypes.InstanceMetadataProtocolStateDisabled,
+							ValidateDiagFunc: enum.Validate[awstypes.InstanceMetadataProtocolState](),
 						},
 						"http_put_response_hop_limit": {
 							Type:         schema.TypeInt,
@@ -562,16 +564,16 @@ func ResourceInstance() *schema.Resource {
 							ValidateFunc: validation.IntBetween(1, 64),
 						},
 						"http_tokens": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.StringInSlice(ec2.HttpTokensState_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.HttpTokensState](),
 						},
 						"instance_metadata_tags": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.StringInSlice(ec2.InstanceMetadataTagsState_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.InstanceMetadataTagsState](),
 						},
 					},
 				},
@@ -661,10 +663,10 @@ func ResourceInstance() *schema.Resource {
 							Computed: true,
 						},
 						"hostname_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.StringInSlice(ec2.HostnameType_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.HostnameType](),
 						},
 					},
 				},
@@ -738,10 +740,10 @@ func ResourceInstance() *schema.Resource {
 							Computed: true,
 						},
 						names.AttrVolumeType: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.StringInSlice(ec2.VolumeType_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.VolumeType](),
 						},
 					},
 				},
@@ -786,11 +788,11 @@ func ResourceInstance() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"tenancy": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(ec2.Tenancy_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.Tenancy](),
 			},
 			"user_data": {
 				Type:          schema.TypeString,
@@ -844,7 +846,7 @@ func ResourceInstance() *schema.Resource {
 				_, ok := diff.GetOk(names.AttrLaunchTemplate)
 
 				if diff.Id() != "" && diff.HasChange("launch_template.0.version") && ok {
-					conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+					conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 					stateVersion := diff.Get("launch_template.0.version")
 
@@ -902,7 +904,7 @@ func ResourceInstance() *schema.Resource {
 				return diff.Get("user_data_replace_on_change").(bool)
 			}),
 			customdiff.ForceNewIf(names.AttrInstanceType, func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
-				conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+				conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 				_, ok := diff.GetOk(names.AttrInstanceType)
 
@@ -911,12 +913,12 @@ func ResourceInstance() *schema.Resource {
 				}
 
 				o, n := diff.GetChange(names.AttrInstanceType)
-				it1, err := FindInstanceTypeByName(ctx, conn, o.(string))
+				it1, err := findInstanceTypeByName(ctx, conn, o.(string))
 				if err != nil {
 					return false
 				}
 
-				it2, err := FindInstanceTypeByName(ctx, conn, n.(string))
+				it2, err := findInstanceTypeByName(ctx, conn, n.(string))
 				if err != nil {
 					return false
 				}
@@ -925,7 +927,7 @@ func ResourceInstance() *schema.Resource {
 					return false
 				}
 
-				if aws.StringValue(it1.InstanceType) == aws.StringValue(it2.InstanceType) {
+				if it1.InstanceType == it2.InstanceType {
 					return false
 				}
 
@@ -944,7 +946,7 @@ func iopsDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool {
 	i := strings.LastIndexByte(k, '.')
 	vt := k[:i+1] + names.AttrVolumeType
 	v := d.Get(vt).(string)
-	return (strings.ToLower(v) != ec2.VolumeTypeIo1 && strings.ToLower(v) != ec2.VolumeTypeIo2 && strings.ToLower(v) != ec2.VolumeTypeGp3) && new == "0"
+	return (strings.ToLower(v) != string(awstypes.VolumeTypeIo1) && strings.ToLower(v) != string(awstypes.VolumeTypeIo2) && strings.ToLower(v) != string(awstypes.VolumeTypeGp3)) && new == "0"
 }
 
 func throughputDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool {
@@ -952,12 +954,12 @@ func throughputDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool
 	i := strings.LastIndexByte(k, '.')
 	vt := k[:i+1] + names.AttrVolumeType
 	v := d.Get(vt).(string)
-	return strings.ToLower(v) != ec2.VolumeTypeGp3 && new == "0"
+	return strings.ToLower(v) != string(awstypes.VolumeTypeGp3) && new == "0"
 }
 
 func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	instanceOpts, err := buildInstanceOpts(ctx, d, meta)
 	if err != nil {
@@ -965,14 +967,14 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	// instance itself
-	tagSpecifications := getTagSpecificationsIn(ctx, ec2.ResourceTypeInstance)
+	tagSpecifications := getTagSpecificationsInV2(ctx, awstypes.ResourceTypeInstance)
 
 	// block devices
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tagSpecifications = append(tagSpecifications,
 		tagSpecificationsFromKeyValue(
 			defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("volume_tags").(map[string]interface{}))),
-			ec2.ResourceTypeVolume)...)
+			string(awstypes.ResourceTypeVolume))...)
 
 	input := &ec2.RunInstancesInput{
 		BlockDeviceMappings:               instanceOpts.BlockDeviceMappings,
@@ -994,9 +996,9 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		KeyName:                           instanceOpts.KeyName,
 		LaunchTemplate:                    instanceOpts.LaunchTemplate,
 		MaintenanceOptions:                instanceOpts.MaintenanceOptions,
-		MaxCount:                          aws.Int64(1),
+		MaxCount:                          aws.Int32(1),
 		MetadataOptions:                   instanceOpts.MetadataOptions,
-		MinCount:                          aws.Int64(1),
+		MinCount:                          aws.Int32(1),
 		Monitoring:                        instanceOpts.Monitoring,
 		NetworkInterfaces:                 instanceOpts.NetworkInterfaces,
 		Placement:                         instanceOpts.Placement,
@@ -1016,7 +1018,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	log.Printf("[DEBUG] Creating EC2 Instance: %s", input)
 	outputRaw, err := tfresource.RetryWhen(ctx, iamPropagationTimeout,
 		func() (interface{}, error) {
-			return conn.RunInstancesWithContext(ctx, input)
+			return conn.RunInstances(ctx, input)
 		},
 		func(err error) (bool, error) {
 			// IAM instance profiles can take ~10 seconds to propagate in AWS:
@@ -1038,11 +1040,11 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Instance: %s", err)
 	}
 
-	instance := outputRaw.(*ec2.Reservation).Instances[0]
+	instanceId := outputRaw.(*awstypes.Reservation).Instances[0].InstanceId
 
-	d.SetId(aws.StringValue(instance.InstanceId))
+	d.SetId(aws.ToString(instanceId))
 
-	instance, err = waitInstanceCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+	instance, err := waitInstanceCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Instance (%s) create: %s", d.Id(), err)
@@ -1052,12 +1054,12 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	if instance.PublicIpAddress != nil {
 		d.SetConnInfo(map[string]string{
 			names.AttrType: "ssh",
-			"host":         aws.StringValue(instance.PublicIpAddress),
+			"host":         aws.ToString(instance.PublicIpAddress),
 		})
 	} else if instance.PrivateIpAddress != nil {
 		d.SetConnInfo(map[string]string{
 			names.AttrType: "ssh",
-			"host":         aws.StringValue(instance.PrivateIpAddress),
+			"host":         aws.ToString(instance.PrivateIpAddress),
 		})
 	}
 
@@ -1102,7 +1104,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	for vol, blockDeviceTags := range blockDeviceTagsToCreate {
-		if err := createTags(ctx, conn, vol, Tags(tftags.New(ctx, blockDeviceTags))); err != nil {
+		if err := createTagsV2(ctx, conn, vol, TagsV2(tftags.New(ctx, blockDeviceTags))); err != nil {
 			log.Printf("[ERR] Error creating tags for EBS volume %s: %s", vol, err)
 		}
 	}
@@ -1113,7 +1115,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	instance, err := FindInstanceByID(ctx, conn, d.Id())
 
@@ -1127,8 +1129,8 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", d.Id(), err)
 	}
 
-	instanceType := aws.StringValue(instance.InstanceType)
-	instanceTypeInfo, err := FindInstanceTypeByName(ctx, conn, instanceType)
+	instanceType := string(instance.InstanceType)
+	instanceTypeInfo, err := findInstanceTypeByName(ctx, conn, instanceType)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Instance Type (%s): %s", instanceType, err)
@@ -1200,7 +1202,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("outpost_arn", instance.OutpostArn)
 
 	if instance.IamInstanceProfile != nil && instance.IamInstanceProfile.Arn != nil {
-		name, err := InstanceProfileARNToName(aws.StringValue(instance.IamInstanceProfile.Arn))
+		name, err := InstanceProfileARNToName(aws.ToString(instance.IamInstanceProfile.Arn))
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting iam_instance_profile: %s", err)
@@ -1239,21 +1241,21 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	var secondaryPrivateIPs []string
 	var ipv6Addresses []string
 	if len(instance.NetworkInterfaces) > 0 {
-		var primaryNetworkInterface *ec2.InstanceNetworkInterface
+		var primaryNetworkInterface *awstypes.InstanceNetworkInterface
 		var networkInterfaces []map[string]interface{}
 		for _, iNi := range instance.NetworkInterfaces {
 			ni := make(map[string]interface{})
-			if aws.Int64Value(iNi.Attachment.DeviceIndex) == 0 {
-				primaryNetworkInterface = iNi
+			if aws.ToInt32(iNi.Attachment.DeviceIndex) == 0 {
+				primaryNetworkInterface = &iNi
 			}
 			// If the attached network device is inside our configuration, refresh state with values found.
 			// Otherwise, assume the network device was attached via an outside resource.
 			for _, index := range configuredDeviceIndexes {
-				if index == int(aws.Int64Value(iNi.Attachment.DeviceIndex)) {
-					ni["device_index"] = aws.Int64Value(iNi.Attachment.DeviceIndex)
-					ni["network_card_index"] = aws.Int64Value(iNi.Attachment.NetworkCardIndex)
-					ni[names.AttrNetworkInterfaceID] = aws.StringValue(iNi.NetworkInterfaceId)
-					ni[names.AttrDeleteOnTermination] = aws.BoolValue(iNi.Attachment.DeleteOnTermination)
+				if index == int(aws.ToInt32(iNi.Attachment.DeviceIndex)) {
+					ni["device_index"] = aws.ToInt32(iNi.Attachment.DeviceIndex)
+					ni["network_card_index"] = aws.ToInt32(iNi.Attachment.NetworkCardIndex)
+					ni[names.AttrNetworkInterfaceID] = aws.ToString(iNi.NetworkInterfaceId)
+					ni[names.AttrDeleteOnTermination] = aws.ToBool(iNi.Attachment.DeleteOnTermination)
 				}
 			}
 			// Don't add empty network interfaces to schema
@@ -1284,13 +1286,13 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 			d.Set("associate_public_ip_address", primaryNetworkInterface.Association != nil)
 
 			for _, address := range primaryNetworkInterface.PrivateIpAddresses {
-				if !aws.BoolValue(address.Primary) {
-					secondaryPrivateIPs = append(secondaryPrivateIPs, aws.StringValue(address.PrivateIpAddress))
+				if !aws.ToBool(address.Primary) {
+					secondaryPrivateIPs = append(secondaryPrivateIPs, aws.ToString(address.PrivateIpAddress))
 				}
 			}
 
 			for _, address := range primaryNetworkInterface.Ipv6Addresses {
-				ipv6Addresses = append(ipv6Addresses, aws.StringValue(address.Ipv6Address))
+				ipv6Addresses = append(ipv6Addresses, aws.ToString(address.Ipv6Address))
 			}
 		}
 	} else {
@@ -1309,16 +1311,16 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.Set("ebs_optimized", instance.EbsOptimized)
-	if aws.StringValue(instance.SubnetId) != "" {
+	if aws.ToString(instance.SubnetId) != "" {
 		d.Set("source_dest_check", instance.SourceDestCheck)
 	}
 
-	if instance.Monitoring != nil && instance.Monitoring.State != nil {
-		monitoringState := aws.StringValue(instance.Monitoring.State)
-		d.Set("monitoring", monitoringState == ec2.MonitoringStateEnabled || monitoringState == ec2.MonitoringStatePending)
+	if instance.Monitoring != nil && instance.Monitoring.State != "" {
+		monitoringState := instance.Monitoring.State
+		d.Set("monitoring", monitoringState == awstypes.MonitoringStateEnabled || monitoringState == awstypes.MonitoringStatePending)
 	}
 
-	setTagsOut(ctx, instance.Tags)
+	setTagsOutV2(ctx, instance.Tags)
 
 	if _, ok := d.GetOk("volume_tags"); ok && !blockDeviceTagsDefined(d) {
 		volumeTags, err := readVolumeTags(ctx, conn, d.Id())
@@ -1328,7 +1330,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 		defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 		ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-		tags := KeyValueTags(ctx, volumeTags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+		tags := keyValueTagsV2(ctx, volumeTags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 		if err := d.Set("volume_tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting volume_tags: %s", err)
@@ -1357,7 +1359,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Region:    meta.(*conns.AWSClient).Region,
-		Service:   ec2.ServiceName,
+		Service:   names.EC2,
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("instance/%s", d.Id()),
 	}
@@ -1365,12 +1367,12 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	// Instance attributes
 	{
-		attr, err := conn.DescribeInstanceAttributeWithContext(ctx, &ec2.DescribeInstanceAttributeInput{
-			Attribute:  aws.String(ec2.InstanceAttributeNameDisableApiStop),
+		attr, err := conn.DescribeInstanceAttribute(ctx, &ec2.DescribeInstanceAttributeInput{
+			Attribute:  awstypes.InstanceAttributeNameDisableApiStop,
 			InstanceId: aws.String(d.Id()),
 		})
 		if err != nil && !errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
-			return sdkdiag.AppendErrorf(diags, "getting attribute (%s): %s", ec2.InstanceAttributeNameDisableApiStop, err)
+			return sdkdiag.AppendErrorf(diags, "getting attribute (%s): %s", awstypes.InstanceAttributeNameDisableApiStop, err)
 		}
 		if !errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
 			d.Set("disable_api_stop", attr.DisableApiStop.Value)
@@ -1380,25 +1382,25 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		if isSnowballEdgeInstance(d.Id()) {
 			log.Printf("[INFO] Determined deploying to Snowball Edge based off Instance ID %s. Skip setting the 'disable_api_termination' attribute.", d.Id())
 		} else {
-			output, err := conn.DescribeInstanceAttributeWithContext(ctx, &ec2.DescribeInstanceAttributeInput{
-				Attribute:  aws.String(ec2.InstanceAttributeNameDisableApiTermination),
+			output, err := conn.DescribeInstanceAttribute(ctx, &ec2.DescribeInstanceAttributeInput{
+				Attribute:  awstypes.InstanceAttributeNameDisableApiTermination,
 				InstanceId: aws.String(d.Id()),
 			})
 
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "getting attribute (%s): %s", ec2.InstanceAttributeNameDisableApiTermination, err)
+				return sdkdiag.AppendErrorf(diags, "getting attribute (%s): %s", awstypes.InstanceAttributeNameDisableApiTermination, err)
 			}
 
 			d.Set("disable_api_termination", output.DisableApiTermination.Value)
 		}
 	}
 	{
-		attr, err := conn.DescribeInstanceAttributeWithContext(ctx, &ec2.DescribeInstanceAttributeInput{
-			Attribute:  aws.String(ec2.InstanceAttributeNameUserData),
+		attr, err := conn.DescribeInstanceAttribute(ctx, &ec2.DescribeInstanceAttributeInput{
+			Attribute:  awstypes.InstanceAttributeNameUserData,
 			InstanceId: aws.String(d.Id()),
 		})
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "getting attribute (%s): %s", ec2.InstanceAttributeNameUserData, err)
+			return sdkdiag.AppendErrorf(diags, "getting attribute (%s): %s", awstypes.InstanceAttributeNameUserData, err)
 		}
 		if attr.UserData != nil && attr.UserData.Value != nil {
 			// Since user_data and user_data_base64 conflict with each other,
@@ -1409,15 +1411,15 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 			if b64 {
 				d.Set("user_data_base64", attr.UserData.Value)
 			} else {
-				d.Set("user_data", userDataHashSum(aws.StringValue(attr.UserData.Value)))
+				d.Set("user_data", userDataHashSum(aws.ToString(attr.UserData.Value)))
 			}
 		}
 	}
 
 	// AWS Standard will return InstanceCreditSpecification.NotSupported errors for EC2 Instance IDs outside T2 and T3 instance types
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/8055
-	if aws.BoolValue(instanceTypeInfo.BurstablePerformanceSupported) {
-		instanceCreditSpecification, err := FindInstanceCreditSpecificationByID(ctx, conn, d.Id())
+	if aws.ToBool(instanceTypeInfo.BurstablePerformanceSupported) {
+		instanceCreditSpecification, err := findInstanceCreditSpecificationByID(ctx, conn, d.Id())
 
 		// Ignore UnsupportedOperation errors for AWS China and GovCloud (US).
 		// Reference: https://github.com/hashicorp/terraform-provider-aws/pull/4362.
@@ -1439,7 +1441,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if d.Get("get_password_data").(bool) {
-		passwordData, err := getInstancePasswordData(ctx, aws.StringValue(instance.InstanceId), conn, d.Timeout(schema.TimeoutRead))
+		passwordData, err := getInstancePasswordData(ctx, aws.ToString(instance.InstanceId), conn, d.Timeout(schema.TimeoutRead))
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", d.Id(), err)
 		}
@@ -1457,12 +1459,12 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("capacity_reservation_specification", nil)
 	}
 
-	if spotInstanceRequestID := aws.StringValue(instance.SpotInstanceRequestId); spotInstanceRequestID != "" && instance.InstanceLifecycle != nil {
+	if spotInstanceRequestID := aws.ToString(instance.SpotInstanceRequestId); spotInstanceRequestID != "" && instance.InstanceLifecycle != "" {
 		d.Set("instance_lifecycle", instance.InstanceLifecycle)
 		d.Set("spot_instance_request_id", spotInstanceRequestID)
 
 		input := &ec2.DescribeSpotInstanceRequestsInput{
-			SpotInstanceRequestIds: aws.StringSlice([]string{spotInstanceRequestID}),
+			SpotInstanceRequestIds: []string{spotInstanceRequestID},
 		}
 
 		apiObject, err := FindSpotInstanceRequest(ctx, conn, input)
@@ -1471,26 +1473,21 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 			return sdkdiag.AppendErrorf(diags, "reading EC2 Spot Instance Request (%s): %s", spotInstanceRequestID, err)
 		}
 
-		tfMap := map[string]interface{}{}
-
-		if v := apiObject.InstanceInterruptionBehavior; v != nil {
-			tfMap["instance_interruption_behavior"] = aws.StringValue(v)
+		tfMap := map[string]interface{}{
+			"instance_interruption_behavior": apiObject.InstanceInterruptionBehavior,
+			"spot_instance_type":             apiObject.Type,
 		}
 
 		if v := apiObject.SpotPrice; v != nil {
-			tfMap["max_price"] = aws.StringValue(v)
-		}
-
-		if v := apiObject.Type; v != nil {
-			tfMap["spot_instance_type"] = aws.StringValue(v)
+			tfMap["max_price"] = aws.ToString(v)
 		}
 
 		if v := apiObject.ValidUntil; v != nil {
-			tfMap["valid_until"] = aws.TimeValue(v).Format(time.RFC3339)
+			tfMap["valid_until"] = aws.ToTime(v).Format(time.RFC3339)
 		}
 
 		if err := d.Set("instance_market_options", []interface{}{map[string]interface{}{
-			"market_type":  ec2.MarketTypeSpot,
+			"market_type":  awstypes.MarketTypeSpot,
 			"spot_options": []interface{}{tfMap},
 		}}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting instance_market_options: %s", err)
@@ -1506,7 +1503,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	if d.HasChange("volume_tags") && !d.IsNewResource() {
 		volIDs, err := getInstanceVolIDs(ctx, conn, d.Id())
@@ -1517,7 +1514,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		o, n := d.GetChange("volume_tags")
 
 		for _, volID := range volIDs {
-			if err := updateTags(ctx, conn, volID, o, n); err != nil {
+			if err := updateTagsV2(ctx, conn, volID, o, n); err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating volume_tags (%s): %s", volID, err)
 			}
 		}
@@ -1525,15 +1522,15 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 	if d.HasChange("iam_instance_profile") && !d.IsNewResource() {
 		request := &ec2.DescribeIamInstanceProfileAssociationsInput{
-			Filters: []*ec2.Filter{
+			Filters: []awstypes.Filter{
 				{
 					Name:   aws.String("instance-id"),
-					Values: []*string{aws.String(d.Id())},
+					Values: []string{d.Id()},
 				},
 			},
 		}
 
-		resp, err := conn.DescribeIamInstanceProfileAssociationsWithContext(ctx, request)
+		resp, err := conn.DescribeIamInstanceProfileAssociations(ctx, request)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s): %s", d.Id(), err)
 		}
@@ -1551,17 +1548,17 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				associationId := resp.IamInstanceProfileAssociations[0].AssociationId
 				input := &ec2.ReplaceIamInstanceProfileAssociationInput{
 					AssociationId: associationId,
-					IamInstanceProfile: &ec2.IamInstanceProfileSpecification{
+					IamInstanceProfile: &awstypes.IamInstanceProfileSpecification{
 						Name: aws.String(d.Get("iam_instance_profile").(string)),
 					},
 				}
 
 				// If the instance is running, we can replace the instance profile association.
 				// If it is stopped, the association must be removed and the new one attached separately. (GH-8262)
-				instanceState := d.Get("instance_state").(string)
+				instanceState := awstypes.InstanceStateName(d.Get("instance_state").(string))
 
 				if instanceState != "" {
-					if instanceState == ec2.InstanceStateNameStopped || instanceState == ec2.InstanceStateNameStopping || instanceState == ec2.InstanceStateNameShuttingDown {
+					if instanceState == awstypes.InstanceStateNameStopped || instanceState == awstypes.InstanceStateNameStopping || instanceState == awstypes.InstanceStateNameShuttingDown {
 						if err := disassociateInstanceProfile(ctx, associationId, conn); err != nil {
 							return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s): %s", d.Id(), err)
 						}
@@ -1570,7 +1567,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 						}
 					} else {
 						err := retry.RetryContext(ctx, iamPropagationTimeout, func() *retry.RetryError {
-							_, err := conn.ReplaceIamInstanceProfileAssociationWithContext(ctx, input)
+							_, err := conn.ReplaceIamInstanceProfileAssociation(ctx, input)
 							if err != nil {
 								if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
 									return retry.RetryableError(err)
@@ -1580,7 +1577,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 							return nil
 						})
 						if tfresource.TimedOut(err) {
-							_, err = conn.ReplaceIamInstanceProfileAssociationWithContext(ctx, input)
+							_, err = conn.ReplaceIamInstanceProfileAssociation(ctx, input)
 						}
 						if err != nil {
 							return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s): replacing instance profile: %s", d.Id(), err)
@@ -1599,7 +1596,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 		}
 
-		if _, err := WaitInstanceIAMInstanceProfileUpdated(ctx, conn, d.Id(), d.Get("iam_instance_profile").(string)); err != nil {
+		if _, err := waitInstanceIAMInstanceProfileUpdated(ctx, conn, d.Id(), d.Get("iam_instance_profile").(string)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for EC2 Instance (%s) IAM Instance Profile update: %s", d.Id(), err)
 		}
 	}
@@ -1616,12 +1613,12 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		if d.HasChange("source_dest_check") && !d.IsNewResource() || d.IsNewResource() && !sourceDestCheck {
 			input := &ec2.ModifyInstanceAttributeInput{
 				InstanceId: aws.String(d.Id()),
-				SourceDestCheck: &ec2.AttributeBooleanValue{
+				SourceDestCheck: &awstypes.AttributeBooleanValue{
 					Value: aws.Bool(sourceDestCheck),
 				},
 			}
 
-			_, err := conn.ModifyInstanceAttributeWithContext(ctx, input)
+			_, err := conn.ModifyInstanceAttribute(ctx, input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "modifying EC2 Instance (%s) SourceDestCheck attribute: %s", d.Id(), err)
@@ -1635,10 +1632,10 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", d.Id(), err)
 		}
 
-		var primaryInterface *ec2.InstanceNetworkInterface
+		var primaryInterface *awstypes.InstanceNetworkInterface
 		for _, ni := range instance.NetworkInterfaces {
-			if aws.Int64Value(ni.Attachment.DeviceIndex) == 0 {
-				primaryInterface = ni
+			if aws.ToInt32(ni.Attachment.DeviceIndex) == 0 {
+				primaryInterface = &ni
 			}
 		}
 
@@ -1653,10 +1650,10 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			// Add more to the primary NIC.
 			input := &ec2.AssignIpv6AddressesInput{
 				NetworkInterfaceId: primaryInterface.NetworkInterfaceId,
-				Ipv6AddressCount:   aws.Int64(int64(ns - os)),
+				Ipv6AddressCount:   aws.Int32(int32(ns - os)),
 			}
 
-			_, err := conn.AssignIpv6AddressesWithContext(ctx, input)
+			_, err := conn.AssignIpv6Addresses(ctx, input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "assigning EC2 Instance (%s) IPv6 addresses: %s", d.Id(), err)
@@ -1667,9 +1664,9 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				return sdkdiag.AppendErrorf(diags, "IPv6 address count (%d) on the instance does not match state's count (%d), we're in a race with something else", len(primaryInterface.Ipv6Addresses), os)
 			}
 
-			toRemove := make([]*string, 0)
+			toRemove := make([]string, 0)
 			for _, addr := range primaryInterface.Ipv6Addresses[ns:] { // Can I assume this is strongly ordered?
-				toRemove = append(toRemove, addr.Ipv6Address)
+				toRemove = append(toRemove, *addr.Ipv6Address)
 			}
 
 			input := &ec2.UnassignIpv6AddressesInput{
@@ -1677,7 +1674,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				Ipv6Addresses:      toRemove,
 			}
 
-			_, err := conn.UnassignIpv6AddressesWithContext(ctx, input)
+			_, err := conn.UnassignIpv6Addresses(ctx, input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "unassigning EC2 Instance (%s) IPv6 addresses: %s", d.Id(), err)
@@ -1692,10 +1689,10 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", d.Id(), err)
 		}
 
-		var primaryInterface *ec2.InstanceNetworkInterface
+		var primaryInterface *awstypes.InstanceNetworkInterface
 		for _, ni := range instance.NetworkInterfaces {
-			if aws.Int64Value(ni.Attachment.DeviceIndex) == 0 {
-				primaryInterface = ni
+			if aws.ToInt32(ni.Attachment.DeviceIndex) == 0 {
+				primaryInterface = &ni
 			}
 		}
 
@@ -1720,10 +1717,10 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			if unassignIps.Len() != 0 {
 				input := &ec2.UnassignPrivateIpAddressesInput{
 					NetworkInterfaceId: primaryInterface.NetworkInterfaceId,
-					PrivateIpAddresses: flex.ExpandStringSet(unassignIps),
+					PrivateIpAddresses: flex.ExpandStringValueSet(unassignIps),
 				}
 				log.Printf("[INFO] Unassigning secondary_private_ips on Instance %q", d.Id())
-				_, err := conn.UnassignPrivateIpAddressesWithContext(ctx, input)
+				_, err := conn.UnassignPrivateIpAddresses(ctx, input)
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "Failure to unassign Secondary Private IPs: %s", err)
 				}
@@ -1734,10 +1731,10 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			if assignIps.Len() != 0 {
 				input := &ec2.AssignPrivateIpAddressesInput{
 					NetworkInterfaceId: primaryInterface.NetworkInterfaceId,
-					PrivateIpAddresses: flex.ExpandStringSet(assignIps),
+					PrivateIpAddresses: flex.ExpandStringValueSet(assignIps),
 				}
 				log.Printf("[INFO] Assigning secondary_private_ips on Instance %q", d.Id())
-				_, err := conn.AssignPrivateIpAddressesWithContext(ctx, input)
+				_, err := conn.AssignPrivateIpAddresses(ctx, input)
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "Failure to assign Secondary Private IPs: %s", err)
 				}
@@ -1749,10 +1746,10 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				return sdkdiag.AppendErrorf(diags, "Failed to update vpc_security_group_ids on %q, which does not contain a primary network interface",
 					d.Id())
 			}
-			var groups []*string
+			var groups []string
 			if v := d.Get(names.AttrVPCSecurityGroupIDs).(*schema.Set); v.Len() > 0 {
 				for _, v := range v.List() {
-					groups = append(groups, aws.String(v.(string)))
+					groups = append(groups, v.(string))
 				}
 			}
 
@@ -1765,7 +1762,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			// Thus, we need to actually modify the primary network interface for the new security groups, as the primary
 			// network interface is where we modify/create security group assignments during Create.
 			log.Printf("[INFO] Modifying `vpc_security_group_ids` on Instance %q", d.Id())
-			if _, err := conn.ModifyNetworkInterfaceAttributeWithContext(ctx, &ec2.ModifyNetworkInterfaceAttributeInput{
+			if _, err := conn.ModifyNetworkInterfaceAttribute(ctx, &ec2.ModifyNetworkInterfaceAttributeInput{
 				NetworkInterfaceId: primaryInterface.NetworkInterfaceId,
 				Groups:             groups,
 			}); err != nil {
@@ -1784,7 +1781,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				instanceType := d.Get(names.AttrInstanceType).(string)
 				input := &ec2.ModifyInstanceAttributeInput{
 					InstanceId: aws.String(d.Id()),
-					InstanceType: &ec2.AttributeValue{
+					InstanceType: &awstypes.AttributeValue{
 						Value: aws.String(instanceType),
 					},
 				}
@@ -1809,7 +1806,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 			input := &ec2.ModifyInstanceAttributeInput{
 				InstanceId: aws.String(d.Id()),
-				UserData: &ec2.BlobAttributeValue{
+				UserData: &awstypes.BlobAttributeValue{
 					Value: v,
 				},
 			}
@@ -1829,7 +1826,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 			input := &ec2.ModifyInstanceAttributeInput{
 				InstanceId: aws.String(d.Id()),
-				UserData: &ec2.BlobAttributeValue{
+				UserData: &awstypes.BlobAttributeValue{
 					Value: v,
 				},
 			}
@@ -1855,12 +1852,12 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	if d.HasChange("instance_initiated_shutdown_behavior") {
 		input := &ec2.ModifyInstanceAttributeInput{
 			InstanceId: aws.String(d.Id()),
-			InstanceInitiatedShutdownBehavior: &ec2.AttributeValue{
+			InstanceInitiatedShutdownBehavior: &awstypes.AttributeValue{
 				Value: aws.String(d.Get("instance_initiated_shutdown_behavior").(string)),
 			},
 		}
 
-		_, err := conn.ModifyInstanceAttributeWithContext(ctx, input)
+		_, err := conn.ModifyInstanceAttribute(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying EC2 Instance (%s) InstanceInitiatedShutdownBehavior attribute: %s", d.Id(), err)
@@ -1871,8 +1868,8 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		autoRecovery := d.Get("maintenance_options.0.auto_recovery").(string)
 
 		log.Printf("[INFO] Modifying instance automatic recovery settings %s", d.Id())
-		_, err := conn.ModifyInstanceMaintenanceOptionsWithContext(ctx, &ec2.ModifyInstanceMaintenanceOptionsInput{
-			AutoRecovery: aws.String(autoRecovery),
+		_, err := conn.ModifyInstanceMaintenanceOptions(ctx, &ec2.ModifyInstanceMaintenanceOptionsInput{
+			AutoRecovery: awstypes.InstanceAutoRecoveryState(autoRecovery),
 			InstanceId:   aws.String(d.Id()),
 		})
 
@@ -1880,7 +1877,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s): modifying maintenance options: %s", d.Id(), err)
 		}
 
-		if _, err := WaitInstanceMaintenanceOptionsAutoRecoveryUpdated(ctx, conn, d.Id(), autoRecovery, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waitInstanceMaintenanceOptionsAutoRecoveryUpdated(ctx, conn, d.Id(), autoRecovery, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s): modifying maintenance options: waiting for completion: %s", d.Id(), err)
 		}
 	}
@@ -1889,13 +1886,13 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		var mErr error
 		if d.Get("monitoring").(bool) {
 			log.Printf("[DEBUG] Enabling monitoring for Instance (%s)", d.Id())
-			_, mErr = conn.MonitorInstancesWithContext(ctx, &ec2.MonitorInstancesInput{
-				InstanceIds: []*string{aws.String(d.Id())},
+			_, mErr = conn.MonitorInstances(ctx, &ec2.MonitorInstancesInput{
+				InstanceIds: []string{d.Id()},
 			})
 		} else {
 			log.Printf("[DEBUG] Disabling monitoring for Instance (%s)", d.Id())
-			_, mErr = conn.UnmonitorInstancesWithContext(ctx, &ec2.UnmonitorInstancesInput{
-				InstanceIds: []*string{aws.String(d.Id())},
+			_, mErr = conn.UnmonitorInstances(ctx, &ec2.UnmonitorInstancesInput{
+				InstanceIds: []string{d.Id()},
 			})
 		}
 		if mErr != nil {
@@ -1909,11 +1906,11 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			instanceCreditSpecification.InstanceId = aws.String(d.Id())
 			input := &ec2.ModifyInstanceCreditSpecificationInput{
 				ClientToken:                  aws.String(id.UniqueId()),
-				InstanceCreditSpecifications: []*ec2.InstanceCreditSpecificationRequest{instanceCreditSpecification},
+				InstanceCreditSpecifications: []awstypes.InstanceCreditSpecificationRequest{instanceCreditSpecification},
 			}
 
 			log.Printf("[DEBUG] Modifying EC2 Instance credit specification: %s", input)
-			_, err := conn.ModifyInstanceCreditSpecificationWithContext(ctx, input)
+			_, err := conn.ModifyInstanceCreditSpecification(ctx, input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s) credit specification: %s", d.Id(), err)
@@ -1925,30 +1922,29 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		if v, ok := d.GetOk("metadata_options"); ok {
 			if tfMap, ok := v.([]interface{})[0].(map[string]interface{}); ok {
 				input := &ec2.ModifyInstanceMetadataOptionsInput{
-					HttpEndpoint: aws.String(tfMap["http_endpoint"].(string)),
+					HttpEndpoint: awstypes.InstanceMetadataEndpointState(tfMap["http_endpoint"].(string)),
 					InstanceId:   aws.String(d.Id()),
 				}
 
-				if tfMap["http_endpoint"].(string) == ec2.InstanceMetadataEndpointStateEnabled {
+				if tfMap["http_endpoint"].(string) == string(awstypes.InstanceMetadataEndpointStateEnabled) {
 					// These parameters are not allowed unless HttpEndpoint is enabled.
-					input.HttpProtocolIpv6 = aws.String(tfMap["http_protocol_ipv6"].(string))
-					input.HttpPutResponseHopLimit = aws.Int64(int64(tfMap["http_put_response_hop_limit"].(int)))
-					input.HttpTokens = aws.String(tfMap["http_tokens"].(string))
-					input.InstanceMetadataTags = aws.String(tfMap["instance_metadata_tags"].(string))
+					input.HttpProtocolIpv6 = awstypes.InstanceMetadataProtocolState(tfMap["http_protocol_ipv6"].(string))
+					input.HttpPutResponseHopLimit = aws.Int32(int32(tfMap["http_put_response_hop_limit"].(int)))
+					input.HttpTokens = awstypes.HttpTokensState(tfMap["http_tokens"].(string))
+					input.InstanceMetadataTags = awstypes.InstanceMetadataTagsState(tfMap["instance_metadata_tags"].(string))
 				}
 
-				_, err := conn.ModifyInstanceMetadataOptionsWithContext(ctx, input)
+				_, err := conn.ModifyInstanceMetadataOptions(ctx, input)
 				if tfawserr.ErrMessageContains(err, errCodeUnsupportedOperation, "InstanceMetadataTags") {
 					log.Printf("[WARN] updating EC2 Instance (%s) metadata options: %s. Retrying without instance metadata tags.", d.Id(), err)
-					input.InstanceMetadataTags = nil
 
-					_, err = conn.ModifyInstanceMetadataOptionsWithContext(ctx, input)
+					_, err = conn.ModifyInstanceMetadataOptions(ctx, input)
 				}
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s) metadata options: %s", d.Id(), err)
 				}
 
-				if _, err := WaitInstanceMetadataOptionsApplied(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+				if _, err := waitInstanceMetadataOptionsApplied(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 					return sdkdiag.AppendErrorf(diags, "waiting for EC2 Instance (%s) metadata options update: %s", d.Id(), err)
 				}
 			}
@@ -1966,49 +1962,49 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		if d.HasChange("root_block_device.0.volume_size") {
 			if v, ok := d.Get("root_block_device.0.volume_size").(int); ok && v != 0 {
 				modifyVolume = true
-				input.Size = aws.Int64(int64(v))
+				input.Size = aws.Int32(int32(v))
 			}
 		}
 		if d.HasChange("root_block_device.0.volume_type") {
 			if v, ok := d.Get("root_block_device.0.volume_type").(string); ok && v != "" {
 				modifyVolume = true
-				input.VolumeType = aws.String(v)
+				input.VolumeType = awstypes.VolumeType(v)
 			}
 		}
 		if d.HasChange("root_block_device.0.iops") {
 			if v, ok := d.Get("root_block_device.0.iops").(int); ok && v != 0 {
 				// Enforce IOPs usage with a valid volume type
 				// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/12667
-				if t, ok := d.Get("root_block_device.0.volume_type").(string); ok && t != ec2.VolumeTypeIo1 && t != ec2.VolumeTypeIo2 && t != ec2.VolumeTypeGp3 {
+				if t, ok := d.Get("root_block_device.0.volume_type").(string); ok && t != string(awstypes.VolumeTypeIo1) && t != string(awstypes.VolumeTypeIo2) && t != string(awstypes.VolumeTypeGp3) {
 					if t == "" {
 						// Volume defaults to gp2
-						t = ec2.VolumeTypeGp2
+						t = string(awstypes.VolumeTypeGp2)
 					}
 					return sdkdiag.AppendErrorf(diags, "updating instance: iops attribute not supported for type %s", t)
 				}
 				modifyVolume = true
-				input.Iops = aws.Int64(int64(v))
+				input.Iops = aws.Int32(int32(v))
 			}
 		}
 		if d.HasChange("root_block_device.0.throughput") {
 			if v, ok := d.Get("root_block_device.0.throughput").(int); ok && v != 0 {
 				// Enforce throughput usage with a valid volume type
-				if t, ok := d.Get("root_block_device.0.volume_type").(string); ok && t != ec2.VolumeTypeGp3 {
+				if t, ok := d.Get("root_block_device.0.volume_type").(string); ok && t != string(awstypes.VolumeTypeGp3) {
 					return sdkdiag.AppendErrorf(diags, "updating instance: throughput attribute not supported for type %s", t)
 				}
 				modifyVolume = true
-				input.Throughput = aws.Int64(int64(v))
+				input.Throughput = aws.Int32(int32(v))
 			}
 		}
 		if modifyVolume {
 			log.Printf("[DEBUG] Modifying volume: %s", input)
-			_, err := conn.ModifyVolumeWithContext(ctx, input)
+			_, err := conn.ModifyVolume(ctx, input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s) volume (%s): %s", d.Id(), volID, err)
 			}
 
-			if _, err := WaitVolumeModificationComplete(ctx, conn, volID, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			if _, err := waitVolumeModificationComplete(ctx, conn, volID, d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for EC2 Instance (%s) volume (%s) update: %s", d.Id(), volID, err)
 			}
 		}
@@ -2017,10 +2013,10 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			deviceName := d.Get("root_block_device.0.device_name").(string)
 			if v, ok := d.Get("root_block_device.0.delete_on_termination").(bool); ok {
 				input := &ec2.ModifyInstanceAttributeInput{
-					BlockDeviceMappings: []*ec2.InstanceBlockDeviceMappingSpecification{
+					BlockDeviceMappings: []awstypes.InstanceBlockDeviceMappingSpecification{
 						{
 							DeviceName: aws.String(deviceName),
-							Ebs: &ec2.EbsInstanceBlockDeviceSpecification{
+							Ebs: &awstypes.EbsInstanceBlockDeviceSpecification{
 								DeleteOnTermination: aws.Bool(v),
 							},
 						},
@@ -2028,13 +2024,13 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 					InstanceId: aws.String(d.Id()),
 				}
 
-				_, err := conn.ModifyInstanceAttributeWithContext(ctx, input)
+				_, err := conn.ModifyInstanceAttribute(ctx, input)
 
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "modifying EC2 Instance (%s) BlockDeviceMappings (%s) attribute: %s", d.Id(), deviceName, err)
 				}
 
-				if _, err := WaitInstanceRootBlockDeviceDeleteOnTerminationUpdated(ctx, conn, d.Id(), v, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				if _, err := waitInstanceRootBlockDeviceDeleteOnTerminationUpdated(ctx, conn, d.Id(), v, d.Timeout(schema.TimeoutUpdate)); err != nil {
 					return sdkdiag.AppendErrorf(diags, "waiting for EC2 Instance (%s) root block device DeleteOnTermination update: %s", d.Id(), err)
 				}
 			}
@@ -2043,7 +2039,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		if d.HasChange("root_block_device.0.tags") {
 			o, n := d.GetChange("root_block_device.0.tags")
 
-			if err := updateTags(ctx, conn, volID, o, n); err != nil {
+			if err := updateTagsV2(ctx, conn, volID, o, n); err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating tags for volume (%s): %s", volID, err)
 			}
 		}
@@ -2051,7 +2047,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		if d.HasChange("root_block_device.0.tags_all") && !d.HasChange("root_block_device.0.tags") {
 			o, n := d.GetChange("root_block_device.0.tags_all")
 
-			if err := updateTags(ctx, conn, volID, o, n); err != nil {
+			if err := updateTagsV2(ctx, conn, volID, o, n); err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating tags for volume (%s): %s", volID, err)
 			}
 		}
@@ -2061,7 +2057,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	// otherwise the modification will return an IncorrectInstanceState error
 	if d.HasChange("capacity_reservation_specification") && !d.IsNewResource() {
 		if v, ok := d.GetOk("capacity_reservation_specification"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			if v := expandCapacityReservationSpecification(v.([]interface{})[0].(map[string]interface{})); v != nil && (v.CapacityReservationPreference != nil || v.CapacityReservationTarget != nil) {
+			if v := expandCapacityReservationSpecification(v.([]interface{})[0].(map[string]interface{})); v != nil && (v.CapacityReservationPreference != "" || v.CapacityReservationTarget != nil) {
 				if err := stopInstance(ctx, conn, d.Id(), false, InstanceStopTimeout); err != nil {
 					return sdkdiag.AppendFromErr(diags, err)
 				}
@@ -2070,12 +2066,12 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 					instanceType := d.Get(names.AttrInstanceType).(string)
 					input := &ec2.ModifyInstanceAttributeInput{
 						InstanceId: aws.String(d.Id()),
-						InstanceType: &ec2.AttributeValue{
+						InstanceType: &awstypes.AttributeValue{
 							Value: aws.String(instanceType),
 						},
 					}
 
-					if _, err := conn.ModifyInstanceAttributeWithContext(ctx, input); err != nil {
+					if _, err := conn.ModifyInstanceAttribute(ctx, input); err != nil {
 						return sdkdiag.AppendErrorf(diags, "modifying EC2 Instance (%s) InstanceType (%s) attribute: %s", d.Id(), instanceType, err)
 					}
 				}
@@ -2087,13 +2083,13 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 				log.Printf("[DEBUG] Modifying EC2 Instance capacity reservation attributes: %s", input)
 
-				_, err := conn.ModifyInstanceCapacityReservationAttributesWithContext(ctx, input)
+				_, err := conn.ModifyInstanceCapacityReservationAttributes(ctx, input)
 
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s) capacity reservation attributes: %s", d.Id(), err)
 				}
 
-				if _, err := WaitInstanceCapacityReservationSpecificationUpdated(ctx, conn, d.Id(), v); err != nil {
+				if _, err := waitInstanceCapacityReservationSpecificationUpdated(ctx, conn, d.Id(), v); err != nil {
 					return sdkdiag.AppendErrorf(diags, "waiting for EC2 Instance (%s) capacity reservation attributes update: %s", d.Id(), err)
 				}
 
@@ -2121,10 +2117,10 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 
 			if d.HasChange("private_dns_name_options.0.hostname_type") {
-				input.PrivateDnsHostnameType = aws.String(tfMap["hostname_type"].(string))
+				input.PrivateDnsHostnameType = awstypes.HostnameType(tfMap["hostname_type"].(string))
 			}
 
-			_, err := conn.ModifyPrivateDnsNameOptionsWithContext(ctx, input)
+			_, err := conn.ModifyPrivateDnsNameOptions(ctx, input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s): modifying private DNS name options: %s", d.Id(), err)
@@ -2140,7 +2136,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	if err := disableInstanceAPITermination(ctx, conn, d.Id(), false); err != nil {
 		log.Printf("[WARN] attempting to terminate EC2 Instance (%s) despite error disabling API termination: %s", d.Id(), err)
@@ -2152,10 +2148,10 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
-	if v, ok := d.GetOk("instance_lifecycle"); ok && v == ec2.InstanceLifecycleSpot {
+	if v, ok := d.GetOk("instance_lifecycle"); ok && v == awstypes.InstanceLifecycleSpot {
 		spotInstanceRequestID := d.Get("spot_instance_request_id").(string)
-		_, err := conn.CancelSpotInstanceRequestsWithContext(ctx, &ec2.CancelSpotInstanceRequestsInput{
-			SpotInstanceRequestIds: aws.StringSlice([]string{spotInstanceRequestID}),
+		_, err := conn.CancelSpotInstanceRequests(ctx, &ec2.CancelSpotInstanceRequestsInput{
+			SpotInstanceRequestIds: []string{spotInstanceRequestID},
 		})
 
 		if err != nil {
@@ -2170,15 +2166,15 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func disableInstanceAPIStop(ctx context.Context, conn *ec2.EC2, id string, disableAPIStop bool) error {
+func disableInstanceAPIStop(ctx context.Context, conn *ec2.Client, id string, disableAPIStop bool) error {
 	input := &ec2.ModifyInstanceAttributeInput{
-		DisableApiStop: &ec2.AttributeBooleanValue{
+		DisableApiStop: &awstypes.AttributeBooleanValue{
 			Value: aws.Bool(disableAPIStop),
 		},
 		InstanceId: aws.String(id),
 	}
 
-	_, err := conn.ModifyInstanceAttributeWithContext(ctx, input)
+	_, err := conn.ModifyInstanceAttribute(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, errCodeUnsupportedOperation, "not supported for spot instances") {
 		log.Printf("[WARN] failed to modify EC2 Instance (%s) attribute: %s", id, err)
@@ -2192,15 +2188,15 @@ func disableInstanceAPIStop(ctx context.Context, conn *ec2.EC2, id string, disab
 	return nil
 }
 
-func disableInstanceAPITermination(ctx context.Context, conn *ec2.EC2, id string, disableAPITermination bool) error {
+func disableInstanceAPITermination(ctx context.Context, conn *ec2.Client, id string, disableAPITermination bool) error {
 	input := &ec2.ModifyInstanceAttributeInput{
-		DisableApiTermination: &ec2.AttributeBooleanValue{
+		DisableApiTermination: &awstypes.AttributeBooleanValue{
 			Value: aws.Bool(disableAPITermination),
 		},
 		InstanceId: aws.String(id),
 	}
 
-	_, err := conn.ModifyInstanceAttributeWithContext(ctx, input)
+	_, err := conn.ModifyInstanceAttribute(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, errCodeUnsupportedOperation, "not supported for spot instances") {
 		log.Printf("[WARN] failed to modify EC2 Instance (%s) attribute: %s", id, err)
@@ -2218,14 +2214,14 @@ func disableInstanceAPITermination(ctx context.Context, conn *ec2.EC2, id string
 // as input by first stopping the EC2 instance before the modification
 // and then starting up the EC2 instance after modification.
 // Reference: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Stop_Start.html
-func modifyInstanceAttributeWithStopStart(ctx context.Context, conn *ec2.EC2, input *ec2.ModifyInstanceAttributeInput, attrName string) error {
-	id := aws.StringValue(input.InstanceId)
+func modifyInstanceAttributeWithStopStart(ctx context.Context, conn *ec2.Client, input *ec2.ModifyInstanceAttributeInput, attrName string) error {
+	id := aws.ToString(input.InstanceId)
 
 	if err := stopInstance(ctx, conn, id, false, InstanceStopTimeout); err != nil {
 		return err
 	}
 
-	if _, err := conn.ModifyInstanceAttributeWithContext(ctx, input); err != nil {
+	if _, err := conn.ModifyInstanceAttribute(ctx, input); err != nil {
 		return fmt.Errorf("modifying EC2 Instance (%s) %s attribute: %w", id, attrName, err)
 	}
 
@@ -2236,7 +2232,7 @@ func modifyInstanceAttributeWithStopStart(ctx context.Context, conn *ec2.EC2, in
 	return nil
 }
 
-func readBlockDevices(ctx context.Context, d *schema.ResourceData, meta interface{}, instance *ec2.Instance, ds bool) error {
+func readBlockDevices(ctx context.Context, d *schema.ResourceData, meta interface{}, instance *awstypes.Instance, ds bool) error {
 	ibds, err := readBlockDevicesFromInstance(ctx, d, meta, instance, ds)
 	if err != nil {
 		return fmt.Errorf("reading block devices: %w", err)
@@ -2288,16 +2284,16 @@ func readBlockDevices(ctx context.Context, d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, meta interface{}, instance *ec2.Instance, ds bool) (map[string]interface{}, error) {
+func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, meta interface{}, instance *awstypes.Instance, ds bool) (map[string]interface{}, error) {
 	blockDevices := make(map[string]interface{})
 	blockDevices["ebs"] = make([]map[string]interface{}, 0)
 	blockDevices["root"] = nil
 	// Ephemeral devices don't show up in BlockDeviceMappings or DescribeVolumes so we can't actually set them
 
-	instanceBlockDevices := make(map[string]*ec2.InstanceBlockDeviceMapping)
+	instanceBlockDevices := make(map[string]awstypes.InstanceBlockDeviceMapping)
 	for _, bd := range instance.BlockDeviceMappings {
 		if bd.Ebs != nil {
-			instanceBlockDevices[aws.StringValue(bd.Ebs.VolumeId)] = bd
+			instanceBlockDevices[aws.ToString(bd.Ebs.VolumeId)] = bd
 		}
 	}
 
@@ -2305,15 +2301,15 @@ func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, m
 		return nil, nil
 	}
 
-	volIDs := make([]*string, 0, len(instanceBlockDevices))
+	volIDs := make([]string, 0, len(instanceBlockDevices))
 	for volID := range instanceBlockDevices {
-		volIDs = append(volIDs, aws.String(volID))
+		volIDs = append(volIDs, volID)
 	}
 
 	// Need to call DescribeVolumes to get volume_size and volume_type for each
 	// EBS block device
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
-	volResp, err := conn.DescribeVolumesWithContext(ctx, &ec2.DescribeVolumesInput{
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	volResp, err := conn.DescribeVolumes(ctx, &ec2.DescribeVolumesInput{
 		VolumeIds: volIDs,
 	})
 	if err != nil {
@@ -2324,40 +2320,40 @@ func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, m
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	for _, vol := range volResp.Volumes {
-		instanceBd := instanceBlockDevices[aws.StringValue(vol.VolumeId)]
+		instanceBd := instanceBlockDevices[aws.ToString(vol.VolumeId)]
 		bd := make(map[string]interface{})
 
-		bd["volume_id"] = aws.StringValue(vol.VolumeId)
+		bd["volume_id"] = aws.ToString(vol.VolumeId)
 
 		if instanceBd.Ebs != nil && instanceBd.Ebs.DeleteOnTermination != nil {
-			bd[names.AttrDeleteOnTermination] = aws.BoolValue(instanceBd.Ebs.DeleteOnTermination)
+			bd[names.AttrDeleteOnTermination] = aws.ToBool(instanceBd.Ebs.DeleteOnTermination)
 		}
 		if vol.Size != nil {
-			bd[names.AttrVolumeSize] = aws.Int64Value(vol.Size)
+			bd[names.AttrVolumeSize] = aws.ToInt32(vol.Size)
 		}
-		if vol.VolumeType != nil {
-			bd[names.AttrVolumeType] = aws.StringValue(vol.VolumeType)
+		if vol.VolumeType != "" {
+			bd[names.AttrVolumeType] = vol.VolumeType
 		}
 		if vol.Iops != nil {
-			bd[names.AttrIOPS] = aws.Int64Value(vol.Iops)
+			bd[names.AttrIOPS] = aws.ToInt32(vol.Iops)
 		}
 		if vol.Encrypted != nil {
-			bd[names.AttrEncrypted] = aws.BoolValue(vol.Encrypted)
+			bd[names.AttrEncrypted] = aws.ToBool(vol.Encrypted)
 		}
 		if vol.KmsKeyId != nil {
-			bd[names.AttrKMSKeyID] = aws.StringValue(vol.KmsKeyId)
+			bd[names.AttrKMSKeyID] = aws.ToString(vol.KmsKeyId)
 		}
 		if vol.Throughput != nil {
-			bd["throughput"] = aws.Int64Value(vol.Throughput)
+			bd["throughput"] = aws.ToInt32(vol.Throughput)
 		}
 		if instanceBd.DeviceName != nil {
-			bd[names.AttrDeviceName] = aws.StringValue(instanceBd.DeviceName)
+			bd[names.AttrDeviceName] = aws.ToString(instanceBd.DeviceName)
 		}
 		if v, ok := d.GetOk("volume_tags"); !ok || v == nil || len(v.(map[string]interface{})) == 0 {
 			if ds {
-				bd[names.AttrTags] = KeyValueTags(ctx, vol.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()
+				bd[names.AttrTags] = keyValueTagsV2(ctx, vol.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()
 			} else {
-				tags := KeyValueTags(ctx, vol.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+				tags := keyValueTagsV2(ctx, vol.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 				bd[names.AttrTags] = tags.RemoveDefaultConfig(defaultTagsConfig).Map()
 				bd[names.AttrTagsAll] = tags.Map()
 			}
@@ -2367,7 +2363,7 @@ func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, m
 			blockDevices["root"] = bd
 		} else {
 			if vol.SnapshotId != nil {
-				bd[names.AttrSnapshotID] = aws.StringValue(vol.SnapshotId)
+				bd[names.AttrSnapshotID] = aws.ToString(vol.SnapshotId)
 			}
 
 			blockDevices["ebs"] = append(blockDevices["ebs"].([]map[string]interface{}), bd)
@@ -2384,21 +2380,21 @@ func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, m
 	return blockDevices, nil
 }
 
-func blockDeviceIsRoot(bd *ec2.InstanceBlockDeviceMapping, instance *ec2.Instance) bool {
+func blockDeviceIsRoot(bd awstypes.InstanceBlockDeviceMapping, instance *awstypes.Instance) bool {
 	return bd.DeviceName != nil &&
 		instance.RootDeviceName != nil &&
-		aws.StringValue(bd.DeviceName) == aws.StringValue(instance.RootDeviceName)
+		aws.ToString(bd.DeviceName) == aws.ToString(instance.RootDeviceName)
 }
 
-func associateInstanceProfile(ctx context.Context, d *schema.ResourceData, conn *ec2.EC2) error {
+func associateInstanceProfile(ctx context.Context, d *schema.ResourceData, conn *ec2.Client) error {
 	input := &ec2.AssociateIamInstanceProfileInput{
 		InstanceId: aws.String(d.Id()),
-		IamInstanceProfile: &ec2.IamInstanceProfileSpecification{
+		IamInstanceProfile: &awstypes.IamInstanceProfileSpecification{
 			Name: aws.String(d.Get("iam_instance_profile").(string)),
 		},
 	}
 	err := retry.RetryContext(ctx, iamPropagationTimeout, func() *retry.RetryError {
-		_, err := conn.AssociateIamInstanceProfileWithContext(ctx, input)
+		_, err := conn.AssociateIamInstanceProfile(ctx, input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
 				return retry.RetryableError(err)
@@ -2408,7 +2404,7 @@ func associateInstanceProfile(ctx context.Context, d *schema.ResourceData, conn 
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		_, err = conn.AssociateIamInstanceProfileWithContext(ctx, input)
+		_, err = conn.AssociateIamInstanceProfile(ctx, input)
 	}
 	if err != nil {
 		return fmt.Errorf("associating instance profile: %s", err)
@@ -2416,8 +2412,8 @@ func associateInstanceProfile(ctx context.Context, d *schema.ResourceData, conn 
 	return nil
 }
 
-func disassociateInstanceProfile(ctx context.Context, associationId *string, conn *ec2.EC2) error {
-	_, err := conn.DisassociateIamInstanceProfileWithContext(ctx, &ec2.DisassociateIamInstanceProfileInput{
+func disassociateInstanceProfile(ctx context.Context, associationId *string, conn *ec2.Client) error {
+	_, err := conn.DisassociateIamInstanceProfile(ctx, &ec2.DisassociateIamInstanceProfileInput{
 		AssociationId: associationId,
 	})
 	if err != nil {
@@ -2426,7 +2422,7 @@ func disassociateInstanceProfile(ctx context.Context, associationId *string, con
 	return nil
 }
 
-func FetchRootDeviceName(ctx context.Context, conn *ec2.EC2, amiID string) (*string, error) {
+func FetchRootDeviceName(ctx context.Context, conn *ec2.Client, amiID string) (*string, error) {
 	if amiID == "" {
 		return nil, errors.New("Cannot fetch root device name for blank AMI ID.")
 	}
@@ -2440,7 +2436,7 @@ func FetchRootDeviceName(ctx context.Context, conn *ec2.EC2, amiID string) (*str
 	rootDeviceName := image.RootDeviceName
 
 	// Instance store backed AMIs do not provide a root device name.
-	if aws.StringValue(image.RootDeviceType) == ec2.DeviceTypeInstanceStore {
+	if image.RootDeviceType == awstypes.DeviceTypeInstanceStore {
 		return nil, nil
 	}
 
@@ -2457,7 +2453,7 @@ func FetchRootDeviceName(ctx context.Context, conn *ec2.EC2, amiID string) (*str
 	// BlockDeviceMapping entry serves as the root device.
 	rootDeviceNameInMapping := false
 	for _, bdm := range image.BlockDeviceMappings {
-		if aws.StringValue(bdm.DeviceName) == aws.StringValue(image.RootDeviceName) {
+		if aws.ToString(bdm.DeviceName) == aws.ToString(image.RootDeviceName) {
 			rootDeviceNameInMapping = true
 		}
 	}
@@ -2473,8 +2469,8 @@ func FetchRootDeviceName(ctx context.Context, conn *ec2.EC2, amiID string) (*str
 	return rootDeviceName, nil
 }
 
-func buildNetworkInterfaceOpts(d *schema.ResourceData, groups []*string, nInterfaces interface{}) []*ec2.InstanceNetworkInterfaceSpecification {
-	networkInterfaces := []*ec2.InstanceNetworkInterfaceSpecification{}
+func buildNetworkInterfaceOpts(d *schema.ResourceData, groups []string, nInterfaces interface{}) []awstypes.InstanceNetworkInterfaceSpecification {
+	networkInterfaces := []awstypes.InstanceNetworkInterfaceSpecification{}
 	// Get necessary items
 	subnet, hasSubnet := d.GetOk(names.AttrSubnetID)
 
@@ -2486,8 +2482,8 @@ func buildNetworkInterfaceOpts(d *schema.ResourceData, groups []*string, nInterf
 		// You also need to attach Security Groups to the NetworkInterface instead of the instance,
 		// to avoid: Network interfaces and an instance-level security groups may not be specified on
 		// the same request
-		ni := &ec2.InstanceNetworkInterfaceSpecification{
-			DeviceIndex: aws.Int64(0),
+		ni := awstypes.InstanceNetworkInterfaceSpecification{
+			DeviceIndex: aws.Int32(0),
 			SubnetId:    aws.String(subnet.(string)),
 			Groups:      groups,
 		}
@@ -2505,13 +2501,13 @@ func buildNetworkInterfaceOpts(d *schema.ResourceData, groups []*string, nInterf
 		}
 
 		if v, ok := d.GetOk("ipv6_address_count"); ok {
-			ni.Ipv6AddressCount = aws.Int64(int64(v.(int)))
+			ni.Ipv6AddressCount = aws.Int32(int32(v.(int)))
 		}
 
 		if v, ok := d.GetOk("ipv6_addresses"); ok {
-			ipv6Addresses := make([]*ec2.InstanceIpv6Address, len(v.([]interface{})))
+			ipv6Addresses := make([]awstypes.InstanceIpv6Address, len(v.([]interface{})))
 			for i, address := range v.([]interface{}) {
-				ipv6Addresses[i] = &ec2.InstanceIpv6Address{
+				ipv6Addresses[i] = awstypes.InstanceIpv6Address{
 					Ipv6Address: aws.String(address.(string)),
 				}
 			}
@@ -2521,7 +2517,7 @@ func buildNetworkInterfaceOpts(d *schema.ResourceData, groups []*string, nInterf
 
 		if v := d.Get(names.AttrVPCSecurityGroupIDs).(*schema.Set); v.Len() > 0 {
 			for _, v := range v.List() {
-				ni.Groups = append(ni.Groups, aws.String(v.(string)))
+				ni.Groups = append(ni.Groups, v.(string))
 			}
 		}
 
@@ -2531,9 +2527,9 @@ func buildNetworkInterfaceOpts(d *schema.ResourceData, groups []*string, nInterf
 		vL := nInterfaces.(*schema.Set).List()
 		for _, v := range vL {
 			ini := v.(map[string]interface{})
-			ni := &ec2.InstanceNetworkInterfaceSpecification{
-				DeviceIndex:         aws.Int64(int64(ini["device_index"].(int))),
-				NetworkCardIndex:    aws.Int64(int64(ini["network_card_index"].(int))),
+			ni := awstypes.InstanceNetworkInterfaceSpecification{
+				DeviceIndex:         aws.Int32(int32(ini["device_index"].(int))),
+				NetworkCardIndex:    aws.Int32(int32(ini["network_card_index"].(int))),
 				NetworkInterfaceId:  aws.String(ini[names.AttrNetworkInterfaceID].(string)),
 				DeleteOnTermination: aws.Bool(ini[names.AttrDeleteOnTermination].(bool)),
 			}
@@ -2544,14 +2540,14 @@ func buildNetworkInterfaceOpts(d *schema.ResourceData, groups []*string, nInterf
 	return networkInterfaces
 }
 
-func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceData, conn *ec2.EC2) ([]*ec2.BlockDeviceMapping, error) {
-	blockDevices := make([]*ec2.BlockDeviceMapping, 0)
+func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceData, conn *ec2.Client) ([]awstypes.BlockDeviceMapping, error) {
+	blockDevices := make([]awstypes.BlockDeviceMapping, 0)
 
 	if v, ok := d.GetOk("ebs_block_device"); ok {
 		vL := v.(*schema.Set).List()
 		for _, v := range vL {
 			bd := v.(map[string]interface{})
-			ebs := &ec2.EbsBlockDevice{
+			ebs := &awstypes.EbsBlockDevice{
 				DeleteOnTermination: aws.Bool(bd[names.AttrDeleteOnTermination].(bool)),
 			}
 
@@ -2568,18 +2564,18 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 			}
 
 			if v, ok := bd[names.AttrVolumeSize].(int); ok && v != 0 {
-				ebs.VolumeSize = aws.Int64(int64(v))
+				ebs.VolumeSize = aws.Int32(int32(v))
 			}
 
 			if v, ok := bd[names.AttrVolumeType].(string); ok && v != "" {
-				ebs.VolumeType = aws.String(v)
+				ebs.VolumeType = awstypes.VolumeType(v)
 				if iops, ok := bd[names.AttrIOPS].(int); ok && iops > 0 {
-					if ec2.VolumeTypeIo1 == strings.ToLower(v) || ec2.VolumeTypeIo2 == strings.ToLower(v) || ec2.VolumeTypeGp3 == strings.ToLower(v) {
+					if awstypes.VolumeTypeIo1 == ebs.VolumeType || awstypes.VolumeTypeIo2 == ebs.VolumeType || awstypes.VolumeTypeGp3 == ebs.VolumeType {
 						// Condition: This parameter is required for requests to create io1 or io2
 						// volumes and optional for gp3; it is not used in requests to create gp2, st1, sc1, or
 						// standard volumes.
 						// See: http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_EbsBlockDevice.html
-						ebs.Iops = aws.Int64(int64(iops))
+						ebs.Iops = aws.Int32(int32(iops))
 					} else {
 						// Enforce IOPs usage with a valid volume type
 						// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/12667
@@ -2588,15 +2584,15 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 				}
 				if throughput, ok := bd["throughput"].(int); ok && throughput > 0 {
 					// `throughput` is only valid for gp3
-					if ec2.VolumeTypeGp3 == strings.ToLower(v) {
-						ebs.Throughput = aws.Int64(int64(throughput))
+					if awstypes.VolumeTypeGp3 == ebs.VolumeType {
+						ebs.Throughput = aws.Int32(int32(throughput))
 					} else {
 						return nil, fmt.Errorf("creating resource: throughput attribute not supported for ebs_block_device with volume_type %s", v)
 					}
 				}
 			}
 
-			blockDevices = append(blockDevices, &ec2.BlockDeviceMapping{
+			blockDevices = append(blockDevices, awstypes.BlockDeviceMapping{
 				DeviceName: aws.String(bd[names.AttrDeviceName].(string)),
 				Ebs:        ebs,
 			})
@@ -2607,7 +2603,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 		vL := v.(*schema.Set).List()
 		for _, v := range vL {
 			bd := v.(map[string]interface{})
-			bdm := &ec2.BlockDeviceMapping{
+			bdm := awstypes.BlockDeviceMapping{
 				DeviceName:  aws.String(bd[names.AttrDeviceName].(string)),
 				VirtualName: aws.String(bd["virtual_name"].(string)),
 			}
@@ -2617,7 +2613,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 				bdm.VirtualName = nil
 			}
 
-			if bdm.NoDevice == nil && aws.StringValue(bdm.VirtualName) == "" {
+			if bdm.NoDevice == nil && aws.ToString(bdm.VirtualName) == "" {
 				return nil, errors.New("virtual_name cannot be empty when no_device is false or undefined.")
 			}
 
@@ -2629,7 +2625,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 		vL := v.([]interface{})
 		for _, v := range vL {
 			bd := v.(map[string]interface{})
-			ebs := &ec2.EbsBlockDevice{
+			ebs := &awstypes.EbsBlockDevice{
 				DeleteOnTermination: aws.Bool(bd[names.AttrDeleteOnTermination].(bool)),
 			}
 
@@ -2642,19 +2638,19 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 			}
 
 			if v, ok := bd[names.AttrVolumeSize].(int); ok && v != 0 {
-				ebs.VolumeSize = aws.Int64(int64(v))
+				ebs.VolumeSize = aws.Int32(int32(v))
 			}
 
 			if v, ok := bd[names.AttrVolumeType].(string); ok && v != "" {
-				ebs.VolumeType = aws.String(v)
+				ebs.VolumeType = awstypes.VolumeType(v)
 				if iops, ok := bd[names.AttrIOPS].(int); ok && iops > 0 {
-					if ec2.VolumeTypeIo1 == strings.ToLower(v) || ec2.VolumeTypeIo2 == strings.ToLower(v) || ec2.VolumeTypeGp3 == strings.ToLower(v) {
+					if awstypes.VolumeTypeIo1 == ebs.VolumeType || awstypes.VolumeTypeIo2 == ebs.VolumeType || awstypes.VolumeTypeGp3 == ebs.VolumeType {
 						// Only set the iops attribute if the volume type is io1, io2, or gp3. Setting otherwise
 						// can trigger a refresh/plan loop based on the computed value that is given
 						// from AWS, and prevent us from specifying 0 as a valid iops.
 						//   See https://github.com/hashicorp/terraform/pull/4146
 						//   See https://github.com/hashicorp/terraform/issues/7765
-						ebs.Iops = aws.Int64(int64(iops))
+						ebs.Iops = aws.Int32(int32(iops))
 					} else {
 						// Enforce IOPs usage with a valid volume type
 						// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/12667
@@ -2663,8 +2659,8 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 				}
 				if throughput, ok := bd["throughput"].(int); ok && throughput > 0 {
 					// throughput is only valid for gp3
-					if ec2.VolumeTypeGp3 == strings.ToLower(v) {
-						ebs.Throughput = aws.Int64(int64(throughput))
+					if awstypes.VolumeTypeGp3 == ebs.VolumeType {
+						ebs.Throughput = aws.Int32(int32(throughput))
 					} else {
 						// Enforce throughput usage with a valid volume type
 						return nil, fmt.Errorf("creating resource: throughput attribute not supported for root_block_device with volume_type %s", v)
@@ -2681,7 +2677,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 					return nil, err
 				}
 
-				amiID = aws.StringValue(launchTemplateData.ImageId)
+				amiID = aws.ToString(launchTemplateData.ImageId)
 			}
 
 			// AMI from configuration overrides the one from the launch template.
@@ -2700,7 +2696,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 						amiID)
 				}
 
-				blockDevices = append(blockDevices, &ec2.BlockDeviceMapping{
+				blockDevices = append(blockDevices, awstypes.BlockDeviceMapping{
 					DeviceName: dn,
 					Ebs:        ebs,
 				})
@@ -2713,14 +2709,14 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 	return blockDevices, nil
 }
 
-func readVolumeTags(ctx context.Context, conn *ec2.EC2, instanceId string) ([]*ec2.Tag, error) {
+func readVolumeTags(ctx context.Context, conn *ec2.Client, instanceId string) ([]*awstypes.Tag, error) {
 	volIDs, err := getInstanceVolIDs(ctx, conn, instanceId)
 	if err != nil {
 		return nil, fmt.Errorf("getting tags for volumes (%s): %s", volIDs, err)
 	}
 
-	resp, err := conn.DescribeTagsWithContext(ctx, &ec2.DescribeTagsInput{
-		Filters: attributeFiltersFromMultimap(map[string][]string{
+	resp, err := conn.DescribeTags(ctx, &ec2.DescribeTagsInput{
+		Filters: attributeFiltersFromMultimapV2(map[string][]string{
 			"resource-id": volIDs,
 		}),
 	})
@@ -2735,21 +2731,21 @@ func readVolumeTags(ctx context.Context, conn *ec2.EC2, instanceId string) ([]*e
 // use a heuristic to figure this out. The default VPC can have security groups
 // with IDs or names, so store them both here and let the config determine
 // which one to use in Plan and Apply.
-func readSecurityGroups(ctx context.Context, d *schema.ResourceData, instance *ec2.Instance, conn *ec2.EC2) error {
+func readSecurityGroups(ctx context.Context, d *schema.ResourceData, instance *awstypes.Instance, conn *ec2.Client) error {
 	// An instance with a subnet is in a VPC, and possibly the default VPC.
 	// An instance without a subnet is in the default VPC.
-	hasSubnet := aws.StringValue(instance.SubnetId) != ""
+	hasSubnet := aws.ToString(instance.SubnetId) != ""
 	useID, useName := hasSubnet, !hasSubnet
 
 	// If the instance is in a VPC, find out if that VPC is Default to determine
 	// whether to store names.
-	if vpcID := aws.StringValue(instance.VpcId); vpcID != "" {
-		vpc, err := FindVPCByID(ctx, conn, vpcID)
+	if vpcID := aws.ToString(instance.VpcId); vpcID != "" {
+		vpc, err := FindVPCByIDV2(ctx, conn, vpcID)
 
 		if err != nil {
 			log.Printf("[WARN] error reading EC2 Instance (%s) VPC (%s): %s", d.Id(), vpcID, err)
 		} else {
-			useName = aws.BoolValue(vpc.IsDefault)
+			useName = aws.ToBool(vpc.IsDefault)
 		}
 	}
 
@@ -2757,7 +2753,7 @@ func readSecurityGroups(ctx context.Context, d *schema.ResourceData, instance *e
 	if useID {
 		sgs := make([]string, 0, len(instance.SecurityGroups))
 		for _, sg := range instance.SecurityGroups {
-			sgs = append(sgs, aws.StringValue(sg.GroupId))
+			sgs = append(sgs, aws.ToString(sg.GroupId))
 		}
 		log.Printf("[DEBUG] Setting Security Group IDs: %#v", sgs)
 		if err := d.Set(names.AttrVPCSecurityGroupIDs, sgs); err != nil {
@@ -2771,7 +2767,7 @@ func readSecurityGroups(ctx context.Context, d *schema.ResourceData, instance *e
 	if useName {
 		sgs := make([]string, 0, len(instance.SecurityGroups))
 		for _, sg := range instance.SecurityGroups {
-			sgs = append(sgs, aws.StringValue(sg.GroupName))
+			sgs = append(sgs, aws.ToString(sg.GroupName))
 		}
 		log.Printf("[DEBUG] Setting Security Group Names: %#v", sgs)
 		if err := d.Set(names.AttrSecurityGroups, sgs); err != nil {
@@ -2785,14 +2781,14 @@ func readSecurityGroups(ctx context.Context, d *schema.ResourceData, instance *e
 	return nil
 }
 
-func readInstanceShutdownBehavior(ctx context.Context, d *schema.ResourceData, conn *ec2.EC2) error {
-	output, err := conn.DescribeInstanceAttributeWithContext(ctx, &ec2.DescribeInstanceAttributeInput{
+func readInstanceShutdownBehavior(ctx context.Context, d *schema.ResourceData, conn *ec2.Client) error {
+	output, err := conn.DescribeInstanceAttribute(ctx, &ec2.DescribeInstanceAttributeInput{
 		InstanceId: aws.String(d.Id()),
-		Attribute:  aws.String(ec2.InstanceAttributeNameInstanceInitiatedShutdownBehavior),
+		Attribute:  awstypes.InstanceAttributeNameInstanceInitiatedShutdownBehavior,
 	})
 
 	if err != nil {
-		return fmt.Errorf("getting attribute (%s): %w", ec2.InstanceAttributeNameInstanceInitiatedShutdownBehavior, err)
+		return fmt.Errorf("getting attribute (%s): %w", awstypes.InstanceAttributeNameInstanceInitiatedShutdownBehavior, err)
 	}
 
 	if output != nil && output.InstanceInitiatedShutdownBehavior != nil {
@@ -2802,7 +2798,7 @@ func readInstanceShutdownBehavior(ctx context.Context, d *schema.ResourceData, c
 	return nil
 }
 
-func getInstancePasswordData(ctx context.Context, instanceID string, conn *ec2.EC2, timeout time.Duration) (string, error) {
+func getInstancePasswordData(ctx context.Context, instanceID string, conn *ec2.Client, timeout time.Duration) (string, error) {
 	log.Printf("[INFO] Reading password data for instance %s", instanceID)
 
 	var passwordData string
@@ -2812,30 +2808,30 @@ func getInstancePasswordData(ctx context.Context, instanceID string, conn *ec2.E
 	}
 	err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
 		var err error
-		resp, err = conn.GetPasswordDataWithContext(ctx, input)
+		resp, err = conn.GetPasswordData(ctx, input)
 
 		if err != nil {
 			return retry.NonRetryableError(err)
 		}
 
-		if resp.PasswordData == nil || aws.StringValue(resp.PasswordData) == "" {
+		if resp.PasswordData == nil || aws.ToString(resp.PasswordData) == "" {
 			return retry.RetryableError(fmt.Errorf("Password data is blank for instance ID: %s", instanceID))
 		}
 
-		passwordData = strings.TrimSpace(aws.StringValue(resp.PasswordData))
+		passwordData = strings.TrimSpace(aws.ToString(resp.PasswordData))
 
 		log.Printf("[INFO] Password data read for instance %s", instanceID)
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		resp, err = conn.GetPasswordDataWithContext(ctx, input)
+		resp, err = conn.GetPasswordData(ctx, input)
 		if err != nil {
 			return "", fmt.Errorf("getting password data: %s", err)
 		}
-		if resp.PasswordData == nil || aws.StringValue(resp.PasswordData) == "" {
+		if resp.PasswordData == nil || aws.ToString(resp.PasswordData) == "" {
 			return "", errors.New("password data is blank")
 		}
-		passwordData = strings.TrimSpace(aws.StringValue(resp.PasswordData))
+		passwordData = strings.TrimSpace(aws.ToString(resp.PasswordData))
 	}
 	if err != nil {
 		return "", err
@@ -2845,40 +2841,40 @@ func getInstancePasswordData(ctx context.Context, instanceID string, conn *ec2.E
 }
 
 type instanceOpts struct {
-	BlockDeviceMappings               []*ec2.BlockDeviceMapping
-	CapacityReservationSpecification  *ec2.CapacityReservationSpecification
-	CpuOptions                        *ec2.CpuOptionsRequest
-	CreditSpecification               *ec2.CreditSpecificationRequest
+	BlockDeviceMappings               []awstypes.BlockDeviceMapping
+	CapacityReservationSpecification  *awstypes.CapacityReservationSpecification
+	CpuOptions                        *awstypes.CpuOptionsRequest
+	CreditSpecification               *awstypes.CreditSpecificationRequest
 	DisableAPIStop                    *bool
 	DisableAPITermination             *bool
 	EBSOptimized                      *bool
-	EnclaveOptions                    *ec2.EnclaveOptionsRequest
-	HibernationOptions                *ec2.HibernationOptionsRequest
-	IAMInstanceProfile                *ec2.IamInstanceProfileSpecification
+	EnclaveOptions                    *awstypes.EnclaveOptionsRequest
+	HibernationOptions                *awstypes.HibernationOptionsRequest
+	IAMInstanceProfile                *awstypes.IamInstanceProfileSpecification
 	ImageID                           *string
-	InstanceInitiatedShutdownBehavior *string
-	InstanceMarketOptions             *ec2.InstanceMarketOptionsRequest
-	InstanceType                      *string
-	Ipv6AddressCount                  *int64
-	Ipv6Addresses                     []*ec2.InstanceIpv6Address
+	InstanceInitiatedShutdownBehavior awstypes.ShutdownBehavior
+	InstanceMarketOptions             *awstypes.InstanceMarketOptionsRequest
+	InstanceType                      awstypes.InstanceType
+	Ipv6AddressCount                  *int32
+	Ipv6Addresses                     []awstypes.InstanceIpv6Address
 	KeyName                           *string
-	LaunchTemplate                    *ec2.LaunchTemplateSpecification
-	MaintenanceOptions                *ec2.InstanceMaintenanceOptionsRequest
-	MetadataOptions                   *ec2.InstanceMetadataOptionsRequest
-	Monitoring                        *ec2.RunInstancesMonitoringEnabled
-	NetworkInterfaces                 []*ec2.InstanceNetworkInterfaceSpecification
-	Placement                         *ec2.Placement
-	PrivateDNSNameOptions             *ec2.PrivateDnsNameOptionsRequest
+	LaunchTemplate                    *awstypes.LaunchTemplateSpecification
+	MaintenanceOptions                *awstypes.InstanceMaintenanceOptionsRequest
+	MetadataOptions                   *awstypes.InstanceMetadataOptionsRequest
+	Monitoring                        *awstypes.RunInstancesMonitoringEnabled
+	NetworkInterfaces                 []awstypes.InstanceNetworkInterfaceSpecification
+	Placement                         *awstypes.Placement
+	PrivateDNSNameOptions             *awstypes.PrivateDnsNameOptionsRequest
 	PrivateIPAddress                  *string
-	SecurityGroupIDs                  []*string
-	SecurityGroups                    []*string
-	SpotPlacement                     *ec2.SpotPlacement
+	SecurityGroupIDs                  []string
+	SecurityGroups                    []string
+	SpotPlacement                     *awstypes.SpotPlacement
 	SubnetID                          *string
 	UserData64                        *string
 }
 
 func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interface{}) (*instanceOpts, error) {
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	opts := &instanceOpts{
 		DisableAPITermination: aws.Bool(d.Get("disable_api_termination").(bool)),
@@ -2896,7 +2892,7 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if v, ok := d.GetOk(names.AttrInstanceType); ok {
-		opts.InstanceType = aws.String(v.(string))
+		opts.InstanceType = awstypes.InstanceType(v.(string))
 	}
 
 	var instanceInterruptionBehavior string
@@ -2912,7 +2908,7 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 		opts.LaunchTemplate = launchTemplateSpecification
 
 		if launchTemplateData.InstanceMarketOptions != nil && launchTemplateData.InstanceMarketOptions.SpotOptions != nil {
-			instanceInterruptionBehavior = aws.StringValue(launchTemplateData.InstanceMarketOptions.SpotOptions.InstanceInterruptionBehavior)
+			instanceInterruptionBehavior = string(launchTemplateData.InstanceMarketOptions.SpotOptions.InstanceInterruptionBehavior)
 		}
 	}
 
@@ -2920,20 +2916,20 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	// Set default cpu_credits as Unlimited for T3/T3a instance type
 	if strings.HasPrefix(instanceType, "t3") {
-		opts.CreditSpecification = &ec2.CreditSpecificationRequest{
+		opts.CreditSpecification = &awstypes.CreditSpecificationRequest{
 			CpuCredits: aws.String(CPUCreditsUnlimited),
 		}
 	}
 
 	if v, ok := d.GetOk("credit_specification"); ok && len(v.([]interface{})) > 0 {
 		if instanceType != "" {
-			instanceTypeInfo, err := FindInstanceTypeByName(ctx, conn, instanceType)
+			instanceTypeInfo, err := findInstanceTypeByName(ctx, conn, instanceType)
 
 			if err != nil {
 				return nil, fmt.Errorf("reading EC2 Instance Type (%s): %w", instanceType, err)
 			}
 
-			if aws.BoolValue(instanceTypeInfo.BurstablePerformanceSupported) {
+			if aws.ToBool(instanceTypeInfo.BurstablePerformanceSupported) {
 				if v, ok := v.([]interface{})[0].(map[string]interface{}); ok {
 					opts.CreditSpecification = expandCreditSpecificationRequest(v)
 				} else {
@@ -2946,15 +2942,15 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if v := d.Get("instance_initiated_shutdown_behavior").(string); v != "" {
-		opts.InstanceInitiatedShutdownBehavior = aws.String(v)
+		opts.InstanceInitiatedShutdownBehavior = awstypes.ShutdownBehavior(v)
 	}
 
-	opts.Monitoring = &ec2.RunInstancesMonitoringEnabled{
+	opts.Monitoring = &awstypes.RunInstancesMonitoringEnabled{
 		Enabled: aws.Bool(d.Get("monitoring").(bool)),
 	}
 
 	if v, ok := d.GetOk("iam_instance_profile"); ok {
-		opts.IAMInstanceProfile = &ec2.IamInstanceProfileSpecification{
+		opts.IAMInstanceProfile = &awstypes.IamInstanceProfileSpecification{
 			Name: aws.String(v.(string)),
 		}
 	}
@@ -2974,25 +2970,25 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	// Placement is used for aws_instance; SpotPlacement is used for
 	// aws_spot_instance_request. They represent the same data. :-|
-	opts.Placement = &ec2.Placement{
+	opts.Placement = &awstypes.Placement{
 		AvailabilityZone: aws.String(d.Get(names.AttrAvailabilityZone).(string)),
 	}
 
 	if v, ok := d.GetOk("placement_partition_number"); ok {
-		opts.Placement.PartitionNumber = aws.Int64(int64(v.(int)))
+		opts.Placement.PartitionNumber = aws.Int32(int32(v.(int)))
 	}
 
-	opts.SpotPlacement = &ec2.SpotPlacement{
+	opts.SpotPlacement = &awstypes.SpotPlacement{
 		AvailabilityZone: aws.String(d.Get(names.AttrAvailabilityZone).(string)),
 	}
 
-	if v, ok := d.GetOk("placement_group"); ok && (instanceInterruptionBehavior == "" || instanceInterruptionBehavior == ec2.InstanceInterruptionBehaviorTerminate) {
+	if v, ok := d.GetOk("placement_group"); ok && (instanceInterruptionBehavior == "" || instanceInterruptionBehavior == string(awstypes.InstanceInterruptionBehaviorTerminate)) {
 		opts.Placement.GroupName = aws.String(v.(string))
 		opts.SpotPlacement.GroupName = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("tenancy"); ok {
-		opts.Placement.Tenancy = aws.String(v.(string))
+		opts.Placement.Tenancy = awstypes.Tenancy(v.(string))
 	}
 	if v, ok := d.GetOk("host_id"); ok {
 		opts.Placement.HostId = aws.String(v.(string))
@@ -3010,19 +3006,19 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 		if tc < 0 {
 			tc = 2
 		}
-		opts.CpuOptions = &ec2.CpuOptionsRequest{
-			CoreCount:      aws.Int64(int64(v)),
-			ThreadsPerCore: aws.Int64(int64(tc)),
+		opts.CpuOptions = &awstypes.CpuOptionsRequest{
+			CoreCount:      aws.Int32(int32(v)),
+			ThreadsPerCore: aws.Int32(int32(tc)),
 		}
 	}
 
 	if v := d.Get("hibernation"); v != "" {
-		opts.HibernationOptions = &ec2.HibernationOptionsRequest{
+		opts.HibernationOptions = &awstypes.HibernationOptionsRequest{
 			Configured: aws.Bool(v.(bool)),
 		}
 	}
 
-	var groups []*string
+	var groups []string
 	if v := d.Get(names.AttrSecurityGroups); v != nil {
 		// Security group names.
 		// For a nondefault VPC, you must use security group IDs instead.
@@ -3033,7 +3029,7 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 		for _, v := range sgs {
 			str := v.(string)
-			groups = append(groups, aws.String(str))
+			groups = append(groups, str)
 		}
 	}
 
@@ -3056,20 +3052,20 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 			opts.PrivateIPAddress = aws.String(v.(string))
 		}
 		if opts.SubnetID != nil &&
-			aws.StringValue(opts.SubnetID) != "" {
+			aws.ToString(opts.SubnetID) != "" {
 			opts.SecurityGroupIDs = groups
 		} else {
 			opts.SecurityGroups = groups
 		}
 
 		if v, ok := d.GetOk("ipv6_address_count"); ok {
-			opts.Ipv6AddressCount = aws.Int64(int64(v.(int)))
+			opts.Ipv6AddressCount = aws.Int32(int32(v.(int)))
 		}
 
 		if v, ok := d.GetOk("ipv6_addresses"); ok {
-			ipv6Addresses := make([]*ec2.InstanceIpv6Address, len(v.([]interface{})))
+			ipv6Addresses := make([]awstypes.InstanceIpv6Address, len(v.([]interface{})))
 			for i, address := range v.([]interface{}) {
-				ipv6Addresses[i] = &ec2.InstanceIpv6Address{
+				ipv6Addresses[i] = awstypes.InstanceIpv6Address{
 					Ipv6Address: aws.String(address.(string)),
 				}
 			}
@@ -3079,7 +3075,7 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 
 		if v := d.Get(names.AttrVPCSecurityGroupIDs).(*schema.Set); v.Len() > 0 {
 			for _, v := range v.List() {
-				opts.SecurityGroupIDs = append(opts.SecurityGroupIDs, aws.String(v.(string)))
+				opts.SecurityGroupIDs = append(opts.SecurityGroupIDs, v.(string))
 			}
 		}
 	}
@@ -3116,7 +3112,7 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 // startInstance starts an EC2 instance and waits for the instance to start.
-func startInstance(ctx context.Context, conn *ec2.EC2, id string, retry bool, timeout time.Duration) error {
+func startInstance(ctx context.Context, conn *ec2.Client, id string, retry bool, timeout time.Duration) error {
 	var err error
 
 	tflog.Info(ctx, "Starting EC2 Instance", map[string]any{
@@ -3126,15 +3122,15 @@ func startInstance(ctx context.Context, conn *ec2.EC2, id string, retry bool, ti
 		// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/16433.
 		_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, ec2PropagationTimeout,
 			func() (interface{}, error) {
-				return conn.StartInstancesWithContext(ctx, &ec2.StartInstancesInput{
-					InstanceIds: aws.StringSlice([]string{id}),
+				return conn.StartInstances(ctx, &ec2.StartInstancesInput{
+					InstanceIds: []string{id},
 				})
 			},
 			errCodeInvalidParameterValue, "LaunchPlan instance type does not match attribute value",
 		)
 	} else {
-		_, err = conn.StartInstancesWithContext(ctx, &ec2.StartInstancesInput{
-			InstanceIds: aws.StringSlice([]string{id}),
+		_, err = conn.StartInstances(ctx, &ec2.StartInstancesInput{
+			InstanceIds: []string{id},
 		})
 	}
 
@@ -3150,14 +3146,14 @@ func startInstance(ctx context.Context, conn *ec2.EC2, id string, retry bool, ti
 }
 
 // stopInstance stops an EC2 instance and waits for the instance to stop.
-func stopInstance(ctx context.Context, conn *ec2.EC2, id string, force bool, timeout time.Duration) error {
+func stopInstance(ctx context.Context, conn *ec2.Client, id string, force bool, timeout time.Duration) error {
 	tflog.Info(ctx, "Stopping EC2 Instance", map[string]any{
 		"ec2_instance_id": id,
 		"force":           force,
 	})
-	_, err := conn.StopInstancesWithContext(ctx, &ec2.StopInstancesInput{
+	_, err := conn.StopInstances(ctx, &ec2.StopInstancesInput{
 		Force:       aws.Bool(force),
-		InstanceIds: aws.StringSlice([]string{id}),
+		InstanceIds: []string{id},
 	})
 
 	if err != nil {
@@ -3172,10 +3168,10 @@ func stopInstance(ctx context.Context, conn *ec2.EC2, id string, force bool, tim
 }
 
 // terminateInstance shuts down an EC2 instance and waits for the instance to be deleted.
-func terminateInstance(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) error {
+func terminateInstance(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) error {
 	log.Printf("[DEBUG] Terminating EC2 Instance: %s", id)
-	_, err := conn.TerminateInstancesWithContext(ctx, &ec2.TerminateInstancesInput{
-		InstanceIds: aws.StringSlice([]string{id}),
+	_, err := conn.TerminateInstances(ctx, &ec2.TerminateInstancesInput{
+		InstanceIds: []string{id},
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidInstanceIDNotFound) {
@@ -3193,11 +3189,11 @@ func terminateInstance(ctx context.Context, conn *ec2.EC2, id string, timeout ti
 	return nil
 }
 
-func waitInstanceCreated(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Instance, error) {
+func waitInstanceCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.Instance, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{ec2.InstanceStateNamePending},
-		Target:     []string{ec2.InstanceStateNameRunning},
-		Refresh:    StatusInstanceState(ctx, conn, id),
+		Pending:    enum.Slice(awstypes.InstanceStateNamePending),
+		Target:     enum.Slice(awstypes.InstanceStateNameRunning),
+		Refresh:    statusInstanceState(ctx, conn, id),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -3205,9 +3201,9 @@ func waitInstanceCreated(ctx context.Context, conn *ec2.EC2, id string, timeout 
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*ec2.Instance); ok {
+	if output, ok := outputRaw.(*awstypes.Instance); ok {
 		if stateReason := output.StateReason; stateReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(stateReason.Message)))
+			tfresource.SetLastError(err, errors.New(aws.ToString(stateReason.Message)))
 		}
 
 		return output, err
@@ -3216,17 +3212,17 @@ func waitInstanceCreated(ctx context.Context, conn *ec2.EC2, id string, timeout 
 	return nil, err
 }
 
-func waitInstanceDeleted(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Instance, error) {
+func waitInstanceDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.Instance, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{
-			ec2.InstanceStateNamePending,
-			ec2.InstanceStateNameRunning,
-			ec2.InstanceStateNameShuttingDown,
-			ec2.InstanceStateNameStopping,
-			ec2.InstanceStateNameStopped,
-		},
-		Target:     []string{ec2.InstanceStateNameTerminated},
-		Refresh:    StatusInstanceState(ctx, conn, id),
+		Pending: enum.Slice(
+			awstypes.InstanceStateNamePending,
+			awstypes.InstanceStateNameRunning,
+			awstypes.InstanceStateNameShuttingDown,
+			awstypes.InstanceStateNameStopping,
+			awstypes.InstanceStateNameStopped,
+		),
+		Target:     enum.Slice(awstypes.InstanceStateNameTerminated),
+		Refresh:    statusInstanceState(ctx, conn, id),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -3234,9 +3230,9 @@ func waitInstanceDeleted(ctx context.Context, conn *ec2.EC2, id string, timeout 
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*ec2.Instance); ok {
+	if output, ok := outputRaw.(*awstypes.Instance); ok {
 		if stateReason := output.StateReason; stateReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(stateReason.Message)))
+			tfresource.SetLastError(err, errors.New(aws.ToString(stateReason.Message)))
 		}
 
 		return output, err
@@ -3245,11 +3241,11 @@ func waitInstanceDeleted(ctx context.Context, conn *ec2.EC2, id string, timeout 
 	return nil, err
 }
 
-func waitInstanceReady(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Instance, error) {
+func waitInstanceReady(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.Instance, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{ec2.InstanceStateNamePending, ec2.InstanceStateNameStopping},
-		Target:     []string{ec2.InstanceStateNameRunning, ec2.InstanceStateNameStopped},
-		Refresh:    StatusInstanceState(ctx, conn, id),
+		Pending:    enum.Slice(awstypes.InstanceStateNamePending, awstypes.InstanceStateNameStopping),
+		Target:     enum.Slice(awstypes.InstanceStateNameRunning, awstypes.InstanceStateNameStopped),
+		Refresh:    statusInstanceState(ctx, conn, id),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -3257,9 +3253,9 @@ func waitInstanceReady(ctx context.Context, conn *ec2.EC2, id string, timeout ti
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*ec2.Instance); ok {
+	if output, ok := outputRaw.(*awstypes.Instance); ok {
 		if stateReason := output.StateReason; stateReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(stateReason.Message)))
+			tfresource.SetLastError(err, errors.New(aws.ToString(stateReason.Message)))
 		}
 
 		return output, err
@@ -3268,11 +3264,11 @@ func waitInstanceReady(ctx context.Context, conn *ec2.EC2, id string, timeout ti
 	return nil, err
 }
 
-func waitInstanceStarted(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Instance, error) {
+func waitInstanceStarted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.Instance, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{ec2.InstanceStateNamePending, ec2.InstanceStateNameStopped},
-		Target:     []string{ec2.InstanceStateNameRunning},
-		Refresh:    StatusInstanceState(ctx, conn, id),
+		Pending:    enum.Slice(awstypes.InstanceStateNamePending, awstypes.InstanceStateNameStopped),
+		Target:     enum.Slice(awstypes.InstanceStateNameRunning),
+		Refresh:    statusInstanceState(ctx, conn, id),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -3280,9 +3276,9 @@ func waitInstanceStarted(ctx context.Context, conn *ec2.EC2, id string, timeout 
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*ec2.Instance); ok {
+	if output, ok := outputRaw.(*awstypes.Instance); ok {
 		if stateReason := output.StateReason; stateReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(stateReason.Message)))
+			tfresource.SetLastError(err, errors.New(aws.ToString(stateReason.Message)))
 		}
 
 		return output, err
@@ -3291,16 +3287,16 @@ func waitInstanceStarted(ctx context.Context, conn *ec2.EC2, id string, timeout 
 	return nil, err
 }
 
-func waitInstanceStopped(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Instance, error) {
+func waitInstanceStopped(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.Instance, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{
-			ec2.InstanceStateNamePending,
-			ec2.InstanceStateNameRunning,
-			ec2.InstanceStateNameShuttingDown,
-			ec2.InstanceStateNameStopping,
-		},
-		Target:     []string{ec2.InstanceStateNameStopped},
-		Refresh:    StatusInstanceState(ctx, conn, id),
+		Pending: enum.Slice(
+			awstypes.InstanceStateNamePending,
+			awstypes.InstanceStateNameRunning,
+			awstypes.InstanceStateNameShuttingDown,
+			awstypes.InstanceStateNameStopping,
+		),
+		Target:     enum.Slice(awstypes.InstanceStateNameStopped),
+		Refresh:    statusInstanceState(ctx, conn, id),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -3308,9 +3304,9 @@ func waitInstanceStopped(ctx context.Context, conn *ec2.EC2, id string, timeout 
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*ec2.Instance); ok {
+	if output, ok := outputRaw.(*awstypes.Instance); ok {
 		if stateReason := output.StateReason; stateReason != nil {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(stateReason.Message)))
+			tfresource.SetLastError(err, errors.New(aws.ToString(stateReason.Message)))
 		}
 
 		return output, err
@@ -3332,11 +3328,11 @@ func userDataHashSum(userData string) string {
 	return hex.EncodeToString(hash[:])
 }
 
-func getInstanceVolIDs(ctx context.Context, conn *ec2.EC2, instanceId string) ([]string, error) {
+func getInstanceVolIDs(ctx context.Context, conn *ec2.Client, instanceId string) ([]string, error) {
 	volIDs := []string{}
 
-	resp, err := conn.DescribeVolumesWithContext(ctx, &ec2.DescribeVolumesInput{
-		Filters: newAttributeFilterList(map[string]string{
+	resp, err := conn.DescribeVolumes(ctx, &ec2.DescribeVolumesInput{
+		Filters: newAttributeFilterListV2(map[string]string{
 			"attachment.instance-id": instanceId,
 		}),
 	})
@@ -3345,18 +3341,18 @@ func getInstanceVolIDs(ctx context.Context, conn *ec2.EC2, instanceId string) ([
 	}
 
 	for _, v := range resp.Volumes {
-		volIDs = append(volIDs, aws.StringValue(v.VolumeId))
+		volIDs = append(volIDs, aws.ToString(v.VolumeId))
 	}
 
 	return volIDs, nil
 }
 
-func getRootVolID(instance *ec2.Instance) string {
+func getRootVolID(instance *awstypes.Instance) string {
 	volID := ""
 	for _, bd := range instance.BlockDeviceMappings {
 		if bd.Ebs != nil && blockDeviceIsRoot(bd, instance) {
 			if bd.Ebs.VolumeId != nil {
-				volID = aws.StringValue(bd.Ebs.VolumeId)
+				volID = aws.ToString(bd.Ebs.VolumeId)
 			}
 			break
 		}
@@ -3365,12 +3361,12 @@ func getRootVolID(instance *ec2.Instance) string {
 	return volID
 }
 
-func getVolIDByDeviceName(instance *ec2.Instance, deviceName string) string {
+func getVolIDByDeviceName(instance *awstypes.Instance, deviceName string) string {
 	volID := ""
 	for _, bd := range instance.BlockDeviceMappings {
-		if aws.StringValue(bd.DeviceName) == deviceName {
+		if aws.ToString(bd.DeviceName) == deviceName {
 			if bd.Ebs != nil {
-				volID = aws.StringValue(bd.Ebs.VolumeId)
+				volID = aws.ToString(bd.Ebs.VolumeId)
 				break
 			}
 		}
@@ -3403,50 +3399,50 @@ func blockDeviceTagsDefined(d *schema.ResourceData) bool {
 	return false
 }
 
-func expandInstanceMetadataOptions(l []interface{}) *ec2.InstanceMetadataOptionsRequest {
+func expandInstanceMetadataOptions(l []interface{}) *awstypes.InstanceMetadataOptionsRequest {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
 	m := l[0].(map[string]interface{})
 
-	opts := &ec2.InstanceMetadataOptionsRequest{
-		HttpEndpoint: aws.String(m["http_endpoint"].(string)),
+	opts := &awstypes.InstanceMetadataOptionsRequest{
+		HttpEndpoint: awstypes.InstanceMetadataEndpointState(m["http_endpoint"].(string)),
 	}
 
-	if m["http_endpoint"].(string) == ec2.InstanceMetadataEndpointStateEnabled {
+	if m["http_endpoint"].(string) == string(awstypes.InstanceMetadataEndpointStateEnabled) {
 		// These parameters are not allowed unless HttpEndpoint is enabled
 		if v, ok := m["http_protocol_ipv6"].(string); ok && v != "" {
-			opts.HttpProtocolIpv6 = aws.String(v)
+			opts.HttpProtocolIpv6 = awstypes.InstanceMetadataProtocolState(v)
 		}
 
 		if v, ok := m["http_tokens"].(string); ok && v != "" {
-			opts.HttpTokens = aws.String(v)
+			opts.HttpTokens = awstypes.HttpTokensState(v)
 		}
 
 		if v, ok := m["http_put_response_hop_limit"].(int); ok && v != 0 {
-			opts.HttpPutResponseHopLimit = aws.Int64(int64(v))
+			opts.HttpPutResponseHopLimit = aws.Int32(int32(v))
 		}
 
 		if v, ok := m["instance_metadata_tags"].(string); ok && v != "" {
-			opts.InstanceMetadataTags = aws.String(v)
+			opts.InstanceMetadataTags = awstypes.InstanceMetadataTagsState(v)
 		}
 	}
 
 	return opts
 }
 
-func expandCPUOptions(l []interface{}) *ec2.CpuOptionsRequest {
+func expandCPUOptions(l []interface{}) *awstypes.CpuOptionsRequest {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
 	m := l[0].(map[string]interface{})
 
-	opts := &ec2.CpuOptionsRequest{}
+	opts := &awstypes.CpuOptionsRequest{}
 
 	if v, ok := m["amd_sev_snp"].(string); ok && v != "" {
-		opts.AmdSevSnp = aws.String(v)
+		opts.AmdSevSnp = awstypes.AmdSevSnpSpecification(v)
 	}
 
 	if v, ok := m["core_count"].(int); ok && v > 0 {
@@ -3454,21 +3450,21 @@ func expandCPUOptions(l []interface{}) *ec2.CpuOptionsRequest {
 		if tc < 0 {
 			tc = 2
 		}
-		opts.CoreCount = aws.Int64(int64(v))
-		opts.ThreadsPerCore = aws.Int64(int64(tc))
+		opts.CoreCount = aws.Int32(int32(v))
+		opts.ThreadsPerCore = aws.Int32(int32(tc))
 	}
 
 	return opts
 }
 
-func expandEnclaveOptions(l []interface{}) *ec2.EnclaveOptionsRequest {
+func expandEnclaveOptions(l []interface{}) *awstypes.EnclaveOptionsRequest {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
 	m := l[0].(map[string]interface{})
 
-	opts := &ec2.EnclaveOptionsRequest{
+	opts := &awstypes.EnclaveOptionsRequest{
 		Enabled: aws.Bool(m[names.AttrEnabled].(bool)),
 	}
 
@@ -3476,10 +3472,10 @@ func expandEnclaveOptions(l []interface{}) *ec2.EnclaveOptionsRequest {
 }
 
 // Expands an array of secondary Private IPs into a ec2 Private IP Address Spec
-func expandSecondaryPrivateIPAddresses(ips []interface{}) []*ec2.PrivateIpAddressSpecification {
-	specs := make([]*ec2.PrivateIpAddressSpecification, 0, len(ips))
+func expandSecondaryPrivateIPAddresses(ips []interface{}) []awstypes.PrivateIpAddressSpecification {
+	specs := make([]awstypes.PrivateIpAddressSpecification, 0, len(ips))
 	for _, v := range ips {
-		spec := &ec2.PrivateIpAddressSpecification{
+		spec := awstypes.PrivateIpAddressSpecification{
 			PrivateIpAddress: aws.String(v.(string)),
 		}
 
@@ -3488,65 +3484,63 @@ func expandSecondaryPrivateIPAddresses(ips []interface{}) []*ec2.PrivateIpAddres
 	return specs
 }
 
-func flattenInstanceMetadataOptions(opts *ec2.InstanceMetadataOptionsResponse) []interface{} {
+func flattenInstanceMetadataOptions(opts *awstypes.InstanceMetadataOptionsResponse) []interface{} {
 	if opts == nil {
 		return nil
 	}
 
 	m := map[string]interface{}{
-		"http_endpoint":               aws.StringValue(opts.HttpEndpoint),
-		"http_protocol_ipv6":          aws.StringValue(opts.HttpProtocolIpv6),
-		"http_put_response_hop_limit": aws.Int64Value(opts.HttpPutResponseHopLimit),
-		"http_tokens":                 aws.StringValue(opts.HttpTokens),
-		"instance_metadata_tags":      aws.StringValue(opts.InstanceMetadataTags),
+		"http_endpoint":               opts.HttpEndpoint,
+		"http_protocol_ipv6":          opts.HttpProtocolIpv6,
+		"http_put_response_hop_limit": opts.HttpPutResponseHopLimit,
+		"http_tokens":                 opts.HttpTokens,
+		"instance_metadata_tags":      opts.InstanceMetadataTags,
 	}
 
 	return []interface{}{m}
 }
 
-func flattenCPUOptions(opts *ec2.CpuOptions) []interface{} {
+func flattenCPUOptions(opts *awstypes.CpuOptions) []interface{} {
 	if opts == nil {
 		return nil
 	}
 
-	m := map[string]interface{}{}
-
-	if v := opts.AmdSevSnp; v != nil {
-		m["amd_sev_snp"] = aws.StringValue(v)
+	m := map[string]interface{}{
+		"amd_sev_snp": opts.AmdSevSnp,
 	}
 
 	if v := opts.CoreCount; v != nil {
-		m["core_count"] = aws.Int64Value(v)
+		m["core_count"] = aws.ToInt32(v)
 	}
 
 	if v := opts.ThreadsPerCore; v != nil {
-		m["threads_per_core"] = aws.Int64Value(v)
+		m["threads_per_core"] = aws.ToInt32(v)
 	}
 
 	return []interface{}{m}
 }
 
-func flattenEnclaveOptions(opts *ec2.EnclaveOptions) []interface{} {
+func flattenEnclaveOptions(opts *awstypes.EnclaveOptions) []interface{} {
 	if opts == nil {
 		return nil
 	}
 
 	m := map[string]interface{}{
-		names.AttrEnabled: aws.BoolValue(opts.Enabled),
+		names.AttrEnabled: aws.ToBool(opts.Enabled),
 	}
 
 	return []interface{}{m}
 }
 
-func expandCapacityReservationSpecification(tfMap map[string]interface{}) *ec2.CapacityReservationSpecification {
+func expandCapacityReservationSpecification(tfMap map[string]interface{}) *awstypes.CapacityReservationSpecification {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &ec2.CapacityReservationSpecification{}
+	apiObject := &awstypes.CapacityReservationSpecification{}
 
 	if v, ok := tfMap["capacity_reservation_preference"].(string); ok && v != "" {
-		apiObject.CapacityReservationPreference = aws.String(v)
+		apiObject.CapacityReservationPreference = awstypes.CapacityReservationPreference(v)
 	}
 
 	if v, ok := tfMap["capacity_reservation_target"].([]interface{}); ok && len(v) > 0 {
@@ -3556,12 +3550,12 @@ func expandCapacityReservationSpecification(tfMap map[string]interface{}) *ec2.C
 	return apiObject
 }
 
-func expandCapacityReservationTarget(tfMap map[string]interface{}) *ec2.CapacityReservationTarget {
+func expandCapacityReservationTarget(tfMap map[string]interface{}) *awstypes.CapacityReservationTarget {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &ec2.CapacityReservationTarget{}
+	apiObject := &awstypes.CapacityReservationTarget{}
 
 	if v, ok := tfMap["capacity_reservation_id"].(string); ok && v != "" {
 		apiObject.CapacityReservationId = aws.String(v)
@@ -3574,15 +3568,13 @@ func expandCapacityReservationTarget(tfMap map[string]interface{}) *ec2.Capacity
 	return apiObject
 }
 
-func flattenCapacityReservationSpecificationResponse(apiObject *ec2.CapacityReservationSpecificationResponse) map[string]interface{} {
+func flattenCapacityReservationSpecificationResponse(apiObject *awstypes.CapacityReservationSpecificationResponse) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.CapacityReservationPreference; v != nil {
-		tfMap["capacity_reservation_preference"] = aws.StringValue(v)
+	tfMap := map[string]interface{}{
+		"capacity_reservation_preference": apiObject.CapacityReservationPreference,
 	}
 
 	if v := apiObject.CapacityReservationTarget; v != nil {
@@ -3592,7 +3584,7 @@ func flattenCapacityReservationSpecificationResponse(apiObject *ec2.CapacityRese
 	return tfMap
 }
 
-func flattenCapacityReservationTargetResponse(apiObject *ec2.CapacityReservationTargetResponse) map[string]interface{} {
+func flattenCapacityReservationTargetResponse(apiObject *awstypes.CapacityReservationTargetResponse) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -3600,17 +3592,17 @@ func flattenCapacityReservationTargetResponse(apiObject *ec2.CapacityReservation
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.CapacityReservationId; v != nil {
-		tfMap["capacity_reservation_id"] = aws.StringValue(v)
+		tfMap["capacity_reservation_id"] = aws.ToString(v)
 	}
 
 	if v := apiObject.CapacityReservationResourceGroupArn; v != nil {
-		tfMap["capacity_reservation_resource_group_arn"] = aws.StringValue(v)
+		tfMap["capacity_reservation_resource_group_arn"] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func capacityReservationSpecificationResponsesEqual(v1 *ec2.CapacityReservationSpecificationResponse, v2 *ec2.CapacityReservationSpecification) bool {
+func capacityReservationSpecificationResponsesEqual(v1 *awstypes.CapacityReservationSpecificationResponse, v2 *awstypes.CapacityReservationSpecification) bool {
 	if v1 == nil {
 		return v2 == nil
 	}
@@ -3619,7 +3611,7 @@ func capacityReservationSpecificationResponsesEqual(v1 *ec2.CapacityReservationS
 		return false
 	}
 
-	if aws.StringValue(v1.CapacityReservationPreference) != aws.StringValue(v2.CapacityReservationPreference) {
+	if v1.CapacityReservationPreference != v2.CapacityReservationPreference {
 		return false
 	}
 
@@ -3630,7 +3622,7 @@ func capacityReservationSpecificationResponsesEqual(v1 *ec2.CapacityReservationS
 	return true
 }
 
-func capacityReservationTargetResponsesEqual(v1 *ec2.CapacityReservationTargetResponse, v2 *ec2.CapacityReservationTarget) bool {
+func capacityReservationTargetResponsesEqual(v1 *awstypes.CapacityReservationTargetResponse, v2 *awstypes.CapacityReservationTarget) bool {
 	if v1 == nil {
 		return v2 == nil
 	}
@@ -3639,23 +3631,23 @@ func capacityReservationTargetResponsesEqual(v1 *ec2.CapacityReservationTargetRe
 		return false
 	}
 
-	if aws.StringValue(v1.CapacityReservationId) != aws.StringValue(v2.CapacityReservationId) {
+	if aws.ToString(v1.CapacityReservationId) != aws.ToString(v2.CapacityReservationId) {
 		return false
 	}
 
-	if aws.StringValue(v1.CapacityReservationResourceGroupArn) != aws.StringValue(v2.CapacityReservationResourceGroupArn) {
+	if aws.ToString(v1.CapacityReservationResourceGroupArn) != aws.ToString(v2.CapacityReservationResourceGroupArn) {
 		return false
 	}
 
 	return true
 }
 
-func expandCreditSpecificationRequest(tfMap map[string]interface{}) *ec2.CreditSpecificationRequest {
+func expandCreditSpecificationRequest(tfMap map[string]interface{}) *awstypes.CreditSpecificationRequest {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &ec2.CreditSpecificationRequest{}
+	apiObject := &awstypes.CreditSpecificationRequest{}
 
 	if v, ok := tfMap["cpu_credits"].(string); ok && v != "" {
 		apiObject.CpuCredits = aws.String(v)
@@ -3664,12 +3656,8 @@ func expandCreditSpecificationRequest(tfMap map[string]interface{}) *ec2.CreditS
 	return apiObject
 }
 
-func expandInstanceCreditSpecificationRequest(tfMap map[string]interface{}) *ec2.InstanceCreditSpecificationRequest {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &ec2.InstanceCreditSpecificationRequest{}
+func expandInstanceCreditSpecificationRequest(tfMap map[string]interface{}) awstypes.InstanceCreditSpecificationRequest {
+	apiObject := awstypes.InstanceCreditSpecificationRequest{}
 
 	if v, ok := tfMap["cpu_credits"].(string); ok && v != "" {
 		apiObject.CpuCredits = aws.String(v)
@@ -3678,7 +3666,7 @@ func expandInstanceCreditSpecificationRequest(tfMap map[string]interface{}) *ec2
 	return apiObject
 }
 
-func flattenInstanceCreditSpecification(apiObject *ec2.InstanceCreditSpecification) map[string]interface{} {
+func flattenInstanceCreditSpecification(apiObject *awstypes.InstanceCreditSpecification) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -3686,46 +3674,44 @@ func flattenInstanceCreditSpecification(apiObject *ec2.InstanceCreditSpecificati
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.CpuCredits; v != nil {
-		tfMap["cpu_credits"] = aws.StringValue(v)
+		tfMap["cpu_credits"] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func expandInstanceMaintenanceOptionsRequest(tfMap map[string]interface{}) *ec2.InstanceMaintenanceOptionsRequest {
+func expandInstanceMaintenanceOptionsRequest(tfMap map[string]interface{}) *awstypes.InstanceMaintenanceOptionsRequest {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &ec2.InstanceMaintenanceOptionsRequest{}
+	apiObject := &awstypes.InstanceMaintenanceOptionsRequest{}
 
 	if v, ok := tfMap["auto_recovery"].(string); ok && v != "" {
-		apiObject.AutoRecovery = aws.String(v)
+		apiObject.AutoRecovery = awstypes.InstanceAutoRecoveryState(v)
 	}
 
 	return apiObject
 }
 
-func flattenInstanceMaintenanceOptions(apiObject *ec2.InstanceMaintenanceOptions) map[string]interface{} {
+func flattenInstanceMaintenanceOptions(apiObject *awstypes.InstanceMaintenanceOptions) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.AutoRecovery; v != nil {
-		tfMap["auto_recovery"] = aws.StringValue(v)
+	tfMap := map[string]interface{}{
+		"auto_recovery": apiObject.AutoRecovery,
 	}
 
 	return tfMap
 }
 
-func expandPrivateDNSNameOptionsRequest(tfMap map[string]interface{}) *ec2.PrivateDnsNameOptionsRequest {
+func expandPrivateDNSNameOptionsRequest(tfMap map[string]interface{}) *awstypes.PrivateDnsNameOptionsRequest {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &ec2.PrivateDnsNameOptionsRequest{}
+	apiObject := &awstypes.PrivateDnsNameOptionsRequest{}
 
 	if v, ok := tfMap["enable_resource_name_dns_aaaa_record"].(bool); ok {
 		apiObject.EnableResourceNameDnsAAAARecord = aws.Bool(v)
@@ -3736,39 +3722,37 @@ func expandPrivateDNSNameOptionsRequest(tfMap map[string]interface{}) *ec2.Priva
 	}
 
 	if v, ok := tfMap["hostname_type"].(string); ok && v != "" {
-		apiObject.HostnameType = aws.String(v)
+		apiObject.HostnameType = awstypes.HostnameType(v)
 	}
 
 	return apiObject
 }
 
-func flattenPrivateDNSNameOptionsResponse(apiObject *ec2.PrivateDnsNameOptionsResponse) map[string]interface{} {
+func flattenPrivateDNSNameOptionsResponse(apiObject *awstypes.PrivateDnsNameOptionsResponse) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]interface{}{
+		"hostname_type": apiObject.HostnameType,
+	}
 
 	if v := apiObject.EnableResourceNameDnsAAAARecord; v != nil {
-		tfMap["enable_resource_name_dns_aaaa_record"] = aws.BoolValue(v)
+		tfMap["enable_resource_name_dns_aaaa_record"] = v
 	}
 
 	if v := apiObject.EnableResourceNameDnsARecord; v != nil {
-		tfMap["enable_resource_name_dns_a_record"] = aws.BoolValue(v)
-	}
-
-	if v := apiObject.HostnameType; v != nil {
-		tfMap["hostname_type"] = aws.StringValue(v)
+		tfMap["enable_resource_name_dns_a_record"] = v
 	}
 
 	return tfMap
 }
 
-func expandInstanceMarketOptionsRequest(tfMap map[string]interface{}) *ec2.InstanceMarketOptionsRequest {
-	apiObject := &ec2.InstanceMarketOptionsRequest{}
+func expandInstanceMarketOptionsRequest(tfMap map[string]interface{}) *awstypes.InstanceMarketOptionsRequest {
+	apiObject := &awstypes.InstanceMarketOptionsRequest{}
 
 	if v, ok := tfMap["market_type"]; ok && v.(string) != "" {
-		apiObject.MarketType = aws.String(tfMap["market_type"].(string))
+		apiObject.MarketType = awstypes.MarketType(tfMap["market_type"].(string))
 	}
 
 	if v, ok := tfMap["spot_options"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -3778,11 +3762,11 @@ func expandInstanceMarketOptionsRequest(tfMap map[string]interface{}) *ec2.Insta
 	return apiObject
 }
 
-func expandSpotMarketOptions(tfMap map[string]interface{}) *ec2.SpotMarketOptions {
-	apiObject := &ec2.SpotMarketOptions{}
+func expandSpotMarketOptions(tfMap map[string]interface{}) *awstypes.SpotMarketOptions {
+	apiObject := &awstypes.SpotMarketOptions{}
 
 	if v, ok := tfMap["instance_interruption_behavior"].(string); ok && v != "" {
-		apiObject.InstanceInterruptionBehavior = aws.String(v)
+		apiObject.InstanceInterruptionBehavior = awstypes.InstanceInterruptionBehavior(v)
 	}
 
 	if v, ok := tfMap["max_price"].(string); ok && v != "" {
@@ -3790,7 +3774,7 @@ func expandSpotMarketOptions(tfMap map[string]interface{}) *ec2.SpotMarketOption
 	}
 
 	if v, ok := tfMap["spot_instance_type"].(string); ok && v != "" {
-		apiObject.SpotInstanceType = aws.String(v)
+		apiObject.SpotInstanceType = awstypes.SpotInstanceType(v)
 	}
 
 	if v, ok := tfMap["valid_until"].(string); ok && v != "" {
@@ -3802,12 +3786,12 @@ func expandSpotMarketOptions(tfMap map[string]interface{}) *ec2.SpotMarketOption
 	return apiObject
 }
 
-func expandLaunchTemplateSpecification(tfMap map[string]interface{}) *ec2.LaunchTemplateSpecification {
+func expandLaunchTemplateSpecification(tfMap map[string]interface{}) *awstypes.LaunchTemplateSpecification {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &ec2.LaunchTemplateSpecification{}
+	apiObject := &awstypes.LaunchTemplateSpecification{}
 
 	// DescribeLaunchTemplates returns both name and id but LaunchTemplateSpecification
 	// allows only one of them to be set.
@@ -3824,7 +3808,7 @@ func expandLaunchTemplateSpecification(tfMap map[string]interface{}) *ec2.Launch
 	return apiObject
 }
 
-func flattenInstanceLaunchTemplate(ctx context.Context, conn *ec2.EC2, instanceID, previousLaunchTemplateVersion string) ([]interface{}, error) {
+func flattenInstanceLaunchTemplate(ctx context.Context, conn *ec2.Client, instanceID, previousLaunchTemplateVersion string) ([]interface{}, error) {
 	launchTemplateID, err := findInstanceLaunchTemplateID(ctx, conn, instanceID)
 
 	if err != nil {
@@ -3886,7 +3870,7 @@ func flattenInstanceLaunchTemplate(ctx context.Context, conn *ec2.EC2, instanceI
 	return []interface{}{tfMap}, nil
 }
 
-func findInstanceLaunchTemplateID(ctx context.Context, conn *ec2.EC2, id string) (string, error) {
+func findInstanceLaunchTemplateID(ctx context.Context, conn *ec2.Client, id string) (string, error) {
 	launchTemplateID, err := findInstanceTagValue(ctx, conn, id, "aws:ec2launchtemplate:id")
 
 	if err != nil {
@@ -3896,7 +3880,7 @@ func findInstanceLaunchTemplateID(ctx context.Context, conn *ec2.EC2, id string)
 	return launchTemplateID, nil
 }
 
-func findInstanceLaunchTemplateVersion(ctx context.Context, conn *ec2.EC2, id string) (string, error) {
+func findInstanceLaunchTemplateVersion(ctx context.Context, conn *ec2.Client, id string) (string, error) {
 	launchTemplateVersion, err := findInstanceTagValue(ctx, conn, id, "aws:ec2launchtemplate:version")
 
 	if err != nil {
@@ -3906,31 +3890,31 @@ func findInstanceLaunchTemplateVersion(ctx context.Context, conn *ec2.EC2, id st
 	return launchTemplateVersion, nil
 }
 
-func findLaunchTemplateData(ctx context.Context, conn *ec2.EC2, launchTemplateSpecification *ec2.LaunchTemplateSpecification) (*ec2.ResponseLaunchTemplateData, error) {
+func findLaunchTemplateData(ctx context.Context, conn *ec2.Client, launchTemplateSpecification *awstypes.LaunchTemplateSpecification) (*awstypes.ResponseLaunchTemplateData, error) {
 	input := &ec2.DescribeLaunchTemplateVersionsInput{}
 
-	if v := aws.StringValue(launchTemplateSpecification.LaunchTemplateId); v != "" {
+	if v := aws.ToString(launchTemplateSpecification.LaunchTemplateId); v != "" {
 		input.LaunchTemplateId = aws.String(v)
-	} else if v := aws.StringValue(launchTemplateSpecification.LaunchTemplateName); v != "" {
+	} else if v := aws.ToString(launchTemplateSpecification.LaunchTemplateName); v != "" {
 		input.LaunchTemplateName = aws.String(v)
 	}
 
 	var latestVersion bool
 
-	if v := aws.StringValue(launchTemplateSpecification.Version); v != "" {
+	if v := aws.ToString(launchTemplateSpecification.Version); v != "" {
 		switch v {
 		case LaunchTemplateVersionDefault:
-			input.Filters = newAttributeFilterList(map[string]string{
+			input.Filters = newAttributeFilterListV2(map[string]string{
 				"is-default-version": "true",
 			})
 		case LaunchTemplateVersionLatest:
 			latestVersion = true
 		default:
-			input.Versions = aws.StringSlice([]string{v})
+			input.Versions = []string{v}
 		}
 	}
 
-	output, err := FindLaunchTemplateVersions(ctx, conn, input)
+	output, err := findLaunchTemplateVersions(ctx, conn, input)
 
 	if err != nil {
 		return nil, fmt.Errorf("reading EC2 Launch Template versions: %w", err)
@@ -3944,25 +3928,25 @@ func findLaunchTemplateData(ctx context.Context, conn *ec2.EC2, launchTemplateSp
 }
 
 // findLaunchTemplateNameAndVersions returns the specified launch template's name, default version and latest version.
-func findLaunchTemplateNameAndVersions(ctx context.Context, conn *ec2.EC2, id string) (string, string, string, error) {
-	lt, err := FindLaunchTemplateByID(ctx, conn, id)
+func findLaunchTemplateNameAndVersions(ctx context.Context, conn *ec2.Client, id string) (string, string, string, error) {
+	lt, err := findLaunchTemplateByID(ctx, conn, id)
 
 	if err != nil {
 		return "", "", "", err
 	}
 
-	return aws.StringValue(lt.LaunchTemplateName), strconv.FormatInt(aws.Int64Value(lt.DefaultVersionNumber), 10), strconv.FormatInt(aws.Int64Value(lt.LatestVersionNumber), 10), nil
+	return aws.ToString(lt.LaunchTemplateName), strconv.FormatInt(aws.ToInt64(lt.DefaultVersionNumber), 10), strconv.FormatInt(aws.ToInt64(lt.LatestVersionNumber), 10), nil
 }
 
-func findInstanceTagValue(ctx context.Context, conn *ec2.EC2, instanceID, tagKey string) (string, error) {
+func findInstanceTagValue(ctx context.Context, conn *ec2.Client, instanceID, tagKey string) (string, error) {
 	input := &ec2.DescribeTagsInput{
-		Filters: newAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterListV2(map[string]string{
 			"resource-id": instanceID,
 			names.AttrKey: tagKey,
 		}),
 	}
 
-	output, err := conn.DescribeTagsWithContext(ctx, input)
+	output, err := conn.DescribeTags(ctx, input)
 
 	if err != nil {
 		return "", err
@@ -3972,7 +3956,7 @@ func findInstanceTagValue(ctx context.Context, conn *ec2.EC2, instanceID, tagKey
 	case 0:
 		return "", nil
 	case 1:
-		return aws.StringValue(output.Tags[0].Value), nil
+		return aws.ToString(output.Tags[0].Value), nil
 	default:
 		return "", tfresource.NewTooManyResultsError(count, input)
 	}
@@ -4019,10 +4003,10 @@ func ParseInstanceType(s string) (*InstanceType, error) {
 	}, nil
 }
 
-func hasCommonElement(slice1 []*string, slice2 []*string) bool {
-	for _, str1 := range slice1 {
-		for _, str2 := range slice2 {
-			if aws.StringValue(str1) == aws.StringValue(str2) {
+func hasCommonElement(slice1 []awstypes.ArchitectureType, slice2 []awstypes.ArchitectureType) bool {
+	for _, type1 := range slice1 {
+		for _, type2 := range slice2 {
+			if type1 == type2 {
 				return true
 			}
 		}
