@@ -299,41 +299,6 @@ func waitVolumeAttachmentInstanceStopped(ctx context.Context, conn *ec2.Client, 
 	return nil, err
 }
 
-func waitVolumeAttachmentCreated(ctx context.Context, conn *ec2.Client, volumeID, instanceID, deviceName string, timeout time.Duration) (*awstypes.VolumeAttachment, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:    enum.Slice(awstypes.VolumeAttachmentStateAttaching),
-		Target:     enum.Slice(awstypes.VolumeAttachmentStateAttached),
-		Refresh:    statusVolumeAttachmentState(ctx, conn, volumeID, instanceID, deviceName),
-		Timeout:    timeout,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.VolumeAttachment); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func statusVolumeAttachmentState(ctx context.Context, conn *ec2.Client, volumeID, instanceID, deviceName string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := findVolumeAttachment(ctx, conn, volumeID, instanceID, deviceName)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, string(output.State), nil
-	}
-}
-
 func waitVolumeAttachmentInstanceReady(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.Instance, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.InstanceStateNamePending, awstypes.InstanceStateNameStopping),
@@ -379,7 +344,7 @@ func waitVolumeAttachmentDeleted(ctx context.Context, conn *ec2.Client, volumeID
 func statusVolumeAttachmentInstanceState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		// Don't call FindInstanceByID as it maps useful status codes to NotFoundError.
-		output, err := FindInstanceV2(ctx, conn, &ec2.DescribeInstancesInput{
+		output, err := findInstance(ctx, conn, &ec2.DescribeInstancesInput{
 			InstanceIds: []string{id},
 		})
 
