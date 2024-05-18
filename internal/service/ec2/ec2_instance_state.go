@@ -8,13 +8,15 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -52,7 +54,7 @@ func ResourceInstanceState() *schema.Resource {
 			names.AttrState: {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{ec2.InstanceStateNameRunning, ec2.InstanceStateNameStopped}, false),
+				ValidateFunc: validation.StringInSlice(enum.Slice(awstypes.InstanceStateNameRunning, awstypes.InstanceStateNameStopped), false),
 			},
 		},
 	}
@@ -61,7 +63,7 @@ func ResourceInstanceState() *schema.Resource {
 func resourceInstanceStateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 	instanceId := d.Get(names.AttrInstanceID).(string)
 
 	instance, instanceErr := waitInstanceReady(ctx, conn, instanceId, d.Timeout(schema.TimeoutCreate))
@@ -70,7 +72,7 @@ func resourceInstanceStateCreate(ctx context.Context, d *schema.ResourceData, me
 		return create.AppendDiagError(diags, names.EC2, create.ErrActionReading, ResInstance, instanceId, instanceErr)
 	}
 
-	err := updateInstanceState(ctx, conn, instanceId, aws.StringValue(instance.State.Name), d.Get(names.AttrState).(string), d.Get("force").(bool))
+	err := updateInstanceState(ctx, conn, instanceId, string(instance.State.Name), d.Get(names.AttrState).(string), d.Get("force").(bool))
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -84,9 +86,9 @@ func resourceInstanceStateCreate(ctx context.Context, d *schema.ResourceData, me
 func resourceInstanceStateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	state, err := FindInstanceStateByID(ctx, conn, d.Id())
+	state, err := findInstanceStateByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.EC2, create.ErrActionReading, ResInstanceState, d.Id())
@@ -108,12 +110,12 @@ func resourceInstanceStateRead(ctx context.Context, d *schema.ResourceData, meta
 func resourceInstanceStateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	instance, instanceErr := waitInstanceReady(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 
 	if instanceErr != nil {
-		return create.AppendDiagError(diags, names.EC2, create.ErrActionReading, ResInstance, aws.StringValue(instance.InstanceId), instanceErr)
+		return create.AppendDiagError(diags, names.EC2, create.ErrActionReading, ResInstance, aws.ToString(instance.InstanceId), instanceErr)
 	}
 
 	if d.HasChange(names.AttrState) {
@@ -134,7 +136,7 @@ func resourceInstanceStateDelete(ctx context.Context, d *schema.ResourceData, me
 	return nil // nosemgrep:ci.semgrep.pluginsdk.return-diags-not-nil
 }
 
-func updateInstanceState(ctx context.Context, conn *ec2.EC2, id string, currentState string, configuredState string, force bool) error {
+func updateInstanceState(ctx context.Context, conn *ec2.Client, id string, currentState string, configuredState string, force bool) error {
 	if currentState == configuredState {
 		return nil
 	}
