@@ -1520,6 +1520,69 @@ func {{ template "testname" . }}_tags_DefaultTags_emptyResourceTag(t *testing.T)
 	})
 }
 
+func {{ template "testname" . }}_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+{{- if .SkipEmptyTags }}
+	t.Skip("Resource {{ .Name }} does not support empty tags")
+{{ end }}
+	{{- template "Init" . }}
+
+	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
+		{{ template "TestCaseSetupNoProviders" . }}
+		Steps: []resource.TestStep{
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
+				ConfigVariables: config.Variables{ {{ if .Generator }}
+					acctest.CtRName: config.StringVariable(rName),{{ end }}
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(""),
+					}),
+					"resource_tags": nil,
+					{{ range $name, $value := .AdditionalTfVars -}}
+					"{{ $name }}": config.StringVariable({{ $value }}),
+					{{ end }}
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					{{- template "ExistsCheck" . -}}
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags),  knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(""),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+						{{ if eq .Implementation "framework" -}}
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.NotNull()),
+						{{- else -}}
+						// TODO: Should be known
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTagsAll)),
+						{{- end }}
+					},
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
+				ConfigVariables: config.Variables{ {{ if .Generator }}
+					acctest.CtRName: config.StringVariable(rName),{{ end }}
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(""),
+					}),
+					"resource_tags": nil,
+					{{ range $name, $value := .AdditionalTfVars -}}
+					"{{ $name }}": config.StringVariable({{ $value }}),
+					{{ end }}
+				},
+				{{- template "ImportBody" . -}}
+			},
+		},
+	})
+}
+
 func {{ template "testname" . }}_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 {{- if eq .Implementation "framework" }}
 	t.Skip("Tags with null values are not correctly handled with the Plugin Framework")
