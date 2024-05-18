@@ -42,9 +42,10 @@ func TestAccBedrockAgentAgent_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_resource_in_use_check"},
 			},
 		},
 	})
@@ -69,12 +70,14 @@ func TestAccBedrockAgentAgent_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "agent_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "basic claude"),
+					resource.TestCheckResourceAttr(resourceName, "skip_resource_in_use_check", "true"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_resource_in_use_check"},
 			},
 		},
 	})
@@ -120,9 +123,10 @@ func TestAccBedrockAgentAgent_update(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_resource_in_use_check"},
 			},
 		},
 	})
@@ -149,9 +153,10 @@ func TestAccBedrockAgentAgent_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_resource_in_use_check"},
 			},
 			{
 				Config: testAccAgentConfig_tags2(rName, "anthropic.claude-v2", acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
@@ -335,6 +340,7 @@ resource "aws_bedrockagent_agent" "test" {
   idle_session_ttl_in_seconds = 500
   instruction                 = file("${path.module}/test-fixtures/instruction.txt")
   foundation_model            = %[2]q
+  skip_resource_in_use_check  = true
 
   prompt_override_configuration {
     override_lambda = null

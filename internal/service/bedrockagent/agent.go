@@ -143,6 +143,14 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 					boolplanmodifier.UseStateForUnknown(),
 				},
 			},
+			"skip_resource_in_use_check": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(false),
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
+			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
@@ -344,7 +352,8 @@ func (r *agentResource) Delete(ctx context.Context, request resource.DeleteReque
 
 	agentID := data.ID.ValueString()
 	_, err := conn.DeleteAgent(ctx, &bedrockagent.DeleteAgentInput{
-		AgentId: fwflex.StringFromFramework(ctx, data.AgentID),
+		AgentId:                fwflex.StringFromFramework(ctx, data.AgentID),
+		SkipResourceInUseCheck: *fwflex.BoolFromFramework(ctx, data.SkipResourceInUseCheck),
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -544,6 +553,7 @@ type agentResourceModel struct {
 	Instruction                 types.String                                                      `tfsdk:"instruction"`
 	PrepareAgent                types.Bool                                                        `tfsdk:"prepare_agent"`
 	PromptOverrideConfiguration fwtypes.ListNestedObjectValueOf[promptOverrideConfigurationModel] `tfsdk:"prompt_override_configuration"`
+	SkipResourceInUseCheck      types.Bool                                                        `tfsdk:"skip_resource_in_use_check"`
 	Tags                        types.Map                                                         `tfsdk:"tags"`
 	TagsAll                     types.Map                                                         `tfsdk:"tags_all"`
 	Timeouts                    timeouts.Value                                                    `tfsdk:"timeouts"`
