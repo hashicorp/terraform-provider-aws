@@ -7,8 +7,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -38,15 +37,15 @@ func DataSourceInstanceTypes() *schema.Resource {
 
 func dataSourceInstanceTypesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeInstanceTypesInput{}
 
 	if v, ok := d.GetOk(names.AttrFilter); ok {
-		input.Filters = newCustomFilterList(v.(*schema.Set))
+		input.Filters = newCustomFilterListV2(v.(*schema.Set))
 	}
 
-	output, err := FindInstanceTypes(ctx, conn, input)
+	output, err := findInstanceTypes(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Instance Types: %s", err)
@@ -55,7 +54,7 @@ func dataSourceInstanceTypesRead(ctx context.Context, d *schema.ResourceData, me
 	var instanceTypes []string
 
 	for _, instanceType := range output {
-		instanceTypes = append(instanceTypes, aws.StringValue(instanceType.InstanceType))
+		instanceTypes = append(instanceTypes, string(instanceType.InstanceType))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
