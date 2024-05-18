@@ -7,7 +7,9 @@ import (
 	"context"
 	"strconv"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -42,6 +44,251 @@ func statusCapacityReservationState(ctx context.Context, conn *ec2.Client, id st
 		}
 
 		return output, string(output.State), nil
+	}
+}
+
+func statusFleetState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		// Don't call FindFleetByID as it maps useful status codes to NotFoundError.
+		output, err := findFleet(ctx, conn, &ec2.DescribeFleetsInput{
+			FleetIds: []string{id},
+		})
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.FleetState), nil
+	}
+}
+
+func statusInstanceState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		// Don't call FindInstanceByID as it maps useful status codes to NotFoundError.
+		output, err := findInstance(ctx, conn, &ec2.DescribeInstancesInput{
+			InstanceIds: []string{id},
+		})
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State.Name), nil
+	}
+}
+
+// StatusInstanceIAMInstanceProfile fetches the Instance and its IamInstanceProfile
+//
+// The EC2 API accepts a name and always returns an ARN, so it is converted
+// back to the name to prevent unexpected differences.
+func statusInstanceIAMInstanceProfile(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		instance, err := FindInstanceByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if instance.IamInstanceProfile == nil || instance.IamInstanceProfile.Arn == nil {
+			return instance, "", nil
+		}
+
+		name, err := InstanceProfileARNToName(aws.ToString(instance.IamInstanceProfile.Arn))
+
+		if err != nil {
+			return instance, "", err
+		}
+
+		return instance, name, nil
+	}
+}
+
+func statusInstanceCapacityReservationSpecificationEquals(ctx context.Context, conn *ec2.Client, id string, expectedValue *types.CapacityReservationSpecification) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindInstanceByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output.CapacityReservationSpecification, strconv.FormatBool(capacityReservationSpecificationResponsesEqual(output.CapacityReservationSpecification, expectedValue)), nil
+	}
+}
+
+func statusInstanceMaintenanceOptionsAutoRecovery(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindInstanceByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if v := output.MaintenanceOptions; v != nil {
+			return v, string(v.AutoRecovery), nil
+		}
+
+		return nil, "", nil
+	}
+}
+
+func statusInstanceMetadataOptionsState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindInstanceByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if output.MetadataOptions == nil {
+			return nil, "", nil
+		}
+
+		return output.MetadataOptions, string(output.MetadataOptions.State), nil
+	}
+}
+
+func statusInstanceRootBlockDeviceDeleteOnTermination(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindInstanceByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		for _, v := range output.BlockDeviceMappings {
+			if aws.ToString(v.DeviceName) == aws.ToString(output.RootDeviceName) && v.Ebs != nil {
+				return v.Ebs, strconv.FormatBool(aws.ToBool(v.Ebs.DeleteOnTermination)), nil
+			}
+		}
+
+		return nil, "", nil
+	}
+}
+
+func statusSpotFleetActivityStatus(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findSpotFleetRequestByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.ActivityStatus), nil
+	}
+}
+
+func statusSpotFleetRequestState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		// Don't call FindSpotFleetRequestByID as it maps useful status codes to NotFoundError.
+		output, err := findSpotFleetRequest(ctx, conn, &ec2.DescribeSpotFleetRequestsInput{
+			SpotFleetRequestIds: []string{id},
+		})
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.SpotFleetRequestState), nil
+	}
+}
+
+func statusSpotInstanceRequest(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindSpotInstanceRequestByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.ToString(output.Status.Code), nil
+	}
+}
+
+func statusVolumeState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindEBSVolumeByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
+func statusVolumeAttachmentState(ctx context.Context, conn *ec2.Client, volumeID, instanceID, deviceName string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findVolumeAttachment(ctx, conn, volumeID, instanceID, deviceName)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
+func statusVolumeModificationState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findVolumeModificationByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.ModificationState), nil
 	}
 }
 

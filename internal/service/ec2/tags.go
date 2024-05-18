@@ -53,15 +53,15 @@ func tagSpecificationsFromMap(ctx context.Context, m map[string]interface{}, t a
 }
 
 // tagSpecificationsFromKeyValue returns the tag specifications for the given tag key/value tags and resource type.
-func tagSpecificationsFromKeyValue(tags tftags.KeyValueTags, resourceType string) []*ec2.TagSpecification {
+func tagSpecificationsFromKeyValue(tags tftags.KeyValueTags, resourceType string) []awstypes.TagSpecification {
 	if len(tags) == 0 {
 		return nil
 	}
 
-	return []*ec2.TagSpecification{
+	return []awstypes.TagSpecification{
 		{
-			ResourceType: aws.String(resourceType),
-			Tags:         Tags(tags.IgnoreAWS()),
+			ResourceType: awstypes.ResourceType(resourceType),
+			Tags:         TagsV2(tags.IgnoreAWS()),
 		},
 	}
 }
@@ -85,14 +85,14 @@ func getTagSpecificationsIn(ctx context.Context, resourceType string) []*ec2.Tag
 
 // tagsFromTagDescriptions returns the tags from the given tag descriptions.
 // No attempt is made to remove duplicates.
-func tagsFromTagDescriptions(tds []*ec2.TagDescription) []*ec2.Tag {
+func tagsFromTagDescriptions(tds []awstypes.TagDescription) []*awstypes.Tag {
 	if len(tds) == 0 {
 		return nil
 	}
 
-	tags := []*ec2.Tag{}
+	tags := []*awstypes.Tag{}
 	for _, td := range tds {
-		tags = append(tags, &ec2.Tag{
+		tags = append(tags, &awstypes.Tag{
 			Key:   td.Key,
 			Value: td.Value,
 		})

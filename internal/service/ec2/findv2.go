@@ -101,9 +101,7 @@ func findCapacityReservations(ctx context.Context, conn *ec2.Client, input *ec2.
 			return nil, err
 		}
 
-		for _, v := range page.CapacityReservations {
-			output = append(output, v)
-		}
+		output = append(output, page.CapacityReservations...)
 	}
 
 	return output, nil
@@ -130,6 +128,609 @@ func findCapacityReservationByID(ctx context.Context, conn *ec2.Client, id strin
 
 	// Eventual consistency check.
 	if aws.ToString(output.CapacityReservationId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findFleet(ctx context.Context, conn *ec2.Client, input *ec2.DescribeFleetsInput) (*awstypes.FleetData, error) {
+	output, err := findFleets(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findFleets(ctx context.Context, conn *ec2.Client, input *ec2.DescribeFleetsInput) ([]awstypes.FleetData, error) {
+	var output []awstypes.FleetData
+
+	pages := ec2.NewDescribeFleetsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidFleetIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Fleets...)
+	}
+
+	return output, nil
+}
+
+func findFleetByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.FleetData, error) {
+	input := &ec2.DescribeFleetsInput{
+		FleetIds: []string{id},
+	}
+
+	output, err := findFleet(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.FleetState; state == awstypes.FleetStateCodeDeleted || state == awstypes.FleetStateCodeDeletedRunning || state == awstypes.FleetStateCodeDeletedTerminatingInstances {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.FleetId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findInstanceCreditSpecifications(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstanceCreditSpecificationsInput) ([]awstypes.InstanceCreditSpecification, error) {
+	var output []awstypes.InstanceCreditSpecification
+
+	pages := ec2.NewDescribeInstanceCreditSpecificationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidInstanceIDNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.InstanceCreditSpecifications...)
+	}
+
+	return output, nil
+}
+
+func findInstanceCreditSpecification(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstanceCreditSpecificationsInput) (*awstypes.InstanceCreditSpecification, error) {
+	output, err := findInstanceCreditSpecifications(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findInstanceCreditSpecificationByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.InstanceCreditSpecification, error) {
+	input := &ec2.DescribeInstanceCreditSpecificationsInput{
+		InstanceIds: []string{id},
+	}
+
+	output, err := findInstanceCreditSpecification(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.InstanceId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findInstances(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstancesInput) ([]awstypes.Instance, error) {
+	var output []awstypes.Instance
+
+	pages := ec2.NewDescribeInstancesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			if tfawserr.ErrCodeEquals(err, errCodeInvalidInstanceIDNotFound) {
+				return nil, &retry.NotFoundError{
+					LastError:   err,
+					LastRequest: input,
+				}
+			}
+			return nil, err
+		}
+
+		for _, v := range page.Reservations {
+			output = append(output, v.Instances...)
+		}
+	}
+
+	return output, nil
+}
+
+func findInstance(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstancesInput) (*awstypes.Instance, error) {
+	output, err := findInstances(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output, func(v *awstypes.Instance) bool { return v.State != nil })
+}
+
+func FindInstanceByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Instance, error) {
+	input := &ec2.DescribeInstancesInput{
+		InstanceIds: []string{id},
+	}
+
+	output, err := findInstance(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State.Name; state == awstypes.InstanceStateNameTerminated {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.InstanceId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findInstanceStatus(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstanceStatusInput) (*awstypes.InstanceStatus, error) {
+	output, err := findInstanceStatuses(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findInstanceStatuses(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstanceStatusInput) ([]awstypes.InstanceStatus, error) {
+	var output []awstypes.InstanceStatus
+
+	pages := ec2.NewDescribeInstanceStatusPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidInstanceIDNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.InstanceStatuses...)
+	}
+
+	return output, nil
+}
+
+func findInstanceState(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstanceStatusInput) (*awstypes.InstanceState, error) {
+	output, err := findInstanceStatus(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output.InstanceState == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.InstanceState, nil
+}
+
+func findInstanceStateByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.InstanceState, error) {
+	input := &ec2.DescribeInstanceStatusInput{
+		InstanceIds:         []string{id},
+		IncludeAllInstances: aws.Bool(true),
+	}
+
+	output, err := findInstanceState(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if name := output.Name; name == awstypes.InstanceStateNameTerminated {
+		return nil, &retry.NotFoundError{
+			Message:     string(name),
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findInstanceTypes(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstanceTypesInput) ([]awstypes.InstanceTypeInfo, error) {
+	var output []awstypes.InstanceTypeInfo
+
+	pages := ec2.NewDescribeInstanceTypesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.InstanceTypes...)
+	}
+
+	return output, nil
+}
+
+func findInstanceType(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstanceTypesInput) (*awstypes.InstanceTypeInfo, error) {
+	output, err := findInstanceTypes(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findInstanceTypeByName(ctx context.Context, conn *ec2.Client, name string) (*awstypes.InstanceTypeInfo, error) {
+	input := &ec2.DescribeInstanceTypesInput{
+		InstanceTypes: []awstypes.InstanceType{awstypes.InstanceType(name)},
+	}
+
+	output, err := findInstanceType(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func findLaunchTemplate(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLaunchTemplatesInput) (*awstypes.LaunchTemplate, error) {
+	output, err := findLaunchTemplates(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findLaunchTemplates(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLaunchTemplatesInput) ([]awstypes.LaunchTemplate, error) {
+	var output []awstypes.LaunchTemplate
+
+	pages := ec2.NewDescribeLaunchTemplatesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidLaunchTemplateIdMalformed, errCodeInvalidLaunchTemplateIdNotFound, errCodeInvalidLaunchTemplateNameNotFoundException) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.LaunchTemplates...)
+	}
+
+	return output, nil
+}
+
+func findLaunchTemplateByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.LaunchTemplate, error) {
+	input := &ec2.DescribeLaunchTemplatesInput{
+		LaunchTemplateIds: []string{id},
+	}
+
+	output, err := findLaunchTemplate(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.LaunchTemplateId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findLaunchTemplateVersion(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLaunchTemplateVersionsInput) (*awstypes.LaunchTemplateVersion, error) {
+	output, err := findLaunchTemplateVersions(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output, func(v *awstypes.LaunchTemplateVersion) bool { return v.LaunchTemplateData != nil })
+}
+
+func findLaunchTemplateVersions(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLaunchTemplateVersionsInput) ([]awstypes.LaunchTemplateVersion, error) {
+	var output []awstypes.LaunchTemplateVersion
+
+	pages := ec2.NewDescribeLaunchTemplateVersionsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidLaunchTemplateIdNotFound, errCodeInvalidLaunchTemplateNameNotFoundException, errCodeInvalidLaunchTemplateIdVersionNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.LaunchTemplateVersions...)
+	}
+
+	return output, nil
+}
+
+func FindLaunchTemplateVersionByTwoPartKey(ctx context.Context, conn *ec2.Client, launchTemplateID, version string) (*awstypes.LaunchTemplateVersion, error) {
+	input := &ec2.DescribeLaunchTemplateVersionsInput{
+		LaunchTemplateId: aws.String(launchTemplateID),
+		Versions:         []string{version},
+	}
+
+	output, err := findLaunchTemplateVersion(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.LaunchTemplateId) != launchTemplateID {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findVolumeAttachmentInstanceByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Instance, error) {
+	input := &ec2.DescribeInstancesInput{
+		InstanceIds: []string{id},
+	}
+
+	output, err := findInstance(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State.Name; state == awstypes.InstanceStateNameTerminated {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.InstanceId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindSpotInstanceRequests(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSpotInstanceRequestsInput) ([]awstypes.SpotInstanceRequest, error) {
+	var output []awstypes.SpotInstanceRequest
+
+	pages := ec2.NewDescribeSpotInstanceRequestsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidSpotInstanceRequestIDNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.SpotInstanceRequests...)
+	}
+
+	return output, nil
+}
+
+func FindSpotInstanceRequest(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSpotInstanceRequestsInput) (*awstypes.SpotInstanceRequest, error) {
+	output, err := FindSpotInstanceRequests(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output, func(v *awstypes.SpotInstanceRequest) bool { return v.Status != nil })
+}
+
+func FindSpotInstanceRequestByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.SpotInstanceRequest, error) {
+	input := &ec2.DescribeSpotInstanceRequestsInput{
+		SpotInstanceRequestIds: []string{id},
+	}
+
+	output, err := FindSpotInstanceRequest(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State; state == awstypes.SpotInstanceStateCancelled || state == awstypes.SpotInstanceStateClosed {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.SpotInstanceRequestId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findSubnetByIDV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Subnet, error) {
+	input := &ec2.DescribeSubnetsInput{
+		SubnetIds: []string{id},
+	}
+
+	output, err := findSubnetV2(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.SubnetId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findSubnetV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSubnetsInput) (*awstypes.Subnet, error) {
+	output, err := findSubnetsV2(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findSubnetsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSubnetsInput) ([]awstypes.Subnet, error) {
+	var output []awstypes.Subnet
+
+	pages := ec2.NewDescribeSubnetsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidSubnetIDNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Subnets...)
+
+	}
+
+	return output, nil
+}
+
+func findVolumeModifications(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVolumesModificationsInput) ([]awstypes.VolumeModification, error) {
+	var output []awstypes.VolumeModification
+
+	pages := ec2.NewDescribeVolumesModificationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidVolumeNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.VolumesModifications...)
+	}
+
+	return output, nil
+}
+
+func findVolumeModification(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVolumesModificationsInput) (*awstypes.VolumeModification, error) {
+	output, err := findVolumeModifications(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findVolumeModificationByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VolumeModification, error) {
+	input := &ec2.DescribeVolumesModificationsInput{
+		VolumeIds: []string{id},
+	}
+
+	output, err := findVolumeModification(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.VolumeId) != id {
 		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
@@ -674,6 +1275,122 @@ func findPrefixListByNameV2(ctx context.Context, conn *ec2.Client, name string) 
 	return findPrefixListV2(ctx, conn, input)
 }
 
+func findSpotFleetInstances(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSpotFleetInstancesInput) ([]awstypes.ActiveInstance, error) {
+	var output []awstypes.ActiveInstance
+
+	err := describeSpotFleetInstancesPages(ctx, conn, input, func(page *ec2.DescribeSpotFleetInstancesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.ActiveInstances...)
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidSpotFleetRequestIdNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func findSpotFleetRequests(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSpotFleetRequestsInput) ([]awstypes.SpotFleetRequestConfig, error) {
+	var output []awstypes.SpotFleetRequestConfig
+
+	paginator := ec2.NewDescribeSpotFleetRequestsPaginator(conn, input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidSpotFleetRequestIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.SpotFleetRequestConfigs...)
+	}
+
+	return output, nil
+}
+
+func findSpotFleetRequest(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSpotFleetRequestsInput) (*awstypes.SpotFleetRequestConfig, error) {
+	output, err := findSpotFleetRequests(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output, func(v *awstypes.SpotFleetRequestConfig) bool { return v.SpotFleetRequestConfig != nil })
+}
+
+func findSpotFleetRequestByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.SpotFleetRequestConfig, error) {
+	input := &ec2.DescribeSpotFleetRequestsInput{
+		SpotFleetRequestIds: []string{id},
+	}
+
+	output, err := findSpotFleetRequest(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.SpotFleetRequestState; state == awstypes.BatchStateCancelled || state == awstypes.BatchStateCancelledRunning || state == awstypes.BatchStateCancelledTerminatingInstances {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.SpotFleetRequestId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findSpotFleetRequestHistoryRecords(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSpotFleetRequestHistoryInput) ([]awstypes.HistoryRecord, error) {
+	var output []awstypes.HistoryRecord
+
+	err := describeSpotFleetRequestHistoryPages(ctx, conn, input, func(page *ec2.DescribeSpotFleetRequestHistoryOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.HistoryRecords...)
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidSpotFleetRequestIdNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
 func findVPCEndpointServiceConfigurationByServiceNameV2(ctx context.Context, conn *ec2.Client, name string) (*awstypes.ServiceConfiguration, error) {
 	input := &ec2.DescribeVpcEndpointServiceConfigurationsInput{
 		Filters: newAttributeFilterListV2(map[string]string{
@@ -915,7 +1632,7 @@ func findVPCEndpointServicesV2(ctx context.Context, conn *ec2.Client, input *ec2
 	var serviceDetails []awstypes.ServiceDetail
 	var serviceNames []string
 
-	err := describeVPCEndpointServicesPagesV2(ctx, conn, input, func(page *ec2.DescribeVpcEndpointServicesOutput, lastPage bool) bool {
+	err := describeVPCEndpointServicesPages(ctx, conn, input, func(page *ec2.DescribeVpcEndpointServicesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -1131,9 +1848,7 @@ func FindImages(ctx context.Context, conn *ec2.Client, input *ec2.DescribeImages
 			return nil, err
 		}
 
-		for _, v := range page.Images {
-			output = append(output, v)
-		}
+		output = append(output, page.Images...)
 	}
 
 	return output, nil

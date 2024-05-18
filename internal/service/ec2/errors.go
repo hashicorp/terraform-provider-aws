@@ -133,40 +133,40 @@ const (
 	errCodeVPNGatewayLimitExceeded                           = "VpnGatewayLimitExceeded"
 )
 
-func CancelSpotFleetRequestError(apiObject *ec2.CancelSpotFleetRequestsErrorItem) error {
-	if apiObject == nil || apiObject.Error == nil {
+func CancelSpotFleetRequestError(apiObject awstypes.CancelSpotFleetRequestsErrorItem) error {
+	if apiObject.Error == nil {
 		return nil
 	}
 
-	return awserr.New(aws.StringValue(apiObject.Error.Code), aws.StringValue(apiObject.Error.Message), nil)
+	return awserr.New(string(apiObject.Error.Code), aws_sdkv2.ToString(apiObject.Error.Message), nil)
 }
 
-func CancelSpotFleetRequestsError(apiObjects []*ec2.CancelSpotFleetRequestsErrorItem) error {
+func CancelSpotFleetRequestsError(apiObjects []awstypes.CancelSpotFleetRequestsErrorItem) error {
 	var errs []error
 
 	for _, apiObject := range apiObjects {
 		if err := CancelSpotFleetRequestError(apiObject); err != nil {
-			errs = append(errs, fmt.Errorf("%s: %w", aws.StringValue(apiObject.SpotFleetRequestId), err))
+			errs = append(errs, fmt.Errorf("%s: %w", aws_sdkv2.ToString(apiObject.SpotFleetRequestId), err))
 		}
 	}
 
 	return errors.Join(errs...)
 }
 
-func deleteFleetError(apiObject *ec2.DeleteFleetErrorItem) error {
-	if apiObject == nil || apiObject.Error == nil {
+func deleteFleetError(apiObject awstypes.DeleteFleetErrorItem) error {
+	if apiObject.Error == nil {
 		return nil
 	}
 
-	return awserr.New(aws.StringValue(apiObject.Error.Code), aws.StringValue(apiObject.Error.Message), nil)
+	return awserr.New(string(apiObject.Error.Code), aws_sdkv2.ToString(apiObject.Error.Message), nil)
 }
 
-func deleteFleetsError(apiObjects []*ec2.DeleteFleetErrorItem) error {
+func deleteFleetsError(apiObjects []awstypes.DeleteFleetErrorItem) error {
 	var errs []error
 
 	for _, apiObject := range apiObjects {
 		if err := deleteFleetError(apiObject); err != nil {
-			errs = append(errs, fmt.Errorf("%s: %w", aws.StringValue(apiObject.FleetId), err))
+			errs = append(errs, fmt.Errorf("%s: %w", aws_sdkv2.ToString(apiObject.FleetId), err))
 		}
 	}
 

@@ -90,6 +90,28 @@ func attributeFiltersFromMultimap(m map[string][]string) []*ec2_sdkv1.Filter {
 	return filters
 }
 
+// attributeFiltersFromMultimapV2 returns an array of EC2 Filter objects to be used when listing resources.
+//
+// The keys of the specified map are the resource attributes names used in the filter - see the documentation
+// for the relevant "Describe" action for a list of the valid names. The resource must match all the filters
+// to be included in the result.
+// The values of the specified map are lists of resource attribute values used in the filter. The resource can
+// match any of the filter values to be included in the result.
+// See https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Filtering.html#Filtering_Resources_CLI for more details.
+func attributeFiltersFromMultimapV2(m map[string][]string) []awstypes.Filter {
+	if len(m) == 0 {
+		return nil
+	}
+
+	filters := []awstypes.Filter{}
+
+	for k, v := range m {
+		filters = append(filters, newFilterV2(k, v))
+	}
+
+	return filters
+}
+
 // tagFilters returns an array of EC2 Filter objects to be used when listing resources by tag.
 func tagFilters(ctx context.Context) []awstypes.Filter {
 	return newTagFilterListV2(getTagsInV2(ctx))

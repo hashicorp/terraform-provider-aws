@@ -39,8 +39,11 @@ var (
 	FindEIPByAssociationID                                 = findEIPByAssociationID
 	FindEIPDomainNameAttributeByAllocationID               = findEIPDomainNameAttributeByAllocationID
 	FindFastSnapshotRestoreByTwoPartKey                    = findFastSnapshotRestoreByTwoPartKey
+	FindFleetByID                                          = findFleetByID
 	FindInstanceMetadataDefaults                           = findInstanceMetadataDefaults
+	FindInstanceStateByID                                  = findInstanceStateByID
 	FindKeyPairByName                                      = findKeyPairByName
+	FindLaunchTemplateByID                                 = findLaunchTemplateByID
 	FindNetworkACLByIDV2                                   = findNetworkACLByIDV2
 	FindNetworkInterfaceByIDV2                             = findNetworkInterfaceByIDV2
 	FindRouteByIPv4DestinationV2                           = findRouteByIPv4DestinationV2
@@ -48,6 +51,9 @@ var (
 	FindRouteByPrefixListIDDestinationV2                   = findRouteByPrefixListIDDestinationV2
 	FindRouteTableAssociationByIDV2                        = findRouteTableAssociationByIDV2
 	FindRouteTableByIDV2                                   = findRouteTableByIDV2
+	FindSpotFleetRequestByID                               = findSpotFleetRequestByID
+	FindSpotFleetRequests                                  = findSpotFleetRequests
+	FindSubnetsV2                                          = findSubnetsV2
 	FindVolumeAttachmentInstanceByID                       = findVolumeAttachmentInstanceByID
 	FindVPCEndpointByIDV2                                  = findVPCEndpointByIDV2
 	FindVPCEndpointConnectionByServiceIDAndVPCEndpointIDV2 = findVPCEndpointConnectionByServiceIDAndVPCEndpointIDV2
@@ -69,6 +75,8 @@ var (
 	StopEBSVolumeAttachmentInstance                        = stopVolumeAttachmentInstance
 	UpdateTags                                             = updateTags
 	UpdateTagsV2                                           = updateTagsV2
+
+	WaitVolumeAttachmentCreated = waitVolumeAttachmentCreated
 )
 
 type (

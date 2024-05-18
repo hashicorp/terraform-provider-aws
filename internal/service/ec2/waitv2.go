@@ -12,7 +12,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -89,6 +91,142 @@ func waitCapacityReservationDeleted(ctx context.Context, conn *ec2.Client, id st
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.CapacityReservation); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitFleet(ctx context.Context, conn *ec2.Client, id string, pending, target []string, timeout, delay time.Duration) (*awstypes.FleetData, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    pending,
+		Target:     target,
+		Refresh:    statusFleetState(ctx, conn, id),
+		Timeout:    timeout,
+		Delay:      delay,
+		MinTimeout: 1 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.FleetData); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitInstanceIAMInstanceProfileUpdated(ctx context.Context, conn *ec2.Client, instanceID string, expectedValue string) (*types.Instance, error) {
+	stateConf := &retry.StateChangeConf{
+		Target:     enum.Slice(expectedValue),
+		Refresh:    statusInstanceIAMInstanceProfile(ctx, conn, instanceID),
+		Timeout:    ec2PropagationTimeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.Instance); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitInstanceCapacityReservationSpecificationUpdated(ctx context.Context, conn *ec2.Client, instanceID string, expectedValue *types.CapacityReservationSpecification) (*types.Instance, error) {
+	stateConf := &retry.StateChangeConf{
+		Target:     enum.Slice(strconv.FormatBool(true)),
+		Refresh:    statusInstanceCapacityReservationSpecificationEquals(ctx, conn, instanceID, expectedValue),
+		Timeout:    ec2PropagationTimeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.Instance); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitInstanceMaintenanceOptionsAutoRecoveryUpdated(ctx context.Context, conn *ec2.Client, id, expectedValue string, timeout time.Duration) (*types.InstanceMaintenanceOptions, error) {
+	stateConf := &retry.StateChangeConf{
+		Target:     enum.Slice(expectedValue),
+		Refresh:    statusInstanceMaintenanceOptionsAutoRecovery(ctx, conn, id),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.InstanceMaintenanceOptions); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitInstanceMetadataOptionsApplied(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.InstanceMetadataOptionsResponse, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(types.InstanceMetadataOptionsStatePending),
+		Target:     enum.Slice(types.InstanceMetadataOptionsStateApplied),
+		Refresh:    statusInstanceMetadataOptionsState(ctx, conn, id),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.InstanceMetadataOptionsResponse); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitInstanceRootBlockDeviceDeleteOnTerminationUpdated(ctx context.Context, conn *ec2.Client, id string, expectedValue bool, timeout time.Duration) (*types.EbsInstanceBlockDevice, error) {
+	stateConf := &retry.StateChangeConf{
+		Target:     []string{strconv.FormatBool(expectedValue)},
+		Refresh:    statusInstanceRootBlockDeviceDeleteOnTermination(ctx, conn, id),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.EbsInstanceBlockDevice); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitSpotInstanceRequestFulfilled(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.SpotInstanceRequest, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{spotInstanceRequestStatusCodePendingEvaluation, spotInstanceRequestStatusCodePendingFulfillment},
+		Target:     []string{spotInstanceRequestStatusCodeFulfilled},
+		Refresh:    statusSpotInstanceRequest(ctx, conn, id),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.SpotInstanceRequest); ok {
+		if fault := output.Fault; fault != nil {
+			errFault := fmt.Errorf("%s: %s", aws.ToString(fault.Code), aws.ToString(fault.Message))
+			tfresource.SetLastError(err, fmt.Errorf("%s %w", aws.ToString(output.Status.Message), errFault))
+		} else {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.Status.Message)))
+		}
+
 		return output, err
 	}
 
@@ -245,6 +383,106 @@ func waitNetworkInterfaceDetachedV2(ctx context.Context, conn *ec2.Client, id st
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.NetworkInterfaceAttachment); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitVolumeCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.Volume, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(types.VolumeStateCreating),
+		Target:     enum.Slice(types.VolumeStateAvailable),
+		Refresh:    statusVolumeState(ctx, conn, id),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.Volume); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitVolumeDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.Volume, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(types.VolumeStateDeleting),
+		Target:     []string{},
+		Refresh:    statusVolumeState(ctx, conn, id),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Volume); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitVolumeUpdated(ctx context.Context, conn *ec2_sdkv2.Client, id string, timeout time.Duration) (*types.Volume, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(types.VolumeStateCreating, types.VolumeState(types.VolumeModificationStateModifying)),
+		Target:     enum.Slice(types.VolumeStateAvailable, types.VolumeStateInUse),
+		Refresh:    statusVolumeState(ctx, conn, id),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.Volume); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitVolumeAttachmentCreated(ctx context.Context, conn *ec2.Client, volumeID, instanceID, deviceName string, timeout time.Duration) (*types.VolumeAttachment, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(types.VolumeAttachmentStateAttaching),
+		Target:     enum.Slice(types.VolumeAttachmentStateAttached),
+		Refresh:    statusVolumeAttachmentState(ctx, conn, volumeID, instanceID, deviceName),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.VolumeAttachment); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitVolumeModificationComplete(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.VolumeModification, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.VolumeModificationStateModifying),
+		// The volume is useable once the state is "optimizing", but will not be at full performance.
+		// Optimization can take hours. e.g. a full 1 TiB drive takes approximately 6 hours to optimize,
+		// according to https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/monitoring-volume-modifications.html.
+		Target:     enum.Slice(types.VolumeModificationStateCompleted, types.VolumeModificationStateOptimizing),
+		Refresh:    statusVolumeModificationState(ctx, conn, id),
+		Timeout:    timeout,
+		Delay:      30 * time.Second,
+		MinTimeout: 30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.VolumeModification); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+
 		return output, err
 	}
 
@@ -448,6 +686,82 @@ func waitRouteTableAssociationUpdatedV2(ctx context.Context, conn *ec2.Client, i
 			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 		}
 
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitSpotFleetRequestCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.SpotFleetRequestConfig, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(types.BatchStateSubmitted),
+		Target:     enum.Slice(types.BatchStateActive),
+		Refresh:    statusSpotFleetRequestState(ctx, conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.SpotFleetRequestConfig); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitSpotFleetRequestFulfilled(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.SpotFleetRequestConfig, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(types.ActivityStatusPendingFulfillment),
+		Target:     enum.Slice(types.ActivityStatusFulfilled),
+		Refresh:    statusSpotFleetActivityStatus(ctx, conn, id),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.SpotFleetRequestConfig); ok {
+		if output.ActivityStatus == types.ActivityStatusError {
+			var errs []error
+
+			input := &ec2.DescribeSpotFleetRequestHistoryInput{
+				SpotFleetRequestId: aws.String(id),
+				StartTime:          aws.Time(time.UnixMilli(0)),
+			}
+
+			if output, err := findSpotFleetRequestHistoryRecords(ctx, conn, input); err == nil {
+				for _, v := range output {
+					if eventType := v.EventType; eventType == types.EventTypeError || eventType == types.EventTypeInformation {
+						errs = append(errs, errors.New(string(v.EventType)))
+					}
+				}
+			}
+
+			tfresource.SetLastError(err, errors.Join(errs...))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitSpotFleetRequestUpdated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.SpotFleetRequestConfig, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(types.BatchStateModifying),
+		Target:     enum.Slice(types.BatchStateActive),
+		Refresh:    statusSpotFleetRequestState(ctx, conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.SpotFleetRequestConfig); ok {
 		return output, err
 	}
 
