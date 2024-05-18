@@ -1040,7 +1040,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Instance: %s", err)
 	}
 
-	instanceId := outputRaw.(*awstypes.Reservation).Instances[0].InstanceId
+	instanceId := outputRaw.(*ec2.RunInstancesOutput).Instances[0].InstanceId
 
 	d.SetId(aws.ToString(instanceId))
 

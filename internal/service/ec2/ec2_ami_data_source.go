@@ -434,7 +434,7 @@ func amiBlockDeviceMappingHash(v interface{}) int {
 			buf.WriteString(fmt.Sprintf("%s-", e[names.AttrEncrypted].(string)))
 			buf.WriteString(fmt.Sprintf("%s-", e[names.AttrIOPS].(string)))
 			buf.WriteString(fmt.Sprintf("%s-", e[names.AttrVolumeSize].(string)))
-			buf.WriteString(fmt.Sprintf("%s-", e[names.AttrVolumeType].(string)))
+			buf.WriteString(fmt.Sprintf("%s-", e[names.AttrVolumeType]))
 		}
 	}
 	if d, ok := m["no_device"]; ok {
