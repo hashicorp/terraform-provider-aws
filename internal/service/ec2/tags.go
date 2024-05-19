@@ -85,14 +85,14 @@ func getTagSpecificationsIn(ctx context.Context, resourceType string) []*ec2.Tag
 
 // tagsFromTagDescriptions returns the tags from the given tag descriptions.
 // No attempt is made to remove duplicates.
-func tagsFromTagDescriptions(tds []awstypes.TagDescription) []*awstypes.Tag {
+func tagsFromTagDescriptions(tds []awstypes.TagDescription) []awstypes.Tag {
 	if len(tds) == 0 {
 		return nil
 	}
 
-	tags := []*awstypes.Tag{}
+	tags := []awstypes.Tag{}
 	for _, td := range tds {
-		tags = append(tags, &awstypes.Tag{
+		tags = append(tags, awstypes.Tag{
 			Key:   td.Key,
 			Value: td.Value,
 		})

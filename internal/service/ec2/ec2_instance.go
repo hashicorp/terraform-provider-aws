@@ -2709,7 +2709,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 	return blockDevices, nil
 }
 
-func readVolumeTags(ctx context.Context, conn *ec2.Client, instanceId string) ([]*awstypes.Tag, error) {
+func readVolumeTags(ctx context.Context, conn *ec2.Client, instanceId string) ([]awstypes.Tag, error) {
 	volIDs, err := getInstanceVolIDs(ctx, conn, instanceId)
 	if err != nil {
 		return nil, fmt.Errorf("getting tags for volumes (%s): %s", volIDs, err)
