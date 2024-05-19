@@ -20,6 +20,8 @@ var (
 	ResourceZoneAssociation             = resourceZoneAssociation
 
 	CleanDelegationSetID                        = cleanDelegationSetID
+	CleanRecordName                             = cleanRecordName
+	CleanZoneID                                 = cleanZoneID
 	ExpandRecordName                            = expandRecordName
 	FindCIDRCollectionByID                      = findCIDRCollectionByID
 	FindCIDRLocationByTwoPartKey                = findCIDRLocationByTwoPartKey
@@ -34,6 +36,7 @@ var (
 	FindTrafficPolicyInstanceByID               = findTrafficPolicyInstanceByID
 	FindVPCAssociationAuthorizationByTwoPartKey = findVPCAssociationAuthorizationByTwoPartKey
 	FindZoneAssociationByThreePartKey           = findZoneAssociationByThreePartKey
+	FQDN                                        = fqdn
 	KeySigningKeyStatusActive                   = keySigningKeyStatusActive
 	KeySigningKeyStatusInactive                 = keySigningKeyStatusInactive
 	RecordParseResourceID                       = recordParseResourceID

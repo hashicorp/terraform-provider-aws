@@ -23,7 +23,7 @@ func TestCleanRecordName(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		actual := CleanRecordName(tc.Input)
+		actual := cleanRecordName(tc.Input)
 		if actual != tc.Output {
 			t.Fatalf("input: %s\noutput: %s", tc.Input, actual)
 		}
@@ -47,7 +47,7 @@ func TestNormalizeAliasName(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		actual := NormalizeAliasName(tc.Input)
+		actual := normalizeAliasName(tc.Input)
 		if actual != tc.Output {
 			t.Fatalf("input: %s\noutput: %s", tc.Input, actual)
 		}
@@ -66,26 +66,7 @@ func TestCleanZoneID(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		actual := CleanZoneID(tc.Input)
-		if actual != tc.Output {
-			t.Fatalf("input: %s\noutput: %s", tc.Input, actual)
-		}
-	}
-}
-
-func TestCleanChangeID(t *testing.T) {
-	t.Parallel()
-
-	cases := []struct {
-		Input, Output string
-	}{
-		{"/hostedzone/foo", "/hostedzone/foo"},
-		{"/change/foo", "foo"},
-		{"/bar", "/bar"},
-	}
-
-	for _, tc := range cases {
-		actual := CleanChangeID(tc.Input)
+		actual := cleanZoneID(tc.Input)
 		if actual != tc.Output {
 			t.Fatalf("input: %s\noutput: %s", tc.Input, actual)
 		}
@@ -117,7 +98,7 @@ func TestNormalizeZoneName(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		actual := NormalizeZoneName(tc.Input)
+		actual := normalizeZoneName(tc.Input)
 		if actual != tc.Output {
 			t.Fatalf("input: %s\noutput: %s", tc.Input, actual)
 		}

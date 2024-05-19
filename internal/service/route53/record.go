@@ -62,7 +62,7 @@ func resourceRecord() *schema.Resource {
 		},
 
 		SchemaVersion: 2,
-		MigrateState:  RecordMigrateState,
+		MigrateState:  recordMigrateState,
 
 		Schema: map[string]*schema.Schema{
 			names.AttrAlias: {
@@ -78,7 +78,7 @@ func resourceRecord() *schema.Resource {
 						names.AttrName: {
 							Type:             schema.TypeString,
 							Required:         true,
-							StateFunc:        NormalizeAliasName,
+							StateFunc:        normalizeAliasName,
 							DiffSuppressFunc: sdkv2.SuppressEquivalentStringCaseInsensitive,
 							ValidateFunc:     validation.StringLenBetween(1, 1024),
 						},
@@ -336,7 +336,7 @@ func resourceRecordCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
-	zoneID := CleanZoneID(d.Get("zone_id").(string))
+	zoneID := cleanZoneID(d.Get("zone_id").(string))
 	zoneRecord, err := findHostedZoneByID(ctx, conn, zoneID)
 
 	if err != nil {
@@ -362,7 +362,7 @@ func resourceRecordCreate(ctx context.Context, d *schema.ResourceData, meta inte
 			},
 			Comment: aws.String("Managed by Terraform"),
 		},
-		HostedZoneId: aws.String(CleanZoneID(aws.ToString(zoneRecord.HostedZone.Id))),
+		HostedZoneId: aws.String(cleanZoneID(aws.ToString(zoneRecord.HostedZone.Id))),
 	}
 
 	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.NoSuchHostedZone](ctx, 1*time.Minute, func() (interface{}, error) {
@@ -400,7 +400,7 @@ func resourceRecordRead(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
-	record, fqdn, err := findResourceRecordSetByFourPartKey(ctx, conn, CleanZoneID(d.Get("zone_id").(string)), d.Get(names.AttrName).(string), d.Get(names.AttrType).(string), d.Get("set_identifier").(string))
+	record, fqdn, err := findResourceRecordSetByFourPartKey(ctx, conn, cleanZoneID(d.Get("zone_id").(string)), d.Get(names.AttrName).(string), d.Get(names.AttrType).(string), d.Get("set_identifier").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route 53 Record (%s) not found, removing from state", d.Id())
@@ -415,7 +415,7 @@ func resourceRecordRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if alias := record.AliasTarget; alias != nil {
 		tfList := []interface{}{map[string]interface{}{
 			"evaluate_target_health": alias.EvaluateTargetHealth,
-			names.AttrName:           NormalizeAliasName(aws.ToString(alias.DNSName)),
+			names.AttrName:           normalizeAliasName(aws.ToString(alias.DNSName)),
 			"zone_id":                aws.ToString(alias.HostedZoneId),
 		}}
 
@@ -515,7 +515,7 @@ func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	// Otherwise, we delete the existing record and create a new record within
 	// a transactional change.
-	zoneID := CleanZoneID(d.Get("zone_id").(string))
+	zoneID := cleanZoneID(d.Get("zone_id").(string))
 	zoneRecord, err := findHostedZoneByID(ctx, conn, zoneID)
 
 	if err != nil {
@@ -664,7 +664,7 @@ func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			},
 			Comment: aws.String("Managed by Terraform"),
 		},
-		HostedZoneId: aws.String(CleanZoneID(aws.ToString(zoneRecord.HostedZone.Id))),
+		HostedZoneId: aws.String(cleanZoneID(aws.ToString(zoneRecord.HostedZone.Id))),
 	}
 
 	output, err := conn.ChangeResourceRecordSets(ctx, input)
@@ -701,7 +701,7 @@ func resourceRecordDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
-	zoneID := CleanZoneID(d.Get("zone_id").(string))
+	zoneID := cleanZoneID(d.Get("zone_id").(string))
 	name := d.Get(names.AttrName).(string)
 	rec, _, err := findResourceRecordSetByFourPartKey(ctx, conn, zoneID, name, d.Get(names.AttrType).(string), d.Get("set_identifier").(string))
 
@@ -778,8 +778,8 @@ func findResourceRecordSetByFourPartKey(ctx context.Context, conn *route53.Clien
 		return nil, nil, err
 	}
 
-	fqdn := expandRecordName(recordName, aws.ToString(zone.HostedZone.Name))
-	recordName = FQDN(strings.ToLower(fqdn))
+	name := expandRecordName(recordName, aws.ToString(zone.HostedZone.Name))
+	recordName = fqdn(strings.ToLower(name))
 	input := &route53.ListResourceRecordSetsInput{
 		HostedZoneId:    aws.String(zoneID),
 		StartRecordName: aws.String(recordName),
@@ -791,7 +791,7 @@ func findResourceRecordSetByFourPartKey(ctx context.Context, conn *route53.Clien
 		input.MaxItems = aws.Int32(100)
 	}
 	output, err := findResourceRecordSet(ctx, conn, input, func(v *awstypes.ResourceRecordSet) bool {
-		if recordName != strings.ToLower(CleanRecordName(aws.ToString(v.Name))) {
+		if recordName != strings.ToLower(cleanRecordName(aws.ToString(v.Name))) {
 			return false
 		}
 		if recordType != strings.ToUpper(string(v.Type)) {
@@ -808,7 +808,7 @@ func findResourceRecordSetByFourPartKey(ctx context.Context, conn *route53.Clien
 		return nil, nil, err
 	}
 
-	return output, &fqdn, nil
+	return output, &name, nil
 }
 
 func findResourceRecordSet(ctx context.Context, conn *route53.Client, input *route53.ListResourceRecordSetsInput, filter tfslices.Predicate[*awstypes.ResourceRecordSet]) (*awstypes.ResourceRecordSet, error) {
@@ -847,7 +847,7 @@ func findResourceRecordSets(ctx context.Context, conn *route53.Client, input *ro
 		}
 
 		if page.IsTruncated {
-			if recordName != "" && strings.ToLower(CleanRecordName(aws.ToString(page.NextRecordName))) != recordName {
+			if recordName != "" && strings.ToLower(cleanRecordName(aws.ToString(page.NextRecordName))) != recordName {
 				break
 			}
 
@@ -973,20 +973,11 @@ func expandResourceRecordSet(d *schema.ResourceData, zoneName string) *awstypes.
 	return apiObject
 }
 
-func FQDN(name string) string {
-	n := len(name)
-	if n == 0 || name[n-1] == '.' {
-		return name
-	} else {
-		return name + "."
-	}
-}
-
 // Check if the current record name contains the zone suffix.
 // If it does not, add the zone name to form a fully qualified name
 // and keep AWS happy.
 func expandRecordName(name, zone string) string {
-	rn := NormalizeZoneName(name)
+	rn := normalizeZoneName(name)
 	zone = strings.TrimSuffix(zone, ".")
 	if !strings.HasSuffix(rn, zone) {
 		if len(name) == 0 {

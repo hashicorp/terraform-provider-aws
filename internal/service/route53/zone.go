@@ -76,7 +76,7 @@ func resourceZone() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				StateFunc:    NormalizeZoneName,
+				StateFunc:    normalizeZoneName,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
 			"name_servers": {
@@ -151,7 +151,7 @@ func resourceZoneCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "creating Route53 Hosted Zone (%s): %s", name, err)
 	}
 
-	d.SetId(CleanZoneID(aws.ToString(output.HostedZone.Id)))
+	d.SetId(cleanZoneID(aws.ToString(output.HostedZone.Id)))
 
 	if output.ChangeInfo != nil {
 		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id)); err != nil {
@@ -201,8 +201,8 @@ func resourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("delegation_set_id", "")
 	// To be consistent with other AWS services (e.g. ACM) that do not accept a trailing period,
 	// we remove the suffix from the Hosted Zone Name returned from the API.
-	d.Set(names.AttrName, NormalizeZoneName(aws.ToString(output.HostedZone.Name)))
-	d.Set("zone_id", CleanZoneID(aws.ToString(output.HostedZone.Id)))
+	d.Set(names.AttrName, normalizeZoneName(aws.ToString(output.HostedZone.Name)))
+	d.Set("zone_id", cleanZoneID(aws.ToString(output.HostedZone.Id)))
 
 	var nameServers []string
 
@@ -365,7 +365,7 @@ func deleteAllResourceRecordsFromHostedZone(ctx context.Context, conn *route53.C
 
 	resourceRecordSets, err := findResourceRecordSets(ctx, conn, input, func(v *awstypes.ResourceRecordSet) bool {
 		// Zone NS & SOA records cannot be deleted.
-		if NormalizeZoneName(v.Name) == NormalizeZoneName(hostedZoneName) && (v.Type == awstypes.RRTypeNs || v.Type == awstypes.RRTypeSoa) {
+		if normalizeZoneName(v.Name) == normalizeZoneName(hostedZoneName) && (v.Type == awstypes.RRTypeNs || v.Type == awstypes.RRTypeSoa) {
 			return false
 		}
 		return true

@@ -14,15 +14,10 @@ func cleanDelegationSetID(id string) string {
 	return strings.TrimPrefix(id, "/delegationset/")
 }
 
-// CleanChangeID is used to remove the leading /change/
-func CleanChangeID(ID string) string {
-	return strings.TrimPrefix(ID, "/change/")
-}
-
 // Route 53 stores certain characters with the octal equivalent in ASCII format.
 // This function converts all of these characters back into the original character.
 // E.g. "*" is stored as "\\052" and "@" as "\\100"
-func CleanRecordName(name string) string {
+func cleanRecordName(name string) string {
 	str := name
 	s, err := strconv.Unquote(`"` + str + `"`)
 	if err != nil {
@@ -32,23 +27,23 @@ func CleanRecordName(name string) string {
 }
 
 // CleanZoneID is used to remove the leading /hostedzone/
-func CleanZoneID(ID string) string {
+func cleanZoneID(ID string) string {
 	return strings.TrimPrefix(ID, "/hostedzone/")
 }
 
-func NormalizeAliasName(alias interface{}) string {
+func normalizeAliasName(alias interface{}) string {
 	output := strings.ToLower(alias.(string))
-	return CleanRecordName(strings.TrimSuffix(output, "."))
+	return cleanRecordName(strings.TrimSuffix(output, "."))
 }
 
-// NormalizeZoneName is used to remove the trailing period
+// normalizeZoneName is used to remove the trailing period
 // and apply consistent casing to "name" or "domain name"
 // attributes returned from the Route53 API or provided as
 // user input.
 //
 // The single dot (".") domain name is returned as-is.
 // Uppercase letters are converted to lowercase.
-func NormalizeZoneName(v interface{}) string {
+func normalizeZoneName(v interface{}) string {
 	var str string
 	switch value := v.(type) {
 	case *string:
@@ -64,4 +59,13 @@ func NormalizeZoneName(v interface{}) string {
 	}
 
 	return strings.ToLower(strings.TrimSuffix(str, "."))
+}
+
+func fqdn(name string) string {
+	n := len(name)
+	if n == 0 || name[n-1] == '.' {
+		return name
+	} else {
+		return name + "."
+	}
 }
