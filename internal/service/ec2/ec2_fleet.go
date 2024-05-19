@@ -433,6 +433,10 @@ func ResourceFleet() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
+									// "image_id": {
+									// 	Type:     schema.TypeString,
+									// 	Optional: true,
+									// },
 									"max_price": {
 										Type:     schema.TypeString,
 										Optional: true,
@@ -484,21 +488,20 @@ func ResourceFleet() *schema.Resource {
 							Default:      FleetOnDemandAllocationStrategyLowestPrice,
 							ValidateFunc: validation.StringInSlice(FleetOnDemandAllocationStrategy_Values(), false),
 						},
-						// Pending AWS to provide this attribute back in the `Describe` call
-						// "capacity_reservation_options": {
-						// 	Type:     schema.TypeList,
-						// 	Optional: true,
-						// 	MaxItems: 1,
-						// 	Elem: &schema.Resource{
-						// 		Schema: map[string]*schema.Schema{
-						// 			"usage_strategy": {
-						// 				Type:         schema.TypeString,
-						// 				Optional:     true,
-						// 				ValidateFunc: validation.StringInSlice(ec2.FleetCapacityReservationUsageStrategy_Values(), false),
-						// 			},
-						// 		},
-						// 	},
-						// },
+						"capacity_reservation_options": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"usage_strategy": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.FleetCapacityReservationUsageStrategy](),
+									},
+								},
+							},
+						},
 						"max_total_price": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -1355,7 +1358,7 @@ func flattenFleetLaunchTemplateSpecificationForFleet(apiObject *awstypes.FleetLa
 }
 
 // Pending AWS to provide this attribute back in the `Describe` call.
-// func flattenLaunchTemplatesAndOverridesResponse(apiObject *ec2.LaunchTemplateAndOverridesResponse) map[string]interface{} {
+// func flattenLaunchTemplatesAndOverridesResponse(apiObject *awstypes.LaunchTemplateAndOverridesResponse) map[string]interface{} {
 // 	if apiObject == nil {
 // 		return nil
 // 	}
@@ -1381,13 +1384,13 @@ func flattenFleetLaunchTemplateOverrideses(apiObjects []awstypes.FleetLaunchTemp
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		tfList = append(tfList, flattenFleetLaunchTemplateOverrides(apiObject))
+		tfList = append(tfList, flattenFleetLaunchTemplateOverrides(&apiObject))
 	}
 
 	return tfList
 }
 
-func flattenFleetLaunchTemplateOverrides(apiObject awstypes.FleetLaunchTemplateOverrides) map[string]interface{} {
+func flattenFleetLaunchTemplateOverrides(apiObject *awstypes.FleetLaunchTemplateOverrides) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.AvailabilityZone; v != nil {

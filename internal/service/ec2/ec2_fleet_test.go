@@ -378,7 +378,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_availabilityZone(t *testing.T) {
 // 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 // 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckFleet(ctx, t) },
+// 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
 // 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 // 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 // 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
@@ -2184,7 +2184,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_maxPrice(t *testing.T) {
 // 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 // 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckFleet(ctx, t) },
+// 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
 // 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 // 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 // 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
@@ -2453,31 +2453,30 @@ func TestAccEC2Fleet_OnDemandOptions_allocationStrategy(t *testing.T) {
 	})
 }
 
-// Pending AWS to provide this attribute back in the `Describe` call.
-// func TestAccEC2Fleet_OnDemandOptions_CapacityReservationOptions(t *testing.T) {
-// 	ctx := acctest.Context(t)
-// 	var fleet1 awstypes.FleetData
-// 	resourceName := "aws_ec2_fleet.test"
-// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+func TestAccEC2Fleet_OnDemandOptions_CapacityReservationOptions(t *testing.T) {
+	ctx := acctest.Context(t)
+	var fleet1 awstypes.FleetData
+	resourceName := "aws_ec2_fleet.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-// 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccFleetConfig_onDemandOptionsCapacityReservationOptions(rName, "use-capacity-reservations-first"),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
-// 					resource.TestCheckResourceAttr(resourceName, "on_demand_options.#", "1"),
-// 					resource.TestCheckResourceAttr(resourceName, "on_demand_options.0.capacity_reservation_options.#", "1"),
-// 					resource.TestCheckResourceAttr(resourceName, "on_demand_options.0.capacity_reservation_options.0.usage_strategy", "use-capacity-reservations-first"),
-// 				),
-// 			},
-// 		},
-// 	})
-// }
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFleetConfig_onDemandOptionsCapacityReservationOptions(rName, "use-capacity-reservations-first"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFleetExists(ctx, resourceName, &fleet1),
+					resource.TestCheckResourceAttr(resourceName, "on_demand_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "on_demand_options.0.capacity_reservation_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "on_demand_options.0.capacity_reservation_options.0.usage_strategy", "use-capacity-reservations-first"),
+				),
+			},
+		},
+	})
+}
 
 func TestAccEC2Fleet_OnDemandOptions_MaxTotalPrice(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -3873,36 +3872,35 @@ resource "aws_ec2_fleet" "test" {
 `, rName, allocationStrategy))
 }
 
-// Pending AWS to provide this attribute back in the `Describe` call.
-// func testAccFleetConfig_onDemandOptionsCapacityReservationOptions(rName, usageStrategy string) string {
-// 	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
-// resource "aws_ec2_fleet" "test" {
-//   launch_template_config {
-//     launch_template_specification {
-//       launch_template_id = aws_launch_template.test.id
-//       version            = aws_launch_template.test.latest_version
-//     }
-//   }
+func testAccFleetConfig_onDemandOptionsCapacityReservationOptions(rName, usageStrategy string) string {
+	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
+resource "aws_ec2_fleet" "test" {
+  launch_template_config {
+    launch_template_specification {
+      launch_template_id = aws_launch_template.test.id
+      version            = aws_launch_template.test.latest_version
+    }
+  }
 
-//   on_demand_options {
-//     capacity_reservation_options {
-//       usage_strategy = %[2]q
-//     }
-//   }
+  on_demand_options {
+    capacity_reservation_options {
+      usage_strategy = %[2]q
+    }
+  }
 
-//   target_capacity_specification {
-//     default_target_capacity_type = "on-demand"
-//     total_target_capacity        = 0
-//   }
-//   terminate_instances = true
-//   type = "instant"
+  target_capacity_specification {
+    default_target_capacity_type = "on-demand"
+    total_target_capacity        = 0
+  }
+  terminate_instances = true
+  type = "instant"
 
-//   tags = {
-//     Name = %[1]q
-//   }
-// }
-// `, rName, usageStrategy))
-// }
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, usageStrategy))
+}
 
 func testAccFleetConfig_onDemandOptionsMaxTotalPrice(rName, maxTotalPrice string) string {
 	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
