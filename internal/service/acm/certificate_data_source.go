@@ -86,7 +86,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	input := &acm.ListCertificatesInput{}
 
 	if !tagsOk && !domainOk {
-		return diag.Errorf("no ACM Certificate matching search criteria. Please use at least domain or tags as search criteria")
+		return sdkdiag.AppendErrorf(diags, "no ACM Certificate matching search criteria. Please use at least domain or tags as search criteria")
 	}
 
 	if v, ok := d.GetOk("key_types"); ok && v.(*schema.Set).Len() > 0 {

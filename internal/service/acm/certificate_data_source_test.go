@@ -5,13 +5,13 @@ package acm_test
 
 import (
 	"fmt"
-	"github.com/aws/aws-sdk-go/service/acm"
 	"os"
 	"regexp"
 	"testing"
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/acm/types"
+	"github.com/aws/aws-sdk-go/service/acm"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -125,112 +125,112 @@ func TestAccACMCertificateDataSource_singleIssued(t *testing.T) {
 				Config: testAccCertificateDataSourceConfig_basicAndTags(domain, tagName, tagValue),
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
-					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
-					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusIssued),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate_chain"),
+					resource.TestMatchResourceAttr(resourceName, names.AttrARN, arnRe),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, acm.CertificateStatusIssued),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificateChain),
 				),
 			},
 			{
 				Config: testAccCertificateDataSourceConfig_statusAndTags(domain, acm.CertificateStatusIssued, tagName, tagValue),
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
-					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
-					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusIssued),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate_chain"),
+					resource.TestMatchResourceAttr(resourceName, names.AttrARN, arnRe),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, acm.CertificateStatusIssued),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificateChain),
 				),
 			},
 			{
 				Config: testAccCertificateDataSourceConfig_typesAndTags(domain, certType, tagName, tagValue),
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
-					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate_chain"),
+					resource.TestMatchResourceAttr(resourceName, names.AttrARN, arnRe),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificateChain),
 				),
 			},
 			{
 				Config: testAccCertificateDataSourceConfig_mostRecentAndTags(domain, tagName, tagValue, true),
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
-					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate_chain"),
+					resource.TestMatchResourceAttr(resourceName, names.AttrARN, arnRe),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificateChain),
 				),
 			},
 			{
 				Config: testAccCertificateDataSourceConfig_mostRecentAndStatusAndTags(domain, acm.CertificateStatusIssued, tagName, tagValue, true),
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
-					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate_chain"),
+					resource.TestMatchResourceAttr(resourceName, names.AttrARN, arnRe),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificateChain),
 				),
 			},
 			{
 				Config: testAccCertificateDataSourceConfig_mostRecentAndTypesAndTags(domain, certType, tagName, tagValue, true),
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
-					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate_chain"),
+					resource.TestMatchResourceAttr(resourceName, names.AttrARN, arnRe),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificateChain),
 				),
 			},
 			{
 				Config: testAccCertificateDataSourceConfig_basicTags(tagName, tagValue),
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
-					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
-					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusIssued),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate_chain"),
+					resource.TestMatchResourceAttr(resourceName, names.AttrARN, arnRe),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, acm.CertificateStatusIssued),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificateChain),
 				),
 			},
 			{
 				Config: testAccCertificateDataSourceConfig_TagsAndStatus(acm.CertificateStatusIssued, tagName, tagValue),
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
-					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
-					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusIssued),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate_chain"),
+					resource.TestMatchResourceAttr(resourceName, names.AttrARN, arnRe),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, acm.CertificateStatusIssued),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificateChain),
 				),
 			},
 			{
 				Config: testAccCertificateDataSourceConfig_TagsAndTypes(certType, tagName, tagValue),
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
-					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate_chain"),
+					resource.TestMatchResourceAttr(resourceName, names.AttrARN, arnRe),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificateChain),
 				),
 			},
 			{
 				Config: testAccCertificateDataSourceConfig_TagsAndMostRecent(tagName, tagValue, true),
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
-					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate_chain"),
+					resource.TestMatchResourceAttr(resourceName, names.AttrARN, arnRe),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificateChain),
 				),
 			},
 			{
 				Config: testAccCertificateDataSourceConfig_TagsAndMostRecentAndStatus(acm.CertificateStatusIssued, tagName, tagValue, true),
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
-					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate_chain"),
+					resource.TestMatchResourceAttr(resourceName, names.AttrARN, arnRe),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificateChain),
 				),
 			},
 			{
 				Config: testAccCertificateDataSourceConfig_TagsAndMostRecentAndTypes(certType, tagName, tagValue, true),
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
-					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate_chain"),
+					resource.TestMatchResourceAttr(resourceName, names.AttrARN, arnRe),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificateChain),
 				),
 			},
 		},
@@ -331,21 +331,21 @@ func TestAccACMCertificateDataSource_multipleIssued(t *testing.T) {
 				Config: testAccCertificateDataSourceConfig_mostRecentAndTags(domain, tagName, tagValue, true),
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
-					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
+					resource.TestMatchResourceAttr(resourceName, names.AttrARN, arnRe),
 				),
 			},
 			{
 				Config: testAccCertificateDataSourceConfig_mostRecentAndStatusAndTags(domain, acm.CertificateStatusIssued, tagName, tagValue, true),
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
-					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
+					resource.TestMatchResourceAttr(resourceName, names.AttrARN, arnRe),
 				),
 			},
 			{
 				Config: testAccCertificateDataSourceConfig_mostRecentAndTypesAndTags(domain, certType, tagName, tagValue, true),
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
-					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
+					resource.TestMatchResourceAttr(resourceName, names.AttrARN, arnRe),
 				),
 			},
 			{
@@ -364,21 +364,21 @@ func TestAccACMCertificateDataSource_multipleIssued(t *testing.T) {
 				Config: testAccCertificateDataSourceConfig_TagsAndMostRecent(tagName, tagValue, true),
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
-					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
+					resource.TestMatchResourceAttr(resourceName, names.AttrARN, arnRe),
 				),
 			},
 			{
 				Config: testAccCertificateDataSourceConfig_TagsAndMostRecentAndStatus(acm.CertificateStatusIssued, tagName, tagValue, true),
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
-					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
+					resource.TestMatchResourceAttr(resourceName, names.AttrARN, arnRe),
 				),
 			},
 			{
 				Config: testAccCertificateDataSourceConfig_TagsAndMostRecentAndTypes(certType, tagName, tagValue, true),
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
-					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
+					resource.TestMatchResourceAttr(resourceName, names.AttrARN, arnRe),
 				),
 			},
 		},
@@ -526,8 +526,8 @@ func TestAccACMCertificateDataSource_keyTypes(t *testing.T) {
 			{
 				Config: testAccCertificateDataSourceConfig_keyTypesAndTags(acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key), tagName, domainName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags", dataSourceName, "tags"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTags, dataSourceName, names.AttrTags),
 				),
 			},
 		},
