@@ -80,7 +80,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).ACMClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	domain, domainOk := d.Get(names.AttrDomain)
+	domain, domainOk := d.GetOk(names.AttrDomain)
 	tags, tagsOk := d.GetOk(names.AttrTags)
 
 	input := &acm.ListCertificatesInput{}
