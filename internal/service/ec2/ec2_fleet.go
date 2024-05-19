@@ -69,7 +69,7 @@ func ResourceFleet() *schema.Resource {
 				Default:          awstypes.FleetExcessCapacityTerminationPolicyTermination,
 				ValidateDiagFunc: enum.Validate[awstypes.FleetExcessCapacityTerminationPolicy](),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return d.Get(names.AttrType) != awstypes.FleetTypeMaintain
+					return d.Get(names.AttrType) != string(awstypes.FleetTypeMaintain)
 				},
 				DiffSuppressOnRefresh: true,
 			},
@@ -871,7 +871,7 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		// This argument is only valid for fleet_type of `maintain`, but was defaulted in the schema above, hence the extra check.
-		if v, ok := d.GetOk("excess_capacity_termination_policy"); ok && v != "" && d.Get(names.AttrType) == awstypes.FleetTypeMaintain {
+		if v, ok := d.GetOk("excess_capacity_termination_policy"); ok && v != "" && awstypes.FleetType(d.Get(names.AttrType).(string)) == awstypes.FleetTypeMaintain {
 			input.ExcessCapacityTerminationPolicy = awstypes.FleetExcessCapacityTerminationPolicy(v.(string))
 		}
 
