@@ -48,8 +48,12 @@ func TestAccBatchJobDefinition_tags(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
 					},
 				},
 			},
@@ -89,8 +93,14 @@ func TestAccBatchJobDefinition_tags(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+							acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+							acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+						})),
 					},
 				},
 			},
@@ -129,8 +139,12 @@ func TestAccBatchJobDefinition_tags(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+						})),
 					},
 				},
 			},
@@ -166,7 +180,7 @@ func TestAccBatchJobDefinition_tags(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						// SDK behavior
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
 					},
 				},
 			},
@@ -302,8 +316,12 @@ func TestAccBatchJobDefinition_tags_AddOnUpdate(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
 					},
 				},
 			},
@@ -357,7 +375,9 @@ func TestAccBatchJobDefinition_tags_EmptyTag_OnCreate(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(""),
+						})),
 						// TODO: Should be known
 						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTagsAll)),
 					},
@@ -395,7 +415,7 @@ func TestAccBatchJobDefinition_tags_EmptyTag_OnCreate(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						// SDK behavior
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
 					},
 				},
 			},
@@ -447,8 +467,12 @@ func TestAccBatchJobDefinition_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
 					},
 				},
 			},
@@ -473,7 +497,10 @@ func TestAccBatchJobDefinition_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+							acctest.CtKey2: knownvalue.StringExact(""),
+						})),
 						// TODO: Should be known
 						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTagsAll)),
 					},
@@ -514,8 +541,12 @@ func TestAccBatchJobDefinition_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
 					},
 				},
 			},
@@ -569,8 +600,12 @@ func TestAccBatchJobDefinition_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
 					},
 				},
 			},
@@ -593,7 +628,9 @@ func TestAccBatchJobDefinition_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(""),
+						})),
 						// TODO: Should be known
 						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTagsAll)),
 					},
@@ -652,7 +689,9 @@ func TestAccBatchJobDefinition_tags_DefaultTags_providerOnly(t *testing.T) {
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
 					},
 				},
 			},
@@ -699,7 +738,10 @@ func TestAccBatchJobDefinition_tags_DefaultTags_providerOnly(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						// SDK behavior
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+							acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+						})),
 					},
 				},
 			},
@@ -745,7 +787,9 @@ func TestAccBatchJobDefinition_tags_DefaultTags_providerOnly(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						// SDK behavior
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+						})),
 					},
 				},
 			},
@@ -785,7 +829,7 @@ func TestAccBatchJobDefinition_tags_DefaultTags_providerOnly(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						// SDK behavior
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
 					},
 				},
 			},
@@ -845,8 +889,13 @@ func TestAccBatchJobDefinition_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							"resourcekey1": knownvalue.StringExact(acctest.CtResourceValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							"providerkey1": knownvalue.StringExact(acctest.CtProviderValue1),
+							"resourcekey1": knownvalue.StringExact(acctest.CtResourceValue1),
+						})),
 					},
 				},
 			},
@@ -899,8 +948,15 @@ func TestAccBatchJobDefinition_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							"resourcekey1": knownvalue.StringExact("resourcevalue1updated"),
+							"resourcekey2": knownvalue.StringExact(acctest.CtResourceValue2),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							"providerkey1": knownvalue.StringExact("providervalue1updated"),
+							"resourcekey1": knownvalue.StringExact("resourcevalue1updated"),
+							"resourcekey2": knownvalue.StringExact(acctest.CtResourceValue2),
+						})),
 					},
 				},
 			},
@@ -943,7 +999,7 @@ func TestAccBatchJobDefinition_tags_DefaultTags_nonOverlapping(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						// SDK behavior
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
 					},
 				},
 			},
@@ -1002,8 +1058,12 @@ func TestAccBatchJobDefinition_tags_DefaultTags_overlapping(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							"overlapkey1": knownvalue.StringExact(acctest.CtResourceValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							"overlapkey1": knownvalue.StringExact(acctest.CtResourceValue1),
+						})),
 					},
 				},
 			},
@@ -1056,8 +1116,14 @@ func TestAccBatchJobDefinition_tags_DefaultTags_overlapping(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							"overlapkey1": knownvalue.StringExact(acctest.CtResourceValue1),
+							"overlapkey2": knownvalue.StringExact(acctest.CtResourceValue2),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							"overlapkey1": knownvalue.StringExact(acctest.CtResourceValue1),
+							"overlapkey2": knownvalue.StringExact(acctest.CtResourceValue2),
+						})),
 					},
 				},
 			},
@@ -1108,8 +1174,12 @@ func TestAccBatchJobDefinition_tags_DefaultTags_overlapping(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							"overlapkey1": knownvalue.StringExact(acctest.CtResourceValue2),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							"overlapkey1": knownvalue.StringExact(acctest.CtResourceValue2),
+						})),
 					},
 				},
 			},
@@ -1170,8 +1240,12 @@ func TestAccBatchJobDefinition_tags_DefaultTags_updateToProviderOnly(t *testing.
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
 					},
 				},
 			},
@@ -1199,7 +1273,9 @@ func TestAccBatchJobDefinition_tags_DefaultTags_updateToProviderOnly(t *testing.
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						// SDK behavior
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
 					},
 				},
 			},
@@ -1258,7 +1334,9 @@ func TestAccBatchJobDefinition_tags_DefaultTags_updateToResourceOnly(t *testing.
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
 					},
 				},
 			},
@@ -1285,8 +1363,12 @@ func TestAccBatchJobDefinition_tags_DefaultTags_updateToResourceOnly(t *testing.
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
 					},
 				},
 			},
@@ -1347,7 +1429,9 @@ func TestAccBatchJobDefinition_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(""),
+						})),
 						// TODO: Should be known
 						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTagsAll)),
 					},
@@ -1471,9 +1555,10 @@ func TestAccBatchJobDefinition_tags_DefaultTags_nullOverlappingResourceTag(t *te
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-						// SDK behavior
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtProviderValue1),
+						})),
 					},
 				},
 			},
@@ -1536,7 +1621,9 @@ func TestAccBatchJobDefinition_tags_DefaultTags_nullNonOverlappingResourceTag(t 
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							"providerkey1": knownvalue.StringExact(acctest.CtProviderValue1),
+						})),
 					},
 				},
 			},
@@ -1651,8 +1738,12 @@ func TestAccBatchJobDefinition_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
 					},
 				},
 			},
@@ -1740,8 +1831,12 @@ func TestAccBatchJobDefinition_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.NotNull()),
-						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.NotNull()),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
 					},
 				},
 			},
