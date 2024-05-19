@@ -58,7 +58,7 @@ func statusChange(ctx context.Context, conn *route53.Client, id string) retry.St
 	}
 }
 
-func waitChangeInsync(ctx context.Context, conn *route53.Client, id string) (*awstypes.ChangeInfo, error) { //nolint:unparam
+func waitChangeInsync(ctx context.Context, conn *route53.Client, id string) (*awstypes.ChangeInfo, error) {
 	// Route53 is vulnerable to throttling so longer delays, poll intervals helps significantly to avoid.
 	const (
 		timeout      = 30 * time.Minute
