@@ -135,7 +135,7 @@ func testAccCheckCIDRLocationDestroy(ctx context.Context) resource.TestCheckFunc
 				continue
 			}
 
-			_, err := tfroute53.FindCIDRLocationByTwoPartKey(ctx, conn, rs.Primary.Attributes["cidr_collection_id"], rs.Primary.Attributes["name"])
+			_, err := tfroute53.FindCIDRLocationByTwoPartKey(ctx, conn, rs.Primary.Attributes["cidr_collection_id"], rs.Primary.Attributes[names.AttrName])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -161,7 +161,7 @@ func testAccCheckCIDRLocationExists(ctx context.Context, n string) resource.Test
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Client(ctx)
 
-		_, err := tfroute53.FindCIDRLocationByTwoPartKey(ctx, conn, rs.Primary.Attributes["cidr_collection_id"], rs.Primary.Attributes["name"])
+		_, err := tfroute53.FindCIDRLocationByTwoPartKey(ctx, conn, rs.Primary.Attributes["cidr_collection_id"], rs.Primary.Attributes[names.AttrName])
 
 		return err
 	}

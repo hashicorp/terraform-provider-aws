@@ -9,7 +9,7 @@ const (
 	trafficPolicyDocEndpointCloudFront trafficPolicyDocEndpointType = "cloudfront"
 	trafficPolicyDocEndpointElastic    trafficPolicyDocEndpointType = "elastic-load-balancer"
 	trafficPolicyDocEndpointS3         trafficPolicyDocEndpointType = "s3-website"
-	trafficPolicyDocEndpointValue      trafficPolicyDocEndpointType = "value"
+	trafficPolicyDocEndpointValue      trafficPolicyDocEndpointType = "value" // nosemgrep:ci.literal-value-string-constant
 )
 
 func (trafficPolicyDocEndpointType) Values() []trafficPolicyDocEndpointType {
