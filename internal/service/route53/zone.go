@@ -363,7 +363,7 @@ func deleteAllResourceRecordsFromHostedZone(ctx context.Context, conn *route53.C
 		HostedZoneId: aws.String(hostedZoneID),
 	}
 
-	resourceRecordSets, err := findResourceRecordSets(ctx, conn, input, func(v *awstypes.ResourceRecordSet) bool {
+	resourceRecordSets, err := findResourceRecordSets(ctx, conn, input, tfslices.PredicateTrue[*route53.ListResourceRecordSetsOutput](), func(v *awstypes.ResourceRecordSet) bool {
 		// Zone NS & SOA records cannot be deleted.
 		if normalizeZoneName(v.Name) == normalizeZoneName(hostedZoneName) && (v.Type == awstypes.RRTypeNs || v.Type == awstypes.RRTypeSoa) {
 			return false
@@ -416,12 +416,13 @@ func deleteAllResourceRecordsFromHostedZone(ctx context.Context, conn *route53.C
 }
 
 func findNameServersByZone(ctx context.Context, conn *route53.Client, zoneID, zoneName string) ([]string, error) {
+	rrType := awstypes.RRTypeNs
 	input := &route53.ListResourceRecordSetsInput{
 		HostedZoneId:    aws.String(zoneID),
 		StartRecordName: aws.String(zoneName),
-		StartRecordType: awstypes.RRTypeNs,
+		StartRecordType: rrType,
 	}
-	output, err := findResourceRecordSets(ctx, conn, input, tfslices.PredicateTrue[*awstypes.ResourceRecordSet]())
+	output, err := findResourceRecordSets(ctx, conn, input, resourceRecordsFor(zoneName, rrType), tfslices.PredicateTrue[*awstypes.ResourceRecordSet]())
 
 	if err != nil {
 		return nil, err

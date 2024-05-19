@@ -780,17 +780,18 @@ func findResourceRecordSetByFourPartKey(ctx context.Context, conn *route53.Clien
 
 	name := expandRecordName(recordName, aws.ToString(zone.HostedZone.Name))
 	recordName = fqdn(strings.ToLower(name))
+	rrType := awstypes.RRType(strings.ToUpper(recordType))
 	input := &route53.ListResourceRecordSetsInput{
 		HostedZoneId:    aws.String(zoneID),
 		StartRecordName: aws.String(recordName),
-		StartRecordType: awstypes.RRType(strings.ToUpper(recordType)),
+		StartRecordType: rrType,
 	}
 	if recordSetID == "" {
 		input.MaxItems = aws.Int32(1)
 	} else {
 		input.MaxItems = aws.Int32(100)
 	}
-	output, err := findResourceRecordSet(ctx, conn, input, func(v *awstypes.ResourceRecordSet) bool {
+	output, err := findResourceRecordSet(ctx, conn, input, resourceRecordsFor(recordName, rrType), func(v *awstypes.ResourceRecordSet) bool {
 		if recordName != strings.ToLower(cleanRecordName(aws.ToString(v.Name))) {
 			return false
 		}
@@ -811,8 +812,8 @@ func findResourceRecordSetByFourPartKey(ctx context.Context, conn *route53.Clien
 	return output, &name, nil
 }
 
-func findResourceRecordSet(ctx context.Context, conn *route53.Client, input *route53.ListResourceRecordSetsInput, filter tfslices.Predicate[*awstypes.ResourceRecordSet]) (*awstypes.ResourceRecordSet, error) {
-	output, err := findResourceRecordSets(ctx, conn, input, filter)
+func findResourceRecordSet(ctx context.Context, conn *route53.Client, input *route53.ListResourceRecordSetsInput, morePages tfslices.Predicate[*route53.ListResourceRecordSetsOutput], filter tfslices.Predicate[*awstypes.ResourceRecordSet]) (*awstypes.ResourceRecordSet, error) {
+	output, err := findResourceRecordSets(ctx, conn, input, morePages, filter)
 
 	if err != nil {
 		return nil, err
@@ -821,8 +822,7 @@ func findResourceRecordSet(ctx context.Context, conn *route53.Client, input *rou
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findResourceRecordSets(ctx context.Context, conn *route53.Client, input *route53.ListResourceRecordSetsInput, filter tfslices.Predicate[*awstypes.ResourceRecordSet]) ([]awstypes.ResourceRecordSet, error) {
-	recordName, recordType := aws.ToString(input.StartRecordName), input.StartRecordType
+func findResourceRecordSets(ctx context.Context, conn *route53.Client, input *route53.ListResourceRecordSetsInput, morePages tfslices.Predicate[*route53.ListResourceRecordSetsOutput], filter tfslices.Predicate[*awstypes.ResourceRecordSet]) ([]awstypes.ResourceRecordSet, error) {
 	var output []awstypes.ResourceRecordSet
 
 	pages := route53.NewListResourceRecordSetsPaginator(conn, input)
@@ -846,18 +846,28 @@ func findResourceRecordSets(ctx context.Context, conn *route53.Client, input *ro
 			}
 		}
 
-		if page.IsTruncated {
-			if recordName != "" && strings.ToLower(cleanRecordName(aws.ToString(page.NextRecordName))) != recordName {
-				break
-			}
-
-			if recordType != "" && page.NextRecordType != recordType {
-				break
-			}
+		if !morePages(page) {
+			break
 		}
 	}
 
 	return output, nil
+}
+
+func resourceRecordsFor(recordName string, recordType awstypes.RRType) tfslices.Predicate[*route53.ListResourceRecordSetsOutput] {
+	return func(page *route53.ListResourceRecordSetsOutput) bool {
+		if page.IsTruncated {
+			if strings.ToLower(cleanRecordName(aws.ToString(page.NextRecordName))) != recordName {
+				return false
+			}
+
+			if page.NextRecordType != recordType {
+				return false
+			}
+		}
+
+		return true
+	}
 }
 
 // nilString takes a string as an argument and returns a string
