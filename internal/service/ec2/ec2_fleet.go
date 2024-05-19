@@ -849,7 +849,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("valid_until", aws.ToTime(fleet.ValidUntil).Format(time.RFC3339))
 	}
 
-	setTagsOut(ctx, fleet.Tags)
+	setTagsOutV2(ctx, fleet.Tags)
 
 	return diags
 }
