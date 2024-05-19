@@ -448,7 +448,6 @@ func TestAccEC2LaunchTemplate_data(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "disable_api_stop"),
 					resource.TestCheckResourceAttrSet(resourceName, "disable_api_termination"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "false"),
-					resource.TestCheckResourceAttr(resourceName, "elastic_gpu_specifications.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "iam_instance_profile.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "image_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_initiated_shutdown_behavior"),
@@ -463,7 +462,7 @@ func TestAccEC2LaunchTemplate_data(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.delete_on_termination", ""),
 					resource.TestCheckResourceAttr(resourceName, "placement.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "ram_disk_id"),
-					resource.TestCheckResourceAttr(resourceName, "tag_specifications.#", "5"),
+					resource.TestCheckResourceAttr(resourceName, "tag_specifications.#", "4"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", acctest.Ct1),
 				),
 			},
@@ -3435,10 +3434,6 @@ resource "aws_launch_template" "test" {
   disable_api_termination = true
   ebs_optimized           = false
 
-  elastic_gpu_specifications {
-    type = "test"
-  }
-
   iam_instance_profile {
     name = "test"
   }
@@ -3488,14 +3483,6 @@ resource "aws_launch_template" "test" {
 
   tag_specifications {
     resource_type = "spot-instances-request"
-
-    tags = {
-      Name = "test"
-    }
-  }
-
-  tag_specifications {
-    resource_type = "elastic-gpu"
 
     tags = {
       Name = "test"
@@ -4066,26 +4053,18 @@ resource "aws_autoscaling_group" "test" {
 }
 
 func testAccLaunchTemplateConfig_instanceRequirements(rName, instanceRequirements string) string {
-	return fmt.Sprintf(`
-data "aws_ami" "test" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name     = %[1]q
-  image_id = data.aws_ami.test.id
+  image_id = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
 
   instance_requirements {
     %[2]s
   }
 }
-`, rName, instanceRequirements)
+`, rName, instanceRequirements))
 }
 
 func testAccLaunchTemplateConfig_metadataOptions(rName string) string {
