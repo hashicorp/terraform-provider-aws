@@ -5,6 +5,7 @@ package qbusiness
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -279,6 +280,34 @@ func (r *resourcePlugin) Update(ctx context.Context, req resource.UpdateRequest,
 }
 
 func (r *resourcePlugin) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var data resourcePluginData
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().QBusinessClient(ctx)
+
+	input := &qbusiness.DeletePluginInput{
+		ApplicationId: aws.String(data.ApplicationId.ValueString()),
+		PluginId:      aws.String(data.PluginId.ValueString()),
+	}
+
+	_, err := conn.DeletePlugin(ctx, input)
+
+	if err != nil {
+		var nfe *awstypes.ResourceNotFoundException
+		if errors.As(err, &nfe) {
+			return
+		}
+		resp.Diagnostics.AddError(fmt.Sprintf("failed to delete Q Business plugin (%s)", data.PluginId.ValueString()), err.Error())
+		return
+	}
+
+	if _, err := waitPluginDeleted(ctx, conn, data.ID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		resp.Diagnostics.AddError("failed to wait for Q Business plugin to be deleted", err.Error())
+		return
+	}
 }
 
 func (r *resourcePlugin) ConfigValidators(_ context.Context) []resource.ConfigValidator {
