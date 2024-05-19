@@ -4,5 +4,6 @@
 package route53
 
 const (
-	errCodeAccessDenied = "AccessDenied"
+	errCodeAccessDenied       = "AccessDenied"
+	errCodeSerializationError = "SerializationError"
 )
