@@ -66,7 +66,7 @@ func TestAccQBusinessDatasource_disappears(t *testing.T) {
 				Config: testAccDatasourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDatasourceExists(ctx, resourceName, &datasource),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfqbusiness.ResourceDatasource(), resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfqbusiness.ResourceDatasource, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
