@@ -17,7 +17,7 @@ func (trafficPolicyDocEndpointType) Values() []trafficPolicyDocEndpointType {
 		trafficPolicyDocEndpointCloudFront,
 		trafficPolicyDocEndpointElastic,
 		trafficPolicyDocEndpointS3,
-		trafficPolicyDocEndpointValue,
+		trafficPolicyDocEndpointValue, // nosemgrep:ci.literal-value-string-constant
 	}
 }
 
