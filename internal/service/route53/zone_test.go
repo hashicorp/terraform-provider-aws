@@ -479,7 +479,7 @@ func testAccCreateRandomRecordsInZoneID(ctx context.Context, zone *route53.GetHo
 
 		if output.ChangeInfo != nil {
 			if _, err := tfroute53.WaitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id)); err != nil {
-				return nil
+				return err
 			}
 		}
 
