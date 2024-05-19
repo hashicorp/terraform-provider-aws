@@ -150,7 +150,13 @@ func TestAccLightsailInstance_tags(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "bundle_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "key_pair_name"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "tf-test"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccInstanceConfig_tags2(rName),
@@ -161,6 +167,60 @@ func TestAccLightsailInstance_tags(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "bundle_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "key_pair_name"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "tf-test"),
+					resource.TestCheckResourceAttr(resourceName, "tags.ExtraName", "tf-test"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLightsailInstance_keyOnlyTags(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lightsail_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_keyOnlyTags1(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
+					resource.TestCheckResourceAttrSet(resourceName, "blueprint_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "bundle_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "key_pair_name"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "tf-test"),
+					resource.TestCheckResourceAttr(resourceName, "tags.EmptyTag1", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccInstanceConfig_keyOnlyTags2(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
+					resource.TestCheckResourceAttrSet(resourceName, "blueprint_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "bundle_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "key_pair_name"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "tf-test"),
+					resource.TestCheckResourceAttr(resourceName, "tags.ExtraName", "tf-test"),
+					resource.TestCheckResourceAttr(resourceName, "tags.EmptyTag1", "NoLongerEmpty"),
+					resource.TestCheckResourceAttr(resourceName, "tags.EmptyTag2", ""),
 				),
 			},
 		},
@@ -463,6 +523,44 @@ resource "aws_lightsail_instance" "test" {
   tags = {
     Name      = "tf-test",
     ExtraName = "tf-test"
+  }
+}
+`, rName))
+}
+
+func testAccInstanceConfig_keyOnlyTags1(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfigBase(),
+		fmt.Sprintf(`
+resource "aws_lightsail_instance" "test" {
+  name              = "%s"
+  availability_zone = data.aws_availability_zones.available.names[0]
+  blueprint_id      = "amazon_linux_2"
+  bundle_id         = "nano_3_0"
+
+  tags = {
+    Name      = "tf-test"
+    EmptyTag1 = ""
+  }
+}
+`, rName))
+}
+
+func testAccInstanceConfig_keyOnlyTags2(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfigBase(),
+		fmt.Sprintf(`
+resource "aws_lightsail_instance" "test" {
+  name              = "%s"
+  availability_zone = data.aws_availability_zones.available.names[0]
+  blueprint_id      = "amazon_linux_2"
+  bundle_id         = "nano_3_0"
+
+  tags = {
+    Name      = "tf-test",
+    ExtraName = "tf-test"
+    EmptyTag1 = "NotEmptyAnymore"
+    EmptyTag2 = ""
   }
 }
 `, rName))

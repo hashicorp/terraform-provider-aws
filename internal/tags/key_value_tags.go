@@ -735,7 +735,11 @@ func (tags KeyValueTags) ResolveDuplicates(ctx context.Context, defaultConfig *D
 
 	result := make(map[string]string)
 	for k, v := range t {
-		result[k] = v.ValueString()
+		if v != nil {
+			result[k] = v.ValueString()
+		} else {
+			result[k] = ""
+		}
 	}
 
 	configTags := make(map[string]configTag)
