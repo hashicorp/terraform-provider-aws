@@ -2078,7 +2078,7 @@ func hashLaunchSpecification(v interface{}) int {
 	if v, ok := m[names.AttrSubnetID].(string); ok && v != "" {
 		buf.WriteString(fmt.Sprintf("%s-", v))
 	}
-	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrInstanceType].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrInstanceType]))
 	buf.WriteString(fmt.Sprintf("%s-", m["spot_price"].(string)))
 	return create.StringHashcode(buf.String())
 }
