@@ -58,3 +58,19 @@ func statusRetrieverAvailability(ctx context.Context, conn *qbusiness.Client, re
 		return output, string(output.Status), nil
 	}
 }
+
+func statusPluginAvailability(ctx context.Context, conn *qbusiness.Client, plugin_id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindPluginByID(ctx, conn, plugin_id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.BuildStatus), nil
+	}
+}

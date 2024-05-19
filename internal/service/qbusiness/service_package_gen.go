@@ -35,6 +35,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			},
 		},
 		{
+			Factory: newResourcePlugin,
+			Name:    "Plugin",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
 			Factory: newResourceRetriever,
 			Name:    "Retriever",
 			Tags: &types.ServicePackageResourceTags{
