@@ -167,7 +167,10 @@ func hostedZoneDNSSECDisable(ctx context.Context, conn *route53.Client, hostedZo
 		HostedZoneId: aws.String(hostedZoneID),
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.KeySigningKeyInParentDSRecord](ctx, 5*time.Minute, func() (interface{}, error) {
+	const (
+		timeout = 5 * time.Minute
+	)
+	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.KeySigningKeyInParentDSRecord](ctx, timeout, func() (interface{}, error) {
 		return conn.DisableHostedZoneDNSSEC(ctx, input)
 	})
 

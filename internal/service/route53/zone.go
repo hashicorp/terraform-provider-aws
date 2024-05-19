@@ -379,7 +379,10 @@ func deleteAllResourceRecordsFromHostedZone(ctx context.Context, conn *route53.C
 		return fmt.Errorf("reading Route53 Hosted Zone (%s) resource record sets: %w", hostedZoneID, err)
 	}
 
-	chunks := tfslices.Chunks(resourceRecordSets, 100)
+	const (
+		chunkSize = 100
+	)
+	chunks := tfslices.Chunks(resourceRecordSets, chunkSize)
 	for _, chunk := range chunks {
 		changes := tfslices.ApplyToAll(chunk, func(v awstypes.ResourceRecordSet) awstypes.Change {
 			return awstypes.Change{

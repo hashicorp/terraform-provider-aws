@@ -83,7 +83,10 @@ func (r *cidrCollectionResource) Create(ctx context.Context, request resource.Cr
 		Name:            aws.String(name),
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModification](ctx, 2*time.Minute, func() (interface{}, error) {
+	const (
+		timeout = 2 * time.Minute
+	)
+	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModification](ctx, timeout, func() (interface{}, error) {
 		return conn.CreateCidrCollection(ctx, input)
 	})
 
