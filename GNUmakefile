@@ -9,11 +9,11 @@ ACCTEST_PARALLELISM          ?= 20
 P                            ?= 20
 GO_VER                       ?= $(shell echo go`cat .go-version | xargs`)
 SWEEP_TIMEOUT                ?= 360m
-SEMGREP_ARGS		         ?= --error
+SEMGREP_ARGS                 ?= --error
 SEMGREP_SEND_METRICS         ?= off
 SEMGREP_ENABLE_VERSION_CHECK ?= false
 SEMGREP_TIMEOUT              ?= 900 # 15 minutes, some runs go over 5 minutes
-BASE_REF					 ?= main
+BASE_REF                     ?= main
 
 ifneq ($(origin PKG), undefined)
 	PKG_NAME = internal/service/$(PKG)
