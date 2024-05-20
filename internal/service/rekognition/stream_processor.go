@@ -176,9 +176,11 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 				CustomType: fwtypes.NewListNestedObjectTypeOf[regionOfInterestModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(10),
-					listvalidator.AtLeastOneOf(path.MatchRelative().AtName("bounding_box"), path.MatchRelative().AtName("polygon")),
 				},
 				NestedObject: schema.NestedBlockObject{
+					Validators: []validator.Object{
+						objectvalidator.AtLeastOneOf(path.MatchRelative().AtName("bounding_box"), path.MatchRelative().AtName("polygon")),
+					},
 					Blocks: map[string]schema.Block{
 						"bounding_box": schema.SingleNestedBlock{
 							CustomType:  fwtypes.NewObjectTypeOf[boundingBoxModel](ctx),
