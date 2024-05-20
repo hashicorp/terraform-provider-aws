@@ -262,7 +262,7 @@ func statusSpotFleetRequestState(ctx context.Context, conn *ec2.Client, id strin
 
 func statusSpotInstanceRequest(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindSpotInstanceRequestByID(ctx, conn, id)
+		output, err := findSpotInstanceRequestByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

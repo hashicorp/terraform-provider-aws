@@ -57,6 +57,7 @@ var (
 	FindSpotDatafeedSubscription                           = findSpotDatafeedSubscription
 	FindSpotFleetRequestByID                               = findSpotFleetRequestByID
 	FindSpotFleetRequests                                  = findSpotFleetRequests
+	FindSpotInstanceRequestByID                            = findSpotInstanceRequestByID
 	FindSubnetsV2                                          = findSubnetsV2
 	FindVolumeAttachmentInstanceByID                       = findVolumeAttachmentInstanceByID
 	FindVPCEndpointByIDV2                                  = findVPCEndpointByIDV2

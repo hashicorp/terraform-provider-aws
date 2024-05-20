@@ -775,7 +775,7 @@ func findSpotDatafeedSubscription(ctx context.Context, conn *ec2.Client) (*awsty
 	return output.SpotDatafeedSubscription, nil
 }
 
-func FindSpotInstanceRequests(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSpotInstanceRequestsInput) ([]awstypes.SpotInstanceRequest, error) {
+func findSpotInstanceRequests(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSpotInstanceRequestsInput) ([]awstypes.SpotInstanceRequest, error) {
 	var output []awstypes.SpotInstanceRequest
 
 	pages := ec2.NewDescribeSpotInstanceRequestsPaginator(conn, input)
@@ -799,8 +799,8 @@ func FindSpotInstanceRequests(ctx context.Context, conn *ec2.Client, input *ec2.
 	return output, nil
 }
 
-func FindSpotInstanceRequest(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSpotInstanceRequestsInput) (*awstypes.SpotInstanceRequest, error) {
-	output, err := FindSpotInstanceRequests(ctx, conn, input)
+func findSpotInstanceRequest(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSpotInstanceRequestsInput) (*awstypes.SpotInstanceRequest, error) {
+	output, err := findSpotInstanceRequests(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -809,12 +809,12 @@ func FindSpotInstanceRequest(ctx context.Context, conn *ec2.Client, input *ec2.D
 	return tfresource.AssertSingleValueResult(output, func(v *awstypes.SpotInstanceRequest) bool { return v.Status != nil })
 }
 
-func FindSpotInstanceRequestByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.SpotInstanceRequest, error) {
+func findSpotInstanceRequestByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.SpotInstanceRequest, error) {
 	input := &ec2.DescribeSpotInstanceRequestsInput{
 		SpotInstanceRequestIds: []string{id},
 	}
 
-	output, err := FindSpotInstanceRequest(ctx, conn, input)
+	output, err := findSpotInstanceRequest(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -832,6 +832,23 @@ func FindSpotInstanceRequestByID(ctx context.Context, conn *ec2.Client, id strin
 		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
+	}
+
+	return output, nil
+}
+
+func findSpotPriceHistory(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSpotPriceHistoryInput) ([]awstypes.SpotPrice, error) {
+	var output []awstypes.SpotPrice
+	pages := ec2.NewDescribeSpotPriceHistoryPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.SpotPriceHistory...)
 	}
 
 	return output, nil

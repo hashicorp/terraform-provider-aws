@@ -1467,7 +1467,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 			SpotInstanceRequestIds: []string{spotInstanceRequestID},
 		}
 
-		apiObject, err := FindSpotInstanceRequest(ctx, conn, input)
+		apiObject, err := findSpotInstanceRequest(ctx, conn, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading EC2 Spot Instance Request (%s): %s", spotInstanceRequestID, err)

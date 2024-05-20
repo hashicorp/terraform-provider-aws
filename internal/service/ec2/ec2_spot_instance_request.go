@@ -247,7 +247,7 @@ func resourceSpotInstanceRequestRead(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
-		return FindSpotInstanceRequestByID(ctx, conn, d.Id())
+		return findSpotInstanceRequestByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
