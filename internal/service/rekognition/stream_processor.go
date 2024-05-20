@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/float64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -333,7 +334,11 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 								Validators: []validator.Float64{
 									float64validator.Between(0.0, 100.0),
 								},
-								Optional: true,
+								Optional:      true,
+								PlanModifiers: []planmodifier.Float64{
+
+									//TODO: Requires replacement
+								},
 							},
 						},
 					},
@@ -426,6 +431,16 @@ func (r *resourceStreamProcessor) Read(ctx context.Context, req resource.ReadReq
 	}
 }
 
+func unwrapObjectValueOf[T any](plan fwtypes.ObjectValueOf[T], state fwtypes.ObjectValueOf[T], diagnostics diag.Diagnostics, ctx context.Context) (*T, *T) {
+	ptrPlan, diags := plan.ToPtr(ctx)
+	diagnostics.Append(diags...)
+
+	ptrState, diags := state.ToPtr(ctx)
+	diagnostics.Append(diags...)
+
+	return ptrPlan, ptrState
+}
+
 func (r *resourceStreamProcessor) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().RekognitionClient(ctx)
 
@@ -436,23 +451,49 @@ func (r *resourceStreamProcessor) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
-	planMap := &rekognition.CreateStreamProcessorInput{}
-	stateMap := &rekognition.CreateStreamProcessorInput{}
-	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, planMap)...)
-	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, stateMap)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	in := &rekognition.UpdateStreamProcessorInput{
-		Name:               planMap.Name,
+		Name:               plan.Name.ValueStringPointer(),
 		ParametersToDelete: []awstypes.StreamProcessorParameterToDelete{},
 	}
 
-	if planMap.DataSharingPreference.OptIn != stateMap.DataSharingPreference.OptIn {
-		in.DataSharingPreferenceForUpdate = &awstypes.StreamProcessorDataSharingPreference{
-			OptIn: planMap.DataSharingPreference.OptIn,
+	if !plan.DataSharingPreference.Equal(state.DataSharingPreference) {
+		dspPlan, dspState := unwrapObjectValueOf(plan.DataSharingPreference, state.DataSharingPreference, resp.Diagnostics, ctx)
+		if resp.Diagnostics.HasError() {
+			return
 		}
+
+		if !dspPlan.OptIn.Equal(dspState.OptIn) {
+			in.DataSharingPreferenceForUpdate = &awstypes.StreamProcessorDataSharingPreference{
+				OptIn: dspPlan.OptIn.ValueBool(),
+			}
+		}
+	}
+
+	if !plan.Settings.Equal(state.Settings) {
+		in.SettingsForUpdate = &awstypes.StreamProcessorSettingsForUpdate{
+			ConnectedHomeForUpdate: &awstypes.ConnectedHomeSettingsForUpdate{},
+		}
+
+		settingsPlan, settingsState := unwrapObjectValueOf(plan.Settings, state.Settings, resp.Diagnostics, ctx)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		connectedHomePlan, connectedHomeState := unwrapObjectValueOf(settingsPlan.ConnectedHome, settingsState.ConnectedHome, resp.Diagnostics, ctx)
+		if !connectedHomePlan.MinConfidence.Equal(connectedHomeState.MinConfidence) {
+			if !connectedHomePlan.MinConfidence.IsNull() && connectedHomeState.MinConfidence.IsNull() {
+				in.ParametersToDelete = append(in.ParametersToDelete, awstypes.StreamProcessorParameterToDeleteConnectedHomeMinConfidence)
+			}
+
+			if !connectedHomePlan.MinConfidence.IsNull() {
+				in.SettingsForUpdate.ConnectedHomeForUpdate.MinConfidence = aws.Float32(float32(connectedHomePlan.MinConfidence.ValueFloat64()))
+			}
+		}
+
+		if !connectedHomePlan.Labels.Equal(connectedHomeState.Labels) {
+			in.SettingsForUpdate.ConnectedHomeForUpdate.Labels = fwflex.ExpandFrameworkStringValueList(ctx, connectedHomePlan.Labels)
+		}
+
 	}
 
 	// the update api uses different property names(<prop>ForUpdate) and request shape, so we can't just flex into the request :(
@@ -463,42 +504,6 @@ func (r *resourceStreamProcessor) Update(ctx context.Context, req resource.Updat
 		in := &rekognition.UpdateStreamProcessorInput{
 			Name:               aws.String(plan.Name.ValueString()),
 			ParametersToDelete: []awstypes.StreamProcessorParameterToDelete{},
-		}
-
-		if !plan.DataSharingPreference.Equal(state.DataSharingPreference) {
-			optIn := plan.DataSharingPreference.ObjectValue.Attributes()["opt_in"].(types.Bool)
-			in.DataSharingPreferenceForUpdate = &awstypes.StreamProcessorDataSharingPreference{
-				OptIn: optIn.ValueBool(),
-			}
-		}
-
-		if !plan.Settings.Equal(state.Settings) {
-			in.SettingsForUpdate = &awstypes.StreamProcessorSettingsForUpdate{
-				ConnectedHomeForUpdate: &awstypes.ConnectedHomeSettingsForUpdate{},
-			}
-
-			planConnectedHome := plan.Settings.Attributes()["connected_home"].(fwtypes.ObjectValueOf[connectedHomeModel])
-			stateConnectedHome := state.Settings.Attributes()["connected_home"].(fwtypes.ObjectValueOf[connectedHomeModel])
-
-			planMinConfidence := planConnectedHome.Attributes()["min_confidence"].(types.Float64)
-			stateMinConfidence := stateConnectedHome.Attributes()["min_confidence"].(types.Float64)
-
-			if !planMinConfidence.Equal(stateMinConfidence) {
-				if !stateMinConfidence.IsNull() && planMinConfidence.IsNull() {
-					in.ParametersToDelete = append(in.ParametersToDelete, awstypes.StreamProcessorParameterToDeleteConnectedHomeMinConfidence)
-				}
-
-				if !planMinConfidence.IsNull() {
-					in.SettingsForUpdate.ConnectedHomeForUpdate.MinConfidence = aws.Float32(float32(planMinConfidence.ValueFloat64()))
-				}
-			}
-
-			planLabels := planConnectedHome.Attributes()["labels"].(fwtypes.ListValueOf[types.String])
-			stateLabels := stateConnectedHome.Attributes()["labels"].(fwtypes.ListValueOf[types.String])
-
-			if !planLabels.Equal(stateLabels) {
-				in.SettingsForUpdate.ConnectedHomeForUpdate.Labels = fwflex.ExpandFrameworkStringValueList(ctx, planLabels)
-			}
 		}
 
 		// TIP: -- 4. Call the AWS modify/update function
