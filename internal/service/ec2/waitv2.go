@@ -116,6 +116,57 @@ func waitFleet(ctx context.Context, conn *ec2.Client, id string, pending, target
 	return nil, err
 }
 
+func waitHostCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.Host, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.AllocationStatePending),
+		Target:  enum.Slice(awstypes.AllocationStateAvailable),
+		Timeout: timeout,
+		Refresh: statusHostState(ctx, conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Host); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitHostUpdated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.Host, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.AllocationStatePending),
+		Target:  enum.Slice(awstypes.AllocationStateAvailable),
+		Timeout: timeout,
+		Refresh: statusHostState(ctx, conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Host); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitHostDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.Host, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.AllocationStateAvailable),
+		Target:  []string{},
+		Timeout: timeout,
+		Refresh: statusHostState(ctx, conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Host); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitInstanceIAMInstanceProfileUpdated(ctx context.Context, conn *ec2.Client, instanceID string, expectedValue string) (*types.Instance, error) {
 	stateConf := &retry.StateChangeConf{
 		Target:     enum.Slice(expectedValue),

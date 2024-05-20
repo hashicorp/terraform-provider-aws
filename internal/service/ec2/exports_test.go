@@ -40,6 +40,7 @@ var (
 	FindEIPDomainNameAttributeByAllocationID               = findEIPDomainNameAttributeByAllocationID
 	FindFastSnapshotRestoreByTwoPartKey                    = findFastSnapshotRestoreByTwoPartKey
 	FindFleetByID                                          = findFleetByID
+	FindHostByID                                           = findHostByID
 	FindInstanceMetadataDefaults                           = findInstanceMetadataDefaults
 	FindInstanceStateByID                                  = findInstanceStateByID
 	FindKeyPairByName                                      = findKeyPairByName

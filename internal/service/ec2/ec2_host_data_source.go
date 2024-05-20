@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -91,15 +91,15 @@ func DataSourceHost() *schema.Resource {
 
 func dataSourceHostRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeHostsInput{
-		Filter: newCustomFilterList(d.Get(names.AttrFilter).(*schema.Set)),
+		Filter: newCustomFilterListV2(d.Get(names.AttrFilter).(*schema.Set)),
 	}
 
 	if v, ok := d.GetOk("host_id"); ok {
-		input.HostIds = aws.StringSlice([]string{v.(string)})
+		input.HostIds = []string{v.(string)}
 	}
 
 	if len(input.Filter) == 0 {
@@ -107,19 +107,19 @@ func dataSourceHostRead(ctx context.Context, d *schema.ResourceData, meta interf
 		input.Filter = nil
 	}
 
-	host, err := FindHost(ctx, conn, input)
+	host, err := findHost(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Host", err))
 	}
 
-	d.SetId(aws.StringValue(host.HostId))
+	d.SetId(aws.ToString(host.HostId))
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   ec2.ServiceName,
+		Service:   names.EC2,
 		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: aws.StringValue(host.OwnerId),
+		AccountID: aws.ToString(host.OwnerId),
 		Resource:  fmt.Sprintf("dedicated-host/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)
@@ -136,7 +136,7 @@ func dataSourceHostRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("sockets", host.HostProperties.Sockets)
 	d.Set("total_vcpus", host.HostProperties.TotalVCpus)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, host.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, keyValueTagsV2(ctx, host.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

@@ -9,15 +9,16 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -59,10 +60,10 @@ func ResourceHost() *schema.Resource {
 				Computed:     true,
 			},
 			"auto_placement": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      ec2.AutoPlacementOn,
-				ValidateFunc: validation.StringInSlice(ec2.AutoPlacement_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.AutoPlacementOn,
+				ValidateDiagFunc: enum.Validate[awstypes.AutoPlacement](),
 			},
 			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
@@ -70,10 +71,10 @@ func ResourceHost() *schema.Resource {
 				ForceNew: true,
 			},
 			"host_recovery": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      ec2.HostRecoveryOff,
-				ValidateFunc: validation.StringInSlice(ec2.HostRecovery_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.HostRecoveryOff,
+				ValidateDiagFunc: enum.Validate[awstypes.HostRecovery](),
 			},
 			"instance_family": {
 				Type:         schema.TypeString,
@@ -102,19 +103,19 @@ func ResourceHost() *schema.Resource {
 
 func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.AllocateHostsInput{
-		AutoPlacement:     aws.String(d.Get("auto_placement").(string)),
+		AutoPlacement:     awstypes.AutoPlacement(d.Get("auto_placement").(string)),
 		AvailabilityZone:  aws.String(d.Get(names.AttrAvailabilityZone).(string)),
 		ClientToken:       aws.String(id.UniqueId()),
-		HostRecovery:      aws.String(d.Get("host_recovery").(string)),
-		Quantity:          aws.Int64(1),
-		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeDedicatedHost),
+		HostRecovery:      awstypes.HostRecovery(d.Get("host_recovery").(string)),
+		Quantity:          aws.Int32(1),
+		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeDedicatedHost),
 	}
 
 	if v, ok := d.GetOk("asset_id"); ok {
-		input.AssetIds = aws.StringSlice([]string{v.(string)})
+		input.AssetIds = []string{v.(string)}
 	}
 
 	if v, ok := d.GetOk("instance_family"); ok {
@@ -129,15 +130,15 @@ func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		input.OutpostArn = aws.String(v.(string))
 	}
 
-	output, err := conn.AllocateHostsWithContext(ctx, input)
+	output, err := conn.AllocateHosts(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "allocating EC2 Host: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.HostIds[0]))
+	d.SetId(output.HostIds[0])
 
-	if _, err := WaitHostCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitHostCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Host (%s) create: %s", d.Id(), err)
 	}
 
@@ -146,9 +147,9 @@ func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceHostRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	host, err := FindHostByID(ctx, conn, d.Id())
+	host, err := findHostByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Host %s not found, removing from state", d.Id())
@@ -162,9 +163,9 @@ func resourceHostRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   ec2.ServiceName,
+		Service:   names.EC2,
 		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: aws.StringValue(host.OwnerId),
+		AccountID: aws.ToString(host.OwnerId),
 		Resource:  fmt.Sprintf("dedicated-host/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)
@@ -177,26 +178,26 @@ func resourceHostRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("outpost_arn", host.OutpostArn)
 	d.Set(names.AttrOwnerID, host.OwnerId)
 
-	setTagsOut(ctx, host.Tags)
+	setTagsOutV2(ctx, host.Tags)
 
 	return diags
 }
 
 func resourceHostUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &ec2.ModifyHostsInput{
-			HostIds: aws.StringSlice([]string{d.Id()}),
+			HostIds: []string{d.Id()},
 		}
 
 		if d.HasChange("auto_placement") {
-			input.AutoPlacement = aws.String(d.Get("auto_placement").(string))
+			input.AutoPlacement = awstypes.AutoPlacement(d.Get("auto_placement").(string))
 		}
 
 		if d.HasChange("host_recovery") {
-			input.HostRecovery = aws.String(d.Get("host_recovery").(string))
+			input.HostRecovery = awstypes.HostRecovery(d.Get("host_recovery").(string))
 		}
 
 		if hasChange, v := d.HasChange("instance_family"), d.Get("instance_family").(string); hasChange && v != "" {
@@ -207,17 +208,17 @@ func resourceHostUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			input.InstanceType = aws.String(v)
 		}
 
-		output, err := conn.ModifyHostsWithContext(ctx, input)
+		output, err := conn.ModifyHosts(ctx, input)
 
 		if err == nil && output != nil {
-			err = UnsuccessfulItemsError(output.Unsuccessful)
+			err = unsuccessfulItemsErrorV2(output.Unsuccessful)
 		}
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying EC2 Host (%s): %s", d.Id(), err)
 		}
 
-		if _, err := WaitHostUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waitHostUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for EC2 Host (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -227,15 +228,15 @@ func resourceHostUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceHostDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Deleting EC2 Host: %s", d.Id())
-	output, err := conn.ReleaseHostsWithContext(ctx, &ec2.ReleaseHostsInput{
-		HostIds: aws.StringSlice([]string{d.Id()}),
+	output, err := conn.ReleaseHosts(ctx, &ec2.ReleaseHostsInput{
+		HostIds: []string{d.Id()},
 	})
 
 	if err == nil && output != nil {
-		err = UnsuccessfulItemsError(output.Unsuccessful)
+		err = unsuccessfulItemsErrorV2(output.Unsuccessful)
 	}
 
 	if tfawserr.ErrCodeEquals(err, errCodeClientInvalidHostIDNotFound) {
@@ -246,7 +247,7 @@ func resourceHostDelete(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "releasing EC2 Host (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitHostDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitHostDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Host (%s) delete: %s", d.Id(), err)
 	}
 

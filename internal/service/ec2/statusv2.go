@@ -66,6 +66,22 @@ func statusFleetState(ctx context.Context, conn *ec2.Client, id string) retry.St
 	}
 }
 
+func statusHostState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findHostByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
 func statusInstanceState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		// Don't call FindInstanceByID as it maps useful status codes to NotFoundError.

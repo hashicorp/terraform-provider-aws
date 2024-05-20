@@ -198,6 +198,68 @@ func findFleetByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.
 	return output, nil
 }
 
+func findHostByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Host, error) {
+	input := &ec2.DescribeHostsInput{
+		HostIds: []string{id},
+	}
+
+	output, err := findHost(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State; state == awstypes.AllocationStateReleased || state == awstypes.AllocationStateReleasedPermanentFailure {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.HostId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findHosts(ctx context.Context, conn *ec2.Client, input *ec2.DescribeHostsInput) ([]awstypes.Host, error) {
+	var output []awstypes.Host
+
+	pages := ec2.NewDescribeHostsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidHostIDNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Hosts...)
+	}
+
+	return output, nil
+}
+
+func findHost(ctx context.Context, conn *ec2.Client, input *ec2.DescribeHostsInput) (*awstypes.Host, error) {
+	output, err := findHosts(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output, func(v *awstypes.Host) bool { return v.HostProperties != nil })
+}
+
 func findInstanceCreditSpecifications(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstanceCreditSpecificationsInput) ([]awstypes.InstanceCreditSpecification, error) {
 	var output []awstypes.InstanceCreditSpecification
 

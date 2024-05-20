@@ -834,22 +834,6 @@ func statusEIPDomainNameAttribute(ctx context.Context, conn *ec2_sdkv2.Client, a
 	}
 }
 
-func StatusHostState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindHostByID(ctx, conn, id)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.State), nil
-	}
-}
-
 func StatusInternetGatewayAttachmentState(ctx context.Context, conn *ec2.EC2, internetGatewayID, vpcID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindInternetGatewayAttachment(ctx, conn, internetGatewayID, vpcID)

@@ -1850,57 +1850,6 @@ func waitEIPDomainNameAttributeDeleted(ctx context.Context, conn *ec2_sdkv2.Clie
 	return nil, err
 }
 
-func WaitHostCreated(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Host, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{ec2.AllocationStatePending},
-		Target:  []string{ec2.AllocationStateAvailable},
-		Timeout: timeout,
-		Refresh: StatusHostState(ctx, conn, id),
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*ec2.Host); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func WaitHostUpdated(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Host, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{ec2.AllocationStatePending},
-		Target:  []string{ec2.AllocationStateAvailable},
-		Timeout: timeout,
-		Refresh: StatusHostState(ctx, conn, id),
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*ec2.Host); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func WaitHostDeleted(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Host, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{ec2.AllocationStateAvailable},
-		Target:  []string{},
-		Timeout: timeout,
-		Refresh: StatusHostState(ctx, conn, id),
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*ec2.Host); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
 const (
 	dhcpOptionSetDeletedTimeout = 3 * time.Minute
 )
