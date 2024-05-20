@@ -26,7 +26,7 @@ import (
 
 // @SDKResource("aws_ec2_carrier_gateway, name="Carrier Gateway")
 // @Tags(identifierAttribute="id")
-func ResourceCarrierGateway() *schema.Resource {
+func resourceCarrierGateway() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCarrierGatewayCreate,
 		ReadWithoutTimeout:   resourceCarrierGatewayRead,

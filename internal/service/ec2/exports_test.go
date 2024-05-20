@@ -5,6 +5,7 @@ package ec2
 
 // Exports for use in tests only.
 var (
+	ResourceCarrierGateway                  = resourceCarrierGateway
 	ResourceClientVPNAuthorizationRule      = resourceClientVPNAuthorizationRule
 	ResourceClientVPNEndpoint               = resourceClientVPNEndpoint
 	ResourceClientVPNNetworkAssociation     = resourceClientVPNNetworkAssociation
