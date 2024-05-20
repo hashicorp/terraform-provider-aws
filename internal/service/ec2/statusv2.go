@@ -126,9 +126,9 @@ func statusRouteV2(ctx context.Context, conn *ec2.Client, routeFinder routeFinde
 	}
 }
 
-func statusRouteTable(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusRouteTableV2(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findRouteTableByID(ctx, conn, id)
+		output, err := findRouteTableByIDV2(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -230,6 +230,118 @@ func statusVPCEndpointConnectionVPCEndpointStateV2(ctx context.Context, conn *ec
 		}
 
 		return output, string(output.VpcEndpointState), nil
+	}
+}
+
+func statusVPCEndpointServicePrivateDNSNameConfigurationV2(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findVPCEndpointServicePrivateDNSNameConfigurationByIDV2(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
+func statusClientVPNEndpointState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findClientVPNEndpointByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status.Code), nil
+	}
+}
+
+func statusClientVPNEndpointClientConnectResponseOptionsState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findClientVPNEndpointClientConnectResponseOptionsByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status.Code), nil
+	}
+}
+
+func statusClientVPNAuthorizationRule(ctx context.Context, conn *ec2.Client, endpointID, targetNetworkCIDR, accessGroupID string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findClientVPNAuthorizationRuleByThreePartKey(ctx, conn, endpointID, targetNetworkCIDR, accessGroupID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status.Code), nil
+	}
+}
+
+func statusClientVPNNetworkAssociation(ctx context.Context, conn *ec2.Client, associationID, endpointID string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findClientVPNNetworkAssociationByTwoPartKey(ctx, conn, associationID, endpointID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status.Code), nil
+	}
+}
+
+func statusClientVPNRoute(ctx context.Context, conn *ec2.Client, endpointID, targetSubnetID, destinationCIDR string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findClientVPNRouteByThreePartKey(ctx, conn, endpointID, targetSubnetID, destinationCIDR)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status.Code), nil
+	}
+}
+
+func statusCarrierGateway(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findCarrierGatewayByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
 	}
 }
 

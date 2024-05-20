@@ -1,4 +1,25 @@
-## 5.50.0 (Unreleased)
+## 5.51.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_vpc_endpoint_service_private_dns_verification` ([#37176](https://github.com/hashicorp/terraform-provider-aws/issues/37176))
+
+ENHANCEMENTS:
+
+* resource/aws_api_gateway_deployment: Add `canary_settings` attribute ([#37573](https://github.com/hashicorp/terraform-provider-aws/issues/37573))
+* resource/aws_route53_health_check: Add plan-time validation of `cloudwatch_alarm_region` ([#37510](https://github.com/hashicorp/terraform-provider-aws/issues/37510))
+* resource/aws_route53_record: Add plan-time validation of `latency_routing_policy.region` ([#37510](https://github.com/hashicorp/terraform-provider-aws/issues/37510))
+* resource/aws_route53_vpc_association_authorization: Add plan-time validation of `vpc_region` ([#37510](https://github.com/hashicorp/terraform-provider-aws/issues/37510))
+* resource/aws_route53_zone_association: Add plan-time validation of `vpc_region` ([#37510](https://github.com/hashicorp/terraform-provider-aws/issues/37510))
+* resource/aws_wafv2_web_acl: Add `api_gateway`, `app_runner_service`, `cognito_user_pool`, and `verified_access_instance` configuration blocks to `association_config.request_body` ([#37588](https://github.com/hashicorp/terraform-provider-aws/issues/37588))
+
+BUG FIXES:
+
+* resource/aws_dynamodb_table_replica: Correctly set `kms_key_arn` on Read ([#37570](https://github.com/hashicorp/terraform-provider-aws/issues/37570))
+* resource/aws_kms_grant: Change `grant_token` to [`Sensitive`](https://developer.hashicorp.com/terraform/plugin/best-practices/sensitive-state#using-sensitive-flag-functionality) ([#37593](https://github.com/hashicorp/terraform-provider-aws/issues/37593))
+* resource/aws_m2_deployment: Fix `state` error on `deployment_id` during start/stop update ([#37581](https://github.com/hashicorp/terraform-provider-aws/issues/37581))
+
+## 5.50.0 (May 17, 2024)
 
 ENHANCEMENTS:
 
@@ -18,6 +39,7 @@ BUG FIXES:
 * resource/aws_lakeformation_data_cells_filter: Fix inconsistent `state` error when using `row_filter.all_rows_wildcard` ([#37433](https://github.com/hashicorp/terraform-provider-aws/issues/37433))
 * resource/aws_organizations_account: Allow import of accounts with IAM access to the AWS Billing and Cost Management console ([#35662](https://github.com/hashicorp/terraform-provider-aws/issues/35662))
 * resource/aws_ram_principal_association: Correct plan-time validation of `principal` to fix `panic: unexpected format for ID parts ([...]), the following id parts indexes are blank ([1])` ([#37450](https://github.com/hashicorp/terraform-provider-aws/issues/37450))
+* resource/aws_route53_record: Change region default to us-east-1 ([#37565](https://github.com/hashicorp/terraform-provider-aws/issues/37565))
 * resource/aws_vpc_endpoint_service: Fix destroy error when endpoint service is deleted out-of-band ([#37534](https://github.com/hashicorp/terraform-provider-aws/issues/37534))
 
 ## 5.49.0 (May 10, 2024)

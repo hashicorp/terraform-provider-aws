@@ -183,7 +183,7 @@ func resourceRouteTableAssociationImport(ctx context.Context, d *schema.Resource
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	routeTable, err := findRouteTableByID(ctx, conn, routeTableID)
+	routeTable, err := findRouteTableByIDV2(ctx, conn, routeTableID)
 
 	if err != nil {
 		return nil, err

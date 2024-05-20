@@ -5,6 +5,11 @@ package ec2
 
 // Exports for use in tests only.
 var (
+	ResourceCarrierGateway                  = resourceCarrierGateway
+	ResourceClientVPNAuthorizationRule      = resourceClientVPNAuthorizationRule
+	ResourceClientVPNEndpoint               = resourceClientVPNEndpoint
+	ResourceClientVPNNetworkAssociation     = resourceClientVPNNetworkAssociation
+	ResourceClientVPNRoute                  = resourceClientVPNRoute
 	ResourceCustomerGateway                 = resourceCustomerGateway
 	ResourceDefaultNetworkACL               = resourceDefaultNetworkACL
 	ResourceDefaultRouteTable               = resourceDefaultRouteTable
@@ -32,6 +37,12 @@ var (
 	ResourceVPNGatewayRoutePropagation      = resourceVPNGatewayRoutePropagation
 
 	CustomFiltersSchema                                    = customFiltersSchema
+	FindAvailabilityZonesV2                                = findAvailabilityZonesV2
+	FindCarrierGatewayByID                                 = findCarrierGatewayByID
+	FindClientVPNAuthorizationRuleByThreePartKey           = findClientVPNAuthorizationRuleByThreePartKey
+	FindClientVPNEndpointByID                              = findClientVPNEndpointByID
+	FindClientVPNNetworkAssociationByTwoPartKey            = findClientVPNNetworkAssociationByTwoPartKey
+	FindClientVPNRouteByThreePartKey                       = findClientVPNRouteByThreePartKey
 	FindEBSVolumeAttachment                                = findVolumeAttachment
 	FindEIPByAllocationID                                  = findEIPByAllocationID
 	FindEIPByAssociationID                                 = findEIPByAssociationID
@@ -45,7 +56,7 @@ var (
 	FindRouteByIPv6DestinationV2                           = findRouteByIPv6DestinationV2
 	FindRouteByPrefixListIDDestinationV2                   = findRouteByPrefixListIDDestinationV2
 	FindRouteTableAssociationByIDV2                        = findRouteTableAssociationByIDV2
-	FindRouteTableByIDV2                                   = findRouteTableByID
+	FindRouteTableByIDV2                                   = findRouteTableByIDV2
 	FindVolumeAttachmentInstanceByID                       = findVolumeAttachmentInstanceByID
 	FindVPCEndpointByIDV2                                  = findVPCEndpointByIDV2
 	FindVPCEndpointConnectionByServiceIDAndVPCEndpointIDV2 = findVPCEndpointConnectionByServiceIDAndVPCEndpointIDV2

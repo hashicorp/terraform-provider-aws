@@ -184,7 +184,7 @@ func resourceRouteTableCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	d.SetId(aws.ToString(output.RouteTable.RouteTableId))
 
-	if _, err := waitRouteTableReady(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitRouteTableReadyV2(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Route Table (%s) create: %s", d.Id(), err)
 	}
 
@@ -216,7 +216,7 @@ func resourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
-		return findRouteTableByID(ctx, conn, d.Id())
+		return findRouteTableByIDV2(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -353,7 +353,7 @@ func resourceRouteTableDelete(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	routeTable, err := findRouteTableByID(ctx, conn, d.Id())
+	routeTable, err := findRouteTableByIDV2(ctx, conn, d.Id())
 
 	if tfresource.NotFound(err) {
 		return diags
@@ -385,7 +385,7 @@ func resourceRouteTableDelete(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "deleting Route Table (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitRouteTableDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitRouteTableDeletedV2(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Route Table (%s) delete: %s", d.Id(), err)
 	}
 

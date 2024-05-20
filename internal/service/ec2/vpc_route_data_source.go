@@ -114,7 +114,7 @@ func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	routeTableID := d.Get("route_table_id").(string)
 
-	routeTable, err := findRouteTableByID(ctx, conn, routeTableID)
+	routeTable, err := findRouteTableByIDV2(ctx, conn, routeTableID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Route Table (%s): %s", routeTableID, err)
