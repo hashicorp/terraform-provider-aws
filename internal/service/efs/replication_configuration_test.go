@@ -42,7 +42,7 @@ func TestAccEFSReplicationConfiguration_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
-					resource.TestCheckResourceAttr(resourceName, "destination.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "destination.#", acctest.Ct1),
 					resource.TestMatchResourceAttr(resourceName, "destination.0.file_system_id", regexache.MustCompile(`fs-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.region", acctest.AlternateRegion()),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.status", efs.ReplicationStatusEnabled),
@@ -113,7 +113,7 @@ func TestAccEFSReplicationConfiguration_allAttributes(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
-					resource.TestCheckResourceAttr(resourceName, "destination.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "destination.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "destination.0.availability_zone_name", "data.aws_availability_zones.available", "names.0"),
 					resource.TestMatchResourceAttr(resourceName, "destination.0.file_system_id", regexache.MustCompile(`fs-.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "destination.0.kms_key_id", kmsKeyResourceName, names.AttrKeyID),
@@ -154,7 +154,7 @@ func TestAccEFSReplicationConfiguration_existingDestination(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
-					resource.TestCheckResourceAttr(resourceName, "destination.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "destination.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "destination.0.file_system_id", destinationFsResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.status", efs.ReplicationStatusEnabled),
 				),

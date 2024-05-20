@@ -176,7 +176,7 @@ func resourceGrantCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	// Error Codes: https://docs.aws.amazon.com/sdk-for-go/api/service/kms/#KMS.CreateGrant
 	// Under some circumstances a newly created IAM Role doesn't show up and causes
 	// an InvalidArnException to be thrown.
-	outputRaw, err := tfresource.RetryWhenIsOneOf3[*awstypes.DependencyTimeoutException, *awstypes.KMSInternalException, *awstypes.InvalidArnException](ctx, kmsPropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenIsOneOf3[*awstypes.DependencyTimeoutException, *awstypes.KMSInternalException, *awstypes.InvalidArnException](ctx, propagationTimeout, func() (interface{}, error) {
 		return conn.CreateGrant(ctx, input)
 	})
 
@@ -201,7 +201,7 @@ func resourceGrantRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	grant, err := findGrantByTwoPartKeyWithRetry(ctx, conn, keyID, grantID, kmsPropagationTimeout)
+	grant, err := findGrantByTwoPartKeyWithRetry(ctx, conn, keyID, grantID, propagationTimeout)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] KMS Grant (%s) not found, removing from state", d.Id())
@@ -265,7 +265,7 @@ func resourceGrantDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "deleting KMS Grant (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, kmsPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		return findGrantByTwoPartKey(ctx, conn, keyID, grantID)
 	})
 

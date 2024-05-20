@@ -39,7 +39,7 @@ func TestAccXRayGroup_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "xray", regexache.MustCompile(`group/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrGroupName, rName),
 					resource.TestCheckResourceAttr(resourceName, "filter_expression", "responsetime > 5"),
-					resource.TestCheckResourceAttr(resourceName, "insights_configuration.#", acctest.CtOne), // Computed.
+					resource.TestCheckResourceAttr(resourceName, "insights_configuration.#", acctest.Ct1), // Computed.
 				),
 			},
 			{
@@ -54,7 +54,7 @@ func TestAccXRayGroup_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "xray", regexache.MustCompile(`group/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrGroupName, rName),
 					resource.TestCheckResourceAttr(resourceName, "filter_expression", "responsetime > 10"),
-					resource.TestCheckResourceAttr(resourceName, "insights_configuration.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "insights_configuration.#", acctest.Ct1),
 				),
 			},
 		},
@@ -77,7 +77,7 @@ func TestAccXRayGroup_insights(t *testing.T) {
 				Config: testAccGroupConfig_basicInsights(rName, "responsetime > 5", true, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "insights_configuration.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "insights_configuration.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "insights_configuration.*", map[string]string{
 						"insights_enabled":      "true",
 						"notifications_enabled": "true",
@@ -93,7 +93,7 @@ func TestAccXRayGroup_insights(t *testing.T) {
 				Config: testAccGroupConfig_basicInsights(rName, "responsetime > 10", false, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "insights_configuration.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "insights_configuration.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "insights_configuration.*", map[string]string{
 						"insights_enabled":      "false",
 						"notifications_enabled": "false",

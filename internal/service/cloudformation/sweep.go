@@ -143,7 +143,7 @@ func sweepStackSets(region string) error {
 
 	// Attempt to determine whether or not Organizations access is enabled.
 	orgAccessEnabled := false
-	if servicePrincipalNames, err := tforganizations.FindEnabledServicePrincipalNames(ctx, client.OrganizationsConn(ctx)); err == nil {
+	if servicePrincipalNames, err := tforganizations.FindEnabledServicePrincipalNames(ctx, client.OrganizationsClient(ctx)); err == nil {
 		orgAccessEnabled = slices.Contains(servicePrincipalNames, "member.org.stacksets.cloudformation.amazonaws.com")
 	}
 

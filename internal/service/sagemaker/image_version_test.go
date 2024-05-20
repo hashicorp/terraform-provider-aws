@@ -44,7 +44,7 @@ func TestAccSageMakerImageVersion_basic(t *testing.T) {
 					testAccCheckImageVersionExists(ctx, resourceName, &image),
 					resource.TestCheckResourceAttr(resourceName, "image_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "base_image", baseImage),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "image_arn", "sagemaker", fmt.Sprintf("image/%s", rName)),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("image-version/%s/1", rName)),
 					resource.TestCheckResourceAttrSet(resourceName, "container_image"),

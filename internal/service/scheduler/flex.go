@@ -127,7 +127,7 @@ func expandECSParameters(ctx context.Context, tfMap map[string]interface{}) *typ
 		a.PlatformVersion = aws.String(v)
 	}
 
-	if v, ok := tfMap["propagate_tags"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPropagateTags].(string); ok && v != "" {
 		a.PropagateTags = types.PropagateTags(v)
 	}
 
@@ -219,7 +219,7 @@ func flattenECSParameters(ctx context.Context, apiObject *types.EcsParameters) m
 	}
 
 	if v := string(apiObject.PropagateTags); v != "" {
-		m["propagate_tags"] = v
+		m[names.AttrPropagateTags] = v
 	}
 
 	if v := apiObject.ReferenceId; v != nil {

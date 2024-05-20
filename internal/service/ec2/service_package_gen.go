@@ -52,6 +52,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:    "Instance Metadata Defaults",
 		},
 		{
+			Factory: newResourceEndpointServicePrivateDNSVerification,
+			Name:    "Endpoint Service Private DNS Verification",
+		},
+		{
 			Factory: newSecurityGroupEgressRuleResource,
 			Name:    "Security Group Egress Rule",
 			Tags: &types.ServicePackageResourceTags{
@@ -1101,8 +1105,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceIPAMOrganizationAdminAccount,
+			Factory:  resourceIPAMOrganizationAdminAccount,
 			TypeName: "aws_vpc_ipam_organization_admin_account",
+			Name:     "IPAM Organization Admin Account",
 		},
 		{
 			Factory:  ResourceIPAMPool,

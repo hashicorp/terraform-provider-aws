@@ -94,7 +94,7 @@ func ResourceReceiptRule() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"status_code": {
+						names.AttrStatusCode: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -347,7 +347,7 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 			}
 
 			if element.BounceAction.StatusCode != nil {
-				bounceAction["status_code"] = aws.StringValue(element.BounceAction.StatusCode)
+				bounceAction[names.AttrStatusCode] = aws.StringValue(element.BounceAction.StatusCode)
 			}
 
 			if element.BounceAction.TopicArn != nil {
@@ -616,8 +616,8 @@ func buildReceiptRule(d *schema.ResourceData) *ses.ReceiptRule {
 				SmtpReplyCode: aws.String(elem["smtp_reply_code"].(string)),
 			}
 
-			if elem["status_code"] != "" {
-				bounceAction.StatusCode = aws.String(elem["status_code"].(string))
+			if elem[names.AttrStatusCode] != "" {
+				bounceAction.StatusCode = aws.String(elem[names.AttrStatusCode].(string))
 			}
 
 			if elem[names.AttrTopicARN] != "" {

@@ -26,7 +26,7 @@ func TestAccRoute53ResolverRulesDataSource_basic(t *testing.T) {
 			{
 				Config: testAccRulesDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dsResourceName, "resolver_rule_ids.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(dsResourceName, "resolver_rule_ids.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(dsResourceName, "resolver_rule_ids.*", "rslvr-autodefined-rr-internet-resolver"),
 				),
 			},
@@ -52,9 +52,9 @@ func TestAccRoute53ResolverRulesDataSource_resolverEndpointID(t *testing.T) {
 			{
 				Config: testAccRulesDataSourceConfig_resolverEndpointID(rName1, rName2, domainName1, domainName2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(ds1ResourceName, "resolver_rule_ids.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(ds2ResourceName, "resolver_rule_ids.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(ds3ResourceName, "resolver_rule_ids.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(ds1ResourceName, "resolver_rule_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(ds2ResourceName, "resolver_rule_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(ds3ResourceName, "resolver_rule_ids.#", acctest.Ct0),
 				),
 			},
 		},
@@ -94,7 +94,7 @@ func TestAccRoute53ResolverRulesDataSource_nonExistentNameRegex(t *testing.T) {
 			{
 				Config: testAccRulesDataSourceConfig_nonExistentNameRegex,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dsResourceName, "resolver_rule_ids.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(dsResourceName, "resolver_rule_ids.#", acctest.Ct0),
 				),
 			},
 		},

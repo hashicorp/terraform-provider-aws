@@ -164,7 +164,7 @@ func resourceProject() *schema.Resource {
 								},
 							},
 						},
-						"service_role": {
+						names.AttrServiceRole: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
@@ -588,7 +588,7 @@ func resourceProject() *schema.Resource {
 					},
 				},
 			},
-			"service_role": {
+			names.AttrServiceRole: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -791,7 +791,7 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.SecondarySourceVersions = expandProjectSecondarySourceVersions(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("service_role"); ok {
+	if v, ok := d.GetOk(names.AttrServiceRole); ok {
 		input.ServiceRole = aws.String(v.(string))
 	}
 
@@ -905,7 +905,7 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if err := d.Set("secondary_source_version", flattenProjectSecondarySourceVersions(project.SecondarySourceVersions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting secondary_source_version: %s", err)
 	}
-	d.Set("service_role", project.ServiceRole)
+	d.Set(names.AttrServiceRole, project.ServiceRole)
 	if project.Source != nil {
 		if err := d.Set(names.AttrSource, []interface{}{flattenProjectSource(project.Source)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting source: %s", err)
@@ -1033,8 +1033,8 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			}
 		}
 
-		if d.HasChange("service_role") {
-			input.ServiceRole = aws.String(d.Get("service_role").(string))
+		if d.HasChange(names.AttrServiceRole) {
+			input.ServiceRole = aws.String(d.Get(names.AttrServiceRole).(string))
 		}
 
 		if d.HasChange(names.AttrSource) {
@@ -1467,7 +1467,7 @@ func expandProjectBuildBatchConfig(tfMap map[string]interface{}) *types.ProjectB
 	}
 
 	apiObject := &types.ProjectBuildBatchConfig{
-		ServiceRole: aws.String(tfMap["service_role"].(string)),
+		ServiceRole: aws.String(tfMap[names.AttrServiceRole].(string)),
 	}
 
 	if v, ok := tfMap["combine_artifacts"].(bool); ok {
@@ -1926,7 +1926,7 @@ func flattenBuildBatchConfig(apiObject *types.ProjectBuildBatchConfig) []interfa
 
 	tfMap := map[string]interface{}{}
 
-	tfMap["service_role"] = aws.ToString(apiObject.ServiceRole)
+	tfMap[names.AttrServiceRole] = aws.ToString(apiObject.ServiceRole)
 
 	if apiObject.CombineArtifacts != nil {
 		tfMap["combine_artifacts"] = aws.ToBool(apiObject.CombineArtifacts)

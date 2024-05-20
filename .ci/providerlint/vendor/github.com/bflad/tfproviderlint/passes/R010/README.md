@@ -1,6 +1,6 @@
 # R010
 
-The R010 analyzer reports when [(helper/schema.ResourceData).GetChange()](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/helper/schema?tab=doc#ResourceData.GetChange) assignments are not using the first return value (assigned to `_`), which should be replaced with [(helper/schema.ResourceData).Get()](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/helper/schema?tab=doc#ResourceData.Get) instead.
+The R010 analyzer reports when [(helper/schema.ResourceData).GetChange()](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema?tab=doc#ResourceData.GetChange) assignments are not using the first return value (assigned to `_`), which should be replaced with [(helper/schema.ResourceData).Get()](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema?tab=doc#ResourceData.Get) instead.
 
 ## Flagged Code
 

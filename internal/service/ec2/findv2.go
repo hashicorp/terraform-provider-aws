@@ -12,7 +12,9 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -446,4 +448,556 @@ func FindEBSVolumeV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeV
 	}
 
 	return tfresource.AssertSingleValueResult(output)
+}
+
+func findPrefixListV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribePrefixListsInput) (*awstypes.PrefixList, error) {
+	output, err := findPrefixListsV2(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findPrefixListsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribePrefixListsInput) ([]awstypes.PrefixList, error) {
+	var output []awstypes.PrefixList
+
+	paginator := ec2.NewDescribePrefixListsPaginator(conn, input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+
+		if err != nil {
+			if tfawserr.ErrCodeEquals(err, errCodeInvalidPrefixListIdNotFound) {
+				return nil, &retry.NotFoundError{
+					LastError:   err,
+					LastRequest: input,
+				}
+			}
+			return nil, err
+		}
+
+		output = append(output, page.PrefixLists...)
+	}
+
+	return output, nil
+}
+
+func findVPCEndpointByIDV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VpcEndpoint, error) {
+	input := &ec2.DescribeVpcEndpointsInput{
+		VpcEndpointIds: []string{id},
+	}
+
+	output, err := findVPCEndpointV2(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output.State == awstypes.StateDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     string(output.State),
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.VpcEndpointId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findVPCEndpointV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointsInput) (*awstypes.VpcEndpoint, error) {
+	output, err := findVPCEndpointsV2(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findVPCEndpointsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointsInput) ([]awstypes.VpcEndpoint, error) {
+	var output []awstypes.VpcEndpoint
+
+	paginator := ec2.NewDescribeVpcEndpointsPaginator(conn, input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+
+		if err != nil {
+			if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointIdNotFound) {
+				return nil, &retry.NotFoundError{
+					LastError:   err,
+					LastRequest: input,
+				}
+			}
+			return nil, err
+		}
+
+		output = append(output, page.VpcEndpoints...)
+	}
+
+	return output, nil
+}
+
+func findPrefixListByNameV2(ctx context.Context, conn *ec2.Client, name string) (*awstypes.PrefixList, error) {
+	input := &ec2.DescribePrefixListsInput{
+		Filters: newAttributeFilterListV2(map[string]string{
+			"prefix-list-name": name,
+		}),
+	}
+
+	return findPrefixListV2(ctx, conn, input)
+}
+
+func findVPCEndpointServiceConfigurationByServiceNameV2(ctx context.Context, conn *ec2.Client, name string) (*awstypes.ServiceConfiguration, error) {
+	input := &ec2.DescribeVpcEndpointServiceConfigurationsInput{
+		Filters: newAttributeFilterListV2(map[string]string{
+			"service-name": name,
+		}),
+	}
+
+	return findVPCEndpointServiceConfigurationV2(ctx, conn, input)
+}
+
+func findVPCEndpointServiceConfigurationV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointServiceConfigurationsInput) (*awstypes.ServiceConfiguration, error) {
+	output, err := findVPCEndpointServiceConfigurationsV2(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findVPCEndpointServiceConfigurationsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointServiceConfigurationsInput) ([]awstypes.ServiceConfiguration, error) {
+	var output []awstypes.ServiceConfiguration
+
+	paginator := ec2.NewDescribeVpcEndpointServiceConfigurationsPaginator(conn, input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+
+		if err != nil {
+			if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointServiceIdNotFound) {
+				return nil, &retry.NotFoundError{
+					LastError:   err,
+					LastRequest: input,
+				}
+			}
+			return nil, err
+		}
+
+		output = append(output, page.ServiceConfigurations...)
+	}
+
+	return output, nil
+}
+
+// findRouteTableByIDV2 returns the route table corresponding to the specified identifier.
+// Returns NotFoundError if no route table is found.
+func findRouteTableByIDV2(ctx context.Context, conn *ec2.Client, routeTableID string) (*awstypes.RouteTable, error) {
+	input := &ec2.DescribeRouteTablesInput{
+		RouteTableIds: []string{routeTableID},
+	}
+
+	return findRouteTableV2(ctx, conn, input)
+}
+
+// routeFinderV2 returns the route corresponding to the specified destination.
+// Returns NotFoundError if no route is found.
+type routeFinderV2 func(context.Context, *ec2.Client, string, string) (*awstypes.Route, error)
+
+// findRouteByIPv4DestinationV2 returns the route corresponding to the specified IPv4 destination.
+// Returns NotFoundError if no route is found.
+func findRouteByIPv4DestinationV2(ctx context.Context, conn *ec2.Client, routeTableID, destinationCidr string) (*awstypes.Route, error) {
+	routeTable, err := findRouteTableByIDV2(ctx, conn, routeTableID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, route := range routeTable.Routes {
+		if types.CIDRBlocksEqual(aws.ToString(route.DestinationCidrBlock), destinationCidr) {
+			return &route, nil
+		}
+	}
+
+	return nil, &retry.NotFoundError{
+		LastError: fmt.Errorf("Route in Route Table (%s) with IPv4 destination (%s) not found", routeTableID, destinationCidr),
+	}
+}
+
+// findRouteByIPv6DestinationV2 returns the route corresponding to the specified IPv6 destination.
+// Returns NotFoundError if no route is found.
+func findRouteByIPv6DestinationV2(ctx context.Context, conn *ec2.Client, routeTableID, destinationIpv6Cidr string) (*awstypes.Route, error) {
+	routeTable, err := findRouteTableByIDV2(ctx, conn, routeTableID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, route := range routeTable.Routes {
+		if types.CIDRBlocksEqual(aws.ToString(route.DestinationIpv6CidrBlock), destinationIpv6Cidr) {
+			return &route, nil
+		}
+	}
+
+	return nil, &retry.NotFoundError{
+		LastError: fmt.Errorf("Route in Route Table (%s) with IPv6 destination (%s) not found", routeTableID, destinationIpv6Cidr),
+	}
+}
+
+// findRouteByPrefixListIDDestinationV2 returns the route corresponding to the specified prefix list destination.
+// Returns NotFoundError if no route is found.
+func findRouteByPrefixListIDDestinationV2(ctx context.Context, conn *ec2.Client, routeTableID, prefixListID string) (*awstypes.Route, error) {
+	routeTable, err := findRouteTableByIDV2(ctx, conn, routeTableID)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, route := range routeTable.Routes {
+		if aws.ToString(route.DestinationPrefixListId) == prefixListID {
+			return &route, nil
+		}
+	}
+
+	return nil, &retry.NotFoundError{
+		LastError: fmt.Errorf("Route in Route Table (%s) with Prefix List ID destination (%s) not found", routeTableID, prefixListID),
+	}
+}
+
+// findRouteTableAssociationByIDV2 returns the route table association corresponding to the specified identifier.
+// Returns NotFoundError if no route table association is found.
+func findRouteTableAssociationByIDV2(ctx context.Context, conn *ec2.Client, associationID string) (*awstypes.RouteTableAssociation, error) {
+	input := &ec2.DescribeRouteTablesInput{
+		Filters: newAttributeFilterListV2(map[string]string{
+			"association.route-table-association-id": associationID,
+		}),
+	}
+
+	routeTable, err := findRouteTableV2(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, association := range routeTable.Associations {
+		if aws.ToString(association.RouteTableAssociationId) == associationID {
+			if association.AssociationState != nil {
+				if state := association.AssociationState.State; state == awstypes.RouteTableAssociationStateCodeDisassociated {
+					return nil, &retry.NotFoundError{Message: string(state)}
+				}
+			}
+
+			return &association, nil
+		}
+	}
+
+	return nil, &retry.NotFoundError{}
+}
+
+// findMainRouteTableByVPCIDV2 returns the main route table for the specified VPC.
+// Returns NotFoundError if no route table is found.
+func findMainRouteTableByVPCIDV2(ctx context.Context, conn *ec2.Client, vpcID string) (*awstypes.RouteTable, error) {
+	input := &ec2.DescribeRouteTablesInput{
+		Filters: newAttributeFilterListV2(map[string]string{
+			"association.main": "true",
+			"vpc-id":           vpcID,
+		}),
+	}
+
+	return findRouteTableV2(ctx, conn, input)
+}
+
+// findVPNGatewayRoutePropagationExistsV2 returns NotFoundError if no route propagation for the specified VPN gateway is found.
+func findVPNGatewayRoutePropagationExistsV2(ctx context.Context, conn *ec2.Client, routeTableID, gatewayID string) error {
+	routeTable, err := findRouteTableByIDV2(ctx, conn, routeTableID)
+
+	if err != nil {
+		return err
+	}
+
+	for _, v := range routeTable.PropagatingVgws {
+		if aws.ToString(v.GatewayId) == gatewayID {
+			return nil
+		}
+	}
+
+	return &retry.NotFoundError{
+		LastError: fmt.Errorf("Route Table (%s) VPN Gateway (%s) route propagation not found", routeTableID, gatewayID),
+	}
+}
+
+func findVPCEndpointServiceConfigurationByIDV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.ServiceConfiguration, error) {
+	input := &ec2.DescribeVpcEndpointServiceConfigurationsInput{
+		ServiceIds: []string{id},
+	}
+
+	output, err := findVPCEndpointServiceConfigurationV2(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.ServiceState; state == awstypes.ServiceStateDeleted || state == awstypes.ServiceStateFailed {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.ServiceId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findVPCEndpointServicePrivateDNSNameConfigurationByIDV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.PrivateDnsNameConfiguration, error) {
+	out, err := findVPCEndpointServiceConfigurationByIDV2(ctx, conn, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return out.PrivateDnsNameConfiguration, nil
+}
+
+func findVPCEndpointServicePermissionsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointServicePermissionsInput) ([]awstypes.AllowedPrincipal, error) {
+	var output []awstypes.AllowedPrincipal
+
+	paginator := ec2.NewDescribeVpcEndpointServicePermissionsPaginator(conn, input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+
+		if err != nil {
+			if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointServiceIdNotFound) {
+				return nil, &retry.NotFoundError{
+					LastError:   err,
+					LastRequest: input,
+				}
+			}
+			return nil, err
+		}
+
+		output = append(output, page.AllowedPrincipals...)
+	}
+
+	return output, nil
+}
+
+func findVPCEndpointServicePermissionsByServiceIDV2(ctx context.Context, conn *ec2.Client, id string) ([]awstypes.AllowedPrincipal, error) {
+	input := &ec2.DescribeVpcEndpointServicePermissionsInput{
+		ServiceId: aws.String(id),
+	}
+
+	return findVPCEndpointServicePermissionsV2(ctx, conn, input)
+}
+
+func findVPCEndpointServicesV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointServicesInput) ([]awstypes.ServiceDetail, []string, error) {
+	var serviceDetails []awstypes.ServiceDetail
+	var serviceNames []string
+
+	err := describeVPCEndpointServicesPagesV2(ctx, conn, input, func(page *ec2.DescribeVpcEndpointServicesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		serviceDetails = append(serviceDetails, page.ServiceDetails...)
+		serviceNames = append(serviceNames, page.ServiceNames...)
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidServiceName) {
+		return nil, nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return serviceDetails, serviceNames, nil
+}
+
+// findVPCEndpointRouteTableAssociationExistsV2 returns NotFoundError if no association for the specified VPC endpoint and route table IDs is found.
+func findVPCEndpointRouteTableAssociationExistsV2(ctx context.Context, conn *ec2.Client, vpcEndpointID string, routeTableID string) error {
+	vpcEndpoint, err := findVPCEndpointByIDV2(ctx, conn, vpcEndpointID)
+
+	if err != nil {
+		return err
+	}
+
+	for _, vpcEndpointRouteTableID := range vpcEndpoint.RouteTableIds {
+		if vpcEndpointRouteTableID == routeTableID {
+			return nil
+		}
+	}
+
+	return &retry.NotFoundError{
+		LastError: fmt.Errorf("VPC Endpoint (%s) Route Table (%s) Association not found", vpcEndpointID, routeTableID),
+	}
+}
+
+// findVPCEndpointSecurityGroupAssociationExistsV2 returns NotFoundError if no association for the specified VPC endpoint and security group IDs is found.
+func findVPCEndpointSecurityGroupAssociationExistsV2(ctx context.Context, conn *ec2.Client, vpcEndpointID, securityGroupID string) error {
+	vpcEndpoint, err := findVPCEndpointByIDV2(ctx, conn, vpcEndpointID)
+
+	if err != nil {
+		return err
+	}
+
+	for _, group := range vpcEndpoint.Groups {
+		if aws.ToString(group.GroupId) == securityGroupID {
+			return nil
+		}
+	}
+
+	return &retry.NotFoundError{
+		LastError: fmt.Errorf("VPC Endpoint (%s) Security Group (%s) Association not found", vpcEndpointID, securityGroupID),
+	}
+}
+
+// findVPCEndpointSubnetAssociationExistsV2 returns NotFoundError if no association for the specified VPC endpoint and subnet IDs is found.
+func findVPCEndpointSubnetAssociationExistsV2(ctx context.Context, conn *ec2.Client, vpcEndpointID string, subnetID string) error {
+	vpcEndpoint, err := findVPCEndpointByIDV2(ctx, conn, vpcEndpointID)
+
+	if err != nil {
+		return err
+	}
+
+	for _, vpcEndpointSubnetID := range vpcEndpoint.SubnetIds {
+		if vpcEndpointSubnetID == subnetID {
+			return nil
+		}
+	}
+
+	return &retry.NotFoundError{
+		LastError: fmt.Errorf("VPC Endpoint (%s) Subnet (%s) Association not found", vpcEndpointID, subnetID),
+	}
+}
+
+func findVPCEndpointConnectionByServiceIDAndVPCEndpointIDV2(ctx context.Context, conn *ec2.Client, serviceID, vpcEndpointID string) (*awstypes.VpcEndpointConnection, error) {
+	input := &ec2.DescribeVpcEndpointConnectionsInput{
+		Filters: newAttributeFilterListV2(map[string]string{
+			"service-id": serviceID,
+			// "InvalidFilter: The filter vpc-endpoint-id  is invalid"
+			// "vpc-endpoint-id ": vpcEndpointID,
+		}),
+	}
+
+	var output *awstypes.VpcEndpointConnection
+
+	paginator := ec2.NewDescribeVpcEndpointConnectionsPaginator(conn, input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.VpcEndpointConnections {
+			v := v
+			if aws.ToString(v.VpcEndpointId) == vpcEndpointID {
+				output = &v
+				break
+			}
+		}
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if vpcEndpointState := string(output.VpcEndpointState); vpcEndpointState == vpcEndpointStateDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     vpcEndpointState,
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findVPCEndpointConnectionNotificationV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointConnectionNotificationsInput) (*awstypes.ConnectionNotification, error) {
+	output, err := findVPCEndpointConnectionNotificationsV2(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findVPCEndpointConnectionNotificationsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointConnectionNotificationsInput) ([]awstypes.ConnectionNotification, error) {
+	var output []awstypes.ConnectionNotification
+
+	paginator := ec2.NewDescribeVpcEndpointConnectionNotificationsPaginator(conn, input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+
+		if err != nil {
+			if tfawserr.ErrCodeEquals(err, errCodeInvalidConnectionNotification) {
+				return nil, &retry.NotFoundError{
+					LastError:   err,
+					LastRequest: input,
+				}
+			}
+			return nil, err
+		}
+
+		output = append(output, page.ConnectionNotificationSet...)
+	}
+
+	return output, nil
+}
+
+func findVPCEndpointConnectionNotificationByIDV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.ConnectionNotification, error) {
+	input := &ec2.DescribeVpcEndpointConnectionNotificationsInput{
+		ConnectionNotificationId: aws.String(id),
+	}
+
+	output, err := findVPCEndpointConnectionNotificationV2(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.ConnectionNotificationId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findVPCEndpointServicePermissionV2(ctx context.Context, conn *ec2.Client, serviceID, principalARN string) (*awstypes.AllowedPrincipal, error) {
+	// Applying a server-side filter on "principal" can lead to errors like
+	// "An error occurred (InvalidFilter) when calling the DescribeVpcEndpointServicePermissions operation: The filter value arn:aws:iam::123456789012:role/developer contains unsupported characters".
+	// Apply the filter client-side.
+	input := &ec2.DescribeVpcEndpointServicePermissionsInput{
+		ServiceId: aws.String(serviceID),
+	}
+
+	allowedPrincipals, err := findVPCEndpointServicePermissionsV2(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	allowedPrincipals = tfslices.Filter(allowedPrincipals, func(v awstypes.AllowedPrincipal) bool {
+		return aws.ToString(v.Principal) == principalARN
+	})
+
+	return tfresource.AssertSingleValueResult(allowedPrincipals)
 }

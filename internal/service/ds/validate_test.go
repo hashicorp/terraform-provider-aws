@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package ds
+package ds_test
 
 import (
 	"context"
@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	tfds "github.com/hashicorp/terraform-provider-aws/internal/service/ds"
 )
 
 func TestDirectoryIDValidator(t *testing.T) {
@@ -66,7 +67,7 @@ func TestDirectoryIDValidator(t *testing.T) {
 				ConfigValue:    test.val,
 			}
 			response := validator.StringResponse{}
-			directoryIDValidator.ValidateString(ctx, request, &response)
+			tfds.DirectoryIDValidator.ValidateString(ctx, request, &response)
 
 			if diff := cmp.Diff(response.Diagnostics, test.expectedDiagnostics); diff != "" {
 				t.Errorf("unexpected diagnostics difference: %s", diff)
@@ -120,7 +121,7 @@ func TestDomainWithTrailingDotValidatorValidator(t *testing.T) {
 				ConfigValue:    test.val,
 			}
 			response := validator.StringResponse{}
-			domainWithTrailingDotValidator.ValidateString(ctx, request, &response)
+			tfds.DomainWithTrailingDotValidator.ValidateString(ctx, request, &response)
 
 			if diff := cmp.Diff(response.Diagnostics, test.expectedDiagnostics); diff != "" {
 				t.Errorf("unexpected diagnostics difference: %s", diff)
@@ -171,7 +172,7 @@ func TestTrustPasswordValidator(t *testing.T) {
 				ConfigValue:    test.val,
 			}
 			response := validator.StringResponse{}
-			trustPasswordValidator.ValidateString(ctx, request, &response)
+			tfds.TrustPasswordValidator.ValidateString(ctx, request, &response)
 
 			if diff := cmp.Diff(response.Diagnostics, test.expectedDiagnostics); diff != "" {
 				t.Errorf("unexpected diagnostics difference: %s", diff)

@@ -1,6 +1,8 @@
 # V007
 
-The V007 analyzer reports usage of the deprecated [ValidateRegexp](https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/helper/validation#ValidateRegexp) validation function that should be replaced with [StringIsValidRegExp](https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/helper/validation#StringIsValidRegExp).
+_This terraform-plugin-sdk (v1) analyzer has been removed in tfproviderlint v0.30.0._
+
+The V007 analyzer reports usage of the deprecated [ValidateRegexp](https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation#ValidateRegexp) validation function that should be replaced with [StringIsValidRegExp](https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation#StringIsValidRegExp).
 
 ## Flagged Code
 

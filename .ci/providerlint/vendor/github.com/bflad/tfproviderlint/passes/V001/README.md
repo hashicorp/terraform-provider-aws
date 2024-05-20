@@ -1,7 +1,7 @@
 # V001
 
 The V001 analyzer reports when custom SchemaValidateFunc declarations can be
-replaced with [validation.StringMatch()](https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/helper/validation#StringMatch) or [validation.StringDoesNotMatch()](https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/helper/validation#StringDoesNotMatch).
+replaced with [validation.StringMatch()](https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation#StringMatch) or [validation.StringDoesNotMatch()](https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation#StringDoesNotMatch).
 
 ## Flagged Code
 

@@ -15,7 +15,7 @@ func TestAccIoTEventConfigurations_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		"basic": testAccEventConfigurations_basic,
+		acctest.CtBasic: testAccEventConfigurations_basic,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)

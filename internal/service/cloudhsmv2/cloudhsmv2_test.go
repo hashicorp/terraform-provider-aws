@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCloudHSMV2_serial(t *testing.T) {
@@ -15,18 +14,18 @@ func TestAccCloudHSMV2_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Cluster": {
-			"basic":        testAccCluster_basic,
-			"disappears":   testAccCluster_disappears,
-			names.AttrTags: testAccCluster_tags,
+			acctest.CtBasic: testAccCluster_basic,
+			"disappears":    testAccCluster_disappears,
+			"tags":          testAccCluster_tags,
 		},
 		"Hsm": {
 			"availabilityZone": testAccHSM_AvailabilityZone,
-			"basic":            testAccHSM_basic,
+			acctest.CtBasic:    testAccHSM_basic,
 			"disappears":       testAccHSM_disappears,
 			"ipAddress":        testAccHSM_IPAddress,
 		},
 		"DataSource": {
-			"basic": testAccDataSourceCluster_basic,
+			acctest.CtBasic: testAccDataSourceCluster_basic,
 		},
 	}
 

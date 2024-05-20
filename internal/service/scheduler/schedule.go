@@ -280,7 +280,7 @@ func resourceSchedule() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"propagate_tags": {
+									names.AttrPropagateTags: {
 										Type:             schema.TypeString,
 										Optional:         true,
 										ValidateDiagFunc: enum.Validate[types.PropagateTags](),

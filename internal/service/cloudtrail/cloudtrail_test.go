@@ -38,7 +38,7 @@ func TestAccCloudTrail_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Trail": {
-			"basic":                 testAccTrail_basic,
+			acctest.CtBasic:         testAccTrail_basic,
 			"cloudwatch":            testAccTrail_cloudWatch,
 			"enableLogging":         testAccTrail_enableLogging,
 			"globalServiceEvents":   testAccTrail_globalServiceEvents,
@@ -46,7 +46,7 @@ func TestAccCloudTrail_serial(t *testing.T) {
 			"organization":          testAccTrail_organization,
 			"logValidation":         testAccTrail_logValidation,
 			"kmsKey":                testAccTrail_kmsKey,
-			names.AttrTags:          testAccTrail_tags,
+			"tags":                  testAccTrail_tags,
 			"eventSelector":         testAccTrail_eventSelector,
 			"eventSelectorDynamoDB": testAccTrail_eventSelectorDynamoDB,
 			"eventSelectorExclude":  testAccTrail_eventSelectorExclude,
@@ -381,8 +381,8 @@ func testAccTrail_tags(t *testing.T) {
 				Config: testAccCloudTrailConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrailExists(ctx, resourceName, &trail),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -391,20 +391,20 @@ func testAccTrail_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCloudTrailConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
+				Config: testAccCloudTrailConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrailExists(ctx, resourceName, &trail),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
 				Config: testAccCloudTrailConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrailExists(ctx, resourceName, &trail),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -453,15 +453,15 @@ func testAccTrail_eventSelector(t *testing.T) {
 			{
 				Config: testAccCloudTrailConfig_eventSelector(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "event_selector.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.0.type", "AWS::S3::Object"),
-					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.0.values.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.0.values.#", acctest.Ct2),
 					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "event_selector.0.data_resource.0.values.0", "s3", fmt.Sprintf("%s-2/isen", rName)),
 					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "event_selector.0.data_resource.0.values.1", "s3", fmt.Sprintf("%s-2/ko", rName)),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.include_management_events", "false"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.read_write_type", "ReadOnly"),
-					resource.TestCheckResourceAttr(resourceName, "event_selector.0.exclude_management_event_sources.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.0.exclude_management_event_sources.#", acctest.Ct0),
 				),
 			},
 			{
@@ -472,7 +472,7 @@ func testAccTrail_eventSelector(t *testing.T) {
 			{
 				Config: testAccCloudTrailConfig_eventSelectorReadWriteType(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "event_selector.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.include_management_events", "true"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.read_write_type", "WriteOnly"),
 				),
@@ -480,23 +480,23 @@ func testAccTrail_eventSelector(t *testing.T) {
 			{
 				Config: testAccCloudTrailConfig_eventSelectorModified(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "event_selector.#", acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.0.type", "AWS::S3::Object"),
-					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.0.values.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.0.values.#", acctest.Ct2),
 					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "event_selector.0.data_resource.0.values.0", "s3", fmt.Sprintf("%s-2/isen", rName)),
 					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "event_selector.0.data_resource.0.values.1", "s3", fmt.Sprintf("%s-2/ko", rName)),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.include_management_events", "true"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.read_write_type", "ReadOnly"),
-					resource.TestCheckResourceAttr(resourceName, "event_selector.1.data_resource.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.1.data_resource.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.1.data_resource.0.type", "AWS::S3::Object"),
-					resource.TestCheckResourceAttr(resourceName, "event_selector.1.data_resource.0.values.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.1.data_resource.0.values.#", acctest.Ct2),
 					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "event_selector.1.data_resource.0.values.0", "s3", fmt.Sprintf("%s-2/tf1", rName)),
 					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "event_selector.1.data_resource.0.values.1", "s3", fmt.Sprintf("%s-2/tf2", rName)),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.1.data_resource.1.type", "AWS::Lambda::Function"),
-					resource.TestCheckResourceAttr(resourceName, "event_selector.1.data_resource.1.values.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.1.data_resource.1.values.#", acctest.Ct1),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "event_selector.1.data_resource.1.values.0", "lambda", fmt.Sprintf("function:%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "event_selector.0.exclude_management_event_sources.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.0.exclude_management_event_sources.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.1.include_management_events", "false"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.1.read_write_type", "All"),
 				),
@@ -504,7 +504,7 @@ func testAccTrail_eventSelector(t *testing.T) {
 			{
 				Config: testAccCloudTrailConfig_eventSelectorNone(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "event_selector.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.#", acctest.Ct0),
 				),
 			},
 		},
@@ -525,10 +525,10 @@ func testAccTrail_eventSelectorDynamoDB(t *testing.T) {
 			{
 				Config: testAccCloudTrailConfig_eventSelectorDynamoDB(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "event_selector.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.0.type", "AWS::DynamoDB::Table"),
-					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.0.values.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.0.values.#", acctest.Ct1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "event_selector.0.data_resource.0.values.0", "dynamodb", regexache.MustCompile(`table/tf-acc-test-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.include_management_events", "true"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.read_write_type", "All"),
@@ -552,9 +552,9 @@ func testAccTrail_eventSelectorExclude(t *testing.T) {
 			{
 				Config: testAccCloudTrailConfig_eventSelectorExcludeKMS(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "event_selector.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.include_management_events", "true"),
-					resource.TestCheckResourceAttr(resourceName, "event_selector.0.exclude_management_event_sources.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.0.exclude_management_event_sources.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_selector.0.exclude_management_event_sources.*", "kms.amazonaws.com"),
 				),
 			},
@@ -566,9 +566,9 @@ func testAccTrail_eventSelectorExclude(t *testing.T) {
 			{
 				Config: testAccCloudTrailConfig_eventSelectorExcludeKMSAndRDSData(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "event_selector.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.include_management_events", "true"),
-					resource.TestCheckResourceAttr(resourceName, "event_selector.0.exclude_management_event_sources.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.0.exclude_management_event_sources.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_selector.0.exclude_management_event_sources.*", "kms.amazonaws.com"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_selector.0.exclude_management_event_sources.*", "rdsdata.amazonaws.com"),
 				),
@@ -581,7 +581,7 @@ func testAccTrail_eventSelectorExclude(t *testing.T) {
 			{
 				Config: testAccCloudTrailConfig_eventSelectorNone(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "event_selector.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.#", acctest.Ct0),
 				),
 			},
 		},
@@ -602,7 +602,7 @@ func testAccTrail_insightSelector(t *testing.T) {
 			{
 				Config: testAccCloudTrailConfig_insightSelector(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "insight_selector.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "insight_selector.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "insight_selector.0.insight_type", "ApiCallRateInsight"),
 				),
 			},
@@ -614,7 +614,7 @@ func testAccTrail_insightSelector(t *testing.T) {
 			{
 				Config: testAccCloudTrailConfig_insightSelectorMulti(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "insight_selector.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "insight_selector.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "insight_selector.0.insight_type", "ApiCallRateInsight"),
 					resource.TestCheckResourceAttr(resourceName, "insight_selector.1.insight_type", "ApiErrorRateInsight"),
 				),
@@ -622,14 +622,14 @@ func testAccTrail_insightSelector(t *testing.T) {
 			{
 				Config: testAccCloudTrailConfig_insightSelector(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "insight_selector.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "insight_selector.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "insight_selector.0.insight_type", "ApiCallRateInsight"),
 				),
 			},
 			{
 				Config: testAccCloudTrailConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "insight_selector.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "insight_selector.#", acctest.Ct0),
 				),
 			},
 		},
@@ -655,73 +655,73 @@ func testAccTrail_advancedEventSelector(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "advanced_event_selector.0.field_selector.#", "5"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_event_selector.0.field_selector.*", map[string]string{
 						names.AttrField: "eventCategory",
-						"equals.#":      acctest.CtOne,
+						"equals.#":      acctest.Ct1,
 						"equals.0":      "Data",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_event_selector.0.field_selector.*", map[string]string{
 						names.AttrField: "eventName",
-						"equals.#":      acctest.CtOne,
+						"equals.#":      acctest.Ct1,
 						"equals.0":      "DeleteObject",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_event_selector.0.field_selector.*", map[string]string{
 						names.AttrField: "resources.ARN",
-						"equals.#":      acctest.CtTwo,
+						"equals.#":      acctest.Ct2,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_event_selector.0.field_selector.*", map[string]string{
 						names.AttrField: "readOnly",
-						"equals.#":      acctest.CtOne,
+						"equals.#":      acctest.Ct1,
 						"equals.0":      "false",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_event_selector.0.field_selector.*", map[string]string{
 						names.AttrField: "resources.type",
-						"equals.#":      acctest.CtOne,
+						"equals.#":      acctest.Ct1,
 						"equals.0":      "AWS::S3::Object",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "advanced_event_selector.1.name", "lambdaLogAllEvents"),
-					resource.TestCheckResourceAttr(resourceName, "advanced_event_selector.1.field_selector.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "advanced_event_selector.1.field_selector.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_event_selector.1.field_selector.*", map[string]string{
 						names.AttrField: "eventCategory",
-						"equals.#":      acctest.CtOne,
+						"equals.#":      acctest.Ct1,
 						"equals.0":      "Data",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_event_selector.1.field_selector.*", map[string]string{
 						names.AttrField: "resources.type",
-						"equals.#":      acctest.CtOne,
+						"equals.#":      acctest.Ct1,
 						"equals.0":      "AWS::Lambda::Function",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "advanced_event_selector.2.name", "dynamoDbReadOnlyEvents"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_event_selector.2.field_selector.*", map[string]string{
 						names.AttrField: "readOnly",
-						"equals.#":      acctest.CtOne,
+						"equals.#":      acctest.Ct1,
 						"equals.0":      "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_event_selector.2.field_selector.*", map[string]string{
 						names.AttrField: "resources.type",
-						"equals.#":      acctest.CtOne,
+						"equals.#":      acctest.Ct1,
 						"equals.0":      "AWS::DynamoDB::Table",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "advanced_event_selector.3.name", "s3OutpostsWriteOnlyEvents"),
-					resource.TestCheckResourceAttr(resourceName, "advanced_event_selector.3.field_selector.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "advanced_event_selector.3.field_selector.#", acctest.Ct3),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_event_selector.3.field_selector.*", map[string]string{
 						names.AttrField: "eventCategory",
-						"equals.#":      acctest.CtOne,
+						"equals.#":      acctest.Ct1,
 						"equals.0":      "Data",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_event_selector.3.field_selector.*", map[string]string{
 						names.AttrField: "readOnly",
-						"equals.#":      acctest.CtOne,
+						"equals.#":      acctest.Ct1,
 						"equals.0":      "false",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_event_selector.3.field_selector.*", map[string]string{
 						names.AttrField: "resources.type",
-						"equals.#":      acctest.CtOne,
+						"equals.#":      acctest.Ct1,
 						"equals.0":      "AWS::S3Outposts::Object",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "advanced_event_selector.4.name", "managementEventsSelector"),
-					resource.TestCheckResourceAttr(resourceName, "advanced_event_selector.4.field_selector.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "advanced_event_selector.4.field_selector.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_event_selector.4.field_selector.*", map[string]string{
 						names.AttrField: "eventCategory",
-						"equals.#":      acctest.CtOne,
+						"equals.#":      acctest.Ct1,
 						"equals.0":      "Management",
 					}),
 				),

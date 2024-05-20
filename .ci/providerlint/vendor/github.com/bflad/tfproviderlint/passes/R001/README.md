@@ -1,6 +1,6 @@
 # R001
 
-The R001 analyzer reports a complex key argument for a [`Set()`](https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/helper/schema#ResourceData.Set)
+The R001 analyzer reports a complex key argument for a [`Set()`](https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema#ResourceData.Set)
 call. It is preferred to explicitly use a string literal as the key argument.
 
 ## Flagged Code

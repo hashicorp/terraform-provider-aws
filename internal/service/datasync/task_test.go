@@ -44,10 +44,10 @@ func TestAccDataSyncTask_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "datasync", regexache.MustCompile(`task/task-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_log_group_arn", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_location_arn", dataSyncDestinationLocationResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "excludes.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "includes.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "excludes.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "includes.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "options.0.atime", "BEST_EFFORT"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.bytes_per_second", "-1"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.gid", "INT_VALUE"),
@@ -63,9 +63,9 @@ func TestAccDataSyncTask_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "options.0.transfer_mode", "CHANGED"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.uid", "INT_VALUE"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.verify_mode", "POINT_IN_TIME_CONSISTENT"),
-					resource.TestCheckResourceAttr(resourceName, "schedule.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "schedule.#", acctest.Ct0),
 					resource.TestCheckResourceAttrPair(resourceName, "source_location_arn", dataSyncSourceLocationResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -117,7 +117,7 @@ func TestAccDataSyncTask_schedule(t *testing.T) {
 				Config: testAccTaskConfig_schedule(rName, "cron(0 12 ? * SUN,WED *)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task1),
-					resource.TestCheckResourceAttr(resourceName, "schedule.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "schedule.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_expression", "cron(0 12 ? * SUN,WED *)"),
 				),
 			},
@@ -130,7 +130,7 @@ func TestAccDataSyncTask_schedule(t *testing.T) {
 				Config: testAccTaskConfig_schedule(rName, "cron(0 12 ? * SUN,MON *)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task1),
-					resource.TestCheckResourceAttr(resourceName, "schedule.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "schedule.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_expression", "cron(0 12 ? * SUN,MON *)"),
 				),
 			},
@@ -138,7 +138,7 @@ func TestAccDataSyncTask_schedule(t *testing.T) {
 				Config: testAccTaskConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task1),
-					resource.TestCheckResourceAttr(resourceName, "schedule.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "schedule.#", acctest.Ct0),
 				),
 			},
 		},
@@ -195,7 +195,7 @@ func TestAccDataSyncTask_excludes(t *testing.T) {
 				Config: testAccTaskConfig_excludes(rName, "/folder1|/folder2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task1),
-					resource.TestCheckResourceAttr(resourceName, "excludes.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "excludes.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "excludes.0.filter_type", "SIMPLE_PATTERN"),
 					resource.TestCheckResourceAttr(resourceName, "excludes.0.value", "/folder1|/folder2"),
 				),
@@ -209,7 +209,7 @@ func TestAccDataSyncTask_excludes(t *testing.T) {
 				Config: testAccTaskConfig_excludes(rName, "/test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task1),
-					resource.TestCheckResourceAttr(resourceName, "excludes.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "excludes.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "excludes.0.filter_type", "SIMPLE_PATTERN"),
 					resource.TestCheckResourceAttr(resourceName, "excludes.0.value", "/test"),
 				),
@@ -234,7 +234,7 @@ func TestAccDataSyncTask_includes(t *testing.T) {
 				Config: testAccTaskConfig_includes(rName, "/folder1|/folder2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task1),
-					resource.TestCheckResourceAttr(resourceName, "includes.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "includes.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "includes.0.filter_type", "SIMPLE_PATTERN"),
 					resource.TestCheckResourceAttr(resourceName, "includes.0.value", "/folder1|/folder2"),
 				),
@@ -248,7 +248,7 @@ func TestAccDataSyncTask_includes(t *testing.T) {
 				Config: testAccTaskConfig_includes(rName, "/test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task1),
-					resource.TestCheckResourceAttr(resourceName, "includes.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "includes.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "includes.0.filter_type", "SIMPLE_PATTERN"),
 					resource.TestCheckResourceAttr(resourceName, "includes.0.value", "/test"),
 				),
@@ -273,7 +273,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_atimeMtime(t *testing.T) {
 				Config: testAccTaskConfig_defaultSyncOptionsAtimeMtime(rName, "NONE", "NONE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task1),
-					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "options.0.atime", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.mtime", "NONE"),
 				),
@@ -288,7 +288,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_atimeMtime(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task2),
 					testAccCheckTaskNotRecreated(&task1, &task2),
-					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "options.0.atime", "BEST_EFFORT"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.mtime", "PRESERVE"),
 				),
@@ -313,8 +313,8 @@ func TestAccDataSyncTask_DefaultSyncOptions_bytesPerSecond(t *testing.T) {
 				Config: testAccTaskConfig_defaultSyncOptionsBytesPerSecond(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task1),
-					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "options.0.bytes_per_second", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "options.0.bytes_per_second", acctest.Ct1),
 				),
 			},
 			{
@@ -327,8 +327,8 @@ func TestAccDataSyncTask_DefaultSyncOptions_bytesPerSecond(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task2),
 					testAccCheckTaskNotRecreated(&task1, &task2),
-					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "options.0.bytes_per_second", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "options.0.bytes_per_second", acctest.Ct2),
 				),
 			},
 		},
@@ -351,7 +351,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_gid(t *testing.T) {
 				Config: testAccTaskConfig_defaultSyncOptionsGID(rName, "NONE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task1),
-					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "options.0.gid", "NONE"),
 				),
 			},
@@ -365,7 +365,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_gid(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task2),
 					testAccCheckTaskNotRecreated(&task1, &task2),
-					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "options.0.gid", "INT_VALUE"),
 				),
 			},
@@ -389,7 +389,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_logLevel(t *testing.T) {
 				Config: testAccTaskConfig_defaultSyncOptionsLogLevel(rName, "OFF"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task1),
-					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "options.0.log_level", "OFF"),
 				),
 			},
@@ -403,7 +403,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_logLevel(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task2),
 					testAccCheckTaskNotRecreated(&task1, &task2),
-					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "options.0.log_level", "BASIC"),
 				),
 			},
@@ -427,7 +427,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_objectTags(t *testing.T) {
 				Config: testAccTaskConfig_defaultSyncOptionsObjectTags(rName, "NONE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task1),
-					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "options.0.object_tags", "NONE"),
 				),
 			},
@@ -441,7 +441,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_objectTags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task2),
 					testAccCheckTaskNotRecreated(&task1, &task2),
-					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "options.0.object_tags", "PRESERVE"),
 				),
 			},
@@ -465,7 +465,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_overwriteMode(t *testing.T) {
 				Config: testAccTaskConfig_defaultSyncOptionsOverwriteMode(rName, "NEVER"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task1),
-					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "options.0.overwrite_mode", "NEVER"),
 				),
 			},
@@ -479,7 +479,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_overwriteMode(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task2),
 					testAccCheckTaskNotRecreated(&task1, &task2),
-					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "options.0.overwrite_mode", "ALWAYS"),
 				),
 			},
@@ -503,7 +503,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_posixPermissions(t *testing.T) {
 				Config: testAccTaskConfig_defaultSyncOptionsPOSIXPermissions(rName, "NONE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task1),
-					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "options.0.posix_permissions", "NONE"),
 				),
 			},
@@ -517,7 +517,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_posixPermissions(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task2),
 					testAccCheckTaskNotRecreated(&task1, &task2),
-					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "options.0.posix_permissions", "PRESERVE"),
 				),
 			},
@@ -541,7 +541,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_preserveDeletedFiles(t *testing.T) {
 				Config: testAccTaskConfig_defaultSyncOptionsPreserveDeletedFiles(rName, "REMOVE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task1),
-					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "options.0.preserve_deleted_files", "REMOVE"),
 				),
 			},
@@ -555,7 +555,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_preserveDeletedFiles(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task2),
 					testAccCheckTaskNotRecreated(&task1, &task2),
-					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "options.0.preserve_deleted_files", "PRESERVE"),
 				),
 			},
@@ -579,7 +579,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_preserveDevices(t *testing.T) {
 				Config: testAccTaskConfig_defaultSyncOptionsPreserveDevices(rName, "PRESERVE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task1),
-					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "options.0.preserve_devices", "PRESERVE"),
 				),
 			},
@@ -593,7 +593,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_preserveDevices(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task2),
 					testAccCheckTaskNotRecreated(&task1, &task2),
-					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "options.0.preserve_devices", "NONE"),
 				),
 			},
@@ -618,7 +618,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_securityDescriptorCopyFlags(t *testi
 				Config: testAccTaskConfig_defaultSyncOptionsSecurityDescriptorCopyFlags(rName, domainName, "OWNER_DACL"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task1),
-					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "options.0.gid", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.posix_permissions", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.security_descriptor_copy_flags", "OWNER_DACL"),
@@ -635,7 +635,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_securityDescriptorCopyFlags(t *testi
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task2),
 					testAccCheckTaskNotRecreated(&task1, &task2),
-					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "options.0.gid", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.posix_permissions", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.security_descriptor_copy_flags", "OWNER_DACL_SACL"),
@@ -662,7 +662,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_taskQueueing(t *testing.T) {
 				Config: testAccTaskConfig_defaultSyncOptionsQueueing(rName, "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task1),
-					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "options.0.task_queueing", "ENABLED"),
 				),
 			},
@@ -676,7 +676,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_taskQueueing(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task2),
 					testAccCheckTaskNotRecreated(&task1, &task2),
-					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "options.0.task_queueing", "DISABLED"),
 				),
 			},
@@ -700,7 +700,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_transferMode(t *testing.T) {
 				Config: testAccTaskConfig_defaultSyncOptionsTransferMode(rName, "CHANGED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task1),
-					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "options.0.transfer_mode", "CHANGED"),
 				),
 			},
@@ -714,7 +714,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_transferMode(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task2),
 					testAccCheckTaskNotRecreated(&task1, &task2),
-					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "options.0.transfer_mode", "ALL"),
 				),
 			},
@@ -738,7 +738,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_uid(t *testing.T) {
 				Config: testAccTaskConfig_defaultSyncOptionsUID(rName, "NONE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task1),
-					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "options.0.uid", "NONE"),
 				),
 			},
@@ -752,7 +752,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_uid(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task2),
 					testAccCheckTaskNotRecreated(&task1, &task2),
-					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "options.0.uid", "INT_VALUE"),
 				),
 			},
@@ -776,7 +776,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_verifyMode(t *testing.T) {
 				Config: testAccTaskConfig_defaultSyncOptionsVerifyMode(rName, "NONE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task1),
-					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "options.0.verify_mode", "NONE"),
 				),
 			},
@@ -790,7 +790,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_verifyMode(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task2),
 					testAccCheckTaskNotRecreated(&task1, &task2),
-					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "options.0.verify_mode", "POINT_IN_TIME_CONSISTENT"),
 				),
 			},
@@ -799,7 +799,7 @@ func TestAccDataSyncTask_DefaultSyncOptions_verifyMode(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task3),
 					testAccCheckTaskNotRecreated(&task2, &task3),
-					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "options.0.verify_mode", "ONLY_FILES_TRANSFERRED"),
 				),
 			},
@@ -823,13 +823,13 @@ func TestAccDataSyncTask_taskReportConfig(t *testing.T) {
 				Config: testAccTaskConfig_taskReportConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task1),
-					resource.TestCheckResourceAttr(resourceName, "task_report_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "task_report_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "task_report_config.0.output_type", "STANDARD"),
 					resource.TestCheckResourceAttr(resourceName, "task_report_config.0.report_level", "SUCCESSES_AND_ERRORS"),
-					resource.TestCheckResourceAttr(resourceName, "task_report_config.0.s3_destination.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "task_report_config.0.s3_destination.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "task_report_config.0.s3_object_versioning", "INCLUDE"),
 					resource.TestCheckResourceAttr(resourceName, "task_report_config.0.s3_destination.0.subdirectory", "test/"),
-					resource.TestCheckResourceAttr(resourceName, "task_report_config.0.report_overrides.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "task_report_config.0.report_overrides.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "task_report_config.0.report_overrides.0.deleted_override", "ERRORS_ONLY"),
 					resource.TestCheckResourceAttr(resourceName, "task_report_config.0.report_overrides.0.skipped_override", "ERRORS_ONLY"),
 					resource.TestCheckResourceAttr(resourceName, "task_report_config.0.report_overrides.0.transferred_override", "ERRORS_ONLY"),
@@ -863,8 +863,8 @@ func TestAccDataSyncTask_tags(t *testing.T) {
 				Config: testAccTaskConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -873,13 +873,13 @@ func TestAccDataSyncTask_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTaskConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
+				Config: testAccTaskConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task2),
 					testAccCheckTaskNotRecreated(&task1, &task2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
@@ -887,8 +887,8 @@ func TestAccDataSyncTask_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task3),
 					testAccCheckTaskNotRecreated(&task2, &task3),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 		},

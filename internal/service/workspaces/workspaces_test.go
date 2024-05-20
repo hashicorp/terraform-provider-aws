@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccWorkSpaces_serial(t *testing.T) {
@@ -15,27 +14,27 @@ func TestAccWorkSpaces_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Directory": {
-			"basic":                       testAccDirectory_basic,
+			acctest.CtBasic:               testAccDirectory_basic,
 			"disappears":                  testAccDirectory_disappears,
 			"ipGroupIds":                  testAccDirectory_ipGroupIDs,
 			"selfServicePermissions":      testAccDirectory_selfServicePermissions,
 			"subnetIDs":                   testAccDirectory_subnetIDs,
-			names.AttrTags:                testAccDirectory_tags,
+			"tags":                        testAccDirectory_tags,
 			"workspaceAccessProperties":   testAccDirectory_workspaceAccessProperties,
 			"workspaceCreationProperties": testAccDirectory_workspaceCreationProperties,
 			"workspaceCreationProperties_customSecurityGroupId_defaultOu": testAccDirectory_workspaceCreationProperties_customSecurityGroupId_defaultOu,
 		},
 		"IpGroup": {
-			"basic":               testAccIPGroup_basic,
+			acctest.CtBasic:       testAccIPGroup_basic,
 			"disappears":          testAccIPGroup_disappears,
 			"multipleDirectories": testAccIPGroup_MultipleDirectories,
-			names.AttrTags:        testAccIPGroup_tags,
+			"tags":                testAccIPGroup_tags,
 		},
 		"Workspace": {
-			"basic":                  testAccWorkspace_basic,
+			acctest.CtBasic:          testAccWorkspace_basic,
 			"recreate":               testAccWorkspace_recreate,
-			names.AttrTags:           testAccWorkspace_tags,
-			names.AttrTimeout:        testAccWorkspace_timeout,
+			"tags":                   testAccWorkspace_tags,
+			"timeout":                testAccWorkspace_timeout,
 			"validateRootVolumeSize": testAccWorkspace_validateRootVolumeSize,
 			"validateUserVolumeSize": testAccWorkspace_validateUserVolumeSize,
 			"workspaceProperties":    testAccWorkspace_workspaceProperties,

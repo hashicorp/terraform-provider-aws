@@ -329,7 +329,7 @@ func resourceClusterResourceV0() *schema.Resource {
 							Optional: true,
 							Default:  true,
 						},
-						"max_capacity": {
+						names.AttrMaxCapacity: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Default:  clusterScalingConfiguration_DefaultMaxCapacity,
@@ -358,7 +358,7 @@ func resourceClusterResourceV0() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"max_capacity": {
+						names.AttrMaxCapacity: {
 							Type:     schema.TypeFloat,
 							Required: true,
 						},

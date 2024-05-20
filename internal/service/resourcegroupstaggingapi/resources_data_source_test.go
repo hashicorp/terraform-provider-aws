@@ -50,7 +50,7 @@ func TestAccResourceGroupsTaggingAPIResourcesDataSource_includeComplianceDetails
 			{
 				Config: testAccResourcesDataSourceConfig_includeComplianceDetails(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "resource_tag_mapping_list.0.compliance_details.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(dataSourceName, "resource_tag_mapping_list.0.compliance_details.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(dataSourceName, "resource_tag_mapping_list.0.compliance_details.0.compliance_status", "true"),
 				),
 			},
