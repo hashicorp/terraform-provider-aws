@@ -461,3 +461,20 @@ func waitVPCEndpointConnectionAcceptedV2(ctx context.Context, conn *ec2.Client, 
 
 	return nil, err
 }
+
+func waitVPCEndpointServicePrivateDNSNameVerifiedV2(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.PrivateDnsNameConfiguration, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(types.DnsNameStatePendingVerification),
+		Target:                    enum.Slice(types.DnsNameStateVerified),
+		Refresh:                   statusVPCEndpointServicePrivateDNSNameConfigurationV2(ctx, conn, id),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*types.PrivateDnsNameConfiguration); ok {
+		return out, err
+	}
+
+	return nil, err
+}

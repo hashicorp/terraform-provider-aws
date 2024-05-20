@@ -760,6 +760,15 @@ func findVPCEndpointServiceConfigurationByIDV2(ctx context.Context, conn *ec2.Cl
 	return output, nil
 }
 
+func findVPCEndpointServicePrivateDNSNameConfigurationByIDV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.PrivateDnsNameConfiguration, error) {
+	out, err := findVPCEndpointServiceConfigurationByIDV2(ctx, conn, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return out.PrivateDnsNameConfiguration, nil
+}
+
 func findVPCEndpointServicePermissionsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointServicePermissionsInput) ([]awstypes.AllowedPrincipal, error) {
 	var output []awstypes.AllowedPrincipal
 
