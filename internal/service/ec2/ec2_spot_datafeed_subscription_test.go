@@ -160,6 +160,22 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
+resource "aws_s3_bucket_public_access_block" "test" {
+  bucket = aws_s3_bucket.test.bucket
+
+  block_public_acls       = false
+  block_public_policy     = false
+  ignore_public_acls      = false
+  restrict_public_buckets = false
+}
+
+resource "aws_s3_bucket_ownership_controls" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
 resource "aws_s3_bucket_acl" "test" {
   bucket = aws_s3_bucket.test.id
   access_control_policy {
@@ -183,6 +199,10 @@ resource "aws_s3_bucket_acl" "test" {
       id = data.aws_canonical_user_id.current.id
     }
   }
+  depends_on = [
+    aws_s3_bucket_public_access_block.test,
+    aws_s3_bucket_ownership_controls.test
+  ]
 }
 
 resource "aws_spot_datafeed_subscription" "test" {

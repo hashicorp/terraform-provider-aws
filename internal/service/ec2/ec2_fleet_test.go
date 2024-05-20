@@ -3893,7 +3893,7 @@ resource "aws_ec2_fleet" "test" {
     total_target_capacity        = 0
   }
   terminate_instances = true
-  type = "instant"
+  type                = "instant"
 
   tags = {
     Name = %[1]q
