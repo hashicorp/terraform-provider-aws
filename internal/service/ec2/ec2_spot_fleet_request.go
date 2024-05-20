@@ -1929,7 +1929,7 @@ func launchSpecToMap(ctx context.Context, l awstypes.SpotFleetLaunchSpecificatio
 		for _, tagSpecs := range l.TagSpecifications {
 			// only "instance" tags are currently supported: http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SpotFleetTagSpecification.html
 			if tagSpecs.ResourceType == awstypes.ResourceTypeInstance {
-				m[names.AttrTags] = KeyValueTags(ctx, tagSpecs.Tags).IgnoreAWS().Map()
+				m[names.AttrTags] = keyValueTagsV2(ctx, tagSpecs.Tags).IgnoreAWS().Map()
 			}
 		}
 	}
