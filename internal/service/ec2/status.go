@@ -914,22 +914,6 @@ func StatusNetworkInterfaceAttachmentStatus(ctx context.Context, conn *ec2.EC2, 
 	}
 }
 
-func StatusPlacementGroupState(ctx context.Context, conn *ec2.EC2, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindPlacementGroupByName(ctx, conn, name)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.State), nil
-	}
-}
-
 func StatusVPCEndpointState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindVPCEndpointByID(ctx, conn, id)

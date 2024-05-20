@@ -2057,45 +2057,6 @@ func WaitNetworkInterfaceDetached(ctx context.Context, conn *ec2.EC2, id string,
 	return nil, err
 }
 
-const (
-	PlacementGroupCreatedTimeout = 5 * time.Minute
-	PlacementGroupDeletedTimeout = 5 * time.Minute
-)
-
-func WaitPlacementGroupCreated(ctx context.Context, conn *ec2.EC2, name string) (*ec2.PlacementGroup, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{ec2.PlacementGroupStatePending},
-		Target:  []string{ec2.PlacementGroupStateAvailable},
-		Timeout: PlacementGroupCreatedTimeout,
-		Refresh: StatusPlacementGroupState(ctx, conn, name),
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*ec2.PlacementGroup); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func WaitPlacementGroupDeleted(ctx context.Context, conn *ec2.EC2, name string) (*ec2.PlacementGroup, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{ec2.PlacementGroupStateDeleting},
-		Target:  []string{},
-		Timeout: PlacementGroupDeletedTimeout,
-		Refresh: StatusPlacementGroupState(ctx, conn, name),
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*ec2.PlacementGroup); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
 func WaitVPCEndpointAccepted(ctx context.Context, conn *ec2.EC2, vpcEndpointID string, timeout time.Duration) (*ec2.VpcEndpoint, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{vpcEndpointStatePendingAcceptance},

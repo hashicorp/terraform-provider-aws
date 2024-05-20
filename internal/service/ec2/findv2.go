@@ -617,6 +617,58 @@ func FindLaunchTemplateVersionByTwoPartKey(ctx context.Context, conn *ec2.Client
 	return output, nil
 }
 
+func findPlacementGroup(ctx context.Context, conn *ec2.Client, input *ec2.DescribePlacementGroupsInput) (*awstypes.PlacementGroup, error) {
+	output, err := findPlacementGroups(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findPlacementGroups(ctx context.Context, conn *ec2.Client, input *ec2.DescribePlacementGroupsInput) ([]awstypes.PlacementGroup, error) {
+	output, err := conn.DescribePlacementGroups(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidPlacementGroupUnknown) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.PlacementGroups, nil
+}
+
+func findPlacementGroupByName(ctx context.Context, conn *ec2.Client, name string) (*awstypes.PlacementGroup, error) {
+	input := &ec2.DescribePlacementGroupsInput{
+		GroupNames: []string{name},
+	}
+
+	output, err := findPlacementGroup(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State; state == awstypes.PlacementGroupStateDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
 func findVolumeAttachmentInstanceByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Instance, error) {
 	input := &ec2.DescribeInstancesInput{
 		InstanceIds: []string{id},

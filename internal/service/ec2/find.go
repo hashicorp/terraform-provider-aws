@@ -4955,58 +4955,6 @@ func FindNATGatewayAddressByNATGatewayIDAndPrivateIP(ctx context.Context, conn *
 	return nil, &retry.NotFoundError{}
 }
 
-func FindPlacementGroup(ctx context.Context, conn *ec2.EC2, input *ec2.DescribePlacementGroupsInput) (*ec2.PlacementGroup, error) {
-	output, err := FindPlacementGroups(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSinglePtrResult(output)
-}
-
-func FindPlacementGroups(ctx context.Context, conn *ec2.EC2, input *ec2.DescribePlacementGroupsInput) ([]*ec2.PlacementGroup, error) {
-	output, err := conn.DescribePlacementGroupsWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidPlacementGroupUnknown) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.PlacementGroups, nil
-}
-
-func FindPlacementGroupByName(ctx context.Context, conn *ec2.EC2, name string) (*ec2.PlacementGroup, error) {
-	input := &ec2.DescribePlacementGroupsInput{
-		GroupNames: aws.StringSlice([]string{name}),
-	}
-
-	output, err := FindPlacementGroup(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if state := aws.StringValue(output.State); state == ec2.PlacementGroupStateDeleted {
-		return nil, &retry.NotFoundError{
-			Message:     state,
-			LastRequest: input,
-		}
-	}
-
-	return output, nil
-}
-
 func FindPrefixList(ctx context.Context, conn *ec2.EC2, input *ec2.DescribePrefixListsInput) (*ec2.PrefixList, error) {
 	output, err := FindPrefixLists(ctx, conn, input)
 

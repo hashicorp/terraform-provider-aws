@@ -258,6 +258,45 @@ func waitInstanceRootBlockDeviceDeleteOnTerminationUpdated(ctx context.Context, 
 	return nil, err
 }
 
+const (
+	PlacementGroupCreatedTimeout = 5 * time.Minute
+	PlacementGroupDeletedTimeout = 5 * time.Minute
+)
+
+func waitPlacementGroupCreated(ctx context.Context, conn *ec2.Client, name string) (*awstypes.PlacementGroup, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.PlacementGroupStatePending),
+		Target:  enum.Slice(awstypes.PlacementGroupStateAvailable),
+		Timeout: PlacementGroupCreatedTimeout,
+		Refresh: statusPlacementGroupState(ctx, conn, name),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.PlacementGroup); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitPlacementGroupDeleted(ctx context.Context, conn *ec2.Client, name string) (*awstypes.PlacementGroup, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.PlacementGroupStateDeleting),
+		Target:  []string{},
+		Timeout: PlacementGroupDeletedTimeout,
+		Refresh: statusPlacementGroupState(ctx, conn, name),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.PlacementGroup); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitSpotInstanceRequestFulfilled(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.SpotInstanceRequest, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{spotInstanceRequestStatusCodePendingEvaluation, spotInstanceRequestStatusCodePendingFulfillment},
