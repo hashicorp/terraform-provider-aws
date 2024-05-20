@@ -749,30 +749,6 @@ func FindVolumeAttachment(ctx context.Context, conn *ec2.EC2, volumeID, instance
 	return nil, &retry.NotFoundError{}
 }
 
-func FindInstanceTypeOfferings(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeInstanceTypeOfferingsInput) ([]*ec2.InstanceTypeOffering, error) {
-	var output []*ec2.InstanceTypeOffering
-
-	err := conn.DescribeInstanceTypeOfferingsPagesWithContext(ctx, input, func(page *ec2.DescribeInstanceTypeOfferingsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, v := range page.InstanceTypeOfferings {
-			if v != nil {
-				output = append(output, v)
-			}
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
-}
-
 func FindPublicIPv4Pool(ctx context.Context, conn *ec2.EC2, input *ec2.DescribePublicIpv4PoolsInput) (*ec2.PublicIpv4Pool, error) {
 	output, err := FindPublicIPv4Pools(ctx, conn, input)
 

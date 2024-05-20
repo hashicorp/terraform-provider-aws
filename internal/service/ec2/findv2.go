@@ -427,6 +427,23 @@ func findInstanceTypeByName(ctx context.Context, conn *ec2.Client, name string) 
 	return output, nil
 }
 
+func findInstanceTypeOfferings(ctx context.Context, conn *ec2.Client, input *ec2.DescribeInstanceTypeOfferingsInput) ([]awstypes.InstanceTypeOffering, error) {
+	var output []awstypes.InstanceTypeOffering
+
+	pages := ec2.NewDescribeInstanceTypeOfferingsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.InstanceTypeOfferings...)
+	}
+
+	return output, nil
+}
+
 func findLaunchTemplate(ctx context.Context, conn *ec2.Client, input *ec2.DescribeLaunchTemplatesInput) (*awstypes.LaunchTemplate, error) {
 	output, err := findLaunchTemplates(ctx, conn, input)
 
