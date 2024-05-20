@@ -1,6 +1,6 @@
 # XR004
 
-The XR004 analyzer reports [`Set()`](https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/helper/schema#ResourceData.Set) calls that receive a complex value type, but do not perform error checking. This error checking is to prevent issues where the code is not able to properly set the Terraform state for drift detection. Addition details are available in the [Extending Terraform documentation](https://www.terraform.io/docs/extend/best-practices/detecting-drift.html#error-checking-aggregate-types).
+The XR004 analyzer reports [`Set()`](https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema#ResourceData.Set) calls that receive a complex value type, but do not perform error checking. This error checking is to prevent issues where the code is not able to properly set the Terraform state for drift detection. Addition details are available in the [Extending Terraform documentation](https://www.terraform.io/docs/extend/best-practices/detecting-drift.html#error-checking-aggregate-types).
 
 ## Flagged Code
 

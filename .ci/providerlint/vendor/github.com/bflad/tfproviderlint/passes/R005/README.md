@@ -1,6 +1,6 @@
 # R005
 
-The R005 analyzer reports when multiple [`HasChange()`](https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/helper/schema#ResourceData.HasChange) calls in a conditional can be combined into a single [`HasChanges()`](https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/helper/schema#ResourceData.HasChanges) call.
+The R005 analyzer reports when multiple [`HasChange()`](https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema#ResourceData.HasChange) calls in a conditional can be combined into a single [`HasChanges()`](https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema#ResourceData.HasChanges) call.
 
 ## Flagged Code
 

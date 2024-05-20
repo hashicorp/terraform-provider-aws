@@ -1,6 +1,8 @@
 # V002
 
-The V002 analyzer reports usage of the deprecated [CIDRNetwork](https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/helper/validation#CIDRNetwork) validation function that should be replaced with [IsCIDRNetwork](https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/helper/validation#IsCIDRNetwork).
+_This terraform-plugin-sdk (v1) analyzer has been removed in tfproviderlint v0.30.0._
+
+The V002 analyzer reports usage of the deprecated [CIDRNetwork](https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation#CIDRNetwork) validation function that should be replaced with [IsCIDRNetwork](https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation#IsCIDRNetwork).
 
 ## Flagged Code
 

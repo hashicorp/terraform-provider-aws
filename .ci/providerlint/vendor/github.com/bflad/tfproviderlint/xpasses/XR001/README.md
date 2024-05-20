@@ -1,6 +1,6 @@
 # XR001
 
-The XR001 analyzer reports usage of [`GetOkExists()`](https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/helper/schema#ResourceData.GetOkExists) calls, which generally do not work as expected. Usage should be moved to standard `Get()` and `GetOk()` calls.
+The XR001 analyzer reports usage of [`GetOkExists()`](https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema#ResourceData.GetOkExists) calls, which generally do not work as expected. Usage should be moved to standard `Get()` and `GetOk()` calls.
 
 ## Flagged Code
 

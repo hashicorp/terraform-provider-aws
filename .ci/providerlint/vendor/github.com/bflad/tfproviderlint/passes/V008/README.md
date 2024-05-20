@@ -1,6 +1,8 @@
 # V008
 
-The V008 analyzer reports usage of the deprecated [ValidateRFC3339TimeString](https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/helper/validation#ValidateRFC3339TimeString) validation function that should be replaced with [IsRFC3339Time](https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/helper/validation#IsRFC3339Time).
+_This terraform-plugin-sdk (v1) analyzer has been removed in tfproviderlint v0.30.0._
+
+The V008 analyzer reports usage of the deprecated [ValidateRFC3339TimeString](https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation#ValidateRFC3339TimeString) validation function that should be replaced with [IsRFC3339Time](https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation#IsRFC3339Time).
 
 ## Flagged Code
 

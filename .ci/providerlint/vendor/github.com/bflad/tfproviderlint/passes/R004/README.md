@@ -1,8 +1,8 @@
 # R004
 
-The R004 analyzer reports incorrect types for a [`Set()`](https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/helper/schema#ResourceData.Set) call value.
+The R004 analyzer reports incorrect types for a [`Set()`](https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema#ResourceData.Set) call value.
 The `Set()` function only supports a subset of basic types, slices and maps of that
-subset of basic types, and the [`schema.Set`](https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/helper/schema#Set) type.
+subset of basic types, and the [`schema.Set`](https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema#Set) type.
 
 ## Flagged Code
 
