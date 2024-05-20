@@ -7,8 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
-	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -28,19 +26,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	sdkschema "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -119,6 +113,14 @@ func (r *resourcePlugin) Schema(ctx context.Context, req resource.SchemaRequest,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 1000),
 					stringvalidator.RegexMatches(regexache.MustCompile(`^\P{C}*$`), "must not contain control characters"),
+				},
+			},
+			names.AttrState: schema.StringAttribute{
+				CustomType:  fwtypes.StringEnumType[awstypes.PluginState](),
+				Optional:    true,
+				Description: "The state of the Amazon Q plugin.",
+				Validators: []validator.String{
+					enum.FrameworkValidate[awstypes.PluginState](),
 				},
 			},
 			"server_url": schema.StringAttribute{
@@ -273,10 +275,90 @@ func (r *resourcePlugin) Create(ctx context.Context, req resource.CreateRequest,
 }
 
 func (r *resourcePlugin) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var data resourcePluginData
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().QBusinessClient(ctx)
+	out, err := FindPluginByID(ctx, conn, data.ID.ValueString())
+
+	if tfresource.NotFound(err) {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("failed to retrieve Q Business plugin (%s)", data.ID.ValueString()), err.Error())
+		return
+	}
+
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	data.flattenAuthConfiguration(ctx, out.AuthConfiguration)
+	if out.CustomPluginConfiguration != nil {
+		data.flattenApiSchema(ctx, out.CustomPluginConfiguration.ApiSchema)
+	}
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *resourcePlugin) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var old, new resourcePluginData
+	resp.Diagnostics.Append(req.Plan.Get(ctx, new)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
+	resp.Diagnostics.Append(req.State.Get(ctx, &old)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if !old.BasicAuthConfiguration.Equal(new.BasicAuthConfiguration) ||
+		!old.OAuth2ClientCredentialConfiguration.Equal(new.OAuth2ClientCredentialConfiguration) ||
+		!old.NoAuthConfiguration.Equal(new.NoAuthConfiguration) ||
+		!old.CustomPluginConfiguration.Equal(new.CustomPluginConfiguration) ||
+		!old.DisplayName.Equal(new.DisplayName) ||
+		!old.ServerURL.Equal(new.ServerURL) ||
+		!old.State.Equal(new.State) {
+		conn := r.Meta().QBusinessClient(ctx)
+
+		input := &qbusiness.UpdatePluginInput{}
+
+		authConf, d := new.expandAuthConfiguration(ctx)
+		if d.HasError() {
+			resp.Diagnostics.Append(d...)
+			return
+		}
+		input.AuthConfiguration = authConf
+
+		if input.CustomPluginConfiguration != nil {
+			apiSchema, d := new.expandApiSchema(ctx)
+			if d.HasError() {
+				resp.Diagnostics.Append(d...)
+				return
+			}
+			input.CustomPluginConfiguration.ApiSchema = apiSchema
+		}
+
+		_, err := conn.UpdatePlugin(ctx, input)
+
+		if err != nil {
+			resp.Diagnostics.AddError("failed to update Q Business plugin", err.Error())
+			return
+		}
+
+		if _, err := waitPluginUpdated(ctx, conn, new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+			resp.Diagnostics.AddError("failed to wait for Q Business plugin to be updated", err.Error())
+			return
+		}
+	}
+	resp.Diagnostics.Append(resp.State.Set(ctx, &new)...)
 }
 
 func (r *resourcePlugin) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -334,6 +416,8 @@ type resourcePluginData struct {
 	OAuth2ClientCredentialConfiguration fwtypes.ListNestedObjectValueOf[authConfigurationData]         `tfsdk:"oauth2_client_credential_configuration"`
 	NoAuthConfiguration                 fwtypes.ObjectValueOf[noAuthConfigurationData]                 `tfsdk:"no_auth_configuration"`
 	CustomPluginConfiguration           fwtypes.ListNestedObjectValueOf[customPluginConfigurationData] `tfsdk:"custom_plugin_configuration"`
+	ServerURL                           types.String                                                   `tfsdk:"server_url"`
+	State                               fwtypes.StringEnum[awstypes.PluginState]                       `tfsdk:"state"`
 }
 
 type authConfigurationData struct {
@@ -412,6 +496,22 @@ func (r *resourcePluginData) expandAuthConfiguration(ctx context.Context) (awsty
 	return nil, diags
 }
 
+func (r *resourcePluginData) flattenApiSchema(ctx context.Context, apiSchema awstypes.APISchema) {
+	switch v := apiSchema.(type) {
+	case *awstypes.APISchemaMemberPayload:
+		r.CustomPluginConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &customPluginConfigurationData{
+			Payload: fwflex.StringValueToFramework(ctx, v.Value),
+		})
+	case *awstypes.APISchemaMemberS3:
+		r.CustomPluginConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &customPluginConfigurationData{
+			S3: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &s3Data{
+				Bucket: fwflex.StringToFramework(ctx, v.Value.Bucket),
+				Key:    fwflex.StringToFramework(ctx, v.Value.Key),
+			}),
+		})
+	}
+}
+
 func (r *resourcePluginData) expandApiSchema(ctx context.Context) (awstypes.APISchema, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
@@ -443,263 +543,24 @@ func (r *resourcePluginData) expandApiSchema(ctx context.Context) (awstypes.APIS
 	return nil, diags
 }
 
+const (
+	pluginResourceIDPartCount = 2
+)
+
 func (data *resourcePluginData) setID() {
 	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{data.ApplicationId.ValueString(), data.PluginId.ValueString()}, pluginResourceIDPartCount, false)))
 }
 
-func authConfigurationSchema1() *sdkschema.Schema {
-	return &sdkschema.Schema{
-		Type:         sdkschema.TypeList,
-		Optional:     true,
-		MaxItems:     1,
-		ExactlyOneOf: []string{"basic_auth_configuration", "oauth2_client_credential_configuration"},
-		Elem: &sdkschema.Resource{
-			Schema: map[string]*sdkschema.Schema{
-				"role_arn": {
-					Type:         sdkschema.TypeString,
-					Required:     true,
-					Description:  "ARN of an IAM role used by Amazon Q to access the basic authentication credentials stored in a Secrets Manager secret.",
-					ValidateFunc: verify.ValidARN,
-				},
-				"secret_arn": {
-					Type:         sdkschema.TypeString,
-					Required:     true,
-					Description:  "ARN of the Secrets Manager secret that stores the basic authentication credentials used for plugin configuration.",
-					ValidateFunc: verify.ValidARN,
-				},
-			},
-		},
-	}
-}
-
-func ResourcePlugin() *sdkschema.Resource {
-	return &sdkschema.Resource{
-
-		Importer: &sdkschema.ResourceImporter{
-			StateContext: sdkschema.ImportStatePassthroughContext,
-		},
-
-		CustomizeDiff: verify.SetTagsDiff,
-
-		Schema: map[string]*sdkschema.Schema{
-			"application_id": {
-				Type:        sdkschema.TypeString,
-				Required:    true,
-				Description: "Identifier of the Amazon Q application associated with the plugin.",
-				ValidateFunc: validation.All(
-					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9-]{35}$`), "must be a valid application ID"),
-				),
-			},
-			"arn": {
-				Type:        sdkschema.TypeString,
-				Computed:    true,
-				Description: "ARN of the Amazon Q plugin.",
-			},
-			"basic_auth_configuration":               authConfigurationSchema1(),
-			"oauth2_client_credential_configuration": authConfigurationSchema1(),
-			"display_name": {
-				Type:        sdkschema.TypeString,
-				Required:    true,
-				Description: "The name of the Amazon Q plugin.",
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 100),
-					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9_-]*$`), "must begin with a letter or number and contain only alphanumeric, underscore, or hyphen characters"),
-				),
-			},
-			"plugin_id": {
-				Type:        sdkschema.TypeString,
-				Computed:    true,
-				Description: "The identifier of the Amazon Q plugin.",
-			},
-			"server_url": {
-				Type:        sdkschema.TypeString,
-				Required:    true,
-				Description: "Source URL used for plugin configuration.",
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 2048),
-					validation.StringMatch(regexache.MustCompile(`^(https?|ftp|file)://([^\s]*)$`), "must be a valid URL"),
-				),
-			},
-			"state": {
-				Type:             sdkschema.TypeString,
-				Required:         true,
-				Description:      "State of plugin. Valid value are `ENABLED` and `DISABLED`",
-				ValidateDiagFunc: enum.Validate[awstypes.PluginState](),
-			},
-			"type": {
-				Type:             sdkschema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				Description:      "Type of plugin. Valid value are `SERVICE_NOW`, `SALESFORCE`, `JIRA`, and `ZENDESK`",
-				ValidateDiagFunc: enum.Validate[awstypes.PluginType](),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-		},
-	}
-}
-
-func resourcePluginCreate(ctx context.Context, d *sdkschema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).QBusinessClient(ctx)
-
-	application_id := d.Get("application_id").(string)
-
-	input := &qbusiness.CreatePluginInput{
-		ApplicationId: aws.String(application_id),
-		DisplayName:   aws.String(d.Get("display_name").(string)),
-		ServerUrl:     aws.String(d.Get("server_url").(string)),
-		Type:          awstypes.PluginType(d.Get("type").(string)),
-		Tags:          getTagsIn(ctx),
-	}
-
-	if v, ok := d.GetOk("basic_auth_configuration"); ok {
-		input.AuthConfiguration = expandBasicAuthConfiguration(v.([]interface{}))
-	}
-
-	if v, ok := d.GetOk("oauth2_client_credential_configuration"); ok {
-		input.AuthConfiguration = expandOAuth2ClientCredentialConfiguration(v.([]interface{}))
-	}
-
-	output, err := conn.CreatePlugin(ctx, input)
-
+func (data *resourcePluginData) initFromID() error {
+	parts, err := flex.ExpandResourceId(data.ID.ValueString(), pluginResourceIDPartCount, false)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating qbusiness plugin: %s", err)
+		return err
 	}
 
-	d.SetId(application_id + "/" + aws.ToString(output.PluginId))
-
-	updateInput := &qbusiness.UpdatePluginInput{
-		ApplicationId: aws.String(application_id),
-		PluginId:      output.PluginId,
-		State:         awstypes.PluginState(d.Get("state").(string)),
-	}
-
-	_, err = conn.UpdatePlugin(ctx, updateInput)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating qbusiness plugin: %s", err)
-	}
-
-	return append(diags, resourcePluginRead(ctx, d, meta)...)
+	data.ApplicationId = types.StringValue(parts[0])
+	data.PluginId = types.StringValue(parts[1])
+	return nil
 }
-
-func resourcePluginRead(ctx context.Context, d *sdkschema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).QBusinessClient(ctx)
-
-	output, err := FindPluginByID(ctx, conn, d.Id())
-
-	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		log.Printf("[WARN] qbusiness plugin (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading qbusiness plugin (%s): %s", d.Id(), err)
-	}
-
-	d.Set("application_id", output.ApplicationId)
-	d.Set("arn", output.PluginArn)
-	d.Set("display_name", output.DisplayName)
-
-	switch v := output.AuthConfiguration.(type) {
-	case *awstypes.PluginAuthConfigurationMemberBasicAuthConfiguration:
-		if err := d.Set("basic_auth_configuration", flattenBasicAuthConfiguration(&v.Value)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting qbusiness plugin basic_auth_configuration: %s", err)
-		}
-	case *awstypes.PluginAuthConfigurationMemberOAuth2ClientCredentialConfiguration:
-		if err := d.Set("oauth2_client_credential_configuration", flattenOAuth2ClientCredentialConfiguration(&v.Value)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting qbusiness plugin oauth2_client_credential_configuration: %s", err)
-		}
-	}
-
-	d.Set("plugin_id", output.PluginId)
-	d.Set("server_url", output.ServerUrl)
-	d.Set("state", output.State)
-	d.Set("type", output.Type)
-
-	return diags
-}
-
-func resourcePluginUpdate(ctx context.Context, d *sdkschema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).QBusinessClient(ctx)
-
-	application_id, plugin_id, err := parsePluginID(d.Id())
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing qbusiness plugin ID (%s): %s", d.Id(), err)
-	}
-
-	input := &qbusiness.UpdatePluginInput{
-		ApplicationId: aws.String(application_id),
-		PluginId:      aws.String(plugin_id),
-	}
-
-	if d.HasChange("display_name") {
-		input.DisplayName = aws.String(d.Get("display_name").(string))
-	}
-	if d.HasChange("server_url") {
-		input.ServerUrl = aws.String(d.Get("server_url").(string))
-	}
-	if d.HasChange("state") {
-		input.State = awstypes.PluginState(d.Get("state").(string))
-	}
-
-	_, err = conn.UpdatePlugin(ctx, input)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating qbusiness plugin: %s", err)
-	}
-
-	return append(diags, resourcePluginRead(ctx, d, meta)...)
-}
-
-func resourcePluginDelete(ctx context.Context, d *sdkschema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).QBusinessClient(ctx)
-
-	application_id, plugin_id, err := parsePluginID(d.Id())
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing qbusiness plugin ID (%s): %s", d.Id(), err)
-	}
-
-	_, err = conn.DeletePlugin(ctx, &qbusiness.DeletePluginInput{
-		ApplicationId: aws.String(application_id),
-		PluginId:      aws.String(plugin_id),
-	})
-
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return diags
-	}
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting qbusiness plugin (%s): %s", d.Id(), err)
-	}
-
-	return diags
-}
-
-func parsePluginID(id string) (string, string, error) {
-	parts := strings.Split(id, "/")
-
-	if len(parts) != 2 {
-		return "", "", fmt.Errorf("invalid plugin ID: %s", id)
-	}
-
-	return parts[0], parts[1], nil
-}
-
-const (
-	pluginResourceIDPartCount = 2
-)
 
 func FindPluginByID(ctx context.Context, conn *qbusiness.Client, id string) (*qbusiness.GetPluginOutput, error) {
 	parts, err := flex.ExpandResourceId(id, pluginResourceIDPartCount, false)
@@ -731,58 +592,4 @@ func FindPluginByID(ctx context.Context, conn *qbusiness.Client, id string) (*qb
 	}
 
 	return output, nil
-}
-
-func flattenBasicAuthConfiguration(basicAuthConfiguration *awstypes.BasicAuthConfiguration) []interface{} {
-	if basicAuthConfiguration == nil {
-		return []interface{}{}
-	}
-	return []interface{}{
-		map[string]interface{}{
-			"role_arn":   aws.ToString(basicAuthConfiguration.RoleArn),
-			"secret_arn": aws.ToString(basicAuthConfiguration.SecretArn),
-		},
-	}
-}
-
-func flattenOAuth2ClientCredentialConfiguration(oauth2ClientCredentialConfiguration *awstypes.OAuth2ClientCredentialConfiguration) []interface{} {
-	if oauth2ClientCredentialConfiguration == nil {
-		return []interface{}{}
-	}
-	return []interface{}{
-		map[string]interface{}{
-			"role_arn":   aws.ToString(oauth2ClientCredentialConfiguration.RoleArn),
-			"secret_arn": aws.ToString(oauth2ClientCredentialConfiguration.SecretArn),
-		},
-	}
-}
-
-func expandBasicAuthConfiguration(basicAuthConfiguration []interface{}) *awstypes.PluginAuthConfigurationMemberBasicAuthConfiguration {
-	if len(basicAuthConfiguration) == 0 {
-		return nil
-	}
-
-	basicAuth := basicAuthConfiguration[0].(map[string]interface{})
-
-	return &awstypes.PluginAuthConfigurationMemberBasicAuthConfiguration{
-		Value: awstypes.BasicAuthConfiguration{
-			RoleArn:   aws.String(basicAuth["role_arn"].(string)),
-			SecretArn: aws.String(basicAuth["secret_arn"].(string)),
-		},
-	}
-}
-
-func expandOAuth2ClientCredentialConfiguration(oauth2ClientCredentialConfiguration []interface{}) *awstypes.PluginAuthConfigurationMemberOAuth2ClientCredentialConfiguration {
-	if len(oauth2ClientCredentialConfiguration) == 0 {
-		return nil
-	}
-
-	oAuth2 := oauth2ClientCredentialConfiguration[0].(map[string]interface{})
-
-	return &awstypes.PluginAuthConfigurationMemberOAuth2ClientCredentialConfiguration{
-		Value: awstypes.OAuth2ClientCredentialConfiguration{
-			RoleArn:   aws.String(oAuth2["role_arn"].(string)),
-			SecretArn: aws.String(oAuth2["secret_arn"].(string)),
-		},
-	}
 }

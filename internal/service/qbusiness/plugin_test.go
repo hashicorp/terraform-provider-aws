@@ -64,7 +64,7 @@ func TestAccQBusinessPlugin_disappears(t *testing.T) {
 				Config: testAccPluginConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPluginExists(ctx, resourceName, &plugin),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfqbusiness.ResourcePlugin(), resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfqbusiness.ResourcePlugin, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

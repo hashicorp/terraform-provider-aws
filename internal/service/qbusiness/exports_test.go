@@ -7,4 +7,5 @@ var (
 	ResourceApplication = newResourceApplication
 	ResourceIndex       = newResourceIndex
 	ResourceRetriever   = newResourceRetriever
+	ResourcePlugin      = newResourcePlugin
 )
