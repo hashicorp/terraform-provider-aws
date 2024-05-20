@@ -17,11 +17,13 @@ BASE_REF                     ?= main
 
 ifneq ($(origin PKG), undefined)
 	PKG_NAME = internal/service/$(PKG)
+	SVC_DIR = ./internal/service/$(PKG)
 	TEST = ./$(PKG_NAME)/...
 endif
 
 ifneq ($(origin K), undefined)
 	PKG_NAME = internal/service/$(K)
+	SVC_DIR = ./internal/service/$(PKG)
 	TEST = ./$(PKG_NAME)/...
 endif
 
@@ -39,36 +41,43 @@ endif
 
 ifeq ($(PKG_NAME), internal/service/ebs)
 	PKG_NAME = internal/service/ec2
+	SVC_DIR = ./internal/service/ec2
 	TEST = ./$(PKG_NAME)/...
 endif
 
 ifeq ($(PKG_NAME), internal/service/ipam)
 	PKG_NAME = internal/service/ec2
+	SVC_DIR = ./internal/service/ec2
 	TEST = ./$(PKG_NAME)/...
 endif
 
 ifeq ($(PKG_NAME), internal/service/transitgateway)
 	PKG_NAME = internal/service/ec2
+	SVC_DIR = ./internal/service/ec2
 	TEST = ./$(PKG_NAME)/...
 endif
 
 ifeq ($(PKG_NAME), internal/service/vpc)
 	PKG_NAME = internal/service/ec2
+	SVC_DIR = ./internal/service/ec2
 	TEST = ./$(PKG_NAME)/...
 endif
 
 ifeq ($(PKG_NAME), internal/service/vpnclient)
 	PKG_NAME = internal/service/ec2
+	SVC_DIR = ./internal/service/ec2
 	TEST = ./$(PKG_NAME)/...
 endif
 
 ifeq ($(PKG_NAME), internal/service/vpnsite)
 	PKG_NAME = internal/service/ec2
+	SVC_DIR = ./internal/service/ec2
 	TEST = ./$(PKG_NAME)/...
 endif
 
 ifeq ($(PKG_NAME), internal/service/wavelength)
 	PKG_NAME = internal/service/ec2
+	SVC_DIR = ./internal/service/ec2
 	TEST = ./$(PKG_NAME)/...
 endif
 
@@ -484,6 +493,27 @@ semgrep-validate: ## Validate semgrep configuration files
 semgrep: semgrep-validate ## Run semgrep
 	@echo "make: running Semgrep static analysis..."
 	@docker run --rm --volume "${PWD}:/src" returntocorp/semgrep semgrep --config .ci/.semgrep.yml --config .ci/.semgrep-constants.yml --config .ci/.semgrep-test-constants.yml
+
+semnaming-cae: semgrep-validate ## Run semgrep on all files
+	@echo "make: Semgrep Checks / Naming Scan Caps/AWS/EC2..."
+	@semgrep $(SEMGREP_ARGS) \
+		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
+		--config .ci/.semgrep-caps-aws-ec2.yml
+
+semnaming: semgrep-validate
+	@echo "make: Semgrep Checks / Test Configs Scan..."
+	@semgrep $(SEMGREP_ARGS) \
+		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
+		--config .ci/.semgrep-configs.yml
+
+semservicenaming: semgrep-validate
+	@echo "make: Semgrep Checks / Service Name Scan A-Z..."
+	@semgrep $(SEMGREP_ARGS) \
+		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
+		--config .ci/.semgrep-service-name0.yml \
+		--config .ci/.semgrep-service-name1.yml \
+		--config .ci/.semgrep-service-name2.yml \
+		--config .ci/.semgrep-service-name3.yml
 
 skaff: prereq-go ## Install skaff
 	cd skaff && $(GO_VER) install github.com/hashicorp/terraform-provider-aws/skaff
