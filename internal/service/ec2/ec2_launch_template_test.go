@@ -47,7 +47,6 @@ func TestAccEC2LaunchTemplate_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "disable_api_stop", "false"),
 					resource.TestCheckResourceAttr(resourceName, "disable_api_termination", "false"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", ""),
-					resource.TestCheckResourceAttr(resourceName, "elastic_gpu_specifications.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "elastic_inference_accelerator.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "enclave_options.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "hibernation_options.#", acctest.Ct0),
