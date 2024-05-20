@@ -22,13 +22,23 @@ Continuous integration plays a pivotal role in maintaining the health and qualit
 
 Additionally, these tests provide rapid feedback to contributors, enabling them to identify and rectify issues early in the development cycle. In essence, continuous integration tests serve as a safeguard, bolstering the reliability and maintainability of this project while fostering a collaborative and iterative development environment.
 
-## Specific Tests
+## Running Tests Locally
+
+CI tests run on GitHub when you run a pull request. However, these can take a while to run. If you prefer, you can run most tests locally. Before running tests locally, you will need to clone the repository, which you've likely done anyway if you're working on a PR, and install tools.
+
+Use the `tools` target to install a variety of tools used by different CI tests:
+
+```sh
+% make tools
+```
+
+## Using `make` To Run Specific Tests
 
 There are many different tests and they change often. This guide doesn't cover everything CI does because, as noted above, many of the CI processes enrich the pull request, such as adding labels. If you notice something important that isn't reflected in this documentation, we welcome your contribution to fix it!
 
 The makefile included with the Terraform AWS Provider allows you to run many of the CI tests locally before submitting your PR. The file is located in the provider's root directory and is called `GNUmakefile`. You should be able to use `make` with a variety of Linux-type shells that support `sh` and `bash`, such as a MacOS terminal.
 
-**Note:** Many tests will simply exit without error if a test passed. "No news is good news."
+**Note:** Some tests will simply exit without error if a test passed. "No news is good news."
 
 ### Acceptance Test Linting
 
@@ -36,19 +46,19 @@ Acceptance test linting involves thorough testing of the Terraform configuration
 
 Acceptance Test Linting has two components: `terrafmt` and `tflint`. `make` has several targets to help you with this.
 
-Use the `tools` target before running Acceptance Test Linting:
-
-```sh
-% make tools
-```
-
 Use the `acctestlint` target to run all the Acceptance Test Linting checks using both `terrafmt` and `tflint`:
 
 ```sh
 % make acctestlint
 ```
 
-Limit any of the Acceptance Test Linting checks to a specific directory using `SVC_DIR`:
+You can limit the test to a service package by using the `PKG` environment variable:
+
+```sh
+% PKG=rds make acctestlint
+```
+
+The command above is equivalent to using `SVC_DIR` and the whole relative path:
 
 ```sh
 % SVC_DIR=./internal/service/rds make acctestlint
@@ -140,13 +150,15 @@ To locally run Semgrep checks using `make`, you'll need to install Semgrep local
 
 #### Code Quality Scan
 
+This scan looks for a hodgepodge of issues, best practices, and problems we've found over the years.
+
 Use the `semcodequality` target to run the same check CI runs:
 
 ```sh
 % make semcodequality
 ```
 
-You can limit the scan to a service package by using the `PKG_NAME` environment variable:
+You can limit the scan to a service package by using the `PKG` environment variable:
 
 ```sh
 % PKG=rds make semcodequality
@@ -154,15 +166,51 @@ You can limit the scan to a service package by using the `PKG_NAME` environment 
 
 #### Naming Scan Caps/AWS/EC2
 
-Coming soon
+Idiomatic Go uses [_mixed caps_](naming.md#mixed_caps) for multiword names, not camel case. In camel case, a name with the words "SMTP thing" would be `SmtpThing`. This is wrong in Go. In mixed caps, and therefore idiomatic Go, `SMTPThing` is correct. This scan ensures that many acronyms and initialisms are capitalized correctly in code. 
+
+Use the `semnaming-cae` target to run the same check CI runs:
+
+```sh
+% make semnaming-cae
+```
+
+You can limit the scan to a service package by using the `PKG` environment variable:
+
+```sh
+% PKG=rds make semnaming-cae
+```
 
 #### Test Configs Scan
 
-Coming soon
+This scan checks for consistency in naming of test-related functions.
+
+Use the `semnaming` target to run the same check CI runs:
+
+```sh
+% make semnaming
+```
+
+You can limit the scan to a service package by using the `PKG` environment variable:
+
+```sh
+% PKG=rds make semnaming
+```
 
 #### Service Name Scan A-Z
 
-Coming soon
+This scan ensures that AWS service names are used fairly consistently from one service package to the next.
+
+Use the `semservicenaming` target to run the same check CI runs:
+
+```sh
+% make semservicenaming
+```
+
+You can limit the scan to a service package by using the `PKG` environment variable:
+
+```sh
+% PKG=rds make semservicenaming
+```
 
 ### YAML Linting / yamllint
 
@@ -316,7 +364,7 @@ Use the `provcheckmarkdownlint` target to run this test:
 % make provcheckmarkdownlint
 ```
 
-#### terraform_providers_schema
+#### terraform providers schema
 
 This process generates the Terraform AWS Provider schema for use by the `tfproviderdocs` check.
 
@@ -324,6 +372,6 @@ This process generates the Terraform AWS Provider schema for use by the `tfprovi
 
 Coming soon
 
-#### validate_sweepers_unlinked
+#### Sweeper Functions Not Linked
 
 Coming soon
