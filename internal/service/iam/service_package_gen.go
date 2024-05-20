@@ -90,6 +90,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Server Certificate",
 		},
 		{
+			Factory:  dataSourceServerCertificates,
+			TypeName: "aws_iam_server_certificates",
+			Name:     "Server Certificates",
+		},
+		{
 			Factory:  dataSourceSessionContext,
 			TypeName: "aws_iam_session_context",
 			Name:     "Session Context",
