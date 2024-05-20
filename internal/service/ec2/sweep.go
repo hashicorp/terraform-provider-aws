@@ -520,7 +520,7 @@ func sweepCarrierGateways(region string) error {
 		}
 
 		for _, v := range page.CarrierGateways {
-			r := ResourceCarrierGateway()
+			r := resourceCarrierGateway()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.CarrierGatewayId))
 
