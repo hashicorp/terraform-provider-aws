@@ -37,7 +37,7 @@ var (
 	ResourceVPNGatewayRoutePropagation      = resourceVPNGatewayRoutePropagation
 
 	CustomFiltersSchema                                    = customFiltersSchema
-	FindAvailabilityZonesV2                                = findAvailabilityZonesV2
+	FindAvailabilityZones                                = findAvailabilityZones
 	FindCarrierGatewayByID                                 = findCarrierGatewayByID
 	FindClientVPNAuthorizationRuleByThreePartKey           = findClientVPNAuthorizationRuleByThreePartKey
 	FindClientVPNEndpointByID                              = findClientVPNEndpointByID

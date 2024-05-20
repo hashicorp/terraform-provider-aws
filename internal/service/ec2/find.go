@@ -22,20 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func FindAvailabilityZones(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeAvailabilityZonesInput) ([]*ec2.AvailabilityZone, error) {
-	output, err := conn.DescribeAvailabilityZonesWithContext(ctx, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.AvailabilityZones, nil
-}
-
 func FindCOIPPools(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeCoipPoolsInput) ([]*ec2.CoipPool, error) {
 	var output []*ec2.CoipPool
 

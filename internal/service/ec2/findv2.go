@@ -18,21 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func findAvailabilityZonesV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeAvailabilityZonesInput) ([]awstypes.AvailabilityZone, error) {
-	output, err := conn.DescribeAvailabilityZones(ctx, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.AvailabilityZones, nil
-}
-
-func findAvailabilityZonesV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeAvailabilityZonesInput) ([]awstypes.AvailabilityZone, error) {
+func findAvailabilityZones(ctx context.Context, conn *ec2.Client, input *ec2.DescribeAvailabilityZonesInput) ([]awstypes.AvailabilityZone, error) {
 	output, err := conn.DescribeAvailabilityZones(ctx, input)
 
 	if err != nil {
@@ -47,7 +33,7 @@ func findAvailabilityZonesV2(ctx context.Context, conn *ec2.Client, input *ec2.D
 }
 
 func findAvailabilityZone(ctx context.Context, conn *ec2.Client, input *ec2.DescribeAvailabilityZonesInput) (*awstypes.AvailabilityZone, error) {
-	output, err := findAvailabilityZonesV2(ctx, conn, input)
+	output, err := findAvailabilityZones(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -64,7 +50,7 @@ func findAvailabilityZoneGroupByName(ctx context.Context, conn *ec2.Client, name
 		}),
 	}
 
-	output, err := findAvailabilityZonesV2(ctx, conn, input)
+	output, err := findAvailabilityZones(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
