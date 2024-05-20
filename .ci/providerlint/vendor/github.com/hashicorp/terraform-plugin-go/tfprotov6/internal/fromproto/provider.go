@@ -46,8 +46,9 @@ func ConfigureProviderRequest(in *tfplugin6.ConfigureProvider_Request) *tfprotov
 	}
 
 	resp := &tfprotov6.ConfigureProviderRequest{
-		Config:           DynamicValue(in.Config),
-		TerraformVersion: in.TerraformVersion,
+		Config:             DynamicValue(in.Config),
+		TerraformVersion:   in.TerraformVersion,
+		ClientCapabilities: ConfigureProviderClientCapabilities(in.ClientCapabilities),
 	}
 
 	return resp
