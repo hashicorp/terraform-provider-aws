@@ -6,7 +6,7 @@ require (
 	github.com/ProtonMail/go-crypto v1.1.0-alpha.2
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.53.4
+	github.com/aws/aws-sdk-go v1.53.5
 	github.com/aws/aws-sdk-go-v2 v1.27.0
 	github.com/aws/aws-sdk-go-v2/config v1.27.15
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.15
@@ -51,7 +51,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.38.3
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.35.4
 	github.com/aws/aws-sdk-go-v2/service/codeartifact v1.27.3
-	github.com/aws/aws-sdk-go-v2/service/codebuild v1.35.1
+	github.com/aws/aws-sdk-go-v2/service/codebuild v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.13.4
 	github.com/aws/aws-sdk-go-v2/service/codecommit v1.22.7
 	github.com/aws/aws-sdk-go-v2/service/codedeploy v1.25.7
@@ -84,7 +84,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/eks v1.42.4
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.38.4
 	github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.23.7
-	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.30.8
+	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.31.0
 	github.com/aws/aws-sdk-go-v2/service/emr v1.39.8
 	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.19.4
 	github.com/aws/aws-sdk-go-v2/service/eventbridge v1.31.2
@@ -107,7 +107,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.10.7
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.27.7
 	github.com/aws/aws-sdk-go-v2/service/kms v1.31.3
-	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.32.3
+	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.33.0
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.54.3
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.3.7
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.43.7
@@ -121,7 +121,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.11.3
 	github.com/aws/aws-sdk-go-v2/service/mediastore v1.20.7
 	github.com/aws/aws-sdk-go-v2/service/mq v1.22.7
-	github.com/aws/aws-sdk-go-v2/service/mwaa v1.27.0
+	github.com/aws/aws-sdk-go-v2/service/mwaa v1.27.1
 	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.8.4
 	github.com/aws/aws-sdk-go-v2/service/oam v1.11.3
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.11.10
@@ -171,7 +171,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/synthetics v1.24.7
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.25.8
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.37.3
-	github.com/aws/aws-sdk-go-v2/service/transfer v1.47.5
+	github.com/aws/aws-sdk-go-v2/service/transfer v1.48.0
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.14.2
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.8.2
 	github.com/aws/aws-sdk-go-v2/service/waf v1.20.7
