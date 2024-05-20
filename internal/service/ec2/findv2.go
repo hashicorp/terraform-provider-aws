@@ -32,6 +32,20 @@ func findAvailabilityZonesV2(ctx context.Context, conn *ec2.Client, input *ec2.D
 	return output.AvailabilityZones, nil
 }
 
+func findAvailabilityZonesV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeAvailabilityZonesInput) ([]awstypes.AvailabilityZone, error) {
+	output, err := conn.DescribeAvailabilityZones(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.AvailabilityZones, nil
+}
+
 func findAvailabilityZone(ctx context.Context, conn *ec2.Client, input *ec2.DescribeAvailabilityZonesInput) (*awstypes.AvailabilityZone, error) {
 	output, err := findAvailabilityZonesV2(ctx, conn, input)
 
@@ -1235,7 +1249,6 @@ func findIPAMPoolAllocationsV2(ctx context.Context, conn *ec2.Client, input *ec2
 	var output []awstypes.IpamPoolAllocation
 
 	pages := ec2.NewGetIpamPoolAllocationsPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -1410,9 +1423,9 @@ func findPrefixListV2(ctx context.Context, conn *ec2.Client, input *ec2.Describe
 func findPrefixListsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribePrefixListsInput) ([]awstypes.PrefixList, error) {
 	var output []awstypes.PrefixList
 
-	paginator := ec2.NewDescribePrefixListsPaginator(conn, input)
-	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(ctx)
+	pages := ec2.NewDescribePrefixListsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, errCodeInvalidPrefixListIdNotFound) {
@@ -1471,9 +1484,9 @@ func findVPCEndpointV2(ctx context.Context, conn *ec2.Client, input *ec2.Describ
 func findVPCEndpointsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointsInput) ([]awstypes.VpcEndpoint, error) {
 	var output []awstypes.VpcEndpoint
 
-	paginator := ec2.NewDescribeVpcEndpointsPaginator(conn, input)
-	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(ctx)
+	pages := ec2.NewDescribeVpcEndpointsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointIdNotFound) {
@@ -1640,9 +1653,9 @@ func findVPCEndpointServiceConfigurationV2(ctx context.Context, conn *ec2.Client
 func findVPCEndpointServiceConfigurationsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointServiceConfigurationsInput) ([]awstypes.ServiceConfiguration, error) {
 	var output []awstypes.ServiceConfiguration
 
-	paginator := ec2.NewDescribeVpcEndpointServiceConfigurationsPaginator(conn, input)
-	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(ctx)
+	pages := ec2.NewDescribeVpcEndpointServiceConfigurationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointServiceIdNotFound) {
@@ -1823,12 +1836,21 @@ func findVPCEndpointServiceConfigurationByIDV2(ctx context.Context, conn *ec2.Cl
 	return output, nil
 }
 
+func findVPCEndpointServicePrivateDNSNameConfigurationByIDV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.PrivateDnsNameConfiguration, error) {
+	out, err := findVPCEndpointServiceConfigurationByIDV2(ctx, conn, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return out.PrivateDnsNameConfiguration, nil
+}
+
 func findVPCEndpointServicePermissionsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointServicePermissionsInput) ([]awstypes.AllowedPrincipal, error) {
 	var output []awstypes.AllowedPrincipal
 
-	paginator := ec2.NewDescribeVpcEndpointServicePermissionsPaginator(conn, input)
-	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(ctx)
+	pages := ec2.NewDescribeVpcEndpointServicePermissionsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointServiceIdNotFound) {
@@ -1951,9 +1973,9 @@ func findVPCEndpointConnectionByServiceIDAndVPCEndpointIDV2(ctx context.Context,
 
 	var output *awstypes.VpcEndpointConnection
 
-	paginator := ec2.NewDescribeVpcEndpointConnectionsPaginator(conn, input)
-	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(ctx)
+	pages := ec2.NewDescribeVpcEndpointConnectionsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -1994,9 +2016,9 @@ func findVPCEndpointConnectionNotificationV2(ctx context.Context, conn *ec2.Clie
 func findVPCEndpointConnectionNotificationsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointConnectionNotificationsInput) ([]awstypes.ConnectionNotification, error) {
 	var output []awstypes.ConnectionNotification
 
-	paginator := ec2.NewDescribeVpcEndpointConnectionNotificationsPaginator(conn, input)
-	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(ctx)
+	pages := ec2.NewDescribeVpcEndpointConnectionNotificationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, errCodeInvalidConnectionNotification) {
@@ -2054,6 +2076,302 @@ func findVPCEndpointServicePermissionV2(ctx context.Context, conn *ec2.Client, s
 	})
 
 	return tfresource.AssertSingleValueResult(allowedPrincipals)
+}
+
+func findClientVPNEndpoint(ctx context.Context, conn *ec2.Client, input *ec2.DescribeClientVpnEndpointsInput) (*awstypes.ClientVpnEndpoint, error) {
+	output, err := findClientVPNEndpoints(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findClientVPNEndpoints(ctx context.Context, conn *ec2.Client, input *ec2.DescribeClientVpnEndpointsInput) ([]awstypes.ClientVpnEndpoint, error) {
+	var output []awstypes.ClientVpnEndpoint
+
+	pages := ec2.NewDescribeClientVpnEndpointsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidClientVPNEndpointIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.ClientVpnEndpoints...)
+	}
+
+	return output, nil
+}
+
+func findClientVPNEndpointByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.ClientVpnEndpoint, error) {
+	input := &ec2.DescribeClientVpnEndpointsInput{
+		ClientVpnEndpointIds: []string{id},
+	}
+
+	output, err := findClientVPNEndpoint(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.Status.Code; state == awstypes.ClientVpnEndpointStatusCodeDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.ClientVpnEndpointId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findClientVPNEndpointClientConnectResponseOptionsByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.ClientConnectResponseOptions, error) {
+	output, err := findClientVPNEndpointByID(ctx, conn, id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output.ClientConnectOptions == nil || output.ClientConnectOptions.Status == nil {
+		return nil, tfresource.NewEmptyResultError(id)
+	}
+
+	return output.ClientConnectOptions, nil
+}
+
+func findClientVPNAuthorizationRule(ctx context.Context, conn *ec2.Client, input *ec2.DescribeClientVpnAuthorizationRulesInput) (*awstypes.AuthorizationRule, error) {
+	output, err := findClientVPNAuthorizationRules(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findClientVPNAuthorizationRules(ctx context.Context, conn *ec2.Client, input *ec2.DescribeClientVpnAuthorizationRulesInput) ([]awstypes.AuthorizationRule, error) {
+	var output []awstypes.AuthorizationRule
+
+	pages := ec2.NewDescribeClientVpnAuthorizationRulesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidClientVPNEndpointIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.AuthorizationRules...)
+	}
+
+	return output, nil
+}
+
+func findClientVPNAuthorizationRuleByThreePartKey(ctx context.Context, conn *ec2.Client, endpointID, targetNetworkCIDR, accessGroupID string) (*awstypes.AuthorizationRule, error) {
+	filters := map[string]string{
+		"destination-cidr": targetNetworkCIDR,
+	}
+	if accessGroupID != "" {
+		filters["group-id"] = accessGroupID
+	}
+	input := &ec2.DescribeClientVpnAuthorizationRulesInput{
+		ClientVpnEndpointId: aws.String(endpointID),
+		Filters:             newAttributeFilterListV2(filters),
+	}
+
+	return findClientVPNAuthorizationRule(ctx, conn, input)
+}
+
+func findClientVPNNetworkAssociation(ctx context.Context, conn *ec2.Client, input *ec2.DescribeClientVpnTargetNetworksInput) (*awstypes.TargetNetwork, error) {
+	output, err := findClientVPNNetworkAssociations(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findClientVPNNetworkAssociations(ctx context.Context, conn *ec2.Client, input *ec2.DescribeClientVpnTargetNetworksInput) ([]awstypes.TargetNetwork, error) {
+	var output []awstypes.TargetNetwork
+
+	pages := ec2.NewDescribeClientVpnTargetNetworksPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidClientVPNEndpointIdNotFound, errCodeInvalidClientVPNAssociationIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.ClientVpnTargetNetworks...)
+	}
+
+	return output, nil
+}
+
+func findClientVPNNetworkAssociationByTwoPartKey(ctx context.Context, conn *ec2.Client, associationID, endpointID string) (*awstypes.TargetNetwork, error) {
+	input := &ec2.DescribeClientVpnTargetNetworksInput{
+		AssociationIds:      []string{associationID},
+		ClientVpnEndpointId: aws.String(endpointID),
+	}
+
+	output, err := findClientVPNNetworkAssociation(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.Status.Code; state == awstypes.AssociationStatusCodeDisassociated {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.ClientVpnEndpointId) != endpointID || aws.ToString(output.AssociationId) != associationID {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findClientVPNRoute(ctx context.Context, conn *ec2.Client, input *ec2.DescribeClientVpnRoutesInput) (*awstypes.ClientVpnRoute, error) {
+	output, err := findClientVPNRoutes(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findClientVPNRoutes(ctx context.Context, conn *ec2.Client, input *ec2.DescribeClientVpnRoutesInput) ([]awstypes.ClientVpnRoute, error) {
+	var output []awstypes.ClientVpnRoute
+
+	pages := ec2.NewDescribeClientVpnRoutesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidClientVPNEndpointIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Routes...)
+	}
+
+	return output, nil
+}
+
+func findClientVPNRouteByThreePartKey(ctx context.Context, conn *ec2.Client, endpointID, targetSubnetID, destinationCIDR string) (*awstypes.ClientVpnRoute, error) {
+	input := &ec2.DescribeClientVpnRoutesInput{
+		ClientVpnEndpointId: aws.String(endpointID),
+		Filters: newAttributeFilterListV2(map[string]string{
+			"destination-cidr": destinationCIDR,
+			"target-subnet":    targetSubnetID,
+		}),
+	}
+
+	return findClientVPNRoute(ctx, conn, input)
+}
+
+func findCarrierGateway(ctx context.Context, conn *ec2.Client, input *ec2.DescribeCarrierGatewaysInput) (*awstypes.CarrierGateway, error) {
+	output, err := findCarrierGateways(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findCarrierGateways(ctx context.Context, conn *ec2.Client, input *ec2.DescribeCarrierGatewaysInput) ([]awstypes.CarrierGateway, error) {
+	var output []awstypes.CarrierGateway
+
+	pages := ec2.NewDescribeCarrierGatewaysPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidCarrierGatewayIDNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.CarrierGateways...)
+	}
+
+	return output, nil
+}
+
+func findCarrierGatewayByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.CarrierGateway, error) {
+	input := &ec2.DescribeCarrierGatewaysInput{
+		CarrierGatewayIds: []string{id},
+	}
+
+	output, err := findCarrierGateway(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State; state == awstypes.CarrierGatewayStateDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.CarrierGatewayId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
 }
 
 func FindImages(ctx context.Context, conn *ec2.Client, input *ec2.DescribeImagesInput) ([]awstypes.Image, error) {

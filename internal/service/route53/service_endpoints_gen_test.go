@@ -4,17 +4,17 @@ package route53_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"maps"
-	"net/url"
 	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	route53_sdkv1 "github.com/aws/aws-sdk-go/service/route53"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	route53_sdkv2 "github.com/aws/aws-sdk-go-v2/service/route53"
 	"github.com/aws/smithy-go/middleware"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/google/go-cmp/cmp"
@@ -213,32 +213,42 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 }
 
 func defaultEndpoint(region string) string {
-	r := endpoints.DefaultResolver()
+	r := route53_sdkv2.NewDefaultEndpointResolverV2()
 
-	ep, err := r.EndpointFor(route53_sdkv1.EndpointsID, region)
+	ep, err := r.ResolveEndpoint(context.Background(), route53_sdkv2.EndpointParameters{
+		Region: aws_sdkv2.String(region),
+	})
 	if err != nil {
 		return err.Error()
 	}
 
-	url, _ := url.Parse(ep.URL)
-
-	if url.Path == "" {
-		url.Path = "/"
+	if ep.URI.Path == "" {
+		ep.URI.Path = "/"
 	}
 
-	return url.String()
+	return ep.URI.String()
 }
 
 func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) string {
 	t.Helper()
 
-	client := meta.Route53Conn(ctx)
+	var endpoint string
 
-	req, _ := client.ListHostedZonesRequest(&route53_sdkv1.ListHostedZonesInput{})
+	client := meta.Route53Client(ctx)
 
-	req.HTTPRequest.URL.Path = "/"
-
-	endpoint := req.HTTPRequest.URL.String()
+	_, err := client.ListHostedZones(ctx, &route53_sdkv2.ListHostedZonesInput{},
+		func(opts *route53_sdkv2.Options) {
+			opts.APIOptions = append(opts.APIOptions,
+				addRetrieveEndpointURLMiddleware(t, &endpoint),
+				addCancelRequestMiddleware(),
+			)
+		},
+	)
+	if err == nil {
+		t.Fatal("Expected an error, got none")
+	} else if !errors.Is(err, errCancelOperation) {
+		t.Fatalf("Unexpected error: %s", err)
+	}
 
 	return endpoint
 }

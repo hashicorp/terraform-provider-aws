@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func testAccClientVPNRoute_basic(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v ec2.ClientVpnRoute
+	var v awstypes.ClientVpnRoute
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_client_vpn_route.test"
 	endpointResourceName := "aws_ec2_client_vpn_endpoint.test"
@@ -60,7 +60,7 @@ func testAccClientVPNRoute_basic(t *testing.T, semaphore tfsync.Semaphore) {
 
 func testAccClientVPNRoute_disappears(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v ec2.ClientVpnRoute
+	var v awstypes.ClientVpnRoute
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_client_vpn_route.test"
 
@@ -87,7 +87,7 @@ func testAccClientVPNRoute_disappears(t *testing.T, semaphore tfsync.Semaphore) 
 
 func testAccClientVPNRoute_description(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v ec2.ClientVpnRoute
+	var v awstypes.ClientVpnRoute
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_client_vpn_route.test"
 
@@ -118,7 +118,7 @@ func testAccClientVPNRoute_description(t *testing.T, semaphore tfsync.Semaphore)
 
 func testAccCheckClientVPNRouteDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_client_vpn_route" {
@@ -147,7 +147,7 @@ func testAccCheckClientVPNRouteDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckClientVPNRouteExists(ctx context.Context, name string, v *ec2.ClientVpnRoute) resource.TestCheckFunc {
+func testAccCheckClientVPNRouteExists(ctx context.Context, name string, v *awstypes.ClientVpnRoute) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -159,7 +159,7 @@ func testAccCheckClientVPNRouteExists(ctx context.Context, name string, v *ec2.C
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindClientVPNRouteByThreePartKey(ctx, conn, endpointID, targetSubnetID, destinationCIDR)
 
