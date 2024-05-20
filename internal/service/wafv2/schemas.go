@@ -591,7 +591,7 @@ func requestBodySchema() *schema.Schema {
 						},
 					},
 				},
-				"verifiedaccess_instance": {
+				"verified_access_instance": {
 					Type:     schema.TypeList,
 					Optional: true,
 					Elem: &schema.Resource{

@@ -2940,8 +2940,8 @@ func TestAccWAFV2WebACL_associationConfigRegional(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "association_config.0.request_body.0.cognito_user_pool.0.default_size_inspection_limit", "KB_32"),
 					resource.TestCheckResourceAttr(resourceName, "association_config.0.request_body.0.apprunner_service.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "association_config.0.request_body.0.apprunner_service.0.default_size_inspection_limit", "KB_48"),
-					resource.TestCheckResourceAttr(resourceName, "association_config.0.request_body.0.verifiedaccess_instance.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "association_config.0.request_body.0.verifiedaccess_instance.0.default_size_inspection_limit", "KB_64"),
+					resource.TestCheckResourceAttr(resourceName, "association_config.0.request_body.0.verified_access_instance.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "association_config.0.request_body.0.verified_access_instance.0.default_size_inspection_limit", "KB_64"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.allow.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.#", acctest.Ct0),
@@ -6039,7 +6039,7 @@ resource "aws_wafv2_web_acl" "test" {
       apprunner_service {
         default_size_inspection_limit = "KB_48"
       }
-      verifiedaccess_instance {
+      verified_access_instance {
         default_size_inspection_limit = "KB_64"
       }
     }
