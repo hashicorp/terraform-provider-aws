@@ -80,19 +80,19 @@ A correct example is `accessanalyzer_analyzer.html.markdown`. An incorrect examp
 6. Use the `.go` extension.
 7. Idiomatic names for common non-resource, non-data-source files include `consts.go` (service-wide constants), `find.go` (finders), `flex.go` (FLatteners and EXpanders), `generate.go` (directives for code generation), `id.go` (ID creators and parsers), `status.go` (status functions), `sweep.go` (sweepers), `tags_gen.go` (generated tag code), `validate.go` (validators), and `wait.go` (waiters).
 
-## MixedCaps
+## Mixed Caps
 
-Write multiword names in Go using _MixedCaps_ (or _mixedCaps_) rather than underscores.
+**NOTE:** Mixed Caps is different than camel case, Pascal case, or snake case!
+
+Idiomatic Go uses [_MixedCaps_](https://go.dev/wiki/CodeReviewComments#initialisms) for multiword names in code. Mixed Caps is similar to camel case except **initialisms and abbreviations in mixedCaps should be the correct, human-readable case**, such as `VPCEndpoint` not `VpcEndpoint`. After all, names in code _are for humans_.
+
+An acronym such as "VPC" should either be all capitalized ("VPC") or all lowercase ("vpc"), never "Vpc" or "vPC." Similarly, in mixedCaps, "DynamoDB" should either be "DynamoDB" or "dynamoDB", depending on whether an initial cap is needed or not, and never "dynamoDb" or "DynamoDb."
 
 For more details on capitalizations we enforce with CI Semgrep tests, see the [Caps List](https://github.com/hashicorp/terraform-provider-aws/blob/main/names/caps.md).
 
-Initialisms and other abbreviations are a key difference between many camel/Pascal case interpretations and mixedCaps. **Abbreviations in mixedCaps should be the correct, human-readable case.** After all, names in code _are for humans_. (The mixedCaps convention aligns with HashiCorp's emphasis on pragmatism and beauty.)
-
-For example, an initialism such as "VPC" should either be all capitalized ("VPC") or all lowercase ("vpc"), never "Vpc" or "vPC." Similarly, in mixedCaps, "DynamoDB" should either be "DynamoDB" or "dynamoDB", depending on whether an initial cap is needed or not, and never "dynamoDb" or "DynamoDb."
-
 ### Rule
 
-1. Use _mixedCaps_ for function, type, method, variable, and constant names in the Terraform AWS Provider Go code.
+1. Use _mixedCaps_ for names (such as for functions, types, methods, variables, and constants) in the Terraform AWS Provider Go code.
 
 ## Functions
 
