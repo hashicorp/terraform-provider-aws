@@ -34,7 +34,7 @@ package txtar
 import (
 	"bytes"
 	"fmt"
-	"os"
+	"io/ioutil"
 	"strings"
 )
 
@@ -66,7 +66,7 @@ func Format(a *Archive) []byte {
 
 // ParseFile parses the named file as an archive.
 func ParseFile(file string) (*Archive, error) {
-	data, err := os.ReadFile(file)
+	data, err := ioutil.ReadFile(file)
 	if err != nil {
 		return nil, err
 	}

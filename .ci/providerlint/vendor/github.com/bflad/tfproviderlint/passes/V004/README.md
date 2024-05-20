@@ -1,8 +1,6 @@
 # V004
 
-_This terraform-plugin-sdk (v1) analyzer has been removed in tfproviderlint v0.30.0._
-
-The V004 analyzer reports usage of the deprecated [SingleIP](https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation#SingleIP) validation function that should be replaced with [IsIPAddress](https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation#IsIPAddress).
+The V004 analyzer reports usage of the deprecated [SingleIP](https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/helper/validation#SingleIP) validation function that should be replaced with [IsIPAddress](https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/helper/validation#IsIPAddress).
 
 ## Flagged Code
 

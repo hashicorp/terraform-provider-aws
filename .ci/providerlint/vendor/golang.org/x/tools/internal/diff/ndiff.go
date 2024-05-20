@@ -18,7 +18,7 @@ func Strings(before, after string) []Edit {
 		return nil // common case
 	}
 
-	if isASCII(before) && isASCII(after) {
+	if stringIsASCII(before) && stringIsASCII(after) {
 		// TODO(adonovan): opt: specialize diffASCII for strings.
 		return diffASCII([]byte(before), []byte(after))
 	}
@@ -32,7 +32,7 @@ func Bytes(before, after []byte) []Edit {
 		return nil // common case
 	}
 
-	if isASCII(before) && isASCII(after) {
+	if bytesIsASCII(before) && bytesIsASCII(after) {
 		return diffASCII(before, after)
 	}
 	return diffRunes(runes(before), runes(after))
@@ -88,8 +88,18 @@ func runesLen(runes []rune) (len int) {
 	return len
 }
 
-// isASCII reports whether s contains only ASCII.
-func isASCII[S string | []byte](s S) bool {
+// stringIsASCII reports whether s contains only ASCII.
+// TODO(adonovan): combine when x/tools allows generics.
+func stringIsASCII(s string) bool {
+	for i := 0; i < len(s); i++ {
+		if s[i] >= utf8.RuneSelf {
+			return false
+		}
+	}
+	return true
+}
+
+func bytesIsASCII(s []byte) bool {
 	for i := 0; i < len(s); i++ {
 		if s[i] >= utf8.RuneSelf {
 			return false
