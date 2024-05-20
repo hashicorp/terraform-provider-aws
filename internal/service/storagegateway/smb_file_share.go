@@ -383,7 +383,11 @@ func resourceSMBFileShareUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		if d.HasChange("cache_attributes") {
-			input.CacheAttributes = expandCacheAttributes(d.Get("cache_attributes").([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("cache_attributes"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.CacheAttributes = expandCacheAttributes(v.([]interface{})[0].(map[string]interface{}))
+			} else {
+				input.CacheAttributes = &storagegateway.CacheAttributes{}
+			}
 		}
 
 		if d.HasChange("case_sensitivity") {
