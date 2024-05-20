@@ -174,6 +174,9 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 			},
 			"regions_of_interest": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[regionOfInterestModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(10),
+				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"bounding_box": schema.SingleNestedBlock{
@@ -500,6 +503,68 @@ func (r *resourceStreamProcessor) Update(ctx context.Context, req resource.Updat
 			}
 		}
 
+		if plan.RegionsOfInterest.IsNull() && !state.RegionsOfInterest.IsNull() {
+			in.ParametersToDelete = append(in.ParametersToDelete, awstypes.StreamProcessorParameterToDeleteRegionsOfInterest)
+		}
+
+		if !plan.RegionsOfInterest.Equal(state.RegionsOfInterest) {
+			var regions []awstypes.RegionOfInterest
+
+			planRegions, _ := unwrapListObjectValueOf(plan.RegionsOfInterest, state.RegionsOfInterest, resp.Diagnostics, ctx)
+
+			for i := 0; i < len(planRegions); i++ {
+				planRegion := planRegions[i]
+				region := &awstypes.RegionOfInterest{}
+
+				if !planRegion.BoundingBox.IsNull() {
+					boundingBox, diags := planRegion.BoundingBox.ToPtr(ctx)
+					resp.Diagnostics.Append(diags...)
+
+					region.BoundingBox = &awstypes.BoundingBox{}
+
+					if !boundingBox.Top.IsNull() {
+						region.BoundingBox.Top = aws.Float32(float32(boundingBox.Top.ValueFloat64()))
+					}
+
+					if !boundingBox.Left.IsNull() {
+						region.BoundingBox.Left = aws.Float32(float32(boundingBox.Left.ValueFloat64()))
+					}
+
+					if !boundingBox.Height.IsNull() {
+						region.BoundingBox.Height = aws.Float32(float32(boundingBox.Height.ValueFloat64()))
+					}
+
+					if !boundingBox.Width.IsNull() {
+						region.BoundingBox.Width = aws.Float32(float32(boundingBox.Width.ValueFloat64()))
+					}
+				}
+
+				if !planRegion.Polygon.IsNull() {
+					polygons, diags := planRegion.Polygon.ToSlice(ctx)
+					resp.Diagnostics.Append(diags...)
+
+					plannedPolygons := make([]awstypes.Point, len(polygons))
+
+					for i := 0; i < len(polygons); i++ {
+						polygon := polygons[i]
+						plannedPolygons[i] = awstypes.Point{}
+
+						if !polygon.X.IsNull() {
+							plannedPolygons[i].X = aws.Float32(float32(polygon.X.ValueFloat64()))
+						}
+
+						if !polygon.Y.IsNull() {
+							plannedPolygons[i].Y = aws.Float32(float32(polygon.Y.ValueFloat64()))
+						}
+					}
+					region.Polygon = plannedPolygons
+				}
+				regions = append(regions, *region)
+			}
+
+			in.RegionsOfInterestForUpdate = regions
+		}
+
 		_, err := conn.UpdateStreamProcessor(ctx, in)
 		if err != nil {
 			resp.Diagnostics.AddError(
@@ -674,6 +739,16 @@ func unwrapObjectValueOf[T any](plan fwtypes.ObjectValueOf[T], state fwtypes.Obj
 	diagnostics.Append(diags...)
 
 	ptrState, diags := state.ToPtr(ctx)
+	diagnostics.Append(diags...)
+
+	return ptrPlan, ptrState
+}
+
+func unwrapListObjectValueOf[T any](plan fwtypes.ListNestedObjectValueOf[T], state fwtypes.ListNestedObjectValueOf[T], diagnostics diag.Diagnostics, ctx context.Context) ([]*T, []*T) {
+	ptrPlan, diags := plan.ToSlice(ctx)
+	diagnostics.Append(diags...)
+
+	ptrState, diags := state.ToSlice(ctx)
 	diagnostics.Append(diags...)
 
 	return ptrPlan, ptrState
