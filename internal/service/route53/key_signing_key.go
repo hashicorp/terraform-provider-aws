@@ -280,6 +280,10 @@ func resourceKeySigningKeyDelete(ctx context.Context, d *schema.ResourceData, me
 
 		output, err := conn.DeactivateKeySigningKey(ctx, input)
 
+		if errs.IsA[*awstypes.NoSuchKeySigningKey](err) {
+			return diags
+		}
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "deactivating Route 53 Key Signing Key (%s): %s", d.Id(), err)
 		}
