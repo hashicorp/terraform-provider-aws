@@ -356,7 +356,7 @@ func waitRouteTableAssociationDeleted(ctx context.Context, conn *ec2.Client, id 
 	return nil, err
 }
 
-func waitRouteTableAssociationUpdated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.RouteTableAssociationState, error) {
+func waitRouteTableAssociationUpdated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.RouteTableAssociationState, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.RouteTableAssociationStateCodeAssociating),
 		Target:  enum.Slice(types.RouteTableAssociationStateCodeAssociated),
@@ -725,7 +725,7 @@ func waitVPNConnectionDeleted(ctx context.Context, conn *ec2.Client, id string) 
 	return nil, err
 }
 
-func waitVPNConnectionUpdated(ctx context.Context, conn *ec2.Client, id string) (*types.VpnConnection, error) {
+func waitVPNConnectionUpdated(ctx context.Context, conn *ec2.Client, id string) (*types.VpnConnection, error) { //nolint:unparam
 	const (
 		timeout = 30 * time.Minute
 	)
@@ -831,7 +831,7 @@ func waitVPNGatewayDeleted(ctx context.Context, conn *ec2.Client, id string) (*t
 	return nil, err
 }
 
-func waitVPNGatewayVPCAttachmentAttached(ctx context.Context, conn *ec2.Client, vpnGatewayID, vpcID string) (*types.VpcAttachment, error) {
+func waitVPNGatewayVPCAttachmentAttached(ctx context.Context, conn *ec2.Client, vpnGatewayID, vpcID string) (*types.VpcAttachment, error) { //nolint:unparam
 	const (
 		timeout = 15 * time.Minute
 	)
@@ -851,7 +851,7 @@ func waitVPNGatewayVPCAttachmentAttached(ctx context.Context, conn *ec2.Client, 
 	return nil, err
 }
 
-func waitVPNGatewayVPCAttachmentDetached(ctx context.Context, conn *ec2.Client, vpnGatewayID, vpcID string) (*types.VpcAttachment, error) {
+func waitVPNGatewayVPCAttachmentDetached(ctx context.Context, conn *ec2.Client, vpnGatewayID, vpcID string) (*types.VpcAttachment, error) { //nolint:unparam
 	const (
 		timeout = 30 * time.Minute
 	)
