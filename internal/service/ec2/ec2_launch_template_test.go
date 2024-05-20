@@ -461,7 +461,7 @@ func TestAccEC2LaunchTemplate_data(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.delete_on_termination", ""),
 					resource.TestCheckResourceAttr(resourceName, "placement.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "ram_disk_id"),
-					resource.TestCheckResourceAttr(resourceName, "tag_specifications.#", "4"),
+					resource.TestCheckResourceAttr(resourceName, "tag_specifications.#", acctest.Ct4),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", acctest.Ct1),
 				),
 			},

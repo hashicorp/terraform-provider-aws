@@ -2469,8 +2469,8 @@ func TestAccEC2Fleet_OnDemandOptions_CapacityReservationOptions(t *testing.T) {
 				Config: testAccFleetConfig_onDemandOptionsCapacityReservationOptions(rName, "use-capacity-reservations-first"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "on_demand_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "on_demand_options.0.capacity_reservation_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "on_demand_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "on_demand_options.0.capacity_reservation_options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "on_demand_options.0.capacity_reservation_options.0.usage_strategy", "use-capacity-reservations-first"),
 				),
 			},
