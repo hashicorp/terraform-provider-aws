@@ -234,8 +234,8 @@ github.com/OpenPeeDeeP/depguard/v2 v2.2.0/go.mod h1:CIzddKRvLBC4Au5aYP/i3nyaWQ+C
 github.com/ProtonMail/go-crypto v0.0.0-20230217124315-7d5c6f04bbb8/go.mod h1:I0gYDMZ6Z5GRU7l58bNFSkPTFN6Yl12dsUlAZ8xy98g=
 github.com/ProtonMail/go-crypto v1.1.0-alpha.1-proton h1:R+MMcIpg1nTjsYabIeFNR18j2V+3WT25xClrsrR0O6A=
 github.com/ProtonMail/go-crypto v1.1.0-alpha.1-proton/go.mod h1:rA3QumHc/FZ8pAHreoekgiAbzpNsfQAosU5td4SnOrE=
-github.com/YakDriver/tfproviderdocs v0.12.0 h1:nAUduFAut7I284/lZG6ODdNmGBwqkZm6+67AXwa4RAk=
-github.com/YakDriver/tfproviderdocs v0.12.0/go.mod h1:jhtn0KyVjpEls7APqBDSZsPoS9IDMY89XfVaXf/mnA4=
+github.com/YakDriver/tfproviderdocs v0.13.0 h1:MTM88fRxOrF3GhMSrleu/IDsvBkOXP8pvOpjFHEJjm0=
+github.com/YakDriver/tfproviderdocs v0.13.0/go.mod h1:jhtn0KyVjpEls7APqBDSZsPoS9IDMY89XfVaXf/mnA4=
 github.com/agext/levenshtein v1.2.3 h1:YB2fHEn0UJagG8T1rrWknE3ZQzWM06O8AMAatNn7lmo=
 github.com/agext/levenshtein v1.2.3/go.mod h1:JEDfjyjHDjOF/1e4FlBE/PkbqA9OfWu2ki2W0IB5558=
 github.com/alcortesm/tgz v0.0.0-20161220082320-9c5fe88206d7/go.mod h1:6zEj6s6u/ghQa61ZWa/C2Aw3RkjiTBOix7dkqa1VLIs=
