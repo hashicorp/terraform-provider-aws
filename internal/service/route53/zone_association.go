@@ -92,7 +92,10 @@ func resourceZoneAssociationCreate(ctx context.Context, d *schema.ResourceData, 
 
 	if output.ChangeInfo != nil {
 		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for Route 53 Zone Association (%s) synchronize: %s", d.Id(), err)
+			// AccessDenied errors likely due to cross-account issue.
+			if !tfawserr.ErrCodeEquals(err, errCodeAccessDenied) {
+				return sdkdiag.AppendErrorf(diags, "waiting for Route 53 Zone Association (%s) synchronize: %s", d.Id(), err)
+			}
 		}
 	}
 
@@ -173,7 +176,10 @@ func resourceZoneAssociationDelete(ctx context.Context, d *schema.ResourceData, 
 
 	if output.ChangeInfo != nil {
 		if _, err := waitChangeInsync(ctx, conn, aws.ToString(output.ChangeInfo.Id)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for Route 53 Zone Association (%s) synchronize: %s", d.Id(), err)
+			// AccessDenied errors likely due to cross-account issue.
+			if !tfawserr.ErrCodeEquals(err, errCodeAccessDenied) {
+				return sdkdiag.AppendErrorf(diags, "waiting for Route 53 Zone Association (%s) synchronize: %s", d.Id(), err)
+			}
 		}
 	}
 
