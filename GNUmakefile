@@ -115,6 +115,7 @@ cleango: prereq-go ## Clean up Go cache
 	done ; \
 	echo "make: cleaning Go caches..." ; \
 	$(GO_VER) clean -modcache -testcache -cache -i -r
+	go clean -modcache -testcache -cache -i -r
 	@echo "make: Go caches cleaned"
 
 cleantidy: prereq-go ## Clean up tidy
@@ -155,7 +156,7 @@ depscheck: cleantidy ## Verify dependencies are tidy
 
 docs-lint: ## Lint documentation
 	@echo "make: checking docs against linters..."
-	@misspell -error -source=text docs/ || (echo; \
+	@misspell -error -source text docs/ || (echo; \
 		echo "Unexpected misspelling found in docs files."; \
 		echo "To automatically fix the misspelling, run 'make docs-lint-fix' and commit the changes."; \
 		exit 1)
@@ -264,9 +265,23 @@ lint: golangci-lint providerlint importlint ## Run all linters
 
 lint-fix: testacc-lint-fix website-lint-fix docs-lint-fix ## Fix all linter findings
 
-misspell:
-	@echo: "make: Checking the spelling of the codebase..."
+misspell-changelog:
+	@echo "make: CHANGELOG Misspell / misspell..."
 	@misspell -error -source text CHANGELOG.md .changelog
+
+misspell-docs:
+	@echo "make: Documentation Checks / misspell..."
+	@misspell -error -source text docs/
+
+misspell-website:
+	@echo "make: Website Checks / misspell..."
+	@misspell -error -source text website/docs/d website/docs/functions website/docs/guides website/docs/r website/docs/index.html.markdown
+
+misspell-go:
+	@echo "make: Provider Checks / misspell..."
+	@misspell -error -source auto internal/
+
+misspell: misspell-changelog misspell-docs misspell-website misspell-go ## Run misspell
 
 preferredlib:
 	@found=`git diff origin/$(BASE_REF) internal/ | grep '^\+\s*"github.com/aws/aws-sdk-go/'` ; \
@@ -604,11 +619,16 @@ yamllint: ## Lint YAML files (via yamllint)
 # Please keep targets in alphabetical order
 .PHONY: \
 	acctestlint \
+	awssdkpatch \
+	awssdkpatch-apply \
+	awssdkpatch-gen \
 	build \
 	clean \
 	cleango \
+	cleanplugin \
 	cleantidy \
 	copyright \
+	default \
 	depscheck \
 	docs-lint \
 	docs-lint-fix \
@@ -622,17 +642,24 @@ yamllint: ## Lint YAML files (via yamllint)
 	gencheck \
 	generate-changelog \
 	gh-workflows-lint \
+	go_build \
 	golangci-lint \
+	golangci-lint1 \
+	golangci-lint2 \
 	help \
 	importlint \
 	install \
 	lint \
 	lint-fix \
+	misspell \
+	preferredlib \
 	prereq-go \
+	provcheckmarkdownlint \
 	providerlint \
 	sane \
 	sanity \
 	semall \
+	semcodequality \
 	semconstants \
 	semfix \
 	semgrep \
@@ -648,11 +675,12 @@ yamllint: ## Lint YAML files (via yamllint)
 	testacc-lint-fix \
 	testacc-short \
 	testacc-tflint \
+	tfproviderdocs \
 	tfsdk2fw \
 	tools \
 	ts \
-	website-lint \
 	website-link-check \
 	website-link-check-ghrc \
+	website-lint \
 	website-lint-fix \
-	yamllint
+	yamllint \
