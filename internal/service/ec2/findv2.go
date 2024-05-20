@@ -669,6 +669,61 @@ func findPlacementGroupByName(ctx context.Context, conn *ec2.Client, name string
 	return output, nil
 }
 
+func findPublicIPv4Pool(ctx context.Context, conn *ec2.Client, input *ec2.DescribePublicIpv4PoolsInput) (*awstypes.PublicIpv4Pool, error) {
+	output, err := findPublicIPv4Pools(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findPublicIPv4Pools(ctx context.Context, conn *ec2.Client, input *ec2.DescribePublicIpv4PoolsInput) ([]awstypes.PublicIpv4Pool, error) {
+	var output []awstypes.PublicIpv4Pool
+
+	pages := ec2.NewDescribePublicIpv4PoolsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidPublicIpv4PoolIDNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.PublicIpv4Pools...)
+	}
+
+	return output, nil
+}
+
+func findPublicIPv4PoolByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.PublicIpv4Pool, error) {
+	input := &ec2.DescribePublicIpv4PoolsInput{
+		PoolIds: []string{id},
+	}
+
+	output, err := findPublicIPv4Pool(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.PoolId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
 func findVolumeAttachmentInstanceByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Instance, error) {
 	input := &ec2.DescribeInstancesInput{
 		InstanceIds: []string{id},

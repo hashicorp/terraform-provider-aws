@@ -6,8 +6,8 @@ package ec2
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -35,15 +35,15 @@ func DataSourcePublicIPv4Pools() *schema.Resource {
 
 func dataSourcePublicIPv4PoolsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribePublicIpv4PoolsInput{}
 
-	input.Filters = append(input.Filters, newTagFilterList(
-		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
+	input.Filters = append(input.Filters, newTagFilterListV2(
+		TagsV2(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
 	)...)
 
-	input.Filters = append(input.Filters, newCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterListV2(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
@@ -51,7 +51,7 @@ func dataSourcePublicIPv4PoolsRead(ctx context.Context, d *schema.ResourceData, 
 		input.Filters = nil
 	}
 
-	output, err := FindPublicIPv4Pools(ctx, conn, input)
+	output, err := findPublicIPv4Pools(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Public IPv4 Pools: %s", err)
@@ -60,7 +60,7 @@ func dataSourcePublicIPv4PoolsRead(ctx context.Context, d *schema.ResourceData, 
 	var poolIDs []string
 
 	for _, v := range output {
-		poolIDs = append(poolIDs, aws.StringValue(v.PoolId))
+		poolIDs = append(poolIDs, aws.ToString(v.PoolId))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)

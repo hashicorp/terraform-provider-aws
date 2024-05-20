@@ -48,6 +48,7 @@ var (
 	FindNetworkACLByIDV2                                   = findNetworkACLByIDV2
 	FindNetworkInterfaceByIDV2                             = findNetworkInterfaceByIDV2
 	FindPlacementGroupByName                               = findPlacementGroupByName
+	FindPublicIPv4Pools                                    = findPublicIPv4Pools
 	FindRouteByIPv4DestinationV2                           = findRouteByIPv4DestinationV2
 	FindRouteByIPv6DestinationV2                           = findRouteByIPv6DestinationV2
 	FindRouteByPrefixListIDDestinationV2                   = findRouteByPrefixListIDDestinationV2

@@ -6,8 +6,8 @@ package ec2
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -73,11 +73,11 @@ func DataSourcePublicIPv4Pool() *schema.Resource {
 
 func dataSourcePublicIPv4PoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	poolID := d.Get("pool_id").(string)
-	pool, err := FindPublicIPv4PoolByID(ctx, conn, poolID)
+	pool, err := findPublicIPv4PoolByID(ctx, conn, poolID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Public IPv4 Pool (%s): %s", poolID, err)
@@ -98,33 +98,29 @@ func dataSourcePublicIPv4PoolRead(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func flattenPublicIPv4PoolRange(apiObject *ec2.PublicIpv4PoolRange) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
+func flattenPublicIPv4PoolRange(apiObject awstypes.PublicIpv4PoolRange) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.AddressCount; v != nil {
-		tfMap["address_count"] = aws.Int64Value(v)
+		tfMap["address_count"] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.AvailableAddressCount; v != nil {
-		tfMap["available_address_count"] = aws.Int64Value(v)
+		tfMap["available_address_count"] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.FirstAddress; v != nil {
-		tfMap["first_address"] = aws.StringValue(v)
+		tfMap["first_address"] = aws.ToString(v)
 	}
 
 	if v := apiObject.LastAddress; v != nil {
-		tfMap["last_address"] = aws.StringValue(v)
+		tfMap["last_address"] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func flattenPublicIPv4PoolRanges(apiObjects []*ec2.PublicIpv4PoolRange) []interface{} {
+func flattenPublicIPv4PoolRanges(apiObjects []awstypes.PublicIpv4PoolRange) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -132,10 +128,6 @@ func flattenPublicIPv4PoolRanges(apiObjects []*ec2.PublicIpv4PoolRange) []interf
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
 		tfList = append(tfList, flattenPublicIPv4PoolRange(apiObject))
 	}
 
