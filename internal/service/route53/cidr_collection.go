@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -151,6 +152,10 @@ func (r *cidrCollectionResource) Delete(ctx context.Context, request resource.De
 	_, err := conn.DeleteCidrCollection(ctx, &route53.DeleteCidrCollectionInput{
 		Id: fwflex.StringFromFramework(ctx, data.ID),
 	})
+
+	if errs.IsA[*awstypes.NoSuchCidrCollectionException](err) {
+		return
+	}
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("deleting Route 53 CIDR Collection (%s)", data.ID.ValueString()), err.Error())
