@@ -8,10 +8,11 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -24,7 +25,7 @@ import (
 )
 
 // @SDKResource("aws_ec2_client_vpn_authorization_rule", name="Client VPN Authorization Rule")
-func ResourceClientVPNAuthorizationRule() *schema.Resource {
+func resourceClientVPNAuthorizationRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClientVPNAuthorizationRuleCreate,
 		ReadWithoutTimeout:   resourceClientVPNAuthorizationRuleRead,
@@ -35,8 +36,8 @@ func ResourceClientVPNAuthorizationRule() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(ClientVPNAuthorizationRuleCreatedTimeout),
-			Delete: schema.DefaultTimeout(ClientVPNAuthorizationRuleDeletedTimeout),
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -75,7 +76,7 @@ func ResourceClientVPNAuthorizationRule() *schema.Resource {
 
 func resourceClientVPNAuthorizationRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	endpointID := d.Get("client_vpn_endpoint_id").(string)
 	targetNetworkCIDR := d.Get("target_network_cidr").(string)
@@ -100,7 +101,7 @@ func resourceClientVPNAuthorizationRuleCreate(ctx context.Context, d *schema.Res
 	}
 
 	id := ClientVPNAuthorizationRuleCreateResourceID(endpointID, targetNetworkCIDR, accessGroupID)
-	_, err := conn.AuthorizeClientVpnIngressWithContext(ctx, input)
+	_, err := conn.AuthorizeClientVpnIngress(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "authorizing EC2 Client VPN Authorization Rule (%s): %s", id, err)
@@ -108,7 +109,7 @@ func resourceClientVPNAuthorizationRuleCreate(ctx context.Context, d *schema.Res
 
 	d.SetId(id)
 
-	if _, err := WaitClientVPNAuthorizationRuleCreated(ctx, conn, endpointID, targetNetworkCIDR, accessGroupID, d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitClientVPNAuthorizationRuleCreated(ctx, conn, endpointID, targetNetworkCIDR, accessGroupID, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Client VPN Authorization Rule (%s) create: %s", d.Id(), err)
 	}
 
@@ -117,14 +118,14 @@ func resourceClientVPNAuthorizationRuleCreate(ctx context.Context, d *schema.Res
 
 func resourceClientVPNAuthorizationRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	endpointID, targetNetworkCIDR, accessGroupID, err := ClientVPNAuthorizationRuleParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	rule, err := FindClientVPNAuthorizationRuleByThreePartKey(ctx, conn, endpointID, targetNetworkCIDR, accessGroupID)
+	rule, err := findClientVPNAuthorizationRuleByThreePartKey(ctx, conn, endpointID, targetNetworkCIDR, accessGroupID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Client VPN Authorization Rule (%s) not found, removing from state", d.Id())
@@ -147,7 +148,7 @@ func resourceClientVPNAuthorizationRuleRead(ctx context.Context, d *schema.Resou
 
 func resourceClientVPNAuthorizationRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	endpointID, targetNetworkCIDR, accessGroupID, err := ClientVPNAuthorizationRuleParseResourceID(d.Id())
 	if err != nil {
@@ -164,7 +165,7 @@ func resourceClientVPNAuthorizationRuleDelete(ctx context.Context, d *schema.Res
 	}
 
 	log.Printf("[DEBUG] Deleting EC2 Client VPN Authorization Rule: %s", d.Id())
-	_, err = conn.RevokeClientVpnIngressWithContext(ctx, input)
+	_, err = conn.RevokeClientVpnIngress(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidClientVPNEndpointIdNotFound, errCodeInvalidClientVPNAuthorizationRuleNotFound) {
 		return diags
@@ -174,7 +175,7 @@ func resourceClientVPNAuthorizationRuleDelete(ctx context.Context, d *schema.Res
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 Client VPN Authorization Rule (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitClientVPNAuthorizationRuleDeleted(ctx, conn, endpointID, targetNetworkCIDR, accessGroupID, d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitClientVPNAuthorizationRuleDeleted(ctx, conn, endpointID, targetNetworkCIDR, accessGroupID, d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 Client VPN Authorization Rule (%s): waiting for completion: %s", d.Id(), err)
 	}
 

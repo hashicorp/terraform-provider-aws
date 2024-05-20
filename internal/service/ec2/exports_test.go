@@ -5,6 +5,10 @@ package ec2
 
 // Exports for use in tests only.
 var (
+	ResourceClientVPNAuthorizationRule      = resourceClientVPNAuthorizationRule
+	ResourceClientVPNEndpoint               = resourceClientVPNEndpoint
+	ResourceClientVPNNetworkAssociation     = resourceClientVPNNetworkAssociation
+	ResourceClientVPNRoute                  = resourceClientVPNRoute
 	ResourceCustomerGateway                 = resourceCustomerGateway
 	ResourceDefaultNetworkACL               = resourceDefaultNetworkACL
 	ResourceDefaultRouteTable               = resourceDefaultRouteTable
@@ -32,6 +36,10 @@ var (
 	ResourceVPNGatewayRoutePropagation      = resourceVPNGatewayRoutePropagation
 
 	CustomFiltersSchema                                    = customFiltersSchema
+	FindClientVPNAuthorizationRuleByThreePartKey           = findClientVPNAuthorizationRuleByThreePartKey
+	FindClientVPNEndpointByID                              = findClientVPNEndpointByID
+	FindClientVPNNetworkAssociationByTwoPartKey            = findClientVPNNetworkAssociationByTwoPartKey
+	FindClientVPNRouteByThreePartKey                       = findClientVPNRouteByThreePartKey
 	FindEBSVolumeAttachment                                = findVolumeAttachment
 	FindEIPByAllocationID                                  = findEIPByAllocationID
 	FindEIPByAssociationID                                 = findEIPByAssociationID

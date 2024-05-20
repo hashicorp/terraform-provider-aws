@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -23,7 +23,7 @@ import (
 
 func testAccClientVPNAuthorizationRule_basic(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v ec2.AuthorizationRule
+	var v awstypes.AuthorizationRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_client_vpn_authorization_rule.test"
 	subnetResourceName := "aws_subnet.test.0"
@@ -57,7 +57,7 @@ func testAccClientVPNAuthorizationRule_basic(t *testing.T, semaphore tfsync.Sema
 
 func testAccClientVPNAuthorizationRule_disappears(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v ec2.AuthorizationRule
+	var v awstypes.AuthorizationRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_client_vpn_authorization_rule.test"
 
@@ -84,7 +84,7 @@ func testAccClientVPNAuthorizationRule_disappears(t *testing.T, semaphore tfsync
 
 func testAccClientVPNAuthorizationRule_Disappears_endpoint(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v ec2.AuthorizationRule
+	var v awstypes.AuthorizationRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_client_vpn_authorization_rule.test"
 
@@ -111,7 +111,7 @@ func testAccClientVPNAuthorizationRule_Disappears_endpoint(t *testing.T, semapho
 
 func testAccClientVPNAuthorizationRule_groups(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v ec2.AuthorizationRule
+	var v awstypes.AuthorizationRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource1Name := "aws_ec2_client_vpn_authorization_rule.test1"
 	resource2Name := "aws_ec2_client_vpn_authorization_rule.test2"
@@ -186,7 +186,7 @@ func testAccClientVPNAuthorizationRule_groups(t *testing.T, semaphore tfsync.Sem
 
 func testAccClientVPNAuthorizationRule_subnets(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v ec2.AuthorizationRule
+	var v awstypes.AuthorizationRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource1Name := "aws_ec2_client_vpn_authorization_rule.test1"
 	resource2Name := "aws_ec2_client_vpn_authorization_rule.test2"
@@ -244,7 +244,7 @@ func testAccClientVPNAuthorizationRule_subnets(t *testing.T, semaphore tfsync.Se
 
 func testAccCheckClientVPNAuthorizationRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_client_vpn_authorization_rule" {
@@ -273,7 +273,7 @@ func testAccCheckClientVPNAuthorizationRuleDestroy(ctx context.Context) resource
 	}
 }
 
-func testAccCheckClientVPNAuthorizationRuleExists(ctx context.Context, name string, v *ec2.AuthorizationRule) resource.TestCheckFunc {
+func testAccCheckClientVPNAuthorizationRuleExists(ctx context.Context, name string, v *awstypes.AuthorizationRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -285,7 +285,7 @@ func testAccCheckClientVPNAuthorizationRuleExists(ctx context.Context, name stri
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindClientVPNAuthorizationRuleByThreePartKey(ctx, conn, endpointID, targetNetworkCIDR, accessGroupID)
 

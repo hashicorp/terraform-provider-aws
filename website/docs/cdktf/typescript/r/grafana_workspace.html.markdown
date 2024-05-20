@@ -71,7 +71,7 @@ The following arguments are optional:
 * `configuration` - (Optional) The configuration string for the workspace that you create. For more information about the format and configuration options available, see [Working in your Grafana workspace](https://docs.aws.amazon.com/grafana/latest/userguide/AMG-configure-workspace.html).
 * `dataSources` - (Optional) The data sources for the workspace. Valid values are `AMAZON_OPENSEARCH_SERVICE`, `ATHENA`, `CLOUDWATCH`, `PROMETHEUS`, `REDSHIFT`, `SITEWISE`, `TIMESTREAM`, `XRAY`
 * `description` - (Optional) The workspace description.
-* `grafanaVersion` - (Optional) Specifies the version of Grafana to support in the new workspace. Supported values are `8.4` and `9.4`. If not specified, defaults to `8.4`.
+* `grafanaVersion` - (Optional) Specifies the version of Grafana to support in the new workspace. Supported values are `8.4`, `9.4` and `10.4`. If not specified, defaults to `9.4`.
 * `name` - (Optional) The Grafana workspace name.
 * `networkAccessControl` - (Optional) Configuration for network access to your workspace.See [Network Access Control](#network-access-control) below.
 * `notificationDestinations` - (Optional) The notification destinations. If a data source is specified here, Amazon Managed Grafana will create IAM roles and permissions needed to use these destinations. Must be set to `SNS`.
@@ -129,4 +129,4 @@ Using `terraform import`, import Grafana Workspace using the workspace's `id`. F
 % terraform import aws_grafana_workspace.example g-2054c75a02
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-820d8fa60d26cc380b30e0e075e8870fa4551ee953fef3e08d695a7c4dd8f5a0 -->
+<!-- cache-key: cdktf-0.20.1 input-7495c5f13ac0a841311b7c1ed9f599029aaf6505a3718c8bd92bf5dc10f55092 -->

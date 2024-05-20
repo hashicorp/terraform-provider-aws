@@ -54,6 +54,7 @@ func ReadResource_Response(in *tfprotov5.ReadResourceResponse) *tfplugin5.ReadRe
 		Diagnostics: Diagnostics(in.Diagnostics),
 		NewState:    DynamicValue(in.NewState),
 		Private:     in.Private,
+		Deferred:    Deferred(in.Deferred),
 	}
 
 	return resp
@@ -70,6 +71,7 @@ func PlanResourceChange_Response(in *tfprotov5.PlanResourceChangeResponse) *tfpl
 		PlannedPrivate:   in.PlannedPrivate,
 		PlannedState:     DynamicValue(in.PlannedState),
 		RequiresReplace:  AttributePaths(in.RequiresReplace),
+		Deferred:         Deferred(in.Deferred),
 	}
 
 	return resp
@@ -98,6 +100,7 @@ func ImportResourceState_Response(in *tfprotov5.ImportResourceStateResponse) *tf
 	resp := &tfplugin5.ImportResourceState_Response{
 		Diagnostics:       Diagnostics(in.Diagnostics),
 		ImportedResources: ImportResourceState_ImportedResources(in.ImportedResources),
+		Deferred:          Deferred(in.Deferred),
 	}
 
 	return resp
