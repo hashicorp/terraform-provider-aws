@@ -6,7 +6,6 @@ package route53
 import (
 	"context"
 	"fmt"
-	"sort"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
@@ -218,8 +217,6 @@ func hostedZoneNameServers(ctx context.Context, conn *route53.Client, zoneID, zo
 			return nil, fmt.Errorf("reading Route53 Hosted Zone (%s) name servers: %w", zoneID, err)
 		}
 	}
-
-	sort.Strings(nameServers)
 
 	return nameServers, nil
 }
