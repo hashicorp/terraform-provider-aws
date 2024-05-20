@@ -219,7 +219,7 @@ func findVPCDefaultSecurityGroupV2(ctx context.Context, conn *ec2.Client, id str
 	return findSecurityGroupV2(ctx, conn, input)
 }
 
-func findVPCMainRouteTableV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.RouteTable, error) {
+func findVPCMainRouteTable(ctx context.Context, conn *ec2.Client, id string) (*awstypes.RouteTable, error) {
 	input := &ec2.DescribeRouteTablesInput{
 		Filters: newAttributeFilterListV2(map[string]string{
 			"association.main": "true",
@@ -227,11 +227,11 @@ func findVPCMainRouteTableV2(ctx context.Context, conn *ec2.Client, id string) (
 		}),
 	}
 
-	return findRouteTableV2(ctx, conn, input)
+	return findRouteTable(ctx, conn, input)
 }
 
-func findRouteTableV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRouteTablesInput) (*awstypes.RouteTable, error) {
-	output, err := findRouteTablesV2(ctx, conn, input)
+func findRouteTable(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRouteTablesInput) (*awstypes.RouteTable, error) {
+	output, err := findRouteTables(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -240,7 +240,7 @@ func findRouteTableV2(ctx context.Context, conn *ec2.Client, input *ec2.Describe
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findRouteTablesV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRouteTablesInput) ([]awstypes.RouteTable, error) {
+func findRouteTables(ctx context.Context, conn *ec2.Client, input *ec2.DescribeRouteTablesInput) ([]awstypes.RouteTable, error) {
 	var output []awstypes.RouteTable
 
 	pages := ec2.NewDescribeRouteTablesPaginator(conn, input)
@@ -610,24 +610,24 @@ func findVPCEndpointServiceConfigurationsV2(ctx context.Context, conn *ec2.Clien
 	return output, nil
 }
 
-// findRouteTableByIDV2 returns the route table corresponding to the specified identifier.
+// findRouteTableByID returns the route table corresponding to the specified identifier.
 // Returns NotFoundError if no route table is found.
-func findRouteTableByIDV2(ctx context.Context, conn *ec2.Client, routeTableID string) (*awstypes.RouteTable, error) {
+func findRouteTableByID(ctx context.Context, conn *ec2.Client, routeTableID string) (*awstypes.RouteTable, error) {
 	input := &ec2.DescribeRouteTablesInput{
 		RouteTableIds: []string{routeTableID},
 	}
 
-	return findRouteTableV2(ctx, conn, input)
+	return findRouteTable(ctx, conn, input)
 }
 
-// routeFinderV2 returns the route corresponding to the specified destination.
+// routeFinder returns the route corresponding to the specified destination.
 // Returns NotFoundError if no route is found.
-type routeFinderV2 func(context.Context, *ec2.Client, string, string) (*awstypes.Route, error)
+type routeFinder func(context.Context, *ec2.Client, string, string) (*awstypes.Route, error)
 
-// findRouteByIPv4DestinationV2 returns the route corresponding to the specified IPv4 destination.
+// findRouteByIPv4Destination returns the route corresponding to the specified IPv4 destination.
 // Returns NotFoundError if no route is found.
-func findRouteByIPv4DestinationV2(ctx context.Context, conn *ec2.Client, routeTableID, destinationCidr string) (*awstypes.Route, error) {
-	routeTable, err := findRouteTableByIDV2(ctx, conn, routeTableID)
+func findRouteByIPv4Destination(ctx context.Context, conn *ec2.Client, routeTableID, destinationCidr string) (*awstypes.Route, error) {
+	routeTable, err := findRouteTableByID(ctx, conn, routeTableID)
 
 	if err != nil {
 		return nil, err
@@ -644,10 +644,10 @@ func findRouteByIPv4DestinationV2(ctx context.Context, conn *ec2.Client, routeTa
 	}
 }
 
-// findRouteByIPv6DestinationV2 returns the route corresponding to the specified IPv6 destination.
+// findRouteByIPv6Destination returns the route corresponding to the specified IPv6 destination.
 // Returns NotFoundError if no route is found.
-func findRouteByIPv6DestinationV2(ctx context.Context, conn *ec2.Client, routeTableID, destinationIpv6Cidr string) (*awstypes.Route, error) {
-	routeTable, err := findRouteTableByIDV2(ctx, conn, routeTableID)
+func findRouteByIPv6Destination(ctx context.Context, conn *ec2.Client, routeTableID, destinationIpv6Cidr string) (*awstypes.Route, error) {
+	routeTable, err := findRouteTableByID(ctx, conn, routeTableID)
 
 	if err != nil {
 		return nil, err
@@ -664,10 +664,10 @@ func findRouteByIPv6DestinationV2(ctx context.Context, conn *ec2.Client, routeTa
 	}
 }
 
-// findRouteByPrefixListIDDestinationV2 returns the route corresponding to the specified prefix list destination.
+// findRouteByPrefixListIDDestination returns the route corresponding to the specified prefix list destination.
 // Returns NotFoundError if no route is found.
-func findRouteByPrefixListIDDestinationV2(ctx context.Context, conn *ec2.Client, routeTableID, prefixListID string) (*awstypes.Route, error) {
-	routeTable, err := findRouteTableByIDV2(ctx, conn, routeTableID)
+func findRouteByPrefixListIDDestination(ctx context.Context, conn *ec2.Client, routeTableID, prefixListID string) (*awstypes.Route, error) {
+	routeTable, err := findRouteTableByID(ctx, conn, routeTableID)
 	if err != nil {
 		return nil, err
 	}
@@ -683,16 +683,58 @@ func findRouteByPrefixListIDDestinationV2(ctx context.Context, conn *ec2.Client,
 	}
 }
 
-// findRouteTableAssociationByIDV2 returns the route table association corresponding to the specified identifier.
+// findMainRouteTableAssociationByID returns the main route table association corresponding to the specified identifier.
 // Returns NotFoundError if no route table association is found.
-func findRouteTableAssociationByIDV2(ctx context.Context, conn *ec2.Client, associationID string) (*awstypes.RouteTableAssociation, error) {
+func findMainRouteTableAssociationByID(ctx context.Context, conn *ec2.Client, associationID string) (*awstypes.RouteTableAssociation, error) {
+	association, err := findRouteTableAssociationByID(ctx, conn, associationID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !aws.ToBool(association.Main) {
+		return nil, &retry.NotFoundError{
+			Message: fmt.Sprintf("%s is not the association with the main route table", associationID),
+		}
+	}
+
+	return association, err
+}
+
+// findMainRouteTableAssociationByVPCID returns the main route table association for the specified VPC.
+// Returns NotFoundError if no route table association is found.
+func findMainRouteTableAssociationByVPCID(ctx context.Context, conn *ec2.Client, vpcID string) (*awstypes.RouteTableAssociation, error) {
+	routeTable, err := findMainRouteTableByVPCID(ctx, conn, vpcID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, association := range routeTable.Associations {
+		if aws.ToBool(association.Main) {
+			if association.AssociationState != nil {
+				if state := association.AssociationState.State; state == awstypes.RouteTableAssociationStateCodeDisassociated {
+					continue
+				}
+			}
+
+			return &association, nil
+		}
+	}
+
+	return nil, &retry.NotFoundError{}
+}
+
+// findRouteTableAssociationByID returns the route table association corresponding to the specified identifier.
+// Returns NotFoundError if no route table association is found.
+func findRouteTableAssociationByID(ctx context.Context, conn *ec2.Client, associationID string) (*awstypes.RouteTableAssociation, error) {
 	input := &ec2.DescribeRouteTablesInput{
 		Filters: newAttributeFilterListV2(map[string]string{
 			"association.route-table-association-id": associationID,
 		}),
 	}
 
-	routeTable, err := findRouteTableV2(ctx, conn, input)
+	routeTable, err := findRouteTable(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -713,9 +755,9 @@ func findRouteTableAssociationByIDV2(ctx context.Context, conn *ec2.Client, asso
 	return nil, &retry.NotFoundError{}
 }
 
-// findMainRouteTableByVPCIDV2 returns the main route table for the specified VPC.
+// findMainRouteTableByVPCID returns the main route table for the specified VPC.
 // Returns NotFoundError if no route table is found.
-func findMainRouteTableByVPCIDV2(ctx context.Context, conn *ec2.Client, vpcID string) (*awstypes.RouteTable, error) {
+func findMainRouteTableByVPCID(ctx context.Context, conn *ec2.Client, vpcID string) (*awstypes.RouteTable, error) {
 	input := &ec2.DescribeRouteTablesInput{
 		Filters: newAttributeFilterListV2(map[string]string{
 			"association.main": "true",
@@ -723,12 +765,12 @@ func findMainRouteTableByVPCIDV2(ctx context.Context, conn *ec2.Client, vpcID st
 		}),
 	}
 
-	return findRouteTableV2(ctx, conn, input)
+	return findRouteTable(ctx, conn, input)
 }
 
-// findVPNGatewayRoutePropagationExistsV2 returns NotFoundError if no route propagation for the specified VPN gateway is found.
-func findVPNGatewayRoutePropagationExistsV2(ctx context.Context, conn *ec2.Client, routeTableID, gatewayID string) error {
-	routeTable, err := findRouteTableByIDV2(ctx, conn, routeTableID)
+// findVPNGatewayRoutePropagationExists returns NotFoundError if no route propagation for the specified VPN gateway is found.
+func findVPNGatewayRoutePropagationExists(ctx context.Context, conn *ec2.Client, routeTableID, gatewayID string) error {
+	routeTable, err := findRouteTableByID(ctx, conn, routeTableID)
 
 	if err != nil {
 		return err

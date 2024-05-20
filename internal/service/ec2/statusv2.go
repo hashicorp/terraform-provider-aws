@@ -110,7 +110,11 @@ func statusVPCEndpointStateV2(ctx context.Context, conn *ec2.Client, id string) 
 	}
 }
 
-func statusRouteV2(ctx context.Context, conn *ec2.Client, routeFinder routeFinderV2, routeTableID, destination string) retry.StateRefreshFunc {
+const (
+	routeStatusReady = "ready"
+)
+
+func statusRoute(ctx context.Context, conn *ec2.Client, routeFinder routeFinder, routeTableID, destination string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := routeFinder(ctx, conn, routeTableID, destination)
 
@@ -122,13 +126,17 @@ func statusRouteV2(ctx context.Context, conn *ec2.Client, routeFinder routeFinde
 			return nil, "", err
 		}
 
-		return output, RouteStatusReady, nil
+		return output, routeStatusReady, nil
 	}
 }
 
-func statusRouteTableV2(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+const (
+	routeTableStatusReady = "ready"
+)
+
+func statusRouteTable(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findRouteTableByIDV2(ctx, conn, id)
+		output, err := findRouteTableByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -138,13 +146,13 @@ func statusRouteTableV2(ctx context.Context, conn *ec2.Client, id string) retry.
 			return nil, "", err
 		}
 
-		return output, RouteTableStatusReady, nil
+		return output, routeTableStatusReady, nil
 	}
 }
 
 func statusRouteTableAssociationStateV2(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findRouteTableAssociationByIDV2(ctx, conn, id)
+		output, err := findRouteTableAssociationByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

@@ -21,6 +21,7 @@ var (
 	ResourceInstanceMetadataDefaults        = newInstanceMetadataDefaultsResource
 	ResourceIPAMOrganizationAdminAccount    = resourceIPAMOrganizationAdminAccount
 	ResourceKeyPair                         = resourceKeyPair
+	ResourceMainRouteTableAssociation       = resourceMainRouteTableAssociation
 	ResourceNetworkACL                      = resourceNetworkACL
 	ResourceNetworkACLRule                  = resourceNetworkACLRule
 	ResourceNetworkInterface                = resourceNetworkInterface
@@ -51,13 +52,14 @@ var (
 	FindFastSnapshotRestoreByTwoPartKey                    = findFastSnapshotRestoreByTwoPartKey
 	FindInstanceMetadataDefaults                           = findInstanceMetadataDefaults
 	FindKeyPairByName                                      = findKeyPairByName
+	FindMainRouteTableAssociationByID                      = findMainRouteTableAssociationByID
 	FindNetworkACLByIDV2                                   = findNetworkACLByIDV2
 	FindNetworkInterfaceByIDV2                             = findNetworkInterfaceByIDV2
-	FindRouteByIPv4DestinationV2                           = findRouteByIPv4DestinationV2
-	FindRouteByIPv6DestinationV2                           = findRouteByIPv6DestinationV2
-	FindRouteByPrefixListIDDestinationV2                   = findRouteByPrefixListIDDestinationV2
-	FindRouteTableAssociationByIDV2                        = findRouteTableAssociationByIDV2
-	FindRouteTableByIDV2                                   = findRouteTableByIDV2
+	FindRouteByIPv4DestinationV2                           = findRouteByIPv4Destination
+	FindRouteByIPv6DestinationV2                           = findRouteByIPv6Destination
+	FindRouteByPrefixListIDDestinationV2                   = findRouteByPrefixListIDDestination
+	FindRouteTableAssociationByIDV2                        = findRouteTableAssociationByID
+	FindRouteTableByIDV2                                   = findRouteTableByID
 	FindVolumeAttachmentInstanceByID                       = findVolumeAttachmentInstanceByID
 	FindVPCEndpointByIDV2                                  = findVPCEndpointByIDV2
 	FindVPCEndpointConnectionByServiceIDAndVPCEndpointIDV2 = findVPCEndpointConnectionByServiceIDAndVPCEndpointIDV2
@@ -71,7 +73,7 @@ var (
 	FindVPNConnectionRouteByTwoPartKey                     = findVPNConnectionRouteByTwoPartKey
 	FindVPNGatewayByID                                     = findVPNGatewayByID
 	FindVPNGatewayVPCAttachmentByTwoPartKey                = findVPNGatewayVPCAttachmentByTwoPartKey
-	FindVPNGatewayRoutePropagationExistsV2                 = findVPNGatewayRoutePropagationExistsV2
+	FindVPNGatewayRoutePropagationExistsV2                 = findVPNGatewayRoutePropagationExists
 	FlattenNetworkInterfacePrivateIPAddresses              = flattenNetworkInterfacePrivateIPAddresses
 	IPAMServicePrincipal                                   = ipamServicePrincipal
 	NewAttributeFilterList                                 = newAttributeFilterList

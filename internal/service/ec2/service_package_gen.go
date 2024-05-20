@@ -876,8 +876,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceMainRouteTableAssociation,
+			Factory:  resourceMainRouteTableAssociation,
 			TypeName: "aws_main_route_table_association",
+			Name:     "Main Route Table Association",
 		},
 		{
 			Factory:  ResourceNATGateway,
