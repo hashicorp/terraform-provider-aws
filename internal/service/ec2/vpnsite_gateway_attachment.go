@@ -60,7 +60,7 @@ func resourceVPNGatewayAttachmentCreate(ctx context.Context, d *schema.ResourceD
 
 	d.SetId(VPNGatewayVPCAttachmentCreateID(vpnGatewayID, vpcID))
 
-	_, err = WaitVPNGatewayVPCAttachmentAttached(ctx, conn, vpnGatewayID, vpcID)
+	_, err = waitVPNGatewayVPCAttachmentAttached(ctx, conn, vpnGatewayID, vpcID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPN Gateway (%s) Attachment (%s) to become attached: %s", vpnGatewayID, vpcID, err)
@@ -76,7 +76,7 @@ func resourceVPNGatewayAttachmentRead(ctx context.Context, d *schema.ResourceDat
 	vpcID := d.Get(names.AttrVPCID).(string)
 	vpnGatewayID := d.Get("vpn_gateway_id").(string)
 
-	_, err := FindVPNGatewayVPCAttachment(ctx, conn, vpnGatewayID, vpcID)
+	_, err := findVPNGatewayVPCAttachmentByTwoPartKey(ctx, conn, vpnGatewayID, vpcID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 VPN Gateway (%s) Attachment (%s) not found, removing from state", vpnGatewayID, vpcID)
@@ -112,7 +112,7 @@ func resourceVPNGatewayAttachmentDelete(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 VPN Gateway (%s) Attachment (%s): %s", vpnGatewayID, vpcID, err)
 	}
 
-	_, err = WaitVPNGatewayVPCAttachmentDetached(ctx, conn, vpnGatewayID, vpcID)
+	_, err = waitVPNGatewayVPCAttachmentDetached(ctx, conn, vpnGatewayID, vpcID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPN Gateway (%s) Attachment (%s) to become detached: %s", vpnGatewayID, vpcID, err)

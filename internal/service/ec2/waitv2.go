@@ -681,18 +681,15 @@ func waitCarrierGatewayDeleted(ctx context.Context, conn *ec2.Client, id string)
 	return nil, err
 }
 
-const (
-	vpnConnectionCreatedTimeout = 40 * time.Minute
-	vpnConnectionDeletedTimeout = 30 * time.Minute
-	vpnConnectionUpdatedTimeout = 30 * time.Minute
-)
-
-func WaitVPNConnectionCreated(ctx context.Context, conn *ec2.Client, id string) (*types.VpnConnection, error) {
+func waitVPNConnectionCreated(ctx context.Context, conn *ec2.Client, id string) (*types.VpnConnection, error) {
+	const (
+		timeout = 40 * time.Minute
+	)
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.VpnStatePending),
 		Target:     enum.Slice(types.VpnStateAvailable),
-		Refresh:    StatusVPNConnectionState(ctx, conn, id),
-		Timeout:    vpnConnectionCreatedTimeout,
+		Refresh:    statusVPNConnection(ctx, conn, id),
+		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 10 * time.Second,
 	}
@@ -706,12 +703,15 @@ func WaitVPNConnectionCreated(ctx context.Context, conn *ec2.Client, id string) 
 	return nil, err
 }
 
-func WaitVPNConnectionDeleted(ctx context.Context, conn *ec2.Client, id string) (*types.VpnConnection, error) {
+func waitVPNConnectionDeleted(ctx context.Context, conn *ec2.Client, id string) (*types.VpnConnection, error) {
+	const (
+		timeout = 30 * time.Minute
+	)
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.VpnStateDeleting),
 		Target:     []string{},
-		Refresh:    StatusVPNConnectionState(ctx, conn, id),
-		Timeout:    vpnConnectionDeletedTimeout,
+		Refresh:    statusVPNConnection(ctx, conn, id),
+		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 10 * time.Second,
 	}
@@ -725,12 +725,15 @@ func WaitVPNConnectionDeleted(ctx context.Context, conn *ec2.Client, id string) 
 	return nil, err
 }
 
-func WaitVPNConnectionUpdated(ctx context.Context, conn *ec2.Client, id string) (*types.VpnConnection, error) {
+func waitVPNConnectionUpdated(ctx context.Context, conn *ec2.Client, id string) (*types.VpnConnection, error) {
+	const (
+		timeout = 30 * time.Minute
+	)
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(vpnStateModifying),
 		Target:     enum.Slice(types.VpnStateAvailable),
-		Refresh:    StatusVPNConnectionState(ctx, conn, id),
-		Timeout:    vpnConnectionUpdatedTimeout,
+		Refresh:    statusVPNConnection(ctx, conn, id),
+		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 10 * time.Second,
 	}
@@ -744,17 +747,15 @@ func WaitVPNConnectionUpdated(ctx context.Context, conn *ec2.Client, id string) 
 	return nil, err
 }
 
-const (
-	vpnConnectionRouteCreatedTimeout = 15 * time.Second
-	vpnConnectionRouteDeletedTimeout = 15 * time.Second
-)
-
-func WaitVPNConnectionRouteCreated(ctx context.Context, conn *ec2.Client, vpnConnectionID, cidrBlock string) (*types.VpnStaticRoute, error) {
+func waitVPNConnectionRouteCreated(ctx context.Context, conn *ec2.Client, vpnConnectionID, cidrBlock string) (*types.VpnStaticRoute, error) {
+	const (
+		timeout = 15 * time.Second
+	)
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.VpnStatePending),
 		Target:  enum.Slice(types.VpnStateAvailable),
-		Refresh: StatusVPNConnectionRouteState(ctx, conn, vpnConnectionID, cidrBlock),
-		Timeout: vpnConnectionRouteCreatedTimeout,
+		Refresh: statusVPNConnectionRoute(ctx, conn, vpnConnectionID, cidrBlock),
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -766,12 +767,15 @@ func WaitVPNConnectionRouteCreated(ctx context.Context, conn *ec2.Client, vpnCon
 	return nil, err
 }
 
-func WaitVPNConnectionRouteDeleted(ctx context.Context, conn *ec2.Client, vpnConnectionID, cidrBlock string) (*types.VpnStaticRoute, error) {
+func waitVPNConnectionRouteDeleted(ctx context.Context, conn *ec2.Client, vpnConnectionID, cidrBlock string) (*types.VpnStaticRoute, error) {
+	const (
+		timeout = 15 * time.Second
+	)
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.VpnStatePending, types.VpnStateAvailable, types.VpnStateDeleting),
 		Target:  []string{},
-		Refresh: StatusVPNConnectionRouteState(ctx, conn, vpnConnectionID, cidrBlock),
-		Timeout: vpnConnectionRouteDeletedTimeout,
+		Refresh: statusVPNConnectionRoute(ctx, conn, vpnConnectionID, cidrBlock),
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -783,17 +787,15 @@ func WaitVPNConnectionRouteDeleted(ctx context.Context, conn *ec2.Client, vpnCon
 	return nil, err
 }
 
-const (
-	vpnGatewayCreatedTimeout = 10 * time.Minute
-	vpnGatewayDeletedTimeout = 10 * time.Minute
-)
-
-func WaitVPNGatewayCreated(ctx context.Context, conn *ec2.Client, id string) (*types.VpnGateway, error) {
+func waitVPNGatewayCreated(ctx context.Context, conn *ec2.Client, id string) (*types.VpnGateway, error) {
+	const (
+		timeout = 10 * time.Minute
+	)
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.VpnStatePending),
 		Target:     enum.Slice(types.VpnStateAvailable),
-		Refresh:    StatusVPNGatewayState(ctx, conn, id),
-		Timeout:    vpnGatewayCreatedTimeout,
+		Refresh:    statusVPNGateway(ctx, conn, id),
+		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 10 * time.Second,
 	}
@@ -807,12 +809,15 @@ func WaitVPNGatewayCreated(ctx context.Context, conn *ec2.Client, id string) (*t
 	return nil, err
 }
 
-func WaitVPNGatewayDeleted(ctx context.Context, conn *ec2.Client, id string) (*types.VpnGateway, error) {
+func waitVPNGatewayDeleted(ctx context.Context, conn *ec2.Client, id string) (*types.VpnGateway, error) {
+	const (
+		timeout = 10 * time.Minute
+	)
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.VpnStateDeleting),
 		Target:     []string{},
-		Refresh:    StatusVPNGatewayState(ctx, conn, id),
-		Timeout:    vpnGatewayDeletedTimeout,
+		Refresh:    statusVPNGateway(ctx, conn, id),
+		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 10 * time.Second,
 	}
@@ -826,19 +831,15 @@ func WaitVPNGatewayDeleted(ctx context.Context, conn *ec2.Client, id string) (*t
 	return nil, err
 }
 
-const (
-	VPNGatewayDeletedTimeout = 5 * time.Minute
-
-	VPNGatewayVPCAttachmentAttachedTimeout = 15 * time.Minute
-	VPNGatewayVPCAttachmentDetachedTimeout = 30 * time.Minute
-)
-
-func WaitVPNGatewayVPCAttachmentAttached(ctx context.Context, conn *ec2.Client, vpnGatewayID, vpcID string) (*types.VpcAttachment, error) {
+func waitVPNGatewayVPCAttachmentAttached(ctx context.Context, conn *ec2.Client, vpnGatewayID, vpcID string) (*types.VpcAttachment, error) {
+	const (
+		timeout = 15 * time.Minute
+	)
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.AttachmentStatusAttaching),
 		Target:  enum.Slice(types.AttachmentStatusAttached),
-		Refresh: StatusVPNGatewayVPCAttachmentState(ctx, conn, vpnGatewayID, vpcID),
-		Timeout: VPNGatewayVPCAttachmentAttachedTimeout,
+		Refresh: statusVPNGatewayVPCAttachment(ctx, conn, vpnGatewayID, vpcID),
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -850,12 +851,15 @@ func WaitVPNGatewayVPCAttachmentAttached(ctx context.Context, conn *ec2.Client, 
 	return nil, err
 }
 
-func WaitVPNGatewayVPCAttachmentDetached(ctx context.Context, conn *ec2.Client, vpnGatewayID, vpcID string) (*types.VpcAttachment, error) {
+func waitVPNGatewayVPCAttachmentDetached(ctx context.Context, conn *ec2.Client, vpnGatewayID, vpcID string) (*types.VpcAttachment, error) {
+	const (
+		timeout = 30 * time.Minute
+	)
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.AttachmentStatusAttached, types.AttachmentStatusDetaching),
 		Target:  []string{},
-		Refresh: StatusVPNGatewayVPCAttachmentState(ctx, conn, vpnGatewayID, vpcID),
-		Timeout: VPNGatewayVPCAttachmentDetachedTimeout,
+		Refresh: statusVPNGatewayVPCAttachment(ctx, conn, vpnGatewayID, vpcID),
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -867,17 +871,15 @@ func WaitVPNGatewayVPCAttachmentDetached(ctx context.Context, conn *ec2.Client, 
 	return nil, err
 }
 
-const (
-	customerGatewayCreatedTimeout = 10 * time.Minute
-	customerGatewayDeletedTimeout = 5 * time.Minute
-)
-
-func WaitCustomerGatewayCreated(ctx context.Context, conn *ec2.Client, id string) (*types.CustomerGateway, error) {
+func waitCustomerGatewayCreated(ctx context.Context, conn *ec2.Client, id string) (*types.CustomerGateway, error) {
+	const (
+		timeout = 10 * time.Minute
+	)
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(CustomerGatewayStatePending),
 		Target:     enum.Slice(CustomerGatewayStateAvailable),
-		Refresh:    StatusCustomerGatewayState(ctx, conn, id),
-		Timeout:    customerGatewayCreatedTimeout,
+		Refresh:    statusCustomerGateway(ctx, conn, id),
+		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
@@ -891,12 +893,15 @@ func WaitCustomerGatewayCreated(ctx context.Context, conn *ec2.Client, id string
 	return nil, err
 }
 
-func WaitCustomerGatewayDeleted(ctx context.Context, conn *ec2.Client, id string) (*types.CustomerGateway, error) {
+func waitCustomerGatewayDeleted(ctx context.Context, conn *ec2.Client, id string) (*types.CustomerGateway, error) {
+	const (
+		timeout = 5 * time.Minute
+	)
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(CustomerGatewayStateAvailable, CustomerGatewayStateDeleting),
 		Target:  []string{},
-		Refresh: StatusCustomerGatewayState(ctx, conn, id),
-		Timeout: customerGatewayDeletedTimeout,
+		Refresh: statusCustomerGateway(ctx, conn, id),
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

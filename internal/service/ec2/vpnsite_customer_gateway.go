@@ -84,7 +84,6 @@ func resourceCustomerGateway() *schema.Resource {
 
 func resourceCustomerGatewayCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.CreateCustomerGatewayInput{
@@ -122,7 +121,7 @@ func resourceCustomerGatewayCreate(ctx context.Context, d *schema.ResourceData, 
 
 	d.SetId(aws.ToString(output.CustomerGateway.CustomerGatewayId))
 
-	if _, err := WaitCustomerGatewayCreated(ctx, conn, d.Id()); err != nil {
+	if _, err := waitCustomerGatewayCreated(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Customer Gateway (%s) create: %s", d.Id(), err)
 	}
 
@@ -131,10 +130,9 @@ func resourceCustomerGatewayCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	customerGateway, err := FindCustomerGatewayByID(ctx, conn, d.Id())
+	customerGateway, err := findCustomerGatewayByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Customer Gateway (%s) not found, removing from state", d.Id())
@@ -172,7 +170,6 @@ func resourceCustomerGatewayUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceCustomerGatewayDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Deleting EC2 Customer Gateway: %s", d.Id())
@@ -188,7 +185,7 @@ func resourceCustomerGatewayDelete(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 Customer Gateway (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitCustomerGatewayDeleted(ctx, conn, d.Id()); err != nil {
+	if _, err := waitCustomerGatewayDeleted(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Customer Gateway (%s) delete: %s", d.Id(), err)
 	}
 

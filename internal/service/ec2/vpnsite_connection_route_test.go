@@ -79,7 +79,7 @@ func testAccCheckVPNConnectionRouteDestroy(ctx context.Context) resource.TestChe
 				return err
 			}
 
-			_, err = tfec2.FindVPNConnectionRouteByVPNConnectionIDAndCIDR(ctx, conn, vpnConnectionID, cidrBlock)
+			_, err = tfec2.FindVPNConnectionRouteByTwoPartKey(ctx, conn, vpnConnectionID, cidrBlock)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -115,7 +115,7 @@ func testAccVPNConnectionRouteExists(ctx context.Context, n string) resource.Tes
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		_, err = tfec2.FindVPNConnectionRouteByVPNConnectionIDAndCIDR(ctx, conn, vpnConnectionID, cidrBlock)
+		_, err = tfec2.FindVPNConnectionRouteByTwoPartKey(ctx, conn, vpnConnectionID, cidrBlock)
 
 		return err
 	}

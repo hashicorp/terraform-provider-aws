@@ -43,6 +43,7 @@ var (
 	FindClientVPNEndpointByID                              = findClientVPNEndpointByID
 	FindClientVPNNetworkAssociationByTwoPartKey            = findClientVPNNetworkAssociationByTwoPartKey
 	FindClientVPNRouteByThreePartKey                       = findClientVPNRouteByThreePartKey
+	FindCustomerGatewayByID                                = findCustomerGatewayByID
 	FindEBSVolumeAttachment                                = findVolumeAttachment
 	FindEIPByAllocationID                                  = findEIPByAllocationID
 	FindEIPByAssociationID                                 = findEIPByAssociationID
@@ -66,6 +67,10 @@ var (
 	FindVPCEndpointServiceConfigurationByIDV2              = findVPCEndpointServiceConfigurationByIDV2
 	FindVPCEndpointServicePermissionV2                     = findVPCEndpointServicePermissionV2
 	FindVPCEndpointSubnetAssociationExistsV2               = findVPCEndpointSubnetAssociationExistsV2
+	FindVPNConnectionByID                                  = findVPNConnectionByID
+	FindVPNConnectionRouteByTwoPartKey                     = findVPNConnectionRouteByTwoPartKey
+	FindVPNGatewayByID                                     = findVPNGatewayByID
+	FindVPNGatewayVPCAttachmentByTwoPartKey                = findVPNGatewayVPCAttachmentByTwoPartKey
 	FindVPNGatewayRoutePropagationExistsV2                 = findVPNGatewayRoutePropagationExistsV2
 	FlattenNetworkInterfacePrivateIPAddresses              = flattenNetworkInterfacePrivateIPAddresses
 	IPAMServicePrincipal                                   = ipamServicePrincipal

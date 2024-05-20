@@ -22,6 +22,7 @@ import (
 )
 
 // @SDKDataSource("aws_customer_gateway", name="Customer Gateway")
+// @Tags
 func dataSourceCustomerGateway() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCustomerGatewayRead,
@@ -68,9 +69,7 @@ func dataSourceCustomerGateway() *schema.Resource {
 
 func dataSourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeCustomerGatewaysInput{}
 
@@ -82,7 +81,7 @@ func dataSourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, 
 		input.CustomerGatewayIds = []string{v.(string)}
 	}
 
-	cgw, err := FindCustomerGateway(ctx, conn, input)
+	cgw, err := findCustomerGateway(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Customer Gateway", err))
@@ -114,9 +113,7 @@ func dataSourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set(names.AttrIPAddress, cgw.IpAddress)
 	d.Set(names.AttrType, cgw.Type)
 
-	if err := d.Set(names.AttrTags, keyValueTagsV2(ctx, cgw.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOutV2(ctx, cgw.Tags)
 
 	return diags
 }

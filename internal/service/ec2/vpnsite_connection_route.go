@@ -62,7 +62,7 @@ func resourceVPNConnectionRouteCreate(ctx context.Context, d *schema.ResourceDat
 
 	d.SetId(id)
 
-	if _, err := WaitVPNConnectionRouteCreated(ctx, conn, vpnConnectionID, cidrBlock); err != nil {
+	if _, err := waitVPNConnectionRouteCreated(ctx, conn, vpnConnectionID, cidrBlock); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPN Connection Route (%s) create: %s", d.Id(), err)
 	}
 
@@ -79,7 +79,7 @@ func resourceVPNConnectionRouteRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPN Connection Route (%s): %s", d.Id(), err)
 	}
 
-	_, err = FindVPNConnectionRouteByVPNConnectionIDAndCIDR(ctx, conn, vpnConnectionID, cidrBlock)
+	_, err = findVPNConnectionRouteByTwoPartKey(ctx, conn, vpnConnectionID, cidrBlock)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 VPN Connection Route (%s) not found, removing from state", d.Id())
@@ -121,7 +121,7 @@ func resourceVPNConnectionRouteDelete(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 VPN Connection Route (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitVPNConnectionRouteDeleted(ctx, conn, vpnConnectionID, cidrBlock); err != nil {
+	if _, err := waitVPNConnectionRouteDeleted(ctx, conn, vpnConnectionID, cidrBlock); err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 VPN Connection Route (%s): waiting for completion: %s", d.Id(), err)
 	}
 

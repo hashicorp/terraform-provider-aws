@@ -1311,12 +1311,39 @@ func findCarrierGatewayByID(ctx context.Context, conn *ec2.Client, id string) (*
 	return output, nil
 }
 
-func FindVPNConnectionByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VpnConnection, error) {
+func findVPNConnection(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpnConnectionsInput) (*awstypes.VpnConnection, error) {
+	output, err := findVPNConnections(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findVPNConnections(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpnConnectionsInput) ([]awstypes.VpnConnection, error) {
+	output, err := conn.DescribeVpnConnections(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPNConnectionIDNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output.VpnConnections, nil
+}
+
+func findVPNConnectionByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VpnConnection, error) {
 	input := &ec2.DescribeVpnConnectionsInput{
 		VpnConnectionIds: []string{id},
 	}
 
-	output, err := FindVPNConnection(ctx, conn, input)
+	output, err := findVPNConnection(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -1339,34 +1366,7 @@ func FindVPNConnectionByID(ctx context.Context, conn *ec2.Client, id string) (*a
 	return output, nil
 }
 
-func FindVPNConnections(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpnConnectionsInput) ([]awstypes.VpnConnection, error) {
-	output, err := conn.DescribeVpnConnections(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPNConnectionIDNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return output.VpnConnections, nil
-}
-
-func FindVPNConnection(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpnConnectionsInput) (*awstypes.VpnConnection, error) {
-	output, err := FindVPNConnections(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSingleValueResult(output)
-}
-
-func FindVPNConnectionRouteByVPNConnectionIDAndCIDR(ctx context.Context, conn *ec2.Client, vpnConnectionID, cidrBlock string) (*awstypes.VpnStaticRoute, error) {
+func findVPNConnectionRouteByTwoPartKey(ctx context.Context, conn *ec2.Client, vpnConnectionID, cidrBlock string) (*awstypes.VpnStaticRoute, error) {
 	input := &ec2.DescribeVpnConnectionsInput{
 		Filters: newAttributeFilterListV2(map[string]string{
 			"route.destination-cidr-block": cidrBlock,
@@ -1374,7 +1374,7 @@ func FindVPNConnectionRouteByVPNConnectionIDAndCIDR(ctx context.Context, conn *e
 		}),
 	}
 
-	output, err := FindVPNConnection(ctx, conn, input)
+	output, err := findVPNConnection(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -1391,27 +1391,8 @@ func FindVPNConnectionRouteByVPNConnectionIDAndCIDR(ctx context.Context, conn *e
 	}
 }
 
-// FindVPNGatewayRoutePropagationExists returns NotFoundError if no route propagation for the specified VPN gateway is found.
-func FindVPNGatewayRoutePropagationExists(ctx context.Context, conn *ec2.Client, routeTableID, gatewayID string) error {
-	routeTable, err := findRouteTableByIDV2(ctx, conn, routeTableID)
-
-	if err != nil {
-		return err
-	}
-
-	for _, v := range routeTable.PropagatingVgws {
-		if aws.ToString(v.GatewayId) == gatewayID {
-			return nil
-		}
-	}
-
-	return &retry.NotFoundError{
-		LastError: fmt.Errorf("Route Table (%s) VPN Gateway (%s) route propagation not found", routeTableID, gatewayID),
-	}
-}
-
-func FindVPNGatewayVPCAttachment(ctx context.Context, conn *ec2.Client, vpnGatewayID, vpcID string) (*awstypes.VpcAttachment, error) {
-	vpnGateway, err := FindVPNGatewayByID(ctx, conn, vpnGatewayID)
+func findVPNGatewayVPCAttachmentByTwoPartKey(ctx context.Context, conn *ec2.Client, vpnGatewayID, vpcID string) (*awstypes.VpcAttachment, error) {
+	vpnGateway, err := findVPNGatewayByID(ctx, conn, vpnGatewayID)
 
 	if err != nil {
 		return nil, err
@@ -1433,12 +1414,43 @@ func FindVPNGatewayVPCAttachment(ctx context.Context, conn *ec2.Client, vpnGatew
 	return nil, tfresource.NewEmptyResultError(vpcID)
 }
 
-func FindVPNGatewayByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VpnGateway, error) {
+func findVPNGateway(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpnGatewaysInput) (*awstypes.VpnGateway, error) {
+	output, err := findVPNGateways(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findVPNGateways(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpnGatewaysInput) ([]awstypes.VpnGateway, error) {
+	output, err := conn.DescribeVpnGateways(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPNGatewayIDNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.VpnGateways, nil
+}
+
+func findVPNGatewayByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VpnGateway, error) {
 	input := &ec2.DescribeVpnGatewaysInput{
 		VpnGatewayIds: []string{id},
 	}
 
-	output, err := FindVPNGateway(ctx, conn, input)
+	output, err := findVPNGateway(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -1461,8 +1473,8 @@ func FindVPNGatewayByID(ctx context.Context, conn *ec2.Client, id string) (*awst
 	return output, nil
 }
 
-func FindVPNGateway(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpnGatewaysInput) (*awstypes.VpnGateway, error) {
-	output, err := FindVPNGateways(ctx, conn, input)
+func findTransitGatewayAttachmentV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayAttachmentsInput) (*awstypes.TransitGatewayAttachment, error) {
+	output, err := findTransitGatewayAttachmentsV2(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -1471,56 +1483,32 @@ func FindVPNGateway(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVp
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func FindVPNGateways(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpnGatewaysInput) ([]awstypes.VpnGateway, error) {
-	output, err := conn.DescribeVpnGateways(ctx, input)
+func findTransitGatewayAttachmentsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayAttachmentsInput) ([]awstypes.TransitGatewayAttachment, error) {
+	var output []awstypes.TransitGatewayAttachment
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPNGatewayIDNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+	pages := ec2.NewDescribeTransitGatewayAttachmentsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayAttachmentIDNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
 		}
-	}
 
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.VpnGateways, nil
-}
-
-func FindTransitGatewayAttachmentV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayAttachmentsInput) (*awstypes.TransitGatewayAttachment, error) {
-	output, err := FindTransitGatewayAttachmentsV2(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSingleValueResult(output)
-}
-
-func FindTransitGatewayAttachmentsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayAttachmentsInput) ([]awstypes.TransitGatewayAttachment, error) {
-	output, err := conn.DescribeTransitGatewayAttachments(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayAttachmentIDNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return nil, err
 		}
+
+		output = append(output, page.TransitGatewayAttachments...)
 	}
 
-	if err != nil {
-		return nil, err
-	}
-
-	return output.TransitGatewayAttachments, nil
+	return output, nil
 }
 
-func FindCustomerGateway(ctx context.Context, conn *ec2.Client, input *ec2.DescribeCustomerGatewaysInput) (*awstypes.CustomerGateway, error) {
-	output, err := FindCustomerGateways(ctx, conn, input)
+func findCustomerGateway(ctx context.Context, conn *ec2.Client, input *ec2.DescribeCustomerGatewaysInput) (*awstypes.CustomerGateway, error) {
+	output, err := findCustomerGateways(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -1529,7 +1517,7 @@ func FindCustomerGateway(ctx context.Context, conn *ec2.Client, input *ec2.Descr
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func FindCustomerGateways(ctx context.Context, conn *ec2.Client, input *ec2.DescribeCustomerGatewaysInput) ([]awstypes.CustomerGateway, error) {
+func findCustomerGateways(ctx context.Context, conn *ec2.Client, input *ec2.DescribeCustomerGatewaysInput) ([]awstypes.CustomerGateway, error) {
 	output, err := conn.DescribeCustomerGateways(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidCustomerGatewayIDNotFound) {
@@ -1550,12 +1538,12 @@ func FindCustomerGateways(ctx context.Context, conn *ec2.Client, input *ec2.Desc
 	return output.CustomerGateways, nil
 }
 
-func FindCustomerGatewayByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.CustomerGateway, error) {
+func findCustomerGatewayByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.CustomerGateway, error) {
 	input := &ec2.DescribeCustomerGatewaysInput{
 		CustomerGatewayIds: []string{id},
 	}
 
-	output, err := FindCustomerGateway(ctx, conn, input)
+	output, err := findCustomerGateway(ctx, conn, input)
 
 	if err != nil {
 		return nil, err

@@ -345,9 +345,9 @@ func statusCarrierGateway(ctx context.Context, conn *ec2.Client, id string) retr
 	}
 }
 
-func StatusVPNConnectionState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusVPNConnection(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindVPNConnectionByID(ctx, conn, id)
+		output, err := findVPNConnectionByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -361,9 +361,9 @@ func StatusVPNConnectionState(ctx context.Context, conn *ec2.Client, id string) 
 	}
 }
 
-func StatusVPNConnectionRouteState(ctx context.Context, conn *ec2.Client, vpnConnectionID, cidrBlock string) retry.StateRefreshFunc {
+func statusVPNConnectionRoute(ctx context.Context, conn *ec2.Client, vpnConnectionID, cidrBlock string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindVPNConnectionRouteByVPNConnectionIDAndCIDR(ctx, conn, vpnConnectionID, cidrBlock)
+		output, err := findVPNConnectionRouteByTwoPartKey(ctx, conn, vpnConnectionID, cidrBlock)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -377,9 +377,9 @@ func StatusVPNConnectionRouteState(ctx context.Context, conn *ec2.Client, vpnCon
 	}
 }
 
-func StatusVPNGatewayState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusVPNGateway(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindVPNGatewayByID(ctx, conn, id)
+		output, err := findVPNGatewayByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -393,9 +393,9 @@ func StatusVPNGatewayState(ctx context.Context, conn *ec2.Client, id string) ret
 	}
 }
 
-func StatusVPNGatewayVPCAttachmentState(ctx context.Context, conn *ec2.Client, vpnGatewayID, vpcID string) retry.StateRefreshFunc {
+func statusVPNGatewayVPCAttachment(ctx context.Context, conn *ec2.Client, vpnGatewayID, vpcID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindVPNGatewayVPCAttachment(ctx, conn, vpnGatewayID, vpcID)
+		output, err := findVPNGatewayVPCAttachmentByTwoPartKey(ctx, conn, vpnGatewayID, vpcID)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -409,9 +409,9 @@ func StatusVPNGatewayVPCAttachmentState(ctx context.Context, conn *ec2.Client, v
 	}
 }
 
-func StatusCustomerGatewayState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusCustomerGateway(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindCustomerGatewayByID(ctx, conn, id)
+		output, err := findCustomerGatewayByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

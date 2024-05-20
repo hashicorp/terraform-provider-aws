@@ -23,6 +23,7 @@ import (
 )
 
 // @SDKDataSource("aws_vpn_gateway", name="VPN Gateway")
+// @Tags
 func dataSourceVPNGateway() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVPNGatewayRead,
@@ -70,7 +71,6 @@ func dataSourceVPNGateway() *schema.Resource {
 func dataSourceVPNGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeVpnGatewaysInput{}
 
@@ -110,7 +110,7 @@ func dataSourceVPNGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 		input.Filters = nil
 	}
 
-	vgw, err := FindVPNGateway(ctx, conn, input)
+	vgw, err := findVPNGateway(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 VPN Gateway", err))
@@ -136,9 +136,7 @@ func dataSourceVPNGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrAvailabilityZone, vgw.AvailabilityZone)
 	d.Set(names.AttrState, vgw.State)
 
-	if err := d.Set(names.AttrTags, keyValueTagsV2(ctx, vgw.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOutV2(ctx, vgw.Tags)
 
 	return diags
 }

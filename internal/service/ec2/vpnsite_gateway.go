@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
@@ -89,7 +90,7 @@ func resourceVPNGatewayCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	d.SetId(aws.ToString(output.VpnGateway.VpnGatewayId))
 
-	if _, err := WaitVPNGatewayCreated(ctx, conn, d.Id()); err != nil {
+	if _, err := waitVPNGatewayCreated(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPN Gateway (%s) create: %s", d.Id(), err)
 	}
 
@@ -107,7 +108,7 @@ func resourceVPNGatewayRead(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
-		return FindVPNGatewayByID(ctx, conn, d.Id())
+		return findVPNGatewayByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -180,7 +181,10 @@ func resourceVPNGatewayDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	log.Printf("[INFO] Deleting EC2 VPN Gateway: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, VPNGatewayDeletedTimeout, func() (interface{}, error) {
+	const (
+		timeout = 5 * time.Minute
+	)
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func() (interface{}, error) {
 		return conn.DeleteVpnGateway(ctx, &ec2.DeleteVpnGatewayInput{
 			VpnGatewayId: aws.String(d.Id()),
 		})
@@ -194,7 +198,7 @@ func resourceVPNGatewayDelete(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 VPN Gateway (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitVPNGatewayDeleted(ctx, conn, d.Id()); err != nil {
+	if _, err := waitVPNGatewayDeleted(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPN Gateway (%s) delete: %s", d.Id(), err)
 	}
 
@@ -215,7 +219,7 @@ func attachVPNGatewayToVPC(ctx context.Context, conn *ec2.Client, vpnGatewayID, 
 		return fmt.Errorf("attaching EC2 VPN Gateway (%s) to VPC (%s): %w", vpnGatewayID, vpcID, err)
 	}
 
-	if _, err := WaitVPNGatewayVPCAttachmentAttached(ctx, conn, vpnGatewayID, vpcID); err != nil {
+	if _, err := waitVPNGatewayVPCAttachmentAttached(ctx, conn, vpnGatewayID, vpcID); err != nil {
 		return fmt.Errorf("waiting for EC2 VPN Gateway (%s) VPC (%s) attachment create: %w", vpnGatewayID, vpcID, err)
 	}
 
@@ -238,7 +242,7 @@ func detachVPNGatewayFromVPC(ctx context.Context, conn *ec2.Client, vpnGatewayID
 		return fmt.Errorf("detaching EC2 VPN Gateway (%s) from VPC (%s): %w", vpnGatewayID, vpcID, err)
 	}
 
-	if _, err := WaitVPNGatewayVPCAttachmentDetached(ctx, conn, vpnGatewayID, vpcID); err != nil {
+	if _, err := waitVPNGatewayVPCAttachmentDetached(ctx, conn, vpnGatewayID, vpcID); err != nil {
 		return fmt.Errorf("waiting for EC2 VPN Gateway (%s) VPC (%s) attachment delete: %w", vpnGatewayID, vpcID, err)
 	}
 
