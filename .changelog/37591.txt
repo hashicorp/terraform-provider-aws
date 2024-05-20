@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cloudtrail: Convert `insight_selector` to a set type, preventing persistent differences
+```
