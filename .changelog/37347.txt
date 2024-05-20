@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_glue_job: Fix `interface conversion: interface {} is nil, not map[string]interface {}` panic when `notify_delay_after` is empty (`null`)
+```

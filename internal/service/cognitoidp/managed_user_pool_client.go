@@ -36,21 +36,21 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource
-func newResourceManagedUserPoolClient(context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceManagedUserPoolClient{}, nil
+// @FrameworkResource(name="Managed User Pool Client")
+func newManagedUserPoolClientResource(context.Context) (resource.ResourceWithConfigure, error) {
+	return &managedUserPoolClientResource{}, nil
 }
 
-type resourceManagedUserPoolClient struct {
+type managedUserPoolClientResource struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceManagedUserPoolClient) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+func (r *managedUserPoolClientResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
 	response.TypeName = "aws_cognito_managed_user_pool_client"
 }
 
 // Schema returns the schema for this resource.
-func (r *resourceManagedUserPoolClient) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *managedUserPoolClientResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"access_token_validity": schema.Int64Attribute{
@@ -158,7 +158,7 @@ func (r *resourceManagedUserPoolClient) Schema(ctx context.Context, request reso
 					setplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"id_token_validity": schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
@@ -180,7 +180,7 @@ func (r *resourceManagedUserPoolClient) Schema(ctx context.Context, request reso
 					setplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -192,12 +192,12 @@ func (r *resourceManagedUserPoolClient) Schema(ctx context.Context, request reso
 				Validators: append(
 					userPoolClientNameValidator,
 					stringvalidator.ExactlyOneOf(
-						path.MatchRelative().AtParent().AtName("name_prefix"),
+						path.MatchRelative().AtParent().AtName(names.AttrNamePrefix),
 						path.MatchRelative().AtParent().AtName("name_pattern"),
 					),
 				),
 			},
-			"name_prefix": schema.StringAttribute{
+			names.AttrNamePrefix: schema.StringAttribute{
 				Optional:   true,
 				Validators: userPoolClientNameValidator,
 			},
@@ -271,7 +271,7 @@ func (r *resourceManagedUserPoolClient) Schema(ctx context.Context, request reso
 								),
 								stringvalidator.ConflictsWith(
 									path.MatchRelative().AtParent().AtName("external_id"),
-									path.MatchRelative().AtParent().AtName("role_arn"),
+									path.MatchRelative().AtParent().AtName(names.AttrRoleARN),
 								),
 							},
 						},
@@ -280,14 +280,14 @@ func (r *resourceManagedUserPoolClient) Schema(ctx context.Context, request reso
 							Validators: []validator.String{
 								stringvalidator.AlsoRequires(
 									path.MatchRelative().AtParent().AtName("external_id"),
-									path.MatchRelative().AtParent().AtName("role_arn"),
+									path.MatchRelative().AtParent().AtName(names.AttrRoleARN),
 								),
 							},
 						},
 						"external_id": schema.StringAttribute{
 							Optional: true,
 						},
-						"role_arn": schema.StringAttribute{
+						names.AttrRoleARN: schema.StringAttribute{
 							CustomType: fwtypes.ARNType,
 							Optional:   true,
 							Computed:   true,
@@ -338,7 +338,7 @@ func (r *resourceManagedUserPoolClient) Schema(ctx context.Context, request reso
 	response.Schema = s
 }
 
-func (r *resourceManagedUserPoolClient) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+func (r *managedUserPoolClientResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	conn := r.Meta().CognitoIDPConn(ctx)
 
 	var config resourceManagedUserPoolClientData
@@ -534,7 +534,7 @@ func (r *resourceManagedUserPoolClient) Create(ctx context.Context, request reso
 	response.Diagnostics.Append(response.State.Set(ctx, &config)...)
 }
 
-func (r *resourceManagedUserPoolClient) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+func (r *managedUserPoolClientResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var state resourceManagedUserPoolClientData
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 	if response.Diagnostics.HasError() {
@@ -590,7 +590,7 @@ func (r *resourceManagedUserPoolClient) Read(ctx context.Context, request resour
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
 
-func (r *resourceManagedUserPoolClient) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+func (r *managedUserPoolClientResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var config resourceManagedUserPoolClientData
 	response.Diagnostics.Append(request.Config.Get(ctx, &config)...)
 	if response.Diagnostics.HasError() {
@@ -671,7 +671,7 @@ func (r *resourceManagedUserPoolClient) Update(ctx context.Context, request reso
 	response.Diagnostics.Append(response.State.Set(ctx, &config)...)
 }
 
-func (r *resourceManagedUserPoolClient) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+func (r *managedUserPoolClientResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var state resourceManagedUserPoolClientData
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 	if response.Diagnostics.HasError() {
@@ -679,12 +679,12 @@ func (r *resourceManagedUserPoolClient) Delete(ctx context.Context, request reso
 	}
 
 	response.Diagnostics.AddWarning(
-		"Cognito User Pool Client (%s) not deleted",
+		fmt.Sprintf("Cognito User Pool Client (%s) not deleted", state.ID.ValueString()),
 		"User Pool Client is managed by another service and will be deleted when that resource is deleted. Removed from Terraform state.",
 	)
 }
 
-func (r *resourceManagedUserPoolClient) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+func (r *managedUserPoolClientResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	parts := strings.Split(request.ID, "/")
 	if len(parts) != 2 {
 		response.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf("wrong format of import ID (%s), use: 'user-pool-id/client-id'", request.ID))
@@ -692,11 +692,11 @@ func (r *resourceManagedUserPoolClient) ImportState(ctx context.Context, request
 	}
 	userPoolId := parts[0]
 	clientId := parts[1]
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("id"), clientId)...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), clientId)...)
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("user_pool_id"), userPoolId)...)
 }
 
-func (r *resourceManagedUserPoolClient) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
+func (r *managedUserPoolClientResource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
 	return []resource.ConfigValidator{
 		resourceManagedUserPoolClientAccessTokenValidityValidator{
 			resourceManagedUserPoolClientValidityValidator{

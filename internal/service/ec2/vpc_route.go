@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -40,14 +41,14 @@ var routeValidTargets = []string{
 	"gateway_id",
 	"local_gateway_id",
 	"nat_gateway_id",
-	"network_interface_id",
-	"transit_gateway_id",
+	names.AttrNetworkInterfaceID,
+	names.AttrTransitGatewayID,
 	"vpc_endpoint_id",
 	"vpc_peering_connection_id",
 }
 
-// @SDKResource("aws_route")
-func ResourceRoute() *schema.Resource {
+// @SDKResource("aws_route", name="Route")
+func resourceRoute() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRouteCreate,
 		ReadWithoutTimeout:   resourceRouteRead,
@@ -131,13 +132,13 @@ func ResourceRoute() *schema.Resource {
 				Optional:     true,
 				ExactlyOneOf: routeValidTargets,
 			},
-			"network_interface_id": {
+			names.AttrNetworkInterfaceID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ExactlyOneOf: routeValidTargets,
 			},
-			"transit_gateway_id": {
+			names.AttrTransitGatewayID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ExactlyOneOf: routeValidTargets,
@@ -159,7 +160,7 @@ func ResourceRoute() *schema.Resource {
 			//
 			// Computed attributes.
 			//
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -171,7 +172,7 @@ func ResourceRoute() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -184,13 +185,11 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	destinationAttributeKey, destination, err := routeDestinationAttribute(d)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	targetAttributeKey, target, err := routeTargetAttribute(d)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -239,6 +238,18 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.VpcPeeringConnectionId = target
 	default:
 		return sdkdiag.AppendErrorf(diags, "creating Route: unexpected route target attribute: %q", targetAttributeKey)
+	}
+
+	route, err := routeFinder(ctx, conn, routeTableID, destination)
+
+	switch {
+	case err == nil:
+		if aws.StringValue(route.Origin) == ec2.RouteOriginCreateRoute {
+			return sdkdiag.AppendFromErr(diags, routeAlreadyExistsError(routeTableID, destination))
+		}
+	case tfresource.NotFound(err):
+	default:
+		return sdkdiag.AppendErrorf(diags, "reading Route: %s", err)
 	}
 
 	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate),
@@ -321,12 +332,12 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("egress_only_gateway_id", route.EgressOnlyInternetGatewayId)
 	d.Set("nat_gateway_id", route.NatGatewayId)
 	d.Set("local_gateway_id", route.LocalGatewayId)
-	d.Set("instance_id", route.InstanceId)
+	d.Set(names.AttrInstanceID, route.InstanceId)
 	d.Set("instance_owner_id", route.InstanceOwnerId)
-	d.Set("network_interface_id", route.NetworkInterfaceId)
+	d.Set(names.AttrNetworkInterfaceID, route.NetworkInterfaceId)
 	d.Set("origin", route.Origin)
-	d.Set("state", route.State)
-	d.Set("transit_gateway_id", route.TransitGatewayId)
+	d.Set(names.AttrState, route.State)
+	d.Set(names.AttrTransitGatewayID, route.TransitGatewayId)
 	d.Set("vpc_peering_connection_id", route.VpcPeeringConnectionId)
 
 	return diags

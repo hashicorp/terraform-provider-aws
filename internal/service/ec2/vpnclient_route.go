@@ -14,19 +14,22 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ec2_client_vpn_route")
+// @SDKResource("aws_ec2_client_vpn_route", name="Client VPN Route")
 func ResourceClientVPNRoute() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClientVPNRouteCreate,
 		ReadWithoutTimeout:   resourceClientVPNRouteRead,
 		DeleteWithoutTimeout: resourceClientVPNRouteDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -42,7 +45,7 @@ func ResourceClientVPNRoute() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -62,7 +65,7 @@ func ResourceClientVPNRoute() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"type": {
+			names.AttrType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -79,12 +82,13 @@ func resourceClientVPNRouteCreate(ctx context.Context, d *schema.ResourceData, m
 	destinationCIDR := d.Get("destination_cidr_block").(string)
 	id := ClientVPNRouteCreateResourceID(endpointID, targetSubnetID, destinationCIDR)
 	input := &ec2.CreateClientVpnRouteInput{
+		ClientToken:          aws.String(sdkid.UniqueId()),
 		ClientVpnEndpointId:  aws.String(endpointID),
 		DestinationCidrBlock: aws.String(destinationCIDR),
 		TargetVpcSubnetId:    aws.String(targetSubnetID),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -110,9 +114,8 @@ func resourceClientVPNRouteRead(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	endpointID, targetSubnetID, destinationCIDR, err := ClientVPNRouteParseResourceID(d.Id())
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EC2 Client VPN Route (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	route, err := FindClientVPNRouteByThreePartKey(ctx, conn, endpointID, targetSubnetID, destinationCIDR)
@@ -128,11 +131,11 @@ func resourceClientVPNRouteRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.Set("client_vpn_endpoint_id", route.ClientVpnEndpointId)
-	d.Set("description", route.Description)
+	d.Set(names.AttrDescription, route.Description)
 	d.Set("destination_cidr_block", route.DestinationCidr)
 	d.Set("origin", route.Origin)
 	d.Set("target_vpc_subnet_id", route.TargetSubnet)
-	d.Set("type", route.Type)
+	d.Set(names.AttrType, route.Type)
 
 	return diags
 }
@@ -142,9 +145,8 @@ func resourceClientVPNRouteDelete(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	endpointID, targetSubnetID, destinationCIDR, err := ClientVPNRouteParseResourceID(d.Id())
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting EC2 Client VPN Route (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[DEBUG] Deleting EC2 Client VPN Route: %s", d.Id())

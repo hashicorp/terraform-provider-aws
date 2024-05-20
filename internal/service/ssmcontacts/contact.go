@@ -35,7 +35,7 @@ func ResourceContact() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -44,11 +44,11 @@ func ResourceContact() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"display_name": {
+			names.AttrDisplayName: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"type": {
+			names.AttrType: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -70,10 +70,10 @@ func resourceContactCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	input := &ssmcontacts.CreateContactInput{
 		Alias:       aws.String(d.Get("alias").(string)),
-		DisplayName: aws.String(d.Get("display_name").(string)),
+		DisplayName: aws.String(d.Get(names.AttrDisplayName).(string)),
 		Plan:        &types.Plan{Stages: []types.Stage{}},
 		Tags:        getTagsIn(ctx),
-		Type:        types.ContactType(d.Get("type").(string)),
+		Type:        types.ContactType(d.Get(names.AttrType).(string)),
 	}
 
 	output, err := client.CreateContact(ctx, input)
@@ -115,10 +115,10 @@ func resourceContactRead(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceContactUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 
-	if d.HasChanges("display_name") {
+	if d.HasChanges(names.AttrDisplayName) {
 		in := &ssmcontacts.UpdateContactInput{
 			ContactId:   aws.String(d.Id()),
-			DisplayName: aws.String(d.Get("display_name").(string)),
+			DisplayName: aws.String(d.Get(names.AttrDisplayName).(string)),
 		}
 
 		_, err := conn.UpdateContact(ctx, in)

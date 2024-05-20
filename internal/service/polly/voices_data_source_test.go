@@ -22,7 +22,7 @@ func TestAccPollyVoicesDataSource_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.PollyEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PollyEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PollyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
@@ -33,7 +33,7 @@ func TestAccPollyVoicesDataSource_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "voices.*", map[string]string{
 						"gender":        "Female",
 						"language_code": "en-US",
-						"name":          "Kendra",
+						names.AttrName:  "Kendra",
 					}),
 				),
 			},
@@ -50,7 +50,7 @@ func TestAccPollyVoicesDataSource_languageCode(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.PollyEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PollyEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PollyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
@@ -61,7 +61,7 @@ func TestAccPollyVoicesDataSource_languageCode(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "voices.*", map[string]string{
 						"gender":        "Female",
 						"language_code": "en-US",
-						"name":          "Kendra",
+						names.AttrName:  "Kendra",
 					}),
 				),
 			},

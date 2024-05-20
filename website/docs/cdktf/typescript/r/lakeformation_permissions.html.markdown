@@ -159,7 +159,7 @@ class MyConvertedCode extends TerraformStack {
       dataLocation: {
         arn: Token.asString(awsLakeformationResourceExample.arn),
       },
-      permissions: ["ALL"],
+      permissions: ["DATA_LOCATION_ACCESS"],
       principal: workflowRole.arn,
     });
   }
@@ -242,6 +242,7 @@ The following arguments are required:
 One of the following is required:
 
 * `catalogResource` - (Optional) Whether the permissions are to be granted for the Data Catalog. Defaults to `false`.
+* `dataCellsFilter` - (Optional) Configuration block for a data cells filter resource. Detailed below.
 * `dataLocation` - (Optional) Configuration block for a data location resource. Detailed below.
 * `database` - (Optional) Configuration block for a database resource. Detailed below.
 * `lfTag` - (Optional) Configuration block for an LF-tag resource. Detailed below.
@@ -253,6 +254,13 @@ The following arguments are optional:
 
 * `catalogId` – (Optional) Identifier for the Data Catalog. By default, the account ID. The Data Catalog is the persistent metadata store. It contains database definitions, table definitions, and other control information to manage your Lake Formation environment.
 * `permissionsWithGrantOption` - (Optional) Subset of `permissions` which the principal can pass.
+
+### data_cells_filter
+
+* `databaseName` - (Required) The name of the database.
+* `name` - (Required) The name of the data cells filter.
+* `tableCatalogId` - (Required) The ID of the Data Catalog.
+* `tableName` - (Required) The name of the table.
 
 ### data_location
 
@@ -331,4 +339,4 @@ The following arguments are optional:
 
 This resource exports no additional attributes.
 
-<!-- cache-key: cdktf-0.20.0 input-fd78e0884a6908a814356ab7d33f0f75b98fe926eb713d3c171ff4fd77586027 -->
+<!-- cache-key: cdktf-0.20.1 input-5c0a207897d25881935b64503ff30f4b662505e097086bf925a9adce1a9584b7 -->

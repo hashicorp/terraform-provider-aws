@@ -6,13 +6,13 @@ package organizations_test
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(organizations.EndpointsID, testAccErrorCheckSkip)
+	acctest.RegisterServiceErrorCheckFunc(names.OrganizationsServiceID, testAccErrorCheckSkip)
 }
 
 func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
@@ -48,7 +48,7 @@ func TestAccOrganizations_serial(t *testing.T) {
 			"basic":                              testAccOrganizationalUnit_basic,
 			"disappears":                         testAccOrganizationalUnit_disappears,
 			"update":                             testAccOrganizationalUnit_update,
-			"tags":                               testAccOrganizationalUnit_tags,
+			names.AttrTags:                       testAccOrganizationalUnit_tags,
 			"DataSource_basic":                   testAccOrganizationalUnitDataSource_basic,
 			"ChildAccountsDataSource_basic":      testAccOrganizationalUnitChildAccountsDataSource_basic,
 			"DescendantAccountsDataSource_basic": testAccOrganizationalUnitDescendantAccountsDataSource_basic,
@@ -78,9 +78,9 @@ func TestAccOrganizations_serial(t *testing.T) {
 			"UnattachedPolicy": testAccPolicyDataSource_UnattachedPolicy,
 		},
 		"ResourcePolicy": {
-			"basic":      testAccResourcePolicy_basic,
-			"disappears": testAccResourcePolicy_disappears,
-			"tags":       testAccResourcePolicy_tags,
+			"basic":        testAccResourcePolicy_basic,
+			"disappears":   testAccResourcePolicy_disappears,
+			names.AttrTags: testAccResourcePolicy_tags,
 		},
 		"DelegatedAdministrator": {
 			"basic":      testAccDelegatedAdministrator_basic,

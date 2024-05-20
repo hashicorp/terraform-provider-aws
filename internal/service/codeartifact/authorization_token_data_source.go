@@ -6,11 +6,10 @@ package codeartifact
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/codeartifact"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/codeartifact"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -19,12 +18,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKDataSource("aws_codeartifact_authorization_token")
-func DataSourceAuthorizationToken() *schema.Resource {
+// @SDKDataSource("aws_codeartifact_authorization_token", name="Authoiration Token")
+func dataSourceAuthorizationToken() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAuthorizationTokenRead,
 
 		Schema: map[string]*schema.Schema{
+			"authorization_token": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"domain": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -43,10 +46,6 @@ func DataSourceAuthorizationToken() *schema.Resource {
 					validation.IntInSlice([]int{0}),
 				),
 			},
-			"authorization_token": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"expiration": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -57,33 +56,34 @@ func DataSourceAuthorizationToken() *schema.Resource {
 
 func dataSourceAuthorizationTokenRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CodeArtifactConn(ctx)
-	domain := d.Get("domain").(string)
-	domainOwner := meta.(*conns.AWSClient).AccountID
-	params := &codeartifact.GetAuthorizationTokenInput{
-		Domain: aws.String(domain),
-	}
+	conn := meta.(*conns.AWSClient).CodeArtifactClient(ctx)
 
+	domainName := d.Get("domain").(string)
+	var domainOwner string
 	if v, ok := d.GetOk("domain_owner"); ok {
-		params.DomainOwner = aws.String(v.(string))
 		domainOwner = v.(string)
+	} else {
+		domainOwner = meta.(*conns.AWSClient).AccountID
+	}
+	input := &codeartifact.GetAuthorizationTokenInput{
+		Domain:      aws.String(domainName),
+		DomainOwner: aws.String(domainOwner),
 	}
 
 	if v, ok := d.GetOkExists("duration_seconds"); ok {
-		params.DurationSeconds = aws.Int64(int64(v.(int)))
+		input.DurationSeconds = aws.Int64(int64(v.(int)))
 	}
 
-	log.Printf("[DEBUG] Getting CodeArtifact authorization token")
-	out, err := conn.GetAuthorizationTokenWithContext(ctx, params)
+	output, err := conn.GetAuthorizationToken(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting CodeArtifact authorization token: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading CodeArtifact Authorization Token: %s", err)
 	}
-	log.Printf("[DEBUG] CodeArtifact authorization token: %#v", out)
 
-	d.SetId(fmt.Sprintf("%s:%s", domainOwner, domain))
-	d.Set("authorization_token", out.AuthorizationToken)
-	d.Set("expiration", aws.TimeValue(out.Expiration).Format(time.RFC3339))
+	d.SetId(fmt.Sprintf("%s:%s", domainOwner, domainName))
+	d.Set("authorization_token", output.AuthorizationToken)
 	d.Set("domain_owner", domainOwner)
+	d.Set("expiration", aws.ToTime(output.Expiration).Format(time.RFC3339))
 
 	return diags
 }

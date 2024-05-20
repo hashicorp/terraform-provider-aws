@@ -44,11 +44,11 @@ main () {
     }' --jq '.data.organization.repository.milestone.pullRequests.edges[].node' | jq --raw-output --slurp '.[] | .url')
 
   # gh issues allows passing multiple URLs at once
-  gh issue edit $ISSUES --remove-label bug
+  gh issue edit $ISSUES --remove-label prioritized
 
   # gh pr does not allow passing multiple URLs at once
   for item in $PULLS; do
-    gh pr edit "$item" --remove-label bug
+    gh pr edit "$item" --remove-label prioritized
   done
 }
 

@@ -46,7 +46,7 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 }
 
 // nosemgrep:ci.servicequotas-in-func-name
-func preCheckServiceQuotaSet(ctx context.Context, serviceCode, quotaCode string, t *testing.T) {
+func testAccPreCheckServiceQuotaSet(ctx context.Context, t *testing.T, serviceCode, quotaCode string) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceQuotasClient(ctx)
 
 	input := &servicequotas.GetServiceQuotaInput{
@@ -64,7 +64,7 @@ func preCheckServiceQuotaSet(ctx context.Context, serviceCode, quotaCode string,
 	}
 }
 
-func preCheckServiceQuotaUnset(ctx context.Context, serviceCode, quotaCode string, t *testing.T) {
+func testAccPreCheckServiceQuotaUnset(ctx context.Context, t *testing.T, serviceCode, quotaCode string) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceQuotasClient(ctx)
 
 	input := &servicequotas.GetServiceQuotaInput{
@@ -82,7 +82,7 @@ func preCheckServiceQuotaUnset(ctx context.Context, serviceCode, quotaCode strin
 	}
 }
 
-func preCheckServiceQuotaHasUsageMetric(ctx context.Context, serviceCode, quotaCode string, t *testing.T) {
+func testAccPreCheckServiceQuotaHasUsageMetric(ctx context.Context, t *testing.T, serviceCode, quotaCode string) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceQuotasClient(ctx)
 
 	input := &servicequotas.GetAWSDefaultServiceQuotaInput{

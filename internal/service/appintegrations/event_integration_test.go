@@ -9,19 +9,20 @@ import (
 	"os"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appintegrationsservice"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/appintegrations"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfappintegrations "github.com/hashicorp/terraform-provider-aws/internal/service/appintegrations"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAppIntegrationsEventIntegration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var eventIntegration appintegrationsservice.GetEventIntegrationOutput
+	var eventIntegration appintegrations.GetEventIntegrationOutput
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	originalDescription := "original description"
@@ -38,9 +39,9 @@ func TestAccAppIntegrationsEventIntegration_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, appintegrationsservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.AppIntegrationsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, appintegrationsservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppIntegrationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEventIntegrationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -48,8 +49,8 @@ func TestAccAppIntegrationsEventIntegration_basic(t *testing.T) {
 				Config: testAccEventIntegrationConfig_basic(rName, originalDescription, sourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventIntegrationExists(ctx, resourceName, &eventIntegration),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "description", originalDescription),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, originalDescription),
 					resource.TestCheckResourceAttr(resourceName, "eventbridge_bus", "default"),
 					resource.TestCheckResourceAttr(resourceName, "event_filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "event_filter.0.source", sourceName),
@@ -66,8 +67,8 @@ func TestAccAppIntegrationsEventIntegration_basic(t *testing.T) {
 				Config: testAccEventIntegrationConfig_basic(rName, updatedDescription, sourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventIntegrationExists(ctx, resourceName, &eventIntegration),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "description", updatedDescription),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, updatedDescription),
 					resource.TestCheckResourceAttr(resourceName, "eventbridge_bus", "default"),
 					resource.TestCheckResourceAttr(resourceName, "event_filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "event_filter.0.source", sourceName),
@@ -81,7 +82,7 @@ func TestAccAppIntegrationsEventIntegration_basic(t *testing.T) {
 
 func TestAccAppIntegrationsEventIntegration_updateTags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var eventIntegration appintegrationsservice.GetEventIntegrationOutput
+	var eventIntegration appintegrations.GetEventIntegrationOutput
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	description := "example description"
@@ -97,9 +98,9 @@ func TestAccAppIntegrationsEventIntegration_updateTags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, appintegrationsservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.AppIntegrationsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, appintegrationsservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppIntegrationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEventIntegrationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -107,8 +108,8 @@ func TestAccAppIntegrationsEventIntegration_updateTags(t *testing.T) {
 				Config: testAccEventIntegrationConfig_basic(rName, description, sourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventIntegrationExists(ctx, resourceName, &eventIntegration),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, "eventbridge_bus", "default"),
 					resource.TestCheckResourceAttr(resourceName, "event_filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "event_filter.0.source", sourceName),
@@ -125,8 +126,8 @@ func TestAccAppIntegrationsEventIntegration_updateTags(t *testing.T) {
 				Config: testAccEventIntegrationConfig_tags(rName, description, sourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventIntegrationExists(ctx, resourceName, &eventIntegration),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, "eventbridge_bus", "default"),
 					resource.TestCheckResourceAttr(resourceName, "event_filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "event_filter.0.source", sourceName),
@@ -144,8 +145,8 @@ func TestAccAppIntegrationsEventIntegration_updateTags(t *testing.T) {
 				Config: testAccEventIntegrationConfig_tagsUpdated(rName, description, sourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventIntegrationExists(ctx, resourceName, &eventIntegration),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, "eventbridge_bus", "default"),
 					resource.TestCheckResourceAttr(resourceName, "event_filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "event_filter.0.source", sourceName),
@@ -161,7 +162,7 @@ func TestAccAppIntegrationsEventIntegration_updateTags(t *testing.T) {
 
 func TestAccAppIntegrationsEventIntegration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var eventIntegration appintegrationsservice.GetEventIntegrationOutput
+	var eventIntegration appintegrations.GetEventIntegrationOutput
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	description := "disappears"
@@ -177,9 +178,9 @@ func TestAccAppIntegrationsEventIntegration_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, appintegrationsservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.AppIntegrationsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, appintegrationsservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppIntegrationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEventIntegrationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -197,20 +198,20 @@ func TestAccAppIntegrationsEventIntegration_disappears(t *testing.T) {
 
 func testAccCheckEventIntegrationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppIntegrationsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppIntegrationsClient(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appintegrations_event_integration" {
 				continue
 			}
 
-			input := &appintegrationsservice.GetEventIntegrationInput{
+			input := &appintegrations.GetEventIntegrationInput{
 				Name: aws.String(rs.Primary.ID),
 			}
 
-			resp, err := conn.GetEventIntegrationWithContext(ctx, input)
+			resp, err := conn.GetEventIntegration(ctx, input)
 
 			if err == nil {
-				if aws.StringValue(resp.Name) == rs.Primary.ID {
+				if aws.ToString(resp.Name) == rs.Primary.ID {
 					return fmt.Errorf("Event Integration '%s' was not deleted properly", rs.Primary.ID)
 				}
 			}
@@ -220,7 +221,7 @@ func testAccCheckEventIntegrationDestroy(ctx context.Context) resource.TestCheck
 	}
 }
 
-func testAccCheckEventIntegrationExists(ctx context.Context, name string, eventIntegration *appintegrationsservice.GetEventIntegrationOutput) resource.TestCheckFunc {
+func testAccCheckEventIntegrationExists(ctx context.Context, name string, eventIntegration *appintegrations.GetEventIntegrationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 
@@ -228,11 +229,11 @@ func testAccCheckEventIntegrationExists(ctx context.Context, name string, eventI
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppIntegrationsConn(ctx)
-		input := &appintegrationsservice.GetEventIntegrationInput{
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppIntegrationsClient(ctx)
+		input := &appintegrations.GetEventIntegrationInput{
 			Name: aws.String(rs.Primary.ID),
 		}
-		resp, err := conn.GetEventIntegrationWithContext(ctx, input)
+		resp, err := conn.GetEventIntegration(ctx, input)
 
 		if err != nil {
 			return err

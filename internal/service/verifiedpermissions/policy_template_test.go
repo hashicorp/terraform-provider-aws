@@ -34,7 +34,7 @@ func TestAccVerifiedPermissionsPolicyTemplate_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -43,7 +43,7 @@ func TestAccVerifiedPermissionsPolicyTemplate_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyTemplateExists(ctx, resourceName, &policytemplate),
 					resource.TestCheckResourceAttr(resourceName, "statement", "permit (principal in ?principal, action in PhotoFlash::Action::\"FullPhotoAccess\", resource == ?resource) unless { resource.IsPrivate };"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 				),
 			},
 			{
@@ -69,7 +69,7 @@ func TestAccVerifiedPermissionsPolicyTemplate_update(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -78,7 +78,7 @@ func TestAccVerifiedPermissionsPolicyTemplate_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyTemplateExists(ctx, resourceName, &policytemplate),
 					resource.TestCheckResourceAttr(resourceName, "statement", "permit (principal in ?principal, action in PhotoFlash::Action::\"FullPhotoAccess\", resource == ?resource) unless { resource.IsPrivate };"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 				),
 			},
 			{
@@ -86,7 +86,7 @@ func TestAccVerifiedPermissionsPolicyTemplate_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyTemplateExists(ctx, resourceName, &policytemplate),
 					resource.TestCheckResourceAttr(resourceName, "statement", "permit (principal in ?principal, action in PhotoFlash::Action::\"FullPhotoAccess\", resource == ?resource);"),
-					resource.TestCheckResourceAttr(resourceName, "description", "test"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
 				),
 			},
 		},
@@ -107,7 +107,7 @@ func TestAccVerifiedPermissionsPolicyTemplate_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyTemplateDestroy(ctx),
 		Steps: []resource.TestStep{

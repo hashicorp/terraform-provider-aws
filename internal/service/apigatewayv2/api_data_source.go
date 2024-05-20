@@ -5,19 +5,19 @@ package apigatewayv2
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_apigatewayv2_api")
-func DataSourceAPI() *schema.Resource {
+// @SDKDataSource("aws_apigatewayv2_api", name="API")
+// @Tags
+func dataSourceAPI() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAPIRead,
 
@@ -34,7 +34,7 @@ func DataSourceAPI() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -51,25 +51,21 @@ func DataSourceAPI() *schema.Resource {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      hashStringCaseInsensitive,
 						},
 						"allow_methods": {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      hashStringCaseInsensitive,
 						},
 						"allow_origins": {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      hashStringCaseInsensitive,
 						},
 						"expose_headers": {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      hashStringCaseInsensitive,
 						},
 						"max_age": {
 							Type:     schema.TypeInt,
@@ -78,7 +74,7 @@ func DataSourceAPI() *schema.Resource {
 					},
 				},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -90,7 +86,7 @@ func DataSourceAPI() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -102,8 +98,8 @@ func DataSourceAPI() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
-			"version": {
+			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -113,11 +109,10 @@ func DataSourceAPI() *schema.Resource {
 
 func dataSourceAPIRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	apiID := d.Get("api_id").(string)
+	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	api, err := FindAPIByID(ctx, conn, apiID)
+	apiID := d.Get("api_id").(string)
+	api, err := findAPIByID(ctx, conn, apiID)
 
 	if tfresource.NotFound(err) {
 		return sdkdiag.AppendErrorf(diags, "no API Gateway v2 API matched; change the search criteria and try again")
@@ -128,36 +123,21 @@ func dataSourceAPIRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	d.SetId(apiID)
-
 	d.Set("api_endpoint", api.ApiEndpoint)
 	d.Set("api_key_selection_expression", api.ApiKeySelectionExpression)
-	apiArn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "apigateway",
-		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  fmt.Sprintf("/apis/%s", d.Id()),
-	}.String()
-	d.Set("arn", apiArn)
+	d.Set(names.AttrARN, apiARN(meta.(*conns.AWSClient), d.Id()))
 	if err := d.Set("cors_configuration", flattenCORSConfiguration(api.CorsConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting cors_configuration: %s", err)
 	}
-	d.Set("description", api.Description)
+	d.Set(names.AttrDescription, api.Description)
 	d.Set("disable_execute_api_endpoint", api.DisableExecuteApiEndpoint)
-	executionArn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "execute-api",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  d.Id(),
-	}.String()
-	d.Set("execution_arn", executionArn)
-	d.Set("name", api.Name)
+	d.Set("execution_arn", apiInvokeARN(meta.(*conns.AWSClient), d.Id()))
+	d.Set(names.AttrName, api.Name)
 	d.Set("protocol_type", api.ProtocolType)
 	d.Set("route_selection_expression", api.RouteSelectionExpression)
-	if err := d.Set("tags", KeyValueTags(ctx, api.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-	d.Set("version", api.Version)
+	d.Set(names.AttrVersion, api.Version)
+
+	setTagsOut(ctx, api.Tags)
 
 	return diags
 }

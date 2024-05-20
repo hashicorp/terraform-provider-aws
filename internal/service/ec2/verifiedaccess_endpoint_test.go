@@ -14,12 +14,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccVerifiedAccessEndpoint_basic(t *testing.T) {
+func testAccVerifiedAccessEndpoint_basic(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var v types.VerifiedAccessEndpoint
 	resourceName := "aws_verifiedaccess_endpoint.test"
@@ -29,6 +30,7 @@ func TestAccVerifiedAccessEndpoint_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckVerifiedAccess(ctx, t)
 		},
@@ -42,10 +44,10 @@ func TestAccVerifiedAccessEndpoint_basic(t *testing.T) {
 					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "application_domain"),
 					resource.TestCheckResourceAttr(resourceName, "attachment_type", "vpc"),
-					resource.TestCheckResourceAttr(resourceName, "description", "example"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "example"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_certificate_arn"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_domain_prefix", "example"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "load-balancer"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "load-balancer"),
 					resource.TestCheckResourceAttr(resourceName, "policy_document", ""),
 					resource.TestCheckResourceAttr(resourceName, "sse_specification.0.customer_managed_key_enabled", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "load_balancer_options.0.load_balancer_arn"),
@@ -68,7 +70,7 @@ func TestAccVerifiedAccessEndpoint_basic(t *testing.T) {
 	})
 }
 
-func TestAccVerifiedAccessEndpoint_networkInterface(t *testing.T) {
+func testAccVerifiedAccessEndpoint_networkInterface(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var v types.VerifiedAccessEndpoint
 	resourceName := "aws_verifiedaccess_endpoint.test"
@@ -78,6 +80,7 @@ func TestAccVerifiedAccessEndpoint_networkInterface(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckVerifiedAccess(ctx, t)
 		},
@@ -91,10 +94,10 @@ func TestAccVerifiedAccessEndpoint_networkInterface(t *testing.T) {
 					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "application_domain"),
 					resource.TestCheckResourceAttr(resourceName, "attachment_type", "vpc"),
-					resource.TestCheckResourceAttr(resourceName, "description", "example"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "example"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_certificate_arn"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_domain_prefix", "example"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "network-interface"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "network-interface"),
 					resource.TestCheckResourceAttrSet(resourceName, "network_interface_options.0.network_interface_id"),
 					resource.TestCheckResourceAttr(resourceName, "network_interface_options.0.port", "443"),
 					resource.TestCheckResourceAttr(resourceName, "network_interface_options.0.protocol", "https"),
@@ -114,7 +117,7 @@ func TestAccVerifiedAccessEndpoint_networkInterface(t *testing.T) {
 	})
 }
 
-func TestAccVerifiedAccessEndpoint_tags(t *testing.T) {
+func testAccVerifiedAccessEndpoint_tags(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var v types.VerifiedAccessEndpoint
 	resourceName := "aws_verifiedaccess_endpoint.test"
@@ -124,6 +127,7 @@ func TestAccVerifiedAccessEndpoint_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckVerifiedAccess(ctx, t)
 		},
@@ -168,7 +172,7 @@ func TestAccVerifiedAccessEndpoint_tags(t *testing.T) {
 	})
 }
 
-func TestAccVerifiedAccessEndpoint_disappears(t *testing.T) {
+func testAccVerifiedAccessEndpoint_disappears(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var v types.VerifiedAccessEndpoint
 	resourceName := "aws_verifiedaccess_endpoint.test"
@@ -178,6 +182,7 @@ func TestAccVerifiedAccessEndpoint_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckVerifiedAccess(ctx, t)
 		},
@@ -197,7 +202,7 @@ func TestAccVerifiedAccessEndpoint_disappears(t *testing.T) {
 	})
 }
 
-func TestAccVerifiedAccessEndpoint_policyDocument(t *testing.T) {
+func testAccVerifiedAccessEndpoint_policyDocument(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var v types.VerifiedAccessEndpoint
 	resourceName := "aws_verifiedaccess_endpoint.test"
@@ -208,6 +213,7 @@ func TestAccVerifiedAccessEndpoint_policyDocument(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckVerifiedAccess(ctx, t)
 		},

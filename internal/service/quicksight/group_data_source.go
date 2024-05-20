@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_quicksight_group", name="Group")
@@ -25,7 +26,7 @@ func DataSourceGroup() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -34,15 +35,15 @@ func DataSourceGroup() *schema.Resource {
 					Optional: true,
 					Computed: true,
 				},
-				"description": {
+				names.AttrDescription: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"group_name": {
+				names.AttrGroupName: {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				"namespace": {
+				names.AttrNamespace: {
 					Type:     schema.TypeString,
 					Optional: true,
 					Default:  DefaultGroupNamespace,
@@ -68,8 +69,8 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if v, ok := d.GetOk("aws_account_id"); ok {
 		awsAccountID = v.(string)
 	}
-	groupName := d.Get("group_name").(string)
-	namespace := d.Get("namespace").(string)
+	groupName := d.Get(names.AttrGroupName).(string)
+	namespace := d.Get(names.AttrNamespace).(string)
 	in := &quicksight.DescribeGroupInput{
 		GroupName:    aws.String(groupName),
 		AwsAccountId: aws.String(awsAccountID),
@@ -86,10 +87,10 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	group := out.Group
 	d.SetId(fmt.Sprintf("%s/%s/%s", awsAccountID, namespace, aws.StringValue(group.GroupName)))
-	d.Set("arn", group.Arn)
+	d.Set(names.AttrARN, group.Arn)
 	d.Set("aws_account_id", awsAccountID)
-	d.Set("description", group.Description)
-	d.Set("group_name", group.GroupName)
+	d.Set(names.AttrDescription, group.Description)
+	d.Set(names.AttrGroupName, group.GroupName)
 	d.Set("principal_id", group.PrincipalId)
 
 	return diags

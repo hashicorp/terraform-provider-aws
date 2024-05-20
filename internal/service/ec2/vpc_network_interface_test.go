@@ -12,9 +12,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,63 +22,41 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
-
-func TestFlattenGroupIdentifiers(t *testing.T) {
-	t.Parallel()
-
-	expanded := []*ec2.GroupIdentifier{
-		{GroupId: aws.String("sg-001")},
-		{GroupId: aws.String("sg-002")},
-	}
-
-	result := tfec2.FlattenGroupIdentifiers(expanded)
-
-	if len(result) != 2 {
-		t.Fatalf("expected result had %d elements, but got %d", 2, len(result))
-	}
-
-	if result[0] != "sg-001" {
-		t.Fatalf("expected id to be sg-001, but was %s", result[0])
-	}
-
-	if result[1] != "sg-002" {
-		t.Fatalf("expected id to be sg-002, but was %s", result[1])
-	}
-}
 
 func TestAccVPCNetworkInterface_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf ec2.NetworkInterface
+	var conf types.NetworkInterface
 	resourceName := "aws_network_interface.test"
 	subnetResourceName := "aws_subnet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckENIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCNetworkInterfaceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`network-interface/.+$`)),
+					testAccCheckENIExistsV2(ctx, resourceName, &conf),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`network-interface/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "attachment.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "interface_type", "interface"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "mac_address"),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
 					checkResourceAttrPrivateDNSName(resourceName, "private_dns_name", &conf.PrivateIpAddress),
 					resource.TestCheckResourceAttrSet(resourceName, "private_ip"),
 					resource.TestCheckResourceAttr(resourceName, "private_ips.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source_dest_check", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", subnetResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, subnetResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -94,20 +72,20 @@ func TestAccVPCNetworkInterface_basic(t *testing.T) {
 
 func TestAccVPCNetworkInterface_ipv6(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf ec2.NetworkInterface
+	var conf types.NetworkInterface
 	resourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckENIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCNetworkInterfaceConfig_ipv6(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &conf),
+					testAccCheckENIExistsV2(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "1"),
 				),
@@ -121,7 +99,7 @@ func TestAccVPCNetworkInterface_ipv6(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_ipv6Multiple(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &conf),
+					testAccCheckENIExistsV2(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "2"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "2"),
 				),
@@ -129,7 +107,7 @@ func TestAccVPCNetworkInterface_ipv6(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_ipv6(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &conf),
+					testAccCheckENIExistsV2(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "1"),
 				),
@@ -142,18 +120,18 @@ func TestAccVPCNetworkInterface_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	var conf ec2.NetworkInterface
+	var conf types.NetworkInterface
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckENIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCNetworkInterfaceConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &conf),
+					testAccCheckENIExistsV2(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -167,7 +145,7 @@ func TestAccVPCNetworkInterface_tags(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &conf),
+					testAccCheckENIExistsV2(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -176,7 +154,7 @@ func TestAccVPCNetworkInterface_tags(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &conf),
+					testAccCheckENIExistsV2(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -187,20 +165,20 @@ func TestAccVPCNetworkInterface_tags(t *testing.T) {
 
 func TestAccVPCNetworkInterface_ipv6Count(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf ec2.NetworkInterface
+	var conf types.NetworkInterface
 	resourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckENIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCNetworkInterfaceConfig_ipv6Count(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &conf),
+					testAccCheckENIExistsV2(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "1"),
 				),
 			},
@@ -213,21 +191,21 @@ func TestAccVPCNetworkInterface_ipv6Count(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_ipv6Count(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &conf),
+					testAccCheckENIExistsV2(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "2"),
 				),
 			},
 			{
 				Config: testAccVPCNetworkInterfaceConfig_ipv6Count(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &conf),
+					testAccCheckENIExistsV2(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "0"),
 				),
 			},
 			{
 				Config: testAccVPCNetworkInterfaceConfig_ipv6Count(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &conf),
+					testAccCheckENIExistsV2(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "1"),
 				),
 			},
@@ -237,20 +215,20 @@ func TestAccVPCNetworkInterface_ipv6Count(t *testing.T) {
 
 func TestAccVPCNetworkInterface_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var networkInterface ec2.NetworkInterface
+	var networkInterface types.NetworkInterface
 	resourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckENIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCNetworkInterfaceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &networkInterface),
+					testAccCheckENIExistsV2(ctx, resourceName, &networkInterface),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceNetworkInterface(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -261,7 +239,7 @@ func TestAccVPCNetworkInterface_disappears(t *testing.T) {
 
 func TestAccVPCNetworkInterface_description(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf ec2.NetworkInterface
+	var conf types.NetworkInterface
 	resourceName := "aws_network_interface.test"
 	subnetResourceName := "aws_subnet.test"
 	securityGroupResourceName := "aws_security_group.test"
@@ -269,16 +247,16 @@ func TestAccVPCNetworkInterface_description(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckENIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCNetworkInterfaceConfig_description(rName, "description 1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &conf),
+					testAccCheckENIExistsV2(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "attachment.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "description", "description 1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description 1"),
 					resource.TestCheckResourceAttr(resourceName, "interface_type", "interface"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "0"),
@@ -289,9 +267,9 @@ func TestAccVPCNetworkInterface_description(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "private_ips.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "private_ips.*", "172.16.10.100"),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_groups.*", securityGroupResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_groups.*", securityGroupResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "source_dest_check", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", subnetResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, subnetResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
@@ -305,9 +283,9 @@ func TestAccVPCNetworkInterface_description(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_description(rName, "description 2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &conf),
+					testAccCheckENIExistsV2(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "attachment.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "description", "description 2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description 2"),
 					resource.TestCheckResourceAttr(resourceName, "interface_type", "interface"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "0"),
@@ -318,9 +296,9 @@ func TestAccVPCNetworkInterface_description(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "private_ips.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "private_ips.*", "172.16.10.100"),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_groups.*", securityGroupResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_groups.*", securityGroupResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "source_dest_check", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", subnetResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, subnetResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
@@ -335,20 +313,20 @@ func TestAccVPCNetworkInterface_attachment(t *testing.T) {
 	}
 
 	ctx := acctest.Context(t)
-	var conf ec2.NetworkInterface
+	var conf types.NetworkInterface
 	resourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckENIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCNetworkInterfaceConfig_attachment(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &conf),
+					testAccCheckENIExistsV2(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "attachment.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attachment.*", map[string]string{
 						"device_index": "1",
@@ -370,28 +348,32 @@ func TestAccVPCNetworkInterface_attachment(t *testing.T) {
 
 func TestAccVPCNetworkInterface_ignoreExternalAttachment(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf ec2.NetworkInterface
+	var conf types.NetworkInterface
 	resourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckENIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCNetworkInterfaceConfig_externalAttachment(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &conf),
+					testAccCheckENIExistsV2(ctx, resourceName, &conf),
 					testAccCheckENIMakeExternalAttachment(ctx, "aws_instance.test", &conf),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"private_ip_list_enabled", "ipv6_address_list_enabled"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"attachment",
+					"ipv6_address_list_enabled",
+					"private_ip_list_enabled",
+				},
 			},
 		},
 	})
@@ -399,20 +381,20 @@ func TestAccVPCNetworkInterface_ignoreExternalAttachment(t *testing.T) {
 
 func TestAccVPCNetworkInterface_sourceDestCheck(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf ec2.NetworkInterface
+	var conf types.NetworkInterface
 	resourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckENIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCNetworkInterfaceConfig_sourceDestCheck(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &conf),
+					testAccCheckENIExistsV2(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "source_dest_check", "false"),
 				),
 			},
@@ -425,14 +407,14 @@ func TestAccVPCNetworkInterface_sourceDestCheck(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_sourceDestCheck(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &conf),
+					testAccCheckENIExistsV2(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "source_dest_check", "true"),
 				),
 			},
 			{
 				Config: testAccVPCNetworkInterfaceConfig_sourceDestCheck(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &conf),
+					testAccCheckENIExistsV2(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "source_dest_check", "false"),
 				),
 			},
@@ -442,20 +424,20 @@ func TestAccVPCNetworkInterface_sourceDestCheck(t *testing.T) {
 
 func TestAccVPCNetworkInterface_privateIPsCount(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf ec2.NetworkInterface
+	var conf types.NetworkInterface
 	resourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckENIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCNetworkInterfaceConfig_privateIPsCount(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &conf),
+					testAccCheckENIExistsV2(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "private_ips_count", "1"),
 				),
 			},
@@ -468,7 +450,7 @@ func TestAccVPCNetworkInterface_privateIPsCount(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_privateIPsCount(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &conf),
+					testAccCheckENIExistsV2(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "private_ips_count", "2"),
 				),
 			},
@@ -481,7 +463,7 @@ func TestAccVPCNetworkInterface_privateIPsCount(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_privateIPsCount(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &conf),
+					testAccCheckENIExistsV2(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "private_ips_count", "0"),
 				),
 			},
@@ -494,7 +476,7 @@ func TestAccVPCNetworkInterface_privateIPsCount(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_privateIPsCount(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &conf),
+					testAccCheckENIExistsV2(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "private_ips_count", "1"),
 				),
 			},
@@ -510,20 +492,20 @@ func TestAccVPCNetworkInterface_privateIPsCount(t *testing.T) {
 
 func TestAccVPCNetworkInterface_ENIInterfaceType_efa(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf ec2.NetworkInterface
+	var conf types.NetworkInterface
 	resourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckENIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCNetworkInterfaceConfig_type(rName, "efa"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &conf),
+					testAccCheckENIExistsV2(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "interface_type", "efa"),
 				),
 			},
@@ -539,20 +521,20 @@ func TestAccVPCNetworkInterface_ENIInterfaceType_efa(t *testing.T) {
 
 func TestAccVPCNetworkInterface_ENI_ipv4Prefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf ec2.NetworkInterface
+	var conf types.NetworkInterface
 	resourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckENIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCNetworkInterfaceConfig_ipv4Prefix(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &conf),
+					testAccCheckENIExistsV2(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv4_prefix_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ipv4_prefixes.#", "1"),
 				),
@@ -566,7 +548,7 @@ func TestAccVPCNetworkInterface_ENI_ipv4Prefix(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_ipv4PrefixMultiple(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &conf),
+					testAccCheckENIExistsV2(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv4_prefix_count", "2"),
 					resource.TestCheckResourceAttr(resourceName, "ipv4_prefixes.#", "2"),
 				),
@@ -574,7 +556,7 @@ func TestAccVPCNetworkInterface_ENI_ipv4Prefix(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_ipv4Prefix(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &conf),
+					testAccCheckENIExistsV2(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv4_prefix_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ipv4_prefixes.#", "1"),
 				),
@@ -585,20 +567,20 @@ func TestAccVPCNetworkInterface_ENI_ipv4Prefix(t *testing.T) {
 
 func TestAccVPCNetworkInterface_ENI_ipv4PrefixCount(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf ec2.NetworkInterface
+	var conf types.NetworkInterface
 	resourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckENIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCNetworkInterfaceConfig_ipv4PrefixCount(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &conf),
+					testAccCheckENIExistsV2(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv4_prefix_count", "1"),
 				),
 			},
@@ -611,21 +593,21 @@ func TestAccVPCNetworkInterface_ENI_ipv4PrefixCount(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_ipv4PrefixCount(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &conf),
+					testAccCheckENIExistsV2(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv4_prefix_count", "2"),
 				),
 			},
 			{
 				Config: testAccVPCNetworkInterfaceConfig_ipv4PrefixCount(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &conf),
+					testAccCheckENIExistsV2(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv4_prefix_count", "0"),
 				),
 			},
 			{
 				Config: testAccVPCNetworkInterfaceConfig_ipv4PrefixCount(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &conf),
+					testAccCheckENIExistsV2(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv4_prefix_count", "1"),
 				),
 			},
@@ -635,20 +617,20 @@ func TestAccVPCNetworkInterface_ENI_ipv4PrefixCount(t *testing.T) {
 
 func TestAccVPCNetworkInterface_ENI_ipv6Prefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf ec2.NetworkInterface
+	var conf types.NetworkInterface
 	resourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckENIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCNetworkInterfaceConfig_ipv6Prefix(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &conf),
+					testAccCheckENIExistsV2(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_prefix_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_prefixes.#", "1"),
 				),
@@ -662,7 +644,7 @@ func TestAccVPCNetworkInterface_ENI_ipv6Prefix(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_ipv6PrefixMultiple(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &conf),
+					testAccCheckENIExistsV2(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_prefix_count", "2"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_prefixes.#", "2"),
 				),
@@ -670,7 +652,7 @@ func TestAccVPCNetworkInterface_ENI_ipv6Prefix(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_ipv6Prefix(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &conf),
+					testAccCheckENIExistsV2(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_prefix_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_prefixes.#", "1"),
 				),
@@ -681,20 +663,20 @@ func TestAccVPCNetworkInterface_ENI_ipv6Prefix(t *testing.T) {
 
 func TestAccVPCNetworkInterface_ENI_ipv6PrefixCount(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf ec2.NetworkInterface
+	var conf types.NetworkInterface
 	resourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckENIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCNetworkInterfaceConfig_ipv6PrefixCount(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &conf),
+					testAccCheckENIExistsV2(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_prefix_count", "1"),
 				),
 			},
@@ -707,21 +689,21 @@ func TestAccVPCNetworkInterface_ENI_ipv6PrefixCount(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfaceConfig_ipv6PrefixCount(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &conf),
+					testAccCheckENIExistsV2(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_prefix_count", "2"),
 				),
 			},
 			{
 				Config: testAccVPCNetworkInterfaceConfig_ipv6PrefixCount(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &conf),
+					testAccCheckENIExistsV2(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_prefix_count", "0"),
 				),
 			},
 			{
 				Config: testAccVPCNetworkInterfaceConfig_ipv6PrefixCount(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &conf),
+					testAccCheckENIExistsV2(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_prefix_count", "1"),
 				),
 			},
@@ -731,22 +713,22 @@ func TestAccVPCNetworkInterface_ENI_ipv6PrefixCount(t *testing.T) {
 
 func TestAccVPCNetworkInterface_privateIPSet(t *testing.T) {
 	ctx := acctest.Context(t)
-	var networkInterface, lastInterface ec2.NetworkInterface
+	var networkInterface, lastInterface types.NetworkInterface
 	resourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckENIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{ // Configuration with three private_ips
 				Config: testAccVPCNetworkInterfaceConfig_privateIPSet(rName, []string{"172.16.10.44", "172.16.10.59", "172.16.10.123"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &networkInterface),
+					testAccCheckENIExistsV2(ctx, resourceName, &networkInterface),
 					testAccCheckENIPrivateIPSet([]string{"172.16.10.44", "172.16.10.59", "172.16.10.123"}, &networkInterface),
-					testAccCheckENIExists(ctx, resourceName, &lastInterface),
+					testAccCheckENIExistsV2(ctx, resourceName, &lastInterface),
 				),
 			},
 			{
@@ -758,63 +740,63 @@ func TestAccVPCNetworkInterface_privateIPSet(t *testing.T) {
 			{ // Change order of private_ips
 				Config: testAccVPCNetworkInterfaceConfig_privateIPSet(rName, []string{"172.16.10.123", "172.16.10.44", "172.16.10.59"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &networkInterface),
+					testAccCheckENIExistsV2(ctx, resourceName, &networkInterface),
 					testAccCheckENIPrivateIPSet([]string{"172.16.10.44", "172.16.10.59", "172.16.10.123"}, &networkInterface),
 					testAccCheckENISame(&lastInterface, &networkInterface), // same
-					testAccCheckENIExists(ctx, resourceName, &lastInterface),
+					testAccCheckENIExistsV2(ctx, resourceName, &lastInterface),
 				),
 			},
 			{ // Add secondaries to private_ips
 				Config: testAccVPCNetworkInterfaceConfig_privateIPSet(rName, []string{"172.16.10.123", "172.16.10.12", "172.16.10.44", "172.16.10.59"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &networkInterface),
+					testAccCheckENIExistsV2(ctx, resourceName, &networkInterface),
 					testAccCheckENIPrivateIPSet([]string{"172.16.10.44", "172.16.10.12", "172.16.10.59", "172.16.10.123"}, &networkInterface),
 					testAccCheckENISame(&lastInterface, &networkInterface), // same
-					testAccCheckENIExists(ctx, resourceName, &lastInterface),
+					testAccCheckENIExistsV2(ctx, resourceName, &lastInterface),
 				),
 			},
 			{ // Remove secondary to private_ips
 				Config: testAccVPCNetworkInterfaceConfig_privateIPSet(rName, []string{"172.16.10.123", "172.16.10.44", "172.16.10.59"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &networkInterface),
+					testAccCheckENIExistsV2(ctx, resourceName, &networkInterface),
 					testAccCheckENIPrivateIPSet([]string{"172.16.10.44", "172.16.10.59", "172.16.10.123"}, &networkInterface),
 					testAccCheckENISame(&lastInterface, &networkInterface), // same
-					testAccCheckENIExists(ctx, resourceName, &lastInterface),
+					testAccCheckENIExistsV2(ctx, resourceName, &lastInterface),
 				),
 			},
 			{ // Remove primary
 				Config: testAccVPCNetworkInterfaceConfig_privateIPSet(rName, []string{"172.16.10.123", "172.16.10.59", "172.16.10.57"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &networkInterface),
+					testAccCheckENIExistsV2(ctx, resourceName, &networkInterface),
 					testAccCheckENIPrivateIPSet([]string{"172.16.10.57", "172.16.10.59", "172.16.10.123"}, &networkInterface),
 					testAccCheckENIDifferent(&lastInterface, &networkInterface), // different
-					testAccCheckENIExists(ctx, resourceName, &lastInterface),
+					testAccCheckENIExistsV2(ctx, resourceName, &lastInterface),
 				),
 			},
 			{ // Use count to add IPs
 				Config: testAccVPCNetworkInterfaceConfig_privateIPSetCount(rName, 4),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &networkInterface),
+					testAccCheckENIExistsV2(ctx, resourceName, &networkInterface),
 					testAccCheckENISame(&lastInterface, &networkInterface), // same
-					testAccCheckENIExists(ctx, resourceName, &lastInterface),
+					testAccCheckENIExistsV2(ctx, resourceName, &lastInterface),
 				),
 			},
 			{ // Change list, retain primary
 				Config: testAccVPCNetworkInterfaceConfig_privateIPSet(rName, []string{"172.16.10.44", "172.16.10.57"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &networkInterface),
+					testAccCheckENIExistsV2(ctx, resourceName, &networkInterface),
 					testAccCheckENIPrivateIPSet([]string{"172.16.10.44", "172.16.10.57"}, &networkInterface),
 					testAccCheckENISame(&lastInterface, &networkInterface), // same
-					testAccCheckENIExists(ctx, resourceName, &lastInterface),
+					testAccCheckENIExistsV2(ctx, resourceName, &lastInterface),
 				),
 			},
 			{ // New list
 				Config: testAccVPCNetworkInterfaceConfig_privateIPSet(rName, []string{"172.16.10.17"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &networkInterface),
+					testAccCheckENIExistsV2(ctx, resourceName, &networkInterface),
 					testAccCheckENIPrivateIPSet([]string{"172.16.10.17"}, &networkInterface),
 					testAccCheckENIDifferent(&lastInterface, &networkInterface), // different
-					testAccCheckENIExists(ctx, resourceName, &lastInterface),
+					testAccCheckENIExistsV2(ctx, resourceName, &lastInterface),
 				),
 			},
 		},
@@ -827,22 +809,22 @@ func TestAccVPCNetworkInterface_privateIPList(t *testing.T) {
 	}
 
 	ctx := acctest.Context(t)
-	var networkInterface, lastInterface ec2.NetworkInterface
+	var networkInterface, lastInterface types.NetworkInterface
 	resourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckENIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{ // Build a set incrementally in order
 				Config: testAccVPCNetworkInterfaceConfig_privateIPSet(rName, []string{"172.16.10.17"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &networkInterface),
+					testAccCheckENIExistsV2(ctx, resourceName, &networkInterface),
 					testAccCheckENIPrivateIPSet([]string{"172.16.10.17"}, &networkInterface),
-					testAccCheckENIExists(ctx, resourceName, &lastInterface),
+					testAccCheckENIExistsV2(ctx, resourceName, &lastInterface),
 				),
 			},
 			{
@@ -854,117 +836,117 @@ func TestAccVPCNetworkInterface_privateIPList(t *testing.T) {
 			{ // Add to set
 				Config: testAccVPCNetworkInterfaceConfig_privateIPSet(rName, []string{"172.16.10.17", "172.16.10.45"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &networkInterface),
+					testAccCheckENIExistsV2(ctx, resourceName, &networkInterface),
 					testAccCheckENIPrivateIPSet([]string{"172.16.10.17", "172.16.10.45"}, &networkInterface),
 					testAccCheckENISame(&lastInterface, &networkInterface), // same
-					testAccCheckENIExists(ctx, resourceName, &lastInterface),
+					testAccCheckENIExistsV2(ctx, resourceName, &lastInterface),
 				),
 			},
 			{ // Add to set
 				Config: testAccVPCNetworkInterfaceConfig_privateIPSet(rName, []string{"172.16.10.17", "172.16.10.45", "172.16.10.89"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &networkInterface),
+					testAccCheckENIExistsV2(ctx, resourceName, &networkInterface),
 					testAccCheckENIPrivateIPSet([]string{"172.16.10.17", "172.16.10.45", "172.16.10.89"}, &networkInterface),
 					testAccCheckENISame(&lastInterface, &networkInterface), // same
-					testAccCheckENIExists(ctx, resourceName, &lastInterface),
+					testAccCheckENIExistsV2(ctx, resourceName, &lastInterface),
 				),
 			},
 			{ // Add to set
 				Config: testAccVPCNetworkInterfaceConfig_privateIPSet(rName, []string{"172.16.10.17", "172.16.10.45", "172.16.10.89", "172.16.10.122"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &networkInterface),
+					testAccCheckENIExistsV2(ctx, resourceName, &networkInterface),
 					testAccCheckENIPrivateIPSet([]string{"172.16.10.17", "172.16.10.45", "172.16.10.89", "172.16.10.122"}, &networkInterface),
 					testAccCheckENISame(&lastInterface, &networkInterface), // same
-					testAccCheckENIExists(ctx, resourceName, &lastInterface),
+					testAccCheckENIExistsV2(ctx, resourceName, &lastInterface),
 				),
 			},
 			{ // Change from set to list using same order
 				Config: testAccVPCNetworkInterfaceConfig_privateIPList(rName, []string{"172.16.10.17", "172.16.10.45", "172.16.10.89", "172.16.10.122"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &networkInterface),
+					testAccCheckENIExistsV2(ctx, resourceName, &networkInterface),
 					testAccCheckENIPrivateIPList([]string{"172.16.10.17", "172.16.10.45", "172.16.10.89", "172.16.10.122"}, &networkInterface),
 					testAccCheckENISame(&lastInterface, &networkInterface), // same
-					testAccCheckENIExists(ctx, resourceName, &lastInterface),
+					testAccCheckENIExistsV2(ctx, resourceName, &lastInterface),
 				),
 			},
 			{ // Change order of private_ip_list
 				Config: testAccVPCNetworkInterfaceConfig_privateIPList(rName, []string{"172.16.10.17", "172.16.10.89", "172.16.10.45", "172.16.10.122"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &networkInterface),
+					testAccCheckENIExistsV2(ctx, resourceName, &networkInterface),
 					testAccCheckENIPrivateIPList([]string{"172.16.10.17", "172.16.10.89", "172.16.10.45", "172.16.10.122"}, &networkInterface),
 					testAccCheckENISame(&lastInterface, &networkInterface), // same
-					testAccCheckENIExists(ctx, resourceName, &lastInterface),
+					testAccCheckENIExistsV2(ctx, resourceName, &lastInterface),
 				),
 			},
 			{ // Remove secondaries from end
 				Config: testAccVPCNetworkInterfaceConfig_privateIPList(rName, []string{"172.16.10.17", "172.16.10.89", "172.16.10.45"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &networkInterface),
+					testAccCheckENIExistsV2(ctx, resourceName, &networkInterface),
 					testAccCheckENIPrivateIPList([]string{"172.16.10.17", "172.16.10.89", "172.16.10.45"}, &networkInterface),
 					testAccCheckENISame(&lastInterface, &networkInterface), // same
-					testAccCheckENIExists(ctx, resourceName, &lastInterface),
+					testAccCheckENIExistsV2(ctx, resourceName, &lastInterface),
 				),
 			},
 			{ // Add secondaries to end
 				Config: testAccVPCNetworkInterfaceConfig_privateIPList(rName, []string{"172.16.10.17", "172.16.10.89", "172.16.10.45", "172.16.10.123"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &networkInterface),
+					testAccCheckENIExistsV2(ctx, resourceName, &networkInterface),
 					testAccCheckENIPrivateIPList([]string{"172.16.10.17", "172.16.10.89", "172.16.10.45", "172.16.10.123"}, &networkInterface),
 					testAccCheckENISame(&lastInterface, &networkInterface), // same
-					testAccCheckENIExists(ctx, resourceName, &lastInterface),
+					testAccCheckENIExistsV2(ctx, resourceName, &lastInterface),
 				),
 			},
 			{ // Add secondaries to middle
 				Config: testAccVPCNetworkInterfaceConfig_privateIPList(rName, []string{"172.16.10.17", "172.16.10.89", "172.16.10.77", "172.16.10.45", "172.16.10.123"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &networkInterface),
+					testAccCheckENIExistsV2(ctx, resourceName, &networkInterface),
 					testAccCheckENIPrivateIPList([]string{"172.16.10.17", "172.16.10.89", "172.16.10.77", "172.16.10.45", "172.16.10.123"}, &networkInterface),
 					testAccCheckENISame(&lastInterface, &networkInterface), // same
-					testAccCheckENIExists(ctx, resourceName, &lastInterface),
+					testAccCheckENIExistsV2(ctx, resourceName, &lastInterface),
 				),
 			},
 			{ // Remove secondaries from middle
 				Config: testAccVPCNetworkInterfaceConfig_privateIPList(rName, []string{"172.16.10.17", "172.16.10.89", "172.16.10.123"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &networkInterface),
+					testAccCheckENIExistsV2(ctx, resourceName, &networkInterface),
 					testAccCheckENIPrivateIPList([]string{"172.16.10.17", "172.16.10.89", "172.16.10.123"}, &networkInterface),
 					testAccCheckENISame(&lastInterface, &networkInterface), // same
-					testAccCheckENIExists(ctx, resourceName, &lastInterface),
+					testAccCheckENIExistsV2(ctx, resourceName, &lastInterface),
 				),
 			},
 			{ // Use count to add IPs
 				Config: testAccVPCNetworkInterfaceConfig_privateIPSetCount(rName, 4),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &networkInterface),
+					testAccCheckENIExistsV2(ctx, resourceName, &networkInterface),
 					testAccCheckENISame(&lastInterface, &networkInterface), // same
-					testAccCheckENIExists(ctx, resourceName, &lastInterface),
+					testAccCheckENIExistsV2(ctx, resourceName, &lastInterface),
 				),
 			},
 			{ // Change to specific list - forces new
 				Config: testAccVPCNetworkInterfaceConfig_privateIPList(rName, []string{"172.16.10.59", "172.16.10.123", "172.16.10.38"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &networkInterface),
+					testAccCheckENIExistsV2(ctx, resourceName, &networkInterface),
 					testAccCheckENIPrivateIPList([]string{"172.16.10.59", "172.16.10.123", "172.16.10.38"}, &networkInterface),
 					testAccCheckENIDifferent(&lastInterface, &networkInterface), // different
-					testAccCheckENIExists(ctx, resourceName, &lastInterface),
+					testAccCheckENIExistsV2(ctx, resourceName, &lastInterface),
 				),
 			},
 			{ // Change first of private_ip_list - forces new
 				Config: testAccVPCNetworkInterfaceConfig_privateIPList(rName, []string{"172.16.10.123", "172.16.10.59", "172.16.10.38"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &networkInterface),
+					testAccCheckENIExistsV2(ctx, resourceName, &networkInterface),
 					testAccCheckENIPrivateIPList([]string{"172.16.10.123", "172.16.10.59", "172.16.10.38"}, &networkInterface),
 					testAccCheckENIDifferent(&lastInterface, &networkInterface), // different
-					testAccCheckENIExists(ctx, resourceName, &lastInterface),
+					testAccCheckENIExistsV2(ctx, resourceName, &lastInterface),
 				),
 			},
 			{ // Change from list to set using same set
 				Config: testAccVPCNetworkInterfaceConfig_privateIPSet(rName, []string{"172.16.10.123", "172.16.10.59", "172.16.10.38"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists(ctx, resourceName, &networkInterface),
+					testAccCheckENIExistsV2(ctx, resourceName, &networkInterface),
 					testAccCheckENIPrivateIPSet([]string{"172.16.10.123", "172.16.10.59", "172.16.10.38"}, &networkInterface),
 					testAccCheckENISame(&lastInterface, &networkInterface), // same
-					testAccCheckENIExists(ctx, resourceName, &lastInterface),
+					testAccCheckENIExistsV2(ctx, resourceName, &lastInterface),
 				),
 			},
 		},
@@ -987,14 +969,35 @@ func convertIPToDashIP(ip string) string {
 }
 
 func regionalPrivateDNSSuffix(region string) string {
-	if region == endpoints.UsEast1RegionID {
+	if region == names.USEast1RegionID {
 		return "ec2.internal"
 	}
 
 	return fmt.Sprintf("%s.compute.internal", region)
 }
 
-func testAccCheckENIExists(ctx context.Context, n string, v *ec2.NetworkInterface) resource.TestCheckFunc {
+func testAccCheckENIExists(ctx context.Context, n string, v *types.NetworkInterface) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+
+		output, err := tfec2.FindNetworkInterfaceByIDV2(ctx, conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
+
+func testAccCheckENIExistsV2(ctx context.Context, n string, v *types.NetworkInterface) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1005,9 +1008,9 @@ func testAccCheckENIExists(ctx context.Context, n string, v *ec2.NetworkInterfac
 			return fmt.Errorf("No EC2 Network Interface ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		output, err := tfec2.FindNetworkInterfaceByID(ctx, conn, rs.Primary.ID)
+		output, err := tfec2.FindNetworkInterfaceByIDV2(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -1021,14 +1024,14 @@ func testAccCheckENIExists(ctx context.Context, n string, v *ec2.NetworkInterfac
 
 func testAccCheckENIDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_network_interface" {
 				continue
 			}
 
-			_, err := tfec2.FindNetworkInterfaceByID(ctx, conn, rs.Primary.ID)
+			_, err := tfec2.FindNetworkInterfaceByIDV2(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -1045,7 +1048,7 @@ func testAccCheckENIDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckENIMakeExternalAttachment(ctx context.Context, n string, networkInterface *ec2.NetworkInterface) resource.TestCheckFunc {
+func testAccCheckENIMakeExternalAttachment(ctx context.Context, n string, networkInterface *types.NetworkInterface) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok || rs.Primary.ID == "" {
@@ -1053,12 +1056,12 @@ func testAccCheckENIMakeExternalAttachment(ctx context.Context, n string, networ
 		}
 
 		input := &ec2.AttachNetworkInterfaceInput{
-			DeviceIndex:        aws.Int64(1),
+			DeviceIndex:        aws.Int32(1),
 			InstanceId:         aws.String(rs.Primary.ID),
 			NetworkInterfaceId: networkInterface.NetworkInterfaceId,
 		}
 
-		_, err := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx).AttachNetworkInterfaceWithContext(ctx, input)
+		_, err := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx).AttachNetworkInterface(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("error attaching ENI: %w", err)
@@ -1067,7 +1070,7 @@ func testAccCheckENIMakeExternalAttachment(ctx context.Context, n string, networ
 	}
 }
 
-func testAccCheckENIPrivateIPSet(ips []string, iface *ec2.NetworkInterface) resource.TestCheckFunc {
+func testAccCheckENIPrivateIPSet(ips []string, iface *types.NetworkInterface) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		iIPs := tfec2.FlattenNetworkInterfacePrivateIPAddresses(iface.PrivateIpAddresses)
 
@@ -1079,7 +1082,7 @@ func testAccCheckENIPrivateIPSet(ips []string, iface *ec2.NetworkInterface) reso
 	}
 }
 
-func testAccCheckENIPrivateIPList(ips []string, iface *ec2.NetworkInterface) resource.TestCheckFunc {
+func testAccCheckENIPrivateIPList(ips []string, iface *types.NetworkInterface) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		iIPs := tfec2.FlattenNetworkInterfacePrivateIPAddresses(iface.PrivateIpAddresses)
 
@@ -1110,19 +1113,19 @@ func stringSlicesEqual(s1, s2 []string) bool {
 	return reflect.DeepEqual(s1, s2)
 }
 
-func testAccCheckENISame(iface1 *ec2.NetworkInterface, iface2 *ec2.NetworkInterface) resource.TestCheckFunc {
+func testAccCheckENISame(iface1 *types.NetworkInterface, iface2 *types.NetworkInterface) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(iface1.NetworkInterfaceId) != aws.StringValue(iface2.NetworkInterfaceId) {
-			return fmt.Errorf("interface %s should not have been replaced with %s", aws.StringValue(iface1.NetworkInterfaceId), aws.StringValue(iface2.NetworkInterfaceId))
+		if aws.ToString(iface1.NetworkInterfaceId) != aws.ToString(iface2.NetworkInterfaceId) {
+			return fmt.Errorf("interface %s should not have been replaced with %s", aws.ToString(iface1.NetworkInterfaceId), aws.ToString(iface2.NetworkInterfaceId))
 		}
 		return nil
 	}
 }
 
-func testAccCheckENIDifferent(iface1 *ec2.NetworkInterface, iface2 *ec2.NetworkInterface) resource.TestCheckFunc {
+func testAccCheckENIDifferent(iface1 *types.NetworkInterface, iface2 *types.NetworkInterface) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(iface1.NetworkInterfaceId) == aws.StringValue(iface2.NetworkInterfaceId) {
-			return fmt.Errorf("interface %s should have been replaced, have %s", aws.StringValue(iface1.NetworkInterfaceId), aws.StringValue(iface2.NetworkInterfaceId))
+		if aws.ToString(iface1.NetworkInterfaceId) == aws.ToString(iface2.NetworkInterfaceId) {
+			return fmt.Errorf("interface %s should have been replaced, have %s", aws.ToString(iface1.NetworkInterfaceId), aws.ToString(iface2.NetworkInterfaceId))
 		}
 		return nil
 	}

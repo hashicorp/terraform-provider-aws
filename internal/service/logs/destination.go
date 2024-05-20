@@ -38,11 +38,11 @@ func resourceDestination() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -51,7 +51,7 @@ func resourceDestination() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`[^:*]*`), ""),
 				),
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -78,10 +78,10 @@ func resourceDestinationCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &cloudwatchlogs.PutDestinationInput{
 		DestinationName: aws.String(name),
-		RoleArn:         aws.String(d.Get("role_arn").(string)),
+		RoleArn:         aws.String(d.Get(names.AttrRoleARN).(string)),
 		TargetArn:       aws.String(d.Get("target_arn").(string)),
 	}
 
@@ -122,9 +122,9 @@ func resourceDestinationRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Logs Destination (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", destination.Arn)
-	d.Set("name", destination.DestinationName)
-	d.Set("role_arn", destination.RoleArn)
+	d.Set(names.AttrARN, destination.Arn)
+	d.Set(names.AttrName, destination.DestinationName)
+	d.Set(names.AttrRoleARN, destination.RoleArn)
 	d.Set("target_arn", destination.TargetArn)
 
 	return diags
@@ -135,10 +135,10 @@ func resourceDestinationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &cloudwatchlogs.PutDestinationInput{
 			DestinationName: aws.String(d.Id()),
-			RoleArn:         aws.String(d.Get("role_arn").(string)),
+			RoleArn:         aws.String(d.Get(names.AttrRoleARN).(string)),
 			TargetArn:       aws.String(d.Get("target_arn").(string)),
 		}
 

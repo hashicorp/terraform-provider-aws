@@ -72,6 +72,25 @@ func waitIndexCreated(ctx context.Context, conn *qbusiness.Client, index_id stri
 	return nil, err
 }
 
+func waitIndexUpdated(ctx context.Context, conn *qbusiness.Client, index_id string, timeout time.Duration) (*qbusiness.GetIndexOutput, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(types.IndexStatusCreating, types.IndexStatusUpdating),
+		Target:     enum.Slice(types.IndexStatusActive),
+		Refresh:    statusIndexAvailability(ctx, conn, index_id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*qbusiness.GetIndexOutput); ok {
+		tfresource.SetLastError(err, errors.New(string(output.Status)))
+
+		return output, err
+	}
+	return nil, err
+}
+
 func waitIndexDeleted(ctx context.Context, conn *qbusiness.Client, index_id string, timeout time.Duration) (*qbusiness.GetIndexOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.IndexStatusActive, types.IndexStatusDeleting),
@@ -84,6 +103,44 @@ func waitIndexDeleted(ctx context.Context, conn *qbusiness.Client, index_id stri
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*qbusiness.GetIndexOutput); ok {
+		tfresource.SetLastError(err, errors.New(string(output.Status)))
+
+		return output, err
+	}
+	return nil, err
+}
+
+func waitRetrieverCreated(ctx context.Context, conn *qbusiness.Client, retriever_id string, timeout time.Duration) (*qbusiness.GetRetrieverOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(types.RetrieverStatusCreating),
+		Target:     enum.Slice(types.RetrieverStatusActive),
+		Refresh:    statusRetrieverAvailability(ctx, conn, retriever_id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*qbusiness.GetRetrieverOutput); ok {
+		tfresource.SetLastError(err, errors.New(string(output.Status)))
+
+		return output, err
+	}
+	return nil, err
+}
+
+func waitRetrieverDeleted(ctx context.Context, conn *qbusiness.Client, retriever_id string, timeout time.Duration) (*qbusiness.GetRetrieverOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(types.RetrieverStatusActive),
+		Target:     []string{},
+		Refresh:    statusRetrieverAvailability(ctx, conn, retriever_id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*qbusiness.GetRetrieverOutput); ok {
 		tfresource.SetLastError(err, errors.New(string(output.Status)))
 
 		return output, err

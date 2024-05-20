@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_lightsail_container_service_deployment_version")
@@ -83,7 +84,7 @@ func ResourceContainerServiceDeploymentVersion() *schema.Resource {
 					},
 				},
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -124,7 +125,7 @@ func ResourceContainerServiceDeploymentVersion() *schema.Resource {
 										Default:      5,
 										ValidateFunc: validation.IntBetween(5, 300),
 									},
-									"path": {
+									names.AttrPath: {
 										Type:     schema.TypeString,
 										Optional: true,
 										ForceNew: true,
@@ -155,16 +156,16 @@ func ResourceContainerServiceDeploymentVersion() *schema.Resource {
 					},
 				},
 			},
-			"service_name": {
+			names.AttrServiceName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -176,7 +177,7 @@ func resourceContainerServiceDeploymentVersionCreate(ctx context.Context, d *sch
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
-	serviceName := d.Get("service_name").(string)
+	serviceName := d.Get(names.AttrServiceName).(string)
 
 	input := lightsail.CreateContainerServiceDeploymentInput{
 		ServiceName: aws.String(serviceName),
@@ -232,10 +233,10 @@ func resourceContainerServiceDeploymentVersionRead(ctx context.Context, d *schem
 		return sdkdiag.AppendErrorf(diags, "reading Lightsail Container Service (%s) Deployment Version (%d): %s", serviceName, version, err)
 	}
 
-	d.Set("created_at", aws.ToTime(deployment.CreatedAt).Format(time.RFC3339))
-	d.Set("service_name", serviceName)
-	d.Set("state", deployment.State)
-	d.Set("version", deployment.Version)
+	d.Set(names.AttrCreatedAt, aws.ToTime(deployment.CreatedAt).Format(time.RFC3339))
+	d.Set(names.AttrServiceName, serviceName)
+	d.Set(names.AttrState, deployment.State)
+	d.Set(names.AttrVersion, deployment.Version)
 
 	if err := d.Set("container", flattenContainerServiceDeploymentContainers(deployment.Containers)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting container for Lightsail Container Service (%s) Deployment Version (%d): %s", serviceName, version, err)
@@ -363,7 +364,7 @@ func expandContainerServiceDeploymentPublicEndpointHealthCheck(tfList []interfac
 	healthCheck := &types.ContainerServiceHealthCheckConfig{
 		HealthyThreshold:   aws.Int32(int32(tfMap["healthy_threshold"].(int))),
 		IntervalSeconds:    aws.Int32(int32(tfMap["interval_seconds"].(int))),
-		Path:               aws.String(tfMap["path"].(string)),
+		Path:               aws.String(tfMap[names.AttrPath].(string)),
 		SuccessCodes:       aws.String(tfMap["success_codes"].(string)),
 		TimeoutSeconds:     aws.Int32(int32(tfMap["timeout_seconds"].(int))),
 		UnhealthyThreshold: aws.Int32(int32(tfMap["unhealthy_threshold"].(int))),
@@ -416,7 +417,7 @@ func flattenContainerServiceDeploymentPublicEndpointHealthCheck(healthCheck *typ
 		map[string]interface{}{
 			"healthy_threshold":   int(aws.ToInt32(healthCheck.HealthyThreshold)),
 			"interval_seconds":    int(aws.ToInt32(healthCheck.IntervalSeconds)),
-			"path":                aws.ToString(healthCheck.Path),
+			names.AttrPath:        aws.ToString(healthCheck.Path),
 			"success_codes":       aws.ToString(healthCheck.SuccessCodes),
 			"timeout_seconds":     int(aws.ToInt32(healthCheck.TimeoutSeconds)),
 			"unhealthy_threshold": int(aws.ToInt32(healthCheck.UnhealthyThreshold)),

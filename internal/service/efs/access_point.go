@@ -5,7 +5,6 @@ package efs
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -42,16 +41,16 @@ func ResourceAccessPoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"file_system_id": {
+			names.AttrFileSystemID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -90,7 +89,7 @@ func ResourceAccessPoint() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"path": {
+						names.AttrPath: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -135,7 +134,7 @@ func resourceAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
-	fsId := d.Get("file_system_id").(string)
+	fsId := d.Get(names.AttrFileSystemID).(string)
 	input := efs.CreateAccessPointInput{
 		FileSystemId: aws.String(fsId),
 		Tags:         getTagsIn(ctx),
@@ -195,27 +194,23 @@ func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	ap := resp.AccessPoints[0]
 
-	log.Printf("[DEBUG] Found EFS access point: %#v", ap)
-
+	d.Set(names.AttrARN, ap.AccessPointArn)
+	fsID := aws.StringValue(ap.FileSystemId)
 	fsARN := arn.ARN{
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Partition: meta.(*conns.AWSClient).Partition,
 		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  fmt.Sprintf("file-system/%s", aws.StringValue(ap.FileSystemId)),
+		Resource:  "file-system/" + fsID,
 		Service:   "elasticfilesystem",
 	}.String()
-
 	d.Set("file_system_arn", fsARN)
-	d.Set("file_system_id", ap.FileSystemId)
-	d.Set("arn", ap.AccessPointArn)
-	d.Set("owner_id", ap.OwnerId)
-
+	d.Set(names.AttrFileSystemID, fsID)
+	d.Set(names.AttrOwnerID, ap.OwnerId)
 	if err := d.Set("posix_user", flattenAccessPointPOSIXUser(ap.PosixUser)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting posix user: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting posix_user: %s", err)
 	}
-
 	if err := d.Set("root_directory", flattenAccessPointRootDirectory(ap.RootDirectory)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting root directory: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting root_directory: %s", err)
 	}
 
 	setTagsOut(ctx, ap.Tags)
@@ -285,7 +280,7 @@ func expandAccessPointRootDirectory(rDir []interface{}) *efs.RootDirectory {
 
 	rootDir := &efs.RootDirectory{}
 
-	if v, ok := m["path"]; ok {
+	if v, ok := m[names.AttrPath]; ok {
 		rootDir.Path = aws.String(v.(string))
 	}
 
@@ -332,7 +327,7 @@ func flattenAccessPointRootDirectory(rDir *efs.RootDirectory) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"path":          aws.StringValue(rDir.Path),
+		names.AttrPath:  aws.StringValue(rDir.Path),
 		"creation_info": flattenAccessPointRootDirectoryCreationInfo(rDir.CreationInfo),
 	}
 

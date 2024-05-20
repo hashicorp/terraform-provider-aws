@@ -43,11 +43,11 @@ func ResourceSinkPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"policy": {
+			names.AttrPolicy: {
 				Type:                  schema.TypeString,
 				Required:              true,
 				ValidateFunc:          validation.StringIsJSON,
@@ -79,10 +79,10 @@ func resourceSinkPolicyPut(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 
 	sinkIdentifier := d.Get("sink_identifier").(string)
-	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
 
 	if err != nil {
-		return diag.Errorf("policy (%s) is invalid JSON: %s", d.Get("policy").(string), err)
+		return diag.Errorf("policy (%s) is invalid JSON: %s", d.Get(names.AttrPolicy).(string), err)
 	}
 
 	in := &oam.PutSinkPolicyInput{
@@ -117,16 +117,16 @@ func resourceSinkPolicyRead(ctx context.Context, d *schema.ResourceData, meta in
 		return create.DiagError(names.ObservabilityAccessManager, create.ErrActionReading, ResNameSinkPolicy, d.Id(), err)
 	}
 
-	d.Set("arn", out.SinkArn)
+	d.Set(names.AttrARN, out.SinkArn)
 	d.Set("sink_id", out.SinkId)
 	d.Set("sink_identifier", d.Id())
 
-	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.ToString(out.Policy))
+	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), aws.ToString(out.Policy))
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	d.Set("policy", policyToSet)
+	d.Set(names.AttrPolicy, policyToSet)
 
 	return nil
 }

@@ -44,8 +44,8 @@ func TestAccFinSpaceKxDataview_basic(t *testing.T) {
 				Config: testAccKxDataviewConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxDataviewExists(ctx, resourceName, &dataview),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxDataviewStatusActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxDataviewStatusActive)),
 				),
 			},
 			{
@@ -88,6 +88,66 @@ func TestAccFinSpaceKxDataview_disappears(t *testing.T) {
 	})
 }
 
+func TestAccFinSpaceKxDataview_readWrite(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping test in short mode.")
+	}
+
+	ctx := acctest.Context(t)
+	var dataview finspace.GetKxDataviewOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_finspace_kx_dataview.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKxDataviewDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKxDataviewConfig_readWrite(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKxDataviewExists(ctx, resourceName, &dataview),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFinSpaceKxDataview_onDemand(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping test in short mode.")
+	}
+
+	ctx := acctest.Context(t)
+	var dataview finspace.GetKxDataviewOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_finspace_kx_dataview.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, finspace.ServiceID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, finspace.ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKxDataviewDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKxDataviewConfig_onDemand(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKxDataviewExists(ctx, resourceName, &dataview),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+				),
+			},
+		},
+	})
+}
+
 func TestAccFinSpaceKxDataview_tags(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping test in short mode.")
@@ -111,11 +171,12 @@ func TestAccFinSpaceKxDataview_tags(t *testing.T) {
 				Config: testAccKxDataviewConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxDataviewExists(ctx, resourceName, &dataview),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
+
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -125,7 +186,7 @@ func TestAccFinSpaceKxDataview_tags(t *testing.T) {
 				Config: testAccKxDataviewConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxDataviewExists(ctx, resourceName, &dataview),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -135,7 +196,7 @@ func TestAccFinSpaceKxDataview_tags(t *testing.T) {
 				Config: testAccKxDataviewConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxDataviewExists(ctx, resourceName, &dataview),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -167,8 +228,8 @@ func TestAccFinSpaceKxDataview_withKxVolume(t *testing.T) {
 				Config: testAccKxDataviewConfig_withKxVolume(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxDataviewExists(ctx, resourceName, &dataview),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxDataviewStatusActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxDataviewStatusActive)),
 				),
 			},
 		},
@@ -253,6 +314,75 @@ resource "aws_finspace_kx_dataview" "test" {
   auto_update          = true
   az_mode              = "SINGLE"
   availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
+}
+`, rName))
+}
+
+func testAccKxDataviewConfig_readWrite(rName string) string {
+	return acctest.ConfigCompose(
+		testAccKxDataviewConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_finspace_kx_volume" "test" {
+  name               = %[1]q
+  environment_id     = aws_finspace_kx_environment.test.id
+  availability_zones = [aws_finspace_kx_environment.test.availability_zones[0]]
+  az_mode            = "SINGLE"
+  type               = "NAS_1"
+
+  nas1_configuration {
+    size = 1200
+    type = "SSD_250"
+  }
+}
+
+resource "aws_finspace_kx_dataview" "test" {
+  name                 = %[1]q
+  environment_id       = aws_finspace_kx_environment.test.id
+  database_name        = aws_finspace_kx_database.test.name
+  auto_update          = false
+  az_mode              = "SINGLE"
+  availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
+  read_write           = true
+
+  segment_configurations {
+    db_paths    = ["/*"]
+    volume_name = aws_finspace_kx_volume.test.name
+    on_demand   = false
+  }
+}
+`, rName))
+}
+
+func testAccKxDataviewConfig_onDemand(rName string) string {
+	return acctest.ConfigCompose(
+		testAccKxDataviewConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_finspace_kx_volume" "test" {
+  name               = %[1]q
+  environment_id     = aws_finspace_kx_environment.test.id
+  availability_zones = [aws_finspace_kx_environment.test.availability_zones[0]]
+  az_mode            = "SINGLE"
+  type               = "NAS_1"
+
+  nas1_configuration {
+    size = 1200
+    type = "SSD_250"
+  }
+}
+
+resource "aws_finspace_kx_dataview" "test" {
+  name                 = %[1]q
+  environment_id       = aws_finspace_kx_environment.test.id
+  database_name        = aws_finspace_kx_database.test.name
+  auto_update          = false
+  az_mode              = "SINGLE"
+  availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
+
+  segment_configurations {
+    db_paths    = ["/*"]
+    volume_name = aws_finspace_kx_volume.test.name
+    on_demand   = true
+  }
 }
 `, rName))
 }

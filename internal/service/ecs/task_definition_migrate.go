@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func resourceTaskDefinitionMigrateState(v int, is *terraform.InstanceState, meta interface{}) (*terraform.InstanceState, error) {
@@ -29,7 +30,7 @@ func resourceTaskDefinitionMigrateState(v int, is *terraform.InstanceState, meta
 }
 
 func migrateTaskDefinitionStateV0toV1(is *terraform.InstanceState, conn *ecs.ECS) (*terraform.InstanceState, error) {
-	arn := is.Attributes["arn"]
+	arn := is.Attributes[names.AttrARN]
 
 	ctx := context.TODO() // nosemgrep:ci.semgrep.migrate.context-todo
 	// We need to pull definitions from the API b/c they're unrecoverable from the checksum

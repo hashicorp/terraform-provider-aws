@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_backup_plan")
@@ -25,16 +26,16 @@ func DataSourcePlan() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
-			"version": {
+			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -57,15 +58,15 @@ func dataSourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.SetId(aws.StringValue(resp.BackupPlanId))
-	d.Set("arn", resp.BackupPlanArn)
-	d.Set("name", resp.BackupPlan.BackupPlanName)
-	d.Set("version", resp.VersionId)
+	d.Set(names.AttrARN, resp.BackupPlanArn)
+	d.Set(names.AttrName, resp.BackupPlan.BackupPlanName)
+	d.Set(names.AttrVersion, resp.VersionId)
 
 	tags, err := listTags(ctx, conn, aws.StringValue(resp.BackupPlanArn))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for Backup Plan (%s): %s", id, err)
 	}
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

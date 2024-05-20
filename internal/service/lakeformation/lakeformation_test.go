@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccLakeFormation_serial(t *testing.T) {
@@ -19,6 +20,12 @@ func TestAccLakeFormation_serial(t *testing.T) {
 			"withoutCatalogId": testAccDataLakeSettings_withoutCatalogID,
 			"readOnlyAdmins":   testAccDataLakeSettings_readOnlyAdmins,
 		},
+		"DataCellsFilter": {
+			"basic":          testAccDataCellsFilter_basic,
+			"columnWildcard": testAccDataCellsFilter_columnWildcard,
+			"disappears":     testAccDataCellsFilter_disappears,
+			"rowFilter":      testAccDataCellsFilter_rowFilter,
+		},
 		"DataLakeSettingsDataSource": {
 			"basic":          testAccDataLakeSettingsDataSource_basic,
 			"readOnlyAdmins": testAccDataLakeSettingsDataSource_readOnlyAdmins,
@@ -28,6 +35,7 @@ func TestAccLakeFormation_serial(t *testing.T) {
 			"database":            testAccPermissions_database,
 			"databaseIAMAllowed":  testAccPermissions_databaseIAMAllowed,
 			"databaseMultiple":    testAccPermissions_databaseMultiple,
+			"dataCellsFilter":     testAccPermissions_dataCellsFilter,
 			"dataLocation":        testAccPermissions_dataLocation,
 			"disappears":          testAccPermissions_disappears,
 			"lfTag":               testAccPermissions_lfTag,
@@ -36,6 +44,7 @@ func TestAccLakeFormation_serial(t *testing.T) {
 		},
 		"PermissionsDataSource": {
 			"basic":            testAccPermissionsDataSource_basic,
+			"dataCellsFilter":  testAccPermissionsDataSource_dataCellsFilter,
 			"database":         testAccPermissionsDataSource_database,
 			"dataLocation":     testAccPermissionsDataSource_dataLocation,
 			"lfTag":            testAccPermissionsDataSource_lfTag,
@@ -65,8 +74,14 @@ func TestAccLakeFormation_serial(t *testing.T) {
 			"basic":           testAccLFTag_basic,
 			"disappears":      testAccLFTag_disappears,
 			"tagKeyComplex":   testAccLFTag_TagKey_complex,
-			"values":          testAccLFTag_Values,
+			names.AttrValues:  testAccLFTag_Values,
 			"valuesOverFifty": testAccLFTag_Values_overFifty,
+		},
+		"ResourceLFTag": {
+			"basic":            testAccResourceLFTag_basic,
+			"disappears":       testAccResourceLFTag_disappears,
+			"table":            testAccResourceLFTag_table,
+			"tableWithColumns": testAccResourceLFTag_tableWithColumns,
 		},
 		"ResourceLFTags": {
 			"basic":                testAccResourceLFTags_basic,

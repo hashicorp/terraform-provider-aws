@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_guardduty_detector")
@@ -29,22 +30,22 @@ func DataSourceDetector() *schema.Resource {
 							Type:     schema.TypeList,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"status": {
+									names.AttrStatus: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
 								},
 							},
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"status": {
+						names.AttrStatus: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -55,7 +56,7 @@ func DataSourceDetector() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"id": {
+			names.AttrID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -64,7 +65,7 @@ func DataSourceDetector() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -76,7 +77,7 @@ func dataSourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
-	detectorID := d.Get("id").(string)
+	detectorID := d.Get(names.AttrID).(string)
 
 	if detectorID == "" {
 		output, err := FindDetector(ctx, conn)
@@ -104,7 +105,7 @@ func dataSourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	d.Set("finding_publishing_frequency", gdo.FindingPublishingFrequency)
 	d.Set("service_role_arn", gdo.ServiceRole)
-	d.Set("status", gdo.Status)
+	d.Set(names.AttrStatus, gdo.Status)
 
 	return diags
 }

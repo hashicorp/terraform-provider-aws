@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_route53domains_delegation_signer_record
+```
+
+```release-note:enhancement
+resource/aws_route53domains_registered_domain: Support resource import
+```

@@ -5,13 +5,13 @@ package networkfirewall
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/networkfirewall"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -184,43 +184,52 @@ func resourceLoggingConfigurationDelete(ctx context.Context, d *schema.ResourceD
 }
 
 func putLoggingConfiguration(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string, l []*networkfirewall.LoggingConfiguration) error {
-	var errors *multierror.Error
+	var errs []error
+
 	for _, config := range l {
 		input := &networkfirewall.UpdateLoggingConfigurationInput{
 			FirewallArn:          aws.String(arn),
 			LoggingConfiguration: config,
 		}
+
 		_, err := conn.UpdateLoggingConfigurationWithContext(ctx, input)
+
 		if err != nil {
-			errors = multierror.Append(errors, fmt.Errorf("adding Logging Configuration to NetworkFirewall Firewall (%s): %w", arn, err))
+			errs = append(errs, fmt.Errorf("adding Logging Configuration to NetworkFirewall Firewall (%s): %w", arn, err))
 		}
 	}
-	return errors.ErrorOrNil()
+
+	return errors.Join(errs...)
 }
 
 func removeLoggingConfiguration(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string, l *networkfirewall.LoggingConfiguration) error {
 	if l == nil {
 		return nil
 	}
-	var errors *multierror.Error
+
+	var errs []error
+
 	// Must delete destination configs one at a time
 	for i, config := range l.LogDestinationConfigs {
 		input := &networkfirewall.UpdateLoggingConfigurationInput{
 			FirewallArn: aws.String(arn),
 		}
+
 		if i == 0 && len(l.LogDestinationConfigs) == 2 {
 			loggingConfig := &networkfirewall.LoggingConfiguration{
 				LogDestinationConfigs: []*networkfirewall.LogDestinationConfig{config},
 			}
 			input.LoggingConfiguration = loggingConfig
 		}
+
 		_, err := conn.UpdateLoggingConfigurationWithContext(ctx, input)
+
 		if err != nil {
-			errors = multierror.Append(errors, fmt.Errorf("removing Logging Configuration LogDestinationConfig (%v) from NetworkFirewall Firewall: %s: %w", config, arn, err))
+			errs = append(errs, fmt.Errorf("removing Logging Configuration LogDestinationConfig (%v) from NetworkFirewall Firewall: %s: %w", config, arn, err))
 		}
 	}
 
-	return errors.ErrorOrNil()
+	return errors.Join(errs...)
 }
 
 func expandLoggingConfiguration(l []interface{}) []*networkfirewall.LoggingConfiguration {

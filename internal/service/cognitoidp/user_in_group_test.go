@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcognitoidp "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCognitoIDPUserInGroup_basic(t *testing.T) {
@@ -29,7 +30,7 @@ func TestAccCognitoIDPUserInGroup_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserInGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -37,9 +38,9 @@ func TestAccCognitoIDPUserInGroup_basic(t *testing.T) {
 				Config: testAccUserInGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserInGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", userPoolResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "group_name", userGroupResourceName, "name"),
-					resource.TestCheckResourceAttrPair(resourceName, "username", userResourceName, "username"),
+					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", userPoolResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrGroupName, userGroupResourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrUsername, userResourceName, names.AttrUsername),
 				),
 			},
 		},
@@ -53,7 +54,7 @@ func TestAccCognitoIDPUserInGroup_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserInGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -109,9 +110,9 @@ func testAccCheckUserInGroupExists(ctx context.Context, resourceName string) res
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
-		groupName := rs.Primary.Attributes["group_name"]
+		groupName := rs.Primary.Attributes[names.AttrGroupName]
 		userPoolId := rs.Primary.Attributes["user_pool_id"]
-		username := rs.Primary.Attributes["username"]
+		username := rs.Primary.Attributes[names.AttrUsername]
 
 		found, err := tfcognitoidp.FindCognitoUserInGroup(ctx, conn, groupName, userPoolId, username)
 
@@ -136,9 +137,9 @@ func testAccCheckUserInGroupDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			groupName := rs.Primary.Attributes["group_name"]
+			groupName := rs.Primary.Attributes[names.AttrGroupName]
 			userPoolId := rs.Primary.Attributes["user_pool_id"]
-			username := rs.Primary.Attributes["username"]
+			username := rs.Primary.Attributes[names.AttrUsername]
 
 			found, err := tfcognitoidp.FindCognitoUserInGroup(ctx, conn, groupName, userPoolId, username)
 

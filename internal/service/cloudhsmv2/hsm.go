@@ -5,25 +5,31 @@ package cloudhsmv2
 
 import (
 	"context"
+	"errors"
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudhsmv2"
+	"github.com/aws/aws-sdk-go-v2/service/cloudhsmv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_cloudhsm_v2_hsm")
-func ResourceHSM() *schema.Resource {
+// @SDKResource("aws_cloudhsm_v2_hsm", name="HSM")
+func resourceHSM() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceHSMCreate,
 		ReadWithoutTimeout:   resourceHSMRead,
 		DeleteWithoutTimeout: resourceHSMDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -34,12 +40,12 @@ func ResourceHSM() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"availability_zone", "subnet_id"},
+				ExactlyOneOf: []string{names.AttrAvailabilityZone, names.AttrSubnetID},
 			},
 			"cluster_id": {
 				Type:     schema.TypeString,
@@ -58,18 +64,18 @@ func ResourceHSM() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"ip_address": {
+			names.AttrIPAddress: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"subnet_id": {
+			names.AttrSubnetID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ExactlyOneOf: []string{"availability_zone", "subnet_id"},
+				ExactlyOneOf: []string{names.AttrAvailabilityZone, names.AttrSubnetID},
 			},
 		},
 	}
@@ -77,41 +83,41 @@ func ResourceHSM() *schema.Resource {
 
 func resourceHSMCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudHSMV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).CloudHSMV2Client(ctx)
 
 	clusterID := d.Get("cluster_id").(string)
 	input := &cloudhsmv2.CreateHsmInput{
 		ClusterId: aws.String(clusterID),
 	}
 
-	if v, ok := d.GetOk("availability_zone"); ok {
+	if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
 		input.AvailabilityZone = aws.String(v.(string))
 	} else {
-		cluster, err := FindClusterByID(ctx, conn, clusterID)
+		cluster, err := findClusterByID(ctx, conn, clusterID)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading CloudHSMv2 Cluster (%s): %s", clusterID, err)
 		}
 
-		subnetID := d.Get("subnet_id").(string)
+		subnetID := d.Get(names.AttrSubnetID).(string)
 		for az, sn := range cluster.SubnetMapping {
-			if aws.StringValue(sn) == subnetID {
+			if sn == subnetID {
 				input.AvailabilityZone = aws.String(az)
 			}
 		}
 	}
 
-	if v, ok := d.GetOk("ip_address"); ok {
+	if v, ok := d.GetOk(names.AttrIPAddress); ok {
 		input.IpAddress = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateHsmWithContext(ctx, input)
+	output, err := conn.CreateHsm(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating CloudHSMv2 HSM: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.Hsm.HsmId))
+	d.SetId(aws.ToString(output.Hsm.HsmId))
 
 	if _, err := waitHSMCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for CloudHSMv2 HSM (%s) create: %s", d.Id(), err)
@@ -122,9 +128,9 @@ func resourceHSMCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceHSMRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudHSMV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).CloudHSMV2Client(ctx)
 
-	hsm, err := FindHSMByTwoPartKey(ctx, conn, d.Id(), d.Get("hsm_eni_id").(string))
+	hsm, err := findHSMByTwoPartKey(ctx, conn, d.Id(), d.Get("hsm_eni_id").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudHSMv2 HSM (%s) not found, removing from state", d.Id())
@@ -137,32 +143,32 @@ func resourceHSMRead(ctx context.Context, d *schema.ResourceData, meta interface
 	}
 
 	// When matched by ENI ID, the ID should updated.
-	if aws.StringValue(hsm.HsmId) != d.Id() {
-		d.SetId(aws.StringValue(hsm.HsmId))
+	if aws.ToString(hsm.HsmId) != d.Id() {
+		d.SetId(aws.ToString(hsm.HsmId))
 	}
 
-	d.Set("availability_zone", hsm.AvailabilityZone)
+	d.Set(names.AttrAvailabilityZone, hsm.AvailabilityZone)
 	d.Set("cluster_id", hsm.ClusterId)
 	d.Set("hsm_eni_id", hsm.EniId)
 	d.Set("hsm_id", hsm.HsmId)
 	d.Set("hsm_state", hsm.State)
-	d.Set("ip_address", hsm.EniIp)
-	d.Set("subnet_id", hsm.SubnetId)
+	d.Set(names.AttrIPAddress, hsm.EniIp)
+	d.Set(names.AttrSubnetID, hsm.SubnetId)
 
 	return diags
 }
 
 func resourceHSMDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudHSMV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).CloudHSMV2Client(ctx)
 
 	log.Printf("[INFO] Deleting CloudHSMv2 HSM: %s", d.Id())
-	_, err := conn.DeleteHsmWithContext(ctx, &cloudhsmv2.DeleteHsmInput{
+	_, err := conn.DeleteHsm(ctx, &cloudhsmv2.DeleteHsmInput{
 		ClusterId: aws.String(d.Get("cluster_id").(string)),
 		HsmId:     aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, cloudhsmv2.ErrCodeCloudHsmResourceNotFoundException) {
+	if errs.IsA[*types.CloudHsmResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -175,4 +181,87 @@ func resourceHSMDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	return diags
+}
+
+func findHSMByTwoPartKey(ctx context.Context, conn *cloudhsmv2.Client, hsmID, eniID string) (*types.Hsm, error) {
+	input := &cloudhsmv2.DescribeClustersInput{}
+
+	output, err := findClusters(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range output {
+		for _, v := range v.Hsms {
+			v := v
+
+			// CloudHSMv2 HSM instances can be recreated, but the ENI ID will
+			// remain consistent. Without this ENI matching, HSM instances
+			// instances can become orphaned.
+			if aws.ToString(v.HsmId) == hsmID || aws.ToString(v.EniId) == eniID {
+				return &v, nil
+			}
+		}
+	}
+
+	return nil, &retry.NotFoundError{}
+}
+
+func statusHSM(ctx context.Context, conn *cloudhsmv2.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findHSMByTwoPartKey(ctx, conn, id, "")
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), err
+	}
+}
+
+func waitHSMCreated(ctx context.Context, conn *cloudhsmv2.Client, id string, timeout time.Duration) (*types.Hsm, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(types.HsmStateCreateInProgress),
+		Target:     enum.Slice(types.HsmStateActive),
+		Refresh:    statusHSM(ctx, conn, id),
+		Timeout:    timeout,
+		MinTimeout: 30 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.Hsm); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateMessage)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitHSMDeleted(ctx context.Context, conn *cloudhsmv2.Client, id string, timeout time.Duration) (*types.Hsm, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(types.HsmStateDeleteInProgress),
+		Target:     []string{},
+		Refresh:    statusHSM(ctx, conn, id),
+		Timeout:    timeout,
+		MinTimeout: 30 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.Hsm); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StateMessage)))
+
+		return output, err
+	}
+
+	return nil, err
 }

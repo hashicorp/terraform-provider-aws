@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudwatch_query_definition")
@@ -37,7 +38,7 @@ func resourceQueryDefinition() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
@@ -70,7 +71,7 @@ func resourceQueryDefinitionPut(ctx context.Context, d *schema.ResourceData, met
 
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &cloudwatchlogs.PutQueryDefinitionInput{
 		Name:        aws.String(name),
 		QueryString: aws.String(d.Get("query_string").(string)),
@@ -102,7 +103,7 @@ func resourceQueryDefinitionRead(ctx context.Context, d *schema.ResourceData, me
 
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
-	result, err := findQueryDefinitionByTwoPartKey(ctx, conn, d.Get("name").(string), d.Id())
+	result, err := findQueryDefinitionByTwoPartKey(ctx, conn, d.Get(names.AttrName).(string), d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Logs Query Definition (%s) not found, removing from state", d.Id())
@@ -115,7 +116,7 @@ func resourceQueryDefinitionRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	d.Set("log_group_names", result.LogGroupNames)
-	d.Set("name", result.Name)
+	d.Set(names.AttrName, result.Name)
 	d.Set("query_definition_id", result.QueryDefinitionId)
 	d.Set("query_string", result.QueryString)
 

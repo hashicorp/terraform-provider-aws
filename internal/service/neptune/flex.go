@@ -6,6 +6,7 @@ package neptune
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func expandParameters(configured []interface{}) []*neptune.Parameter {
@@ -16,8 +17,8 @@ func expandParameters(configured []interface{}) []*neptune.Parameter {
 
 		p := &neptune.Parameter{
 			ApplyMethod:    aws.String(data["apply_method"].(string)),
-			ParameterName:  aws.String(data["name"].(string)),
-			ParameterValue: aws.String(data["value"].(string)),
+			ParameterName:  aws.String(data[names.AttrName].(string)),
+			ParameterValue: aws.String(data[names.AttrValue].(string)),
 		}
 
 		parameters = append(parameters, p)
@@ -32,9 +33,9 @@ func flattenParameters(list []*neptune.Parameter) []map[string]interface{} {
 	for _, i := range list {
 		if i.ParameterValue != nil {
 			result = append(result, map[string]interface{}{
-				"apply_method": aws.StringValue(i.ApplyMethod),
-				"name":         aws.StringValue(i.ParameterName),
-				"value":        aws.StringValue(i.ParameterValue),
+				"apply_method":  aws.StringValue(i.ApplyMethod),
+				names.AttrName:  aws.StringValue(i.ParameterName),
+				names.AttrValue: aws.StringValue(i.ParameterValue),
 			})
 		}
 	}

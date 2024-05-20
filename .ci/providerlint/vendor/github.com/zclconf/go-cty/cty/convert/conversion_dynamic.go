@@ -40,6 +40,11 @@ func dynamicPassthrough(in cty.Value, path cty.Path) (cty.Value, error) {
 // perspective, and will panic if it finds that they are not. For example if
 // in is an object and out is a map, this function will still attempt to iterate
 // through both as if they were the same.
+// While the outermost in and out types may be compatible from a Convert
+// perspective, inner types may not match when converting between maps and
+// objects with optional attributes when the optional attributes don't match
+// the map element type. Therefor in the case of a non-primitive type mismatch,
+// we have to assume conversion was possible and pass the out type through.
 func dynamicReplace(in, out cty.Type) cty.Type {
 	if in == cty.DynamicPseudoType || in == cty.NilType {
 		// Short circuit this case, there's no point worrying about this if in
@@ -56,11 +61,9 @@ func dynamicReplace(in, out cty.Type) cty.Type {
 		// return it unchanged.
 		return out
 	case out.IsMapType():
-		var elemType cty.Type
-
 		// Maps are compatible with other maps or objects.
 		if in.IsMapType() {
-			elemType = dynamicReplace(in.ElementType(), out.ElementType())
+			return cty.Map(dynamicReplace(in.ElementType(), out.ElementType()))
 		}
 
 		if in.IsObjectType() {
@@ -69,10 +72,10 @@ func dynamicReplace(in, out cty.Type) cty.Type {
 				types = append(types, t)
 			}
 			unifiedType, _ := unify(types, true)
-			elemType = dynamicReplace(unifiedType, out.ElementType())
+			return cty.Map(dynamicReplace(unifiedType, out.ElementType()))
 		}
 
-		return cty.Map(elemType)
+		return out
 	case out.IsObjectType():
 		// Objects are compatible with other objects and maps.
 		outTypes := map[string]cty.Type{}
@@ -97,33 +100,29 @@ func dynamicReplace(in, out cty.Type) cty.Type {
 
 		return cty.Object(outTypes)
 	case out.IsSetType():
-		var elemType cty.Type
-
 		// Sets are compatible with other sets, lists, tuples.
 		if in.IsSetType() || in.IsListType() {
-			elemType = dynamicReplace(in.ElementType(), out.ElementType())
+			return cty.Set(dynamicReplace(in.ElementType(), out.ElementType()))
 		}
 
 		if in.IsTupleType() {
 			unifiedType, _ := unify(in.TupleElementTypes(), true)
-			elemType = dynamicReplace(unifiedType, out.ElementType())
+			return cty.Set(dynamicReplace(unifiedType, out.ElementType()))
 		}
 
-		return cty.Set(elemType)
+		return out
 	case out.IsListType():
-		var elemType cty.Type
-
 		// Lists are compatible with other lists, sets, and tuples.
 		if in.IsSetType() || in.IsListType() {
-			elemType = dynamicReplace(in.ElementType(), out.ElementType())
+			return cty.List(dynamicReplace(in.ElementType(), out.ElementType()))
 		}
 
 		if in.IsTupleType() {
 			unifiedType, _ := unify(in.TupleElementTypes(), true)
-			elemType = dynamicReplace(unifiedType, out.ElementType())
+			return cty.List(dynamicReplace(unifiedType, out.ElementType()))
 		}
 
-		return cty.List(elemType)
+		return out
 	case out.IsTupleType():
 		// Tuples are only compatible with other tuples
 		var types []cty.Type

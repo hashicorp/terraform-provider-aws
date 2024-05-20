@@ -48,7 +48,7 @@ func resourceIdentityProviderConfig() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -65,7 +65,7 @@ func resourceIdentityProviderConfig() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"client_id": {
+						names.AttrClientID: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -120,7 +120,7 @@ func resourceIdentityProviderConfig() *schema.Resource {
 					},
 				},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -182,12 +182,12 @@ func resourceIdentityProviderConfigRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "reading EKS Identity Provider Config (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", oidc.IdentityProviderConfigArn)
+	d.Set(names.AttrARN, oidc.IdentityProviderConfigArn)
 	d.Set("cluster_name", oidc.ClusterName)
 	if err := d.Set("oidc", []interface{}{flattenOIDCIdentityProviderConfig(oidc)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting oidc: %s", err)
 	}
-	d.Set("status", oidc.Status)
+	d.Set(names.AttrStatus, oidc.Status)
 
 	setTagsOut(ctx, oidc.Tags)
 
@@ -214,7 +214,7 @@ func resourceIdentityProviderConfigDelete(ctx context.Context, d *schema.Resourc
 		ClusterName: aws.String(clusterName),
 		IdentityProviderConfig: &types.IdentityProviderConfig{
 			Name: aws.String(configName),
-			Type: aws.String(IdentityProviderConfigTypeOIDC),
+			Type: aws.String(identityProviderConfigTypeOIDC),
 		},
 	})
 
@@ -242,7 +242,7 @@ func findOIDCIdentityProviderConfigByTwoPartKey(ctx context.Context, conn *eks.C
 		ClusterName: aws.String(clusterName),
 		IdentityProviderConfig: &types.IdentityProviderConfig{
 			Name: aws.String(configName),
-			Type: aws.String(IdentityProviderConfigTypeOIDC),
+			Type: aws.String(identityProviderConfigTypeOIDC),
 		},
 	}
 
@@ -323,7 +323,7 @@ func expandOIDCIdentityProviderConfigRequest(tfMap map[string]interface{}) (stri
 
 	apiObject := &types.OidcIdentityProviderConfigRequest{}
 
-	if v, ok := tfMap["client_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrClientID].(string); ok && v != "" {
 		apiObject.ClientId = aws.String(v)
 	}
 
@@ -368,7 +368,7 @@ func flattenOIDCIdentityProviderConfig(apiObject *types.OidcIdentityProviderConf
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.ClientId; v != nil {
-		tfMap["client_id"] = aws.ToString(v)
+		tfMap[names.AttrClientID] = aws.ToString(v)
 	}
 
 	if v := apiObject.GroupsClaim; v != nil {

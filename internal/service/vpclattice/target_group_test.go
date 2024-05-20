@@ -35,7 +35,7 @@ func TestAccVPCLatticeTargetGroup_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -43,7 +43,7 @@ func TestAccVPCLatticeTargetGroup_basic(t *testing.T) {
 				Config: testAccTargetGroupConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexache.MustCompile("targetgroup/.+$")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("targetgroup/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.enabled", "true"),
@@ -62,10 +62,10 @@ func TestAccVPCLatticeTargetGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "config.0.port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.protocol", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.protocol_version", "HTTP1"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "type", "INSTANCE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "INSTANCE"),
 				),
 			},
 			{
@@ -89,7 +89,7 @@ func TestAccVPCLatticeTargetGroup_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServiceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -113,7 +113,7 @@ func TestAccVPCLatticeTargetGroup_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -163,7 +163,7 @@ func TestAccVPCLatticeTargetGroup_lambda(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -171,12 +171,12 @@ func TestAccVPCLatticeTargetGroup_lambda(t *testing.T) {
 				Config: testAccTargetGroupConfig_lambda(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexache.MustCompile("targetgroup/.+$")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("targetgroup/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "type", "LAMBDA"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "LAMBDA"),
 				),
 			},
 			{
@@ -200,7 +200,7 @@ func TestAccVPCLatticeTargetGroup_lambdaEventStructureVersion(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -208,13 +208,13 @@ func TestAccVPCLatticeTargetGroup_lambdaEventStructureVersion(t *testing.T) {
 				Config: testAccTargetGroupConfig_lambdaEventStructureVersion(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexache.MustCompile("targetgroup/.+$")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("targetgroup/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.lambda_event_structure_version", "V2"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "type", "LAMBDA"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "LAMBDA"),
 				),
 			},
 			{
@@ -237,7 +237,7 @@ func TestAccVPCLatticeTargetGroup_ip(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -245,7 +245,7 @@ func TestAccVPCLatticeTargetGroup_ip(t *testing.T) {
 				Config: testAccTargetGroupConfig_ip(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexache.MustCompile("targetgroup/.+$")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("targetgroup/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.enabled", "true"),
@@ -263,10 +263,10 @@ func TestAccVPCLatticeTargetGroup_ip(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "config.0.port", "443"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.protocol", "HTTPS"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.protocol_version", "HTTP2"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "type", "IP"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "IP"),
 				),
 			},
 			{
@@ -278,7 +278,7 @@ func TestAccVPCLatticeTargetGroup_ip(t *testing.T) {
 				Config: testAccTargetGroupConfig_ipUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexache.MustCompile("targetgroup/.+$")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("targetgroup/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.enabled", "true"),
@@ -296,10 +296,10 @@ func TestAccVPCLatticeTargetGroup_ip(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "config.0.port", "443"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.protocol", "HTTPS"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.protocol_version", "HTTP2"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "type", "IP"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "IP"),
 				),
 			},
 		},
@@ -318,7 +318,7 @@ func TestAccVPCLatticeTargetGroup_alb(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -326,17 +326,17 @@ func TestAccVPCLatticeTargetGroup_alb(t *testing.T) {
 				Config: testAccTargetGroupConfig_alb(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexache.MustCompile("targetgroup/.+$")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("targetgroup/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.ip_address_type", ""),
 					resource.TestCheckResourceAttr(resourceName, "config.0.port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.protocol", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.protocol_version", "HTTP1"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "type", "ALB"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "ALB"),
 				),
 			},
 			{

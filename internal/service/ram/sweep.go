@@ -43,7 +43,7 @@ func sweepResourceShares(region string) error {
 				continue
 			}
 
-			r := ResourceResourceShare()
+			r := resourceResourceShare()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.ResourceShareArn))
 

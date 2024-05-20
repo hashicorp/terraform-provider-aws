@@ -29,23 +29,23 @@ func TestAccAMPScraper_basic(t *testing.T) {
 
 	var scraper types.ScraperDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	eksClusterVersion := "1.28"
 	resourceName := "aws_prometheus_scraper.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AMPEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckScraperDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScraperConfig_basic(rName, eksClusterVersion),
+				Config: testAccScraperConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScraperExists(ctx, resourceName, &scraper),
 					resource.TestCheckNoResourceAttr(resourceName, "alias"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "destination.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.amp.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
 					resource.TestCheckResourceAttrSet(resourceName, "scrape_configuration"),
 					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.eks.#", "1"),
@@ -70,17 +70,16 @@ func TestAccAMPScraper_disappears(t *testing.T) {
 
 	var scraper types.ScraperDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	eksClusterVersion := "1.28"
 	resourceName := "aws_prometheus_scraper.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AMPEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckScraperDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScraperConfig_basic(rName, eksClusterVersion),
+				Config: testAccScraperConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScraperExists(ctx, resourceName, &scraper),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfamp.ResourceScraper, resourceName),
@@ -100,17 +99,16 @@ func TestAccAMPScraper_tags(t *testing.T) {
 
 	var scraper types.ScraperDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	eksClusterVersion := "1.28"
 	resourceName := "aws_prometheus_scraper.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AMPEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckScraperDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScraperConfig_tags1(rName, eksClusterVersion, "key1", "value1"),
+				Config: testAccScraperConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScraperExists(ctx, resourceName, &scraper),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -123,7 +121,7 @@ func TestAccAMPScraper_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccScraperConfig_tags2(rName, eksClusterVersion, "key1", "value1updated", "key2", "value2"),
+				Config: testAccScraperConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScraperExists(ctx, resourceName, &scraper),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -132,7 +130,7 @@ func TestAccAMPScraper_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccScraperConfig_tags1(rName, eksClusterVersion, "key2", "value2"),
+				Config: testAccScraperConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScraperExists(ctx, resourceName, &scraper),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -152,17 +150,16 @@ func TestAccAMPScraper_alias(t *testing.T) {
 
 	var scraper types.ScraperDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	eksClusterVersion := "1.28"
 	resourceName := "aws_prometheus_scraper.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AMPEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckScraperDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScraperConfig_alias(rName, eksClusterVersion),
+				Config: testAccScraperConfig_alias(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScraperExists(ctx, resourceName, &scraper),
 					resource.TestCheckResourceAttr(resourceName, "alias", rName),
@@ -186,17 +183,16 @@ func TestAccAMPScraper_securityGroups(t *testing.T) {
 
 	var scraper types.ScraperDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	eksClusterVersion := "1.28"
 	resourceName := "aws_prometheus_scraper.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AMPEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckScraperDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScraperConfig_securityGroups(rName, eksClusterVersion),
+				Config: testAccScraperConfig_securityGroups(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScraperExists(ctx, resourceName, &scraper),
 					resource.TestCheckResourceAttr(resourceName, "source.0.eks.0.security_group_ids.#", "1"),
@@ -331,7 +327,7 @@ scrape_configs:
       replacement: $1:10249
 `
 
-func testAccScraperConfig_base(rName, eksClusterVersion string) string {
+func testAccScraperConfig_base(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -404,11 +400,11 @@ resource "aws_prometheus_workspace" "test" {
     AMPAgentlessScraper = ""
   }
 }
-`, rName, eksClusterVersion))
+`, rName))
 }
 
-func testAccScraperConfig_basic(rName, eksClusterVersion string) string {
-	return acctest.ConfigCompose(testAccScraperConfig_base(rName, eksClusterVersion), fmt.Sprintf(`
+func testAccScraperConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccScraperConfig_base(rName), fmt.Sprintf(`
 resource "aws_prometheus_scraper" "test" {
   scrape_configuration = %[1]q
 
@@ -428,8 +424,8 @@ resource "aws_prometheus_scraper" "test" {
 `, scrapeConfigBlob))
 }
 
-func testAccScraperConfig_tags1(rName, eksClusterVersion, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccScraperConfig_base(rName, eksClusterVersion), fmt.Sprintf(`
+func testAccScraperConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccScraperConfig_base(rName), fmt.Sprintf(`
 resource "aws_prometheus_scraper" "test" {
   scrape_configuration = %[3]q
 
@@ -453,8 +449,8 @@ resource "aws_prometheus_scraper" "test" {
 `, tagKey1, tagValue1, scrapeConfigBlob))
 }
 
-func testAccScraperConfig_tags2(rName, eksClusterVersion, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccScraperConfig_base(rName, eksClusterVersion), fmt.Sprintf(`
+func testAccScraperConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccScraperConfig_base(rName), fmt.Sprintf(`
 resource "aws_prometheus_scraper" "test" {
   scrape_configuration = %[5]q
 
@@ -479,8 +475,8 @@ resource "aws_prometheus_scraper" "test" {
 `, tagKey1, tagValue1, tagKey2, tagValue2, scrapeConfigBlob))
 }
 
-func testAccScraperConfig_alias(rName, eksClusterVersion string) string {
-	return acctest.ConfigCompose(testAccScraperConfig_base(rName, eksClusterVersion), fmt.Sprintf(`
+func testAccScraperConfig_alias(rName string) string {
+	return acctest.ConfigCompose(testAccScraperConfig_base(rName), fmt.Sprintf(`
 resource "aws_prometheus_scraper" "test" {
   alias                = %[1]q
   scrape_configuration = %[2]q
@@ -501,8 +497,8 @@ resource "aws_prometheus_scraper" "test" {
 `, rName, scrapeConfigBlob))
 }
 
-func testAccScraperConfig_securityGroups(rName, eksClusterVersion string) string {
-	return acctest.ConfigCompose(testAccScraperConfig_base(rName, eksClusterVersion), fmt.Sprintf(`
+func testAccScraperConfig_securityGroups(rName string) string {
+	return acctest.ConfigCompose(testAccScraperConfig_base(rName), fmt.Sprintf(`
 resource "aws_prometheus_scraper" "test" {
   alias                = %[1]q
   scrape_configuration = %[2]q

@@ -12,6 +12,7 @@ With the following modifications:
  - Ignore errorlint reports
  - Refactor deprecated io/ioutil in Go 1.16
  - Adds context parameter
+ - Updated to use the AWS SDK for Go v2
 */
 
 /*
@@ -46,7 +47,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/service/sts"
+	"github.com/aws/aws-sdk-go-v2/service/sts"
+	"github.com/aws/smithy-go/middleware"
+	smithyhttp "github.com/aws/smithy-go/transport/http"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Identity is returned on successful Verify() results. It contains a parsed
@@ -100,8 +104,7 @@ const (
 
 // Token is generated and used by Kubernetes client-go to authenticate with a Kubernetes cluster.
 type Token struct {
-	Token      string
-	Expiration time.Time
+	Token string
 }
 
 // FormatError is returned when there is a problem with token that is
@@ -131,8 +134,8 @@ func NewSTSError(m string) STSError {
 }
 
 var parameterWhitelist = map[string]bool{
-	"action":               true,
-	"version":              true,
+	names.AttrAction:       true,
+	names.AttrVersion:      true,
 	"x-amz-algorithm":      true,
 	"x-amz-credential":     true,
 	"x-amz-date":           true,
@@ -159,7 +162,7 @@ type getCallerIdentityWrapper struct {
 // Generator provides new tokens for the AWS IAM Authenticator.
 type Generator interface {
 	// GetWithSTS returns a token valid for clusterID using the given STS client.
-	GetWithSTS(ctx context.Context, clusterID string, stsAPI *sts.STS) (Token, error)
+	GetWithSTS(ctx context.Context, clusterID string, stsAPI *sts.Client) (Token, error)
 }
 
 type generator struct {
@@ -176,27 +179,80 @@ func NewGenerator(forwardSessionName bool, cache bool) (Generator, error) {
 }
 
 // GetWithSTS returns a token valid for clusterID using the given STS client.
-func (g generator) GetWithSTS(ctx context.Context, clusterID string, stsAPI *sts.STS) (Token, error) {
-	// generate an sts:GetCallerIdentity request and add our custom cluster ID header
-	request, _ := stsAPI.GetCallerIdentityRequest(&sts.GetCallerIdentityInput{})
-	request.SetContext(ctx)
-	request.HTTPRequest.Header.Add(clusterIDHeader, clusterID)
-
+func (g generator) GetWithSTS(ctx context.Context, clusterID string, stsAPI *sts.Client) (Token, error) {
 	// Sign the request.  The expires parameter (sets the x-amz-expires header) is
-	// currently ignored by STS, and the token expires 15 minutes after the x-amz-date
-	// timestamp regardless.  We set it to 60 seconds for backwards compatibility (the
-	// parameter is a required argument to Presign(), and authenticators 0.3.0 and older are expecting a value between
-	// 0 and 60 on the server side).
-	// https://github.com/aws/aws-sdk-go/issues/2167
-	presignedURLString, err := request.Presign(requestPresignParam)
+	// not supported by the STS presigner.  We set it to 60 [nano]seconds for backwards compatibility (the
+	// parameter was a required argument to AWS SDK v1's Presign(), and authenticators 0.3.0 and older are
+	// expecting a value between 0 and 60 on the server side).
+	presigner := sts.NewPresignClient(stsAPI, func(po *sts.PresignOptions) {
+		po.ClientOptions = []func(*sts.Options){
+			func(o *sts.Options) {
+				o.APIOptions = []func(*middleware.Stack) error{
+					addClusterIdHeaderSetterMiddleware(clusterID),
+					addExpiryParamSetterMiddleware(requestPresignParam),
+				}
+			},
+		}
+	})
+
+	request, err := presigner.PresignGetCallerIdentity(ctx, &sts.GetCallerIdentityInput{})
 	if err != nil {
 		return Token{}, err
 	}
 
-	// Set token expiration to 1 minute before the presigned URL expires for some cushion
-	tokenExpiration := time.Now().Local().Add(presignedURLExpiration - 1*time.Minute)
-	// TODO: this may need to be a constant-time base64 encoding
-	return Token{v1Prefix + base64.RawURLEncoding.EncodeToString([]byte(presignedURLString)), tokenExpiration}, nil
+	return Token{v1Prefix + base64.RawURLEncoding.EncodeToString([]byte(request.URL))}, nil
+}
+
+func addClusterIdHeaderSetterMiddleware(clusterID string) func(*middleware.Stack) error {
+	return func(stack *middleware.Stack) error {
+		return stack.Build.Add(
+			setClusterIdHeaderMiddleware(clusterID),
+			middleware.After,
+		)
+	}
+}
+
+func setClusterIdHeaderMiddleware(clusterID string) middleware.BuildMiddleware {
+	return middleware.BuildMiddlewareFunc(
+		"Test: Set ClusterId",
+		func(ctx context.Context, in middleware.BuildInput, next middleware.BuildHandler) (out middleware.BuildOutput, metadata middleware.Metadata, err error) {
+			switch req := in.Request.(type) {
+			case *smithyhttp.Request:
+				req.Header.Add(clusterIDHeader, clusterID)
+			default:
+				return out, metadata, fmt.Errorf("unknown transport type %T", in.Request)
+			}
+
+			return next.HandleBuild(ctx, in)
+		},
+	)
+}
+
+func addExpiryParamSetterMiddleware(expire time.Duration) func(*middleware.Stack) error {
+	return func(stack *middleware.Stack) error {
+		return stack.Build.Add(
+			setExpiryParamMiddleware(expire),
+			middleware.After,
+		)
+	}
+}
+
+func setExpiryParamMiddleware(expire time.Duration) middleware.BuildMiddleware {
+	return middleware.BuildMiddlewareFunc(
+		"Test: Set ExpiryParam",
+		func(ctx context.Context, in middleware.BuildInput, next middleware.BuildHandler) (out middleware.BuildOutput, metadata middleware.Metadata, err error) {
+			switch req := in.Request.(type) {
+			case *smithyhttp.Request:
+				query := req.URL.Query()
+				query.Set("X-Amz-Expires", strconv.FormatInt(int64(expire/time.Second), 10))
+				req.URL.RawQuery = query.Encode()
+			default:
+				return out, metadata, fmt.Errorf("unknown transport type %T", in.Request)
+			}
+
+			return next.HandleBuild(ctx, in)
+		},
+	)
 }
 
 // Verifier validates tokens by calling STS and returning the associated identity.
@@ -273,7 +329,7 @@ func (v tokenVerifier) Verify(token string) (*Identity, error) {
 		queryParamsLower.Set(strings.ToLower(key), values[0])
 	}
 
-	if queryParamsLower.Get("action") != "GetCallerIdentity" {
+	if queryParamsLower.Get(names.AttrAction) != "GetCallerIdentity" {
 		return nil, FormatError{"unexpected action parameter in pre-signed URL"}
 	}
 
@@ -307,7 +363,7 @@ func (v tokenVerifier) Verify(token string) (*Identity, error) {
 		return nil, FormatError{fmt.Sprintf("X-Amz-Date parameter is expired (%.f minute expiration) %s", presignedURLExpiration.Minutes(), dateParam)}
 	}
 
-	req, _ := http.NewRequest("GET", parsedURL.String(), nil)
+	req, _ := http.NewRequest(http.MethodGet, parsedURL.String(), nil)
 	req.Header.Set(clusterIDHeader, v.clusterID)
 	req.Header.Set("accept", "application/json")
 
@@ -327,7 +383,7 @@ func (v tokenVerifier) Verify(token string) (*Identity, error) {
 		return nil, NewSTSError(fmt.Sprintf("error reading HTTP result: %v", err))
 	}
 
-	if response.StatusCode != 200 {
+	if response.StatusCode != http.StatusOK {
 		return nil, NewSTSError(fmt.Sprintf("error from AWS (expected 200, got %d). Body: %s", response.StatusCode, string(responseBody[:])))
 	}
 

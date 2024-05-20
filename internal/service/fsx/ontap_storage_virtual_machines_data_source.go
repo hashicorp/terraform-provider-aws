@@ -13,15 +13,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_fsx_ontap_storage_virtual_machines", name="ONTAP Storage Virtual Machines")
-func DataSourceONTAPStorageVirtualMachines() *schema.Resource {
+func dataSourceONTAPStorageVirtualMachines() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceONTAPStorageVirtualMachinesRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter": DataSourceStorageVirtualMachineFiltersSchema(),
+			names.AttrFilter: storageVirtualMachineFiltersSchema(),
 			"ids": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -37,8 +38,8 @@ func dataSourceONTAPStorageVirtualMachinesRead(ctx context.Context, d *schema.Re
 
 	input := &fsx.DescribeStorageVirtualMachinesInput{}
 
-	input.Filters = BuildStorageVirtualMachineFiltersDataSource(
-		d.Get("filter").(*schema.Set),
+	input.Filters = newStorageVirtualMachineFilterList(
+		d.Get(names.AttrFilter).(*schema.Set),
 	)
 
 	if len(input.Filters) == 0 {
@@ -51,14 +52,10 @@ func dataSourceONTAPStorageVirtualMachinesRead(ctx context.Context, d *schema.Re
 		return sdkdiag.AppendErrorf(diags, "reading FSx ONTAP Storage Virtual Machines: %s", err)
 	}
 
-	var svmIDs []string
-
-	for _, svm := range svms {
-		svmIDs = append(svmIDs, aws.StringValue(svm.StorageVirtualMachineId))
-	}
-
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("ids", svmIDs)
+	d.Set("ids", tfslices.ApplyToAll(svms, func(svm *fsx.StorageVirtualMachine) string {
+		return aws.StringValue(svm.StorageVirtualMachineId)
+	}))
 
 	return diags
 }

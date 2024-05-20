@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccVPCNetworkACLRule_basic(t *testing.T) {
@@ -30,7 +31,7 @@ func TestAccVPCNetworkACLRule_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckNetworkACLRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -45,7 +46,7 @@ func TestAccVPCNetworkACLRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resource1Name, "egress", "false"),
 					resource.TestCheckResourceAttr(resource1Name, "from_port", "22"),
 					resource.TestCheckResourceAttr(resource1Name, "ipv6_cidr_block", ""),
-					resource.TestCheckResourceAttr(resource1Name, "protocol", "6"),
+					resource.TestCheckResourceAttr(resource1Name, names.AttrProtocol, "6"),
 					resource.TestCheckResourceAttr(resource1Name, "rule_action", "allow"),
 					resource.TestCheckResourceAttr(resource1Name, "rule_number", "200"),
 					resource.TestCheckResourceAttr(resource1Name, "to_port", "22"),
@@ -55,7 +56,7 @@ func TestAccVPCNetworkACLRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resource2Name, "icmp_code", "-1"),
 					resource.TestCheckResourceAttr(resource2Name, "icmp_type", "0"),
 					resource.TestCheckResourceAttr(resource2Name, "ipv6_cidr_block", ""),
-					resource.TestCheckResourceAttr(resource2Name, "protocol", "1"),
+					resource.TestCheckResourceAttr(resource2Name, names.AttrProtocol, "1"),
 					resource.TestCheckResourceAttr(resource2Name, "rule_action", "allow"),
 					resource.TestCheckResourceAttr(resource2Name, "rule_number", "300"),
 
@@ -64,7 +65,7 @@ func TestAccVPCNetworkACLRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resource3Name, "icmp_code", "-1"),
 					resource.TestCheckResourceAttr(resource3Name, "icmp_type", "-1"),
 					resource.TestCheckResourceAttr(resource3Name, "ipv6_cidr_block", ""),
-					resource.TestCheckResourceAttr(resource3Name, "protocol", "1"),
+					resource.TestCheckResourceAttr(resource3Name, names.AttrProtocol, "1"),
 					resource.TestCheckResourceAttr(resource3Name, "rule_action", "allow"),
 					resource.TestCheckResourceAttr(resource3Name, "rule_number", "400"),
 				),
@@ -98,7 +99,7 @@ func TestAccVPCNetworkACLRule_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckNetworkACLRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -121,7 +122,7 @@ func TestAccVPCNetworkACLRule_Disappears_networkACL(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckNetworkACLRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -144,7 +145,7 @@ func TestAccVPCNetworkACLRule_Disappears_ingressEgressSameNumber(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckNetworkACLRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -167,7 +168,7 @@ func TestAccVPCNetworkACLRule_ipv6(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckNetworkACLRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -179,7 +180,7 @@ func TestAccVPCNetworkACLRule_ipv6(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "egress", "false"),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "22"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", "::/0"),
-					resource.TestCheckResourceAttr(resourceName, "protocol", "6"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "6"),
 					resource.TestCheckResourceAttr(resourceName, "rule_action", "allow"),
 					resource.TestCheckResourceAttr(resourceName, "rule_number", "150"),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "22"),
@@ -202,7 +203,7 @@ func TestAccVPCNetworkACLRule_ipv6ICMP(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckNetworkACLRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -215,7 +216,7 @@ func TestAccVPCNetworkACLRule_ipv6ICMP(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "icmp_code", "-1"),
 					resource.TestCheckResourceAttr(resourceName, "icmp_type", "-1"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", "::/0"),
-					resource.TestCheckResourceAttr(resourceName, "protocol", "58"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "58"),
 					resource.TestCheckResourceAttr(resourceName, "rule_action", "allow"),
 					resource.TestCheckResourceAttr(resourceName, "rule_number", "150"),
 				),
@@ -240,7 +241,7 @@ func TestAccVPCNetworkACLRule_ipv6VPCAssignGeneratedIPv6CIDRBlockUpdate(t *testi
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckNetworkACLRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -278,7 +279,7 @@ func TestAccVPCNetworkACLRule_allProtocol(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckNetworkACLRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -290,7 +291,7 @@ func TestAccVPCNetworkACLRule_allProtocol(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "egress", "false"),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "22"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", ""),
-					resource.TestCheckResourceAttr(resourceName, "protocol", "-1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "-1"),
 					resource.TestCheckResourceAttr(resourceName, "rule_action", "allow"),
 					resource.TestCheckResourceAttr(resourceName, "rule_number", "150"),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "22"),
@@ -311,7 +312,7 @@ func TestAccVPCNetworkACLRule_tcpProtocol(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckNetworkACLRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -323,7 +324,7 @@ func TestAccVPCNetworkACLRule_tcpProtocol(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "egress", "true"),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "22"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", ""),
-					resource.TestCheckResourceAttr(resourceName, "protocol", "6"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "6"),
 					resource.TestCheckResourceAttr(resourceName, "rule_action", "deny"),
 					resource.TestCheckResourceAttr(resourceName, "rule_number", "150"),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "22"),
@@ -332,6 +333,24 @@ func TestAccVPCNetworkACLRule_tcpProtocol(t *testing.T) {
 			{
 				Config:   testAccVPCNetworkACLRuleConfig_tcpProtocolNoRealUpdate(rName),
 				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func TestAccVPCNetworkACLRule_duplicate(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNetworkACLRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccVPCNetworkACLRuleConfig_duplicate(rName),
+				ExpectError: regexache.MustCompile(`NetworkAclEntryAlreadyExists: EC2 Network ACL .* already exists`),
 			},
 		},
 	})
@@ -738,6 +757,48 @@ resource "aws_network_acl" "test" {
 }`, rName)
 }
 
+func testAccVPCNetworkACLRuleConfig_duplicate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.3.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_network_acl" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_network_acl_rule" "test1" {
+  network_acl_id = aws_network_acl.test.id
+  rule_number    = 200
+  egress         = false
+  protocol       = "tcp"
+  rule_action    = "allow"
+  cidr_block     = "0.0.0.0/0"
+  from_port      = 22
+  to_port        = 22
+}
+
+resource "aws_network_acl_rule" "test2" {
+  network_acl_id = aws_network_acl_rule.test1.network_acl_id
+  rule_number    = 200
+  egress         = false
+  protocol       = "tcp"
+  rule_action    = "allow"
+  cidr_block     = "0.0.0.0/0"
+  from_port      = 22
+  to_port        = 22
+}
+`, rName)
+}
+
 func testAccNetworkACLRuleImportStateIdFunc(resourceName, resourceProtocol string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -747,7 +808,7 @@ func testAccNetworkACLRuleImportStateIdFunc(resourceName, resourceProtocol strin
 
 		naclID := rs.Primary.Attributes["network_acl_id"]
 		ruleNumber := rs.Primary.Attributes["rule_number"]
-		protocol := rs.Primary.Attributes["protocol"]
+		protocol := rs.Primary.Attributes[names.AttrProtocol]
 		// Ensure the resource's ID will be determined from the original protocol value set in the resource's config
 		if protocol != resourceProtocol {
 			protocol = resourceProtocol

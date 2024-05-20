@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/codegurureviewer"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/codegurureviewer"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
 func RegisterSweepers() {
@@ -28,20 +28,18 @@ func sweepAssociations(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	input := &codegurureviewer.ListRepositoryAssociationsInput{}
-	conn := client.CodeGuruReviewerConn(ctx)
-
+	conn := client.CodeGuruReviewerClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListRepositoryAssociationsPagesWithContext(ctx, input, func(page *codegurureviewer.ListRepositoryAssociationsOutput, lastPage bool) bool {
+	err = listRepositoryAssociationsPages(ctx, conn, input, func(page *codegurureviewer.ListRepositoryAssociationsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
 		for _, v := range page.RepositoryAssociationSummaries {
-			r := ResourceRepositoryAssociation()
+			r := resourceRepositoryAssociation()
 			d := r.Data(nil)
-
-			d.SetId(aws.StringValue(v.Name))
+			d.SetId(aws.ToString(v.Name))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -49,19 +47,19 @@ func sweepAssociations(region string) error {
 		return !lastPage
 	})
 
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping CodeGuruReviewer Association sweep for %s: %s", region, err)
+	if awsv2.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping CodeGuru Reviewer Repository Association sweep for %s: %s", region, err)
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error listing CodeGuruReviewer Associations (%s): %w", region, err)
+		return fmt.Errorf("error listing CodeGuru Reviewer Repository Associations (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
-		return fmt.Errorf("error sweeping CodeGuruReviewer Associations (%s): %w", region, err)
+		return fmt.Errorf("error sweeping CodeGuru Reviewer Repository Associations (%s): %w", region, err)
 	}
 
 	return nil

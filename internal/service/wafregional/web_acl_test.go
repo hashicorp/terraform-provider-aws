@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfwafregional "github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccWAFRegionalWebACL_basic(t *testing.T) {
@@ -30,7 +31,7 @@ func TestAccWAFRegionalWebACL_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, wafregional.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -38,12 +39,12 @@ func TestAccWAFRegionalWebACL_basic(t *testing.T) {
 				Config: testAccWebACLConfig_basic(wafAclName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "waf-regional", regexache.MustCompile(`webacl/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "waf-regional", regexache.MustCompile(`webacl/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "ALLOW"),
-					resource.TestCheckResourceAttr(resourceName, "name", wafAclName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafAclName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "metric_name", wafAclName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, wafAclName),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "0"),
 				),
 			},
@@ -64,7 +65,7 @@ func TestAccWAFRegionalWebACL_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, wafregional.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -110,7 +111,7 @@ func TestAccWAFRegionalWebACL_createRateBased(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, wafregional.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -120,9 +121,9 @@ func TestAccWAFRegionalWebACL_createRateBased(t *testing.T) {
 					testAccCheckWebACLExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "ALLOW"),
-					resource.TestCheckResourceAttr(resourceName, "name", wafAclName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafAclName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "metric_name", wafAclName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, wafAclName),
 				),
 			},
 			{
@@ -142,7 +143,7 @@ func TestAccWAFRegionalWebACL_createGroup(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, wafregional.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -152,9 +153,9 @@ func TestAccWAFRegionalWebACL_createGroup(t *testing.T) {
 					testAccCheckWebACLExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "ALLOW"),
-					resource.TestCheckResourceAttr(resourceName, "name", wafAclName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafAclName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "metric_name", wafAclName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, wafAclName),
 				),
 			},
 			{
@@ -175,7 +176,7 @@ func TestAccWAFRegionalWebACL_changeNameForceNew(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, wafregional.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -185,9 +186,9 @@ func TestAccWAFRegionalWebACL_changeNameForceNew(t *testing.T) {
 					testAccCheckWebACLExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "ALLOW"),
-					resource.TestCheckResourceAttr(resourceName, "name", wafAclName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafAclName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "metric_name", wafAclName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, wafAclName),
 				),
 			},
 			{
@@ -196,9 +197,9 @@ func TestAccWAFRegionalWebACL_changeNameForceNew(t *testing.T) {
 					testAccCheckWebACLExists(ctx, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "ALLOW"),
-					resource.TestCheckResourceAttr(resourceName, "name", wafAclNewName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafAclNewName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "metric_name", wafAclNewName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, wafAclNewName),
 				),
 			},
 			{
@@ -219,7 +220,7 @@ func TestAccWAFRegionalWebACL_changeDefaultAction(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, wafregional.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -229,9 +230,9 @@ func TestAccWAFRegionalWebACL_changeDefaultAction(t *testing.T) {
 					testAccCheckWebACLExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "ALLOW"),
-					resource.TestCheckResourceAttr(resourceName, "name", wafAclName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafAclName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "metric_name", wafAclName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, wafAclName),
 				),
 			},
 			{
@@ -240,9 +241,9 @@ func TestAccWAFRegionalWebACL_changeDefaultAction(t *testing.T) {
 					testAccCheckWebACLExists(ctx, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "BLOCK"),
-					resource.TestCheckResourceAttr(resourceName, "name", wafAclNewName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafAclNewName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "metric_name", wafAclNewName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, wafAclNewName),
 				),
 			},
 			{
@@ -262,7 +263,7 @@ func TestAccWAFRegionalWebACL_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, wafregional.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -270,7 +271,7 @@ func TestAccWAFRegionalWebACL_disappears(t *testing.T) {
 				Config: testAccWebACLConfig_basic(wafAclName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
-					testAccCheckWebACLDisappears(ctx, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfwafregional.ResourceWebACL(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -286,7 +287,7 @@ func TestAccWAFRegionalWebACL_noRules(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, wafregional.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -296,7 +297,7 @@ func TestAccWAFRegionalWebACL_noRules(t *testing.T) {
 					testAccCheckWebACLExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "ALLOW"),
-					resource.TestCheckResourceAttr(resourceName, "name", wafAclName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafAclName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
 				),
 			},
@@ -319,7 +320,7 @@ func TestAccWAFRegionalWebACL_changeRules(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, wafregional.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -330,11 +331,11 @@ func TestAccWAFRegionalWebACL_changeRules(t *testing.T) {
 					testAccCheckWebACLExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "ALLOW"),
-					resource.TestCheckResourceAttr(resourceName, "name", wafAclName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafAclName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					computeWebACLRuleIndex(&r.RuleId, 1, "REGULAR", "BLOCK", &idx),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"priority": "1",
+						names.AttrPriority: "1",
 					}),
 				),
 			},
@@ -344,7 +345,7 @@ func TestAccWAFRegionalWebACL_changeRules(t *testing.T) {
 					testAccCheckWebACLExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "ALLOW"),
-					resource.TestCheckResourceAttr(resourceName, "name", wafAclName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafAclName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "2"),
 				),
 			},
@@ -365,7 +366,7 @@ func TestAccWAFRegionalWebACL_logging(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, wafregional.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -409,63 +410,19 @@ func computeWebACLRuleIndex(ruleId **string, priority int, ruleType string, acti
 	return func(s *terraform.State) error {
 		ruleResource := tfwafregional.ResourceWebACL().SchemaMap()["rule"].Elem.(*schema.Resource)
 		actionMap := map[string]interface{}{
-			"type": actionType,
+			names.AttrType: actionType,
 		}
 		m := map[string]interface{}{
-			"rule_id":         **ruleId,
-			"type":            ruleType,
-			"priority":        priority,
-			"action":          []interface{}{actionMap},
-			"override_action": []interface{}{},
+			"rule_id":          **ruleId,
+			names.AttrType:     ruleType,
+			names.AttrPriority: priority,
+			names.AttrAction:   []interface{}{actionMap},
+			"override_action":  []interface{}{},
 		}
 
 		f := schema.HashResource(ruleResource)
 		*idx = f(m)
 
-		return nil
-	}
-}
-
-func testAccCheckWebACLDisappears(ctx context.Context, v *waf.WebACL) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn(ctx)
-		region := acctest.Provider.Meta().(*conns.AWSClient).Region
-
-		wr := tfwafregional.NewRetryer(conn, region)
-		_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-			req := &waf.UpdateWebACLInput{
-				ChangeToken: token,
-				WebACLId:    v.WebACLId,
-			}
-
-			for _, activatedRule := range v.Rules {
-				webACLUpdate := &waf.WebACLUpdate{
-					Action: aws.String(waf.ChangeActionDelete),
-					ActivatedRule: &waf.ActivatedRule{
-						Priority: activatedRule.Priority,
-						RuleId:   activatedRule.RuleId,
-						Action:   activatedRule.Action,
-					},
-				}
-				req.Updates = append(req.Updates, webACLUpdate)
-			}
-
-			return conn.UpdateWebACLWithContext(ctx, req)
-		})
-		if err != nil {
-			return fmt.Errorf("Error getting change token for waf ACL: %s", err)
-		}
-
-		_, err = wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-			opts := &waf.DeleteWebACLInput{
-				ChangeToken: token,
-				WebACLId:    v.WebACLId,
-			}
-			return conn.DeleteWebACLWithContext(ctx, opts)
-		})
-		if err != nil {
-			return fmt.Errorf("Error Deleting WAF ACL: %s", err)
-		}
 		return nil
 	}
 }

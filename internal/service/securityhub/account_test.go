@@ -28,7 +28,7 @@ func testAccAccount_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -57,7 +57,7 @@ func testAccAccount_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -79,7 +79,7 @@ func testAccAccount_enableDefaultStandardsFalse(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -101,7 +101,7 @@ func testAccAccount_full(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		// control_finding_generator not supported in AWS GovCloud.
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -131,7 +131,7 @@ func testAccAccount_migrateV0(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.SecurityHubEndpointID),
+		ErrorCheck:   acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		CheckDestroy: testAccCheckAccountDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -171,7 +171,7 @@ func testAccAccount_removeControlFindingGeneratorDefaultValue(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.SecurityHubEndpointID),
+		ErrorCheck:   acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		CheckDestroy: testAccCheckAccountDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -206,7 +206,11 @@ func testAccCheckAccountExists(ctx context.Context, n string) resource.TestCheck
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		_, err := tfsecurityhub.FindHub(ctx, acctest.Provider.Meta().(*conns.AWSClient))
+		awsClient := acctest.Provider.Meta().(*conns.AWSClient)
+		conn := awsClient.SecurityHubClient(ctx)
+
+		arn := tfsecurityhub.AccountHubARN(awsClient)
+		_, err := tfsecurityhub.FindHubByARN(ctx, conn, arn)
 
 		return err
 	}
@@ -214,12 +218,16 @@ func testAccCheckAccountExists(ctx context.Context, n string) resource.TestCheck
 
 func testAccCheckAccountDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
+		awsClient := acctest.Provider.Meta().(*conns.AWSClient)
+		conn := awsClient.SecurityHubClient(ctx)
+
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_securityhub_account" {
 				continue
 			}
 
-			_, err := tfsecurityhub.FindHub(ctx, acctest.Provider.Meta().(*conns.AWSClient))
+			arn := tfsecurityhub.AccountHubARN(awsClient)
+			_, err := tfsecurityhub.FindHubByARN(ctx, conn, arn)
 
 			if tfresource.NotFound(err) {
 				continue

@@ -5,7 +5,6 @@ package dms
 
 import (
 	"context"
-	"encoding/base64"
 	"log"
 
 	"github.com/YakDriver/regexache"
@@ -20,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -38,7 +38,7 @@ func ResourceCertificate() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"certificate_arn": {
+			names.AttrCertificateARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -90,11 +90,11 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("certificate_wallet"); ok {
-		certWallet, err := base64.StdEncoding.DecodeString(v.(string))
+		v, err := itypes.Base64Decode(v.(string))
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
-		input.CertificateWallet = certWallet
+		input.CertificateWallet = v
 	}
 
 	_, err := conn.ImportCertificateWithContext(ctx, input)
@@ -143,7 +143,7 @@ func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta
 
 	log.Printf("[DEBUG] Deleting DMS Certificate: %s", d.Id())
 	_, err := conn.DeleteCertificateWithContext(ctx, &dms.DeleteCertificateInput{
-		CertificateArn: aws.String(d.Get("certificate_arn").(string)),
+		CertificateArn: aws.String(d.Get(names.AttrCertificateARN).(string)),
 	})
 
 	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
@@ -161,13 +161,13 @@ func resourceCertificateSetState(d *schema.ResourceData, cert *dms.Certificate) 
 	d.SetId(aws.StringValue(cert.CertificateIdentifier))
 
 	d.Set("certificate_id", cert.CertificateIdentifier)
-	d.Set("certificate_arn", cert.CertificateArn)
+	d.Set(names.AttrCertificateARN, cert.CertificateArn)
 
 	if aws.StringValue(cert.CertificatePem) != "" {
 		d.Set("certificate_pem", cert.CertificatePem)
 	}
 	if cert.CertificateWallet != nil && len(cert.CertificateWallet) != 0 {
-		d.Set("certificate_wallet", verify.Base64Encode(cert.CertificateWallet))
+		d.Set("certificate_wallet", itypes.Base64EncodeOnce(cert.CertificateWallet))
 	}
 }
 

@@ -26,22 +26,23 @@ import (
 
 // @SDKResource("aws_wafregional_web_acl", name="Web ACL")
 // @Tags(identifierAttribute="arn")
-func ResourceWebACL() *schema.Resource {
+func resourceWebACL() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWebACLCreate,
 		ReadWithoutTimeout:   resourceWebACLRead,
 		UpdateWithoutTimeout: resourceWebACLUpdate,
 		DeleteWithoutTimeout: resourceWebACLDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -52,7 +53,7 @@ func ResourceWebACL() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.StringInSlice([]string{
@@ -90,7 +91,7 @@ func ResourceWebACL() *schema.Resource {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
-												"type": {
+												names.AttrType: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.StringInSlice(wafregional.MatchFieldType_Values(), false),
@@ -104,7 +105,7 @@ func ResourceWebACL() *schema.Resource {
 					},
 				},
 			},
-			"metric_name": {
+			names.AttrMetricName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -114,13 +115,13 @@ func ResourceWebACL() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"action": {
+						names.AttrAction: {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"type": {
+									names.AttrType: {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.StringInSlice([]string{
@@ -138,7 +139,7 @@ func ResourceWebACL() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"type": {
+									names.AttrType: {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.StringInSlice([]string{
@@ -149,11 +150,11 @@ func ResourceWebACL() *schema.Resource {
 								},
 							},
 						},
-						"priority": {
+						names.AttrPriority: {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  waf.WafRuleTypeRegular,
@@ -188,15 +189,15 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input := &waf.CreateWebACLInput{
 			ChangeToken:   token,
 			DefaultAction: tfwaf.ExpandAction(d.Get("default_action").([]interface{})),
-			MetricName:    aws.String(d.Get("metric_name").(string)),
-			Name:          aws.String(d.Get("name").(string)),
+			MetricName:    aws.String(d.Get(names.AttrMetricName).(string)),
+			Name:          aws.String(d.Get(names.AttrName).(string)),
 			Tags:          getTagsIn(ctx),
 		}
 
 		return conn.CreateWebACLWithContext(ctx, input)
 	})
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating WAF Regional Web ACL (%s): %s", d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating WAF Regional Web ACL (%s): %s", d.Get(names.AttrName).(string), err)
 	}
 	resp := out.(*waf.CreateWebACLOutput)
 	d.SetId(aws.StringValue(resp.WebACL.WebACLId))
@@ -282,19 +283,19 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 			Service:   "waf-regional",
 		}.String()
 	}
-	d.Set("arn", webACLARN)
+	d.Set(names.AttrARN, webACLARN)
 
 	if err := d.Set("default_action", tfwaf.FlattenAction(resp.WebACL.DefaultAction)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting default_action: %s", err)
 	}
-	d.Set("name", resp.WebACL.Name)
-	d.Set("metric_name", resp.WebACL.MetricName)
+	d.Set(names.AttrName, resp.WebACL.Name)
+	d.Set(names.AttrMetricName, resp.WebACL.MetricName)
 	if err := d.Set("rule", tfwaf.FlattenWebACLRules(resp.WebACL.Rules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 	}
 
 	getLoggingConfigurationInput := &waf.GetLoggingConfigurationInput{
-		ResourceArn: aws.String(d.Get("arn").(string)),
+		ResourceArn: aws.String(d.Get(names.AttrARN).(string)),
 	}
 	loggingConfiguration := []interface{}{}
 
@@ -345,7 +346,7 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 		if len(loggingConfiguration) == 1 {
 			input := &waf.PutLoggingConfigurationInput{
-				LoggingConfiguration: expandLoggingConfiguration(loggingConfiguration, d.Get("arn").(string)),
+				LoggingConfiguration: expandLoggingConfiguration(loggingConfiguration, d.Get(names.AttrARN).(string)),
 			}
 
 			log.Printf("[DEBUG] Updating WAF Regional Web ACL (%s) Logging Configuration: %s", d.Id(), input)
@@ -354,7 +355,7 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			}
 		} else {
 			input := &waf.DeleteLoggingConfigurationInput{
-				ResourceArn: aws.String(d.Get("arn").(string)),
+				ResourceArn: aws.String(d.Get(names.AttrARN).(string)),
 			}
 
 			log.Printf("[DEBUG] Deleting WAF Regional Web ACL (%s) Logging Configuration: %s", d.Id(), input)
@@ -371,38 +372,47 @@ func resourceWebACLDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 	region := meta.(*conns.AWSClient).Region
+	wr := NewRetryer(conn, region)
 
-	// First, need to delete all rules
-	rules := d.Get("rule").(*schema.Set).List()
-	if len(rules) > 0 {
-		wr := NewRetryer(conn, region)
+	if rules := d.Get("rule").(*schema.Set).List(); len(rules) > 0 {
 		_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-			req := &waf.UpdateWebACLInput{
+			input := &waf.UpdateWebACLInput{
 				ChangeToken:   token,
 				DefaultAction: tfwaf.ExpandAction(d.Get("default_action").([]interface{})),
 				Updates:       diffWebACLRules(rules, []interface{}{}),
 				WebACLId:      aws.String(d.Id()),
 			}
-			return conn.UpdateWebACLWithContext(ctx, req)
+
+			return conn.UpdateWebACLWithContext(ctx, input)
 		})
+
+		if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentContainerException, wafregional.ErrCodeWAFNonexistentItemException) {
+			return diags
+		}
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "Removing WAF Regional ACL Rules: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating WAF Regional Web ACL (%s): %s", d.Id(), err)
 		}
 	}
 
-	wr := NewRetryer(conn, region)
+	log.Printf("[INFO] Deleting WAF Regional Web ACL: %s", d.Id())
 	_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		req := &waf.DeleteWebACLInput{
 			ChangeToken: token,
 			WebACLId:    aws.String(d.Id()),
 		}
 
-		log.Printf("[INFO] Deleting WAF ACL")
 		return conn.DeleteWebACLWithContext(ctx, req)
 	})
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Deleting WAF Regional ACL: %s", err)
+
+	if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
+		return diags
 	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting WAF Regional Web ACL (%s): %s", d.Id(), err)
+	}
+
 	return diags
 }
 
@@ -476,7 +486,7 @@ func flattenRedactedFields(fieldToMatches []*waf.FieldToMatch) []interface{} {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"type": {
+			names.AttrType: {
 				Type:     schema.TypeString,
 				Required: true,
 			},

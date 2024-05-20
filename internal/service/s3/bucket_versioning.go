@@ -23,10 +23,11 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_s3_bucket_versioning")
-func ResourceBucketVersioning() *schema.Resource {
+// @SDKResource("aws_s3_bucket_versioning", name="Bucket Versioning")
+func resourceBucketVersioning() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketVersioningCreate,
 		ReadWithoutTimeout:   resourceBucketVersioningRead,
@@ -38,7 +39,7 @@ func ResourceBucketVersioning() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"bucket": {
+			names.AttrBucket: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -66,7 +67,7 @@ func ResourceBucketVersioning() *schema.Resource {
 							Computed:         true,
 							ValidateDiagFunc: enum.Validate[types.MFADelete](),
 						},
-						"status": {
+						names.AttrStatus: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(bucketVersioningStatus_Values(), false),
@@ -88,7 +89,7 @@ func ResourceBucketVersioning() *schema.Resource {
 				oldStatusRaw, newStatusRaw := diff.GetChange("versioning_configuration.0.status")
 				oldStatus, newStatus := oldStatusRaw.(string), newStatusRaw.(string)
 
-				if newStatus == BucketVersioningStatusDisabled && (oldStatus == string(types.BucketVersioningStatusEnabled) || oldStatus == string(types.BucketVersioningStatusSuspended)) {
+				if newStatus == bucketVersioningStatusDisabled && (oldStatus == string(types.BucketVersioningStatusEnabled) || oldStatus == string(types.BucketVersioningStatusSuspended)) {
 					return fmt.Errorf("versioning_configuration.status cannot be updated from '%s' to '%s'", oldStatus, newStatus)
 				}
 
@@ -101,7 +102,7 @@ func ResourceBucketVersioning() *schema.Resource {
 func resourceBucketVersioningCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket := d.Get("bucket").(string)
+	bucket := d.Get(names.AttrBucket).(string)
 	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
 
 	versioningConfiguration := expandBucketVersioningConfiguration(d.Get("versioning_configuration").([]interface{}))
@@ -110,7 +111,7 @@ func resourceBucketVersioningCreate(ctx context.Context, d *schema.ResourceData,
 	// versioning resources that represent unversioned S3 buckets as was previously
 	// supported within the aws_s3_bucket resource of the 3.x version of the provider.
 	// Thus, we essentially bring existing bucket versioning into adoption.
-	if string(versioningConfiguration.Status) != BucketVersioningStatusDisabled {
+	if string(versioningConfiguration.Status) != bucketVersioningStatusDisabled {
 		input := &s3.PutBucketVersioningInput{
 			Bucket:                  aws.String(bucket),
 			VersioningConfiguration: versioningConfiguration,
@@ -165,7 +166,7 @@ func resourceBucketVersioningRead(ctx context.Context, d *schema.ResourceData, m
 		return diag.Errorf("reading S3 Bucket Versioning (%s): %s", d.Id(), err)
 	}
 
-	d.Set("bucket", bucket)
+	d.Set(names.AttrBucket, bucket)
 	d.Set("expected_bucket_owner", expectedBucketOwner)
 	if err := d.Set("versioning_configuration", flattenVersioning(output)); err != nil {
 		return diag.Errorf("setting versioning_configuration: %s", err)
@@ -206,7 +207,7 @@ func resourceBucketVersioningUpdate(ctx context.Context, d *schema.ResourceData,
 func resourceBucketVersioningDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	if v := expandBucketVersioningConfiguration(d.Get("versioning_configuration").([]interface{})); v != nil && string(v.Status) == BucketVersioningStatusDisabled {
+	if v := expandBucketVersioningConfiguration(d.Get("versioning_configuration").([]interface{})); v != nil && string(v.Status) == bucketVersioningStatusDisabled {
 		log.Printf("[DEBUG] Removing S3 bucket versioning for unversioned bucket (%s) from state", d.Id())
 		return nil
 	}
@@ -264,7 +265,7 @@ func expandBucketVersioningConfiguration(l []interface{}) *types.VersioningConfi
 		result.MFADelete = types.MFADelete(v)
 	}
 
-	if v, ok := tfMap["status"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
 		result.Status = types.BucketVersioningStatus(v)
 	}
 
@@ -281,10 +282,10 @@ func flattenVersioning(config *s3.GetBucketVersioningOutput) []interface{} {
 	}
 
 	if config.Status != "" {
-		m["status"] = config.Status
+		m[names.AttrStatus] = config.Status
 	} else {
 		// Bucket Versioning by default is disabled but not set in the config struct's Status field
-		m["status"] = BucketVersioningStatusDisabled
+		m[names.AttrStatus] = bucketVersioningStatusDisabled
 	}
 
 	return []interface{}{m}
@@ -331,7 +332,7 @@ func statusBucketVersioning(ctx context.Context, conn *s3.Client, bucket, expect
 		}
 
 		if output.Status == "" {
-			return output, BucketVersioningStatusDisabled, nil
+			return output, bucketVersioningStatusDisabled, nil
 		}
 
 		return output, string(output.Status), nil
@@ -359,9 +360,9 @@ func waitForBucketVersioningStatus(ctx context.Context, conn *s3.Client, bucket,
 }
 
 const (
-	BucketVersioningStatusDisabled = "Disabled"
+	bucketVersioningStatusDisabled = "Disabled"
 )
 
 func bucketVersioningStatus_Values() []string {
-	return tfslices.AppendUnique(enum.Values[types.BucketVersioningStatus](), BucketVersioningStatusDisabled)
+	return tfslices.AppendUnique(enum.Values[types.BucketVersioningStatus](), bucketVersioningStatusDisabled)
 }

@@ -10,11 +10,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+)
+
+var (
+	_ basetypes.StringTypable = (*cidrBlockType)(nil)
 )
 
 type cidrBlockType struct {
@@ -23,12 +26,6 @@ type cidrBlockType struct {
 
 var (
 	CIDRBlockType = cidrBlockType{}
-)
-
-var (
-	_ xattr.TypeWithValidate   = (*cidrBlockType)(nil)
-	_ basetypes.StringTypable  = (*cidrBlockType)(nil)
-	_ basetypes.StringValuable = (*CIDRBlock)(nil)
 )
 
 func (t cidrBlockType) Equal(o attr.Type) bool {
@@ -89,35 +86,10 @@ func (cidrBlockType) ValueType(context.Context) attr.Value {
 	return CIDRBlock{}
 }
 
-func (t cidrBlockType) Validate(ctx context.Context, in tftypes.Value, path path.Path) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	if !in.IsKnown() || in.IsNull() {
-		return diags
-	}
-
-	var value string
-	err := in.As(&value)
-	if err != nil {
-		diags.AddAttributeError(
-			path,
-			"CIDRBlock Type Validation Error",
-			ProviderErrorDetailPrefix+fmt.Sprintf("Cannot convert value to string: %s", err),
-		)
-		return diags
-	}
-
-	if err := itypes.ValidateCIDRBlock(value); err != nil {
-		diags.AddAttributeError(
-			path,
-			"CIDRBlock Type Validation Error",
-			err.Error(),
-		)
-		return diags
-	}
-
-	return diags
-}
+var (
+	_ basetypes.StringValuable    = (*CIDRBlock)(nil)
+	_ xattr.ValidateableAttribute = (*CIDRBlock)(nil)
+)
 
 func CIDRBlockNull() CIDRBlock {
 	return CIDRBlock{StringValue: basetypes.NewStringNull()}
@@ -147,4 +119,20 @@ func (v CIDRBlock) Equal(o attr.Value) bool {
 
 func (CIDRBlock) Type(context.Context) attr.Type {
 	return CIDRBlockType
+}
+
+func (v CIDRBlock) ValidateAttribute(ctx context.Context, req xattr.ValidateAttributeRequest, resp *xattr.ValidateAttributeResponse) {
+	if v.IsNull() || v.IsUnknown() {
+		return
+	}
+
+	if err := itypes.ValidateCIDRBlock(v.ValueString()); err != nil {
+		resp.Diagnostics.AddAttributeError(
+			req.Path,
+			"Invalid CIDR Block Value",
+			"The provided value failed validation.\n\n"+
+				"Path: "+req.Path.String()+"\n"+
+				"Error: "+err.Error(),
+		)
+	}
 }

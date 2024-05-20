@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -16,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsecretsmanager "github.com/hashicorp/terraform-provider-aws/internal/service/secretsmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -29,7 +30,7 @@ func TestAccSecretsManagerSecretVersion_basicString(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecretVersionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -41,7 +42,7 @@ func TestAccSecretsManagerSecretVersion_basicString(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "version_id"),
 					resource.TestCheckResourceAttr(resourceName, "version_stages.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "version_stages.*", "AWSCURRENT"),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", secretResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, secretResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -62,7 +63,7 @@ func TestAccSecretsManagerSecretVersion_base64Binary(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecretVersionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -70,11 +71,11 @@ func TestAccSecretsManagerSecretVersion_base64Binary(t *testing.T) {
 				Config: testAccSecretVersionConfig_binary(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretVersionExists(ctx, resourceName, &version),
-					resource.TestCheckResourceAttr(resourceName, "secret_binary", verify.Base64Encode([]byte("test-binary"))),
+					resource.TestCheckResourceAttr(resourceName, "secret_binary", itypes.Base64EncodeOnce([]byte("test-binary"))),
 					resource.TestCheckResourceAttrSet(resourceName, "version_id"),
 					resource.TestCheckResourceAttr(resourceName, "version_stages.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "version_stages.*", "AWSCURRENT"),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", secretResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, secretResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -94,7 +95,7 @@ func TestAccSecretsManagerSecretVersion_versionStages(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecretVersionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -138,6 +139,54 @@ func TestAccSecretsManagerSecretVersion_versionStages(t *testing.T) {
 	})
 }
 
+func TestAccSecretsManagerSecretVersion_versionStagesExternalUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var version secretsmanager.GetSecretValueOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_secretsmanager_secret_version.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecretVersionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSecretVersionConfig_stagesSingle(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecretVersionExists(ctx, resourceName, &version),
+					resource.TestCheckResourceAttr(resourceName, "secret_string", "test-string"),
+					resource.TestCheckResourceAttr(resourceName, "version_stages.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "version_stages.*", "AWSCURRENT"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "version_stages.*", "one"),
+				),
+			},
+			{
+				PreConfig: func() {
+					conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerClient(ctx)
+
+					_, err := conn.PutSecretValue(ctx, &secretsmanager.PutSecretValueInput{
+						SecretId:     version.ARN,
+						SecretString: aws.String("external_update"),
+					})
+
+					if err != nil {
+						t.Fatalf("externally updating Secrets Manager Secret Version: %s", err)
+					}
+				},
+				Config: testAccSecretVersionConfig_stagesSingle(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecretVersionExists(ctx, resourceName, &version),
+					resource.TestCheckResourceAttr(resourceName, "secret_string", "test-string"),
+					resource.TestCheckResourceAttr(resourceName, "version_stages.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "version_stages.*", "AWSCURRENT"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "version_stages.*", "one"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccSecretsManagerSecretVersion_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var version secretsmanager.GetSecretValueOutput
@@ -146,7 +195,7 @@ func TestAccSecretsManagerSecretVersion_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecretVersionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -172,7 +221,7 @@ func TestAccSecretsManagerSecretVersion_Disappears_secret(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecretVersionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -188,10 +237,6 @@ func TestAccSecretsManagerSecretVersion_Disappears_secret(t *testing.T) {
 	})
 }
 
-/*
-
-	Need to handle 'AWSPREVIOUS' better.
-
 func TestAccSecretsManagerSecretVersion_multipleVersions(t *testing.T) {
 	ctx := acctest.Context(t)
 	var version1, version2, version3 secretsmanager.GetSecretValueOutput
@@ -202,7 +247,7 @@ func TestAccSecretsManagerSecretVersion_multipleVersions(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecretVersionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -212,19 +257,19 @@ func TestAccSecretsManagerSecretVersion_multipleVersions(t *testing.T) {
 					testAccCheckSecretVersionExists(ctx, resource1Name, &version1),
 					resource.TestCheckResourceAttr(resource1Name, "version_stages.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resource1Name, "version_stages.*", "one"),
-					testAccCheckSecretVersionExists(ctx, resource1Name, &version2),
+					testAccCheckSecretVersionExists(ctx, resource2Name, &version2),
 					resource.TestCheckResourceAttr(resource2Name, "version_stages.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resource2Name, "version_stages.*", "two"),
-					resource.TestCheckTypeSetElemAttr(resource2Name, "version_stages.*", "AWSCURRENT"),
-					testAccCheckSecretVersionExists(ctx, resource1Name, &version3),
-					resource.TestCheckResourceAttr(resource3Name, "version_stages.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resource2Name, "version_stages.*", "2"),
+					testAccCheckSecretVersionExists(ctx, resource3Name, &version3),
+					resource.TestCheckResourceAttr(resource3Name, "version_stages.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resource3Name, "version_stages.*", "three"),
+					resource.TestCheckTypeSetElemAttr(resource3Name, "version_stages.*", "AWSCURRENT"),
 				),
 			},
 		},
 	})
 }
-*/
 
 func testAccCheckSecretVersionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -245,7 +290,7 @@ func testAccCheckSecretVersionDestroy(ctx context.Context) resource.TestCheckFun
 				return err
 			}
 
-			if len(output.VersionStages) == 0 || (len(output.VersionStages) == 1 && output.VersionStages[0] == "AWSCURRENT") {
+			if len(output.VersionStages) == 0 || (len(output.VersionStages) == 1 && (output.VersionStages[0] == "AWSCURRENT" || output.VersionStages[0] == "AWSPREVIOUS")) {
 				continue
 			}
 
@@ -348,7 +393,6 @@ resource "aws_secretsmanager_secret_version" "test" {
 `, rName)
 }
 
-/*
 func testAccSecretVersionConfig_multipleVersions(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
@@ -360,21 +404,32 @@ resource "aws_secretsmanager_secret_version" "test1" {
   secret_string = "test1"
 
   version_stages = ["one"]
+
+  lifecycle {
+    ignore_changes = [version_stages] # "AWSPREVIOUS"
+  }
 }
 
 resource "aws_secretsmanager_secret_version" "test2" {
   secret_id     = aws_secretsmanager_secret.test.id
   secret_string = "test2"
 
-  version_stages = ["two", "AWSCURRENT"]
+  version_stages = ["two", "2"]
+
+  depends_on = [aws_secretsmanager_secret_version.test1]
+
+  lifecycle {
+    ignore_changes = [version_stages] # "AWSPREVIOUS"
+  }
 }
 
 resource "aws_secretsmanager_secret_version" "test3" {
   secret_id     = aws_secretsmanager_secret.test.id
   secret_string = "test3"
 
-  version_stages = ["three"]
+  version_stages = ["three", "AWSCURRENT"]
+
+  depends_on = [aws_secretsmanager_secret_version.test2]
 }
 `, rName)
 }
-*/

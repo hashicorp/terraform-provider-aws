@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_dx_macsec_key_association")
@@ -64,7 +65,7 @@ func ResourceMacSecKeyAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -130,7 +131,7 @@ func resourceMacSecKeyRead(ctx context.Context, d *schema.ResourceData, meta int
 			d.Set("connection_id", connId)
 			d.Set("secret_arn", key.SecretARN)
 			d.Set("start_on", key.StartOn)
-			d.Set("state", key.State)
+			d.Set(names.AttrState, key.State)
 		}
 	}
 

@@ -9,15 +9,16 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudwatch"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -27,9 +28,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_cloudwatch_metric_stream", name="Metric Alarm")
+// @SDKResource("aws_cloudwatch_metric_stream", name="Metric Stream")
 // @Tags(identifierAttribute="arn")
-func ResourceMetricStream() *schema.Resource {
+func resourceMetricStream() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMetricStreamCreate,
 		ReadWithoutTimeout:   resourceMetricStreamRead,
@@ -49,11 +50,11 @@ func ResourceMetricStream() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_date": {
+			names.AttrCreationDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -70,7 +71,7 @@ func ResourceMetricStream() *schema.Resource {
 								ValidateFunc: validation.StringLenBetween(1, 255),
 							},
 						},
-						"namespace": {
+						names.AttrNamespace: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
@@ -97,7 +98,7 @@ func ResourceMetricStream() *schema.Resource {
 								ValidateFunc: validation.StringLenBetween(1, 255),
 							},
 						},
-						"namespace": {
+						names.AttrNamespace: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
@@ -114,33 +115,33 @@ func ResourceMetricStream() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validateMetricStreamName,
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validateMetricStreamName,
 			},
 			"output_format": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[types.MetricStreamOutputFormat](),
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -177,12 +178,12 @@ func ResourceMetricStream() *schema.Resource {
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"metric_name": {
+									names.AttrMetricName: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 255),
 									},
-									"namespace": {
+									names.AttrNamespace: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 255),
@@ -201,38 +202,37 @@ func ResourceMetricStream() *schema.Resource {
 
 func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudWatchClient(ctx)
 
-	conn := meta.(*conns.AWSClient).CloudWatchConn(ctx)
-
-	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &cloudwatch.PutMetricStreamInput{
 		FirehoseArn:                  aws.String(d.Get("firehose_arn").(string)),
 		IncludeLinkedAccountsMetrics: aws.Bool(d.Get("include_linked_accounts_metrics").(bool)),
 		Name:                         aws.String(name),
-		OutputFormat:                 aws.String(d.Get("output_format").(string)),
-		RoleArn:                      aws.String(d.Get("role_arn").(string)),
+		OutputFormat:                 types.MetricStreamOutputFormat(d.Get("output_format").(string)),
+		RoleArn:                      aws.String(d.Get(names.AttrRoleARN).(string)),
 		Tags:                         getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("exclude_filter"); ok && v.(*schema.Set).Len() > 0 {
-		input.ExcludeFilters = expandMetricStreamFilters(v.(*schema.Set))
+		input.ExcludeFilters = expandMetricStreamFilters(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("include_filter"); ok && v.(*schema.Set).Len() > 0 {
-		input.IncludeFilters = expandMetricStreamFilters(v.(*schema.Set))
+		input.IncludeFilters = expandMetricStreamFilters(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("statistics_configuration"); ok && v.(*schema.Set).Len() > 0 {
-		input.StatisticsConfigurations = expandMetricStreamStatisticsConfigurations(v.(*schema.Set))
+		input.StatisticsConfigurations = expandMetricStreamStatisticsConfigurations(v.(*schema.Set).List())
 	}
 
-	output, err := conn.PutMetricStreamWithContext(ctx, input)
+	output, err := conn.PutMetricStream(ctx, input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
-	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
 		input.Tags = nil
 
-		output, err = conn.PutMetricStreamWithContext(ctx, input)
+		output, err = conn.PutMetricStream(ctx, input)
 	}
 
 	if err != nil {
@@ -247,10 +247,10 @@ func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, met
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
 	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
-		err := createTags(ctx, conn, aws.StringValue(output.Arn), tags)
+		err := createTags(ctx, conn, aws.ToString(output.Arn), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
 			return append(diags, resourceMetricStreamRead(ctx, d, meta)...)
 		}
 
@@ -264,10 +264,9 @@ func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudWatchClient(ctx)
 
-	conn := meta.(*conns.AWSClient).CloudWatchConn(ctx)
-
-	output, err := FindMetricStreamByName(ctx, conn, d.Id())
+	output, err := findMetricStreamByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Metric Stream (%s) not found, removing from state", d.Id())
@@ -279,29 +278,26 @@ func resourceMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Metric Stream (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.Arn)
-	d.Set("creation_date", output.CreationDate.Format(time.RFC3339))
-	d.Set("firehose_arn", output.FirehoseArn)
-	d.Set("include_linked_accounts_metrics", output.IncludeLinkedAccountsMetrics)
-	d.Set("last_update_date", output.CreationDate.Format(time.RFC3339))
-	d.Set("name", output.Name)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(output.Name)))
-	d.Set("output_format", output.OutputFormat)
-	d.Set("role_arn", output.RoleArn)
-	d.Set("state", output.State)
-
-	if output.IncludeFilters != nil {
-		if err := d.Set("include_filter", flattenMetricStreamFilters(output.IncludeFilters)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting include_filter: %s", err)
-		}
-	}
-
+	d.Set(names.AttrARN, output.Arn)
+	d.Set(names.AttrCreationDate, output.CreationDate.Format(time.RFC3339))
 	if output.ExcludeFilters != nil {
 		if err := d.Set("exclude_filter", flattenMetricStreamFilters(output.ExcludeFilters)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting exclude_filter: %s", err)
 		}
 	}
-
+	d.Set("firehose_arn", output.FirehoseArn)
+	if output.IncludeFilters != nil {
+		if err := d.Set("include_filter", flattenMetricStreamFilters(output.IncludeFilters)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting include_filter: %s", err)
+		}
+	}
+	d.Set("include_linked_accounts_metrics", output.IncludeLinkedAccountsMetrics)
+	d.Set("last_update_date", output.CreationDate.Format(time.RFC3339))
+	d.Set(names.AttrName, output.Name)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(output.Name)))
+	d.Set("output_format", output.OutputFormat)
+	d.Set(names.AttrRoleARN, output.RoleArn)
+	d.Set(names.AttrState, output.State)
 	if output.StatisticsConfigurations != nil {
 		if err := d.Set("statistics_configuration", flattenMetricStreamStatisticsConfigurations(output.StatisticsConfigurations)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting statistics_configuration: %s", err)
@@ -313,31 +309,30 @@ func resourceMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceMetricStreamUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudWatchClient(ctx)
 
-	conn := meta.(*conns.AWSClient).CloudWatchConn(ctx)
-
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &cloudwatch.PutMetricStreamInput{
 			FirehoseArn:                  aws.String(d.Get("firehose_arn").(string)),
 			IncludeLinkedAccountsMetrics: aws.Bool(d.Get("include_linked_accounts_metrics").(bool)),
 			Name:                         aws.String(d.Id()),
-			OutputFormat:                 aws.String(d.Get("output_format").(string)),
-			RoleArn:                      aws.String(d.Get("role_arn").(string)),
+			OutputFormat:                 types.MetricStreamOutputFormat(d.Get("output_format").(string)),
+			RoleArn:                      aws.String(d.Get(names.AttrRoleARN).(string)),
 		}
 
 		if v, ok := d.GetOk("exclude_filter"); ok && v.(*schema.Set).Len() > 0 {
-			input.ExcludeFilters = expandMetricStreamFilters(v.(*schema.Set))
+			input.ExcludeFilters = expandMetricStreamFilters(v.(*schema.Set).List())
 		}
 
 		if v, ok := d.GetOk("include_filter"); ok && v.(*schema.Set).Len() > 0 {
-			input.IncludeFilters = expandMetricStreamFilters(v.(*schema.Set))
+			input.IncludeFilters = expandMetricStreamFilters(v.(*schema.Set).List())
 		}
 
 		if v, ok := d.GetOk("statistics_configuration"); ok && v.(*schema.Set).Len() > 0 {
-			input.StatisticsConfigurations = expandMetricStreamStatisticsConfigurations(v.(*schema.Set))
+			input.StatisticsConfigurations = expandMetricStreamStatisticsConfigurations(v.(*schema.Set).List())
 		}
 
-		_, err := conn.PutMetricStreamWithContext(ctx, input)
+		_, err := conn.PutMetricStream(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating CloudWatch Metric Stream (%s): %s", d.Id(), err)
@@ -353,11 +348,10 @@ func resourceMetricStreamUpdate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceMetricStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).CloudWatchConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudWatchClient(ctx)
 
 	log.Printf("[INFO] Deleting CloudWatch Metric Stream: %s", d.Id())
-	_, err := conn.DeleteMetricStreamWithContext(ctx, &cloudwatch.DeleteMetricStreamInput{
+	_, err := conn.DeleteMetricStream(ctx, &cloudwatch.DeleteMetricStreamInput{
 		Name: aws.String(d.Id()),
 	})
 
@@ -372,14 +366,14 @@ func resourceMetricStreamDelete(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func FindMetricStreamByName(ctx context.Context, conn *cloudwatch.CloudWatch, name string) (*cloudwatch.GetMetricStreamOutput, error) {
+func findMetricStreamByName(ctx context.Context, conn *cloudwatch.Client, name string) (*cloudwatch.GetMetricStreamOutput, error) {
 	input := &cloudwatch.GetMetricStreamInput{
 		Name: aws.String(name),
 	}
 
-	output, err := conn.GetMetricStreamWithContext(ctx, input)
+	output, err := conn.GetMetricStream(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, cloudwatch.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -397,9 +391,9 @@ func FindMetricStreamByName(ctx context.Context, conn *cloudwatch.CloudWatch, na
 	return output, nil
 }
 
-func statusMetricStream(ctx context.Context, conn *cloudwatch.CloudWatch, name string) retry.StateRefreshFunc {
+func statusMetricStream(ctx context.Context, conn *cloudwatch.Client, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindMetricStreamByName(ctx, conn, name)
+		output, err := findMetricStreamByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -409,7 +403,7 @@ func statusMetricStream(ctx context.Context, conn *cloudwatch.CloudWatch, name s
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.State), nil
+		return output, aws.ToString(output.State), nil
 	}
 }
 
@@ -418,7 +412,7 @@ const (
 	metricStreamStateStopped = "stopped"
 )
 
-func waitMetricStreamDeleted(ctx context.Context, conn *cloudwatch.CloudWatch, name string, timeout time.Duration) (*cloudwatch.GetMetricStreamOutput, error) {
+func waitMetricStreamDeleted(ctx context.Context, conn *cloudwatch.Client, name string, timeout time.Duration) (*cloudwatch.GetMetricStreamOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{metricStreamStateRunning, metricStreamStateStopped},
 		Target:  []string{},
@@ -435,7 +429,7 @@ func waitMetricStreamDeleted(ctx context.Context, conn *cloudwatch.CloudWatch, n
 	return nil, err
 }
 
-func waitMetricStreamRunning(ctx context.Context, conn *cloudwatch.CloudWatch, name string, timeout time.Duration) (*cloudwatch.GetMetricStreamOutput, error) { //nolint:unparam
+func waitMetricStreamRunning(ctx context.Context, conn *cloudwatch.Client, name string, timeout time.Duration) (*cloudwatch.GetMetricStreamOutput, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{metricStreamStateStopped},
 		Target:  []string{metricStreamStateRunning},
@@ -459,120 +453,161 @@ func validateMetricStreamName(v interface{}, k string) (ws []string, errors []er
 	)(v, k)
 }
 
-func expandMetricStreamFilters(s *schema.Set) []*cloudwatch.MetricStreamFilter {
-	var filters []*cloudwatch.MetricStreamFilter
+func expandMetricStreamFilters(tfList []interface{}) []types.MetricStreamFilter {
+	var apiObjects []types.MetricStreamFilter
 
-	for _, filterRaw := range s.List() {
-		filter := &cloudwatch.MetricStreamFilter{}
-		mFilter := filterRaw.(map[string]interface{})
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
+		}
 
-		if v, ok := mFilter["metric_names"].(*schema.Set); ok && v.Len() > 0 {
-			filter.MetricNames = flex.ExpandStringSet(v)
+		apiObject := types.MetricStreamFilter{}
+
+		if v, ok := tfMap["metric_names"].(*schema.Set); ok && v.Len() > 0 {
+			apiObject.MetricNames = flex.ExpandStringValueSet(v)
 		}
-		if v, ok := mFilter["namespace"].(string); ok && v != "" {
-			filter.Namespace = aws.String(v)
+
+		if v, ok := tfMap[names.AttrNamespace].(string); ok && v != "" {
+			apiObject.Namespace = aws.String(v)
 		}
-		filters = append(filters, filter)
+
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	return filters
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	return apiObjects
 }
 
-func flattenMetricStreamFilters(s []*cloudwatch.MetricStreamFilter) []map[string]interface{} {
-	filters := make([]map[string]interface{}, 0)
+func flattenMetricStreamFilters(apiObjects []types.MetricStreamFilter) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
 
-	for _, bd := range s {
-		if bd.Namespace != nil {
-			stage := make(map[string]interface{})
-			stage["metric_names"] = aws.StringValueSlice(bd.MetricNames)
-			stage["namespace"] = aws.StringValue(bd.Namespace)
-			filters = append(filters, stage)
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject.Namespace != nil {
+			tfMap := map[string]interface{}{
+				"metric_names": apiObject.MetricNames,
+			}
+
+			if v := apiObject.Namespace; v != nil {
+				tfMap[names.AttrNamespace] = aws.ToString(v)
+			}
+
+			tfList = append(tfList, tfMap)
 		}
 	}
 
-	if len(filters) > 0 {
-		return filters
-	}
-
-	return nil
+	return tfList
 }
 
-func expandMetricStreamStatisticsConfigurations(s *schema.Set) []*cloudwatch.MetricStreamStatisticsConfiguration {
-	var configurations []*cloudwatch.MetricStreamStatisticsConfiguration
+func expandMetricStreamStatisticsConfigurations(tfList []interface{}) []types.MetricStreamStatisticsConfiguration {
+	var apiObjects []types.MetricStreamStatisticsConfiguration
 
-	for _, configurationRaw := range s.List() {
-		configuration := &cloudwatch.MetricStreamStatisticsConfiguration{}
-		mConfiguration := configurationRaw.(map[string]interface{})
-
-		if v, ok := mConfiguration["additional_statistics"].(*schema.Set); ok && v.Len() > 0 {
-			configuration.AdditionalStatistics = flex.ExpandStringSet(v)
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
 		}
 
-		if v, ok := mConfiguration["include_metric"].(*schema.Set); ok && v.Len() > 0 {
-			configuration.IncludeMetrics = expandMetricStreamStatisticsConfigurationsIncludeMetrics(v)
+		apiObject := types.MetricStreamStatisticsConfiguration{}
+
+		if v, ok := tfMap["additional_statistics"].(*schema.Set); ok && v.Len() > 0 {
+			apiObject.AdditionalStatistics = flex.ExpandStringValueSet(v)
 		}
 
-		configurations = append(configurations, configuration)
+		if v, ok := tfMap["include_metric"].(*schema.Set); ok && v.Len() > 0 {
+			apiObject.IncludeMetrics = expandMetricStreamStatisticsConfigurationsIncludeMetrics(v.List())
+		}
+
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	if len(configurations) > 0 {
-		return configurations
+	if len(apiObjects) == 0 {
+		return nil
 	}
 
-	return nil
+	return apiObjects
 }
 
-func expandMetricStreamStatisticsConfigurationsIncludeMetrics(metrics *schema.Set) []*cloudwatch.MetricStreamStatisticsMetric {
-	var includeMetrics []*cloudwatch.MetricStreamStatisticsMetric
+func expandMetricStreamStatisticsConfigurationsIncludeMetrics(tfList []interface{}) []types.MetricStreamStatisticsMetric {
+	var apiObjects []types.MetricStreamStatisticsMetric
 
-	for _, metricRaw := range metrics.List() {
-		metric := &cloudwatch.MetricStreamStatisticsMetric{}
-		mMetric := metricRaw.(map[string]interface{})
-
-		if v, ok := mMetric["metric_name"].(string); ok && v != "" {
-			metric.MetricName = aws.String(v)
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
 		}
 
-		if v, ok := mMetric["namespace"].(string); ok && v != "" {
-			metric.Namespace = aws.String(v)
+		apiObject := types.MetricStreamStatisticsMetric{}
+
+		if v, ok := tfMap[names.AttrMetricName].(string); ok && v != "" {
+			apiObject.MetricName = aws.String(v)
 		}
 
-		includeMetrics = append(includeMetrics, metric)
+		if v, ok := tfMap[names.AttrNamespace].(string); ok && v != "" {
+			apiObject.Namespace = aws.String(v)
+		}
+
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	if len(includeMetrics) > 0 {
-		return includeMetrics
+	if len(apiObjects) == 0 {
+		return nil
 	}
 
-	return nil
+	return apiObjects
 }
 
-func flattenMetricStreamStatisticsConfigurations(configurations []*cloudwatch.MetricStreamStatisticsConfiguration) []map[string]interface{} {
-	flatConfigurations := make([]map[string]interface{}, len(configurations))
-
-	for i, configuration := range configurations {
-		flatConfiguration := map[string]interface{}{
-			"additional_statistics": flex.FlattenStringSet(configuration.AdditionalStatistics),
-			"include_metric":        flattenMetricStreamStatisticsConfigurationsIncludeMetrics(configuration.IncludeMetrics),
-		}
-
-		flatConfigurations[i] = flatConfiguration
+func flattenMetricStreamStatisticsConfigurations(apiObjects []types.MetricStreamStatisticsConfiguration) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
 	}
 
-	return flatConfigurations
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]interface{}{}
+
+		if v := apiObject.AdditionalStatistics; v != nil {
+			tfMap["additional_statistics"] = flex.FlattenStringValueSet(v)
+		}
+
+		if v := apiObject.IncludeMetrics; v != nil {
+			tfMap["include_metric"] = flattenMetricStreamStatisticsConfigurationsIncludeMetrics(v)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
 }
 
-func flattenMetricStreamStatisticsConfigurationsIncludeMetrics(metrics []*cloudwatch.MetricStreamStatisticsMetric) []map[string]interface{} {
-	flatMetrics := make([]map[string]interface{}, len(metrics))
-
-	for i, metric := range metrics {
-		flatMetric := map[string]interface{}{
-			"metric_name": aws.StringValue(metric.MetricName),
-			"namespace":   aws.StringValue(metric.Namespace),
-		}
-
-		flatMetrics[i] = flatMetric
+func flattenMetricStreamStatisticsConfigurationsIncludeMetrics(apiObjects []types.MetricStreamStatisticsMetric) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
 	}
 
-	return flatMetrics
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]interface{}{}
+
+		if v := apiObject.MetricName; v != nil {
+			tfMap[names.AttrMetricName] = aws.ToString(v)
+		}
+
+		if v := apiObject.Namespace; v != nil {
+			tfMap[names.AttrNamespace] = aws.ToString(v)
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
 }

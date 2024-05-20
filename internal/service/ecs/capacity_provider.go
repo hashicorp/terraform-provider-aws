@@ -41,7 +41,7 @@ func ResourceCapacityProvider() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -57,6 +57,12 @@ func ResourceCapacityProvider() *schema.Resource {
 							Required:     true,
 							ForceNew:     true,
 							ValidateFunc: verify.ValidARN,
+						},
+						"managed_draining": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(ecs.ManagedDraining_Values(), false),
 						},
 						"managed_scaling": {
 							Type:     schema.TypeList,
@@ -83,7 +89,7 @@ func ResourceCapacityProvider() *schema.Resource {
 										Computed:     true,
 										ValidateFunc: validation.IntBetween(1, 10000),
 									},
-									"status": {
+									names.AttrStatus: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Computed:     true,
@@ -106,7 +112,7 @@ func ResourceCapacityProvider() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -121,7 +127,7 @@ func resourceCapacityProviderCreate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := ecs.CreateCapacityProviderInput{
 		Name:                     aws.String(name),
 		AutoScalingGroupProvider: expandAutoScalingGroupProviderCreate(d.Get("auto_scaling_group_provider")),
@@ -176,13 +182,13 @@ func resourceCapacityProviderRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading ECS Capacity Provider (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.CapacityProviderArn)
+	d.Set(names.AttrARN, output.CapacityProviderArn)
 
 	if err := d.Set("auto_scaling_group_provider", flattenAutoScalingGroupProvider(output.AutoScalingGroupProvider)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting auto_scaling_group_provider: %s", err)
 	}
 
-	d.Set("name", output.Name)
+	d.Set(names.AttrName, output.Name)
 
 	setTagsOut(ctx, output.Tags)
 
@@ -193,10 +199,10 @@ func resourceCapacityProviderUpdate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &ecs.UpdateCapacityProviderInput{
 			AutoScalingGroupProvider: expandAutoScalingGroupProviderUpdate(d.Get("auto_scaling_group_provider")),
-			Name:                     aws.String(d.Get("name").(string)),
+			Name:                     aws.String(d.Get(names.AttrName).(string)),
 		}
 
 		log.Printf("[DEBUG] Updating ECS Capacity Provider: %s", input)
@@ -256,7 +262,7 @@ func resourceCapacityProviderDelete(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceCapacityProviderImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	d.Set("name", d.Id())
+	d.Set(names.AttrName, d.Id())
 	d.SetId(arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Region:    meta.(*conns.AWSClient).Region,
@@ -281,11 +287,15 @@ func expandAutoScalingGroupProviderCreate(configured interface{}) *ecs.AutoScali
 	arn := p["auto_scaling_group_arn"].(string)
 	prov.AutoScalingGroupArn = aws.String(arn)
 
-	if mtp := p["managed_termination_protection"].(string); len(mtp) > 0 {
-		prov.ManagedTerminationProtection = aws.String(mtp)
+	if mtp := p["managed_draining"].(string); len(mtp) > 0 {
+		prov.ManagedDraining = aws.String(mtp)
 	}
 
 	prov.ManagedScaling = expandManagedScaling(p["managed_scaling"])
+
+	if mtp := p["managed_termination_protection"].(string); len(mtp) > 0 {
+		prov.ManagedTerminationProtection = aws.String(mtp)
+	}
 
 	return &prov
 }
@@ -302,11 +312,15 @@ func expandAutoScalingGroupProviderUpdate(configured interface{}) *ecs.AutoScali
 	prov := ecs.AutoScalingGroupProviderUpdate{}
 	p := configured.([]interface{})[0].(map[string]interface{})
 
-	if mtp := p["managed_termination_protection"].(string); len(mtp) > 0 {
-		prov.ManagedTerminationProtection = aws.String(mtp)
+	if mtp := p["managed_draining"].(string); len(mtp) > 0 {
+		prov.ManagedDraining = aws.String(mtp)
 	}
 
 	prov.ManagedScaling = expandManagedScaling(p["managed_scaling"])
+
+	if mtp := p["managed_termination_protection"].(string); len(mtp) > 0 {
+		prov.ManagedTerminationProtection = aws.String(mtp)
+	}
 
 	return &prov
 }
@@ -333,7 +347,7 @@ func expandManagedScaling(configured interface{}) *ecs.ManagedScaling {
 	if v, ok := tfMap["minimum_scaling_step_size"].(int); ok && v != 0 {
 		managedScaling.MinimumScalingStepSize = aws.Int64(int64(v))
 	}
-	if v, ok := tfMap["status"].(string); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrStatus].(string); ok && len(v) > 0 {
 		managedScaling.Status = aws.String(v)
 	}
 	if v, ok := tfMap["target_capacity"].(int); ok && v != 0 {
@@ -350,8 +364,9 @@ func flattenAutoScalingGroupProvider(provider *ecs.AutoScalingGroupProvider) []m
 
 	p := map[string]interface{}{
 		"auto_scaling_group_arn":         aws.StringValue(provider.AutoScalingGroupArn),
-		"managed_termination_protection": aws.StringValue(provider.ManagedTerminationProtection),
+		"managed_draining":               aws.StringValue(provider.ManagedDraining),
 		"managed_scaling":                []map[string]interface{}{},
+		"managed_termination_protection": aws.StringValue(provider.ManagedTerminationProtection),
 	}
 
 	if provider.ManagedScaling != nil {
@@ -359,7 +374,7 @@ func flattenAutoScalingGroupProvider(provider *ecs.AutoScalingGroupProvider) []m
 			"instance_warmup_period":    aws.Int64Value(provider.ManagedScaling.InstanceWarmupPeriod),
 			"maximum_scaling_step_size": aws.Int64Value(provider.ManagedScaling.MaximumScalingStepSize),
 			"minimum_scaling_step_size": aws.Int64Value(provider.ManagedScaling.MinimumScalingStepSize),
-			"status":                    aws.StringValue(provider.ManagedScaling.Status),
+			names.AttrStatus:            aws.StringValue(provider.ManagedScaling.Status),
 			"target_capacity":           aws.Int64Value(provider.ManagedScaling.TargetCapacity),
 		}
 

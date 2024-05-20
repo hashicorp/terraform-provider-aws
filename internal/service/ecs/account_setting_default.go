@@ -17,9 +17,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ecs_account_setting_default")
+// @SDKResource("aws_ecs_account_setting_default", name="Account Setting Defauilt")
 func ResourceAccountSettingDefault() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccountSettingDefaultCreate,
@@ -31,7 +32,7 @@ func ResourceAccountSettingDefault() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				ForceNew:     true,
 				Required:     true,
@@ -41,17 +42,16 @@ func ResourceAccountSettingDefault() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"value": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{"enabled", "disabled"}, false),
+			names.AttrValue: {
+				Type:     schema.TypeString,
+				Required: true,
 			},
 		},
 	}
 }
 
 func resourceAccountSettingDefaultImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	d.Set("name", d.Id())
+	d.Set(names.AttrName, d.Id())
 	d.SetId(arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Region:    meta.(*conns.AWSClient).Region,
@@ -66,8 +66,8 @@ func resourceAccountSettingDefaultCreate(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
-	settingName := d.Get("name").(string)
-	settingValue := d.Get("value").(string)
+	settingName := d.Get(names.AttrName).(string)
+	settingValue := d.Get(names.AttrValue).(string)
 	log.Printf("[DEBUG] Setting Account Default %s", settingName)
 
 	input := ecs.PutAccountSettingDefaultInput{
@@ -93,7 +93,7 @@ func resourceAccountSettingDefaultRead(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	input := &ecs.ListAccountSettingsInput{
-		Name:              aws.String(d.Get("name").(string)),
+		Name:              aws.String(d.Get(names.AttrName).(string)),
 		EffectiveSettings: aws.Bool(true),
 	}
 
@@ -101,7 +101,7 @@ func resourceAccountSettingDefaultRead(ctx context.Context, d *schema.ResourceDa
 	resp, err := conn.ListAccountSettingsWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading ECS Account Setting Defauilt (%s): %s", d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "reading ECS Account Setting Defauilt (%s): %s", d.Get(names.AttrName).(string), err)
 	}
 
 	if len(resp.Settings) == 0 {
@@ -112,9 +112,9 @@ func resourceAccountSettingDefaultRead(ctx context.Context, d *schema.ResourceDa
 
 	for _, r := range resp.Settings {
 		d.SetId(aws.StringValue(r.PrincipalArn))
-		d.Set("name", r.Name)
+		d.Set(names.AttrName, r.Name)
 		d.Set("principal_arn", r.PrincipalArn)
-		d.Set("value", r.Value)
+		d.Set(names.AttrValue, r.Value)
 	}
 
 	return diags
@@ -124,10 +124,10 @@ func resourceAccountSettingDefaultUpdate(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
-	settingName := d.Get("name").(string)
-	settingValue := d.Get("value").(string)
+	settingName := d.Get(names.AttrName).(string)
+	settingValue := d.Get(names.AttrValue).(string)
 
-	if d.HasChange("value") {
+	if d.HasChange(names.AttrValue) {
 		input := ecs.PutAccountSettingDefaultInput{
 			Name:  aws.String(settingName),
 			Value: aws.String(settingValue),
@@ -146,12 +146,18 @@ func resourceAccountSettingDefaultDelete(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
-	settingName := d.Get("name").(string)
+	settingName := d.Get(names.AttrName).(string)
+	settingValue := "disabled"
+
+	//Default value: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-maintenance.html#task-retirement-change
+	if settingName == ecs.SettingNameFargateTaskRetirementWaitPeriod {
+		settingValue = fargateTaskRetirementWaitPeriodValue
+	}
 
 	log.Printf("[WARN] Disabling ECS Account Setting Default %s", settingName)
 	input := ecs.PutAccountSettingDefaultInput{
 		Name:  aws.String(settingName),
-		Value: aws.String("disabled"),
+		Value: aws.String(settingValue),
 	}
 
 	_, err := conn.PutAccountSettingDefaultWithContext(ctx, &input)
