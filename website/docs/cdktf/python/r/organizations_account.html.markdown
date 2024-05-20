@@ -87,6 +87,12 @@ Using `terraform import`, import the AWS member account using the `account_id`. 
 % terraform import aws_organizations_account.my_account 111111111111
 ```
 
+To import accounts that have set iam_user_access_to_billing, use the following:
+
+```console
+% terraform import aws_organizations_account.my_account 111111111111_ALLOW
+```
+
 Certain resource arguments, like `role_name`, do not have an Organizations API method for reading the information after account creation. If the argument is set in the Terraform configuration on an imported resource, Terraform will always show a difference. To workaround this behavior, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference. For example:
 
 ```python
@@ -112,4 +118,4 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-5a8e610cf1ae7ca0e910e17be09234e364906df616915d2a7f13f50fbf54f672 -->
+<!-- cache-key: cdktf-0.20.1 input-d860653667ad2aaa9fbdfb913bef905be02789a28adb8345c0c7e3dc4dd84bb2 -->

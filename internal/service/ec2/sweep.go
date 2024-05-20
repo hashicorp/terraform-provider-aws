@@ -520,7 +520,7 @@ func sweepCarrierGateways(region string) error {
 		}
 
 		for _, v := range page.CarrierGateways {
-			r := ResourceCarrierGateway()
+			r := resourceCarrierGateway()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.CarrierGatewayId))
 
@@ -564,7 +564,7 @@ func sweepClientVPNEndpoints(region string) error {
 		}
 
 		for _, v := range page.ClientVpnEndpoints {
-			r := ResourceClientVPNEndpoint()
+			r := resourceClientVPNEndpoint()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.ClientVpnEndpointId))
 
@@ -619,7 +619,7 @@ func sweepClientVPNNetworkAssociations(region string) error {
 				}
 
 				for _, v := range page.ClientVpnTargetNetworks {
-					r := ResourceClientVPNNetworkAssociation()
+					r := resourceClientVPNNetworkAssociation()
 					d := r.Data(nil)
 					d.SetId(aws.StringValue(v.AssociationId))
 					d.Set("client_vpn_endpoint_id", v.ClientVpnEndpointId)
