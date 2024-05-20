@@ -1,7 +1,7 @@
 # R002
 
 The R002 analyzer reports likely extraneous uses of
-star (`*`) dereferences for a [`Set()`](https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/helper/schema#ResourceData.Set) call. The `Set()` function automatically
+star (`*`) dereferences for a [`Set()`](https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema#ResourceData.Set) call. The `Set()` function automatically
 handles pointers and `*` dereferences without `nil` checks can panic.
 
 ## Flagged Code

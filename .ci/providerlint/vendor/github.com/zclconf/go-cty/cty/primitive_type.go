@@ -1,6 +1,8 @@
 package cty
 
-import "math/big"
+import (
+	"math/big"
+)
 
 // primitiveType is the hidden implementation of the various primitive types
 // that are exposed as variables in this package.
@@ -77,6 +79,18 @@ func rawNumberEqual(a, b *big.Float) bool {
 	case a.Sign() != b.Sign():
 		return false
 	default:
+		// First check if these are integers, and compare them directly. Floats
+		// need a more nuanced approach.
+		aInt, aAcc := a.Int(nil)
+		bInt, bAcc := b.Int(nil)
+		if aAcc != bAcc {
+			// only one is an exact integer value, so they can't be equal
+			return false
+		}
+		if aAcc == big.Exact {
+			return aInt.Cmp(bInt) == 0
+		}
+
 		// This format and precision matches that used by cty/json.Marshal,
 		// and thus achieves our definition of "two numbers are equal if
 		// we'd use the same JSON serialization for both of them".

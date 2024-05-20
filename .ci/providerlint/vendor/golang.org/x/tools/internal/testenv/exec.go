@@ -92,8 +92,7 @@ func NeedsExec(t testing.TB) {
 //     for an arbitrary grace period before the test's deadline expires,
 //   - if Cmd has the Cancel field, fails the test if the command is canceled
 //     due to the test's deadline, and
-//   - if supported, sets a Cleanup function that verifies that the test did not
-//     leak a subprocess.
+//   - sets a Cleanup function that verifies that the test did not leak a subprocess.
 func CommandContext(t testing.TB, ctx context.Context, name string, args ...string) *exec.Cmd {
 	t.Helper()
 	NeedsExec(t)
@@ -126,8 +125,8 @@ func CommandContext(t testing.TB, ctx context.Context, name string, args ...stri
 		// grace periods to clean up: one for the delay between the first
 		// termination signal being sent (via the Cancel callback when the Context
 		// expires) and the process being forcibly terminated (via the WaitDelay
-		// field), and a second one for the delay becween the process being
-		// terminated and and the test logging its output for debugging.
+		// field), and a second one for the delay between the process being
+		// terminated and the test logging its output for debugging.
 		//
 		// (We want to ensure that the test process itself has enough time to
 		// log the output before it is also terminated.)
@@ -173,21 +172,14 @@ func CommandContext(t testing.TB, ctx context.Context, name string, args ...stri
 		rWaitDelay.Set(reflect.ValueOf(gracePeriod))
 	}
 
-	// t.Cleanup was added in Go 1.14; for earlier Go versions,
-	// we just let the Context leak.
-	type Cleanupper interface {
-		Cleanup(func())
-	}
-	if ct, ok := t.(Cleanupper); ok {
-		ct.Cleanup(func() {
-			if cancelCtx != nil {
-				cancelCtx()
-			}
-			if cmd.Process != nil && cmd.ProcessState == nil {
-				t.Errorf("command was started, but test did not wait for it to complete: %v", cmd)
-			}
-		})
-	}
+	t.Cleanup(func() {
+		if cancelCtx != nil {
+			cancelCtx()
+		}
+		if cmd.Process != nil && cmd.ProcessState == nil {
+			t.Errorf("command was started, but test did not wait for it to complete: %v", cmd)
+		}
+	})
 
 	return cmd
 }

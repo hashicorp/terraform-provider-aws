@@ -10,7 +10,7 @@ import (
 
 var Analyzer = &analysis.Analyzer{
 	Name: "resourceinfodatasourceonly",
-	Doc:  "find github.com/hashicorp/terraform-plugin-sdk/helper/schema.Resource literals of Data Sources for later passes",
+	Doc:  "find github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema.Resource literals of Data Sources for later passes",
 	Requires: []*analysis.Analyzer{
 		resourceinfo.Analyzer,
 	},
