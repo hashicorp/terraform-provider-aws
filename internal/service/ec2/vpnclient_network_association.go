@@ -23,7 +23,7 @@ import (
 )
 
 // @SDKResource("aws_ec2_client_vpn_network_association", name="Client VPN Network Association")
-func ResourceClientVPNNetworkAssociation() *schema.Resource {
+func resourceClientVPNNetworkAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClientVPNNetworkAssociationCreate,
 		ReadWithoutTimeout:   resourceClientVPNNetworkAssociationRead,

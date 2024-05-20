@@ -25,7 +25,7 @@ import (
 )
 
 // @SDKResource("aws_ec2_client_vpn_authorization_rule", name="Client VPN Authorization Rule")
-func ResourceClientVPNAuthorizationRule() *schema.Resource {
+func resourceClientVPNAuthorizationRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClientVPNAuthorizationRuleCreate,
 		ReadWithoutTimeout:   resourceClientVPNAuthorizationRuleRead,

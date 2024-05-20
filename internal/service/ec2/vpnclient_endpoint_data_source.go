@@ -21,8 +21,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ec2_client_vpn_endpoint")
-func DataSourceClientVPNEndpoint() *schema.Resource {
+// @SDKDataSource("aws_ec2_client_vpn_endpoint", name="Client VPN Endpoint")
+// @Tags
+func dataSourceClientVPNEndpoint() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceClientVPNEndpointRead,
 
@@ -183,7 +184,6 @@ func DataSourceClientVPNEndpoint() *schema.Resource {
 func dataSourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeClientVpnEndpointsInput{}
 
@@ -261,9 +261,7 @@ func dataSourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData
 	d.Set(names.AttrVPCID, ep.VpcId)
 	d.Set("vpn_port", ep.VpnPort)
 
-	if err := d.Set(names.AttrTags, keyValueTagsV2(ctx, ep.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOutV2(ctx, ep.Tags)
 
 	return diags
 }

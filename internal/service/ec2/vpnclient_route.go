@@ -24,7 +24,7 @@ import (
 )
 
 // @SDKResource("aws_ec2_client_vpn_route", name="Client VPN Route")
-func ResourceClientVPNRoute() *schema.Resource {
+func resourceClientVPNRoute() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClientVPNRouteCreate,
 		ReadWithoutTimeout:   resourceClientVPNRouteRead,

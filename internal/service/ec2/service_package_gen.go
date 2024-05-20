@@ -120,8 +120,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_ebs_volumes",
 		},
 		{
-			Factory:  DataSourceClientVPNEndpoint,
+			Factory:  dataSourceClientVPNEndpoint,
 			TypeName: "aws_ec2_client_vpn_endpoint",
+			Name:     "Client VPN Endpoint",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  DataSourceCoIPPool,
@@ -565,12 +567,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceClientVPNAuthorizationRule,
+			Factory:  resourceClientVPNAuthorizationRule,
 			TypeName: "aws_ec2_client_vpn_authorization_rule",
 			Name:     "Client VPN Authorization Rule",
 		},
 		{
-			Factory:  ResourceClientVPNEndpoint,
+			Factory:  resourceClientVPNEndpoint,
 			TypeName: "aws_ec2_client_vpn_endpoint",
 			Name:     "Client VPN Endpoint",
 			Tags: &types.ServicePackageResourceTags{
@@ -578,12 +580,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceClientVPNNetworkAssociation,
+			Factory:  resourceClientVPNNetworkAssociation,
 			TypeName: "aws_ec2_client_vpn_network_association",
 			Name:     "Client VPN Network Association",
 		},
 		{
-			Factory:  ResourceClientVPNRoute,
+			Factory:  resourceClientVPNRoute,
 			TypeName: "aws_ec2_client_vpn_route",
 			Name:     "Client VPN Route",
 		},
