@@ -433,7 +433,7 @@ resource "aws_wafv2_web_acl" "example" {
       api_gateway {
         default_size_inspection_limit = "KB_64"
       }
-      app_runner_service {
+      apprunner_service {
         default_size_inspection_limit = "KB_64"
       }
       cognito_user_pool {
@@ -1010,7 +1010,7 @@ The `immunity_time_property` block supports the following arguments:
 The `request_body` block supports the following arguments:
 
 * `api_gateway` - (Optional) Customizes the request body that your protected Amazon API Gateway REST APIs forward to AWS WAF for inspection. Applicable only when `scope` is set to `CLOUDFRONT`. See [`api_gateway`](#api_gateway-block) below for details.
-* `app_runner_service` - (Optional) Customizes the request body that your protected Amazon App Runner services forward to AWS WAF for inspection. Applicable only when `scope` is set to `REGIONAL`. See [`app_runner_service`](#app_runner_service-block) below for details.
+* `apprunner_service` - (Optional) Customizes the request body that your protected Amazon App Runner services forward to AWS WAF for inspection. Applicable only when `scope` is set to `REGIONAL`. See [`apprunner_service`](#apprunner_service-block) below for details.
 * `cloudfront` - (Optional) Customizes the request body that your protected Amazon CloudFront distributions forward to AWS WAF for inspection. Applicable only when `scope` is set to `REGIONAL`. See [`cloudfront`](#cloudfront-block) below for details.
 * `cognito_user_pool` - (Optional) Customizes the request body that your protected Amazon Cognito user pools forward to AWS WAF for inspection. Applicable only when `scope` is set to `REGIONAL`. See [`cognito_user_pool`](#cognito_user_pool-block) below for details.
 * `verified_access_instance` - (Optional) Customizes the request body that your protected AWS Verfied Access instances forward to AWS WAF for inspection. Applicable only when `scope` is set to `REGIONAL`. See [`verified_access_instance`](#verified_access_instance-block) below for details.
@@ -1021,9 +1021,9 @@ The `api_gateway` block supports the following arguments:
 
 * `default_size_inspection_limit` - (Required) Specifies the maximum size of the web request body component that an associated Amazon API Gateway REST APIs should send to AWS WAF for inspection. This applies to statements in the web ACL that inspect the body or JSON body. Valid values are `KB_16`, `KB_32`, `KB_48` and `KB_64`.
 
-### `app_runner_service` Block
+### `apprunner_service` Block
 
-The `app_runner_service` block supports the following arguments:
+The `apprunner_service` block supports the following arguments:
 
 * `default_size_inspection_limit` - (Required) Specifies the maximum size of the web request body component that an associated Amazon App Runner services should send to AWS WAF for inspection. This applies to statements in the web ACL that inspect the body or JSON body. Valid values are `KB_16`, `KB_32`, `KB_48` and `KB_64`.
 

@@ -552,7 +552,7 @@ func requestBodySchema() *schema.Schema {
 						},
 					},
 				},
-				"app_runner_service": {
+				"apprunner_service": {
 					Type:     schema.TypeList,
 					Optional: true,
 					Elem: &schema.Resource{
