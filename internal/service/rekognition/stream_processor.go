@@ -173,63 +173,64 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 				},
 			},
 			"regions_of_interest": schema.ListNestedBlock{
-				CustomType:  fwtypes.NewListNestedObjectTypeOf[regionOfInterestModel](ctx),
-				Description: "Specifies locations in the frames where Amazon Rekognition checks for objects or people. You can specify up to 10 regions of interest, and each region has either a polygon or a bounding box.",
+				CustomType: fwtypes.NewListNestedObjectTypeOf[regionOfInterestModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
-						"region": schema.SingleNestedBlock{
-							CustomType: fwtypes.NewObjectTypeOf[regionOfInterestModel](ctx),
-							Blocks: map[string]schema.Block{
-								"bounding_box": schema.SingleNestedBlock{
-									CustomType:  fwtypes.NewObjectTypeOf[boundingBoxModel](ctx),
-									Description: "The box representing a region of interest on screen.",
-									Attributes: map[string]schema.Attribute{
-										"height": schema.Float64Attribute{
-											Optional:    true,
-											Description: "Height of the bounding box as a ratio of the overall image height.",
-											Validators: []validator.Float64{
-												float64validator.Between(0.0, 1.0),
-											},
-										},
-										"left": schema.Float64Attribute{
-											Description: "Left coordinate of the bounding box as a ratio of overall image width.",
-											Optional:    true,
-											Validators: []validator.Float64{
-												float64validator.Between(0.0, 1.0),
-											},
-										},
-										"top": schema.Float64Attribute{
-											Description: "Top coordinate of the bounding box as a ratio of overall image height.",
-											Optional:    true,
-											Validators: []validator.Float64{
-												float64validator.Between(0.0, 1.0),
-											},
-										},
-										"width": schema.Float64Attribute{
-											Description: "Width of the bounding box as a ratio of the overall image width.",
-											Optional:    true,
-											Validators: []validator.Float64{
-												float64validator.Between(0.0, 1.0),
-											},
-										},
+						"bounding_box": schema.SingleNestedBlock{
+							CustomType:  fwtypes.NewObjectTypeOf[boundingBoxModel](ctx),
+							Description: "The box representing a region of interest on screen.",
+							Attributes: map[string]schema.Attribute{
+								"height": schema.Float64Attribute{
+									Optional:    true,
+									Description: "Height of the bounding box as a ratio of the overall image height.",
+									Validators: []validator.Float64{
+										float64validator.Between(0.0, 1.0),
 									},
 								},
-								"polygon": schema.SingleNestedBlock{
-									CustomType:  fwtypes.NewObjectTypeOf[polygonModel](ctx),
-									Description: "Specifies a shape made up of up to 10 Point objects to define a region of interest.",
-									Attributes: map[string]schema.Attribute{
-										"x": schema.Float64Attribute{
-											Description: "The value of the X coordinate for a point on a Polygon.",
-											Optional:    true,
-											Validators: []validator.Float64{
-												float64validator.Between(0.0, 1.0),
+								"left": schema.Float64Attribute{
+									Description: "Left coordinate of the bounding box as a ratio of overall image width.",
+									Optional:    true,
+									Validators: []validator.Float64{
+										float64validator.Between(0.0, 1.0),
+									},
+								},
+								"top": schema.Float64Attribute{
+									Description: "Top coordinate of the bounding box as a ratio of overall image height.",
+									Optional:    true,
+									Validators: []validator.Float64{
+										float64validator.Between(0.0, 1.0),
+									},
+								},
+								"width": schema.Float64Attribute{
+									Description: "Width of the bounding box as a ratio of the overall image width.",
+									Optional:    true,
+									Validators: []validator.Float64{
+										float64validator.Between(0.0, 1.0),
+									},
+								},
+							},
+						},
+						"polygon": schema.ListNestedBlock{
+							CustomType:  fwtypes.NewListNestedObjectTypeOf[polygonModel](ctx),
+							Description: "Specifies a shape made up of up to 10 Point objects to define a region of interest.",
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"polygon_region": schema.SingleNestedBlock{
+										CustomType: fwtypes.NewObjectTypeOf[polygonModel](ctx),
+										Attributes: map[string]schema.Attribute{
+											"x": schema.Float64Attribute{
+												Description: "The value of the X coordinate for a point on a Polygon.",
+												Optional:    true,
+												Validators: []validator.Float64{
+													float64validator.Between(0.0, 1.0),
+												},
 											},
-										},
-										"y": schema.Float64Attribute{
-											Description: "The value of the Y coordinate for a point on a Polygon.",
-											Optional:    true,
-											Validators: []validator.Float64{
-												float64validator.Between(0.0, 1.0),
+											"y": schema.Float64Attribute{
+												Description: "The value of the Y coordinate for a point on a Polygon.",
+												Optional:    true,
+												Validators: []validator.Float64{
+													float64validator.Between(0.0, 1.0),
+												},
 											},
 										},
 									},
@@ -726,8 +727,8 @@ type s3DestinationModel struct {
 }
 
 type regionOfInterestModel struct {
-	BoundingBox fwtypes.ObjectValueOf[boundingBoxModel] `tfsdk:"bounding_box"`
-	Polygon     fwtypes.ObjectValueOf[polygonModel]     `tfsdk:"polygon"`
+	BoundingBox fwtypes.ObjectValueOf[boundingBoxModel]       `tfsdk:"bounding_box"`
+	Polygon     fwtypes.ListNestedObjectValueOf[polygonModel] `tfsdk:"polygon"`
 }
 
 type boundingBoxModel struct {
@@ -757,22 +758,6 @@ type faceSearchModel struct {
 	FaceMatchThreshold types.Float64 `tfsdk:"face_match_threshold"`
 }
 
-/*
-- AWS SDK doesn't have a CreateStreamProcessorInput.StreamProcessorSettings.ConnectedHomeSettings.Labels enum available as of 5/13/24
-
-- see docs https://docs.aws.amazon.com/rekognition/latest/APIReference/API_ConnectedHomeSettings.html#API_ConnectedHomeSettings_Contents
-*/
-type labelSettings string
-
-func (labelSettings) Values() []string {
-	return []string{
-		"PERSON",
-		"PET",
-		"PACKAGE",
-		"ALL",
-	}
-}
-
 const (
 	person_label  = "PERSON"
 	pet_label     = "PET"
@@ -780,7 +765,11 @@ const (
 	all_label     = "ALL"
 )
 
-// OAuthFlowType_Values returns all elements of the OAuthFlowType enum
+/*
+- AWS SDK doesn't have a CreateStreamProcessorInput.StreamProcessorSettings.ConnectedHomeSettings.Labels enum available as of 5/13/24
+
+- see docs https://docs.aws.amazon.com/rekognition/latest/APIReference/API_ConnectedHomeSettings.html#API_ConnectedHomeSettings_Contents
+*/
 func connectedHomeLabels() []string {
 	return []string{
 		person_label,
