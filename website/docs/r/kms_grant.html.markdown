@@ -10,6 +10,9 @@ description: |-
 
 Provides a resource-based access control mechanism for a KMS customer master key.
 
+~> **Note:** All arguments including the grant token will be stored in the raw state as plain-text.
+[Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html).
+
 ## Example Usage
 
 ```terraform
