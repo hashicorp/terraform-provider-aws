@@ -47,4 +47,3 @@ This data source exports the following attributes in addition to the arguments a
 * `path` is set to the path of the IAM Server Certificate
 * `expiration_date` is set to the expiration date of the IAM Server Certificate
 * `upload_date` is the date when the server certificate was uploaded
-
