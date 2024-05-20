@@ -924,7 +924,6 @@ func TestAccRoute53Record_nameChange(t *testing.T) {
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
 			},
-
 			// Cause a change, which will trigger a refresh
 			{
 				Config: testAccRecordConfig_nameChangePost,

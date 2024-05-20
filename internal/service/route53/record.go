@@ -702,7 +702,15 @@ func resourceRecordDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
 	zoneID := cleanZoneID(d.Get("zone_id").(string))
-	name := d.Get(names.AttrName).(string)
+	var name string
+	// If we're dealing with a change of record name, but we're operating on the old, rather than
+	// the new, resource, then we need to use the old name to find it (in order to delete it).
+	if !d.IsNewResource() && d.HasChange(names.AttrName) {
+		oldName, _ := d.GetChange(names.AttrName)
+		name = oldName.(string)
+	} else {
+		name = d.Get(names.AttrName).(string)
+	}
 	rec, _, err := findResourceRecordSetByFourPartKey(ctx, conn, zoneID, name, d.Get(names.AttrType).(string), d.Get("set_identifier").(string))
 
 	if tfresource.NotFound(err) {
