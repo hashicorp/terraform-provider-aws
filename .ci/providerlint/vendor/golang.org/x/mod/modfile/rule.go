@@ -975,8 +975,6 @@ func (f *File) AddGoStmt(version string) error {
 		var hint Expr
 		if f.Module != nil && f.Module.Syntax != nil {
 			hint = f.Module.Syntax
-		} else if f.Syntax == nil {
-			f.Syntax = new(FileSyntax)
 		}
 		f.Go = &Go{
 			Version: version,

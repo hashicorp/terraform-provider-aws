@@ -40,7 +40,7 @@ import (
 	"encoding/gob"
 	"fmt"
 	"go/types"
-	"io"
+	"io/ioutil"
 	"log"
 	"reflect"
 	"sort"
@@ -48,6 +48,7 @@ import (
 
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/types/objectpath"
+	"golang.org/x/tools/internal/typesinternal"
 )
 
 const debug = false
@@ -204,7 +205,9 @@ type GetPackageFunc = func(pkgPath string) *types.Package
 //
 // Concurrent calls to Decode are safe, so long as the
 // [GetPackageFunc] (if any) is also concurrency-safe.
-func (d *Decoder) Decode(read func(pkgPath string) ([]byte, error)) (*Set, error) {
+//
+// TODO(golang/go#61443): eliminate skipMethodSorting one way or the other.
+func (d *Decoder) Decode(skipMethodSorting bool, read func(pkgPath string) ([]byte, error)) (*Set, error) {
 	// Read facts from imported packages.
 	// Facts may describe indirectly imported packages, or their objects.
 	m := make(map[key]analysis.Fact) // one big bucket
@@ -244,7 +247,7 @@ func (d *Decoder) Decode(read func(pkgPath string) ([]byte, error)) (*Set, error
 			key := key{pkg: factPkg, t: reflect.TypeOf(f.Fact)}
 			if f.Object != "" {
 				// object fact
-				obj, err := objectpath.Object(factPkg, f.Object)
+				obj, err := typesinternal.ObjectpathObject(factPkg, string(f.Object), skipMethodSorting)
 				if err != nil {
 					// (most likely due to unexported object)
 					// TODO(adonovan): audit for other possibilities.
@@ -268,8 +271,11 @@ func (d *Decoder) Decode(read func(pkgPath string) ([]byte, error)) (*Set, error
 //
 // It may fail if one of the Facts could not be gob-encoded, but this is
 // a sign of a bug in an Analyzer.
-func (s *Set) Encode() []byte {
+func (s *Set) Encode(skipMethodSorting bool) []byte {
 	encoder := new(objectpath.Encoder)
+	if skipMethodSorting {
+		typesinternal.SkipEncoderMethodSorting(encoder)
+	}
 
 	// TODO(adonovan): opt: use a more efficient encoding
 	// that avoids repeating PkgPath for each fact.
@@ -295,10 +301,10 @@ func (s *Set) Encode() []byte {
 		// we aren't careful about which structs or methods
 		// we rexport: it should be only those referenced
 		// from the API of s.pkg.
-		// TODO(adonovan): opt: be more precise. e.g.
+		// TOOD(adonovan): opt: be more precise. e.g.
 		// intersect with the set of objects computed by
 		// importMap(s.pkg.Imports()).
-		// TODO(adonovan): opt: implement "shallow" facts.
+		// TOOD(adonovan): opt: implement "shallow" facts.
 		if k.pkg != s.pkg {
 			if k.obj == nil {
 				continue // imported package fact
@@ -350,7 +356,7 @@ func (s *Set) Encode() []byte {
 		if err := gob.NewEncoder(&buf).Encode(gobFacts); err != nil {
 			// Fact encoding should never fail. Identify the culprit.
 			for _, gf := range gobFacts {
-				if err := gob.NewEncoder(io.Discard).Encode(gf); err != nil {
+				if err := gob.NewEncoder(ioutil.Discard).Encode(gf); err != nil {
 					fact := gf.Fact
 					pkgpath := reflect.TypeOf(fact).Elem().PkgPath()
 					log.Panicf("internal error: gob encoding of analysis fact %s failed: %v; please report a bug against fact %T in package %q",
