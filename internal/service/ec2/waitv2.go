@@ -641,17 +641,15 @@ func waitClientVPNRouteDeleted(ctx context.Context, conn *ec2.Client, endpointID
 	return nil, err
 }
 
-const (
-	CarrierGatewayAvailableTimeout = 5 * time.Minute
-	CarrierGatewayDeletedTimeout   = 5 * time.Minute
-)
-
-func WaitCarrierGatewayCreated(ctx context.Context, conn *ec2.Client, id string) (*types.CarrierGateway, error) {
+func waitCarrierGatewayCreated(ctx context.Context, conn *ec2.Client, id string) (*types.CarrierGateway, error) {
+	const (
+		timeout = 5 * time.Minute
+	)
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.CarrierGatewayStatePending),
 		Target:  enum.Slice(types.CarrierGatewayStateAvailable),
-		Refresh: StatusCarrierGatewayState(ctx, conn, id),
-		Timeout: CarrierGatewayAvailableTimeout,
+		Refresh: statusCarrierGateway(ctx, conn, id),
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -663,12 +661,15 @@ func WaitCarrierGatewayCreated(ctx context.Context, conn *ec2.Client, id string)
 	return nil, err
 }
 
-func WaitCarrierGatewayDeleted(ctx context.Context, conn *ec2.Client, id string) (*types.CarrierGateway, error) {
+func waitCarrierGatewayDeleted(ctx context.Context, conn *ec2.Client, id string) (*types.CarrierGateway, error) {
+	const (
+		timeout = 5 * time.Minute
+	)
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.CarrierGatewayStateDeleting),
 		Target:  []string{},
-		Refresh: StatusCarrierGatewayState(ctx, conn, id),
-		Timeout: CarrierGatewayDeletedTimeout,
+		Refresh: statusCarrierGateway(ctx, conn, id),
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

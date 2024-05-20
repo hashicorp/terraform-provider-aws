@@ -18,6 +18,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func findAvailabilityZonesV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeAvailabilityZonesInput) ([]awstypes.AvailabilityZone, error) {
+	output, err := conn.DescribeAvailabilityZones(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.AvailabilityZones, nil
+}
+
 func findVPCAttributeV2(ctx context.Context, conn *ec2.Client, vpcID string, attribute awstypes.VpcAttributeName) (bool, error) {
 	input := &ec2.DescribeVpcAttributeInput{
 		Attribute: attribute,
@@ -1235,8 +1249,8 @@ func findClientVPNRouteByThreePartKey(ctx context.Context, conn *ec2.Client, end
 	return findClientVPNRoute(ctx, conn, input)
 }
 
-func FindCarrierGateway(ctx context.Context, conn *ec2.Client, input *ec2.DescribeCarrierGatewaysInput) (*awstypes.CarrierGateway, error) {
-	output, err := FindCarrierGateways(ctx, conn, input)
+func findCarrierGateway(ctx context.Context, conn *ec2.Client, input *ec2.DescribeCarrierGatewaysInput) (*awstypes.CarrierGateway, error) {
+	output, err := findCarrierGateways(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -1245,35 +1259,7 @@ func FindCarrierGateway(ctx context.Context, conn *ec2.Client, input *ec2.Descri
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func FindCarrierGatewayByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.CarrierGateway, error) {
-	input := &ec2.DescribeCarrierGatewaysInput{
-		CarrierGatewayIds: []string{id},
-	}
-
-	output, err := FindCarrierGateway(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if state := output.State; state == awstypes.CarrierGatewayStateDeleted {
-		return nil, &retry.NotFoundError{
-			Message:     string(state),
-			LastRequest: input,
-		}
-	}
-
-	// Eventual consistency check.
-	if aws.ToString(output.CarrierGatewayId) != id {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
-	}
-
-	return output, nil
-}
-
-func FindCarrierGateways(ctx context.Context, conn *ec2.Client, input *ec2.DescribeCarrierGatewaysInput) ([]awstypes.CarrierGateway, error) {
+func findCarrierGateways(ctx context.Context, conn *ec2.Client, input *ec2.DescribeCarrierGatewaysInput) ([]awstypes.CarrierGateway, error) {
 	var output []awstypes.CarrierGateway
 
 	pages := ec2.NewDescribeCarrierGatewaysPaginator(conn, input)
@@ -1292,6 +1278,34 @@ func FindCarrierGateways(ctx context.Context, conn *ec2.Client, input *ec2.Descr
 		}
 
 		output = append(output, page.CarrierGateways...)
+	}
+
+	return output, nil
+}
+
+func findCarrierGatewayByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.CarrierGateway, error) {
+	input := &ec2.DescribeCarrierGatewaysInput{
+		CarrierGatewayIds: []string{id},
+	}
+
+	output, err := findCarrierGateway(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State; state == awstypes.CarrierGatewayStateDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.CarrierGatewayId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
 	}
 
 	return output, nil
