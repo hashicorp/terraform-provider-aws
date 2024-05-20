@@ -176,12 +176,22 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 				CustomType: fwtypes.NewListNestedObjectTypeOf[regionOfInterestModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(10),
+					listvalidator.AtLeastOneOf(path.MatchRelative().AtName("bounding_box"), path.MatchRelative().AtName("polygon")),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"bounding_box": schema.SingleNestedBlock{
 							CustomType:  fwtypes.NewObjectTypeOf[boundingBoxModel](ctx),
 							Description: "The box representing a region of interest on screen.",
+							Validators: []validator.Object{
+								objectvalidator.AlsoRequires(
+									path.MatchRelative().AtName("height"),
+									path.MatchRelative().AtName("left"),
+									path.MatchRelative().AtName("top"),
+									path.MatchRelative().AtName("width"),
+								),
+								objectvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("polygon")),
+							},
 							Attributes: map[string]schema.Attribute{
 								"height": schema.Float64Attribute{
 									Optional:    true,
@@ -215,26 +225,25 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 						},
 						"polygon": schema.ListNestedBlock{
 							CustomType:  fwtypes.NewListNestedObjectTypeOf[polygonModel](ctx),
-							Description: "Specifies a shape made up of up to 10 Point objects to define a region of interest.",
+							Description: "Specifies a shape made of 3 to 10 Point objects that define a region of interest.",
+							Validators: []validator.List{
+								listvalidator.SizeBetween(3, 10),
+								listvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("bounding_box")),
+							},
 							NestedObject: schema.NestedBlockObject{
-								Blocks: map[string]schema.Block{
-									"polygon_region": schema.SingleNestedBlock{
-										CustomType: fwtypes.NewObjectTypeOf[polygonModel](ctx),
-										Attributes: map[string]schema.Attribute{
-											"x": schema.Float64Attribute{
-												Description: "The value of the X coordinate for a point on a Polygon.",
-												Optional:    true,
-												Validators: []validator.Float64{
-													float64validator.Between(0.0, 1.0),
-												},
-											},
-											"y": schema.Float64Attribute{
-												Description: "The value of the Y coordinate for a point on a Polygon.",
-												Optional:    true,
-												Validators: []validator.Float64{
-													float64validator.Between(0.0, 1.0),
-												},
-											},
+								Attributes: map[string]schema.Attribute{
+									"x": schema.Float64Attribute{
+										Description: "The value of the X coordinate for a point on a Polygon.",
+										Optional:    true,
+										Validators: []validator.Float64{
+											float64validator.Between(0.0, 1.0),
+										},
+									},
+									"y": schema.Float64Attribute{
+										Description: "The value of the Y coordinate for a point on a Polygon.",
+										Optional:    true,
+										Validators: []validator.Float64{
+											float64validator.Between(0.0, 1.0),
 										},
 									},
 								},
@@ -321,6 +330,7 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 								Validators: []validator.Float64{
 									float64validator.Between(0.0, 100.0),
 								},
+								Computed: true,
 								Optional: true,
 							},
 						},
@@ -400,12 +410,17 @@ func (r *resourceStreamProcessor) Create(ctx context.Context, req resource.Creat
 	plan.ID = plan.ARN
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitStreamProcessorCreated(ctx, conn, plan.Name.ValueString(), createTimeout)
+	created, err := waitStreamProcessorCreated(ctx, conn, plan.Name.ValueString(), createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Rekognition, create.ErrActionWaitingForCreation, ResNameStreamProcessor, plan.Name.String(), err),
 			err.Error(),
 		)
+		return
+	}
+
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, created, &plan)...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -559,7 +574,10 @@ func (r *resourceStreamProcessor) Update(ctx context.Context, req resource.Updat
 					}
 					region.Polygon = plannedPolygons
 				}
-				regions = append(regions, *region)
+
+				if region.BoundingBox != nil && len(region.Polygon) > 0 {
+					regions = append(regions, *region)
+				}
 			}
 
 			in.RegionsOfInterestForUpdate = regions
@@ -576,12 +594,17 @@ func (r *resourceStreamProcessor) Update(ctx context.Context, req resource.Updat
 	}
 
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err := waitStreamProcessorUpdated(ctx, conn, plan.Name.ValueString(), updateTimeout)
+	updated, err := waitStreamProcessorUpdated(ctx, conn, plan.Name.ValueString(), updateTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Rekognition, create.ErrActionWaitingForUpdate, ResNameStreamProcessor, plan.Name.String(), err),
 			err.Error(),
 		)
+		return
+	}
+
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, updated, &plan)...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
