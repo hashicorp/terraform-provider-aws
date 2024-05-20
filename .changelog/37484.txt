@@ -1,3 +1,6 @@
 ```release-note:enhancement
 resource/aws_bedrockagent_agent_action_group: Add `function_schema` argument
 ```
+```release-note:enhancement
+resource/aws_bedrockagent_agent_action_group: Add `actionGroupExecutor.customControl` argument
+```

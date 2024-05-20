@@ -105,6 +105,10 @@ func (r *agentActionGroupResource) Schema(ctx context.Context, request resource.
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
+						"custom_control": schema.StringAttribute{
+							CustomType: fwtypes.StringEnumType[awstypes.CustomControlMethod](),
+							Optional:   true,
+						},
 						"lambda": schema.StringAttribute{
 							CustomType: fwtypes.ARNType,
 							Optional:   true,
@@ -504,7 +508,8 @@ func (m *agentActionGroupResourceModel) setID() {
 }
 
 type actionGroupExecutorModel struct {
-	Lambda fwtypes.ARN `tfsdk:"lambda"`
+	CustomControl types.String `tfsdk:"custom_control"`
+	Lambda        fwtypes.ARN  `tfsdk:"lambda"`
 }
 
 type apiSchemaModel struct {
@@ -534,7 +539,11 @@ type parameterDetailModel struct {
 }
 
 func expandActionGroupExecutor(_ context.Context, actionGroupExecutorData *actionGroupExecutorModel) awstypes.ActionGroupExecutor {
-	if !actionGroupExecutorData.Lambda.IsNull() {
+	if !actionGroupExecutorData.CustomControl.IsNull() {
+		return &awstypes.ActionGroupExecutorMemberCustomControl{
+			Value: fwtypes.StringEnumValue(awstypes.CustomControlMethod(actionGroupExecutorData.CustomControl.ValueString())).ValueEnum(),
+		}
+	} else if !actionGroupExecutorData.Lambda.IsNull() {
 		return &awstypes.ActionGroupExecutorMemberLambda{
 			Value: actionGroupExecutorData.Lambda.ValueString(),
 		}
@@ -551,6 +560,8 @@ func flattenActionGroupExecutor(ctx context.Context, apiObject awstypes.ActionGr
 	var actionGroupExecutorData actionGroupExecutorModel
 
 	switch v := apiObject.(type) {
+	case *awstypes.ActionGroupExecutorMemberCustomControl:
+		actionGroupExecutorData.CustomControl = fwtypes.StringEnumValue(v.Value).StringValue
 	case *awstypes.ActionGroupExecutorMemberLambda:
 		actionGroupExecutorData.Lambda = fwtypes.ARNValue(v.Value)
 	}

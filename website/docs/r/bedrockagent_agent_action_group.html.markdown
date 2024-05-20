@@ -48,7 +48,7 @@ resource "aws_bedrockagent_agent_action_group" "example" {
 }
 ```
 
-### Function Details/Schema
+### Function Schema (Simplified Schema)
 
 ```terraform
 resource "aws_bedrockagent_agent_action_group" "example" {
@@ -80,6 +80,23 @@ resource "aws_bedrockagent_agent_action_group" "example" {
 }
 ```
 
+### Return of Control
+
+```terraform
+resource "aws_bedrockagent_agent_action_group" "example" {
+  action_group_name          = "example"
+  agent_id                   = "GGRRAED6JP"
+  agent_version              = "DRAFT"
+  skip_resource_in_use_check = true
+  action_group_executor {
+    custom_control = "RETURN_CONTROL"
+  }
+  api_schema {
+    payload = file("path/to/schema.yaml")
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -102,6 +119,9 @@ The following arguments are optional:
 
 The `action_group_executor` configuration block supports the following arguments:
 
+* `custom_control` - (Optional) Custom control method for handling the information elicited from the user. Valid values: `RETURN_CONTROL`.
+
+  To skip using a Lambda function and instead return the predicted action group, in addition to the parameters and information required for it, in the `InvokeAgent` response, specify, specify `RETURN_CONTROL`.
 * `lambda` - (Optional) ARN of the Lambda function containing the business logic that is carried out upon invoking the action.
 
 ### `api_schema` Block
