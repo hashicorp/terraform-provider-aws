@@ -430,7 +430,7 @@ func TestAccEC2SpotInstanceRequest_interruptStop(t *testing.T) {
 		CheckDestroy:             testAccCheckSpotInstanceRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSpotInstanceRequestConfig_interrupt(rName, "stop"),
+				Config: testAccSpotInstanceRequestConfig_interrupt(rName, "stop", "false"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotInstanceRequestExists(ctx, resourceName, &sir),
 					resource.TestCheckResourceAttr(resourceName, "spot_bid_status", "fulfilled"),
@@ -461,7 +461,7 @@ func TestAccEC2SpotInstanceRequest_interruptHibernate(t *testing.T) {
 		CheckDestroy:             testAccCheckSpotInstanceRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSpotInstanceRequestConfig_interrupt(rName, "hibernate"),
+				Config: testAccSpotInstanceRequestConfig_interrupt(rName, "hibernate", "true"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotInstanceRequestExists(ctx, resourceName, &sir),
 					resource.TestCheckResourceAttr(resourceName, "spot_bid_status", "fulfilled"),
@@ -492,14 +492,14 @@ func TestAccEC2SpotInstanceRequest_interruptUpdate(t *testing.T) {
 		CheckDestroy:             testAccCheckSpotInstanceRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSpotInstanceRequestConfig_interrupt(rName, "hibernate"),
+				Config: testAccSpotInstanceRequestConfig_interrupt(rName, "hibernate", "true"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotInstanceRequestExists(ctx, resourceName, &sir1),
 					resource.TestCheckResourceAttr(resourceName, "instance_interruption_behavior", "hibernate"),
 				),
 			},
 			{
-				Config: testAccSpotInstanceRequestConfig_interrupt(rName, "terminate"),
+				Config: testAccSpotInstanceRequestConfig_interrupt(rName, "terminate", "false"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotInstanceRequestExists(ctx, resourceName, &sir2),
 					testAccCheckSpotInstanceRequestIDsNotEqual(&sir1, &sir2),
@@ -1055,7 +1055,7 @@ resource "aws_ec2_tag" "test" {
 `, rName, publicKey))
 }
 
-func testAccSpotInstanceRequestConfig_interrupt(rName, interruptionBehavior string) string {
+func testAccSpotInstanceRequestConfig_interrupt(rName, interruptionBehavior, encrypted string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("c5.large", "c4.large"),
@@ -1067,6 +1067,12 @@ resource "aws_spot_instance_request" "test" {
   wait_for_fulfillment           = true
   instance_interruption_behavior = %[2]q
 
+  root_block_device {
+    encrypted   = %[3]q
+    volume_type = "gp2"
+    volume_size = 11
+  }
+
   tags = {
     Name = %[1]q
   }
@@ -1077,7 +1083,7 @@ resource "aws_ec2_tag" "test" {
   key         = "Name"
   value       = %[1]q
 }
-`, rName, interruptionBehavior))
+`, rName, interruptionBehavior, encrypted))
 }
 
 func testAccSpotInstanceRequestConfig_withInstanceProfile(rName string) string {
