@@ -75,8 +75,8 @@ func resourceTableReplica() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: verify.ValidARN,
 				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			"point_in_time_recovery": { // direct to replica
 				Type:     schema.TypeBool,
