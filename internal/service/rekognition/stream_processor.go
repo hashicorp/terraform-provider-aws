@@ -14,12 +14,14 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/rekognition/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/float64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/float64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -304,9 +306,11 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 							"labels": schema.ListAttribute{
 								Description: "Specifies what you want to detect in the video, such as people, packages, or pets.",
 								CustomType:  fwtypes.ListOfStringType,
-								ElementType: fwtypes.StringEnumType[labelSettings](),
-								Optional:    true,
-								//TODO: validation for label values
+								Required:    true,
+								Validators: []validator.List{
+									listvalidator.SizeAtLeast(1),
+									listvalidator.ValueStringsAre(stringvalidator.OneOf(connectedHomeLabels()...)),
+								},
 							},
 							"min_confidence": schema.Float64Attribute{
 								Description: "The minimum confidence required to label an object in the video.",
@@ -328,16 +332,18 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 									stringvalidator.RegexMatches(collectionIdRegex, "must conform to: [a-zA-Z0-9_.\\-]+"),
 								},
 								Optional: true,
+								PlanModifiers: []planmodifier.String{
+									stringplanmodifier.RequiresReplace(),
+								},
 							},
 							"face_match_threshold": schema.Float64Attribute{
 								Description: "Minimum face match confidence score that must be met to return a result for a recognized face.",
 								Validators: []validator.Float64{
 									float64validator.Between(0.0, 100.0),
 								},
-								Optional:      true,
+								Optional: true,
 								PlanModifiers: []planmodifier.Float64{
-
-									//TODO: Requires replacement
+									float64planmodifier.RequiresReplace(),
 								},
 							},
 						},
@@ -431,16 +437,6 @@ func (r *resourceStreamProcessor) Read(ctx context.Context, req resource.ReadReq
 	}
 }
 
-func unwrapObjectValueOf[T any](plan fwtypes.ObjectValueOf[T], state fwtypes.ObjectValueOf[T], diagnostics diag.Diagnostics, ctx context.Context) (*T, *T) {
-	ptrPlan, diags := plan.ToPtr(ctx)
-	diagnostics.Append(diags...)
-
-	ptrState, diags := state.ToPtr(ctx)
-	diagnostics.Append(diags...)
-
-	return ptrPlan, ptrState
-}
-
 func (r *resourceStreamProcessor) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().RekognitionClient(ctx)
 
@@ -451,62 +447,58 @@ func (r *resourceStreamProcessor) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
-	in := &rekognition.UpdateStreamProcessorInput{
-		Name:               plan.Name.ValueStringPointer(),
-		ParametersToDelete: []awstypes.StreamProcessorParameterToDelete{},
-	}
-
-	if !plan.DataSharingPreference.Equal(state.DataSharingPreference) {
-		dspPlan, dspState := unwrapObjectValueOf(plan.DataSharingPreference, state.DataSharingPreference, resp.Diagnostics, ctx)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		if !dspPlan.OptIn.Equal(dspState.OptIn) {
-			in.DataSharingPreferenceForUpdate = &awstypes.StreamProcessorDataSharingPreference{
-				OptIn: dspPlan.OptIn.ValueBool(),
-			}
-		}
-	}
-
-	if !plan.Settings.Equal(state.Settings) {
-		in.SettingsForUpdate = &awstypes.StreamProcessorSettingsForUpdate{
-			ConnectedHomeForUpdate: &awstypes.ConnectedHomeSettingsForUpdate{},
-		}
-
-		settingsPlan, settingsState := unwrapObjectValueOf(plan.Settings, state.Settings, resp.Diagnostics, ctx)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		connectedHomePlan, connectedHomeState := unwrapObjectValueOf(settingsPlan.ConnectedHome, settingsState.ConnectedHome, resp.Diagnostics, ctx)
-		if !connectedHomePlan.MinConfidence.Equal(connectedHomeState.MinConfidence) {
-			if !connectedHomePlan.MinConfidence.IsNull() && connectedHomeState.MinConfidence.IsNull() {
-				in.ParametersToDelete = append(in.ParametersToDelete, awstypes.StreamProcessorParameterToDeleteConnectedHomeMinConfidence)
-			}
-
-			if !connectedHomePlan.MinConfidence.IsNull() {
-				in.SettingsForUpdate.ConnectedHomeForUpdate.MinConfidence = aws.Float32(float32(connectedHomePlan.MinConfidence.ValueFloat64()))
-			}
-		}
-
-		if !connectedHomePlan.Labels.Equal(connectedHomeState.Labels) {
-			in.SettingsForUpdate.ConnectedHomeForUpdate.Labels = fwflex.ExpandFrameworkStringValueList(ctx, connectedHomePlan.Labels)
-		}
-
-	}
-
-	// the update api uses different property names(<prop>ForUpdate) and request shape, so we can't just flex into the request :(
 	if !plan.DataSharingPreference.Equal(state.DataSharingPreference) ||
 		!plan.Settings.Equal(state.Settings) ||
 		!plan.RegionsOfInterest.Equal(state.RegionsOfInterest) {
 
 		in := &rekognition.UpdateStreamProcessorInput{
-			Name:               aws.String(plan.Name.ValueString()),
+			Name:               plan.Name.ValueStringPointer(),
 			ParametersToDelete: []awstypes.StreamProcessorParameterToDelete{},
 		}
 
-		// TIP: -- 4. Call the AWS modify/update function
+		if !plan.DataSharingPreference.Equal(state.DataSharingPreference) {
+			dspPlan, dspState := unwrapObjectValueOf(plan.DataSharingPreference, state.DataSharingPreference, resp.Diagnostics, ctx)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			if !dspPlan.OptIn.Equal(dspState.OptIn) {
+				in.DataSharingPreferenceForUpdate = &awstypes.StreamProcessorDataSharingPreference{
+					OptIn: dspPlan.OptIn.ValueBool(),
+				}
+			}
+		}
+
+		if !plan.Settings.Equal(state.Settings) {
+			in.SettingsForUpdate = &awstypes.StreamProcessorSettingsForUpdate{
+				ConnectedHomeForUpdate: &awstypes.ConnectedHomeSettingsForUpdate{},
+			}
+
+			settingsPlan, settingsState := unwrapObjectValueOf(plan.Settings, state.Settings, resp.Diagnostics, ctx)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			connectedHomePlan, connectedHomeState := unwrapObjectValueOf(settingsPlan.ConnectedHome, settingsState.ConnectedHome, resp.Diagnostics, ctx)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			if !connectedHomePlan.MinConfidence.Equal(connectedHomeState.MinConfidence) {
+				if !connectedHomePlan.MinConfidence.IsNull() && connectedHomeState.MinConfidence.IsNull() {
+					in.ParametersToDelete = append(in.ParametersToDelete, awstypes.StreamProcessorParameterToDeleteConnectedHomeMinConfidence)
+				}
+
+				if !connectedHomePlan.MinConfidence.IsNull() {
+					in.SettingsForUpdate.ConnectedHomeForUpdate.MinConfidence = aws.Float32(float32(connectedHomePlan.MinConfidence.ValueFloat64()))
+				}
+			}
+
+			if !connectedHomePlan.Labels.Equal(connectedHomeState.Labels) {
+				in.SettingsForUpdate.ConnectedHomeForUpdate.Labels = fwflex.ExpandFrameworkStringValueList(ctx, connectedHomePlan.Labels)
+			}
+		}
+
 		_, err := conn.UpdateStreamProcessor(ctx, in)
 		if err != nil {
 			resp.Diagnostics.AddError(
@@ -515,7 +507,6 @@ func (r *resourceStreamProcessor) Update(ctx context.Context, req resource.Updat
 			)
 			return
 		}
-
 	}
 
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
@@ -677,6 +668,16 @@ func findStreamProcessorByID(ctx context.Context, conn *rekognition.Client, name
 	return out, nil
 }
 
+func unwrapObjectValueOf[T any](plan fwtypes.ObjectValueOf[T], state fwtypes.ObjectValueOf[T], diagnostics diag.Diagnostics, ctx context.Context) (*T, *T) {
+	ptrPlan, diags := plan.ToPtr(ctx)
+	diagnostics.Append(diags...)
+
+	ptrState, diags := state.ToPtr(ctx)
+	diagnostics.Append(diags...)
+
+	return ptrPlan, ptrState
+}
+
 type resourceStreamProcessorDataModel struct {
 	ARN                   types.String                                           `tfsdk:"arn"`
 	DataSharingPreference fwtypes.ObjectValueOf[dataSharingPreferenceModel]      `tfsdk:"data_sharing_preference"`
@@ -763,11 +764,28 @@ type faceSearchModel struct {
 */
 type labelSettings string
 
-func (labelSettings) Values() []labelSettings {
-	return []labelSettings{
+func (labelSettings) Values() []string {
+	return []string{
 		"PERSON",
 		"PET",
 		"PACKAGE",
 		"ALL",
+	}
+}
+
+const (
+	person_label  = "PERSON"
+	pet_label     = "PET"
+	package_label = "PACKAGE"
+	all_label     = "ALL"
+)
+
+// OAuthFlowType_Values returns all elements of the OAuthFlowType enum
+func connectedHomeLabels() []string {
+	return []string{
+		person_label,
+		pet_label,
+		package_label,
+		all_label,
 	}
 }
