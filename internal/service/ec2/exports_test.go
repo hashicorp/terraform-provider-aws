@@ -5,6 +5,7 @@ package ec2
 
 // Exports for use in tests only.
 var (
+	ResourceCarrierGateway                  = resourceCarrierGateway
 	ResourceClientVPNAuthorizationRule      = resourceClientVPNAuthorizationRule
 	ResourceClientVPNEndpoint               = resourceClientVPNEndpoint
 	ResourceClientVPNNetworkAssociation     = resourceClientVPNNetworkAssociation
@@ -36,6 +37,8 @@ var (
 	ResourceVPNGatewayRoutePropagation      = resourceVPNGatewayRoutePropagation
 
 	CustomFiltersSchema                                    = customFiltersSchema
+	FindAvailabilityZonesV2                                = findAvailabilityZonesV2
+	FindCarrierGatewayByID                                 = findCarrierGatewayByID
 	FindClientVPNAuthorizationRuleByThreePartKey           = findClientVPNAuthorizationRuleByThreePartKey
 	FindClientVPNEndpointByID                              = findClientVPNEndpointByID
 	FindClientVPNNetworkAssociationByTwoPartKey            = findClientVPNNetworkAssociationByTwoPartKey

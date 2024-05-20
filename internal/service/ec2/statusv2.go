@@ -327,3 +327,19 @@ func statusClientVPNRoute(ctx context.Context, conn *ec2.Client, endpointID, tar
 		return output, string(output.Status.Code), nil
 	}
 }
+
+func statusCarrierGateway(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findCarrierGatewayByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}

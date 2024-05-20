@@ -559,7 +559,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceCarrierGateway,
+			Factory:  resourceCarrierGateway,
 			TypeName: "aws_ec2_carrier_gateway",
 			Name:     "Carrier Gateway",
 			Tags: &types.ServicePackageResourceTags{

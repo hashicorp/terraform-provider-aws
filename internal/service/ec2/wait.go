@@ -121,46 +121,6 @@ func WaitCapacityReservationDeleted(ctx context.Context, conn *ec2.EC2, id strin
 }
 
 const (
-	CarrierGatewayAvailableTimeout = 5 * time.Minute
-
-	CarrierGatewayDeletedTimeout = 5 * time.Minute
-)
-
-func WaitCarrierGatewayCreated(ctx context.Context, conn *ec2.EC2, id string) (*ec2.CarrierGateway, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{ec2.CarrierGatewayStatePending},
-		Target:  []string{ec2.CarrierGatewayStateAvailable},
-		Refresh: StatusCarrierGatewayState(ctx, conn, id),
-		Timeout: CarrierGatewayAvailableTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*ec2.CarrierGateway); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func WaitCarrierGatewayDeleted(ctx context.Context, conn *ec2.EC2, id string) (*ec2.CarrierGateway, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{ec2.CarrierGatewayStateDeleting},
-		Target:  []string{},
-		Refresh: StatusCarrierGatewayState(ctx, conn, id),
-		Timeout: CarrierGatewayDeletedTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*ec2.CarrierGateway); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-const (
 	// Maximum amount of time to wait for a LocalGatewayRouteTableVpcAssociation to return Associated
 	LocalGatewayRouteTableVPCAssociationAssociatedTimeout = 5 * time.Minute
 
