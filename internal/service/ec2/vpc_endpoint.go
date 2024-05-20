@@ -135,7 +135,7 @@ func ResourceVPCEndpoint() *schema.Resource {
 			"private_dns_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
+				Computed: true,
 			},
 			"requester_managed": {
 				Type:     schema.TypeBool,
@@ -202,7 +202,6 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 	serviceName := d.Get(names.AttrServiceName).(string)
 	input := &ec2.CreateVpcEndpointInput{
 		ClientToken:       aws.String(id.UniqueId()),
-		PrivateDnsEnabled: aws.Bool(d.Get("private_dns_enabled").(bool)),
 		ServiceName:       aws.String(serviceName),
 		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeVpcEndpoint),
 		VpcEndpointType:   awstypes.VpcEndpointType(d.Get("vpc_endpoint_type").(string)),
@@ -231,6 +230,10 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		input.PolicyDocument = aws.String(policy)
+	}
+
+	if v, ok := d.GetOk("private_dns_enabled"); ok {
+		input.PrivateDnsEnabled = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("route_table_ids"); ok && v.(*schema.Set).Len() > 0 {
@@ -381,7 +384,6 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if d.HasChanges("dns_options", names.AttrIPAddressType, names.AttrPolicy, "private_dns_enabled", names.AttrSecurityGroupIDs, "route_table_ids", names.AttrSubnetIDs) {
-		privateDNSEnabled := d.Get("private_dns_enabled").(bool)
 		input := &ec2.ModifyVpcEndpointInput{
 			VpcEndpointId: aws.String(d.Id()),
 		}
@@ -403,6 +405,7 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 			input.IpAddressType = awstypes.IpAddressType(d.Get(names.AttrIPAddressType).(string))
 		}
 
+		privateDNSEnabled := d.Get("private_dns_enabled").(bool)
 		if d.HasChange("private_dns_enabled") {
 			input.PrivateDnsEnabled = aws.Bool(privateDNSEnabled)
 		}
