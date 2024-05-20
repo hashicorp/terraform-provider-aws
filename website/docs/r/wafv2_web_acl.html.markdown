@@ -439,7 +439,7 @@ resource "aws_wafv2_web_acl" "example" {
       cognito_user_pool {
         default_size_inspection_limit = "KB_64"
       }
-      verified_access_instance {
+      verifiedaccess_instance {
         default_size_inspection_limit = "KB_64"
       }
     }
@@ -1013,7 +1013,7 @@ The `request_body` block supports the following arguments:
 * `apprunner_service` - (Optional) Customizes the request body that your protected Amazon App Runner services forward to AWS WAF for inspection. Applicable only when `scope` is set to `REGIONAL`. See [`apprunner_service`](#apprunner_service-block) below for details.
 * `cloudfront` - (Optional) Customizes the request body that your protected Amazon CloudFront distributions forward to AWS WAF for inspection. Applicable only when `scope` is set to `REGIONAL`. See [`cloudfront`](#cloudfront-block) below for details.
 * `cognito_user_pool` - (Optional) Customizes the request body that your protected Amazon Cognito user pools forward to AWS WAF for inspection. Applicable only when `scope` is set to `REGIONAL`. See [`cognito_user_pool`](#cognito_user_pool-block) below for details.
-* `verified_access_instance` - (Optional) Customizes the request body that your protected AWS Verfied Access instances forward to AWS WAF for inspection. Applicable only when `scope` is set to `REGIONAL`. See [`verified_access_instance`](#verified_access_instance-block) below for details.
+* `verifiedaccess_instance` - (Optional) Customizes the request body that your protected AWS Verfied Access instances forward to AWS WAF for inspection. Applicable only when `scope` is set to `REGIONAL`. See [`verifiedaccess_instance`](#verifiedaccess_instance-block) below for details.
 
 ### `api_gateway` Block
 
@@ -1039,9 +1039,9 @@ The `cognito_user_pool` block supports the following arguments:
 
 * `default_size_inspection_limit` - (Required) Specifies the maximum size of the web request body component that an associated Amazon Cognito user pools should send to AWS WAF for inspection. This applies to statements in the web ACL that inspect the body or JSON body. Valid values are `KB_16`, `KB_32`, `KB_48` and `KB_64`.
 
-### `verified_access_instance` Block
+### `verifiedaccess_instance` Block
 
-The `verified_access_instance` block supports the following arguments:
+The `verifiedaccess_instance` block supports the following arguments:
 
 * `default_size_inspection_limit` - (Required) Specifies the maximum size of the web request body component that an associated AWS Verified Access instances should send to AWS WAF for inspection. This applies to statements in the web ACL that inspect the body or JSON body. Valid values are `KB_16`, `KB_32`, `KB_48` and `KB_64`.
 
