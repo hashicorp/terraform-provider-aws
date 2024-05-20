@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -30,8 +31,9 @@ func DataSourceSpotPrice() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			names.AttrFilter: customFiltersSchema(),
 			names.AttrInstanceType: {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.InstanceType](),
 			},
 			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
@@ -59,13 +61,11 @@ func dataSourceSpotPriceRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if v, ok := d.GetOk(names.AttrInstanceType); ok {
-		instanceType := v.(string)
-		input.InstanceTypes = flex.ExpandStringyValueList[awstypes.InstanceType]([]any{aws.String(instanceType)})
+		input.InstanceTypes = flex.ExpandStringyValueList[awstypes.InstanceType]([]any{v.(string)})
 	}
 
 	if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
-		availabilityZone := v.(string)
-		input.AvailabilityZone = aws.String(availabilityZone)
+		input.AvailabilityZone = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk(names.AttrFilter); ok {
