@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -33,8 +34,8 @@ func ResourceClientVPNNetworkAssociation() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(ClientVPNNetworkAssociationCreatedTimeout),
-			Delete: schema.DefaultTimeout(ClientVPNNetworkAssociationDeletedTimeout),
+			Create: schema.DefaultTimeout(30 * time.Minute),
+			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -79,7 +80,7 @@ func resourceClientVPNNetworkAssociationCreate(ctx context.Context, d *schema.Re
 
 	d.SetId(aws.ToString(output.AssociationId))
 
-	if _, err := WaitClientVPNNetworkAssociationCreated(ctx, conn, d.Id(), endpointID, d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitClientVPNNetworkAssociationCreated(ctx, conn, d.Id(), endpointID, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Client VPN Network Association (%s) create: %s", d.Id(), err)
 	}
 
@@ -91,7 +92,7 @@ func resourceClientVPNNetworkAssociationRead(ctx context.Context, d *schema.Reso
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	endpointID := d.Get("client_vpn_endpoint_id").(string)
-	network, err := FindClientVPNNetworkAssociationByIDs(ctx, conn, d.Id(), endpointID)
+	network, err := findClientVPNNetworkAssociationByTwoPartKey(ctx, conn, d.Id(), endpointID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Client VPN Network Association (%s) not found, removing from state", d.Id())
@@ -131,7 +132,7 @@ func resourceClientVPNNetworkAssociationDelete(ctx context.Context, d *schema.Re
 		return sdkdiag.AppendErrorf(diags, "disassociating EC2 Client VPN Network Association (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitClientVPNNetworkAssociationDeleted(ctx, conn, d.Id(), endpointID, d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitClientVPNNetworkAssociationDeleted(ctx, conn, d.Id(), endpointID, d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Client VPN Network Association (%s) delete: %s", d.Id(), err)
 	}
 

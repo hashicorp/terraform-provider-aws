@@ -299,7 +299,7 @@ func resourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	ep, err := FindClientVPNEndpointByID(ctx, conn, d.Id())
+	ep, err := findClientVPNEndpointByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Client VPN Endpoint (%s) not found, removing from state", d.Id())
@@ -447,7 +447,7 @@ func resourceClientVPNEndpointUpdate(ctx context.Context, d *schema.ResourceData
 		}
 
 		if waitForClientConnectResponseOptionsUpdate {
-			if _, err := WaitClientVPNEndpointClientConnectResponseOptionsUpdated(ctx, conn, d.Id()); err != nil {
+			if _, err := waitClientVPNEndpointClientConnectResponseOptionsUpdated(ctx, conn, d.Id()); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for EC2 Client VPN Endpoint (%s) ClientConnectResponseOptions update: %s", d.Id(), err)
 			}
 		}
@@ -473,7 +473,7 @@ func resourceClientVPNEndpointDelete(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 Client VPN Endpoint (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitClientVPNEndpointDeleted(ctx, conn, d.Id()); err != nil {
+	if _, err := waitClientVPNEndpointDeleted(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Client VPN Endpoint (%s) delete: %s", d.Id(), err)
 	}
 

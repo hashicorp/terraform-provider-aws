@@ -250,7 +250,7 @@ func statusVPCEndpointServicePrivateDNSNameConfigurationV2(ctx context.Context, 
 
 func statusClientVPNEndpointState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindClientVPNEndpointByID(ctx, conn, id)
+		output, err := findClientVPNEndpointByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -266,7 +266,7 @@ func statusClientVPNEndpointState(ctx context.Context, conn *ec2.Client, id stri
 
 func statusClientVPNEndpointClientConnectResponseOptionsState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindClientVPNEndpointClientConnectResponseOptionsByID(ctx, conn, id)
+		output, err := findClientVPNEndpointClientConnectResponseOptionsByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -282,7 +282,7 @@ func statusClientVPNEndpointClientConnectResponseOptionsState(ctx context.Contex
 
 func statusClientVPNAuthorizationRule(ctx context.Context, conn *ec2.Client, endpointID, targetNetworkCIDR, accessGroupID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindClientVPNAuthorizationRuleByThreePartKey(ctx, conn, endpointID, targetNetworkCIDR, accessGroupID)
+		output, err := findClientVPNAuthorizationRuleByThreePartKey(ctx, conn, endpointID, targetNetworkCIDR, accessGroupID)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -298,7 +298,7 @@ func statusClientVPNAuthorizationRule(ctx context.Context, conn *ec2.Client, end
 
 func statusClientVPNNetworkAssociation(ctx context.Context, conn *ec2.Client, associationID, endpointID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindClientVPNNetworkAssociationByIDs(ctx, conn, associationID, endpointID)
+		output, err := findClientVPNNetworkAssociationByTwoPartKey(ctx, conn, associationID, endpointID)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -314,7 +314,7 @@ func statusClientVPNNetworkAssociation(ctx context.Context, conn *ec2.Client, as
 
 func statusClientVPNRoute(ctx context.Context, conn *ec2.Client, endpointID, targetSubnetID, destinationCIDR string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindClientVPNRouteByThreePartKey(ctx, conn, endpointID, targetSubnetID, destinationCIDR)
+		output, err := findClientVPNRouteByThreePartKey(ctx, conn, endpointID, targetSubnetID, destinationCIDR)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

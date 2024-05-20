@@ -32,6 +32,10 @@ var (
 	ResourceVPNGatewayRoutePropagation      = resourceVPNGatewayRoutePropagation
 
 	CustomFiltersSchema                                    = customFiltersSchema
+	FindClientVPNAuthorizationRuleByThreePartKey           = findClientVPNAuthorizationRuleByThreePartKey
+	FindClientVPNEndpointByID                              = findClientVPNEndpointByID
+	FindClientVPNNetworkAssociationByTwoPartKey            = findClientVPNNetworkAssociationByTwoPartKey
+	FindClientVPNRouteByThreePartKey                       = findClientVPNRouteByThreePartKey
 	FindEBSVolumeAttachment                                = findVolumeAttachment
 	FindEIPByAllocationID                                  = findEIPByAllocationID
 	FindEIPByAssociationID                                 = findEIPByAssociationID

@@ -131,7 +131,7 @@ func testAccCheckClientVPNNetworkAssociationDestroy(ctx context.Context) resourc
 				continue
 			}
 
-			_, err := tfec2.FindClientVPNNetworkAssociationByIDs(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["client_vpn_endpoint_id"])
+			_, err := tfec2.FindClientVPNNetworkAssociationByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["client_vpn_endpoint_id"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -157,7 +157,7 @@ func testAccCheckClientVPNNetworkAssociationExists(ctx context.Context, name str
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		output, err := tfec2.FindClientVPNNetworkAssociationByIDs(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["client_vpn_endpoint_id"])
+		output, err := tfec2.FindClientVPNNetworkAssociationByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["client_vpn_endpoint_id"])
 
 		if err != nil {
 			return err

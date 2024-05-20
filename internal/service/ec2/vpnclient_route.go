@@ -102,7 +102,7 @@ func resourceClientVPNRouteCreate(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId(id)
 
-	if _, err := WaitClientVPNRouteCreated(ctx, conn, endpointID, targetSubnetID, destinationCIDR, d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitClientVPNRouteCreated(ctx, conn, endpointID, targetSubnetID, destinationCIDR, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Client VPN Route (%s) create: %s", d.Id(), err)
 	}
 
@@ -118,7 +118,7 @@ func resourceClientVPNRouteRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	route, err := FindClientVPNRouteByThreePartKey(ctx, conn, endpointID, targetSubnetID, destinationCIDR)
+	route, err := findClientVPNRouteByThreePartKey(ctx, conn, endpointID, targetSubnetID, destinationCIDR)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Client VPN Route (%s) not found, removing from state", d.Id())
@@ -164,7 +164,7 @@ func resourceClientVPNRouteDelete(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 Client VPN Route (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitClientVPNRouteDeleted(ctx, conn, endpointID, targetSubnetID, destinationCIDR, d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitClientVPNRouteDeleted(ctx, conn, endpointID, targetSubnetID, destinationCIDR, d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 Client VPN Route (%s): waiting for completion: %s", d.Id(), err)
 	}
 
