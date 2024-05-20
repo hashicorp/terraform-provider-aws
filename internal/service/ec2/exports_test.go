@@ -54,6 +54,7 @@ var (
 	FindRouteByPrefixListIDDestinationV2                   = findRouteByPrefixListIDDestinationV2
 	FindRouteTableAssociationByIDV2                        = findRouteTableAssociationByIDV2
 	FindRouteTableByIDV2                                   = findRouteTableByIDV2
+	FindSpotDatafeedSubscription                           = findSpotDatafeedSubscription
 	FindSpotFleetRequestByID                               = findSpotFleetRequestByID
 	FindSpotFleetRequests                                  = findSpotFleetRequests
 	FindSubnetsV2                                          = findSubnetsV2

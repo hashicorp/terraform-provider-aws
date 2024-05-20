@@ -1511,29 +1511,6 @@ func FindSecurityGroupRulesBySecurityGroupID(ctx context.Context, conn *ec2.EC2,
 	return FindSecurityGroupRules(ctx, conn, input)
 }
 
-func FindSpotDatafeedSubscription(ctx context.Context, conn *ec2.EC2) (*ec2.SpotDatafeedSubscription, error) {
-	input := &ec2.DescribeSpotDatafeedSubscriptionInput{}
-
-	output, err := conn.DescribeSpotDatafeedSubscriptionWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidSpotDatafeedNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.SpotDatafeedSubscription == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.SpotDatafeedSubscription, nil
-}
-
 func FindSubnetByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.Subnet, error) {
 	input := &ec2.DescribeSubnetsInput{
 		SubnetIds: aws.StringSlice([]string{id}),

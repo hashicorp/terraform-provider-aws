@@ -752,6 +752,29 @@ func findVolumeAttachmentInstanceByID(ctx context.Context, conn *ec2.Client, id 
 	return output, nil
 }
 
+func findSpotDatafeedSubscription(ctx context.Context, conn *ec2.Client) (*awstypes.SpotDatafeedSubscription, error) {
+	input := &ec2.DescribeSpotDatafeedSubscriptionInput{}
+
+	output, err := conn.DescribeSpotDatafeedSubscription(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidSpotDatafeedNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.SpotDatafeedSubscription == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.SpotDatafeedSubscription, nil
+}
+
 func FindSpotInstanceRequests(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSpotInstanceRequestsInput) ([]awstypes.SpotInstanceRequest, error) {
 	var output []awstypes.SpotInstanceRequest
 
