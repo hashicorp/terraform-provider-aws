@@ -46,7 +46,6 @@ func resourceOpenIDConnectProvider() *schema.Resource {
 			"client_id_list": {
 				Type:     schema.TypeSet,
 				Required: true,
-				ForceNew: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: validation.StringLenBetween(1, 255),
@@ -159,6 +158,39 @@ func resourceOpenIDConnectProviderUpdate(ctx context.Context, d *schema.Resource
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating IAM OIDC Provider (%s) thumbprint: %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("client_id_list") {
+		o, n := d.GetChange("client_id_list")
+		oldSet, newSet := o.(*schema.Set), n.(*schema.Set)
+
+		for _, v := range newSet.Difference(oldSet).List() {
+			clientIdToAdd := v.(string)
+			input := &iam.AddClientIDToOpenIDConnectProviderInput{
+				OpenIDConnectProviderArn: aws.String(d.Id()),
+				ClientID:                 aws.String(clientIdToAdd),
+			}
+
+			_, err := conn.AddClientIDToOpenIDConnectProvider(ctx, input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "adding clientID (%s) to IAM OIDC Provider: %s", clientIdToAdd, err)
+			}
+		}
+
+		for _, v := range oldSet.Difference(newSet).List() {
+			clientIdToRemove := v.(string)
+			input := &iam.RemoveClientIDFromOpenIDConnectProviderInput{
+				OpenIDConnectProviderArn: aws.String(d.Id()),
+				ClientID:                 aws.String(clientIdToRemove),
+			}
+
+			_, err := conn.RemoveClientIDFromOpenIDConnectProvider(ctx, input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "removing clientID (%s) from IAM OIDC Provider: %s", clientIdToRemove, err)
+			}
 		}
 	}
 
