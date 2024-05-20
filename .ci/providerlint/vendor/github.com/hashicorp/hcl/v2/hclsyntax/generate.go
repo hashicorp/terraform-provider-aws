@@ -9,4 +9,4 @@ package hclsyntax
 //go:generate gofmt -w scan_tokens.go
 //go:generate ragel -Z scan_string_lit.rl
 //go:generate gofmt -w scan_string_lit.go
-//go:generate stringer -type TokenType -output token_type_string.go
+//go:generate go run golang.org/x/tools/cmd/stringer -type TokenType -output token_type_string.go
