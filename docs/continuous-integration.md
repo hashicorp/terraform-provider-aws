@@ -166,7 +166,7 @@ You can limit the scan to a service package by using the `PKG` environment varia
 
 #### Naming Scan Caps/AWS/EC2
 
-Idiomatic Go uses [_mixed caps_](naming.md#mixed_caps) for multiword names, not camel case. In camel case, a name with the words "SMTP thing" would be `SmtpThing`. This is wrong in Go. In mixed caps, and therefore idiomatic Go, `SMTPThing` is correct. This scan ensures that many acronyms and initialisms are capitalized correctly in code. 
+Idiomatic Go uses [_mixed caps_](naming.md#mixed_caps) for multiword names, not camel case. In camel case, a name with the words "SMTP thing" would be `SmtpThing`. This is wrong in Go. In mixed caps, and therefore idiomatic Go, `SMTPThing` is correct. This scan ensures that many acronyms and initialisms are capitalized correctly in code.
 
 Use the `semnaming-cae` target to run the same check CI runs:
 
