@@ -64,6 +64,8 @@ func TestAccMWAAEnvironment_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.worker_logs.0.log_level", "INFO"),
 					resource.TestCheckResourceAttr(resourceName, "max_workers", acctest.Ct10),
 					resource.TestCheckResourceAttr(resourceName, "min_workers", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "max_webservers", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "min_webservers", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.security_group_ids.#", acctest.Ct1),
@@ -291,6 +293,8 @@ func TestAccMWAAEnvironment_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.worker_logs.0.log_level", "WARNING"),
 					resource.TestCheckResourceAttr(resourceName, "max_workers", "20"),
 					resource.TestCheckResourceAttr(resourceName, "min_workers", "15"),
+					resource.TestCheckResourceAttr(resourceName, "max_webservers", "5"),
+					resource.TestCheckResourceAttr(resourceName, "min_webservers", "4"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.security_group_ids.#", acctest.Ct1),
@@ -789,6 +793,10 @@ resource "aws_mwaa_environment" "test" {
 
   max_workers = 20
   min_workers = 15
+
+	max_webservers = 5
+  min_webservers = 4
+	
   name        = %[1]q
 
   network_configuration {
