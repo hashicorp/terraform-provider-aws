@@ -1048,7 +1048,7 @@ func resourceSpotFleetRequestRead(ctx context.Context, d *schema.ResourceData, m
 
 	// The default of this argument does not get set in the create operation
 	// Therefore if the API does not return a value, being a *int32 type it will result in 0 and always create a diff.
-	if config.InstancePoolsToUseCount != nil {
+	if config.InstancePoolsToUseCount != nil { // nosemgrep:ci.helper-schema-ResourceData-Set-extraneous-nil-check
 		d.Set("instance_pools_to_use_count", config.InstancePoolsToUseCount)
 	}
 
