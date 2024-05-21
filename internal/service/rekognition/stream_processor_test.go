@@ -78,8 +78,8 @@ func TestAccRekognitionStreamProcessor_connectedHome_poylgon(t *testing.T) {
 				Config: testAccStreamProcessorConfig_connectedHome_polygons(testAccStreamProcessorConfig_connectedHome_setup(rName), rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamProcessorExists(ctx, resourceName, &streamprocessor),
-					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.polygon.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.polygon.#", acctest.Ct3),
 				),
 			},
 		},
@@ -107,8 +107,8 @@ func TestAccRekognitionStreamProcessor_connectedHome_boundingBox(t *testing.T) {
 				Config: testAccStreamProcessorConfig_connectedHome_boundingBox(testAccStreamProcessorConfig_connectedHome_setup(rName), rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamProcessorExists(ctx, resourceName, &streamprocessor),
-					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.polygon.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.polygon.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.bounding_box.left", "0.5"),
 					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.bounding_box.top", "0.5"),
 					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.bounding_box.height", "0.5"),
