@@ -25,7 +25,7 @@ func TestAccDirectConnectTransitVirtualInterface_serial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic: testAccTransitVirtualInterface_basic,
-		names.AttrTags:  testAccTransitVirtualInterface_tags,
+		"tags":          testAccTransitVirtualInterface_tags,
 		"sitelink":      testAccTransitVirtualInterface_siteLink,
 	}
 

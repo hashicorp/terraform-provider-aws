@@ -2867,7 +2867,7 @@ func TestAccWAFV2WebACL_tokenDomains(t *testing.T) {
 	})
 }
 
-func TestAccWAFV2WebACL_associationConfig(t *testing.T) {
+func TestAccWAFV2WebACL_associationConfigCloudFront(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.WebACL
 	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2883,7 +2883,7 @@ func TestAccWAFV2WebACL_associationConfig(t *testing.T) {
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLConfig_associationConfig(webACLName),
+				Config: testAccWebACLConfig_associationConfigCloudFront(webACLName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`global/webacl/.+$`)),
@@ -2897,6 +2897,57 @@ func TestAccWAFV2WebACL_associationConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, webACLName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, webACLName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeCloudfront)),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACL_associationConfigRegional(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.WebACL
+	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLConfig_associationConfigRegional(webACLName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebACLExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "association_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "association_config.0.request_body.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "association_config.0.request_body.0.api_gateway.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "association_config.0.request_body.0.api_gateway.0.default_size_inspection_limit", "KB_16"),
+					resource.TestCheckResourceAttr(resourceName, "association_config.0.request_body.0.cognito_user_pool.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "association_config.0.request_body.0.cognito_user_pool.0.default_size_inspection_limit", "KB_32"),
+					resource.TestCheckResourceAttr(resourceName, "association_config.0.request_body.0.app_runner_service.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "association_config.0.request_body.0.app_runner_service.0.default_size_inspection_limit", "KB_48"),
+					resource.TestCheckResourceAttr(resourceName, "association_config.0.request_body.0.verified_access_instance.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "association_config.0.request_body.0.verified_access_instance.0.default_size_inspection_limit", "KB_64"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.allow.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, webACLName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, webACLName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
@@ -5938,7 +5989,7 @@ resource "aws_wafv2_web_acl" "test" {
 `, rName)
 }
 
-func testAccWebACLConfig_associationConfig(rName string) string {
+func testAccWebACLConfig_associationConfigCloudFront(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
   name        = %[1]q
@@ -5952,6 +6003,43 @@ resource "aws_wafv2_web_acl" "test" {
   association_config {
     request_body {
       cloudfront {
+        default_size_inspection_limit = "KB_64"
+      }
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, rName)
+}
+
+func testAccWebACLConfig_associationConfigRegional(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name        = %[1]q
+  description = %[1]q
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  association_config {
+    request_body {
+      api_gateway {
+        default_size_inspection_limit = "KB_16"
+      }
+      cognito_user_pool {
+        default_size_inspection_limit = "KB_32"
+      }
+      app_runner_service {
+        default_size_inspection_limit = "KB_48"
+      }
+      verified_access_instance {
         default_size_inspection_limit = "KB_64"
       }
     }

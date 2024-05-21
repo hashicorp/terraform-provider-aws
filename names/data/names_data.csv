@@ -271,7 +271,7 @@ opensearchserverless,opensearchserverless,opensearchserverless,opensearchserverl
 osis,osis,osis,osis,,osis,,opensearchingestion,OpenSearchIngestion,OSIS,,,2,,aws_osis_,,osis_,OpenSearch Ingestion,Amazon,,,,,,,OSIS,ListPipelines,,
 opsworks,opsworks,opsworks,opsworks,,opsworks,,,OpsWorks,OpsWorks,,1,,,aws_opsworks_,,opsworks_,OpsWorks,AWS,,,,,,,OpsWorks,DescribeApps,,
 opsworks-cm,opsworkscm,opsworkscm,opsworkscm,,opsworkscm,,,OpsWorksCM,OpsWorksCM,,1,,,aws_opsworkscm_,,opsworkscm_,OpsWorks CM,AWS,,x,,,,,OpsWorksCM,,,
-organizations,organizations,organizations,organizations,,organizations,,,Organizations,Organizations,,1,,,aws_organizations_,,organizations_,Organizations,AWS,,,,,,,Organizations,ListAccounts,,
+organizations,organizations,organizations,organizations,,organizations,,,Organizations,Organizations,x,,2,,aws_organizations_,,organizations_,Organizations,AWS,,,,,,,Organizations,ListAccounts,,
 outposts,outposts,outposts,outposts,,outposts,,,Outposts,Outposts,,1,,,aws_outposts_,,outposts_,Outposts,AWS,,,,,,,Outposts,ListSites,,
 ,,,,,ec2outposts,ec2,,EC2Outposts,,,,,aws_ec2_(coip_pool|local_gateway),aws_ec2outposts_,outposts_,ec2_coip_pool;ec2_local_gateway,Outposts (EC2),AWS,x,,,x,,,,,,Part of EC2
 panorama,panorama,panorama,panorama,,panorama,,,Panorama,Panorama,,1,,,aws_panorama_,,panorama_,Panorama,AWS,,x,,,,,Panorama,,,
@@ -309,7 +309,7 @@ resource-groups,resourcegroups,resourcegroups,resourcegroups,,resourcegroups,,,R
 resourcegroupstaggingapi,resourcegroupstaggingapi,resourcegroupstaggingapi,resourcegroupstaggingapi,,resourcegroupstaggingapi,,resourcegroupstagging,ResourceGroupsTaggingAPI,ResourceGroupsTaggingAPI,,,2,,aws_resourcegroupstaggingapi_,,resourcegroupstaggingapi_,Resource Groups Tagging,AWS,,,,,,,Resource Groups Tagging API,GetResources,,
 robomaker,robomaker,robomaker,robomaker,,robomaker,,,RoboMaker,RoboMaker,,1,,,aws_robomaker_,,robomaker_,RoboMaker,AWS,,x,,,,,RoboMaker,,,
 rolesanywhere,rolesanywhere,rolesanywhere,rolesanywhere,,rolesanywhere,,,RolesAnywhere,RolesAnywhere,,,2,,aws_rolesanywhere_,,rolesanywhere_,Roles Anywhere,AWS,,,,,,,RolesAnywhere,ListProfiles,,
-route53,route53,route53,route53,,route53,,,Route53,Route53,x,1,,aws_route53_(?!resolver_),aws_route53_,,route53_cidr_;route53_delegation_;route53_health_;route53_hosted_;route53_key_;route53_query_;route53_record;route53_traffic_;route53_vpc_;route53_zone,Route 53,Amazon,,,,,,,Route 53,ListHostedZones,,
+route53,route53,route53,route53,,route53,,,Route53,Route53,x,,2,aws_route53_(?!resolver_),aws_route53_,,route53_cidr_;route53_delegation_;route53_health_;route53_hosted_;route53_key_;route53_query_;route53_record;route53_traffic_;route53_vpc_;route53_zone,Route 53,Amazon,,,,,,,Route 53,ListHostedZones,,
 route53domains,route53domains,route53domains,route53domains,,route53domains,,,Route53Domains,Route53Domains,x,,2,,aws_route53domains_,,route53domains_,Route 53 Domains,Amazon,,,,,,,Route 53 Domains,ListDomains,,
 route53profiles,route53profiles,route53profiles,route53profiles,,route53profiles,,,Route53Profiles,Route53Profiles,,,2,,aws_route53profiles_,,route53profiles_,Route 53 Profiles,Amazon,,,,,,,Route 53 Profiles,ListProfiles,,
 route53-recovery-cluster,route53recoverycluster,route53recoverycluster,route53recoverycluster,,route53recoverycluster,,,Route53RecoveryCluster,Route53RecoveryCluster,,1,,,aws_route53recoverycluster_,,route53recoverycluster_,Route 53 Recovery Cluster,Amazon,,x,,,,,Route53 Recovery Cluster,,,

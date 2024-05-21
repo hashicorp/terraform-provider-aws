@@ -8,7 +8,6 @@ import (
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // This is part of an experimental feature, do not use this as a starting point for tests
@@ -32,7 +31,7 @@ func TestAccClientVPNEndpoint_serial(t *testing.T) {
 			"withClientLoginBanner":        testAccClientVPNEndpoint_withClientLoginBannerOptions,
 			"withLogGroup":                 testAccClientVPNEndpoint_withConnectionLogOptions,
 			"withDNSServers":               testAccClientVPNEndpoint_withDNSServers,
-			names.AttrTags:                 testAccClientVPNEndpoint_tags,
+			"tags":                         testAccClientVPNEndpoint_tags,
 			"simpleAttributesUpdate":       testAccClientVPNEndpoint_simpleAttributesUpdate,
 			"selfServicePortal":            testAccClientVPNEndpoint_selfServicePortal,
 			"vpcNoSecurityGroups":          testAccClientVPNEndpoint_vpcNoSecurityGroups,
@@ -42,7 +41,7 @@ func TestAccClientVPNEndpoint_serial(t *testing.T) {
 		"AuthorizationRule": {
 			acctest.CtBasic:      testAccClientVPNAuthorizationRule_basic,
 			"groups":             testAccClientVPNAuthorizationRule_groups,
-			names.AttrSubnets:    testAccClientVPNAuthorizationRule_subnets,
+			"subnets":            testAccClientVPNAuthorizationRule_subnets,
 			"disappears":         testAccClientVPNAuthorizationRule_disappears,
 			"disappearsEndpoint": testAccClientVPNAuthorizationRule_Disappears_endpoint,
 		},
@@ -52,9 +51,9 @@ func TestAccClientVPNEndpoint_serial(t *testing.T) {
 			"disappears":      testAccClientVPNNetworkAssociation_disappears,
 		},
 		"Route": {
-			acctest.CtBasic:       testAccClientVPNRoute_basic,
-			names.AttrDescription: testAccClientVPNRoute_description,
-			"disappears":          testAccClientVPNRoute_disappears,
+			acctest.CtBasic: testAccClientVPNRoute_basic,
+			"description":   testAccClientVPNRoute_description,
+			"disappears":    testAccClientVPNRoute_disappears,
 		},
 	}
 

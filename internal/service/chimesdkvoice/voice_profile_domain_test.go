@@ -32,7 +32,7 @@ func TestAccChimeSDKVoiceVoiceProfileDomain_serial(t *testing.T) {
 			acctest.CtBasic: testAccVoiceProfileDomain_basic,
 			"disappears":    testAccVoiceProfileDomain_disappears,
 			"update":        testAccVoiceProfileDomain_update,
-			names.AttrTags:  testAccVoiceProfileDomain_tags,
+			"tags":          testAccVoiceProfileDomain_tags,
 		},
 	}
 

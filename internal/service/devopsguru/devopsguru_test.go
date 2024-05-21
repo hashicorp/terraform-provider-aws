@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/devopsguru"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDevOpsGuru_serial(t *testing.T) {
@@ -35,7 +34,7 @@ func TestAccDevOpsGuru_serial(t *testing.T) {
 			acctest.CtBasic:    testAccResourceCollection_basic,
 			"cloudformation":   testAccResourceCollection_cloudformation,
 			"disappears":       testAccResourceCollection_disappears,
-			names.AttrTags:     testAccResourceCollection_tags,
+			"tags":             testAccResourceCollection_tags,
 			"tagsAllResources": testAccResourceCollection_tagsAllResources,
 		},
 		"ResourceCollectionDataSource": {

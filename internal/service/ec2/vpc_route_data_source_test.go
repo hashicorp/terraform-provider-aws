@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -174,8 +174,8 @@ func TestAccVPCRouteDataSource_destinationPrefixListID(t *testing.T) {
 
 func TestAccVPCRouteDataSource_gatewayVPCEndpoint(t *testing.T) {
 	ctx := acctest.Context(t)
-	var routeTable ec2.RouteTable
-	var vpce ec2.VpcEndpoint
+	var routeTable awstypes.RouteTable
+	var vpce awstypes.VpcEndpoint
 	rtResourceName := "aws_route_table.test"
 	vpceResourceName := "aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

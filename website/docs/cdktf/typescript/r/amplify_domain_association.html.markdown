@@ -87,11 +87,11 @@ The `subDomain` configuration block supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN for the domain association.
-* `certificateVerificationDnsRecord` - The DNS record for certificate verification.
+* `certificateVerificationDnsRecord` - DNS records for certificate verification in a space-delimited format (`<record> CNAME <target>`).
 
 The `subDomain` configuration block exports the following attributes:
 
-* `dnsRecord` - DNS record for the subdomain.
+* `dnsRecord` - DNS record for the subdomain in a space-prefixed and space-delimited format (` CNAME <target>`).
 * `verified` - Verified status of the subdomain.
 
 ## Import
@@ -126,4 +126,4 @@ Using `terraform import`, import Amplify domain association using `appId` and `d
 % terraform import aws_amplify_domain_association.app d2ypk4k47z8u6/example.com
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-10844d85ea1b0809e4b08cd8168c429bf0c742ec4760985072b9f61b55e19893 -->
+<!-- cache-key: cdktf-0.20.1 input-87ee803ee3ec698dfb384caec80adf64fac4630f4377eb71233daf913f3898f7 -->

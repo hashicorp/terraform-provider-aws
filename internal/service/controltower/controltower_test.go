@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccControlTower_serial(t *testing.T) {
@@ -17,7 +16,7 @@ func TestAccControlTower_serial(t *testing.T) {
 		"LandingZone": {
 			acctest.CtBasic: testAccLandingZone_basic,
 			"disappears":    testAccLandingZone_disappears,
-			names.AttrTags:  testAccLandingZone_tags,
+			"tags":          testAccLandingZone_tags,
 		},
 	}
 

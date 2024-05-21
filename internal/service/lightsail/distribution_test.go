@@ -40,8 +40,8 @@ func TestAccLightsailDistribution_serial(t *testing.T) {
 			"cache_behavior":          testAccDistribution_cacheBehavior,
 			"cache_behavior_settings": testAccDistribution_cacheBehaviorSettings,
 			"default_cache_behavior":  testAccDistribution_defaultCacheBehavior,
-			names.AttrIPAddressType:   testAccDistribution_ipAddressType,
-			names.AttrTags:            testAccDistribution_tags,
+			"ip_address_type":         testAccDistribution_ipAddressType,
+			"tags":                    testAccDistribution_tags,
 		},
 	}
 

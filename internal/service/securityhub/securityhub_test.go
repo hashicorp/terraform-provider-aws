@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSecurityHub_serial(t *testing.T) {
@@ -30,7 +29,7 @@ func TestAccSecurityHub_serial(t *testing.T) {
 			"numberFilters": testAccAutomationRule_numberFilters,
 			"dateFilters":   testAccAutomationRule_dateFilters,
 			"mapFilters":    testAccAutomationRule_mapFilters,
-			names.AttrTags:  testAccAutomationRule_tags,
+			"tags":          testAccAutomationRule_tags,
 		},
 		"ActionTarget": {
 			acctest.CtBasic: testAccActionTarget_basic,

@@ -117,6 +117,7 @@ import (
 	neptunegraph_sdkv2 "github.com/aws/aws-sdk-go-v2/service/neptunegraph"
 	oam_sdkv2 "github.com/aws/aws-sdk-go-v2/service/oam"
 	opensearchserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
+	organizations_sdkv2 "github.com/aws/aws-sdk-go-v2/service/organizations"
 	osis_sdkv2 "github.com/aws/aws-sdk-go-v2/service/osis"
 	paymentcryptography_sdkv2 "github.com/aws/aws-sdk-go-v2/service/paymentcryptography"
 	pcaconnectorad_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pcaconnectorad"
@@ -136,6 +137,7 @@ import (
 	resourcegroups_sdkv2 "github.com/aws/aws-sdk-go-v2/service/resourcegroups"
 	resourcegroupstaggingapi_sdkv2 "github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi"
 	rolesanywhere_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
+	route53_sdkv2 "github.com/aws/aws-sdk-go-v2/service/route53"
 	route53domains_sdkv2 "github.com/aws/aws-sdk-go-v2/service/route53domains"
 	route53profiles_sdkv2 "github.com/aws/aws-sdk-go-v2/service/route53profiles"
 	s3_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3"
@@ -226,14 +228,12 @@ import (
 	networkmanager_sdkv1 "github.com/aws/aws-sdk-go/service/networkmanager"
 	opensearchservice_sdkv1 "github.com/aws/aws-sdk-go/service/opensearchservice"
 	opsworks_sdkv1 "github.com/aws/aws-sdk-go/service/opsworks"
-	organizations_sdkv1 "github.com/aws/aws-sdk-go/service/organizations"
 	outposts_sdkv1 "github.com/aws/aws-sdk-go/service/outposts"
 	pinpoint_sdkv1 "github.com/aws/aws-sdk-go/service/pinpoint"
 	quicksight_sdkv1 "github.com/aws/aws-sdk-go/service/quicksight"
 	rds_sdkv1 "github.com/aws/aws-sdk-go/service/rds"
 	redshift_sdkv1 "github.com/aws/aws-sdk-go/service/redshift"
 	redshiftserverless_sdkv1 "github.com/aws/aws-sdk-go/service/redshiftserverless"
-	route53_sdkv1 "github.com/aws/aws-sdk-go/service/route53"
 	route53recoverycontrolconfig_sdkv1 "github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
 	route53recoveryreadiness_sdkv1 "github.com/aws/aws-sdk-go/service/route53recoveryreadiness"
 	route53resolver_sdkv1 "github.com/aws/aws-sdk-go/service/route53resolver"
@@ -920,8 +920,8 @@ func (c *AWSClient) OpsWorksConn(ctx context.Context) *opsworks_sdkv1.OpsWorks {
 	return errs.Must(conn[*opsworks_sdkv1.OpsWorks](ctx, c, names.OpsWorks, make(map[string]any)))
 }
 
-func (c *AWSClient) OrganizationsConn(ctx context.Context) *organizations_sdkv1.Organizations {
-	return errs.Must(conn[*organizations_sdkv1.Organizations](ctx, c, names.Organizations, make(map[string]any)))
+func (c *AWSClient) OrganizationsClient(ctx context.Context) *organizations_sdkv2.Client {
+	return errs.Must(client[*organizations_sdkv2.Client](ctx, c, names.Organizations, make(map[string]any)))
 }
 
 func (c *AWSClient) OutpostsConn(ctx context.Context) *outposts_sdkv1.Outposts {
@@ -1024,8 +1024,8 @@ func (c *AWSClient) RolesAnywhereClient(ctx context.Context) *rolesanywhere_sdkv
 	return errs.Must(client[*rolesanywhere_sdkv2.Client](ctx, c, names.RolesAnywhere, make(map[string]any)))
 }
 
-func (c *AWSClient) Route53Conn(ctx context.Context) *route53_sdkv1.Route53 {
-	return errs.Must(conn[*route53_sdkv1.Route53](ctx, c, names.Route53, make(map[string]any)))
+func (c *AWSClient) Route53Client(ctx context.Context) *route53_sdkv2.Client {
+	return errs.Must(client[*route53_sdkv2.Client](ctx, c, names.Route53, make(map[string]any)))
 }
 
 func (c *AWSClient) Route53DomainsClient(ctx context.Context) *route53domains_sdkv2.Client {

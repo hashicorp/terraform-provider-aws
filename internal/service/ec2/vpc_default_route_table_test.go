@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -24,7 +24,7 @@ import (
 
 func TestAccVPCDefaultRouteTable_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var routeTable ec2.RouteTable
+	var routeTable awstypes.RouteTable
 	resourceName := "aws_default_route_table.test"
 	vpcResourceName := "aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -69,8 +69,8 @@ func TestAccVPCDefaultRouteTable_basic(t *testing.T) {
 
 func TestAccVPCDefaultRouteTable_Disappears_vpc(t *testing.T) {
 	ctx := acctest.Context(t)
-	var routeTable ec2.RouteTable
-	var vpc ec2.Vpc
+	var routeTable awstypes.RouteTable
+	var vpc awstypes.Vpc
 	resourceName := "aws_default_route_table.test"
 	vpcResourceName := "aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -85,7 +85,7 @@ func TestAccVPCDefaultRouteTable_Disappears_vpc(t *testing.T) {
 				Config: testAccVPCDefaultRouteTableConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
-					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
+					acctest.CheckVPCExistsV2(ctx, vpcResourceName, &vpc),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPC(), vpcResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -96,7 +96,7 @@ func TestAccVPCDefaultRouteTable_Disappears_vpc(t *testing.T) {
 
 func TestAccVPCDefaultRouteTable_Route_mode(t *testing.T) {
 	ctx := acctest.Context(t)
-	var routeTable ec2.RouteTable
+	var routeTable awstypes.RouteTable
 	resourceName := "aws_default_route_table.test"
 	igwResourceName := "aws_internet_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -165,7 +165,7 @@ func TestAccVPCDefaultRouteTable_Route_mode(t *testing.T) {
 
 func TestAccVPCDefaultRouteTable_swap(t *testing.T) {
 	ctx := acctest.Context(t)
-	var routeTable ec2.RouteTable
+	var routeTable awstypes.RouteTable
 	resourceName := "aws_default_route_table.test"
 	igwResourceName := "aws_internet_gateway.test"
 	rtResourceName := "aws_route_table.test"
@@ -238,7 +238,7 @@ func TestAccVPCDefaultRouteTable_ipv4ToTransitGateway(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var routeTable ec2.RouteTable
+	var routeTable awstypes.RouteTable
 	resourceName := "aws_default_route_table.test"
 	tgwResourceName := "aws_ec2_transit_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -275,7 +275,7 @@ func TestAccVPCDefaultRouteTable_ipv4ToVPCEndpoint(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var routeTable ec2.RouteTable
+	var routeTable awstypes.RouteTable
 	resourceName := "aws_default_route_table.test"
 	vpceResourceName := "aws_vpc_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -283,7 +283,7 @@ func TestAccVPCDefaultRouteTable_ipv4ToVPCEndpoint(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckELBv2GatewayLoadBalancer(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID, "elasticloadbalancing"),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID, "elasticloadbalancing"),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRouteTableDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -317,7 +317,7 @@ func TestAccVPCDefaultRouteTable_ipv4ToVPCEndpoint(t *testing.T) {
 
 func TestAccVPCDefaultRouteTable_vpcEndpointAssociation(t *testing.T) {
 	ctx := acctest.Context(t)
-	var routeTable ec2.RouteTable
+	var routeTable awstypes.RouteTable
 	resourceName := "aws_default_route_table.test"
 	igwResourceName := "aws_internet_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -350,7 +350,7 @@ func TestAccVPCDefaultRouteTable_vpcEndpointAssociation(t *testing.T) {
 
 func TestAccVPCDefaultRouteTable_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var routeTable ec2.RouteTable
+	var routeTable awstypes.RouteTable
 	resourceName := "aws_default_route_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -391,7 +391,7 @@ func TestAccVPCDefaultRouteTable_tags(t *testing.T) {
 
 func TestAccVPCDefaultRouteTable_conditionalCIDRBlock(t *testing.T) {
 	ctx := acctest.Context(t)
-	var routeTable ec2.RouteTable
+	var routeTable awstypes.RouteTable
 	resourceName := "aws_default_route_table.test"
 	igwResourceName := "aws_internet_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -430,7 +430,7 @@ func TestAccVPCDefaultRouteTable_conditionalCIDRBlock(t *testing.T) {
 
 func TestAccVPCDefaultRouteTable_prefixListToInternetGateway(t *testing.T) {
 	ctx := acctest.Context(t)
-	var routeTable ec2.RouteTable
+	var routeTable awstypes.RouteTable
 	resourceName := "aws_default_route_table.test"
 	igwResourceName := "aws_internet_gateway.test"
 	plResourceName := "aws_ec2_managed_prefix_list.test"
@@ -472,7 +472,7 @@ func TestAccVPCDefaultRouteTable_prefixListToInternetGateway(t *testing.T) {
 
 func TestAccVPCDefaultRouteTable_revokeExistingRules(t *testing.T) {
 	ctx := acctest.Context(t)
-	var routeTable ec2.RouteTable
+	var routeTable awstypes.RouteTable
 	resourceName := "aws_default_route_table.test"
 	rtResourceName := "aws_route_table.test"
 	eoigwResourceName := "aws_egress_only_internet_gateway.test"
@@ -534,14 +534,14 @@ func TestAccVPCDefaultRouteTable_revokeExistingRules(t *testing.T) {
 
 func testAccCheckDefaultRouteTableDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_default_route_table" {
 				continue
 			}
 
-			_, err := tfec2.FindRouteTableByID(ctx, conn, rs.Primary.ID)
+			_, err := tfec2.FindRouteTableByIDV2(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -1260,7 +1260,7 @@ func testAccPreCheckELBv2GatewayLoadBalancer(ctx context.Context, t *testing.T) 
 			continue
 		}
 
-		if aws.StringValue(limit.Name) == "gateway-load-balancers" {
+		if aws.ToString(limit.Name) == "gateway-load-balancers" {
 			return
 		}
 	}
