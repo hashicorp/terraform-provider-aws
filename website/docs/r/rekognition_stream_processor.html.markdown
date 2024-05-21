@@ -5,17 +5,12 @@ page_title: "AWS: aws_rekognition_stream_processor"
 description: |-
   Terraform resource for managing an AWS Rekognition Stream Processor.
 ---
-<!---
-TIP: A few guiding principles for writing documentation:
-1. Use simple language while avoiding jargon and figures of speech.
-2. Focus on brevity and clarity to keep a reader's attention.
-3. Use active voice and present tense whenever you can.
-4. Document your feature as it exists now; do not mention the future or past if you can help it.
-5. Use accessible and inclusive language.
---->`
+
 # Resource: aws_rekognition_stream_processor
 
 Terraform resource for managing an AWS Rekognition Stream Processor.
+
+~> **Note:** This resource must be configured specifically for your use case, and not all options are compatible with one another. See [Stream Processor API documentation](https://docs.aws.amazon.com/rekognition/latest/APIReference/API_CreateStreamProcessor.html#rekognition-CreateStreamProcessor-request-Input) for configuration information.
 
 ## Example Usage
 
@@ -30,18 +25,56 @@ resource "aws_rekognition_stream_processor" "example" {
 
 The following arguments are required:
 
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `input` - (Required) Input video stream. See [`input`](#input) definition.
+* `name` - (Required) The name of the Stream Processor
+* `role_arn` - (Required) The ARN of the IAM role that allows access to the stream processor.
+* `output` - (Required) Kinesis data stream stream or Amazon S3 bucket location to which Amazon Rekognition Video puts the analysis results
 
 The following arguments are optional:
 
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `kms_key_id` - (Optional) Optional parameter for label detection stream processors
+* `data_sharing_preference` - (Optional) See [`data_sharing_preference`](#data_sharing_preference) definition.
+* `notification_channel` - (Optional) The Amazon Simple Notification Service topic to which Amazon Rekognition publishes the completion status. See [`notification_channel`](#notification_channel) definition.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+## Nested Blocks
+
+### `input`
+
+* `kinesis_video_stream` - Kinesis input stream. See [`kinesis_video_stream`](#kinesis_video_stream) definition.
+
+#### `kinesis_video_stream`
+
+* `arn` - ARN of the Kinesis video stream stream that streams the source video
+
+### `output`
+
+* `kinesis_data_stream` - (Optional) The Amazon Kinesis Data Streams stream to which the Amazon Rekognition stream processor streams the analysis results. See [`kinesis_data_stream`](#kinesis_data_stream) definition.
+* `s3_destination` - (Optiona) The Amazon S3 bucket location to which Amazon Rekognition publishes the detailed inference results of a video analysis operation. See [`s3_destination`](#s3_destination) definition.
+
+#### `kinesis_data_stream`
+
+* `arn` - ARN of the output Amazon Kinesis Data Streams stream.
+
+#### `s3_destination`
+
+* `bucket` - The name of the Amazon S3 bucket you want to associate with the streaming video project
+* `key_prefixx` - The prefix value of the location within the bucket that you want the information to be published to
+
+### `data_sharing_preference`
+
+* `opt_in` - (Optional) Shows whether you are sharing data with Rekognition to improve model performance.
+
+### `notification_channel`
+
+* `sns_topic_arn` - The Amazon Resource Number (ARN) of the Amazon Amazon Simple Notification Service topic to which Amazon Rekognition posts the completion status.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Stream Processor. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
