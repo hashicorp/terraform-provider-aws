@@ -22,39 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccRekognitionStreamProcessor_import(t *testing.T) {
-	ctx := acctest.Context(t)
-
-	var streamprocessor rekognition.DescribeStreamProcessorOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_rekognition_stream_processor.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.RekognitionEndpointID)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.RekognitionServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStreamProcessorDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccStreamProcessorConfig_connectedHome(testAccStreamProcessorConfig_connectedHome_setup(rName), rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStreamProcessorExists(ctx, resourceName, &streamprocessor),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"arn"},
-			},
-		},
-	})
-}
-
 func TestAccRekognitionStreamProcessor_connectedHome(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -79,6 +46,12 @@ func TestAccRekognitionStreamProcessor_connectedHome(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrID, fmt.Sprintf("%[1]s-acctest-processor", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("%[1]s-acctest-processor", rName)),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrARN},
 			},
 		},
 	})
