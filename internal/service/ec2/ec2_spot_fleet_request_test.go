@@ -2834,7 +2834,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
-  spot_price                          = "0.05"
+  spot_price                          = "0.07"
   target_capacity                     = 4
   valid_until                         = %[2]q
   terminate_instances_with_expiration = true
