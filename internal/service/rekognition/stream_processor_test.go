@@ -86,6 +86,39 @@ func TestAccRekognitionStreamProcessor_connectedHome_poylgon(t *testing.T) {
 	})
 }
 
+func TestAccRekognitionStreamProcessor_connectedHome_boundingBox(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var streamprocessor rekognition.DescribeStreamProcessorOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rekognition_stream_processor.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.RekognitionEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.RekognitionServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStreamProcessorDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStreamProcessorConfig_connectedHome_boundingBox(testAccStreamProcessorConfig_connectedHome_setup(rName), rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStreamProcessorExists(ctx, resourceName, &streamprocessor),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.polygon.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.bounding_box.left", "0.5"),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.bounding_box.top", "0.5"),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.bounding_box.height", "0.5"),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.bounding_box.width", "0.5"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRekognitionStreamProcessor_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -180,15 +213,15 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCheckStreamProcessorNotRecreated(before, after *rekognition.DescribeStreamProcessorOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.StreamProcessorArn), aws.ToString(after.StreamProcessorArn); before != after {
-			return create.Error(names.Rekognition, create.ErrActionCheckingNotRecreated, tfrekognition.ResNameStreamProcessor, aws.ToString(&before), errors.New("recreated"))
-		}
+// func testAccCheckStreamProcessorNotRecreated(before, after *rekognition.DescribeStreamProcessorOutput) resource.TestCheckFunc {
+// 	return func(s *terraform.State) error {
+// 		if before, after := aws.ToString(before.StreamProcessorArn), aws.ToString(after.StreamProcessorArn); before != after {
+// 			return create.Error(names.Rekognition, create.ErrActionCheckingNotRecreated, tfrekognition.ResNameStreamProcessor, aws.ToString(&before), errors.New("recreated"))
+// 		}
 
-		return nil
-	}
-}
+// 		return nil
+// 	}
+// }
 
 func testAccStreamProcessorConfig_connectedHome_setup(rName string) string {
 	return fmt.Sprintf(`
@@ -295,6 +328,52 @@ resource "aws_rekognition_stream_processor" "test" {
       x = 0.5
       y = 0.5
     }
+  }
+
+  settings {
+    connected_home {
+      labels = ["PERSON", "ALL"]
+    }
+  }
+
+  input {
+    kinesis_video_stream {
+      arn = aws_kinesis_video_stream.test.arn
+    }
+  }
+
+  notification_channel {
+    sns_topic_arn = aws_sns_topic.test.arn
+  }
+}
+`, setup, rName)
+}
+
+func testAccStreamProcessorConfig_connectedHome_boundingBox(setup, rName string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "aws_rekognition_stream_processor" "test" {
+  role_arn = aws_iam_role.test.arn
+  name     = "%[2]s-acctest-processor"
+
+  data_sharing_preference {
+    opt_in = true
+  }
+
+  output {
+    s3_destination {
+      bucket = aws_s3_bucket.test.bucket
+    }
+  }
+
+  regions_of_interest {
+    bounding_box {
+      left   = 0.5
+      top    = 0.5
+      height = 0.5
+      width  = 0.5
+	}
   }
 
   settings {

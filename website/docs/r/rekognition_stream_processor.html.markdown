@@ -12,7 +12,9 @@ Terraform resource for managing an AWS Rekognition Stream Processor.
 
 ~> **Note:** This resource must be configured specifically for your use case, and not all options are compatible with one another. See [Stream Processor API documentation](https://docs.aws.amazon.com/rekognition/latest/APIReference/API_CreateStreamProcessor.html#rekognition-CreateStreamProcessor-request-Input) for configuration information.
 
-## Label Detection Usage
+## Example Usage
+
+### Label Detection Usage
 
 ```terraform
 Resource "aws_iam_role" "example" {
@@ -83,7 +85,23 @@ resource "aws_rekognition_stream_processor" "example" {
 ### Face Detection Usage
 
 ```terraform
-TODO
+Resource "aws_iam_role" "example" {
+  name = "example-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = "TBD"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      },
+    ]
+  })
+}
 ```
 
 ## Argument Reference
