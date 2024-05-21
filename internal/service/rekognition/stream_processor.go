@@ -531,17 +531,17 @@ func (r *resourceStreamProcessor) Update(ctx context.Context, req resource.Updat
 				return
 			}
 
-			if !connectedHomePlan.MinConfidence.Equal(connectedHomeState.MinConfidence) {
-				if !connectedHomePlan.MinConfidence.IsNull() && connectedHomeState.MinConfidence.IsNull() {
+			if !connectedHomePlan.MinConfidence.Equal(connectedHomeState.MinConfidence) { // nosemgrep:ci.semgrep.migrate.aws-api-context
+				if !connectedHomePlan.MinConfidence.IsNull() && connectedHomeState.MinConfidence.IsNull() { // nosemgrep:ci.semgrep.migrate.aws-api-context
 					in.ParametersToDelete = append(in.ParametersToDelete, awstypes.StreamProcessorParameterToDeleteConnectedHomeMinConfidence)
 				}
 
-				if !connectedHomePlan.MinConfidence.IsNull() {
-					in.SettingsForUpdate.ConnectedHomeForUpdate.MinConfidence = aws.Float32(float32(connectedHomePlan.MinConfidence.ValueFloat64()))
+				if !connectedHomePlan.MinConfidence.IsNull() { // nosemgrep:ci.semgrep.migrate.aws-api-context
+					in.SettingsForUpdate.ConnectedHomeForUpdate.MinConfidence = aws.Float32(float32(connectedHomePlan.MinConfidence.ValueFloat64())) // nosemgrep:ci.semgrep.migrate.aws-api-context
 				}
 			}
 
-			if !connectedHomePlan.Labels.Equal(connectedHomeState.Labels) {
+			if !connectedHomePlan.Labels.Equal(connectedHomeState.Labels) { // nosemgrep:ci.semgrep.migrate.aws-api-context
 				in.SettingsForUpdate.ConnectedHomeForUpdate.Labels = fwflex.ExpandFrameworkStringValueList(ctx, connectedHomePlan.Labels)
 			}
 		}
