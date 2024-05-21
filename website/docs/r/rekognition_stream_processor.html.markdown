@@ -29,6 +29,7 @@ The following arguments are required:
 * `name` - (Required) The name of the Stream Processor
 * `role_arn` - (Required) The ARN of the IAM role that allows access to the stream processor.
 * `output` - (Required) Kinesis data stream stream or Amazon S3 bucket location to which Amazon Rekognition Video puts the analysis results
+* `settings` - (Required) Input parameters used in a streaming video analyzed by a stream processor. See [`settings`](#settings) definition.
 
 The following arguments are optional:
 
@@ -90,6 +91,21 @@ If using `polygon`, a minimum of 3 per region is required, with a maximum of 10.
 ### `notification_channel`
 
 * `sns_topic_arn` - The Amazon Resource Number (ARN) of the Amazon Amazon Simple Notification Service topic to which Amazon Rekognition posts the completion status.
+
+### `settings`
+
+* `connected_home` - Label detection settings to use on a streaming video. See [`connected_home`](#connected_home) definition.
+* `face_search` - Input face recognition parameters for an Amazon Rekognition stream processor. See [`face_search`](#face_search) definition.
+
+#### `connected_home`
+
+* `labels` - Specifies what you want to detect in the video, such as people, packages, or pets. The current valid labels you can include in this list are: "PERSON", "PET", "PACKAGE", and "ALL".
+* `min_confidence` - The minimum confidence required to label an object in the video.
+
+#### `face_search`
+
+* `collection_id` - The ID of a collection that contains faces that you want to search for.
+* `face_match_threshold` - Minimum face match confidence score that must be met to return a result for a recognized face
 
 ## Attribute Reference
 
