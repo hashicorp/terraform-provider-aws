@@ -55,6 +55,7 @@ const (
 type resourceStreamProcessor struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
+	framework.WithImportByID
 }
 
 func (r *resourceStreamProcessor) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -73,7 +74,7 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			"kms_key_id": schema.StringAttribute{
+			names.AttrKMSKeyID: schema.StringAttribute{
 				Description: "The identifier for your AWS Key Management Service key (AWS KMS key). You can supply the Amazon Resource Name (ARN) of your KMS key, the ID of your KMS key, an alias for your KMS key, or an alias ARN.",
 				Optional:    true,
 				Validators: []validator.String{
@@ -135,7 +136,7 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 						CustomType:  fwtypes.NewObjectTypeOf[kinesisVideoStreamInputModel](ctx),
 						Description: "Kinesis video stream stream that provides the source streaming video for a Amazon Rekognition Video stream processor.",
 						Attributes: map[string]schema.Attribute{
-							"arn": schema.StringAttribute{
+							names.AttrARN: schema.StringAttribute{
 								CustomType:  fwtypes.ARNType,
 								Description: "ARN of the Kinesis video stream stream that streams the source video.",
 								Required:    true,
@@ -275,7 +276,7 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 							objectvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("s3_destination")),
 						},
 						Attributes: map[string]schema.Attribute{
-							"arn": schema.StringAttribute{
+							names.AttrARN: schema.StringAttribute{
 								CustomType:  fwtypes.ARNType,
 								Description: "ARN of the output Amazon Kinesis Data Streams stream.",
 								Optional:    true,
@@ -676,7 +677,7 @@ func (r *resourceStreamProcessor) Delete(ctx context.Context, req resource.Delet
 }
 
 func (r *resourceStreamProcessor) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), req, resp)
 }
 
 func (r *resourceStreamProcessor) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {

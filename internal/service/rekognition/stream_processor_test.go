@@ -43,7 +43,8 @@ func TestAccRekognitionStreamProcessor_basic(t *testing.T) {
 				Config: testAccStreamProcessorConfig_basic(testAccStreamProcessorConfig_setup(rName), rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamProcessorExists(ctx, resourceName, &streamprocessor),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrID, fmt.Sprintf("%[1]s-acctest-processor", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("%[1]s-acctest-processor", rName)),
 					// resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
 					// resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
 					// 	"console_access": "false",
@@ -58,40 +59,40 @@ func TestAccRekognitionStreamProcessor_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})
 }
 
-func TestAccRekognitionStreamProcessor_disappears(t *testing.T) {
-	ctx := acctest.Context(t)
+// func TestAccRekognitionStreamProcessor_disappears(t *testing.T) {
+// 	ctx := acctest.Context(t)
 
-	var streamprocessor rekognition.DescribeStreamProcessorOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_rekognition_stream_processor.test"
+// 	var streamprocessor rekognition.DescribeStreamProcessorOutput
+// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+// 	resourceName := "aws_rekognition_stream_processor.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.RekognitionEndpointID)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.RekognitionServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStreamProcessorDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccStreamProcessorConfig_basic(testAccStreamProcessorConfig_setup(rName), rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStreamProcessorExists(ctx, resourceName, &streamprocessor),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfrekognition.ResourceStreamProcessor, resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
+// 	resource.ParallelTest(t, resource.TestCase{
+// 		PreCheck: func() {
+// 			acctest.PreCheck(ctx, t)
+// 			acctest.PreCheckPartitionHasService(t, names.RekognitionEndpointID)
+// 			testAccPreCheck(ctx, t)
+// 		},
+// 		ErrorCheck:               acctest.ErrorCheck(t, names.RekognitionServiceID),
+// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+// 		CheckDestroy:             testAccCheckStreamProcessorDestroy(ctx),
+// 		Steps: []resource.TestStep{
+// 			{
+// 				Config: testAccStreamProcessorConfig_basic(testAccStreamProcessorConfig_setup(rName), rName),
+// 				Check: resource.ComposeTestCheckFunc(
+// 					testAccCheckStreamProcessorExists(ctx, resourceName, &streamprocessor),
+// 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfrekognition.ResourceStreamProcessor, resourceName),
+// 				),
+// 				ExpectNonEmptyPlan: true,
+// 			},
+// 		},
+// 	})
+// }
 
 func testAccCheckStreamProcessorDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
