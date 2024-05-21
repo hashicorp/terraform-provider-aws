@@ -219,7 +219,7 @@ func TestAccLightsailInstance_keyOnlyTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct4),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "tf-test"),
 					resource.TestCheckResourceAttr(resourceName, "tags.ExtraName", "tf-test"),
-					resource.TestCheckResourceAttr(resourceName, "tags.EmptyTag1", "NoLongerEmpty"),
+					resource.TestCheckResourceAttr(resourceName, "tags.EmptyTag1", "NotEmptyAnymore"),
 					resource.TestCheckResourceAttr(resourceName, "tags.EmptyTag2", ""),
 				),
 			},
