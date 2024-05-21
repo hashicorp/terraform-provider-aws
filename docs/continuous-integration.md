@@ -300,7 +300,7 @@ Similarly, use the `build` target to install the provider binary locally using `
 
 #### go_generate
 
-`go_generate` checks to make sure nothing changes after you run the code generators. In other words, what the generators generate should be in sync with the committed code to avoid `make` telling you "bye, bye, bye."
+`go_generate` checks to make sure nothing changes after you run the code generators. In other words, generated code and commited code should be in sync or we'll say, "bye bye bye."
 
 Use the `gencheck` target to run the check:
 
@@ -366,12 +366,44 @@ Use the `provcheckmarkdownlint` target to run this test:
 
 #### terraform providers schema
 
-This process generates the Terraform AWS Provider schema for use by the `tfproviderdocs` check.
+This process generates the Terraform AWS Provider schema for use by the `tfproviderdocs` check. In the `make` file, this is done as part of the `tfproviderdocs` target test.
 
 #### tfproviderdocs
 
-Coming soon
+**NOTE:** To run this test, you need to have Terraform installed locally. On MacOS, you can use Homebrew to install Terraform:
+
+```console
+% brew install terraform
+```
+
+This test builds the provider binary, loads the provider with Terraform, generates the provider schema, and then uses the tfproviderdocs tool to ensure the provider (via the schema) and documentation are consistent with each other.
+
+Use the `tfproviderdocs` target to run this test:
+
+```console
+% make tfproviderdocs
+```
 
 #### Sweeper Functions Not Linked
 
-Coming soon
+This check builds the Terraform AWS Provider in two different configurations, with sweepers and without, to make sure sweepers are properly included or excluded from the builds. The normal build you would receive from the Terraform Registry does not include sweepers and this ensures they aren't accidentally included.
+
+Use the `sweeper-check` target to run both tests:
+
+```console
+% make sweeper-check
+```
+
+You can also run the checks separately.
+
+Use the `sweeper-linked` target to ensure sweeper are included in a sweeper build:
+
+```console
+% make sweeper-linked
+```
+
+Use the `sweeper-unlinked` target to ensure sweeper are not included in a normal build:
+
+```console
+% make sweeper-unlinked
+```
