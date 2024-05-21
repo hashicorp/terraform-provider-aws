@@ -166,7 +166,7 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 						CustomType:  fwtypes.ARNType,
 						Required:    true,
 						Validators: []validator.String{
-							stringvalidator.RegexMatches(snsArnRegex, "must conform to: (^arn:aws:sns:.*:\\w{12}:.+$)"),
+							stringvalidator.RegexMatches(snsArnRegex, "must conform to: (^arn:aws:sns:.*:\\w{12}:.+$)"), // lintignore:AWSAT005
 						},
 						PlanModifiers: []planmodifier.String{
 							stringplanmodifier.RequiresReplace(),
