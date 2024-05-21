@@ -57,7 +57,7 @@ func TestAccRekognitionStreamProcessor_connectedHome(t *testing.T) {
 	})
 }
 
-func TestAccRekognitionStreamProcessor_connectedHome_poylgon(t *testing.T) {
+func TestAccRekognitionStreamProcessor_connectedHome_polygon(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var streamprocessor rekognition.DescribeStreamProcessorOutput

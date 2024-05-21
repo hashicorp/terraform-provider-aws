@@ -67,10 +67,10 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 	kmsKeyIdRegex := regexache.MustCompile(`^[A-Za-z0-9][A-Za-z0-9:_/+=,@.-]$`)
 	nameRegex := regexache.MustCompile(`[a-zA-Z0-9_.\-]+`)
 	collectionIdRegex := regexache.MustCompile(`[a-zA-Z0-9_.\-]+`)
-	kinesisStreamArnRegex := regexache.MustCompile(`(^arn:([a-z\d-]+):kinesisvideo:([a-z\d-]+):\d{12}:.+$)`)
 	s3bucketRegex := regexache.MustCompile(`[0-9A-Za-z\.\-_]*`)
-	snsArnRegex := regexache.MustCompile(`(^arn:aws:sns:.*:\w{12}:.+$)`)
-	roleArnRegex := regexache.MustCompile(`arn:aws:iam::\d{12}:role/?[a-zA-Z_0-9+=,.@\-_/]+`)
+	kinesisStreamArnRegex := regexache.MustCompile(`(^arn:([a-z\d-]+):kinesisvideo:([a-z\d-]+):\d{12}:.+$)`) // lintignore:AWSAT005
+	snsArnRegex := regexache.MustCompile(`(^arn:aws:sns:.*:\w{12}:.+$)`)                                     // lintignore:AWSAT005
+	roleArnRegex := regexache.MustCompile(`arn:aws:iam::\d{12}:role/?[a-zA-Z_0-9+=,.@\-_/]+`)                // lintignore:AWSAT005
 
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -103,7 +103,7 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 				// CustomType:  fwtypes.ARNType,
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(roleArnRegex, "must conform to: arn:aws:iam::\\d{12}:role/?[a-zA-Z_0-9+=,.@\\-_/]+"),
+					stringvalidator.RegexMatches(roleArnRegex, "must conform to: arn:aws:iam::\\d{12}:role/?[a-zA-Z_0-9+=,.@\\-_/]+"), // lintignore:AWSAT005
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -143,7 +143,7 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 								Required:    true,
 								Validators: []validator.String{
 									stringvalidator.All(
-										stringvalidator.RegexMatches(kinesisStreamArnRegex, "must conform to: (^arn:([a-z\\d-]+):kinesisvideo:([a-z\\d-]+):\\d{12}:.+$)"),
+										stringvalidator.RegexMatches(kinesisStreamArnRegex, "must conform to: (^arn:([a-z\\d-]+):kinesisvideo:([a-z\\d-]+):\\d{12}:.+$)"), // lintignore:AWSAT005
 									),
 								},
 								PlanModifiers: []planmodifier.String{
@@ -353,7 +353,7 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 							"min_confidence": schema.Float64Attribute{
 								Description: "The minimum confidence required to label an object in the video.",
 								Validators: []validator.Float64{
-									float64validator.Between(0.0, 100.0),
+									float64validator.Between(0.0, 100.0), //nolint:mnd
 								},
 								Computed: true,
 								Optional: true,
@@ -381,7 +381,7 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 							"face_match_threshold": schema.Float64Attribute{
 								Description: "Minimum face match confidence score that must be met to return a result for a recognized face.",
 								Validators: []validator.Float64{
-									float64validator.Between(0.0, 100.0),
+									float64validator.Between(0.0, 100.0), //nolint:mnd
 								},
 								Optional: true,
 								PlanModifiers: []planmodifier.Float64{
@@ -504,7 +504,7 @@ func (r *resourceStreamProcessor) Update(ctx context.Context, req resource.Updat
 		}
 
 		if !plan.DataSharingPreference.Equal(state.DataSharingPreference) {
-			dspPlan, dspState := unwrapObjectValueOf(plan.DataSharingPreference, state.DataSharingPreference, resp.Diagnostics, ctx)
+			dspPlan, dspState := unwrapObjectValueOf(ctx, resp.Diagnostics, plan.DataSharingPreference, state.DataSharingPreference)
 			if resp.Diagnostics.HasError() {
 				return
 			}
@@ -521,12 +521,12 @@ func (r *resourceStreamProcessor) Update(ctx context.Context, req resource.Updat
 				ConnectedHomeForUpdate: &awstypes.ConnectedHomeSettingsForUpdate{},
 			}
 
-			settingsPlan, settingsState := unwrapObjectValueOf(plan.Settings, state.Settings, resp.Diagnostics, ctx)
+			settingsPlan, settingsState := unwrapObjectValueOf(ctx, resp.Diagnostics, plan.Settings, state.Settings)
 			if resp.Diagnostics.HasError() {
 				return
 			}
 
-			connectedHomePlan, connectedHomeState := unwrapObjectValueOf(settingsPlan.ConnectedHome, settingsState.ConnectedHome, resp.Diagnostics, ctx)
+			connectedHomePlan, connectedHomeState := unwrapObjectValueOf(ctx, resp.Diagnostics, settingsPlan.ConnectedHome, settingsState.ConnectedHome)
 			if resp.Diagnostics.HasError() {
 				return
 			}
@@ -553,7 +553,7 @@ func (r *resourceStreamProcessor) Update(ctx context.Context, req resource.Updat
 		if !plan.RegionsOfInterest.Equal(state.RegionsOfInterest) {
 			var regions []awstypes.RegionOfInterest
 
-			planRegions, _ := unwrapListObjectValueOf(plan.RegionsOfInterest, state.RegionsOfInterest, resp.Diagnostics, ctx)
+			planRegions, _ := unwrapListObjectValueOf(ctx, resp.Diagnostics, plan.RegionsOfInterest, state.RegionsOfInterest)
 
 			for i := 0; i < len(planRegions); i++ {
 				planRegion := planRegions[i]
@@ -785,7 +785,7 @@ func findStreamProcessorByID(ctx context.Context, conn *rekognition.Client, name
 	return out, nil
 }
 
-func unwrapObjectValueOf[T any](plan fwtypes.ObjectValueOf[T], state fwtypes.ObjectValueOf[T], diagnostics diag.Diagnostics, ctx context.Context) (*T, *T) {
+func unwrapObjectValueOf[T any](ctx context.Context, diagnostics diag.Diagnostics, plan fwtypes.ObjectValueOf[T], state fwtypes.ObjectValueOf[T]) (*T, *T) {
 	ptrPlan, diags := plan.ToPtr(ctx)
 	diagnostics.Append(diags...)
 
@@ -795,7 +795,7 @@ func unwrapObjectValueOf[T any](plan fwtypes.ObjectValueOf[T], state fwtypes.Obj
 	return ptrPlan, ptrState
 }
 
-func unwrapListObjectValueOf[T any](plan fwtypes.ListNestedObjectValueOf[T], state fwtypes.ListNestedObjectValueOf[T], diagnostics diag.Diagnostics, ctx context.Context) ([]*T, []*T) {
+func unwrapListObjectValueOf[T any](ctx context.Context, diagnostics diag.Diagnostics, plan fwtypes.ListNestedObjectValueOf[T], state fwtypes.ListNestedObjectValueOf[T]) ([]*T, []*T) {
 	ptrPlan, diags := plan.ToSlice(ctx)
 	diagnostics.Append(diags...)
 
