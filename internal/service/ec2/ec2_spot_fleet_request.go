@@ -2036,7 +2036,7 @@ func rootBlockDeviceToSet(bdm []awstypes.BlockDeviceMapping, rootDevName *string
 				}
 
 				if val.Ebs.VolumeType != "" {
-					m[names.AttrVolumeType] = awstypes.VolumeType(val.Ebs.VolumeType)
+					m[names.AttrVolumeType] = val.Ebs.VolumeType
 				}
 
 				if val.Ebs.Iops != nil {
@@ -2157,7 +2157,7 @@ func flattenLaunchTemplateOverrides(apiObject awstypes.LaunchTemplateOverrides) 
 	}
 
 	if v := apiObject.InstanceType; v != "" {
-		tfMap[names.AttrInstanceType] = awstypes.InstanceType(v)
+		tfMap[names.AttrInstanceType] = v
 	}
 
 	if v := apiObject.Priority; v != nil {

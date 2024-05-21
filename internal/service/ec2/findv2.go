@@ -854,37 +854,6 @@ func findSpotPriceHistory(ctx context.Context, conn *ec2.Client, input *ec2.Desc
 	return output, nil
 }
 
-func findSubnetByIDV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Subnet, error) {
-	input := &ec2.DescribeSubnetsInput{
-		SubnetIds: []string{id},
-	}
-
-	output, err := findSubnetV2(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	// Eventual consistency check.
-	if aws.ToString(output.SubnetId) != id {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
-	}
-
-	return output, nil
-}
-
-func findSubnetV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSubnetsInput) (*awstypes.Subnet, error) {
-	output, err := findSubnetsV2(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSingleValueResult(output)
-}
-
 func findSubnetsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeSubnetsInput) ([]awstypes.Subnet, error) {
 	var output []awstypes.Subnet
 

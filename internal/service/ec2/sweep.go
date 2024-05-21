@@ -732,7 +732,6 @@ func sweepEBSVolumes(region string) error {
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -2756,7 +2755,6 @@ func sweepAMIs(region string) error {
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
