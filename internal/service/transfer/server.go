@@ -13,7 +13,6 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/transfer"
-	"github.com/aws/aws-sdk-go-v2/service/transfer/types"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -407,7 +406,7 @@ func resourceServerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("protocols"); ok && v.(*schema.Set).Len() > 0 {
-		input.Protocols = flex.ExpandStringyValueSet[types.Protocol](d.Get("protocols").(*schema.Set))
+		input.Protocols = flex.ExpandStringyValueSet[awstypes.Protocol](d.Get("protocols").(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("s3_storage_options"); ok && len(v.([]interface{})) > 0 {
@@ -723,7 +722,7 @@ func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		if d.HasChange("protocols") {
-			input.Protocols = flex.ExpandStringyValueSet[types.Protocol](d.Get("protocols").(*schema.Set))
+			input.Protocols = flex.ExpandStringyValueSet[awstypes.Protocol](d.Get("protocols").(*schema.Set))
 		}
 
 		if d.HasChange("s3_storage_options") {
@@ -944,7 +943,7 @@ func expandProtocolDetails(m []interface{}) *awstypes.ProtocolDetails {
 	apiObject := &awstypes.ProtocolDetails{}
 
 	if v, ok := tfMap["as2_transports"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.As2Transports = flex.ExpandStringyValueSet[types.As2Transport](v)
+		apiObject.As2Transports = flex.ExpandStringyValueSet[awstypes.As2Transport](v)
 	}
 
 	if v, ok := tfMap["passive_ip"].(string); ok && len(v) > 0 {
