@@ -23,7 +23,7 @@
 {{ define "TestCaseSetupNoProviders" -}}
 	PreCheck:     func() { acctest.PreCheck(ctx, t){{ if .PreCheck }}; testAccPreCheck(ctx, t){{ end }} },
 	ErrorCheck:   acctest.ErrorCheck(t, names.{{ .PackageProviderNameUpper }}ServiceID),
-	CheckDestroy: testAccCheck{{ .Name }}Destroy(ctx{{ if .DestroyTakesT }}, t{{ end }}),
+	CheckDestroy: {{ if .CheckDestroyNoop }}acctest.CheckDestroyNoop{{ else }}testAccCheck{{ .Name }}Destroy(ctx{{ if .DestroyTakesT }}, t{{ end }}){{ end }},
 {{- end }}
 
 {{ define "TagsKnownValueForNull" -}}

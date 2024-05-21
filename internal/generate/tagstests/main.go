@@ -248,6 +248,7 @@ type ResourceDatum struct {
 	additionalTfVars          map[string]string
 	AlternateRegionProvider   bool
 	TagsUpdateForceNew        bool
+	CheckDestroyNoop          bool
 }
 
 func (d ResourceDatum) AdditionalTfVars() map[string]string {
@@ -406,6 +407,19 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						continue
 					} else {
 						d.DestroyTakesT = b
+					}
+				}
+				if attr, ok := args.Keyword["checkDestroyNoop"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid checkDestroyNoop value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						d.CheckDestroyNoop = b
+						d.GoImports = append(d.GoImports,
+							goImport{
+								Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
+							},
+						)
 					}
 				}
 				if attr, ok := args.Keyword["existsType"]; ok {
