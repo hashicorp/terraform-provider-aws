@@ -501,7 +501,7 @@ func resourceServerRead(ctx context.Context, d *schema.ResourceData, meta interf
 		// Security Group IDs are not returned for VPC endpoints.
 		if output.EndpointType == awstypes.EndpointTypeVpc && len(output.EndpointDetails.SecurityGroupIds) == 0 {
 			vpcEndpointID := aws.ToString(output.EndpointDetails.VpcEndpointId)
-			output, err := tfec2.FindVPCEndpointByID(ctx, meta.(*conns.AWSClient).EC2Conn(ctx), vpcEndpointID)
+			output, err := tfec2.FindVPCEndpointByIDV2(ctx, meta.(*conns.AWSClient).EC2Client(ctx), vpcEndpointID)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "reading Transfer Server (%s) VPC Endpoint (%s): %s", d.Id(), vpcEndpointID, err)

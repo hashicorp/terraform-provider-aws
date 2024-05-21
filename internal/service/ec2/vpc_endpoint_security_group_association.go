@@ -57,7 +57,7 @@ func resourceVPCEndpointSecurityGroupAssociationCreate(ctx context.Context, d *s
 
 	defaultSecurityGroupID := ""
 	if replaceDefaultAssociation {
-		vpcEndpoint, err := findVPCEndpointByIDV2(ctx, conn, vpcEndpointID)
+		vpcEndpoint, err := FindVPCEndpointByIDV2(ctx, conn, vpcEndpointID)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading VPC Endpoint (%s): %s", vpcEndpointID, err)
@@ -142,7 +142,7 @@ func resourceVPCEndpointSecurityGroupAssociationDelete(ctx context.Context, d *s
 	replaceDefaultAssociation := d.Get("replace_default_association").(bool)
 
 	if replaceDefaultAssociation {
-		vpcEndpoint, err := findVPCEndpointByIDV2(ctx, conn, vpcEndpointID)
+		vpcEndpoint, err := FindVPCEndpointByIDV2(ctx, conn, vpcEndpointID)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading VPC Endpoint (%s): %s", vpcEndpointID, err)

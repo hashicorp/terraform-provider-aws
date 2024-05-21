@@ -95,7 +95,7 @@ func statusNetworkInterfaceAttachmentV2(ctx context.Context, conn *ec2.Client, i
 
 func statusVPCEndpointStateV2(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findVPCEndpointByIDV2(ctx, conn, id)
+		output, err := FindVPCEndpointByIDV2(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

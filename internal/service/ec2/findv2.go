@@ -496,7 +496,7 @@ func findPrefixListsV2(ctx context.Context, conn *ec2.Client, input *ec2.Describ
 	return output, nil
 }
 
-func findVPCEndpointByIDV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VpcEndpoint, error) {
+func FindVPCEndpointByIDV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VpcEndpoint, error) {
 	input := &ec2.DescribeVpcEndpointsInput{
 		VpcEndpointIds: []string{id},
 	}
@@ -844,7 +844,7 @@ func findVPCEndpointServicesV2(ctx context.Context, conn *ec2.Client, input *ec2
 
 // findVPCEndpointRouteTableAssociationExistsV2 returns NotFoundError if no association for the specified VPC endpoint and route table IDs is found.
 func findVPCEndpointRouteTableAssociationExistsV2(ctx context.Context, conn *ec2.Client, vpcEndpointID string, routeTableID string) error {
-	vpcEndpoint, err := findVPCEndpointByIDV2(ctx, conn, vpcEndpointID)
+	vpcEndpoint, err := FindVPCEndpointByIDV2(ctx, conn, vpcEndpointID)
 
 	if err != nil {
 		return err
@@ -863,7 +863,7 @@ func findVPCEndpointRouteTableAssociationExistsV2(ctx context.Context, conn *ec2
 
 // findVPCEndpointSecurityGroupAssociationExistsV2 returns NotFoundError if no association for the specified VPC endpoint and security group IDs is found.
 func findVPCEndpointSecurityGroupAssociationExistsV2(ctx context.Context, conn *ec2.Client, vpcEndpointID, securityGroupID string) error {
-	vpcEndpoint, err := findVPCEndpointByIDV2(ctx, conn, vpcEndpointID)
+	vpcEndpoint, err := FindVPCEndpointByIDV2(ctx, conn, vpcEndpointID)
 
 	if err != nil {
 		return err
@@ -882,7 +882,7 @@ func findVPCEndpointSecurityGroupAssociationExistsV2(ctx context.Context, conn *
 
 // findVPCEndpointSubnetAssociationExistsV2 returns NotFoundError if no association for the specified VPC endpoint and subnet IDs is found.
 func findVPCEndpointSubnetAssociationExistsV2(ctx context.Context, conn *ec2.Client, vpcEndpointID string, subnetID string) error {
-	vpcEndpoint, err := findVPCEndpointByIDV2(ctx, conn, vpcEndpointID)
+	vpcEndpoint, err := FindVPCEndpointByIDV2(ctx, conn, vpcEndpointID)
 
 	if err != nil {
 		return err
