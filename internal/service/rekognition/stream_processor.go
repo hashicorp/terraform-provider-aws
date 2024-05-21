@@ -232,12 +232,14 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 							Validators: []validator.List{
 								listvalidator.SizeBetween(3, 10),
 								listvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("bounding_box")),
-								listvalidator.AlsoRequires(
-									path.MatchRelative().AtName("x"),
-									path.MatchRelative().AtName("y"),
-								),
 							},
 							NestedObject: schema.NestedBlockObject{
+								CustomType: fwtypes.NewObjectTypeOf[polygonModel](ctx),
+								Validators: []validator.Object{
+									objectvalidator.AlsoRequires(
+										path.MatchRelative().AtName("x"),
+										path.MatchRelative().AtName("y"),
+									)},
 								Attributes: map[string]schema.Attribute{
 									"x": schema.Float64Attribute{
 										Description: "The value of the X coordinate for a point on a Polygon.",
@@ -677,7 +679,7 @@ func (r *resourceStreamProcessor) Delete(ctx context.Context, req resource.Delet
 }
 
 func (r *resourceStreamProcessor) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *resourceStreamProcessor) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {

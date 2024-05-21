@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccRekognitionStreamProcessor_basic(t *testing.T) {
+func TestAccRekognitionStreamProcessor_connectedHome(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var streamprocessor rekognition.DescribeStreamProcessorOutput
@@ -40,59 +40,80 @@ func TestAccRekognitionStreamProcessor_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckStreamProcessorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStreamProcessorConfig_basic(testAccStreamProcessorConfig_setup(rName), rName),
+				Config: testAccStreamProcessorConfig_connectedHome(testAccStreamProcessorConfig_connectedHome_setup(rName), rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamProcessorExists(ctx, resourceName, &streamprocessor),
 					resource.TestCheckResourceAttr(resourceName, names.AttrID, fmt.Sprintf("%[1]s-acctest-processor", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("%[1]s-acctest-processor", rName)),
-					// resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
-					// resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
-					// 	"console_access": "false",
-					// 	"groups.#":       "0",
-					// 	"username":       "Test",
-					// 	"password":       "TestTest1234",
-					// }),
-					// acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rekognition", regexache.MustCompile(`streamprocessor:+.`)),
 				),
 			},
+			// {
+			// 	ResourceName:            resourceName,
+			// 	ImportState:             true,
+			// 	ImportStateVerify:       true,
+			// 	ImportStateVerifyIgnore: []string{},
+			// },
+		},
+	})
+}
+
+func TestAccRekognitionStreamProcessor_connectedHome_poylgon(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var streamprocessor rekognition.DescribeStreamProcessorOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rekognition_stream_processor.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.RekognitionEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.RekognitionServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStreamProcessorDestroy(ctx),
+		Steps: []resource.TestStep{
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{},
+				Config: testAccStreamProcessorConfig_connectedHome_polygons(testAccStreamProcessorConfig_connectedHome_setup(rName), rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStreamProcessorExists(ctx, resourceName, &streamprocessor),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "regions_of_interest.0.polygon.#", "3"),
+				),
 			},
 		},
 	})
 }
 
-// func TestAccRekognitionStreamProcessor_disappears(t *testing.T) {
-// 	ctx := acctest.Context(t)
+func TestAccRekognitionStreamProcessor_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 
-// 	var streamprocessor rekognition.DescribeStreamProcessorOutput
-// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// 	resourceName := "aws_rekognition_stream_processor.test"
+	var streamprocessor rekognition.DescribeStreamProcessorOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rekognition_stream_processor.test"
 
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck: func() {
-// 			acctest.PreCheck(ctx, t)
-// 			acctest.PreCheckPartitionHasService(t, names.RekognitionEndpointID)
-// 			testAccPreCheck(ctx, t)
-// 		},
-// 		ErrorCheck:               acctest.ErrorCheck(t, names.RekognitionServiceID),
-// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// 		CheckDestroy:             testAccCheckStreamProcessorDestroy(ctx),
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccStreamProcessorConfig_basic(testAccStreamProcessorConfig_setup(rName), rName),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					testAccCheckStreamProcessorExists(ctx, resourceName, &streamprocessor),
-// 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfrekognition.ResourceStreamProcessor, resourceName),
-// 				),
-// 				ExpectNonEmptyPlan: true,
-// 			},
-// 		},
-// 	})
-// }
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.RekognitionEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.RekognitionServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStreamProcessorDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStreamProcessorConfig_connectedHome(testAccStreamProcessorConfig_connectedHome_setup(rName), rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStreamProcessorExists(ctx, resourceName, &streamprocessor),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfrekognition.ResourceStreamProcessor, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
 
 func testAccCheckStreamProcessorDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -169,7 +190,7 @@ func testAccCheckStreamProcessorNotRecreated(before, after *rekognition.Describe
 	}
 }
 
-func testAccStreamProcessorConfig_setup(rName string) string {
+func testAccStreamProcessorConfig_connectedHome_setup(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = "%[1]s-acctest-role"
@@ -206,7 +227,7 @@ resource "aws_kinesis_video_stream" "test" {
 	`, rName)
 }
 
-func testAccStreamProcessorConfig_basic(setup, rName string) string {
+func testAccStreamProcessorConfig_connectedHome(setup, rName string) string {
 	return fmt.Sprintf(`
 %[1]s
 
@@ -221,6 +242,58 @@ resource "aws_rekognition_stream_processor" "test" {
   output {
     s3_destination {
       bucket = aws_s3_bucket.test.bucket
+    }
+  }
+
+  settings {
+    connected_home {
+      labels = ["PERSON", "ALL"]
+    }
+  }
+
+  input {
+    kinesis_video_stream {
+      arn = aws_kinesis_video_stream.test.arn
+    }
+  }
+
+  notification_channel {
+    sns_topic_arn = aws_sns_topic.test.arn
+  }
+}
+`, setup, rName)
+}
+
+func testAccStreamProcessorConfig_connectedHome_polygons(setup, rName string) string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "aws_rekognition_stream_processor" "test" {
+  role_arn = aws_iam_role.test.arn
+  name     = "%[2]s-acctest-processor"
+
+  data_sharing_preference {
+    opt_in = true
+  }
+
+  output {
+    s3_destination {
+      bucket = aws_s3_bucket.test.bucket
+    }
+  }
+
+  regions_of_interest {
+    polygon {
+      x = 0.5
+      y = 0.5
+    }
+    polygon {
+      x = 0.5
+      y = 0.5
+    }
+    polygon {
+      x = 0.5
+      y = 0.5
     }
   }
 
