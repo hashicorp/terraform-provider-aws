@@ -200,8 +200,8 @@ func testAccIngestionConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_appfabric_ingestion" "test" {
 	app = "OKTA"
-	app_bundle_identifier = "arn:aws:appfabric:us-east-1:637423205184:appbundle/a9b91477-8831-43c0-970c-95bdc3b06633"
-	tenant_id = "dev-22002358.okta.com"
+	app_bundle_identifier = "app-bundle-arn"
+	tenant_id = "test-tenant-id"
 	ingestion_type = "auditLog"
 	tags = {
 		Name = "AppFabricTesting"
