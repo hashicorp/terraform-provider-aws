@@ -11,15 +11,14 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rekognition"
-	"github.com/aws/aws-sdk-go-v2/service/rekognition/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfrekognition "github.com/hashicorp/terraform-provider-aws/internal/service/rekognition"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -44,7 +43,7 @@ func TestAccRekognitionStreamProcessor_basic(t *testing.T) {
 				Config: testAccStreamProcessorConfig_basic(testAccStreamProcessorConfig_setup(rName), rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamProcessorExists(ctx, resourceName, &streamprocessor),
-					// resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
+					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
 					// resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
 					// resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
 					// 	"console_access": "false",
@@ -65,43 +64,34 @@ func TestAccRekognitionStreamProcessor_basic(t *testing.T) {
 	})
 }
 
-// func TestAccRekognitionStreamProcessor_disappears(t *testing.T) {
-// 	ctx := acctest.Context(t)
-// 	if testing.Short() {
-// 		t.Skip("skipping long-running test in short mode")
-// 	}
+func TestAccRekognitionStreamProcessor_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 
-// 	var streamprocessor rekognition.DescribeStreamProcessorResponse
-// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// 	resourceName := "aws_rekognition_stream_processor.test"
+	var streamprocessor rekognition.DescribeStreamProcessorOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rekognition_stream_processor.test"
 
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck: func() {
-// 			acctest.PreCheck(ctx, t)
-// 			acctest.PreCheckPartitionHasService(t, names.RekognitionEndpointID)
-// 			testAccPreCheck(t)
-// 		},
-// 		ErrorCheck:               acctest.ErrorCheck(t, names.RekognitionServiceID),
-// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// 		CheckDestroy:             testAccCheckStreamProcessorDestroy(ctx),
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccStreamProcessorConfig_basic(rName, testAccStreamProcessorVersionNewer),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					testAccCheckStreamProcessorExists(ctx, resourceName, &streamprocessor),
-// 					// TIP: The Plugin-Framework disappears helper is similar to the Plugin-SDK version,
-// 					// but expects a new resource factory function as the third argument. To expose this
-// 					// private function to the testing package, you may need to add a line like the following
-// 					// to exports_test.go:
-// 					//
-// 					//   var ResourceStreamProcessor = newResourceStreamProcessor
-// 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfrekognition.ResourceStreamProcessor, resourceName),
-// 				),
-// 				ExpectNonEmptyPlan: true,
-// 			},
-// 		},
-// 	})
-// }
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.RekognitionEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.RekognitionServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStreamProcessorDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStreamProcessorConfig_basic(testAccStreamProcessorConfig_setup(rName), rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStreamProcessorExists(ctx, resourceName, &streamprocessor),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfrekognition.ResourceStreamProcessor, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
 
 func testAccCheckStreamProcessorDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -112,12 +102,11 @@ func testAccCheckStreamProcessorDestroy(ctx context.Context) resource.TestCheckF
 				continue
 			}
 
-			_, err := conn.DescribeStreamProcessor(ctx, &rekognition.DescribeStreamProcessorInput{
-				Name: aws.String(rs.Primary.ID),
-			})
-			if errs.IsA[*types.ResourceNotFoundException](err) {
-				return nil
+			_, err := tfrekognition.FindCollectionByID(ctx, conn, rs.Primary.ID)
+			if tfresource.NotFound(err) {
+				continue
 			}
+
 			if err != nil {
 				return create.Error(names.Rekognition, create.ErrActionCheckingDestroyed, tfrekognition.ResNameStreamProcessor, rs.Primary.ID, err)
 			}
@@ -182,7 +171,7 @@ func testAccCheckStreamProcessorNotRecreated(before, after *rekognition.Describe
 func testAccStreamProcessorConfig_setup(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  name = "%[1]q-acctest-role"
+  name = "%[1]s-acctest-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -200,15 +189,15 @@ resource "aws_iam_role" "test" {
 }
 
 resource "aws_s3_bucket" "test" {
-  bucket = "%[1]q-acctest-bucket"
+  bucket = "%[1]s-acctest-bucket"
 }
 
 resource "aws_sns_topic" "test" {
-  name = "%[1]q-acctest-topic"
+  name = "%[1]s-acctest-topic"
 }
 
 resource "aws_kinesis_video_stream" "test" {
-  name                    = "%[1]q-acctest-kinesis-input"
+  name                    = "%[1]s-acctest-kinesis-input"
   data_retention_in_hours = 1
   device_name             = "kinesis-video-device-name"
   media_type              = "video/h264"
@@ -218,11 +207,11 @@ resource "aws_kinesis_video_stream" "test" {
 
 func testAccStreamProcessorConfig_basic(setup, rName string) string {
 	return fmt.Sprintf(`
-%[1]q
+%[1]s
 
 resource "aws_rekognition_stream_processor" "test" {
   role_arn = aws_iam_role.test.arn
-  name     = "%[1]q-acctest-processor"
+  name     = "%[2]s-acctest-processor"
 
   data_sharing_preference {
     opt_in = true
