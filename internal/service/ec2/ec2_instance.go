@@ -1241,12 +1241,12 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	var secondaryPrivateIPs []string
 	var ipv6Addresses []string
 	if len(instance.NetworkInterfaces) > 0 {
-		var primaryNetworkInterface *awstypes.InstanceNetworkInterface
+		var primaryNetworkInterface awstypes.InstanceNetworkInterface
 		var networkInterfaces []map[string]interface{}
 		for _, iNi := range instance.NetworkInterfaces {
 			ni := make(map[string]interface{})
 			if aws.ToInt32(iNi.Attachment.DeviceIndex) == 0 {
-				primaryNetworkInterface = &iNi
+				primaryNetworkInterface = iNi
 			}
 			// If the attached network device is inside our configuration, refresh state with values found.
 			// Otherwise, assume the network device was attached via an outside resource.
@@ -1271,7 +1271,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		// Set primary network interface details
 		// If an instance is shutting down, network interfaces are detached, and attributes may be nil,
 		// need to protect against nil pointer dereferences
-		if primaryNetworkInterface != nil {
+		if primaryNetworkInterface.NetworkInterfaceId != nil {
 			if primaryNetworkInterface.SubnetId != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
 				d.Set(names.AttrSubnetID, primaryNetworkInterface.SubnetId)
 			}
@@ -1632,14 +1632,14 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", d.Id(), err)
 		}
 
-		var primaryInterface *awstypes.InstanceNetworkInterface
+		var primaryInterface awstypes.InstanceNetworkInterface
 		for _, ni := range instance.NetworkInterfaces {
 			if aws.ToInt32(ni.Attachment.DeviceIndex) == 0 {
-				primaryInterface = &ni
+				primaryInterface = ni
 			}
 		}
 
-		if primaryInterface == nil {
+		if primaryInterface.NetworkInterfaceId == nil {
 			return sdkdiag.AppendErrorf(diags, "Failed to update ipv6_address_count on %q, which does not contain a primary network interface", d.Id())
 		}
 
@@ -1689,15 +1689,15 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", d.Id(), err)
 		}
 
-		var primaryInterface *awstypes.InstanceNetworkInterface
+		var primaryInterface awstypes.InstanceNetworkInterface
 		for _, ni := range instance.NetworkInterfaces {
 			if aws.ToInt32(ni.Attachment.DeviceIndex) == 0 {
-				primaryInterface = &ni
+				primaryInterface = ni
 			}
 		}
 
 		if d.HasChange("secondary_private_ips") {
-			if primaryInterface == nil || primaryInterface.NetworkInterfaceId == nil {
+			if primaryInterface.NetworkInterfaceId == nil {
 				return sdkdiag.AppendErrorf(diags, "Failed to update secondary_private_ips on %q, which does not contain a primary network interface",
 					d.Id())
 			}
