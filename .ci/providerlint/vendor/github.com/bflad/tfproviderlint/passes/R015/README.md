@@ -1,6 +1,6 @@
 # R015
 
-The R015 analyzer reports [`(*schema.ResourceData).SetId()`](https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/helper/schema#ResourceData.Set) usage with unstable `resource.UniqueId()` value. Schema attributes should be stable across Terraform runs.
+The R015 analyzer reports [`(*schema.ResourceData).SetId()`](https://godoc.org/github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema#ResourceData.Set) usage with unstable `resource.UniqueId()` value. Schema attributes should be stable across Terraform runs.
 
 ## Flagged Code
 

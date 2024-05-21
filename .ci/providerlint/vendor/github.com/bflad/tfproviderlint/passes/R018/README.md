@@ -1,6 +1,6 @@
 # R018
 
-The R018 analyzer reports [`time.Sleep()`](https://pkg.go.dev/time?tab=doc#Sleep) function usage. Terraform Providers should generally avoid this function when waiting for API operations and prefer polling methods such as [`resource.Retry()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/helper/resource?tab=doc#Retry) or [`(resource.StateChangeConf).WaitForState()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/helper/resource?tab=doc#StateChangeConf.WaitForState). 
+The R018 analyzer reports [`time.Sleep()`](https://pkg.go.dev/time?tab=doc#Sleep) function usage. Terraform Providers should generally avoid this function when waiting for API operations and prefer polling methods such as [`resource.Retry()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource?tab=doc#Retry) or [`(resource.StateChangeConf).WaitForState()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource?tab=doc#StateChangeConf.WaitForState). 
 
 ## Flagged Code
 
