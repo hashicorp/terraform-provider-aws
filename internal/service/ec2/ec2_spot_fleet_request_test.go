@@ -465,7 +465,7 @@ func TestAccEC2SpotFleetRequest_launchTemplateToLaunchSpec(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotFleetRequestExists(ctx, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
-					resource.TestCheckResourceAttr(resourceName, "spot_price", "0.05"),
+					resource.TestCheckResourceAttr(resourceName, "spot_price", "0.07"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", acctest.Ct1),
 					testAccCheckSpotFleetRequestRecreatedConfig(t, &before, &after),
 				),
@@ -497,7 +497,7 @@ func TestAccEC2SpotFleetRequest_launchSpecToLaunchTemplate(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotFleetRequestExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
-					resource.TestCheckResourceAttr(resourceName, "spot_price", "0.05"),
+					resource.TestCheckResourceAttr(resourceName, "spot_price", "0.07"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", acctest.Ct1),
 				),
 			},
@@ -583,10 +583,10 @@ func TestAccEC2SpotFleetRequest_onDemandMaxTotalPrice(t *testing.T) {
 		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSpotFleetRequestConfig_onDemandMaxTotalPrice(rName, publicKey, validUntil, "0.05"),
+				Config: testAccSpotFleetRequestConfig_onDemandMaxTotalPrice(rName, publicKey, validUntil, "0.07"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
-					resource.TestCheckResourceAttr(resourceName, "on_demand_max_total_price", "0.05"),
+					resource.TestCheckResourceAttr(resourceName, "on_demand_max_total_price", "0.07"),
 				),
 			},
 			{
@@ -765,7 +765,7 @@ func TestAccEC2SpotFleetRequest_changePriceForcesNewRequest(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotFleetRequestExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
-					resource.TestCheckResourceAttr(resourceName, "spot_price", "0.05"),
+					resource.TestCheckResourceAttr(resourceName, "spot_price", "0.07"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", acctest.Ct1),
 				),
 			},
@@ -781,7 +781,7 @@ func TestAccEC2SpotFleetRequest_changePriceForcesNewRequest(t *testing.T) {
 					testAccCheckSpotFleetRequestExists(ctx, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "spot_price", "0.05"),
+					resource.TestCheckResourceAttr(resourceName, "spot_price", "0.07"),
 					testAccCheckSpotFleetRequestRecreatedConfig(t, &before, &after),
 				),
 			},
@@ -1097,10 +1097,10 @@ func TestAccEC2SpotFleetRequest_overridingSpotPrice(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
-					resource.TestCheckResourceAttr(resourceName, "spot_price", "0.05"),
+					resource.TestCheckResourceAttr(resourceName, "spot_price", "0.07"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
-						"spot_price":           "0.05",
+						"spot_price":           "0.07",
 						names.AttrInstanceType: "m3.large",
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "launch_specification.*.instance_type", instanceTypeDataSourceName, names.AttrInstanceType),
@@ -2006,7 +2006,7 @@ func testAccSpotFleetRequestConfig_basic(rName, publicKey, validUntil string) st
 	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
-  spot_price                          = "0.05"
+  spot_price                          = "0.07"
   target_capacity                     = 2
   valid_until                         = %[2]q
   terminate_instances_with_expiration = true
@@ -2033,7 +2033,7 @@ func testAccSpotFleetRequestConfig_context(rName, publicKey, validUntil, context
 resource "aws_spot_fleet_request" "test" {
   context                             = %[3]q
   iam_fleet_role                      = aws_iam_role.test.arn
-  spot_price                          = "0.05"
+  spot_price                          = "0.07"
   target_capacity                     = 2
   valid_until                         = %[2]q
   terminate_instances_with_expiration = true
@@ -2059,7 +2059,7 @@ func testAccSpotFleetRequestConfig_tags1(rName, publicKey, validUntil, tagKey1, 
 	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
-  spot_price                          = "0.05"
+  spot_price                          = "0.07"
   target_capacity                     = 2
   valid_until                         = %[2]q
   terminate_instances_with_expiration = true
@@ -2089,7 +2089,7 @@ func testAccSpotFleetRequestConfig_tags2(rName, publicKey, validUntil, tagKey1, 
 	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
-  spot_price                          = "0.05"
+  spot_price                          = "0.07"
   target_capacity                     = 2
   valid_until                         = %[2]q
   terminate_instances_with_expiration = true
@@ -2120,7 +2120,7 @@ func testAccSpotFleetRequestConfig_associatePublicIPAddress(rName, publicKey, va
 	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
-  spot_price                          = "0.05"
+  spot_price                          = "0.07"
   target_capacity                     = 2
   valid_until                         = %[2]q
   terminate_instances_with_expiration = true
@@ -2146,7 +2146,7 @@ func testAccSpotFleetRequestConfig_targetCapacity(rName, publicKey, validUntil s
 	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
-  spot_price                          = "0.05"
+  spot_price                          = "0.07"
   target_capacity                     = 3
   valid_until                         = %[2]q
   fleet_type                          = "request"
@@ -2186,7 +2186,7 @@ resource "aws_launch_template" "test" {
 
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
-  spot_price                          = "0.05"
+  spot_price                          = "0.07"
   target_capacity                     = 2
   valid_until                         = %[2]q
   terminate_instances_with_expiration = true
@@ -2248,7 +2248,7 @@ resource "aws_launch_template" "test2" {
 
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
-  spot_price                          = "0.05"
+  spot_price                          = "0.07"
   target_capacity                     = 2
   valid_until                         = %[2]q
   terminate_instances_with_expiration = true
@@ -2293,7 +2293,7 @@ resource "aws_launch_template" "test" {
 
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
-  spot_price                          = "0.05"
+  spot_price                          = "0.07"
   target_capacity                     = 2
   valid_until                         = %[2]q
   terminate_instances_with_expiration = true
@@ -2342,7 +2342,7 @@ resource "aws_launch_template" "test" {
 
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
-  spot_price                          = "0.05"
+  spot_price                          = "0.07"
   target_capacity                     = 2
   valid_until                         = %[2]q
   terminate_instances_with_expiration = true
@@ -2383,7 +2383,7 @@ func testAccSpotFleetRequestConfig_excessCapacityTermination(rName, publicKey, v
 	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
-  spot_price                          = "0.05"
+  spot_price                          = "0.07"
   target_capacity                     = 2
   excess_capacity_termination_policy  = "NoTermination"
   valid_until                         = %[2]q
@@ -2409,7 +2409,7 @@ func testAccSpotFleetRequestConfig_type(rName, publicKey, validUntil string) str
 	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
-  spot_price                          = "0.05"
+  spot_price                          = "0.07"
   target_capacity                     = 2
   valid_until                         = %[2]q
   fleet_type                          = "request"
@@ -2505,7 +2505,7 @@ func testAccSpotFleetRequestConfig_changeBidPrice(rName, publicKey, validUntil s
 	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
-  spot_price                          = "0.05"
+  spot_price                          = "0.07"
   target_capacity                     = 2
   valid_until                         = %[2]q
   terminate_instances_with_expiration = true
@@ -2530,7 +2530,7 @@ func testAccSpotFleetRequestConfig_azs(rName, publicKey, validUntil string) stri
 	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
-  spot_price                          = "0.05"
+  spot_price                          = "0.07"
   target_capacity                     = 2
   valid_until                         = %[2]q
   terminate_instances_with_expiration = true
@@ -2595,7 +2595,7 @@ resource "aws_subnet" "test2" {
 
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
-  spot_price                          = "0.05"
+  spot_price                          = "0.07"
   target_capacity                     = 4
   valid_until                         = %[2]q
   terminate_instances_with_expiration = true
@@ -2779,7 +2779,7 @@ func testAccSpotFleetRequestConfig_multipleInstanceTypesinSameAZ(rName, publicKe
 	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
-  spot_price                          = "0.05"
+  spot_price                          = "0.07"
   target_capacity                     = 2
   valid_until                         = %[2]q
   terminate_instances_with_expiration = true
@@ -2867,7 +2867,7 @@ func testAccSpotFleetRequestConfig_overridingPrice(rName, publicKey, validUntil 
 	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
-  spot_price                          = "0.05"
+  spot_price                          = "0.07"
   target_capacity                     = 2
   valid_until                         = %[2]q
   terminate_instances_with_expiration = true
@@ -2889,7 +2889,7 @@ resource "aws_spot_fleet_request" "test" {
     ami               = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name          = aws_key_pair.test.key_name
     availability_zone = data.aws_availability_zones.available.names[0]
-    spot_price        = "0.05"
+    spot_price        = "0.07"
 
     tags = {
       Name = %[1]q
@@ -3078,7 +3078,7 @@ func testAccSpotFleetRequestConfig_ebs(rName, publicKey, validUntil string) stri
 	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
-  spot_price                          = "0.05"
+  spot_price                          = "0.07"
   target_capacity                     = 1
   valid_until                         = %[2]q
   terminate_instances_with_expiration = true
@@ -3122,7 +3122,7 @@ resource "aws_kms_key" "test" {
 
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
-  spot_price                          = "0.05"
+  spot_price                          = "0.07"
   target_capacity                     = 1
   terminate_instances_with_expiration = true
   valid_until                         = %[2]q
@@ -3168,7 +3168,7 @@ resource "aws_kms_key" "test" {
 
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
-  spot_price                          = "0.05"
+  spot_price                          = "0.07"
   target_capacity                     = 1
   terminate_instances_with_expiration = true
   valid_until                         = %[2]q
@@ -3199,7 +3199,7 @@ func testAccSpotFleetRequestConfig_launchSpecificationEBSBlockDeviceGP3(rName, p
 	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
-  spot_price                          = "0.05"
+  spot_price                          = "0.07"
   target_capacity                     = 1
   terminate_instances_with_expiration = true
   wait_for_fulfillment                = true
@@ -3236,7 +3236,7 @@ func testAccSpotFleetRequestConfig_launchSpecificationRootBlockDeviceGP3(rName, 
 	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
-  spot_price                          = "0.05"
+  spot_price                          = "0.07"
   target_capacity                     = 1
   terminate_instances_with_expiration = true
   wait_for_fulfillment                = true
@@ -3269,7 +3269,7 @@ func testAccSpotFleetRequestConfig_launchSpecificationInstanceStoreAMI(rName, pu
 		fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
-  spot_price                          = "0.05"
+  spot_price                          = "0.07"
   target_capacity                     = 2
   valid_until                         = %[2]q
   terminate_instances_with_expiration = true
@@ -3293,7 +3293,7 @@ func testAccSpotFleetRequestConfig_tags(rName, publicKey, validUntil string) str
 	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
-  spot_price                          = "0.05"
+  spot_price                          = "0.07"
   target_capacity                     = 1
   valid_until                         = %[2]q
   terminate_instances_with_expiration = true
@@ -3324,7 +3324,7 @@ resource "aws_placement_group" "test" {
 
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
-  spot_price                          = "0.05"
+  spot_price                          = "0.07"
   target_capacity                     = 2
   valid_until                         = %[2]q
   terminate_instances_with_expiration = true
@@ -3350,7 +3350,7 @@ func testAccSpotFleetRequestConfig_zeroCapacity(rName, publicKey, validUntil str
 	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
-  spot_price                          = "0.05"
+  spot_price                          = "0.07"
   target_capacity                     = 0
   valid_until                         = %[2]q
   terminate_instances_with_expiration = true
@@ -3376,7 +3376,7 @@ func testAccSpotFleetRequestConfig_capacityRebalance(rName, publicKey, validUnti
 	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
-  spot_price                          = "0.05"
+  spot_price                          = "0.07"
   target_capacity                     = 2
   valid_until                         = %[2]q
   terminate_instances_with_expiration = true
@@ -3524,7 +3524,7 @@ func testAccSpotFleetRequestConfig_noTerminateInstancesExpiration(rName, publicK
 	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                  = aws_iam_role.test.arn
-  spot_price                      = "0.05"
+  spot_price                      = "0.07"
   target_capacity                 = 2
   valid_until                     = %[2]q
   terminate_instances_on_delete   = true
@@ -3565,7 +3565,7 @@ resource "aws_launch_template" "test" {
 
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = aws_iam_role.test.arn
-  spot_price                          = "0.05"
+  spot_price                          = "0.07"
   target_capacity                     = 2
   valid_until                         = %[2]q
   target_capacity_unit_type           = %[3]q
