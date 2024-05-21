@@ -147,10 +147,13 @@ cleantidy: prereq-go ## Clean up tidy
 	$$gover mod tidy
 	@echo "make: Go mods tidied"
 
-cleanplugin: ## Clean up provider plugin
-	@echo "make: cleaning provider plugin..."
+cleanmaketests: ## Clean up provider plugin
+	@echo "make: cleaning up remnants from make tests..."
+	@rm -rf sweeper-bin
 	@rm -rf terraform-plugin-dir
 	@rm -rf .terraform/providers
+	@rm -rf terraform-providers-schema
+	@rm -rf example.tf
 
 clean: cleanplugin cleango cleantidy build tools ## Clean up Go cache, tidy and re-install tools
 	@echo "make: clean complete"
@@ -244,8 +247,8 @@ gh-workflows-lint: ## Lint github workflows (via actionlint)
 
 go_build: ## Build provider
 	@os_arch=`go env GOOS`_`go env GOARCH` ; \
-		echo "make: Provider Checks / go_build ($$os_arch)..." ; \
-		go build -o terraform-plugin-dir/registry.terraform.io/hashicorp/aws/99.99.99/$$os_arch/terraform-provider-aws .
+	echo "make: Provider Checks / go_build ($$os_arch)..." ; \
+	go build -o terraform-plugin-dir/registry.terraform.io/hashicorp/aws/99.99.99/$$os_arch/terraform-provider-aws .
 
 golangci-lint1: ## Lint Go source (via golangci-lint)
 	@echo "make: golangci-lint Checks / 1 of 2..."
@@ -528,6 +531,26 @@ sweeper: prereq-go ## Run sweepers with failures allowed
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
 	$(GO_VER) test $(SWEEP_DIR) -v -sweep=$(SWEEP) -sweep-allow-failures -timeout $(SWEEP_TIMEOUT)
 
+sweeper-linked:
+	@echo "make: Provider Checks / sweeper-linked..." ; \
+	go test -c -o ./sweeper-bin ./internal/sweep/ ; \
+	count=`strings ./sweeper-bin | \
+		grep --count --extended-regexp 'internal/service/[a-zA-Z0-9]+\.sweep[a-zA-Z0-9]+$$'` ; \
+	echo "make: sweeper-linked: found $$count, expected more than 0" ; \
+	[ $$count -gt 0 ] || \
+		(echo; echo "Expected `strings` to detect sweeper function names in sweeper binary."; exit 1)
+
+sweeper-unlinked: go_build
+	@os_arch=`go env GOOS`_`go env GOARCH` ; \
+	echo "make: Provider Checks / sweeper-unlinked ($$os_arch)..." ; \
+	count=`strings "terraform-plugin-dir/registry.terraform.io/hashicorp/aws/99.99.99/$$os_arch/terraform-provider-aws" | \
+		grep --count --extended-regexp 'internal/service/[a-zA-Z0-9]+\.sweep[a-zA-Z0-9]+$$'` ; \
+	echo "make: sweeper-unlinked: found $$count, expected 0" ; \
+	[ $$count -eq 0 ] || \
+        (echo "Expected `strings` to detect no sweeper function names in provider binary."; exit 1)
+
+sweeper-check: sweeper-linked sweeper-unlinked
+
 t: prereq-go fmtcheck
 	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
 
@@ -579,10 +602,11 @@ testacc-tflint: ## Lint acceptance tests (via tflint)
 
 tfproviderdocs: go_build
 	@echo "make: Provider Checks / tfproviderdocs..."
+	@trap 'rm -rf terraform-providers-schema example.tf .terraform.lock.hcl' EXIT ; \
+	rm -rf terraform-providers-schema example.tf .terraform.lock.hcl ; \
 	echo 'data "aws_partition" "example" {}' > example.tf ; \
 	terraform init -plugin-dir terraform-plugin-dir ; \
 	mkdir -p terraform-providers-schema ; \
-	trap 'rm -rf terraform-providers-schema example.tf' EXIT ; \
 	terraform providers schema -json > terraform-providers-schema/schema.json ; \
 	tfproviderdocs check \
 		-allowed-resource-subcategories-file website/allowed-subcategories.txt \
