@@ -13,6 +13,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/transfer"
+	"github.com/aws/aws-sdk-go-v2/service/transfer/types"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -406,7 +407,7 @@ func resourceServerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("protocols"); ok && v.(*schema.Set).Len() > 0 {
-		input.Protocols = expandProtocols(v.(*schema.Set))
+		input.Protocols = flex.ExpandStringyValueSet[types.Protocol](d.Get("protocols").(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("s3_storage_options"); ok && len(v.([]interface{})) > 0 {
@@ -722,7 +723,7 @@ func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		if d.HasChange("protocols") {
-			input.Protocols = expandProtocols(d.Get("protocols").(*schema.Set))
+			input.Protocols = flex.ExpandStringyValueSet[types.Protocol](d.Get("protocols").(*schema.Set))
 		}
 
 		if d.HasChange("s3_storage_options") {
@@ -943,7 +944,7 @@ func expandProtocolDetails(m []interface{}) *awstypes.ProtocolDetails {
 	apiObject := &awstypes.ProtocolDetails{}
 
 	if v, ok := tfMap["as2_transports"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.As2Transports = expandAs2Transport(v)
+		apiObject.As2Transports = flex.ExpandStringyValueSet[types.As2Transport](v)
 	}
 
 	if v, ok := tfMap["passive_ip"].(string); ok && len(v) > 0 {
@@ -959,38 +960,6 @@ func expandProtocolDetails(m []interface{}) *awstypes.ProtocolDetails {
 	}
 
 	return apiObject
-}
-
-func expandAs2Transport(configured *schema.Set) []awstypes.As2Transport {
-	output := make([]awstypes.As2Transport, 0, configured.Len())
-
-	for _, raw := range configured.List() {
-		switch raw.(string) {
-		case string(awstypes.As2TransportHttp):
-			output = append(output, awstypes.As2TransportHttp)
-		}
-	}
-
-	return output
-}
-
-func expandProtocols(configured *schema.Set) []awstypes.Protocol {
-	output := make([]awstypes.Protocol, 0, configured.Len())
-
-	for _, raw := range configured.List() {
-		switch raw.(string) {
-		case string(awstypes.ProtocolAs2):
-			output = append(output, awstypes.ProtocolAs2)
-		case string(awstypes.ProtocolFtp):
-			output = append(output, awstypes.ProtocolFtp)
-		case string(awstypes.ProtocolFtps):
-			output = append(output, awstypes.ProtocolFtps)
-		case string(awstypes.ProtocolSftp):
-			output = append(output, awstypes.ProtocolSftp)
-		}
-	}
-
-	return output
 }
 
 func flattenProtocolDetails(apiObject *awstypes.ProtocolDetails) []interface{} {
