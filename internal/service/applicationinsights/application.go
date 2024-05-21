@@ -24,6 +24,7 @@ import (
 
 // @SDKResource("aws_applicationinsights_application", name="Application")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go/service/applicationinsights;applicationinsights.ApplicationInfo")
 func ResourceApplication() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceApplicationCreate,
