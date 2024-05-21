@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rekognition"
 	"github.com/aws/aws-sdk-go-v2/service/rekognition/types"
@@ -26,11 +25,6 @@ import (
 
 func TestAccRekognitionStreamProcessor_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	var streamprocessor rekognition.DescribeStreamProcessorOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -47,18 +41,18 @@ func TestAccRekognitionStreamProcessor_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckStreamProcessorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStreamProcessorConfig_basic(rName, "1.0"),
+				Config: testAccStreamProcessorConfig_basic(testAccStreamProcessorConfig_setup(rName), rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamProcessorExists(ctx, resourceName, &streamprocessor),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
-						"console_access": "false",
-						"groups.#":       "0",
-						"username":       "Test",
-						"password":       "TestTest1234",
-					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rekognition", regexache.MustCompile(`streamprocessor:+.`)),
+					// resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
+					// resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
+					// resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
+					// 	"console_access": "false",
+					// 	"groups.#":       "0",
+					// 	"username":       "Test",
+					// 	"password":       "TestTest1234",
+					// }),
+					// acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rekognition", regexache.MustCompile(`streamprocessor:+.`)),
 				),
 			},
 			{
@@ -188,7 +182,7 @@ func testAccCheckStreamProcessorNotRecreated(before, after *rekognition.Describe
 func testAccStreamProcessorConfig_setup(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  name = "%[1]q-test-role"
+  name = "%[1]q-acctest-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -206,15 +200,15 @@ resource "aws_iam_role" "test" {
 }
 
 resource "aws_s3_bucket" "test" {
-  bucket = "%[1]q-test-bucket"
+  bucket = "%[1]q-acctest-bucket"
 }
 
 resource "aws_sns_topic" "test" {
-  name = "%[1]q-test-topic"
+  name = "%[1]q-acctest-topic"
 }
 
 resource "aws_kinesis_video_stream" "test" {
-  name                    = "%[1]q-test-kinesis-input"
+  name                    = "%[1]q-acctest-kinesis-input"
   data_retention_in_hours = 1
   device_name             = "kinesis-video-device-name"
   media_type              = "video/h264"
@@ -222,29 +216,39 @@ resource "aws_kinesis_video_stream" "test" {
 	`, rName)
 }
 
-func testAccStreamProcessorConfig_basic(rName, version string) string {
+func testAccStreamProcessorConfig_basic(setup, rName string) string {
 	return fmt.Sprintf(`
-resource "aws_security_group" "test" {
-  name = %[1]q
-}
+%[1]q
 
 resource "aws_rekognition_stream_processor" "test" {
-  stream_processor_name   = %[1]q
-  engine_type             = "ActiveRekognition"
-  engine_version          = %[2]q
-  host_instance_type      = "rekognition.t2.micro"
-  security_groups         = [aws_security_group.test.id]
-  authentication_strategy = "simple"
-  storage_type            = "efs"
-
-  logs {
-    general = true
+	role_arn = aws_iam_role.test.arn
+	name     = "%[1]q-acctest-processor"
+  
+	data_sharing_preference {
+	  opt_in = true
+	}
+  
+	output {
+	  s3_destination {
+		bucket = aws_s3_bucket.test.bucket
+	  }
+	}
+  
+	settings {
+	  connected_home {
+		labels = ["PERSON", "ALL"]
+	  }
+	}
+  
+	input {
+	  kinesis_video_stream {
+		arn = aws_kinesis_video_stream.test.arn
+	  }
+	}
+  
+	notification_channel {
+	  sns_topic_arn = aws_sns_topic.test.arn
+	}
   }
-
-  user {
-    username = "Test"
-    password = "TestTest1234"
-  }
-}
-`, rName, version)
+`, setup, rName)
 }
