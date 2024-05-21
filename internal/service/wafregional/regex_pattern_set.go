@@ -86,7 +86,7 @@ func resourceRegexPatternSetRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if err != nil {
-		return diag.Errorf("reading WAF Regional Regex Pattern Set (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading WAF Regional Regex Pattern Set (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrName, regexPatternSet.Name)
