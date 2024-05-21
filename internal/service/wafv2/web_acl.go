@@ -394,7 +394,6 @@ func resourceWebACLDelete(ctx context.Context, d *schema.ResourceData, meta inte
 				return sdkdiag.AppendErrorf(diags, "deleting WAFv2 WebACL (%s), resource has changed since last refresh please run a new plan before applying again: %s", d.Id(), err)
 			}
 		}
-
 	}
 
 	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
