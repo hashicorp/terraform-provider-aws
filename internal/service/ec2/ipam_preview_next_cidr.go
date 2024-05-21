@@ -20,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_vpc_ipam_preview_next_cidr")
-func ResourceIPAMPreviewNextCIDR() *schema.Resource {
+// @SDKResource("aws_vpc_ipam_preview_next_cidr, name="IPAM Preview Next CIDR")
+func resourceIPAMPreviewNextCIDR() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIPAMPreviewNextCIDRCreate,
 		ReadWithoutTimeout:   resourceIPAMPreviewNextCIDRRead,

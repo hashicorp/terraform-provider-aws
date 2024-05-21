@@ -24,8 +24,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_vpc_ipam_pool_cidr_allocation")
-func ResourceIPAMPoolCIDRAllocation() *schema.Resource {
+// @SDKResource("aws_vpc_ipam_pool_cidr_allocation", name="IPAM Pool CIDR Allocation")
+func resourceIPAMPoolCIDRAllocation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIPAMPoolCIDRAllocationCreate,
 		ReadWithoutTimeout:   resourceIPAMPoolCIDRAllocationRead,

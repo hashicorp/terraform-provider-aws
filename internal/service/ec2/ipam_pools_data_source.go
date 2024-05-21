@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_vpc_ipam_pools")
-func DataSourceIPAMPools() *schema.Resource {
+// @SDKDataSource("aws_vpc_ipam_pools", name="IPAM Pools")
+func dataSourceIPAMPools() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceIPAMPoolsRead,
 

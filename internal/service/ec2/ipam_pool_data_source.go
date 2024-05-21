@@ -19,8 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_vpc_ipam_pool")
-func DataSourceIPAMPool() *schema.Resource {
+// @SDKDataSource("aws_vpc_ipam_pool", name="IPAM Pool")
+// @Tags
+func dataSourceIPAMPool() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceIPAMPoolRead,
 
@@ -107,7 +108,6 @@ func DataSourceIPAMPool() *schema.Resource {
 func dataSourceIPAMPoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeIpamPoolsInput{}
 
@@ -148,9 +148,7 @@ func dataSourceIPAMPoolRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("source_ipam_pool_id", pool.SourceIpamPoolId)
 	d.Set(names.AttrState, pool.State)
 
-	if err := d.Set(names.AttrTags, keyValueTagsV2(ctx, pool.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOutV2(ctx, pool.Tags)
 
 	return diags
 }

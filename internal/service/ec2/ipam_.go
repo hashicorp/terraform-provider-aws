@@ -28,7 +28,7 @@ import (
 
 // @SDKResource("aws_vpc_ipam", name="IPAM")
 // @Tags(identifierAttribute="id")
-func ResourceIPAM() *schema.Resource {
+func resourceIPAM() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIPAMCreate,
 		ReadWithoutTimeout:   resourceIPAMRead,
