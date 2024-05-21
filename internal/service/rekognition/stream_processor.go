@@ -357,6 +357,7 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 									float64validator.Between(0.0, 100.0), //nolint:mnd
 								},
 								Default:  float64default.StaticFloat64(50), //nolint:mnd
+								Computed: true,
 								Optional: true,
 							},
 						},
@@ -500,7 +501,6 @@ func (r *resourceStreamProcessor) Update(ctx context.Context, req resource.Updat
 	if !plan.DataSharingPreference.Equal(state.DataSharingPreference) ||
 		!plan.Settings.Equal(state.Settings) ||
 		!plan.RegionsOfInterest.Equal(state.RegionsOfInterest) {
-
 		in := &rekognition.UpdateStreamProcessorInput{
 			Name:               plan.Name.ValueStringPointer(),
 			ParametersToDelete: []awstypes.StreamProcessorParameterToDelete{},
