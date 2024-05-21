@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -292,14 +293,10 @@ func resourceFunction() *schema.Resource {
 				Computed: true,
 			},
 			"replace_security_groups_on_destroy": {
-				Deprecated: "AWS no longer supports this operation. This attribute now has " +
-					"no effect and will be removed in a future major version.",
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
 			"replacement_security_group_ids": {
-				Deprecated: "AWS no longer supports this operation. This attribute now has " +
-					"no effect and will be removed in a future major version.",
 				Type:         schema.TypeSet,
 				Optional:     true,
 				Elem:         &schema.Schema{Type: schema.TypeString},
@@ -1045,6 +1042,12 @@ func resourceFunctionDelete(ctx context.Context, d *schema.ResourceData, meta in
 		return diags
 	}
 
+	if _, ok := d.GetOk("replace_security_groups_on_destroy"); ok {
+		if err := replaceSecurityGroupsOnDestroy(ctx, d, meta); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
 	log.Printf("[INFO] Deleting Lambda Function: %s", d.Id())
 	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidParameterValueException](ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
 		return conn.DeleteFunction(ctx, &lambda.DeleteFunctionInput{
@@ -1118,6 +1121,67 @@ func findLatestFunctionVersionByName(ctx context.Context, conn *lambda.Client, n
 	}
 
 	return output, nil
+}
+
+// replaceSecurityGroupsOnDestroy sets the VPC configuration security groups
+// prior to resource destruction
+//
+// This function is called when the replace_security_groups_on_destroy
+// argument is set. If the replacement_security_group_ids attribute is set,
+// those values will be used as replacements. Otherwise, the default
+// security group is used.
+//
+// Configuring this option can decrease destroy times for the security
+// groups included in the VPC configuration block during normal operation
+// by freeing them from association with ENI's left behind after destruction
+// of the function.
+func replaceSecurityGroupsOnDestroy(ctx context.Context, d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
+	ec2Conn := meta.(*conns.AWSClient).EC2Client(ctx)
+
+	var sgIDs []string
+	var vpcID string
+	if v, ok := d.GetOk(names.AttrVPCConfig); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		tfMap := v.([]interface{})[0].(map[string]interface{})
+		sgIDs = flex.ExpandStringValueSet(tfMap[names.AttrSecurityGroupIDs].(*schema.Set))
+		vpcID = tfMap[names.AttrVPCID].(string)
+	} else { // empty VPC config, nothing to do
+		return nil
+	}
+
+	if len(sgIDs) == 0 { // no security groups, nothing to do
+		return nil
+	}
+
+	var replacementSGIDs []string
+	if v, ok := d.GetOk("replacement_security_group_ids"); ok {
+		replacementSGIDs = flex.ExpandStringValueSet(v.(*schema.Set))
+	} else {
+		defaultSG, err := tfec2.FindSecurityGroupByNameAndVPCIDV2(ctx, ec2Conn, "default", vpcID)
+		if err != nil || defaultSG == nil {
+			return fmt.Errorf("finding VPC (%s) default security group: %s", vpcID, err)
+		}
+		replacementSGIDs = []string{aws.ToString(defaultSG.GroupId)}
+	}
+
+	input := &lambda.UpdateFunctionConfigurationInput{
+		FunctionName: aws.String(d.Id()),
+		VpcConfig: &awstypes.VpcConfig{
+			SecurityGroupIds: replacementSGIDs,
+		},
+	}
+
+	if _, err := retryFunctionOp(ctx, func() (*lambda.UpdateFunctionConfigurationOutput, error) {
+		return conn.UpdateFunctionConfiguration(ctx, input)
+	}); err != nil {
+		return fmt.Errorf("updating Lambda Function (%s) configuration: %s", d.Id(), err)
+	}
+
+	if _, err := waitFunctionUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return fmt.Errorf("waiting for Lambda Function (%s) configuration update: %s", d.Id(), err)
+	}
+
+	return nil
 }
 
 func statusFunctionLastUpdateStatus(ctx context.Context, conn *lambda.Client, name string) retry.StateRefreshFunc {

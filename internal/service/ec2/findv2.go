@@ -298,6 +298,19 @@ func findSecurityGroupsV2(ctx context.Context, conn *ec2.Client, input *ec2.Desc
 	return output, nil
 }
 
+// FindSecurityGroupByNameAndVPCIDV2 looks up a security group by name, VPC ID. Returns a retry.NotFoundError if not found.
+func FindSecurityGroupByNameAndVPCIDV2(ctx context.Context, conn *ec2.Client, name, vpcID string) (*awstypes.SecurityGroup, error) {
+	input := &ec2.DescribeSecurityGroupsInput{
+		Filters: newAttributeFilterListV2(
+			map[string]string{
+				"group-name": name,
+				"vpc-id":     vpcID,
+			},
+		),
+	}
+	return findSecurityGroupV2(ctx, conn, input)
+}
+
 func findIPAMPoolAllocationsV2(ctx context.Context, conn *ec2.Client, input *ec2.GetIpamPoolAllocationsInput) ([]awstypes.IpamPoolAllocation, error) {
 	var output []awstypes.IpamPoolAllocation
 
