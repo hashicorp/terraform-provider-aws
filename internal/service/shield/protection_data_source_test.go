@@ -211,7 +211,7 @@ data "aws_shield_protection" "test" {
   resource_arn = "arn:${data.aws_partition.current.partition}:route53:::hostedzone/${aws_route53_zone.test.zone_id}"
 
   depends_on = [
-	aws_shield_protection.test
+    aws_shield_protection.test
   ]
 }
 `))
@@ -222,7 +222,7 @@ func testAccShieldProtectionDataSource_route53HostedZoneById(hostedZoneName stri
 		testAccShieldProtectionDataSourceConfig_route53HostedZone(hostedZoneName),
 		fmt.Sprint(`
 data "aws_shield_protection" "test" {
-	protection_id = aws_shield_protection.test.id
+  protection_id = aws_shield_protection.test.id
 }
 `))
 }
