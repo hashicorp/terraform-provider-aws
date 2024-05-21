@@ -318,7 +318,7 @@ func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interface
 		d.Set("default_network_acl_id", v.NetworkAclId)
 	}
 
-	if v, err := findVPCMainRouteTableV2(ctx, conn, d.Id()); err != nil {
+	if v, err := findVPCMainRouteTable(ctx, conn, d.Id()); err != nil {
 		log.Printf("[WARN] Error reading EC2 VPC (%s) main Route Table: %s", d.Id(), err)
 		d.Set("default_route_table_id", nil)
 		d.Set("main_route_table_id", nil)
