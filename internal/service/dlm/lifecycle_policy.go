@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dlm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dlm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -283,6 +284,7 @@ func ResourceLifecyclePolicy() *schema.Resource {
 												"copy_tags": {
 													Type:     schema.TypeBool,
 													Optional: true,
+													Computed: true,
 												},
 												"deprecate_rule": {
 													Type:     schema.TypeList,
@@ -494,7 +496,6 @@ func resourceLifecyclePolicyCreate(ctx context.Context, d *schema.ResourceData, 
 		Tags:             getTagsIn(ctx),
 	}
 
-	log.Printf("[INFO] Creating DLM lifecycle policy: %#v", input)
 	out, err := tfresource.RetryWhenIsA[*awstypes.InvalidRequestException](ctx, createRetryTimeout, func() (interface{}, error) {
 		return conn.CreateLifecyclePolicy(ctx, &input)
 	})
@@ -580,14 +581,41 @@ func resourceLifecyclePolicyDelete(ctx context.Context, d *schema.ResourceData, 
 	_, err := conn.DeleteLifecyclePolicy(ctx, &dlm.DeleteLifecyclePolicyInput{
 		PolicyId: aws.String(d.Id()),
 	})
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
+	}
+
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return diags
-		}
 		return sdkdiag.AppendErrorf(diags, "deleting DLM Lifecycle Policy (%s): %s", d.Id(), err)
 	}
 
 	return diags
+}
+
+func findLifecyclePolicyByID(ctx context.Context, conn *dlm.Client, id string) (*dlm.GetLifecyclePolicyOutput, error) {
+	input := &dlm.GetLifecyclePolicyInput{
+		PolicyId: aws.String(id),
+	}
+
+	output, err := conn.GetLifecyclePolicy(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+			LastError:   err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Policy == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
 func expandPolicyDetails(cfg []interface{}) *awstypes.PolicyDetails {
@@ -1031,6 +1059,7 @@ func expandCreateRule(cfg []interface{}) *awstypes.CreateRule {
 
 	if v, ok := c["cron_expression"].(string); ok && v != "" {
 		createRule.CronExpression = aws.String(v)
+		createRule.IntervalUnit = "" // sets interval unit to empty string so that all fields related to interval are ignored
 	}
 
 	return createRule
