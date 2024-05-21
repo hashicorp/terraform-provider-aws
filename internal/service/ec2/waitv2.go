@@ -703,13 +703,13 @@ func waitVPNConnectionCreated(ctx context.Context, conn *ec2.Client, id string) 
 	return nil, err
 }
 
-func waitVPNConnectionDeleted(ctx context.Context, conn *ec2.Client, id string) (*types.VpnConnection, error) {
+func waitVPNConnectionUpdated(ctx context.Context, conn *ec2.Client, id string) (*types.VpnConnection, error) { //nolint:unparam
 	const (
 		timeout = 30 * time.Minute
 	)
 	stateConf := &retry.StateChangeConf{
-		Pending:    enum.Slice(types.VpnStateDeleting),
-		Target:     []string{},
+		Pending:    enum.Slice(vpnStateModifying),
+		Target:     enum.Slice(types.VpnStateAvailable),
 		Refresh:    statusVPNConnection(ctx, conn, id),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
@@ -725,13 +725,13 @@ func waitVPNConnectionDeleted(ctx context.Context, conn *ec2.Client, id string) 
 	return nil, err
 }
 
-func waitVPNConnectionUpdated(ctx context.Context, conn *ec2.Client, id string) (*types.VpnConnection, error) { //nolint:unparam
+func waitVPNConnectionDeleted(ctx context.Context, conn *ec2.Client, id string) (*types.VpnConnection, error) {
 	const (
 		timeout = 30 * time.Minute
 	)
 	stateConf := &retry.StateChangeConf{
-		Pending:    enum.Slice(vpnStateModifying),
-		Target:     enum.Slice(types.VpnStateAvailable),
+		Pending:    enum.Slice(types.VpnStateDeleting),
+		Target:     []string{},
 		Refresh:    statusVPNConnection(ctx, conn, id),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
@@ -907,6 +907,315 @@ func waitCustomerGatewayDeleted(ctx context.Context, conn *ec2.Client, id string
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.CustomerGateway); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitIPAMCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.Ipam, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.IpamStateCreateInProgress),
+		Target:  enum.Slice(types.IpamStateCreateComplete),
+		Refresh: statusIPAM(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.Ipam); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitIPAMUpdated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.Ipam, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.IpamStateModifyInProgress),
+		Target:  enum.Slice(types.IpamStateModifyComplete),
+		Refresh: statusIPAM(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.Ipam); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitIPAMDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.Ipam, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.IpamStateCreateComplete, types.IpamStateModifyComplete, types.IpamStateDeleteInProgress),
+		Target:  []string{},
+		Refresh: statusIPAM(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.Ipam); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitIPAMPoolCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.IpamPool, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.IpamPoolStateCreateInProgress),
+		Target:  enum.Slice(types.IpamPoolStateCreateComplete),
+		Refresh: statusIPAMPool(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.IpamPool); ok {
+		if state := output.State; state == types.IpamPoolStateCreateFailed {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.StateMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitIPAMPoolUpdated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.IpamPool, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.IpamPoolStateModifyInProgress),
+		Target:  enum.Slice(types.IpamPoolStateModifyComplete),
+		Refresh: statusIPAMPool(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.IpamPool); ok {
+		if state := output.State; state == types.IpamPoolStateModifyFailed {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.StateMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitIPAMPoolDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.IpamPool, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.IpamPoolStateDeleteInProgress),
+		Target:  []string{},
+		Refresh: statusIPAMPool(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.IpamPool); ok {
+		if state := output.State; state == types.IpamPoolStateDeleteFailed {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.StateMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitIPAMPoolCIDRCreated(ctx context.Context, conn *ec2.Client, poolCIDRID, poolID, cidrBlock string, timeout time.Duration) (*types.IpamPoolCidr, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:        enum.Slice(types.IpamPoolCidrStatePendingProvision),
+		Target:         enum.Slice(types.IpamPoolCidrStateProvisioned),
+		Refresh:        statusIPAMPoolCIDR(ctx, conn, cidrBlock, poolID, poolCIDRID),
+		Timeout:        timeout,
+		Delay:          5 * time.Second,
+		NotFoundChecks: 1000, // Should exceed any reasonable custom timeout value.
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.IpamPoolCidr); ok {
+		if state, failureReason := output.State, output.FailureReason; state == types.IpamPoolCidrStateFailedProvision && failureReason != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", string(failureReason.Code), aws.ToString(failureReason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitIPAMPoolCIDRDeleted(ctx context.Context, conn *ec2.Client, poolCIDRID, poolID, cidrBlock string, timeout time.Duration) (*types.IpamPoolCidr, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.IpamPoolCidrStatePendingDeprovision, types.IpamPoolCidrStateProvisioned),
+		Target:  []string{},
+		Refresh: statusIPAMPoolCIDR(ctx, conn, cidrBlock, poolID, poolCIDRID),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.IpamPoolCidr); ok {
+		if state, failureReason := output.State, output.FailureReason; state == types.IpamPoolCidrStateFailedDeprovision && failureReason != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", string(failureReason.Code), aws.ToString(failureReason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitIPAMResourceDiscoveryCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.IpamResourceDiscovery, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.IpamResourceDiscoveryStateCreateInProgress),
+		Target:  enum.Slice(types.IpamResourceDiscoveryStateCreateComplete),
+		Refresh: statusIPAMResourceDiscovery(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.IpamResourceDiscovery); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitIPAMResourceDiscoveryUpdated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.IpamResourceDiscovery, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.IpamResourceDiscoveryStateModifyInProgress),
+		Target:  enum.Slice(types.IpamResourceDiscoveryStateModifyComplete),
+		Refresh: statusIPAMResourceDiscovery(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.IpamResourceDiscovery); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitIPAMResourceDiscoveryDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.IpamResourceDiscovery, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.IpamResourceDiscoveryStateCreateComplete, types.IpamResourceDiscoveryStateModifyComplete, types.IpamResourceDiscoveryStateDeleteInProgress),
+		Target:  []string{},
+		Refresh: statusIPAMResourceDiscovery(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.IpamResourceDiscovery); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitIPAMResourceDiscoveryAssociationCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.IpamResourceDiscoveryAssociation, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.IpamResourceDiscoveryAssociationStateAssociateInProgress),
+		Target:  enum.Slice(types.IpamResourceDiscoveryAssociationStateAssociateComplete),
+		Refresh: statusIPAMResourceDiscoveryAssociation(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.IpamResourceDiscoveryAssociation); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitIPAMResourceDiscoveryAssociationDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.IpamResourceDiscoveryAssociation, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.IpamResourceDiscoveryAssociationStateAssociateComplete, types.IpamResourceDiscoveryAssociationStateDisassociateInProgress),
+		Target:  []string{},
+		Refresh: statusIPAMResourceDiscoveryAssociation(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.IpamResourceDiscoveryAssociation); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitIPAMScopeCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.IpamScope, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.IpamScopeStateCreateInProgress),
+		Target:  enum.Slice(types.IpamScopeStateCreateComplete),
+		Refresh: statusIPAMScope(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.IpamScope); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitIPAMScopeUpdated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.IpamScope, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.IpamScopeStateModifyInProgress),
+		Target:  enum.Slice(types.IpamScopeStateModifyComplete),
+		Refresh: statusIPAMScope(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.IpamScope); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitIPAMScopeDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.IpamScope, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.IpamScopeStateCreateComplete, types.IpamScopeStateModifyComplete, types.IpamScopeStateDeleteInProgress),
+		Target:  []string{},
+		Refresh: statusIPAMScope(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.IpamScope); ok {
 		return output, err
 	}
 

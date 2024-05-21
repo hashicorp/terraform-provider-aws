@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -20,7 +20,7 @@ import (
 
 func TestAccIPAMScope_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var scope ec2.IpamScope
+	var scope awstypes.IpamScope
 	resourceName := "aws_vpc_ipam_scope.test"
 	ipamName := "aws_vpc_ipam.test"
 
@@ -60,7 +60,7 @@ func TestAccIPAMScope_basic(t *testing.T) {
 
 func TestAccIPAMScope_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var scope ec2.IpamScope
+	var scope awstypes.IpamScope
 	resourceName := "aws_vpc_ipam_scope.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -83,7 +83,7 @@ func TestAccIPAMScope_disappears(t *testing.T) {
 
 func TestAccIPAMScope_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var scope ec2.IpamScope
+	var scope awstypes.IpamScope
 	resourceName := "aws_vpc_ipam_scope.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -126,7 +126,7 @@ func TestAccIPAMScope_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckIPAMScopeExists(ctx context.Context, n string, v *ec2.IpamScope) resource.TestCheckFunc {
+func testAccCheckIPAMScopeExists(ctx context.Context, n string, v *awstypes.IpamScope) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -137,7 +137,7 @@ func testAccCheckIPAMScopeExists(ctx context.Context, n string, v *ec2.IpamScope
 			return fmt.Errorf("No IPAM Scope ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindIPAMScopeByID(ctx, conn, rs.Primary.ID)
 
@@ -153,7 +153,7 @@ func testAccCheckIPAMScopeExists(ctx context.Context, n string, v *ec2.IpamScope
 
 func testAccCheckIPAMScopeDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpc_ipam_scope" {

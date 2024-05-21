@@ -381,20 +381,25 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_vpc_endpoint_service",
 		},
 		{
-			Factory:  DataSourceIPAMPool,
+			Factory:  dataSourceIPAMPool,
 			TypeName: "aws_vpc_ipam_pool",
+			Name:     "IPAM Pool",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceIPAMPoolCIDRs,
+			Factory:  dataSourceIPAMPoolCIDRs,
 			TypeName: "aws_vpc_ipam_pool_cidrs",
+			Name:     "IPAM Pool CIDRs",
 		},
 		{
-			Factory:  DataSourceIPAMPools,
+			Factory:  dataSourceIPAMPools,
 			TypeName: "aws_vpc_ipam_pools",
+			Name:     "IPAM Pools",
 		},
 		{
-			Factory:  DataSourceIPAMPreviewNextCIDR,
+			Factory:  dataSourceIPAMPreviewNextCIDR,
 			TypeName: "aws_vpc_ipam_preview_next_cidr",
+			Name:     "IPAM Preview Next CIDR",
 		},
 		{
 			Factory:  DataSourceVPCPeeringConnection,
@@ -1097,7 +1102,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_vpc_endpoint_subnet_association",
 		},
 		{
-			Factory:  ResourceIPAM,
+			Factory:  resourceIPAM,
 			TypeName: "aws_vpc_ipam",
 			Name:     "IPAM",
 			Tags: &types.ServicePackageResourceTags{
@@ -1110,7 +1115,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "IPAM Organization Admin Account",
 		},
 		{
-			Factory:  ResourceIPAMPool,
+			Factory:  resourceIPAMPool,
 			TypeName: "aws_vpc_ipam_pool",
 			Name:     "IPAM Pool",
 			Tags: &types.ServicePackageResourceTags{
@@ -1118,19 +1123,22 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceIPAMPoolCIDR,
+			Factory:  resourceIPAMPoolCIDR,
 			TypeName: "aws_vpc_ipam_pool_cidr",
+			Name:     "IPAM Pool CIDR",
 		},
 		{
-			Factory:  ResourceIPAMPoolCIDRAllocation,
+			Factory:  resourceIPAMPoolCIDRAllocation,
 			TypeName: "aws_vpc_ipam_pool_cidr_allocation",
+			Name:     "IPAM Pool CIDR Allocation",
 		},
 		{
-			Factory:  ResourceIPAMPreviewNextCIDR,
+			Factory:  resourceIPAMPreviewNextCIDR,
 			TypeName: "aws_vpc_ipam_preview_next_cidr",
+			Name:     "IPAM Preview Next CIDR",
 		},
 		{
-			Factory:  ResourceIPAMResourceDiscovery,
+			Factory:  resourceIPAMResourceDiscovery,
 			TypeName: "aws_vpc_ipam_resource_discovery",
 			Name:     "IPAM Resource Discovery",
 			Tags: &types.ServicePackageResourceTags{
@@ -1138,7 +1146,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceIPAMResourceDiscoveryAssociation,
+			Factory:  resourceIPAMResourceDiscoveryAssociation,
 			TypeName: "aws_vpc_ipam_resource_discovery_association",
 			Name:     "IPAM Resource Discovery Association",
 			Tags: &types.ServicePackageResourceTags{
@@ -1146,7 +1154,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceIPAMScope,
+			Factory:  resourceIPAMScope,
 			TypeName: "aws_vpc_ipam_scope",
 			Name:     "IPAM Scope",
 			Tags: &types.ServicePackageResourceTags{
