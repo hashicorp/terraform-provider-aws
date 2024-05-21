@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/float64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/float64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -355,7 +356,7 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 								Validators: []validator.Float64{
 									float64validator.Between(0.0, 100.0), //nolint:mnd
 								},
-								Computed: true,
+								Default:  float64default.StaticFloat64(50), //nolint:mnd
 								Optional: true,
 							},
 						},
@@ -553,34 +554,24 @@ func (r *resourceStreamProcessor) Update(ctx context.Context, req resource.Updat
 		}
 
 		if !plan.RegionsOfInterest.Equal(state.RegionsOfInterest) {
-			var regions []awstypes.RegionOfInterest
+			planRegions, diags := plan.RegionsOfInterest.ToSlice(ctx)
+			resp.Diagnostics.Append(diags...)
 
-			planRegions, _ := unwrapListObjectValueOf(ctx, resp.Diagnostics, plan.RegionsOfInterest, state.RegionsOfInterest)
+			plannedRegions := make([]awstypes.RegionOfInterest, len(planRegions))
 
 			for i := 0; i < len(planRegions); i++ {
 				planRegion := planRegions[i]
-				region := &awstypes.RegionOfInterest{}
+				plannedRegions[i] = awstypes.RegionOfInterest{}
 
 				if !planRegion.BoundingBox.IsNull() {
 					boundingBox, diags := planRegion.BoundingBox.ToPtr(ctx)
 					resp.Diagnostics.Append(diags...)
 
-					region.BoundingBox = &awstypes.BoundingBox{}
-
-					if !boundingBox.Top.IsNull() {
-						region.BoundingBox.Top = aws.Float32(float32(boundingBox.Top.ValueFloat64()))
-					}
-
-					if !boundingBox.Left.IsNull() {
-						region.BoundingBox.Left = aws.Float32(float32(boundingBox.Left.ValueFloat64()))
-					}
-
-					if !boundingBox.Height.IsNull() {
-						region.BoundingBox.Height = aws.Float32(float32(boundingBox.Height.ValueFloat64()))
-					}
-
-					if !boundingBox.Width.IsNull() {
-						region.BoundingBox.Width = aws.Float32(float32(boundingBox.Width.ValueFloat64()))
+					plannedRegions[i].BoundingBox = &awstypes.BoundingBox{
+						Top:    aws.Float32(float32(boundingBox.Top.ValueFloat64())),
+						Left:   aws.Float32(float32(boundingBox.Left.ValueFloat64())),
+						Height: aws.Float32(float32(boundingBox.Height.ValueFloat64())),
+						Width:  aws.Float32(float32(boundingBox.Width.ValueFloat64())),
 					}
 				}
 
@@ -592,25 +583,15 @@ func (r *resourceStreamProcessor) Update(ctx context.Context, req resource.Updat
 
 					for i := 0; i < len(polygons); i++ {
 						polygon := polygons[i]
-						plannedPolygons[i] = awstypes.Point{}
-
-						if !polygon.X.IsNull() {
-							plannedPolygons[i].X = aws.Float32(float32(polygon.X.ValueFloat64()))
-						}
-
-						if !polygon.Y.IsNull() {
-							plannedPolygons[i].Y = aws.Float32(float32(polygon.Y.ValueFloat64()))
+						plannedPolygons[i] = awstypes.Point{
+							X: aws.Float32(float32(polygon.X.ValueFloat64())),
+							Y: aws.Float32(float32(polygon.Y.ValueFloat64())),
 						}
 					}
-					region.Polygon = plannedPolygons
-				}
-
-				if region.BoundingBox != nil && len(region.Polygon) > 0 {
-					regions = append(regions, *region)
+					plannedRegions[i].Polygon = plannedPolygons
 				}
 			}
-
-			in.RegionsOfInterestForUpdate = regions
+			in.RegionsOfInterestForUpdate = plannedRegions
 		}
 
 		_, err := conn.UpdateStreamProcessor(ctx, in)
@@ -792,16 +773,6 @@ func unwrapObjectValueOf[T any](ctx context.Context, diagnostics diag.Diagnostic
 	diagnostics.Append(diags...)
 
 	ptrState, diags := state.ToPtr(ctx)
-	diagnostics.Append(diags...)
-
-	return ptrPlan, ptrState
-}
-
-func unwrapListObjectValueOf[T any](ctx context.Context, diagnostics diag.Diagnostics, plan fwtypes.ListNestedObjectValueOf[T], state fwtypes.ListNestedObjectValueOf[T]) ([]*T, []*T) {
-	ptrPlan, diags := plan.ToSlice(ctx)
-	diagnostics.Append(diags...)
-
-	ptrState, diags := state.ToSlice(ctx)
 	diagnostics.Append(diags...)
 
 	return ptrPlan, ptrState
