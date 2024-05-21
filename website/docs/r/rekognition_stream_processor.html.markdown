@@ -35,6 +35,7 @@ The following arguments are optional:
 * `kms_key_id` - (Optional) Optional parameter for label detection stream processors
 * `data_sharing_preference` - (Optional) See [`data_sharing_preference`](#data_sharing_preference) definition.
 * `notification_channel` - (Optional) The Amazon Simple Notification Service topic to which Amazon Rekognition publishes the completion status. See [`notification_channel`](#notification_channel) definition.
+* `regions_of_interest` - (Optional) Specifies locations in the frames where Amazon Rekognition checks for objects or people. See [`regions_of_interest`] definition.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Nested Blocks
@@ -64,6 +65,27 @@ The following arguments are optional:
 ### `data_sharing_preference`
 
 * `opt_in` - (Optional) Shows whether you are sharing data with Rekognition to improve model performance.
+
+### `regions_of_interest`
+
+* `bounding_box` - (Optional) The box representing a region of interest on screen. Only 1 per region is allowed. See [`bounding_box`](#bounding_box) definition.
+* `polygon` - (Optional) Shows whether you are sharing data with Rekognition to improve model performance.  See [`polygon`](#polygon) definition.
+
+#### `bounding_box`
+
+A region can only have a single `bounding_box`
+
+* `height` - (Required) Height of the bounding box as a ratio of the overall image height.
+* `wight` - (Required) Width of the bounding box as a ratio of the overall image width.
+* `left` - (Required) Left coordinate of the bounding box as a ratio of overall image width.
+* `top` - (Required) Top coordinate of the bounding box as a ratio of overall image height.
+
+#### `polygon`
+
+If using `polygon`, a minimum of 3 per region is required, with a maximum of 10.
+
+* `x` - (Required) The value of the X coordinate for a point on a Polygon.
+* `y` - (Required) The value of the Y coordinate for a point on a Polygon.
 
 ### `notification_channel`
 
