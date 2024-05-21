@@ -32,30 +32,30 @@ func TestAccLightsailLoadBalancer_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"lb": {
-			"basic":             testAccLoadBalancer_basic,
+			acctest.CtBasic:     testAccLoadBalancer_basic,
 			"disappears":        testAccLoadBalancer_disappears,
 			"name":              testAccLoadBalancer_name,
 			"health_check_path": testAccLoadBalancer_healthCheckPath,
 			"tags":              testAccLoadBalancer_tags,
 		},
 		"lb_attachment": {
-			"basic":      testAccLoadBalancerAttachment_basic,
-			"disappears": testAccLoadBalancerAttachment_disappears,
+			acctest.CtBasic: testAccLoadBalancerAttachment_basic,
+			"disappears":    testAccLoadBalancerAttachment_disappears,
 		},
 		"lb_certificate": {
-			"basic":                     testAccLoadBalancerCertificate_basic,
+			acctest.CtBasic:             testAccLoadBalancerCertificate_basic,
 			"disappears":                testAccLoadBalancerCertificate_disappears,
 			"domain_validation_records": testAccLoadBalancerCertificate_domainValidationRecords,
 			"subject_alternative_names": testAccLoadBalancerCertificate_subjectAlternativeNames,
 		},
 		"lb_certificate_attachment": {
-			"basic": testAccLoadBalancerCertificateAttachment_basic,
+			acctest.CtBasic: testAccLoadBalancerCertificateAttachment_basic,
 		},
 		"lb_https_redirection_policy": {
-			"basic": testAccLoadBalancerHTTPSRedirectionPolicy_basic,
+			acctest.CtBasic: testAccLoadBalancerHTTPSRedirectionPolicy_basic,
 		},
 		"lb_stickiness_policy": {
-			"basic":           testAccLoadBalancerStickinessPolicy_basic,
+			acctest.CtBasic:   testAccLoadBalancerStickinessPolicy_basic,
 			"cookie_duration": testAccLoadBalancerStickinessPolicy_cookieDuration,
 			"enabled":         testAccLoadBalancerStickinessPolicy_enabled,
 			"disappears":      testAccLoadBalancerStickinessPolicy_disappears,
@@ -85,7 +85,7 @@ func testAccLoadBalancer_basic(t *testing.T) {
 					testAccCheckLoadBalancerExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "health_check_path", "/"),
 					resource.TestCheckResourceAttr(resourceName, "instance_port", "80"),
-					resource.TestCheckResourceAttrSet(resourceName, "dns_name"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrDNSName),
 				),
 			},
 			{
@@ -197,11 +197,11 @@ func testAccLoadBalancer_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerConfig_tags1(rName, "key1", "value1"),
+				Config: testAccLoadBalancerConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -210,20 +210,20 @@ func testAccLoadBalancer_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccLoadBalancerConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccLoadBalancerConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccLoadBalancerConfig_tags1(rName, "key2", "value2"),
+				Config: testAccLoadBalancerConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},

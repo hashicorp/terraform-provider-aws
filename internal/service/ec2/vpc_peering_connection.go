@@ -74,7 +74,7 @@ func ResourceVPCPeeringConnection() *schema.Resource {
 			"requester":       vpcPeeringConnectionOptionsSchema,
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -108,7 +108,7 @@ func resourceVPCPeeringConnectionCreate(ctx context.Context, d *schema.ResourceD
 	input := &ec2.CreateVpcPeeringConnectionInput{
 		PeerVpcId:         aws.String(d.Get("peer_vpc_id").(string)),
 		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeVpcPeeringConnection),
-		VpcId:             aws.String(d.Get("vpc_id").(string)),
+		VpcId:             aws.String(d.Get(names.AttrVPCID).(string)),
 	}
 
 	if v, ok := d.GetOk("peer_owner_id"); ok {
@@ -176,12 +176,12 @@ func resourceVPCPeeringConnectionRead(ctx context.Context, d *schema.ResourceDat
 		// We're the accepter.
 		d.Set("peer_owner_id", vpcPeeringConnection.RequesterVpcInfo.OwnerId)
 		d.Set("peer_vpc_id", vpcPeeringConnection.RequesterVpcInfo.VpcId)
-		d.Set("vpc_id", vpcPeeringConnection.AccepterVpcInfo.VpcId)
+		d.Set(names.AttrVPCID, vpcPeeringConnection.AccepterVpcInfo.VpcId)
 	} else {
 		// We're the requester.
 		d.Set("peer_owner_id", vpcPeeringConnection.AccepterVpcInfo.OwnerId)
 		d.Set("peer_vpc_id", vpcPeeringConnection.AccepterVpcInfo.VpcId)
-		d.Set("vpc_id", vpcPeeringConnection.RequesterVpcInfo.VpcId)
+		d.Set(names.AttrVPCID, vpcPeeringConnection.RequesterVpcInfo.VpcId)
 	}
 
 	if vpcPeeringConnection.AccepterVpcInfo.PeeringOptions != nil {

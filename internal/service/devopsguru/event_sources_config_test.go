@@ -39,7 +39,7 @@ func testAccEventSourcesConfig_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourcesConfigExists(ctx, resourceName, &cfg),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "event_sources.0.amazon_code_guru_profiler.*", map[string]string{
-						"status": "ENABLED",
+						names.AttrStatus: "ENABLED",
 					}),
 				),
 			},

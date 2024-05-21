@@ -42,7 +42,7 @@ func TestAccEC2OutpostsLocalGatewayRouteTablesDataSource_filter(t *testing.T) {
 			{
 				Config: testAccOutpostsLocalGatewayRouteTablesDataSourceConfig_filter(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "ids.#", acctest.Ct1),
 				),
 			},
 		},

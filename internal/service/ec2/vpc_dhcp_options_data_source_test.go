@@ -31,8 +31,8 @@ func TestAccVPCDHCPOptionsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccVPCDHCPOptionsDataSourceConfig_id,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "dhcp_options_id", resourceName, "id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "domain_name", resourceName, "domain_name"),
+					resource.TestCheckResourceAttrPair(datasourceName, "dhcp_options_id", resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDomainName, resourceName, names.AttrDomainName),
 					resource.TestCheckResourceAttrPair(datasourceName, "domain_name_servers.#", resourceName, "domain_name_servers.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "domain_name_servers.0", resourceName, "domain_name_servers.0"),
 					resource.TestCheckResourceAttrPair(datasourceName, "domain_name_servers.1", resourceName, "domain_name_servers.1"),
@@ -42,10 +42,10 @@ func TestAccVPCDHCPOptionsDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "netbios_node_type", resourceName, "netbios_node_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, "ntp_servers.#", resourceName, "ntp_servers.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "ntp_servers.0", resourceName, "ntp_servers.0"),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.Name", resourceName, "tags.Name"),
-					resource.TestCheckResourceAttrPair(datasourceName, "owner_id", resourceName, "owner_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrOwnerID, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 				),
 			},
 		},
@@ -66,8 +66,8 @@ func TestAccVPCDHCPOptionsDataSource_filter(t *testing.T) {
 			{
 				Config: testAccVPCDHCPOptionsDataSourceConfig_filter(rInt, 1),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "dhcp_options_id", resourceName, "id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "domain_name", resourceName, "domain_name"),
+					resource.TestCheckResourceAttrPair(datasourceName, "dhcp_options_id", resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDomainName, resourceName, names.AttrDomainName),
 					resource.TestCheckResourceAttrPair(datasourceName, "domain_name_servers.#", resourceName, "domain_name_servers.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "domain_name_servers.0", resourceName, "domain_name_servers.0"),
 					resource.TestCheckResourceAttrPair(datasourceName, "domain_name_servers.1", resourceName, "domain_name_servers.1"),
@@ -77,9 +77,9 @@ func TestAccVPCDHCPOptionsDataSource_filter(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "netbios_node_type", resourceName, "netbios_node_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, "ntp_servers.#", resourceName, "ntp_servers.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "ntp_servers.0", resourceName, "ntp_servers.0"),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.Name", resourceName, "tags.Name"),
-					resource.TestCheckResourceAttrPair(datasourceName, "owner_id", resourceName, "owner_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrOwnerID, resourceName, names.AttrOwnerID),
 				),
 			},
 			{

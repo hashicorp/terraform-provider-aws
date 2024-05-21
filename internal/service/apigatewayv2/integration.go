@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_apigatewayv2_integration", name="Integration")
@@ -64,7 +65,7 @@ func resourceIntegration() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -147,7 +148,7 @@ func resourceIntegration() *schema.Resource {
 							// Length between [1-512].
 							Elem: &schema.Schema{Type: schema.TypeString},
 						},
-						"status_code": {
+						names.AttrStatusCode: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -206,7 +207,7 @@ func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.CredentialsArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -285,7 +286,7 @@ func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("connection_type", output.ConnectionType)
 	d.Set("content_handling_strategy", output.ContentHandlingStrategy)
 	d.Set("credentials_arn", output.CredentialsArn)
-	d.Set("description", output.Description)
+	d.Set(names.AttrDescription, output.Description)
 	d.Set("integration_method", output.IntegrationMethod)
 	d.Set("integration_response_selection_expression", output.IntegrationResponseSelectionExpression)
 	d.Set("integration_subtype", output.IntegrationSubtype)
@@ -334,8 +335,8 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 		input.CredentialsArn = aws.String(d.Get("credentials_arn").(string))
 	}
 
-	if d.HasChange("description") {
-		input.Description = aws.String(d.Get("description").(string))
+	if d.HasChange(names.AttrDescription) {
+		input.Description = aws.String(d.Get(names.AttrDescription).(string))
 	}
 
 	if d.HasChange("integration_method") {
@@ -400,7 +401,7 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 				continue
 			}
 
-			if v, ok := tfMap["status_code"].(string); ok && v != "" {
+			if v, ok := tfMap[names.AttrStatusCode].(string); ok && v != "" {
 				if input.ResponseParameters == nil {
 					input.ResponseParameters = map[string]map[string]string{}
 				}
@@ -547,7 +548,7 @@ func expandIntegrationResponseParameters(tfList []interface{}) map[string]map[st
 			continue
 		}
 
-		if vStatusCode, ok := tfMap["status_code"].(string); ok && vStatusCode != "" {
+		if vStatusCode, ok := tfMap[names.AttrStatusCode].(string); ok && vStatusCode != "" {
 			if v, ok := tfMap["mappings"].(map[string]interface{}); ok && len(v) > 0 {
 				responseParameters[vStatusCode] = flex.ExpandStringValueMap(v)
 			}
@@ -571,7 +572,7 @@ func flattenIntegrationResponseParameters(responseParameters map[string]map[stri
 
 		tfMap := map[string]interface{}{}
 
-		tfMap["status_code"] = statusCode
+		tfMap[names.AttrStatusCode] = statusCode
 		tfMap["mappings"] = mappings
 
 		tfList = append(tfList, tfMap)

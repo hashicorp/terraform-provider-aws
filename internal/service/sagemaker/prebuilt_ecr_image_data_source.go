@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -345,7 +346,7 @@ func DataSourcePrebuiltECRImage() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePrebuiltECRImageRead,
 		Schema: map[string]*schema.Schema{
-			"repository_name": {
+			names.AttrRepositoryName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.StringInSlice([]string{
@@ -398,7 +399,7 @@ func DataSourcePrebuiltECRImage() *schema.Resource {
 				Default:  "1",
 			},
 
-			"region": {
+			names.AttrRegion: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -419,7 +420,7 @@ func DataSourcePrebuiltECRImage() *schema.Resource {
 func dataSourcePrebuiltECRImageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	region := meta.(*conns.AWSClient).Region
-	if v, ok := d.GetOk("region"); ok {
+	if v, ok := d.GetOk(names.AttrRegion); ok {
 		region = v.(string)
 	}
 
@@ -428,7 +429,7 @@ func dataSourcePrebuiltECRImageRead(ctx context.Context, d *schema.ResourceData,
 		suffix = v.(string)
 	}
 
-	repo := d.Get("repository_name").(string)
+	repo := d.Get(names.AttrRepositoryName).(string)
 
 	id := ""
 	switch repo {

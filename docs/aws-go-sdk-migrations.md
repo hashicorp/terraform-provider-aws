@@ -43,8 +43,16 @@ PKG=ec2 make awssdkpatch-apply
 You may also optionally generate the patch and use [`gopatch`](https://github.com/uber-go/gopatch) to preview differences before modfiying any files.
 
 ```console
-PKG=ec2 make awssdkpatch-gen
+make awssdkpatch-gen PKG=ec2
 gopatch -d -p awssdk.patch ./internal/service/ec2/...
+```
+
+#### Custom options
+
+To set additional `awssdkpatch` flags during patch generation, use the `AWSSDKPATCH_OPTS` environment variable.
+
+```console
+make awssdkpatch-gen PKG=ec2 AWSSDKPATCH_OPTS="-multiclient"
 ```
 
 ## Imports
@@ -62,16 +70,18 @@ github.com/aws-sdk-go-v2/service/<service>
 awstypes github.com/aws-sdk-go-v2/service/<service>/types
 ```
 
-If the `aws` package is used, this should also be upgraded.
+If the `aws` or `arn` packages are used, these should also be upgraded.
 
 ```
 // Remove
 github.com/aws-sdk-go/aws
+github.com/aws-sdk-go/aws/arn
 ```
 
 ```
 // Add
 github.com/aws-sdk-go-v2/aws
+github.com/aws-sdk-go-v2/aws/arn
 ```
 
 ## Client

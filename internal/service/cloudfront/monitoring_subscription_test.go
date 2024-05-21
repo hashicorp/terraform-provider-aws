@@ -34,8 +34,8 @@ func TestAccCloudFrontMonitoringSubscription_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMonitoringSubscriptionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "distribution_id"),
-					resource.TestCheckResourceAttr(resourceName, "monitoring_subscription.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "monitoring_subscription.0.realtime_metrics_subscription_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_subscription.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_subscription.0.realtime_metrics_subscription_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_subscription.0.realtime_metrics_subscription_config.0.realtime_metrics_subscription_status", "Enabled"),
 				),
 			},
@@ -89,8 +89,8 @@ func TestAccCloudFrontMonitoringSubscription_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMonitoringSubscriptionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "distribution_id"),
-					resource.TestCheckResourceAttr(resourceName, "monitoring_subscription.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "monitoring_subscription.0.realtime_metrics_subscription_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_subscription.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_subscription.0.realtime_metrics_subscription_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_subscription.0.realtime_metrics_subscription_config.0.realtime_metrics_subscription_status", "Enabled"),
 				),
 			},
@@ -104,8 +104,8 @@ func TestAccCloudFrontMonitoringSubscription_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMonitoringSubscriptionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "distribution_id"),
-					resource.TestCheckResourceAttr(resourceName, "monitoring_subscription.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "monitoring_subscription.0.realtime_metrics_subscription_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_subscription.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_subscription.0.realtime_metrics_subscription_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_subscription.0.realtime_metrics_subscription_config.0.realtime_metrics_subscription_status", "Disabled"),
 				),
 			},

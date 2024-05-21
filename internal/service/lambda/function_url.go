@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_lambda_function_url", name="Function URL")
@@ -86,7 +87,7 @@ func resourceFunctionURL() *schema.Resource {
 					},
 				},
 			},
-			"function_arn": {
+			names.AttrFunctionARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -206,7 +207,7 @@ func resourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta i
 	} else {
 		d.Set("cors", nil)
 	}
-	d.Set("function_arn", output.FunctionArn)
+	d.Set(names.AttrFunctionARN, output.FunctionArn)
 	d.Set("function_name", name)
 	d.Set("function_url", functionURL)
 	d.Set("invoke_mode", output.InvokeMode)
@@ -353,7 +354,7 @@ func functionURLParseResourceID(id string) (string, string, error) {
 		return parts[0], parts[1], nil
 	}
 
-	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected FUNCTION-NAME%[2]qQUALIFIER or FUNCTION-NAME", id, functionURLResourceIDSeparator)
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected FUNCTION-NAME%[2]sQUALIFIER or FUNCTION-NAME", id, functionURLResourceIDSeparator)
 }
 
 func expandCors(tfMap map[string]interface{}) *awstypes.Cors {

@@ -59,12 +59,12 @@ func resourceStage() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"destination_arn": {
+						names.AttrDestinationARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"format": {
+						names.AttrFormat: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -115,7 +115,7 @@ func resourceStage() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -191,7 +191,7 @@ func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.CanarySettings = expandCanarySettings(v.([]interface{})[0].(map[string]interface{}), deploymentID)
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -252,7 +252,7 @@ func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if err := d.Set("access_log_settings", flattenAccessLogSettings(stage.AccessLogSettings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting access_log_settings: %s", err)
 	}
-	d.Set("arn", stageARN(meta.(*conns.AWSClient), apiID, stageName))
+	d.Set(names.AttrARN, stageARN(meta.(*conns.AWSClient), apiID, stageName))
 	if stage.CacheClusterStatus == types.CacheClusterStatusDeleteInProgress {
 		d.Set("cache_cluster_enabled", false)
 		d.Set("cache_cluster_size", d.Get("cache_cluster_size"))
@@ -270,7 +270,7 @@ func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	d.Set("client_certificate_id", stage.ClientCertificateId)
 	d.Set("deployment_id", stage.DeploymentId)
-	d.Set("description", stage.Description)
+	d.Set(names.AttrDescription, stage.Description)
 	d.Set("documentation_version", stage.DocumentationVersion)
 	d.Set("execution_arn", stageInvokeARN(meta.(*conns.AWSClient), apiID, stageName))
 	d.Set("invoke_url", meta.(*conns.AWSClient).APIGatewayInvokeURL(ctx, apiID, stageName))
@@ -289,7 +289,7 @@ func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		apiID := d.Get("rest_api_id").(string)
 		stageName := d.Get("stage_name").(string)
 		operations := make([]types.PatchOperation, 0)
@@ -340,11 +340,11 @@ func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 				})
 			}
 		}
-		if d.HasChange("description") {
+		if d.HasChange(names.AttrDescription) {
 			operations = append(operations, types.PatchOperation{
 				Op:    types.OpReplace,
 				Path:  aws.String("/description"),
-				Value: aws.String(d.Get("description").(string)),
+				Value: aws.String(d.Get(names.AttrDescription).(string)),
 			})
 		}
 		if d.HasChange("xray_tracing_enabled") {
@@ -553,8 +553,8 @@ func flattenAccessLogSettings(accessLogSettings *types.AccessLogSettings) []map[
 	result := make([]map[string]interface{}, 0, 1)
 	if accessLogSettings != nil {
 		result = append(result, map[string]interface{}{
-			"destination_arn": aws.ToString(accessLogSettings.DestinationArn),
-			"format":          aws.ToString(accessLogSettings.Format),
+			names.AttrDestinationARN: aws.ToString(accessLogSettings.DestinationArn),
+			names.AttrFormat:         aws.ToString(accessLogSettings.Format),
 		})
 	}
 	return result

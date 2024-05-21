@@ -51,7 +51,7 @@ func (r *crossAccountAttachmentResource) Schema(ctx context.Context, request res
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			"created_time": schema.StringAttribute{
+			names.AttrCreatedTime: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 				PlanModifiers: []planmodifier.String{
@@ -63,7 +63,7 @@ func (r *crossAccountAttachmentResource) Schema(ctx context.Context, request res
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
 			"principals": schema.SetAttribute{
@@ -82,7 +82,7 @@ func (r *crossAccountAttachmentResource) Schema(ctx context.Context, request res
 						"endpoint_id": schema.StringAttribute{
 							Optional: true,
 						},
-						"region": schema.StringAttribute{
+						names.AttrRegion: schema.StringAttribute{
 							Optional: true,
 						},
 					},

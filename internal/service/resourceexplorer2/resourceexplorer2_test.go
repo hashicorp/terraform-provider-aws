@@ -14,21 +14,21 @@ func TestAccResourceExplorer2_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Index": {
-			"basic":      testAccIndex_basic,
-			"disappears": testAccIndex_disappears,
-			"tags":       testAccIndex_tags,
-			"type":       testAccIndex_type,
+			acctest.CtBasic: testAccIndex_basic,
+			"disappears":    testAccIndex_disappears,
+			"tags":          testAccIndex_tags,
+			"type":          testAccIndex_type,
 		},
 		"View": {
-			"basic":       testAccView_basic,
-			"defaultView": testAccView_defaultView,
-			"disappears":  testAccView_disappears,
-			"filter":      testAccView_filter,
-			"tags":        testAccView_tags,
+			acctest.CtBasic: testAccView_basic,
+			"defaultView":   testAccView_defaultView,
+			"disappears":    testAccView_disappears,
+			"filter":        testAccView_filter,
+			"tags":          testAccView_tags,
 		},
 		"SearchDataSource": {
-			"basic":     testAccSearchDataSource_basic,
-			"indexType": testAccSearchDataSource_IndexType,
+			acctest.CtBasic: testAccSearchDataSource_basic,
+			"indexType":     testAccSearchDataSource_IndexType,
 		},
 	}
 

@@ -44,7 +44,7 @@ func TestAccLambdaAlias_basic(t *testing.T) {
 					testAccCheckAliasExists(ctx, resourceName, &conf),
 					testAccCheckAliasAttributes(&conf),
 					testAccCheckAliasRoutingDoesNotExistConfig(&conf),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", functionArnResourcePart),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "lambda", functionArnResourcePart),
 					testAccCheckAliasInvokeARN(resourceName, &conf),
 				),
 			},
@@ -109,7 +109,7 @@ func TestAccLambdaAlias_FunctionName_name(t *testing.T) {
 					testAccCheckAliasExists(ctx, resourceName, &conf),
 					testAccCheckAliasAttributes(&conf),
 					testAccCheckAliasRoutingDoesNotExistConfig(&conf),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s:%s", rName, rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "lambda", fmt.Sprintf("function:%s:%s", rName, rName)),
 					testAccCheckAliasInvokeARN(resourceName, &conf),
 				),
 			},
@@ -148,7 +148,7 @@ func TestAccLambdaAlias_nameUpdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(ctx, resourceName, &conf),
 					testAccCheckAliasAttributes(&conf),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", functionArnResourcePart),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "lambda", functionArnResourcePart),
 				),
 			},
 			{
@@ -162,7 +162,7 @@ func TestAccLambdaAlias_nameUpdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(ctx, resourceName, &conf),
 					testAccCheckAliasAttributes(&conf),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", functionArnResourcePartUpdate),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "lambda", functionArnResourcePartUpdate),
 				),
 			},
 		},
@@ -192,7 +192,7 @@ func TestAccLambdaAlias_routing(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(ctx, resourceName, &conf),
 					testAccCheckAliasAttributes(&conf),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", functionArnResourcePart),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "lambda", functionArnResourcePart),
 				),
 			},
 			{
@@ -207,7 +207,7 @@ func TestAccLambdaAlias_routing(t *testing.T) {
 					testAccCheckAliasExists(ctx, resourceName, &conf),
 					testAccCheckAliasAttributes(&conf),
 					testAccCheckAliasRoutingExistsConfig(&conf),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", functionArnResourcePart),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "lambda", functionArnResourcePart),
 				),
 			},
 			{
@@ -216,7 +216,7 @@ func TestAccLambdaAlias_routing(t *testing.T) {
 					testAccCheckAliasExists(ctx, resourceName, &conf),
 					testAccCheckAliasAttributes(&conf),
 					testAccCheckAliasRoutingDoesNotExistConfig(&conf),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", functionArnResourcePart),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "lambda", functionArnResourcePart),
 				),
 			},
 		},
@@ -232,7 +232,7 @@ func testAccCheckAliasDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tflambda.FindAliasByTwoPartKey(ctx, conn, rs.Primary.Attributes["function_name"], rs.Primary.Attributes["name"])
+			_, err := tflambda.FindAliasByTwoPartKey(ctx, conn, rs.Primary.Attributes["function_name"], rs.Primary.Attributes[names.AttrName])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -258,7 +258,7 @@ func testAccCheckAliasExists(ctx context.Context, n string, v *lambda.GetAliasOu
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
 
-		output, err := tflambda.FindAliasByTwoPartKey(ctx, conn, rs.Primary.Attributes["function_name"], rs.Primary.Attributes["name"])
+		output, err := tflambda.FindAliasByTwoPartKey(ctx, conn, rs.Primary.Attributes["function_name"], rs.Primary.Attributes[names.AttrName])
 
 		if err != nil {
 			return err
@@ -323,7 +323,7 @@ func testAccAliasImportStateIDFunc(n string) resource.ImportStateIdFunc {
 			return "", fmt.Errorf("Not found: %s", n)
 		}
 
-		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["function_name"], rs.Primary.Attributes["name"]), nil
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["function_name"], rs.Primary.Attributes[names.AttrName]), nil
 	}
 }
 

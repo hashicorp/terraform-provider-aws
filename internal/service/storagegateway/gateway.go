@@ -57,7 +57,7 @@ func ResourceGateway() *schema.Resource {
 				ForceNew:     true,
 				ExactlyOneOf: []string{"activation_key", "gateway_ip_address"},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -80,7 +80,7 @@ func ResourceGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"endpoint_type": {
+			names.AttrEndpointType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -197,7 +197,7 @@ func ResourceGateway() *schema.Resource {
 								),
 							},
 						},
-						"domain_name": {
+						names.AttrDomainName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.All(
@@ -210,7 +210,7 @@ func ResourceGateway() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(1, 1024),
 						},
-						"password": {
+						names.AttrPassword: {
 							Type:      schema.TypeString,
 							Required:  true,
 							Sensitive: true,
@@ -225,7 +225,7 @@ func ResourceGateway() *schema.Resource {
 							Default:      20,
 							ValidateFunc: validation.IntBetween(0, 3600),
 						},
-						"username": {
+						names.AttrUsername: {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.All(
@@ -522,7 +522,7 @@ func resourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta inter
 	// We allow Terraform to passthrough the configuration value into the state
 	d.Set("activation_key", d.Get("activation_key").(string))
 
-	d.Set("arn", output.GatewayARN)
+	d.Set(names.AttrARN, output.GatewayARN)
 	d.Set("gateway_id", output.GatewayId)
 
 	// The Storage Gateway API currently provides no way to read this value
@@ -546,7 +546,7 @@ func resourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	} else {
 		m := map[string]interface{}{
-			"domain_name":             aws.StringValue(smbSettingsOutput.DomainName),
+			names.AttrDomainName:      aws.StringValue(smbSettingsOutput.DomainName),
 			"active_directory_status": aws.StringValue(smbSettingsOutput.ActiveDirectoryStatus),
 			// The Storage Gateway API currently provides no way to read these values
 			// "password": ...,
@@ -559,8 +559,8 @@ func resourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta inter
 		//    smb_active_directory_settings.0.username: "" => "Administrator"
 		if v, ok := d.GetOk("smb_active_directory_settings"); ok && len(v.([]interface{})) > 0 {
 			configM := v.([]interface{})[0].(map[string]interface{})
-			m["password"] = configM["password"]
-			m["username"] = configM["username"]
+			m[names.AttrPassword] = configM[names.AttrPassword]
+			m[names.AttrUsername] = configM[names.AttrUsername]
 			m["timeout_in_seconds"] = configM["timeout_in_seconds"]
 
 			if v, ok := configM["organizational_unit"]; ok {
@@ -592,7 +592,7 @@ func resourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("smb_security_strategy", smbSettingsOutput.SMBSecurityStrategy)
 	d.Set("smb_file_share_visibility", smbSettingsOutput.FileSharesVisible)
 	d.Set("ec2_instance_id", output.Ec2InstanceId)
-	d.Set("endpoint_type", output.EndpointType)
+	d.Set(names.AttrEndpointType, output.EndpointType)
 	d.Set("host_environment", output.HostEnvironment)
 
 	if err := d.Set("gateway_network_interface", flattenGatewayNetworkInterfaces(output.GatewayNetworkInterfaces)); err != nil {
@@ -817,10 +817,10 @@ func expandGatewayDomain(l []interface{}, gatewayArn string) *storagegateway.Joi
 	}
 
 	domain := &storagegateway.JoinDomainInput{
-		DomainName:       aws.String(tfMap["domain_name"].(string)),
+		DomainName:       aws.String(tfMap[names.AttrDomainName].(string)),
 		GatewayARN:       aws.String(gatewayArn),
-		Password:         aws.String(tfMap["password"].(string)),
-		UserName:         aws.String(tfMap["username"].(string)),
+		Password:         aws.String(tfMap[names.AttrPassword].(string)),
+		UserName:         aws.String(tfMap[names.AttrUsername].(string)),
 		TimeoutInSeconds: aws.Int64(int64(tfMap["timeout_in_seconds"].(int))),
 	}
 

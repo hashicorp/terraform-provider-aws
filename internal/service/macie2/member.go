@@ -34,19 +34,19 @@ func ResourceMember() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"email": {
+			names.AttrEmail: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
 			names.AttrTags:    tftags.TagsSchemaForceNew(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -70,7 +70,7 @@ func ResourceMember() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -102,11 +102,11 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
-	accountId := d.Get("account_id").(string)
+	accountId := d.Get(names.AttrAccountID).(string)
 	input := &macie2.CreateMemberInput{
 		Account: &macie2.AccountDetail{
 			AccountId: aws.String(accountId),
-			Email:     aws.String(d.Get("email").(string)),
+			Email:     aws.String(d.Get(names.AttrEmail).(string)),
 		},
 		Tags: getTagsIn(ctx),
 	}
@@ -213,14 +213,14 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading Macie Member (%s): %s", d.Id(), err)
 	}
 
-	d.Set("account_id", resp.AccountId)
-	d.Set("email", resp.Email)
+	d.Set(names.AttrAccountID, resp.AccountId)
+	d.Set(names.AttrEmail, resp.Email)
 	d.Set("relationship_status", resp.RelationshipStatus)
 	d.Set("administrator_account_id", resp.AdministratorAccountId)
 	d.Set("master_account_id", resp.MasterAccountId)
 	d.Set("invited_at", aws.TimeValue(resp.InvitedAt).Format(time.RFC3339))
 	d.Set("updated_at", aws.TimeValue(resp.UpdatedAt).Format(time.RFC3339))
-	d.Set("arn", resp.Arn)
+	d.Set(names.AttrARN, resp.Arn)
 
 	setTagsOut(ctx, resp.Tags)
 
@@ -242,7 +242,7 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if aws.StringValue(resp.RelationshipStatus) == macie2.RelationshipStatusPaused {
 		status = macie2.MacieStatusPaused
 	}
-	d.Set("status", status)
+	d.Set(names.AttrStatus, status)
 
 	return diags
 }
@@ -317,10 +317,10 @@ func resourceMemberUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	// End Invitation workflow
 
-	if d.HasChange("status") {
+	if d.HasChange(names.AttrStatus) {
 		input := &macie2.UpdateMemberSessionInput{
 			Id:     aws.String(d.Id()),
-			Status: aws.String(d.Get("status").(string)),
+			Status: aws.String(d.Get(names.AttrStatus).(string)),
 		}
 
 		_, err := conn.UpdateMemberSessionWithContext(ctx, input)

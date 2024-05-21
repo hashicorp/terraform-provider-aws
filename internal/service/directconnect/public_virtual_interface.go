@@ -60,7 +60,7 @@ func ResourcePublicVirtualInterface() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -90,7 +90,7 @@ func ResourcePublicVirtualInterface() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -129,7 +129,7 @@ func resourcePublicVirtualInterfaceCreate(ctx context.Context, d *schema.Resourc
 			AddressFamily:        aws.String(d.Get("address_family").(string)),
 			Asn:                  aws.Int64(int64(d.Get("bgp_asn").(int))),
 			Tags:                 getTagsIn(ctx),
-			VirtualInterfaceName: aws.String(d.Get("name").(string)),
+			VirtualInterfaceName: aws.String(d.Get(names.AttrName).(string)),
 			Vlan:                 aws.Int64(int64(d.Get("vlan").(int))),
 		},
 	}
@@ -185,13 +185,13 @@ func resourcePublicVirtualInterfaceRead(ctx context.Context, d *schema.ResourceD
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("dxvif/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("aws_device", vif.AwsDeviceV2)
 	d.Set("bgp_asn", vif.Asn)
 	d.Set("bgp_auth_key", vif.AuthKey)
 	d.Set("customer_address", vif.CustomerAddress)
 	d.Set("connection_id", vif.ConnectionId)
-	d.Set("name", vif.VirtualInterfaceName)
+	d.Set(names.AttrName, vif.VirtualInterfaceName)
 	if err := d.Set("route_filter_prefixes", flattenRouteFilterPrefixes(vif.RouteFilterPrefixes)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting route_filter_prefixes: %s", err)
 	}

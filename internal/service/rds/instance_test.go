@@ -53,13 +53,13 @@ func TestAccRDSInstance_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					testAccCheckInstanceAttributes(&v),
-					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "10"),
+					resource.TestCheckResourceAttr(resourceName, "allocated_storage", acctest.Ct10),
 					resource.TestCheckNoResourceAttr(resourceName, "allow_major_version_upgrade"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexache.MustCompile(`db:.+`)),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
-					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
-					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "0"),
-					resource.TestCheckResourceAttr(resourceName, "backup_target", "region"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(`db:.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, "true"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "backup_target", names.AttrRegion),
 					resource.TestCheckResourceAttrSet(resourceName, "backup_window"),
 					resource.TestCheckResourceAttrSet(resourceName, "ca_cert_identifier"),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "false"),
@@ -67,33 +67,33 @@ func TestAccRDSInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "db_subnet_group_name", "default"),
 					resource.TestCheckResourceAttr(resourceName, "dedicated_log_volume", "false"),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
-					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "endpoint"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", acctest.Ct0),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
 					resource.TestCheckResourceAttr(resourceName, "engine", tfrds.InstanceEngineMySQL),
-					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
-					resource.TestCheckResourceAttrSet(resourceName, "hosted_zone_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrHostedZoneID),
 					resource.TestCheckResourceAttr(resourceName, "iam_database_authentication_enabled", "false"),
-					resource.TestCheckResourceAttrPair(resourceName, "id", resourceName, "resource_id"),
-					resource.TestCheckResourceAttr(resourceName, "identifier", rName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrResourceID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, rName),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_class", "data.aws_rds_orderable_db_instance.test", "instance_class"),
-					resource.TestCheckResourceAttr(resourceName, "iops", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "license_model", "general-public-license"),
-					resource.TestCheckResourceAttr(resourceName, "listener_endpoint.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "listener_endpoint.#", acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window"),
-					resource.TestCheckResourceAttr(resourceName, "max_allocated_storage", "0"),
+					resource.TestCheckResourceAttr(resourceName, "max_allocated_storage", acctest.Ct0),
 					resource.TestMatchResourceAttr(resourceName, "option_group_name", regexache.MustCompile(`^default:mysql-\d`)),
 					resource.TestMatchResourceAttr(resourceName, "parameter_group_name", regexache.MustCompile(`^default\.mysql\d`)),
-					resource.TestCheckResourceAttr(resourceName, "port", "3306"),
-					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
-					resource.TestCheckResourceAttr(resourceName, "replicas.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "resource_id"),
-					resource.TestCheckResourceAttr(resourceName, "status", "available"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "3306"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, "false"),
+					resource.TestCheckResourceAttr(resourceName, "replicas.#", acctest.Ct0),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrResourceID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "available"),
 					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
-					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "0"),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "username", "tfacctest"),
+					resource.TestCheckResourceAttr(resourceName, "storage_throughput", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrUsername, "tfacctest"),
 				),
 			},
 			{
@@ -101,9 +101,9 @@ func TestAccRDSInstance_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
-					"password",
+					names.AttrPassword,
 					"manage_master_user_password",
 					"skip_final_snapshot",
 					"delete_automated_backups",
@@ -132,7 +132,7 @@ func TestAccRDSInstance_identifierPrefix(t *testing.T) {
 				Config: testAccInstanceConfig_identifierPrefix("tf-acc-test-prefix-"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "identifier", "tf-acc-test-prefix-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrIdentifier, "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", "tf-acc-test-prefix-"),
 				),
 			},
@@ -141,8 +141,8 @@ func TestAccRDSInstance_identifierPrefix(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"password",
+					names.AttrApplyImmediately,
+					names.AttrPassword,
 				},
 			},
 		},
@@ -168,7 +168,7 @@ func TestAccRDSInstance_identifierGenerated(t *testing.T) {
 				Config: testAccInstanceConfig_identifierGenerated(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrNameGenerated(resourceName, "identifier"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrIdentifier),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", id.UniqueIdPrefix),
 				),
 			},
@@ -177,8 +177,8 @@ func TestAccRDSInstance_identifierGenerated(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"password",
+					names.AttrApplyImmediately,
+					names.AttrPassword,
 				},
 			},
 		},
@@ -230,11 +230,11 @@ func TestAccRDSInstance_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_tags1(rName, "key1", "value1"),
+				Config: testAccInstanceConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -242,28 +242,28 @@ func TestAccRDSInstance_tags(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
-					"password",
+					names.AttrPassword,
 					"skip_final_snapshot",
 					"delete_automated_backups",
 				},
 			},
 			{
-				Config: testAccInstanceConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccInstanceConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccInstanceConfig_tags1(rName, "key2", "value2"),
+				Config: testAccInstanceConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -291,7 +291,7 @@ func TestAccRDSInstance_Versions_onlyMajor(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "engine", tfrds.InstanceEngineMySQL),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "8.0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "8.0"),
 				),
 			},
 			{
@@ -299,9 +299,9 @@ func TestAccRDSInstance_Versions_onlyMajor(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"engine_version",
-					"password",
+					names.AttrApplyImmediately,
+					names.AttrEngineVersion,
+					names.AttrPassword,
 				},
 			},
 		},
@@ -330,7 +330,7 @@ func TestAccRDSInstance_kmsKey(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					testAccCheckInstanceAttributes(&v),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, kmsKeyResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -338,10 +338,10 @@ func TestAccRDSInstance_kmsKey(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"delete_automated_backups",
 					"final_snapshot_identifier",
-					"password",
+					names.AttrPassword,
 					"skip_final_snapshot",
 				},
 			},
@@ -401,14 +401,14 @@ func TestAccRDSInstance_DBSubnetGroupName_basic(t *testing.T) {
 				Config: testAccInstanceConfig_DBSubnetGroupName_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, names.AttrName),
 				),
 			},
 			{
 				Config: testAccInstanceConfig_DBSubnetGroupName_update(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName2, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName2, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "db_subnet_group_name", fmt.Sprintf("%s-2", rName)),
 				),
 			},
@@ -536,9 +536,9 @@ func TestAccRDSInstance_Versions_allowMajor(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"allow_major_version_upgrade",
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
-					"password",
+					names.AttrPassword,
 					"skip_final_snapshot",
 				},
 			},
@@ -605,7 +605,7 @@ func TestAccRDSInstance_DBSubnetGroupName_ramShared(t *testing.T) {
 				Config: testAccInstanceConfig_DBSubnetGroupName_ramShared(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, names.AttrName),
 				),
 			},
 		},
@@ -633,7 +633,7 @@ func TestAccRDSInstance_DBSubnetGroupName_vpcSecurityGroupIDs(t *testing.T) {
 				Config: testAccInstanceConfig_DBSubnetGroupName_vpcSecurityGroupIDs(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, names.AttrName),
 				),
 			},
 		},
@@ -669,9 +669,9 @@ func TestAccRDSInstance_deletionProtection(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
-					"password",
+					names.AttrPassword,
 					"skip_final_snapshot",
 					"delete_automated_backups",
 				},
@@ -814,14 +814,14 @@ func TestAccRDSInstance_Storage_maxAllocated(t *testing.T) {
 				Config: testAccInstanceConfig_Storage_maxAllocated(rName, 10),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "max_allocated_storage", "10"),
+					resource.TestCheckResourceAttr(resourceName, "max_allocated_storage", acctest.Ct10),
 				),
 			},
 			{
 				Config: testAccInstanceConfig_Storage_maxAllocated(rName, 5),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "max_allocated_storage", "0"),
+					resource.TestCheckResourceAttr(resourceName, "max_allocated_storage", acctest.Ct0),
 				),
 			},
 			{
@@ -835,7 +835,7 @@ func TestAccRDSInstance_Storage_maxAllocated(t *testing.T) {
 				Config: testAccInstanceConfig_Storage_maxAllocated(rName, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "max_allocated_storage", "0"),
+					resource.TestCheckResourceAttr(resourceName, "max_allocated_storage", acctest.Ct0),
 				),
 			},
 		},
@@ -867,7 +867,7 @@ func TestAccRDSInstance_password(t *testing.T) {
 				Config: testAccInstanceConfig_password(rName, "valid-password-1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "password", "valid-password-1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPassword, "valid-password-1"),
 				),
 			},
 			{
@@ -875,9 +875,9 @@ func TestAccRDSInstance_password(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
-					"password",
+					names.AttrPassword,
 					"skip_final_snapshot",
 				},
 			},
@@ -886,7 +886,7 @@ func TestAccRDSInstance_password(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v2),
 					testAccCheckDBInstanceNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, "password", "valid-password-2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPassword, "valid-password-2"),
 				),
 			},
 		},
@@ -910,7 +910,7 @@ func TestAccRDSInstance_ManageMasterPassword_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "manage_master_user_password", "true"),
-					resource.TestCheckResourceAttr(resourceName, "master_user_secret.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "master_user_secret.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.kms_key_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.secret_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.secret_status"),
@@ -921,7 +921,7 @@ func TestAccRDSInstance_ManageMasterPassword_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
 					"manage_master_user_password",
 					"skip_final_snapshot",
@@ -948,7 +948,7 @@ func TestAccRDSInstance_ManageMasterPassword_kmsKey(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "manage_master_user_password", "true"),
-					resource.TestCheckResourceAttr(resourceName, "master_user_secret.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "master_user_secret.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.kms_key_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.secret_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.secret_status"),
@@ -959,7 +959,7 @@ func TestAccRDSInstance_ManageMasterPassword_kmsKey(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
 					"manage_master_user_password",
 					"master_user_secret_kms_key_id",
@@ -998,9 +998,9 @@ func TestAccRDSInstance_ManageMasterPassword_convertToManaged(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
-					"password",
+					names.AttrPassword,
 					"skip_final_snapshot",
 				},
 			},
@@ -1039,22 +1039,22 @@ func TestAccRDSInstance_ReplicateSourceDB_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "identifier", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, rName),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
-					resource.TestCheckResourceAttrPair(resourceName, "replicate_source_db", sourceResourceName, "identifier"),
+					resource.TestCheckResourceAttrPair(resourceName, "replicate_source_db", sourceResourceName, names.AttrIdentifier),
 					resource.TestCheckResourceAttrPair(resourceName, "db_name", sourceResourceName, "db_name"),
 					resource.TestCheckResourceAttr(resourceName, "dedicated_log_volume", "false"),
-					resource.TestCheckResourceAttrPair(resourceName, "username", sourceResourceName, "username"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrUsername, sourceResourceName, names.AttrUsername),
 
-					resource.TestCheckResourceAttr(sourceResourceName, "replicas.#", "0"), // Before refreshing source, it will not be aware of replicas
+					resource.TestCheckResourceAttr(sourceResourceName, "replicas.#", acctest.Ct0), // Before refreshing source, it will not be aware of replicas
 				),
 			},
 			{
 				// Confirm that `replicas` is populated after refreshing source
 				RefreshState: true,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(sourceResourceName, "replicas.#", "1"),
+					resource.TestCheckResourceAttr(sourceResourceName, "replicas.#", acctest.Ct1),
 				),
 			},
 			{
@@ -1062,8 +1062,8 @@ func TestAccRDSInstance_ReplicateSourceDB_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"password",
+					names.AttrApplyImmediately,
+					names.AttrPassword,
 				},
 			},
 			{
@@ -1071,10 +1071,10 @@ func TestAccRDSInstance_ReplicateSourceDB_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "identifier", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, rName),
 					resource.TestCheckResourceAttr(resourceName, "replicate_source_db", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "db_name", sourceResourceName, "db_name"),
-					resource.TestCheckResourceAttrPair(resourceName, "username", sourceResourceName, "username"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrUsername, sourceResourceName, names.AttrUsername),
 				),
 			},
 			{
@@ -1082,8 +1082,8 @@ func TestAccRDSInstance_ReplicateSourceDB_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"password",
+					names.AttrApplyImmediately,
+					names.AttrPassword,
 				},
 			},
 		},
@@ -1112,7 +1112,7 @@ func TestAccRDSInstance_ReplicateSourceDB_namePrefix(t *testing.T) {
 				Config: testAccInstanceConfig_ReplicateSourceDB_namePrefix(identifierPrefix, sourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "identifier", identifierPrefix),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrIdentifier, identifierPrefix),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", identifierPrefix),
 				),
 			},
@@ -1121,8 +1121,8 @@ func TestAccRDSInstance_ReplicateSourceDB_namePrefix(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"password",
+					names.AttrApplyImmediately,
+					names.AttrPassword,
 				},
 			},
 		},
@@ -1150,7 +1150,7 @@ func TestAccRDSInstance_ReplicateSourceDB_nameGenerated(t *testing.T) {
 				Config: testAccInstanceConfig_ReplicateSourceDB_nameGenerated(sourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrNameGenerated(resourceName, "identifier"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrIdentifier),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", id.UniqueIdPrefix),
 				),
 			},
@@ -1159,8 +1159,8 @@ func TestAccRDSInstance_ReplicateSourceDB_nameGenerated(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"password",
+					names.AttrApplyImmediately,
+					names.AttrPassword,
 				},
 			},
 		},
@@ -1227,7 +1227,7 @@ func TestAccRDSInstance_ReplicateSourceDB_allocatedStorage(t *testing.T) {
 					testAccCheckInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "10"),
+					resource.TestCheckResourceAttr(resourceName, "allocated_storage", acctest.Ct10),
 				),
 			},
 		},
@@ -1258,7 +1258,7 @@ func TestAccRDSInstance_ReplicateSourceDB_iops(t *testing.T) {
 					testAccCheckInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "iops", "1000"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "1000"),
 				),
 			},
 		},
@@ -1290,7 +1290,7 @@ func TestAccRDSInstance_ReplicateSourceDB_allocatedStorageAndIops(t *testing.T) 
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "220"),
-					resource.TestCheckResourceAttr(resourceName, "iops", "2200"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "2200"),
 				),
 			},
 		},
@@ -1352,7 +1352,7 @@ func TestAccRDSInstance_ReplicateSourceDB_autoMinorVersionUpgrade(t *testing.T) 
 					testAccCheckInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, "false"),
 				),
 			},
 		},
@@ -1412,7 +1412,7 @@ func TestAccRDSInstance_ReplicateSourceDB_backupRetentionPeriod(t *testing.T) {
 					testAccCheckInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", acctest.Ct1),
 				),
 			},
 		},
@@ -1474,7 +1474,7 @@ func TestAccRDSInstance_ReplicateSourceDB_dbSubnetGroupName(t *testing.T) {
 				Config: testAccInstanceConfig_ReplicateSourceDB_dbSubnetGroupName(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, names.AttrName),
 				),
 			},
 		},
@@ -1507,7 +1507,7 @@ func TestAccRDSInstance_ReplicateSourceDB_dbSubnetGroupNameRAMShared(t *testing.
 				Config: testAccInstanceConfig_ReplicateSourceDB_DBSubnetGroupName_ramShared(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, names.AttrName),
 				),
 			},
 		},
@@ -1538,7 +1538,7 @@ func TestAccRDSInstance_ReplicateSourceDB_dbSubnetGroupNameVPCSecurityGroupIDs(t
 				Config: testAccInstanceConfig_ReplicateSourceDB_DBSubnetGroupName_vpcSecurityGroupIDs(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, names.AttrName),
 				),
 			},
 		},
@@ -1681,7 +1681,7 @@ func TestAccRDSInstance_ReplicateSourceDB_maxAllocatedStorage(t *testing.T) {
 					testAccCheckInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "max_allocated_storage", "10"),
+					resource.TestCheckResourceAttr(resourceName, "max_allocated_storage", acctest.Ct10),
 				),
 			},
 		},
@@ -1975,7 +1975,7 @@ func TestAccRDSInstance_ReplicateSourceDB_port(t *testing.T) {
 					testAccCheckInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "port", "9999"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "9999"),
 				),
 			},
 		},
@@ -2006,7 +2006,7 @@ func TestAccRDSInstance_ReplicateSourceDB_vpcSecurityGroupIDs(t *testing.T) {
 					testAccCheckInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", acctest.Ct1),
 				),
 			},
 		},
@@ -2038,8 +2038,8 @@ func TestAccRDSInstance_ReplicateSourceDB_caCertificateIdentifier(t *testing.T) 
 					testAccCheckInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
-					resource.TestCheckResourceAttrPair(sourceResourceName, "ca_cert_identifier", certifiateDataSourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "ca_cert_identifier", certifiateDataSourceName, "id"),
+					resource.TestCheckResourceAttrPair(sourceResourceName, "ca_cert_identifier", certifiateDataSourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "ca_cert_identifier", certifiateDataSourceName, names.AttrID),
 				),
 			},
 		},
@@ -2070,7 +2070,7 @@ func TestAccRDSInstance_ReplicateSourceDB_characterSet_Source(t *testing.T) {
 					testAccCheckInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
 					resource.TestCheckResourceAttr(sourceResourceName, "character_set_name", "WE8ISO8859P15"),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttrPair(resourceName, "replicate_source_db", sourceResourceName, "identifier"),
+					resource.TestCheckResourceAttrPair(resourceName, "replicate_source_db", sourceResourceName, names.AttrIdentifier),
 					resource.TestCheckResourceAttr(resourceName, "character_set_name", "WE8ISO8859P15"),
 				),
 			},
@@ -2079,9 +2079,9 @@ func TestAccRDSInstance_ReplicateSourceDB_characterSet_Source(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
-					"password",
+					names.AttrPassword,
 					"manage_master_user_password",
 					"skip_final_snapshot",
 					"delete_automated_backups",
@@ -2115,7 +2115,7 @@ func TestAccRDSInstance_ReplicateSourceDB_characterSet_Replica(t *testing.T) {
 					testAccCheckInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
 					resource.TestCheckResourceAttr(sourceResourceName, "character_set_name", "WE8ISO8859P15"),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttrPair(resourceName, "replicate_source_db", sourceResourceName, "identifier"),
+					resource.TestCheckResourceAttrPair(resourceName, "replicate_source_db", sourceResourceName, names.AttrIdentifier),
 					resource.TestCheckResourceAttr(resourceName, "character_set_name", "WE8ISO8859P15"),
 				),
 			},
@@ -2155,9 +2155,9 @@ func TestAccRDSInstance_ReplicateSourceDB_replicaMode(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
-					"password",
+					names.AttrPassword,
 					"manage_master_user_password",
 					"skip_final_snapshot",
 					"delete_automated_backups",
@@ -2217,7 +2217,7 @@ func TestAccRDSInstance_ReplicateSourceDB_parameterGroupTwoStep(t *testing.T) {
 					resource.TestCheckResourceAttr(sourceResourceName, "parameter_group_name", "default.oracle-ee-19"),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "replica_mode", "open-read-only"),
-					resource.TestCheckResourceAttrPair(resourceName, "parameter_group_name", parameterGroupResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "parameter_group_name", parameterGroupResourceName, names.AttrName),
 					testAccCheckInstanceParameterApplyStatusInSync(&dbInstance),
 					testAccCheckInstanceParameterApplyStatusInSync(&sourceDbInstance),
 				),
@@ -2251,8 +2251,8 @@ func TestAccRDSInstance_ReplicateSourceDB_CrossRegion_parameterGroupNameEquivale
 					testAccCheckInstanceExistsWithProvider(ctx, sourceResourceName, &sourceDbInstance, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
 					resource.TestCheckResourceAttr(sourceResourceName, "parameter_group_name", fmt.Sprintf("%s-source", rName)),
 					testAccCheckInstanceExistsWithProvider(ctx, resourceName, &dbInstance, acctest.RegionProviderFunc(acctest.Region(), &providers)),
-					resource.TestCheckResourceAttrPair(resourceName, "replicate_source_db", sourceResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "parameter_group_name", "aws_db_parameter_group.test", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "replicate_source_db", sourceResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "parameter_group_name", "aws_db_parameter_group.test", names.AttrName),
 					testAccCheckInstanceParameterApplyStatusInSync(&dbInstance),
 					testAccCheckInstanceParameterApplyStatusInSync(&sourceDbInstance),
 				),
@@ -2262,8 +2262,8 @@ func TestAccRDSInstance_ReplicateSourceDB_CrossRegion_parameterGroupNameEquivale
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"password",
+					names.AttrApplyImmediately,
+					names.AttrPassword,
 				},
 			},
 		},
@@ -2296,7 +2296,7 @@ func TestAccRDSInstance_ReplicateSourceDB_CrossRegion_characterSet(t *testing.T)
 					testAccCheckInstanceExistsWithProvider(ctx, sourceResourceName, &sourceDbInstance, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
 					resource.TestCheckResourceAttr(sourceResourceName, "character_set_name", "WE8ISO8859P15"),
 					testAccCheckInstanceExistsWithProvider(ctx, resourceName, &dbInstance, acctest.RegionProviderFunc(acctest.Region(), &providers)),
-					resource.TestCheckResourceAttrPair(resourceName, "replicate_source_db", sourceResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "replicate_source_db", sourceResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "character_set_name", "WE8ISO8859P15"),
 				),
 			},
@@ -2305,8 +2305,8 @@ func TestAccRDSInstance_ReplicateSourceDB_CrossRegion_characterSet(t *testing.T)
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"password",
+					names.AttrApplyImmediately,
+					names.AttrPassword,
 				},
 			},
 		},
@@ -2332,7 +2332,7 @@ func TestAccRDSInstance_s3Import(t *testing.T) {
 				Config: testAccInstanceConfig_s3Import(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "identifier", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, rName),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
 				),
 			},
@@ -2341,8 +2341,8 @@ func TestAccRDSInstance_s3Import(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"password",
+					names.AttrApplyImmediately,
+					names.AttrPassword,
 				},
 			},
 		},
@@ -2375,19 +2375,19 @@ func TestAccRDSInstance_SnapshotIdentifier_basic(t *testing.T) {
 					testAccCheckInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "identifier", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, rName),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "dedicated_log_volume", "false"),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_class", sourceDbResourceName, "instance_class"),
 					resource.TestCheckResourceAttrPair(resourceName, "allocated_storage", sourceDbResourceName, "allocated_storage"),
 					resource.TestCheckResourceAttrPair(resourceName, "engine", sourceDbResourceName, "engine"),
-					resource.TestCheckResourceAttrPair(resourceName, "engine_version", sourceDbResourceName, "engine_version"),
-					resource.TestCheckResourceAttrPair(resourceName, "username", sourceDbResourceName, "username"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, sourceDbResourceName, names.AttrEngineVersion),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrUsername, sourceDbResourceName, names.AttrUsername),
 					resource.TestCheckResourceAttrPair(resourceName, "db_name", sourceDbResourceName, "db_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "maintenance_window", sourceDbResourceName, "maintenance_window"),
 					resource.TestCheckResourceAttrPair(resourceName, "option_group_name", sourceDbResourceName, "option_group_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "parameter_group_name", sourceDbResourceName, "parameter_group_name"),
-					resource.TestCheckResourceAttrPair(resourceName, "port", sourceDbResourceName, "port"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrPort, sourceDbResourceName, names.AttrPort),
 				),
 			},
 		},
@@ -2421,7 +2421,7 @@ func TestAccRDSInstance_SnapshotIdentifier_ManageMasterPasswordKMSKey(t *testing
 					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "manage_master_user_password", "true"),
-					resource.TestCheckResourceAttr(resourceName, "master_user_secret.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "master_user_secret.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.kms_key_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.secret_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.secret_status"),
@@ -2432,7 +2432,7 @@ func TestAccRDSInstance_SnapshotIdentifier_ManageMasterPasswordKMSKey(t *testing
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
 					"manage_master_user_password",
 					"master_user_secret_kms_key_id",
@@ -2466,7 +2466,7 @@ func TestAccRDSInstance_SnapshotIdentifier_namePrefix(t *testing.T) {
 				Config: testAccInstanceConfig_SnapshotIdentifier_namePrefix(identifierPrefix, sourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "identifier", identifierPrefix),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrIdentifier, identifierPrefix),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", identifierPrefix),
 				),
 			},
@@ -2475,8 +2475,8 @@ func TestAccRDSInstance_SnapshotIdentifier_namePrefix(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"password",
+					names.AttrApplyImmediately,
+					names.AttrPassword,
 					"snapshot_identifier",
 				},
 			},
@@ -2505,7 +2505,7 @@ func TestAccRDSInstance_SnapshotIdentifier_nameGenerated(t *testing.T) {
 				Config: testAccInstanceConfig_SnapshotIdentifier_nameGenerated(sourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrNameGenerated(resourceName, "identifier"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrIdentifier),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", id.UniqueIdPrefix),
 				),
 			},
@@ -2514,8 +2514,8 @@ func TestAccRDSInstance_SnapshotIdentifier_nameGenerated(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"password",
+					names.AttrApplyImmediately,
+					names.AttrPassword,
 					"snapshot_identifier",
 				},
 			},
@@ -2554,7 +2554,7 @@ func TestAccRDSInstance_SnapshotIdentifier_AssociationRemoved(t *testing.T) {
 					testAccCheckDBInstanceNotRecreated(&dbInstance1, &dbInstance2),
 					resource.TestCheckResourceAttrPair(resourceName, "allocated_storage", sourceDbResourceName, "allocated_storage"),
 					resource.TestCheckResourceAttrPair(resourceName, "engine", sourceDbResourceName, "engine"),
-					resource.TestCheckResourceAttrPair(resourceName, "username", sourceDbResourceName, "username"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrUsername, sourceDbResourceName, names.AttrUsername),
 				),
 			},
 		},
@@ -2587,7 +2587,7 @@ func TestAccRDSInstance_SnapshotIdentifier_allocatedStorage(t *testing.T) {
 					testAccCheckInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "10"),
+					resource.TestCheckResourceAttr(resourceName, "allocated_storage", acctest.Ct10),
 				),
 			},
 		},
@@ -2620,7 +2620,7 @@ func TestAccRDSInstance_SnapshotIdentifier_io1Storage(t *testing.T) {
 					testAccCheckInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "iops", "1000"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "1000"),
 				),
 			},
 		},
@@ -2653,7 +2653,7 @@ func TestAccRDSInstance_SnapshotIdentifier_io2Storage(t *testing.T) {
 					testAccCheckInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "iops", "1000"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "1000"),
 				),
 			},
 		},
@@ -2719,7 +2719,7 @@ func TestAccRDSInstance_SnapshotIdentifier_autoMinorVersionUpgrade(t *testing.T)
 					testAccCheckInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, "false"),
 				),
 			},
 		},
@@ -2784,7 +2784,7 @@ func TestAccRDSInstance_SnapshotIdentifier_backupRetentionPeriodOverride(t *test
 					testAccCheckInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", acctest.Ct1),
 				),
 			},
 		},
@@ -2817,7 +2817,7 @@ func TestAccRDSInstance_SnapshotIdentifier_backupRetentionPeriodUnset(t *testing
 					testAccCheckInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "0"),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", acctest.Ct0),
 				),
 			},
 		},
@@ -2883,7 +2883,7 @@ func TestAccRDSInstance_SnapshotIdentifier_dbSubnetGroupName(t *testing.T) {
 					testAccCheckInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, names.AttrName),
 				),
 			},
 		},
@@ -2920,7 +2920,7 @@ func TestAccRDSInstance_SnapshotIdentifier_dbSubnetGroupNameRAMShared(t *testing
 					testAccCheckInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, names.AttrName),
 				),
 			},
 		},
@@ -2953,7 +2953,7 @@ func TestAccRDSInstance_SnapshotIdentifier_dbSubnetGroupNameVPCSecurityGroupIDs(
 					testAccCheckInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, names.AttrName),
 				),
 			},
 		},
@@ -3095,7 +3095,7 @@ func TestAccRDSInstance_SnapshotIdentifier_maxAllocatedStorage(t *testing.T) {
 					testAccCheckInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "max_allocated_storage", "10"),
+					resource.TestCheckResourceAttr(resourceName, "max_allocated_storage", acctest.Ct10),
 				),
 			},
 		},
@@ -3194,7 +3194,7 @@ func TestAccRDSInstance_SnapshotIdentifier_multiAZSQLServer(t *testing.T) {
 					testAccCheckInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "listener_endpoint.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "listener_endpoint.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "multi_az", "true"),
 				),
 			},
@@ -3262,7 +3262,7 @@ func TestAccRDSInstance_SnapshotIdentifier_port(t *testing.T) {
 					testAccCheckInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "port", "9999"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "9999"),
 				),
 			},
 		},
@@ -3295,8 +3295,8 @@ func TestAccRDSInstance_SnapshotIdentifier_tags(t *testing.T) {
 					testAccCheckInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -3304,7 +3304,7 @@ func TestAccRDSInstance_SnapshotIdentifier_tags(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"snapshot_identifier",
 				},
 			},
@@ -3339,7 +3339,7 @@ func TestAccRDSInstance_SnapshotIdentifier_tagsRemove(t *testing.T) {
 					testAccCheckInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -3347,7 +3347,7 @@ func TestAccRDSInstance_SnapshotIdentifier_tagsRemove(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"snapshot_identifier",
 				},
 			},
@@ -3417,8 +3417,8 @@ func TestAccRDSInstance_SnapshotIdentifier_vpcSecurityGroupIDsTags(t *testing.T)
 					testAccCheckInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 		},
@@ -3453,9 +3453,9 @@ func TestAccRDSInstance_monitoringInterval(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
-					"password",
+					names.AttrPassword,
 					"skip_final_snapshot",
 				},
 			},
@@ -3470,7 +3470,7 @@ func TestAccRDSInstance_monitoringInterval(t *testing.T) {
 				Config: testAccInstanceConfig_monitoringInterval(rName, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", "0"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", acctest.Ct0),
 				),
 			},
 			{
@@ -3505,7 +3505,7 @@ func TestAccRDSInstance_MonitoringRoleARN_enabledToDisabled(t *testing.T) {
 				Config: testAccInstanceConfig_monitoringRoleARN(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttrPair(resourceName, "monitoring_role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "monitoring_role_arn", iamRoleResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -3513,9 +3513,9 @@ func TestAccRDSInstance_MonitoringRoleARN_enabledToDisabled(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
-					"password",
+					names.AttrPassword,
 					"skip_final_snapshot",
 				},
 			},
@@ -3523,7 +3523,7 @@ func TestAccRDSInstance_MonitoringRoleARN_enabledToDisabled(t *testing.T) {
 				Config: testAccInstanceConfig_monitoringInterval(rName, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", "0"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", acctest.Ct0),
 				),
 			},
 		},
@@ -3551,7 +3551,7 @@ func TestAccRDSInstance_MonitoringRoleARN_enabledToRemoved(t *testing.T) {
 				Config: testAccInstanceConfig_monitoringRoleARN(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttrPair(resourceName, "monitoring_role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "monitoring_role_arn", iamRoleResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -3559,9 +3559,9 @@ func TestAccRDSInstance_MonitoringRoleARN_enabledToRemoved(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
-					"password",
+					names.AttrPassword,
 					"skip_final_snapshot",
 				},
 			},
@@ -3603,9 +3603,9 @@ func TestAccRDSInstance_MonitoringRoleARN_removedToEnabled(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
-					"password",
+					names.AttrPassword,
 					"skip_final_snapshot",
 				},
 			},
@@ -3613,7 +3613,7 @@ func TestAccRDSInstance_MonitoringRoleARN_removedToEnabled(t *testing.T) {
 				Config: testAccInstanceConfig_monitoringRoleARN(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttrPair(resourceName, "monitoring_role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "monitoring_role_arn", iamRoleResourceName, names.AttrARN),
 				),
 			},
 		},
@@ -3714,7 +3714,7 @@ func TestAccRDSInstance_portUpdate(t *testing.T) {
 				Config: testAccInstanceConfig_mySQLPort(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "port", "3306"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "3306"),
 				),
 			},
 
@@ -3722,7 +3722,7 @@ func TestAccRDSInstance_portUpdate(t *testing.T) {
 				Config: testAccInstanceConfig_updateMySQLPort(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "port", "3305"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "3305"),
 				),
 			},
 		},
@@ -3793,7 +3793,7 @@ func TestAccRDSInstance_MSSQL_domain(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &vBefore),
 					testAccCheckInstanceDomainAttributes(domain1, &vBefore),
-					resource.TestCheckResourceAttrSet(resourceName, "domain"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrDomain),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_iam_role_name"),
 				),
 			},
@@ -3802,7 +3802,7 @@ func TestAccRDSInstance_MSSQL_domain(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &vAfter),
 					testAccCheckInstanceDomainAttributes(domain2, &vAfter),
-					resource.TestCheckResourceAttrSet(resourceName, "domain"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrDomain),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_iam_role_name"),
 				),
 			},
@@ -3834,7 +3834,7 @@ func TestAccRDSInstance_MSSQL_domainSnapshotRestore(t *testing.T) {
 					testAccCheckInstanceExists(ctx, resourceName, &vRestoredInstance),
 					testAccCheckInstanceExists(ctx, originResourceName, &v),
 					testAccCheckInstanceDomainAttributes(domain, &vRestoredInstance),
-					resource.TestCheckResourceAttrSet(resourceName, "domain"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrDomain),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_iam_role_name"),
 				),
 			},
@@ -3869,7 +3869,7 @@ func TestAccRDSInstance_MSSQL_selfManagedDomain(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "domain_fqdn"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_ou"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_auth_secret_arn"),
-					resource.TestCheckResourceAttr(resourceName, "domain_dns_ips.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "domain_dns_ips.#", acctest.Ct2),
 				),
 			},
 			{
@@ -3879,7 +3879,7 @@ func TestAccRDSInstance_MSSQL_selfManagedDomain(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "domain_fqdn"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_ou"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_auth_secret_arn"),
-					resource.TestCheckResourceAttr(resourceName, "domain_dns_ips.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "domain_dns_ips.#", acctest.Ct2),
 				),
 			},
 		},
@@ -3914,7 +3914,7 @@ func TestAccRDSInstance_MSSQL_selfManagedDomainSnapshotRestore(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "domain_fqdn"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_ou"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_auth_secret_arn"),
-					resource.TestCheckResourceAttr(resourceName, "domain_dns_ips.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "domain_dns_ips.#", acctest.Ct2),
 				),
 			},
 		},
@@ -3944,8 +3944,8 @@ func TestAccRDSInstance_MySQL_snapshotRestoreWithEngineVersion(t *testing.T) {
 					testAccCheckInstanceExists(ctx, restoreResourceName, &vRestoredInstance),
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					// Hardcoded older version. Will need to update when no longer compatible to upgrade from this to the default version.
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "8.0.31"),
-					resource.TestCheckResourceAttrPair(restoreResourceName, "engine_version", "data.aws_rds_engine_version.default", "version"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "8.0.31"),
+					resource.TestCheckResourceAttrPair(restoreResourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.default", names.AttrVersion),
 				),
 			},
 		},
@@ -3997,7 +3997,7 @@ func TestAccRDSInstance_CloudWatchLogsExport_basic(t *testing.T) {
 				Config: testAccInstanceConfig_cloudWatchLogsExport(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "audit"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "error"),
 				),
@@ -4007,9 +4007,9 @@ func TestAccRDSInstance_CloudWatchLogsExport_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
-					"password",
+					names.AttrPassword,
 					"skip_final_snapshot",
 					"delete_automated_backups",
 				},
@@ -4042,7 +4042,7 @@ func TestAccRDSInstance_CloudWatchLogsExport_db2(t *testing.T) {
 				Config: testAccInstanceConfig_CloudWatchLogsExport_db2(rName, customerID, siteID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", acctest.Ct2),
 				),
 			},
 			{
@@ -4050,9 +4050,9 @@ func TestAccRDSInstance_CloudWatchLogsExport_db2(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
-					"password",
+					names.AttrPassword,
 					"skip_final_snapshot",
 				},
 			},
@@ -4080,7 +4080,7 @@ func TestAccRDSInstance_CloudWatchLogsExport_mySQL(t *testing.T) {
 				Config: testAccInstanceConfig_cloudWatchLogsExport(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "audit"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "error"),
 				),
@@ -4089,7 +4089,7 @@ func TestAccRDSInstance_CloudWatchLogsExport_mySQL(t *testing.T) {
 				Config: testAccInstanceConfig_cloudWatchLogsExportAdd(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", acctest.Ct3),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "audit"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "error"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "general"),
@@ -4099,7 +4099,7 @@ func TestAccRDSInstance_CloudWatchLogsExport_mySQL(t *testing.T) {
 				Config: testAccInstanceConfig_cloudWatchLogsExportModify(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", acctest.Ct3),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "audit"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "general"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "slowquery"),
@@ -4109,7 +4109,7 @@ func TestAccRDSInstance_CloudWatchLogsExport_mySQL(t *testing.T) {
 				Config: testAccInstanceConfig_cloudWatchLogsExportDelete(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", acctest.Ct0),
 				),
 			},
 		},
@@ -4136,7 +4136,7 @@ func TestAccRDSInstance_CloudWatchLogsExport_msSQL(t *testing.T) {
 				Config: testAccInstanceConfig_CloudWatchLogsExport_mssql(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", acctest.Ct2),
 				),
 			},
 			{
@@ -4144,9 +4144,9 @@ func TestAccRDSInstance_CloudWatchLogsExport_msSQL(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
-					"password",
+					names.AttrPassword,
 					"skip_final_snapshot",
 				},
 			},
@@ -4174,7 +4174,7 @@ func TestAccRDSInstance_CloudWatchLogsExport_oracle(t *testing.T) {
 				Config: testAccInstanceConfig_CloudWatchLogsExport_oracle(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", acctest.Ct3),
 				),
 			},
 			{
@@ -4182,9 +4182,9 @@ func TestAccRDSInstance_CloudWatchLogsExport_oracle(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
-					"password",
+					names.AttrPassword,
 					"skip_final_snapshot",
 					"delete_automated_backups",
 				},
@@ -4213,7 +4213,7 @@ func TestAccRDSInstance_CloudWatchLogsExport_postgresql(t *testing.T) {
 				Config: testAccInstanceConfig_CloudWatchLogsExport_postgreSQL(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", acctest.Ct2),
 				),
 			},
 			{
@@ -4221,9 +4221,9 @@ func TestAccRDSInstance_CloudWatchLogsExport_postgresql(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
-					"password",
+					names.AttrPassword,
 					"skip_final_snapshot",
 					"delete_automated_backups",
 				},
@@ -4260,8 +4260,8 @@ func TestAccRDSInstance_dedicatedLogVolume_enableOnCreate(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"password",
+					names.AttrApplyImmediately,
+					names.AttrPassword,
 				},
 			},
 		},
@@ -4303,8 +4303,8 @@ func TestAccRDSInstance_dedicatedLogVolume_enableOnUpdate(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"password",
+					names.AttrApplyImmediately,
+					names.AttrPassword,
 				},
 			},
 			{
@@ -4319,8 +4319,8 @@ func TestAccRDSInstance_dedicatedLogVolume_enableOnUpdate(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"password",
+					names.AttrApplyImmediately,
+					names.AttrPassword,
 				},
 			},
 		},
@@ -4386,8 +4386,8 @@ func TestAccRDSInstance_PerformanceInsights_disabledToEnabled(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"password",
+					names.AttrApplyImmediately,
+					names.AttrPassword,
 					"skip_final_snapshot",
 					"final_snapshot_identifier",
 				},
@@ -4434,8 +4434,8 @@ func TestAccRDSInstance_PerformanceInsights_enabledToDisabled(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"password",
+					names.AttrApplyImmediately,
+					names.AttrPassword,
 					"skip_final_snapshot",
 					"final_snapshot_identifier",
 				},
@@ -4476,7 +4476,7 @@ func TestAccRDSInstance_PerformanceInsights_kmsKeyID(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", kmsKeyResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", kmsKeyResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -4484,8 +4484,8 @@ func TestAccRDSInstance_PerformanceInsights_kmsKeyID(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"password",
+					names.AttrApplyImmediately,
+					names.AttrPassword,
 					"skip_final_snapshot",
 					"final_snapshot_identifier",
 				},
@@ -4495,7 +4495,7 @@ func TestAccRDSInstance_PerformanceInsights_kmsKeyID(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "false"),
-					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", kmsKeyResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", kmsKeyResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -4503,7 +4503,7 @@ func TestAccRDSInstance_PerformanceInsights_kmsKeyID(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", kmsKeyResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", kmsKeyResourceName, names.AttrARN),
 				),
 			},
 		},
@@ -4542,8 +4542,8 @@ func TestAccRDSInstance_PerformanceInsights_retentionPeriod(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"password",
+					names.AttrApplyImmediately,
+					names.AttrPassword,
 					"skip_final_snapshot",
 					"final_snapshot_identifier",
 				},
@@ -4597,7 +4597,7 @@ func TestAccRDSInstance_ReplicateSourceDB_performanceInsightsEnabled(t *testing.
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", kmsKeyResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", kmsKeyResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_retention_period", "7"),
 				),
 			},
@@ -4636,7 +4636,7 @@ func TestAccRDSInstance_SnapshotIdentifier_performanceInsightsEnabled(t *testing
 					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", kmsKeyResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", kmsKeyResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_retention_period", "7"),
 				),
 			},
@@ -4665,7 +4665,7 @@ func TestAccRDSInstance_caCertificateIdentifier(t *testing.T) {
 				Config: testAccInstanceConfig_caCertificateID(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "ca_cert_identifier", dataSourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "ca_cert_identifier", dataSourceName, names.AttrID),
 				),
 			},
 		},
@@ -4701,11 +4701,11 @@ func TestAccRDSInstance_RestoreToPointInTime_sourceIdentifier(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"delete_automated_backups",
 					"final_snapshot_identifier",
 					"latest_restorable_time", // dynamic value of a DBInstance
-					"password",
+					names.AttrPassword,
 					"restore_to_point_in_time",
 					"skip_final_snapshot",
 				},
@@ -4743,11 +4743,11 @@ func TestAccRDSInstance_RestoreToPointInTime_sourceResourceID(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"delete_automated_backups",
 					"final_snapshot_identifier",
 					"latest_restorable_time", // dynamic value of a DBInstance
-					"password",
+					names.AttrPassword,
 					"restore_to_point_in_time",
 					"skip_final_snapshot",
 				},
@@ -4808,7 +4808,7 @@ func TestAccRDSInstance_RestoreToPointInTime_manageMasterPassword(t *testing.T) 
 					testAccCheckInstanceExists(ctx, sourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "manage_master_user_password", "true"),
-					resource.TestCheckResourceAttr(resourceName, "master_user_secret.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "master_user_secret.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.kms_key_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.secret_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "master_user_secret.0.secret_status"),
@@ -4819,12 +4819,12 @@ func TestAccRDSInstance_RestoreToPointInTime_manageMasterPassword(t *testing.T) 
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"delete_automated_backups",
 					"final_snapshot_identifier",
 					"latest_restorable_time", // dynamic value of a DBInstance
 					"manage_master_user_password",
-					"password",
+					names.AttrPassword,
 					"restore_to_point_in_time",
 					"skip_final_snapshot",
 				},
@@ -4862,9 +4862,9 @@ func TestAccRDSInstance_Oracle_nationalCharacterSet(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
-					"password",
+					names.AttrPassword,
 					"skip_final_snapshot",
 					"delete_automated_backups",
 				},
@@ -4902,9 +4902,9 @@ func TestAccRDSInstance_Oracle_noNationalCharacterSet(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
-					"password",
+					names.AttrPassword,
 					"skip_final_snapshot",
 					"delete_automated_backups",
 				},
@@ -4962,8 +4962,8 @@ func TestAccRDSInstance_Outposts_coIPDisabledToEnabled(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"password",
+					names.AttrApplyImmediately,
+					names.AttrPassword,
 					"skip_final_snapshot",
 					"final_snapshot_identifier",
 				},
@@ -5003,8 +5003,8 @@ func TestAccRDSInstance_Outposts_coIPEnabledToDisabled(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"password",
+					names.AttrApplyImmediately,
+					names.AttrPassword,
 					"skip_final_snapshot",
 					"final_snapshot_identifier",
 				},
@@ -5046,11 +5046,11 @@ func TestAccRDSInstance_Outposts_coIPRestoreToPointInTime(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"delete_automated_backups",
 					"final_snapshot_identifier",
 					"latest_restorable_time", // dynamic value of a DBInstance
-					"password",
+					names.AttrPassword,
 					"restore_to_point_in_time",
 					"skip_final_snapshot",
 				},
@@ -5144,9 +5144,9 @@ func TestAccRDSInstance_license(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
-					"password",
+					names.AttrPassword,
 					"skip_final_snapshot",
 					"delete_automated_backups",
 				},
@@ -5182,8 +5182,8 @@ func TestAccRDSInstance_BlueGreenDeployment_updateEngineVersion(t *testing.T) {
 				Config: testAccInstanceConfig_BlueGreenDeployment_engineVersion(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "engine_version", "data.aws_rds_engine_version.initial", "version"),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.initial", names.AttrVersion),
 				),
 			},
 			{
@@ -5191,7 +5191,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateEngineVersion(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v2),
 					testAccCheckDBInstanceRecreated(&v1, &v2),
-					resource.TestCheckResourceAttrPair(resourceName, "engine_version", "data.aws_rds_engine_version.update", "version"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.update", names.AttrVersion),
 					resource.TestCheckResourceAttr(resourceName, "blue_green_update.0.enabled", "true"),
 				),
 			},
@@ -5200,9 +5200,9 @@ func TestAccRDSInstance_BlueGreenDeployment_updateEngineVersion(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
-					"password",
+					names.AttrPassword,
 					"skip_final_snapshot",
 					"delete_automated_backups",
 					"blue_green_update",
@@ -5235,8 +5235,8 @@ func TestAccRDSInstance_BlueGreenDeployment_updateParameterGroup(t *testing.T) {
 				Config: testAccInstanceConfig_BlueGreenDeployment_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "parameter_group_name", parameterGroupDataSource, "name"),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "parameter_group_name", parameterGroupDataSource, names.AttrName),
 				),
 			},
 			{
@@ -5244,7 +5244,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateParameterGroup(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v2),
 					testAccCheckDBInstanceRecreated(&v1, &v2),
-					resource.TestCheckResourceAttrPair(resourceName, "parameter_group_name", parameterGroupResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "parameter_group_name", parameterGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "blue_green_update.0.enabled", "true"),
 				),
 			},
@@ -5253,9 +5253,9 @@ func TestAccRDSInstance_BlueGreenDeployment_updateParameterGroup(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
-					"password",
+					names.AttrPassword,
 					"skip_final_snapshot",
 					"delete_automated_backups",
 					"latest_restorable_time", // This causes intermittent failures when the value increments
@@ -5284,20 +5284,20 @@ func TestAccRDSInstance_BlueGreenDeployment_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_BlueGreenDeployment_tags1(rName, "key1", "value1"),
+				Config: testAccInstanceConfig_BlueGreenDeployment_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
-				Config: testAccInstanceConfig_BlueGreenDeployment_tags1(rName, "key1", "value1updated"),
+				Config: testAccInstanceConfig_BlueGreenDeployment_tags1(rName, acctest.CtKey1, acctest.CtValue1Updated),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v2),
 					testAccCheckDBInstanceNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 				),
 			},
 			{
@@ -5305,9 +5305,9 @@ func TestAccRDSInstance_BlueGreenDeployment_tags(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
-					"password",
+					names.AttrPassword,
 					"skip_final_snapshot",
 					"delete_automated_backups",
 					"blue_green_update",
@@ -5339,7 +5339,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateInstanceClass(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_class", "data.aws_rds_orderable_db_instance.test", "instance_class"),
-					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", acctest.Ct1),
 				),
 			},
 			{
@@ -5356,9 +5356,9 @@ func TestAccRDSInstance_BlueGreenDeployment_updateInstanceClass(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
-					"password",
+					names.AttrPassword,
 					"skip_final_snapshot",
 					"delete_automated_backups",
 					"blue_green_update",
@@ -5390,9 +5390,9 @@ func TestAccRDSInstance_BlueGreenDeployment_updateAndPromoteReplica(t *testing.T
 				Config: testAccInstanceConfig_BlueGreenDeployment_prePromote(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttrPair(resourceName, "replicate_source_db", sourceResourceName, "identifier"),
+					resource.TestCheckResourceAttrPair(resourceName, "replicate_source_db", sourceResourceName, names.AttrIdentifier),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_class", "data.aws_rds_orderable_db_instance.test", "instance_class"),
-					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", acctest.Ct1),
 				),
 			},
 			{
@@ -5409,12 +5409,12 @@ func TestAccRDSInstance_BlueGreenDeployment_updateAndPromoteReplica(t *testing.T
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"blue_green_update",
 					"delete_automated_backups",
 					"final_snapshot_identifier",
 					"latest_restorable_time",
-					"password",
+					names.AttrPassword,
 					"skip_final_snapshot",
 				},
 			},
@@ -5443,7 +5443,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateAndEnableBackups(t *testing.T)
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_class", "data.aws_rds_orderable_db_instance.test", "instance_class"),
-					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "0"),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", acctest.Ct0),
 				),
 			},
 			{
@@ -5452,7 +5452,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateAndEnableBackups(t *testing.T)
 					testAccCheckInstanceExists(ctx, resourceName, &v2),
 					testAccCheckDBInstanceRecreated(&v1, &v2),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_class", "data.aws_rds_orderable_db_instance.test", "instance_class"),
-					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "blue_green_update.0.enabled", "true"),
 				),
 			},
@@ -5461,9 +5461,9 @@ func TestAccRDSInstance_BlueGreenDeployment_updateAndEnableBackups(t *testing.T)
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
-					"password",
+					names.AttrPassword,
 					"skip_final_snapshot",
 					"delete_automated_backups",
 					"blue_green_update",
@@ -5495,7 +5495,7 @@ func TestAccRDSInstance_BlueGreenDeployment_deletionProtectionBypassesBlueGreen(
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "true"),
-					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", acctest.Ct1),
 				),
 			},
 			{
@@ -5503,9 +5503,9 @@ func TestAccRDSInstance_BlueGreenDeployment_deletionProtectionBypassesBlueGreen(
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
-					"password",
+					names.AttrPassword,
 					"skip_final_snapshot",
 					"delete_automated_backups",
 					"blue_green_update",
@@ -5526,9 +5526,9 @@ func TestAccRDSInstance_BlueGreenDeployment_deletionProtectionBypassesBlueGreen(
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
-					"password",
+					names.AttrPassword,
 					"skip_final_snapshot",
 					"delete_automated_backups",
 					"blue_green_update",
@@ -5559,7 +5559,7 @@ func TestAccRDSInstance_BlueGreenDeployment_passwordBypassesBlueGreen(t *testing
 				Config: testAccInstanceConfig_BlueGreenDeployment_password(rName, "valid-password-1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "password", "valid-password-1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPassword, "valid-password-1"),
 				),
 			},
 			{
@@ -5567,7 +5567,7 @@ func TestAccRDSInstance_BlueGreenDeployment_passwordBypassesBlueGreen(t *testing
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v2),
 					testAccCheckDBInstanceNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, "password", "valid-password-2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPassword, "valid-password-2"),
 				),
 			},
 		},
@@ -5596,7 +5596,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateWithDeletionProtection(t *test
 					testAccCheckInstanceExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "true"),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_class", "data.aws_rds_orderable_db_instance.test", "instance_class"),
-					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", acctest.Ct1),
 				),
 			},
 			{
@@ -5604,9 +5604,9 @@ func TestAccRDSInstance_BlueGreenDeployment_updateWithDeletionProtection(t *test
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
-					"password",
+					names.AttrPassword,
 					"skip_final_snapshot",
 					"delete_automated_backups",
 					"blue_green_update",
@@ -5628,9 +5628,9 @@ func TestAccRDSInstance_BlueGreenDeployment_updateWithDeletionProtection(t *test
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
-					"password",
+					names.AttrPassword,
 					"skip_final_snapshot",
 					"delete_automated_backups",
 					"blue_green_update",
@@ -5671,11 +5671,11 @@ func TestAccRDSInstance_BlueGreenDeployment_outOfBand(t *testing.T) {
 				Config: testAccInstanceConfig_engineVersion(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttrPair(resourceName, "engine_version", "data.aws_rds_engine_version.initial", "version"),
-					resource.TestCheckResourceAttr(resourceName, "identifier", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "resource_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "id", resourceName, "resource_id"),
-					testAccCheckRetrieveValue("data.aws_rds_engine_version.update", "version", &updateVersion),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.initial", names.AttrVersion),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrResourceID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrResourceID),
+					testAccCheckRetrieveValue("data.aws_rds_engine_version.update", names.AttrVersion, &updateVersion),
 				),
 			},
 			{
@@ -5785,9 +5785,9 @@ func TestAccRDSInstance_BlueGreenDeployment_outOfBand(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v2),
 					testAccCheckDBInstanceRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, "identifier", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "resource_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "id", resourceName, "resource_id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrResourceID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrResourceID),
 				),
 			},
 			{
@@ -5795,9 +5795,9 @@ func TestAccRDSInstance_BlueGreenDeployment_outOfBand(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
-					"password",
+					names.AttrPassword,
 					"skip_final_snapshot",
 					"delete_automated_backups",
 					"blue_green_update",
@@ -5829,9 +5829,9 @@ func TestAccRDSInstance_Storage_gp3MySQL(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "200"),
-					resource.TestCheckResourceAttr(resourceName, "iops", "3000"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "125"),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),
 				),
 			},
 			{
@@ -5839,9 +5839,9 @@ func TestAccRDSInstance_Storage_gp3MySQL(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
-					"password",
+					names.AttrPassword,
 					"skip_final_snapshot",
 					"delete_automated_backups",
 					"blue_green_update",
@@ -5852,9 +5852,9 @@ func TestAccRDSInstance_Storage_gp3MySQL(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "300"),
-					resource.TestCheckResourceAttr(resourceName, "iops", "3000"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "125"),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),
 				),
 			},
 		},
@@ -5882,9 +5882,9 @@ func TestAccRDSInstance_Storage_gp3Postgres(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "200"),
-					resource.TestCheckResourceAttr(resourceName, "iops", "3000"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "125"),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),
 				),
 			},
 			{
@@ -5892,9 +5892,9 @@ func TestAccRDSInstance_Storage_gp3Postgres(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
-					"password",
+					names.AttrPassword,
 					"skip_final_snapshot",
 					"delete_automated_backups",
 					"blue_green_update",
@@ -5905,9 +5905,9 @@ func TestAccRDSInstance_Storage_gp3Postgres(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "300"),
-					resource.TestCheckResourceAttr(resourceName, "iops", "3000"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "125"),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),
 				),
 			},
 		},
@@ -5935,9 +5935,9 @@ func TestAccRDSInstance_Storage_gp3SQLServer(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "200"),
-					resource.TestCheckResourceAttr(resourceName, "iops", "3000"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "125"),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),
 				),
 			},
 			{
@@ -5945,9 +5945,9 @@ func TestAccRDSInstance_Storage_gp3SQLServer(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
-					"password",
+					names.AttrPassword,
 					"skip_final_snapshot",
 					"delete_automated_backups",
 					"blue_green_update",
@@ -5958,9 +5958,9 @@ func TestAccRDSInstance_Storage_gp3SQLServer(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "300"),
-					resource.TestCheckResourceAttr(resourceName, "iops", "3000"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "125"),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),
 				),
 			},
 		},
@@ -5988,18 +5988,18 @@ func TestAccRDSInstance_Storage_changeThroughput(t *testing.T) {
 				Config: testAccInstanceConfig_Storage_throughput(rName, 12000, 500),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "iops", "12000"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "12000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "500"),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),
 				),
 			},
 			{
 				Config: testAccInstanceConfig_Storage_throughput(rName, 12000, 600),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "iops", "12000"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "12000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "600"),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),
 				),
 			},
 		},
@@ -6027,18 +6027,18 @@ func TestAccRDSInstance_Storage_changeIOPSThroughput(t *testing.T) {
 				Config: testAccInstanceConfig_Storage_throughput(rName, 12000, 500),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "iops", "12000"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "12000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "500"),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),
 				),
 			},
 			{
 				Config: testAccInstanceConfig_Storage_throughput(rName, 13000, 600),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "iops", "13000"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "13000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "600"),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),
 				),
 			},
 		},
@@ -6066,18 +6066,18 @@ func TestAccRDSInstance_Storage_changeIOPS(t *testing.T) {
 				Config: testAccInstanceConfig_Storage_throughput(rName, 12000, 500),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "iops", "12000"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "12000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "500"),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),
 				),
 			},
 			{
 				Config: testAccInstanceConfig_Storage_throughput(rName, 13000, 500),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "iops", "13000"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "13000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "500"),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),
 				),
 			},
 		},
@@ -6105,18 +6105,18 @@ func TestAccRDSInstance_Storage_throughputSSE(t *testing.T) {
 				Config: testAccInstanceConfig_Storage_throughputSSE(rName, 4201, 125),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "iops", "4201"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "4201"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "125"),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),
 				),
 			},
 			{
 				Config: testAccInstanceConfig_Storage_throughputSSE(rName, 4201, 126),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "iops", "4201"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "4201"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "126"),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),
 				),
 			},
 		},
@@ -6144,9 +6144,9 @@ func TestAccRDSInstance_Storage_typePostgres(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "200"),
-					resource.TestCheckResourceAttr(resourceName, "iops", "0"),
-					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "0"),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "storage_throughput", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp2"),
 				),
 			},
 			{
@@ -6154,9 +6154,9 @@ func TestAccRDSInstance_Storage_typePostgres(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
-					"password",
+					names.AttrPassword,
 					"skip_final_snapshot",
 					"delete_automated_backups",
 					"blue_green_update",
@@ -6167,9 +6167,9 @@ func TestAccRDSInstance_Storage_typePostgres(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "300"),
-					resource.TestCheckResourceAttr(resourceName, "iops", "3000"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "125"),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),
 				),
 			},
 		},
@@ -6197,7 +6197,7 @@ func TestAccRDSInstance_newIdentifier_Pending(t *testing.T) {
 				Config: testAccInstanceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "identifier", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, rName),
 				),
 			},
 			{
@@ -6215,7 +6215,7 @@ func TestAccRDSInstance_newIdentifier_Pending(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v2),
 					testAccCheckDBInstanceNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, "identifier", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, rName),
 				),
 			},
 		},
@@ -6243,7 +6243,7 @@ func TestAccRDSInstance_newIdentifier_Immediately(t *testing.T) {
 				Config: testAccInstanceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "identifier", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, rName),
 				),
 			},
 			{
@@ -6259,7 +6259,7 @@ func TestAccRDSInstance_newIdentifier_Immediately(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v2),
 					testAccCheckDBInstanceNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, "identifier", rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, rName2),
 				),
 			},
 		},
@@ -6277,17 +6277,17 @@ func testAccCheckInstanceAutomatedBackupsDelete(ctx context.Context) resource.Te
 
 			log.Printf("[INFO] Trying to locate the DBInstance Automated Backup")
 			describeOutput, err := conn.DescribeDBInstanceAutomatedBackupsWithContext(ctx, &rds.DescribeDBInstanceAutomatedBackupsInput{
-				DBInstanceIdentifier: aws.String(rs.Primary.Attributes["identifier"]),
+				DBInstanceIdentifier: aws.String(rs.Primary.Attributes[names.AttrIdentifier]),
 			})
 			if err != nil {
 				return err
 			}
 
 			if describeOutput == nil || len(describeOutput.DBInstanceAutomatedBackups) == 0 {
-				return fmt.Errorf("Automated backup for %s not found", rs.Primary.Attributes["identifier"])
+				return fmt.Errorf("Automated backup for %s not found", rs.Primary.Attributes[names.AttrIdentifier])
 			}
 
-			log.Printf("[INFO] Deleting automated backup for %s", rs.Primary.Attributes["identifier"])
+			log.Printf("[INFO] Deleting automated backup for %s", rs.Primary.Attributes[names.AttrIdentifier])
 			_, err = conn.DeleteDBInstanceAutomatedBackupWithContext(ctx, &rds.DeleteDBInstanceAutomatedBackupInput{
 				DbiResourceId: describeOutput.DBInstanceAutomatedBackups[0].DbiResourceId,
 			})
@@ -6309,7 +6309,7 @@ func testAccCheckInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.Attributes["identifier"])
+			_, err := tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.Attributes[names.AttrIdentifier])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -6319,7 +6319,7 @@ func testAccCheckInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			return fmt.Errorf("RDS DB Instance %s still exists", rs.Primary.Attributes["identifier"])
+			return fmt.Errorf("RDS DB Instance %s still exists", rs.Primary.Attributes[names.AttrIdentifier])
 		}
 
 		return nil
@@ -6452,7 +6452,7 @@ func testAccCheckInstanceDestroyWithFinalSnapshot(ctx context.Context) resource.
 				return err
 			}
 
-			_, err = tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.Attributes["identifier"])
+			_, err = tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.Attributes[names.AttrIdentifier])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -6462,7 +6462,7 @@ func testAccCheckInstanceDestroyWithFinalSnapshot(ctx context.Context) resource.
 				return err
 			}
 
-			return fmt.Errorf("RDS DB Instance %s still exists", rs.Primary.Attributes["identifier"])
+			return fmt.Errorf("RDS DB Instance %s still exists", rs.Primary.Attributes[names.AttrIdentifier])
 		}
 
 		return nil
@@ -6492,7 +6492,7 @@ func testAccCheckInstanceDestroyWithoutFinalSnapshot(ctx context.Context) resour
 				return fmt.Errorf("RDS DB Snapshot %s exists", finalSnapshotID)
 			}
 
-			_, err = tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.Attributes["identifier"])
+			_, err = tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.Attributes[names.AttrIdentifier])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -6502,7 +6502,7 @@ func testAccCheckInstanceDestroyWithoutFinalSnapshot(ctx context.Context) resour
 				return err
 			}
 
-			return fmt.Errorf("RDS DB Instance %s still exists", rs.Primary.Attributes["identifier"])
+			return fmt.Errorf("RDS DB Instance %s still exists", rs.Primary.Attributes[names.AttrIdentifier])
 		}
 
 		return nil
@@ -6546,7 +6546,7 @@ func testAccCheckInstanceExistsWithProvider(ctx context.Context, n string, v *rd
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.Attributes["identifier"] == "" {
+		if rs.Primary.Attributes[names.AttrIdentifier] == "" {
 			return fmt.Errorf("No RDS DB Instance ID is set")
 		}
 

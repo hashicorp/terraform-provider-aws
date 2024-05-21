@@ -46,7 +46,7 @@ func TestAccVPCNetworkACLRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resource1Name, "egress", "false"),
 					resource.TestCheckResourceAttr(resource1Name, "from_port", "22"),
 					resource.TestCheckResourceAttr(resource1Name, "ipv6_cidr_block", ""),
-					resource.TestCheckResourceAttr(resource1Name, "protocol", "6"),
+					resource.TestCheckResourceAttr(resource1Name, names.AttrProtocol, "6"),
 					resource.TestCheckResourceAttr(resource1Name, "rule_action", "allow"),
 					resource.TestCheckResourceAttr(resource1Name, "rule_number", "200"),
 					resource.TestCheckResourceAttr(resource1Name, "to_port", "22"),
@@ -54,9 +54,9 @@ func TestAccVPCNetworkACLRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resource2Name, "cidr_block", "0.0.0.0/0"),
 					resource.TestCheckResourceAttr(resource2Name, "egress", "false"),
 					resource.TestCheckResourceAttr(resource2Name, "icmp_code", "-1"),
-					resource.TestCheckResourceAttr(resource2Name, "icmp_type", "0"),
+					resource.TestCheckResourceAttr(resource2Name, "icmp_type", acctest.Ct0),
 					resource.TestCheckResourceAttr(resource2Name, "ipv6_cidr_block", ""),
-					resource.TestCheckResourceAttr(resource2Name, "protocol", "1"),
+					resource.TestCheckResourceAttr(resource2Name, names.AttrProtocol, acctest.Ct1),
 					resource.TestCheckResourceAttr(resource2Name, "rule_action", "allow"),
 					resource.TestCheckResourceAttr(resource2Name, "rule_number", "300"),
 
@@ -65,7 +65,7 @@ func TestAccVPCNetworkACLRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resource3Name, "icmp_code", "-1"),
 					resource.TestCheckResourceAttr(resource3Name, "icmp_type", "-1"),
 					resource.TestCheckResourceAttr(resource3Name, "ipv6_cidr_block", ""),
-					resource.TestCheckResourceAttr(resource3Name, "protocol", "1"),
+					resource.TestCheckResourceAttr(resource3Name, names.AttrProtocol, acctest.Ct1),
 					resource.TestCheckResourceAttr(resource3Name, "rule_action", "allow"),
 					resource.TestCheckResourceAttr(resource3Name, "rule_number", "400"),
 				),
@@ -180,7 +180,7 @@ func TestAccVPCNetworkACLRule_ipv6(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "egress", "false"),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "22"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", "::/0"),
-					resource.TestCheckResourceAttr(resourceName, "protocol", "6"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "6"),
 					resource.TestCheckResourceAttr(resourceName, "rule_action", "allow"),
 					resource.TestCheckResourceAttr(resourceName, "rule_number", "150"),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "22"),
@@ -216,7 +216,7 @@ func TestAccVPCNetworkACLRule_ipv6ICMP(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "icmp_code", "-1"),
 					resource.TestCheckResourceAttr(resourceName, "icmp_type", "-1"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", "::/0"),
-					resource.TestCheckResourceAttr(resourceName, "protocol", "58"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "58"),
 					resource.TestCheckResourceAttr(resourceName, "rule_action", "allow"),
 					resource.TestCheckResourceAttr(resourceName, "rule_number", "150"),
 				),
@@ -291,7 +291,7 @@ func TestAccVPCNetworkACLRule_allProtocol(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "egress", "false"),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "22"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", ""),
-					resource.TestCheckResourceAttr(resourceName, "protocol", "-1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "-1"),
 					resource.TestCheckResourceAttr(resourceName, "rule_action", "allow"),
 					resource.TestCheckResourceAttr(resourceName, "rule_number", "150"),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "22"),
@@ -324,7 +324,7 @@ func TestAccVPCNetworkACLRule_tcpProtocol(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "egress", "true"),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "22"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", ""),
-					resource.TestCheckResourceAttr(resourceName, "protocol", "6"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "6"),
 					resource.TestCheckResourceAttr(resourceName, "rule_action", "deny"),
 					resource.TestCheckResourceAttr(resourceName, "rule_number", "150"),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "22"),
@@ -808,7 +808,7 @@ func testAccNetworkACLRuleImportStateIdFunc(resourceName, resourceProtocol strin
 
 		naclID := rs.Primary.Attributes["network_acl_id"]
 		ruleNumber := rs.Primary.Attributes["rule_number"]
-		protocol := rs.Primary.Attributes["protocol"]
+		protocol := rs.Primary.Attributes[names.AttrProtocol]
 		// Ensure the resource's ID will be determined from the original protocol value set in the resource's config
 		if protocol != resourceProtocol {
 			protocol = resourceProtocol

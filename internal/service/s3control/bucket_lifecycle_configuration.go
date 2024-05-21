@@ -22,6 +22,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_s3control_bucket_lifecycle_configuration")
@@ -37,13 +38,13 @@ func resourceBucketLifecycleConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"bucket": {
+			names.AttrBucket: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"rule": {
+			names.AttrRule: {
 				Type:     schema.TypeSet,
 				Required: true,
 				MinItems: 1,
@@ -95,26 +96,26 @@ func resourceBucketLifecycleConfiguration() *schema.Resource {
 								},
 							},
 						},
-						"filter": {
+						names.AttrFilter: {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"prefix": {
+									names.AttrPrefix: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"tags": tftags.TagsSchema(),
+									names.AttrTags: tftags.TagsSchema(),
 								},
 							},
 						},
-						"id": {
+						names.AttrID: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringIsNotEmpty,
 						},
-						"status": {
+						names.AttrStatus: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  types.ExpirationStatusEnabled,
@@ -129,7 +130,7 @@ func resourceBucketLifecycleConfiguration() *schema.Resource {
 func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
-	bucket := d.Get("bucket").(string)
+	bucket := d.Get(names.AttrBucket).(string)
 
 	parsedArn, err := arn.Parse(bucket)
 
@@ -145,7 +146,7 @@ func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.R
 		AccountId: aws.String(parsedArn.AccountID),
 		Bucket:    aws.String(bucket),
 		LifecycleConfiguration: &types.LifecycleConfiguration{
-			Rules: expandLifecycleRules(ctx, d.Get("rule").(*schema.Set).List()),
+			Rules: expandLifecycleRules(ctx, d.Get(names.AttrRule).(*schema.Set).List()),
 		},
 	}
 
@@ -185,9 +186,9 @@ func resourceBucketLifecycleConfigurationRead(ctx context.Context, d *schema.Res
 		return diag.Errorf("reading S3 Control Bucket Lifecycle Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set("bucket", d.Id())
+	d.Set(names.AttrBucket, d.Id())
 
-	if err := d.Set("rule", flattenLifecycleRules(ctx, output.Rules)); err != nil {
+	if err := d.Set(names.AttrRule, flattenLifecycleRules(ctx, output.Rules)); err != nil {
 		return diag.Errorf("setting rule: %s", err)
 	}
 
@@ -211,7 +212,7 @@ func resourceBucketLifecycleConfigurationUpdate(ctx context.Context, d *schema.R
 		AccountId: aws.String(parsedArn.AccountID),
 		Bucket:    aws.String(d.Id()),
 		LifecycleConfiguration: &types.LifecycleConfiguration{
-			Rules: expandLifecycleRules(ctx, d.Get("rule").(*schema.Set).List()),
+			Rules: expandLifecycleRules(ctx, d.Get(names.AttrRule).(*schema.Set).List()),
 		},
 	}
 
@@ -369,15 +370,15 @@ func expandLifecycleRule(ctx context.Context, tfMap map[string]interface{}) *typ
 		apiObject.Expiration = expandLifecycleExpiration(v)
 	}
 
-	if v, ok := tfMap["filter"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrFilter].([]interface{}); ok && len(v) > 0 {
 		apiObject.Filter = expandLifecycleRuleFilter(ctx, v)
 	}
 
-	if v, ok := tfMap["id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrID].(string); ok && v != "" {
 		apiObject.ID = aws.String(v)
 	}
 
-	if v, ok := tfMap["status"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
 		apiObject.Status = types.ExpirationStatus(v)
 	}
 
@@ -405,11 +406,11 @@ func expandLifecycleRuleFilter(ctx context.Context, tfList []interface{}) *types
 
 	apiObject := &types.LifecycleRuleFilter{}
 
-	if v, ok := tfMap["prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPrefix].(string); ok && v != "" {
 		apiObject.Prefix = aws.String(v)
 	}
 
-	if v, ok := tfMap["tags"].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrTags].(map[string]interface{}); ok && len(v) > 0 {
 		// See also aws_s3_bucket ReplicationRule.Filter handling
 		if len(v) == 1 {
 			apiObject.Tag = &tagsS3(tftags.New(ctx, v))[0]
@@ -466,7 +467,7 @@ func flattenLifecycleRules(ctx context.Context, apiObjects []types.LifecycleRule
 
 func flattenLifecycleRule(ctx context.Context, apiObject types.LifecycleRule) map[string]interface{} {
 	tfMap := map[string]interface{}{
-		"status": apiObject.Status,
+		names.AttrStatus: apiObject.Status,
 	}
 
 	if v := apiObject.AbortIncompleteMultipartUpload; v != nil {
@@ -478,11 +479,11 @@ func flattenLifecycleRule(ctx context.Context, apiObject types.LifecycleRule) ma
 	}
 
 	if v := apiObject.Filter; v != nil {
-		tfMap["filter"] = flattenLifecycleRuleFilter(ctx, v)
+		tfMap[names.AttrFilter] = flattenLifecycleRuleFilter(ctx, v)
 	}
 
 	if v := apiObject.ID; v != nil {
-		tfMap["id"] = aws.ToString(v)
+		tfMap[names.AttrID] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -497,19 +498,19 @@ func flattenLifecycleRuleFilter(ctx context.Context, apiObject *types.LifecycleR
 
 	if apiObject.And != nil {
 		if v := apiObject.And.Prefix; v != nil {
-			tfMap["prefix"] = aws.ToString(v)
+			tfMap[names.AttrPrefix] = aws.ToString(v)
 		}
 
 		if v := apiObject.And.Tags; v != nil {
-			tfMap["tags"] = keyValueTagsS3(ctx, v).IgnoreAWS().Map()
+			tfMap[names.AttrTags] = keyValueTagsS3(ctx, v).IgnoreAWS().Map()
 		}
 	} else {
 		if v := apiObject.Prefix; v != nil {
-			tfMap["prefix"] = aws.ToString(v)
+			tfMap[names.AttrPrefix] = aws.ToString(v)
 		}
 
 		if v := apiObject.Tag; v != nil {
-			tfMap["tags"] = keyValueTagsS3(ctx, []types.S3Tag{*v}).IgnoreAWS().Map()
+			tfMap[names.AttrTags] = keyValueTagsS3(ctx, []types.S3Tag{*v}).IgnoreAWS().Map()
 		}
 	}
 

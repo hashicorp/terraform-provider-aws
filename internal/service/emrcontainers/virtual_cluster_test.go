@@ -45,14 +45,14 @@ func TestAccEMRContainersVirtualCluster_basic(t *testing.T) {
 				Config: testAccVirtualClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVirtualClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "container_provider.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "container_provider.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "container_provider.0.id", rName),
-					resource.TestCheckResourceAttr(resourceName, "container_provider.0.info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "container_provider.0.info.0.eks_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "container_provider.0.info.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "container_provider.0.info.0.eks_info.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "container_provider.0.info.0.eks_info.0.namespace", "default"),
 					resource.TestCheckResourceAttr(resourceName, "container_provider.0.type", "EKS"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			//
@@ -132,28 +132,28 @@ func TestAccEMRContainersVirtualCluster_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckVirtualClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVirtualClusterConfig_tags1(rName, "key1", "value1"),
+				Config: testAccVirtualClusterConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVirtualClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
-				Config: testAccVirtualClusterConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccVirtualClusterConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVirtualClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccVirtualClusterConfig_tags1(rName, "key2", "value2"),
+				Config: testAccVirtualClusterConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVirtualClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},

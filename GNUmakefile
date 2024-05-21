@@ -85,7 +85,7 @@ awssdkpatch-gen: awssdkpatch ## Generate a patch file using awssdkpatch
 		echo "PKG=foo make awssdkpatch-gen" ; \
 		exit 1 ; \
 	fi
-	@awssdkpatch -service $(PKG)
+	@awssdkpatch $(AWSSDKPATCH_OPTS) -service $(PKG)
 
 awssdkpatch: prereq-go ## Install awssdkpatch
 	cd tools/awssdkpatch && $(GO_VER) install github.com/hashicorp/terraform-provider-aws/tools/awssdkpatch
@@ -167,6 +167,12 @@ docscheck: ## Check provider documentation
 		-require-resource-subcategory
 	@misspell -error -source text CHANGELOG.md .changelog
 
+fixconstants: fiximports fmt semconstants fiximports fmt
+
+fiximports:
+	@echo "make: fixing source code imports with goimports..."
+	@find internal -name "*.go" -type f -exec goimports -w {} \;
+
 fmt: ## Fix Go source formatting
 	@echo "make: fixing source code with gofmt..."
 	gofmt -s -w ./$(PKG_NAME) ./names $(filter-out ./.ci/providerlint/go% ./.ci/providerlint/README.md ./.ci/providerlint/vendor, $(wildcard ./.ci/providerlint/*))
@@ -187,6 +193,7 @@ gen: prereq-go ## Run all Go generators
 	rm -f internal/provider/*_gen.go
 	rm -f internal/service/**/*_gen.go
 	rm -f internal/service/**/*_gen_test.go
+	rm -f internal/service/**/*_gen.tf
 	rm -f names/caps.md
 	rm -f names/*_gen.go
 	rm -f website/docs/guides/custom-service-endpoints.html.md
@@ -336,6 +343,8 @@ semall: semgrep-validate ## Run semgrep on all files
 	@SEMGREP_TIMEOUT=300 semgrep --error --metrics=off \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
 		--config .ci/.semgrep.yml \
+		--config .ci/.semgrep-constants.yml \
+		--config .ci/.semgrep-test-constants.yml \
 		--config .ci/.semgrep-caps-aws-ec2.yml \
 		--config .ci/.semgrep-configs.yml \
 		--config .ci/.semgrep-service-name0.yml \
@@ -357,6 +366,8 @@ semfix: semgrep-validate ## Run semgrep on all files
 	@SEMGREP_TIMEOUT=300 semgrep --error --metrics=off --autofix \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
 		--config .ci/.semgrep.yml \
+		--config .ci/.semgrep-constants.yml \
+		--config .ci/.semgrep-test-constants.yml \
 		--config .ci/.semgrep-caps-aws-ec2.yml \
 		--config .ci/.semgrep-configs.yml \
 		--config .ci/.semgrep-service-name0.yml \
@@ -371,9 +382,18 @@ semfix: semgrep-validate ## Run semgrep on all files
 		--config 'r/dgryski.semgrep-go.oddifsequence' \
 		--config 'r/dgryski.semgrep-go.oserrors'
 
+semconstants: semgrep-validate
+	@echo "make: applying constants fixes locally with Semgrep --autofix"
+	@SEMGREP_TIMEOUT=300 semgrep --error --metrics=off --autofix \
+		--config .ci/.semgrep-constants.yml \
+		--config .ci/.semgrep-test-constants.yml
+
 semgrep-validate: ## Validate semgrep configuration files
+	@echo "make: validating Semgrep configuration files..."
 	@SEMGREP_TIMEOUT=300 semgrep --error --validate \
 		--config .ci/.semgrep.yml \
+		--config .ci/.semgrep-constants.yml \
+		--config .ci/.semgrep-test-constants.yml \
 		--config .ci/.semgrep-caps-aws-ec2.yml \
 		--config .ci/.semgrep-configs.yml \
 		--config .ci/.semgrep-service-name0.yml \
@@ -384,7 +404,7 @@ semgrep-validate: ## Validate semgrep configuration files
 
 semgrep: semgrep-validate ## Run semgrep
 	@echo "make: running Semgrep static analysis..."
-	@docker run --rm --volume "${PWD}:/src" returntocorp/semgrep semgrep --config .ci/.semgrep.yml
+	@docker run --rm --volume "${PWD}:/src" returntocorp/semgrep semgrep --config .ci/.semgrep.yml --config .ci/.semgrep-constants.yml --config .ci/.semgrep-test-constants.yml
 
 skaff: prereq-go ## Install skaff
 	cd skaff && $(GO_VER) install github.com/hashicorp/terraform-provider-aws/skaff
@@ -505,6 +525,8 @@ yamllint: ## Lint YAML files (via yamllint)
 	docs-lint \
 	docs-lint-fix \
 	docscheck \
+	fixconstants \
+	fiximports \
 	fmt \
 	fmtcheck \
 	fumpt \
@@ -523,6 +545,7 @@ yamllint: ## Lint YAML files (via yamllint)
 	sane \
 	sanity \
 	semall \
+	semconstants \
 	semfix \
 	semgrep \
 	semgrep-validate \

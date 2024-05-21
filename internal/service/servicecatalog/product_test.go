@@ -40,27 +40,27 @@ func TestAccServiceCatalogProduct_basic(t *testing.T) {
 				Config: testAccProductConfig_basic(rName, "beskrivning", "supportbeskrivning", domain, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProductExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "catalog", regexache.MustCompile(`product/prod-.*`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "catalog", regexache.MustCompile(`product/prod-.*`)),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
-					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
-					resource.TestCheckResourceAttr(resourceName, "description", "beskrivning"),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "beskrivning"),
 					resource.TestCheckResourceAttr(resourceName, "distributor", "distributör"),
 					resource.TestCheckResourceAttr(resourceName, "has_default_path", "false"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "owner", "ägare"),
-					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrOwner, "ägare"),
+					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.description", "artefaktbeskrivning"),
 					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.disable_template_validation", "true"),
 					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "provisioning_artifact_parameters.0.template_url"),
 					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.type", servicecatalog.ProvisioningArtifactTypeCloudFormationTemplate),
-					resource.TestCheckResourceAttr(resourceName, "status", tfservicecatalog.StatusCreated),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, tfservicecatalog.StatusCreated),
 					resource.TestCheckResourceAttr(resourceName, "support_description", "supportbeskrivning"),
 					resource.TestCheckResourceAttr(resourceName, "support_email", acctest.DefaultEmailAddress),
 					resource.TestCheckResourceAttr(resourceName, "support_url", domain),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					resource.TestCheckResourceAttr(resourceName, "type", servicecatalog.ProductTypeCloudFormationTemplate),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, servicecatalog.ProductTypeCloudFormationTemplate),
 				),
 			},
 			{
@@ -118,9 +118,9 @@ func TestAccServiceCatalogProduct_update(t *testing.T) {
 				Config: testAccProductConfig_basic(rName, "beskrivning", "supportbeskrivning", domain, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProductExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "beskrivning"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "beskrivning"),
 					resource.TestCheckResourceAttr(resourceName, "support_description", "supportbeskrivning"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -128,9 +128,9 @@ func TestAccServiceCatalogProduct_update(t *testing.T) {
 				Config: testAccProductConfig_basic(rName, "ny beskrivning", "ny supportbeskrivning", domain, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProductExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "ny beskrivning"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "ny beskrivning"),
 					resource.TestCheckResourceAttr(resourceName, "support_description", "ny supportbeskrivning"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -155,8 +155,8 @@ func TestAccServiceCatalogProduct_physicalID(t *testing.T) {
 				Config: testAccProductConfig_physicalID(rName, domain, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProductExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "catalog", regexache.MustCompile(`product/prod-.*`)),
-					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "catalog", regexache.MustCompile(`product/prod-.*`)),
+					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.description", "artefaktbeskrivning"),
 					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "provisioning_artifact_parameters.0.template_physical_id"),
@@ -301,107 +301,6 @@ resource "aws_servicecatalog_product" "test" {
   }
 }
 `, rName, description, supportDescription, domain, email))
-}
-
-func testAccProductConfig_tags0(rName string) string {
-	return acctest.ConfigCompose(testAccProductTemplateURLBaseConfig(rName), fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-resource "aws_servicecatalog_product" "test" {
-  description = %[1]q
-  distributor = "distributör"
-  name        = %[1]q
-  owner       = "ägare"
-  type        = "CLOUD_FORMATION_TEMPLATE"
-
-  provisioning_artifact_parameters {
-    description                 = "artefaktbeskrivning"
-    disable_template_validation = true
-    name                        = %[1]q
-    template_url                = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_object.test.key}"
-    type                        = "CLOUD_FORMATION_TEMPLATE"
-  }
-}
-`, rName))
-}
-
-func testAccProductConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccProductTemplateURLBaseConfig(rName), fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-resource "aws_servicecatalog_product" "test" {
-  description = %[1]q
-  distributor = "distributör"
-  name        = %[1]q
-  owner       = "ägare"
-  type        = "CLOUD_FORMATION_TEMPLATE"
-
-  provisioning_artifact_parameters {
-    description                 = "artefaktbeskrivning"
-    disable_template_validation = true
-    name                        = %[1]q
-    template_url                = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_object.test.key}"
-    type                        = "CLOUD_FORMATION_TEMPLATE"
-  }
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1))
-}
-
-func testAccProductConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccProductTemplateURLBaseConfig(rName), fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-resource "aws_servicecatalog_product" "test" {
-  description = %[1]q
-  distributor = "distributör"
-  name        = %[1]q
-  owner       = "ägare"
-  type        = "CLOUD_FORMATION_TEMPLATE"
-
-  provisioning_artifact_parameters {
-    description                 = "artefaktbeskrivning"
-    disable_template_validation = true
-    name                        = %[1]q
-    template_url                = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_object.test.key}"
-    type                        = "CLOUD_FORMATION_TEMPLATE"
-  }
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
-}
-
-func testAccProductConfig_tagsNull(rName, tagKey1 string) string {
-	return acctest.ConfigCompose(testAccProductTemplateURLBaseConfig(rName), fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-resource "aws_servicecatalog_product" "test" {
-  description = %[1]q
-  distributor = "distributör"
-  name        = %[1]q
-  owner       = "ägare"
-  type        = "CLOUD_FORMATION_TEMPLATE"
-
-  provisioning_artifact_parameters {
-    description                 = "artefaktbeskrivning"
-    disable_template_validation = true
-    name                        = %[1]q
-    template_url                = "https://${aws_s3_bucket.test.bucket_regional_domain_name}/${aws_s3_object.test.key}"
-    type                        = "CLOUD_FORMATION_TEMPLATE"
-  }
-
-  tags = {
-    %[2]q = null
-  }
-}
-`, rName, tagKey1))
 }
 
 func testAccProductConfig_physicalID(rName, domain, email string) string {

@@ -43,7 +43,7 @@ func ResourceAgent() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -52,9 +52,9 @@ func ResourceAgent() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"private_link_endpoint", "ip_address"},
+				ConflictsWith: []string{"private_link_endpoint", names.AttrIPAddress},
 			},
-			"ip_address": {
+			names.AttrIPAddress: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -68,7 +68,7 @@ func ResourceAgent() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{"activation_key"},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -86,7 +86,7 @@ func ResourceAgent() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_endpoint_id": {
+			names.AttrVPCEndpointID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -102,7 +102,7 @@ func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
 	activationKey := d.Get("activation_key").(string)
-	agentIpAddress := d.Get("ip_address").(string)
+	agentIpAddress := d.Get(names.AttrIPAddress).(string)
 
 	// Perform one time fetch of activation key from gateway IP address.
 	if activationKey == "" {
@@ -184,7 +184,7 @@ func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		Tags:          getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk(names.AttrName); ok {
 		input.AgentName = aws.String(v.(string))
 	}
 
@@ -196,7 +196,7 @@ func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.SubnetArns = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("vpc_endpoint_id"); ok {
+	if v, ok := d.GetOk(names.AttrVPCEndpointID); ok {
 		input.VpcEndpointId = aws.String(v.(string))
 	}
 
@@ -235,18 +235,18 @@ func resourceAgentRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading DataSync Agent (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.AgentArn)
-	d.Set("name", output.Name)
+	d.Set(names.AttrARN, output.AgentArn)
+	d.Set(names.AttrName, output.Name)
 	if plc := output.PrivateLinkConfig; plc != nil {
 		d.Set("private_link_endpoint", plc.PrivateLinkEndpoint)
 		d.Set("security_group_arns", flex.FlattenStringValueList(plc.SecurityGroupArns))
 		d.Set("subnet_arns", flex.FlattenStringValueList(plc.SubnetArns))
-		d.Set("vpc_endpoint_id", plc.VpcEndpointId)
+		d.Set(names.AttrVPCEndpointID, plc.VpcEndpointId)
 	} else {
 		d.Set("private_link_endpoint", "")
 		d.Set("security_group_arns", nil)
 		d.Set("subnet_arns", nil)
-		d.Set("vpc_endpoint_id", "")
+		d.Set(names.AttrVPCEndpointID, "")
 	}
 
 	return diags
@@ -256,10 +256,10 @@ func resourceAgentUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
-	if d.HasChange("name") {
+	if d.HasChange(names.AttrName) {
 		input := &datasync.UpdateAgentInput{
 			AgentArn: aws.String(d.Id()),
-			Name:     aws.String(d.Get("name").(string)),
+			Name:     aws.String(d.Get(names.AttrName).(string)),
 		}
 
 		_, err := conn.UpdateAgent(ctx, input)

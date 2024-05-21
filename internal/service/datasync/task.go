@@ -43,7 +43,7 @@ func resourceTask() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -69,7 +69,7 @@ func resourceTask() *schema.Resource {
 							Optional:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.FilterType](),
 						},
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -87,14 +87,14 @@ func resourceTask() *schema.Resource {
 							Optional:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.FilterType](),
 						},
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -198,13 +198,13 @@ func resourceTask() *schema.Resource {
 					},
 				},
 			},
-			"schedule": {
+			names.AttrSchedule: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"schedule_expression": {
+						names.AttrScheduleExpression: {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.All(
@@ -329,7 +329,7 @@ func resourceTaskCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		input.Includes = expandFilterRules(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk(names.AttrName); ok {
 		input.Name = aws.String(v.(string))
 	}
 
@@ -337,7 +337,7 @@ func resourceTaskCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		input.TaskReportConfig = expandTaskReportConfig(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("schedule"); ok {
+	if v, ok := d.GetOk(names.AttrSchedule); ok {
 		input.Schedule = expandTaskSchedule(v.([]interface{}))
 	}
 
@@ -372,7 +372,7 @@ func resourceTaskRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return sdkdiag.AppendErrorf(diags, "reading DataSync Task (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.TaskArn)
+	d.Set(names.AttrARN, output.TaskArn)
 	d.Set("cloudwatch_log_group_arn", output.CloudWatchLogGroupArn)
 	d.Set("destination_location_arn", output.DestinationLocationArn)
 	if err := d.Set("excludes", flattenFilterRules(output.Excludes)); err != nil {
@@ -381,11 +381,11 @@ func resourceTaskRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	if err := d.Set("includes", flattenFilterRules(output.Includes)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting includes: %s", err)
 	}
-	d.Set("name", output.Name)
+	d.Set(names.AttrName, output.Name)
 	if err := d.Set("options", flattenOptions(output.Options)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting options: %s", err)
 	}
-	if err := d.Set("schedule", flattenTaskSchedule(output.Schedule)); err != nil {
+	if err := d.Set(names.AttrSchedule, flattenTaskSchedule(output.Schedule)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting schedule: %s", err)
 	}
 	if err := d.Set("task_report_config", flattenTaskReportConfig(output.TaskReportConfig)); err != nil {
@@ -400,7 +400,7 @@ func resourceTaskUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &datasync.UpdateTaskInput{
 			TaskArn: aws.String(d.Id()),
 		}
@@ -417,16 +417,16 @@ func resourceTaskUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			input.Includes = expandFilterRules(d.Get("includes").([]interface{}))
 		}
 
-		if d.HasChanges("name") {
-			input.Name = aws.String(d.Get("name").(string))
+		if d.HasChanges(names.AttrName) {
+			input.Name = aws.String(d.Get(names.AttrName).(string))
 		}
 
 		if d.HasChanges("options") {
 			input.Options = expandOptions(d.Get("options").([]interface{}))
 		}
 
-		if d.HasChanges("schedule") {
-			input.Schedule = expandTaskSchedule(d.Get("schedule").([]interface{}))
+		if d.HasChanges(names.AttrSchedule) {
+			input.Schedule = expandTaskSchedule(d.Get(names.AttrSchedule).([]interface{}))
 		}
 
 		if d.HasChanges("task_report_config") {
@@ -647,7 +647,7 @@ func expandTaskSchedule(l []interface{}) *awstypes.TaskSchedule {
 	m := l[0].(map[string]interface{})
 
 	schedule := &awstypes.TaskSchedule{
-		ScheduleExpression: aws.String(m["schedule_expression"].(string)),
+		ScheduleExpression: aws.String(m[names.AttrScheduleExpression].(string)),
 	}
 
 	return schedule
@@ -659,7 +659,7 @@ func flattenTaskSchedule(schedule *awstypes.TaskSchedule) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"schedule_expression": aws.ToString(schedule.ScheduleExpression),
+		names.AttrScheduleExpression: aws.ToString(schedule.ScheduleExpression),
 	}
 
 	return []interface{}{m}
@@ -748,7 +748,7 @@ func expandFilterRules(l []interface{}) []awstypes.FilterRule {
 		m := mRaw.(map[string]interface{})
 		filterRule := awstypes.FilterRule{
 			FilterType: awstypes.FilterType(m["filter_type"].(string)),
-			Value:      aws.String(m["value"].(string)),
+			Value:      aws.String(m[names.AttrValue].(string)),
 		}
 		filterRules = append(filterRules, filterRule)
 	}
@@ -761,8 +761,8 @@ func flattenFilterRules(filterRules []awstypes.FilterRule) []interface{} {
 
 	for _, filterRule := range filterRules {
 		m := map[string]interface{}{
-			"filter_type": string(filterRule.FilterType),
-			"value":       aws.ToString(filterRule.Value),
+			"filter_type":   string(filterRule.FilterType),
+			names.AttrValue: aws.ToString(filterRule.Value),
 		}
 		l = append(l, m)
 	}

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_subnets")
@@ -26,13 +27,13 @@ func DataSourceSubnets() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"filter": customFiltersSchema(),
-			"ids": {
+			names.AttrFilter: customFiltersSchema(),
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -43,13 +44,13 @@ func dataSourceSubnetsRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	input := &ec2.DescribeSubnetsInput{}
 
-	if tags, tagsOk := d.GetOk("tags"); tagsOk {
+	if tags, tagsOk := d.GetOk(names.AttrTags); tagsOk {
 		input.Filters = append(input.Filters, newTagFilterList(
 			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
 	}
 
-	if filters, filtersOk := d.GetOk("filter"); filtersOk {
+	if filters, filtersOk := d.GetOk(names.AttrFilter); filtersOk {
 		input.Filters = append(input.Filters,
 			newCustomFilterList(filters.(*schema.Set))...)
 	}
@@ -71,7 +72,7 @@ func dataSourceSubnetsRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("ids", subnetIDs)
+	d.Set(names.AttrIDs, subnetIDs)
 
 	return diags
 }

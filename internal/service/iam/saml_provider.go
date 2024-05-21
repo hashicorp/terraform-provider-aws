@@ -42,11 +42,11 @@ func resourceSAMLProvider() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -74,7 +74,7 @@ func resourceSAMLProviderCreate(ctx context.Context, d *schema.ResourceData, met
 
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &iam.CreateSAMLProviderInput{
 		Name:                 aws.String(name),
 		SAMLMetadataDocument: aws.String(d.Get("saml_metadata_document").(string)),
@@ -137,8 +137,8 @@ func resourceSAMLProviderRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set("arn", d.Id())
-	d.Set("name", name)
+	d.Set(names.AttrARN, d.Id())
+	d.Set(names.AttrName, name)
 	d.Set("saml_metadata_document", output.SAMLMetadataDocument)
 	if output.ValidUntil != nil {
 		d.Set("valid_until", aws.ToTime(output.ValidUntil).Format(time.RFC3339))
@@ -156,7 +156,7 @@ func resourceSAMLProviderUpdate(ctx context.Context, d *schema.ResourceData, met
 
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &iam.UpdateSAMLProviderInput{
 			SAMLProviderArn:      aws.String(d.Id()),
 			SAMLMetadataDocument: aws.String(d.Get("saml_metadata_document").(string)),

@@ -35,8 +35,8 @@ func testAccAPICache_basic(t *testing.T) {
 				Config: testAccAPICacheConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPICacheExists(ctx, resourceName, &apiCache),
-					resource.TestCheckResourceAttrPair(resourceName, "api_id", "aws_appsync_graphql_api.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "type", "SMALL"),
+					resource.TestCheckResourceAttrPair(resourceName, "api_id", "aws_appsync_graphql_api.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "SMALL"),
 					resource.TestCheckResourceAttr(resourceName, "api_caching_behavior", "FULL_REQUEST_CACHING"),
 				),
 			},

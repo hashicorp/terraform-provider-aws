@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_elasticache_cluster", name="Cluster")
@@ -25,11 +26,11 @@ func dataSourceCluster() *schema.Resource {
 		ReadWithoutTimeout: dataSourceClusterRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -38,15 +39,15 @@ func dataSourceCluster() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"address": {
+						names.AttrAddress: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"availability_zone": {
+						names.AttrAvailabilityZone: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -54,7 +55,7 @@ func dataSourceCluster() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"port": {
+						names.AttrPort: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -81,7 +82,7 @@ func dataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -94,7 +95,7 @@ func dataSourceCluster() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"destination": {
+						names.AttrDestination: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -137,7 +138,7 @@ func dataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"port": {
+			names.AttrPort: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -149,7 +150,7 @@ func dataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -166,7 +167,7 @@ func dataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -184,17 +185,17 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	d.SetId(aws.StringValue(cluster.CacheClusterId))
-	d.Set("arn", cluster.ARN)
-	d.Set("availability_zone", cluster.PreferredAvailabilityZone)
+	d.Set(names.AttrARN, cluster.ARN)
+	d.Set(names.AttrAvailabilityZone, cluster.PreferredAvailabilityZone)
 	if cluster.ConfigurationEndpoint != nil {
 		clusterAddress, port := aws.StringValue(cluster.ConfigurationEndpoint.Address), aws.Int64Value(cluster.ConfigurationEndpoint.Port)
 		d.Set("cluster_address", clusterAddress)
 		d.Set("configuration_endpoint", fmt.Sprintf("%s:%d", clusterAddress, port))
-		d.Set("port", port)
+		d.Set(names.AttrPort, port)
 	}
 	d.Set("cluster_id", cluster.CacheClusterId)
 	d.Set("engine", cluster.Engine)
-	d.Set("engine_version", cluster.EngineVersion)
+	d.Set(names.AttrEngineVersion, cluster.EngineVersion)
 	d.Set("ip_discovery", cluster.IpDiscovery)
 	d.Set("log_delivery_configuration", flattenLogDeliveryConfigurations(cluster.LogDeliveryConfigurations))
 	d.Set("maintenance_window", cluster.PreferredMaintenanceWindow)
@@ -211,7 +212,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	d.Set("preferred_outpost_arn", cluster.PreferredOutpostArn)
 	d.Set("replication_group_id", cluster.ReplicationGroupId)
-	d.Set("security_group_ids", flattenSecurityGroupIDs(cluster.SecurityGroups))
+	d.Set(names.AttrSecurityGroupIDs, flattenSecurityGroupIDs(cluster.SecurityGroups))
 	d.Set("snapshot_retention_limit", cluster.SnapshotRetentionLimit)
 	d.Set("snapshot_window", cluster.SnapshotWindow)
 	d.Set("subnet_group_name", cluster.CacheSubnetGroupName)
@@ -231,7 +232,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if tags != nil {
-		if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 		}
 	}

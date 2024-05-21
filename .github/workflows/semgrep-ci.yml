@@ -24,14 +24,18 @@ jobs:
     container:
       image: "returntocorp/semgrep:1.52.0"
     steps:
-      - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
       - run: |
           semgrep --validate \
             --config .ci/.semgrep.yml \
+            --config .ci/.semgrep-constants.yml \
+            --config .ci/.semgrep-test-constants.yml \
             --config .ci/semgrep/
       - run: |
           semgrep $COMMON_PARAMS \
             --config .ci/.semgrep.yml \
+            --config .ci/.semgrep-constants.yml \
+            --config .ci/.semgrep-test-constants.yml \
             --config .ci/semgrep/ \
             --config 'r/dgryski.semgrep-go.badnilguard' \
             --config 'r/dgryski.semgrep-go.errnilcheck' \
@@ -47,7 +51,7 @@ jobs:
       image: "returntocorp/semgrep:1.52.0"
     if: (github.action != 'dependabot[bot]')
     steps:
-      - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
       - run: semgrep --validate --config .ci/.semgrep-caps-aws-ec2.yml
       - run: semgrep $COMMON_PARAMS --config .ci/.semgrep-caps-aws-ec2.yml
 
@@ -58,7 +62,7 @@ jobs:
       image: "returntocorp/semgrep:1.52.0"
     if: (github.action != 'dependabot[bot]')
     steps:
-      - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
       - run: semgrep --validate --config .ci/.semgrep-configs.yml
       - run: semgrep $COMMON_PARAMS --config .ci/.semgrep-configs.yml
 
@@ -69,7 +73,7 @@ jobs:
       image: "returntocorp/semgrep:1.52.0"
     if: (github.action != 'dependabot[bot]')
     steps:
-      - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
       - run: semgrep --validate --config .ci/.semgrep-service-name0.yml
       - run: semgrep $COMMON_PARAMS --config .ci/.semgrep-service-name0.yml
 
@@ -80,7 +84,7 @@ jobs:
       image: "returntocorp/semgrep:1.52.0"
     if: (github.action != 'dependabot[bot]')
     steps:
-      - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
       - run: semgrep --validate --config .ci/.semgrep-service-name1.yml
       - run: semgrep $COMMON_PARAMS --config .ci/.semgrep-service-name1.yml
 
@@ -91,7 +95,7 @@ jobs:
       image: "returntocorp/semgrep:1.52.0"
     if: (github.action != 'dependabot[bot]')
     steps:
-      - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
       - run: semgrep --validate --config .ci/.semgrep-service-name2.yml
       - run: semgrep $COMMON_PARAMS --config .ci/.semgrep-service-name2.yml
 
@@ -102,6 +106,6 @@ jobs:
       image: "returntocorp/semgrep:1.52.0"
     if: (github.action != 'dependabot[bot]')
     steps:
-      - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
+      - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
       - run: semgrep --validate --config .ci/.semgrep-service-name3.yml
       - run: semgrep $COMMON_PARAMS --config .ci/.semgrep-service-name3.yml

@@ -64,8 +64,8 @@ func (r *resourceApplicationAccessScope) Schema(ctx context.Context, req resourc
 					listplanmodifier.RequiresReplace(),
 				},
 			},
-			"id": framework.IDAttribute(),
-			"scope": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrScope: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -199,7 +199,7 @@ func (r *resourceApplicationAccessScope) Delete(ctx context.Context, req resourc
 }
 
 func (r *resourceApplicationAccessScope) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func findApplicationAccessScopeByID(ctx context.Context, conn *ssoadmin.Client, id string) (*ssoadmin.GetApplicationAccessScopeOutput, error) {

@@ -30,7 +30,7 @@ func TestAccQuickSightDataSetDataSource_basic(t *testing.T) {
 			{
 				Config: testAccDataSetDataSourceConfig_basic(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 				),
 			},
 		},

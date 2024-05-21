@@ -46,7 +46,7 @@ func ResourceVocabulary() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -54,7 +54,7 @@ func ResourceVocabulary() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"language_code": {
+			names.AttrLanguageCode: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -97,7 +97,7 @@ func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	in := &transcribe.CreateVocabularyInput{
 		VocabularyName: aws.String(d.Get("vocabulary_name").(string)),
-		LanguageCode:   types.LanguageCode(d.Get("language_code").(string)),
+		LanguageCode:   types.LanguageCode(d.Get(names.AttrLanguageCode).(string)),
 		Tags:           getTagsIn(ctx),
 	}
 
@@ -150,10 +150,10 @@ func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta in
 		Resource:  fmt.Sprintf("vocabulary/%s", d.Id()),
 	}.String()
 
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("download_uri", out.DownloadUri)
 	d.Set("vocabulary_name", out.VocabularyName)
-	d.Set("language_code", out.LanguageCode)
+	d.Set(names.AttrLanguageCode, out.LanguageCode)
 
 	return nil
 }
@@ -161,10 +161,10 @@ func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta in
 func resourceVocabularyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		in := &transcribe.UpdateVocabularyInput{
 			VocabularyName: aws.String(d.Id()),
-			LanguageCode:   types.LanguageCode(d.Get("language_code").(string)),
+			LanguageCode:   types.LanguageCode(d.Get(names.AttrLanguageCode).(string)),
 		}
 
 		if d.HasChanges("vocabulary_file_uri", "phrases") {

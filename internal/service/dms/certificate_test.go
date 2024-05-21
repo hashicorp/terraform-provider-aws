@@ -33,7 +33,7 @@ func TestAccDMSCertificate_basic(t *testing.T) {
 				Config: testAccCertificateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCertificateExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificateARN),
 				),
 			},
 			{
@@ -107,11 +107,11 @@ func TestAccDMSCertificate_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCertificateConfig_tags1(rName, "key1", "value1"),
+				Config: testAccCertificateConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCertificateExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -120,20 +120,20 @@ func TestAccDMSCertificate_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCertificateConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccCertificateConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCertificateExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccCertificateConfig_tags1(rName, "key2", "value2"),
+				Config: testAccCertificateConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCertificateExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},

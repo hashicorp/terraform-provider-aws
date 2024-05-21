@@ -37,7 +37,7 @@ func ResourceDirectory() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"alias": {
+			names.AttrAlias: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -112,7 +112,7 @@ func ResourceDirectory() *schema.Resource {
 					},
 				},
 			},
-			"subnet_ids": {
+			names.AttrSubnetIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
@@ -227,7 +227,7 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta i
 		Tags:              getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("subnet_ids"); ok {
+	if v, ok := d.GetOk(names.AttrSubnetIDs); ok {
 		input.SubnetIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
@@ -317,7 +317,7 @@ func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	d.Set("directory_id", directory.DirectoryId)
-	if err := d.Set("subnet_ids", flex.FlattenStringValueSet(directory.SubnetIds)); err != nil {
+	if err := d.Set(names.AttrSubnetIDs, flex.FlattenStringValueSet(directory.SubnetIds)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting subnet_ids: %s", err)
 	}
 	d.Set("workspace_security_group_id", directory.WorkspaceSecurityGroupId)
@@ -325,7 +325,7 @@ func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("registration_code", directory.RegistrationCode)
 	d.Set("directory_name", directory.DirectoryName)
 	d.Set("directory_type", directory.DirectoryType)
-	d.Set("alias", directory.Alias)
+	d.Set(names.AttrAlias, directory.Alias)
 
 	if err := d.Set("self_service_permissions", FlattenSelfServicePermissions(directory.SelfservicePermissions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting self_service_permissions: %s", err)

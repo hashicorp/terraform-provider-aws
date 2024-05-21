@@ -47,21 +47,21 @@ func ResourceRule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.StringLenBetween(0, 500),
 			},
-			"id": {
+			names.AttrID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"resource_tags": {
+			names.AttrResourceTags: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -81,13 +81,13 @@ func ResourceRule() *schema.Resource {
 					},
 				},
 			},
-			"resource_type": {
+			names.AttrResourceType: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[types.ResourceType](),
 			},
-			"retention_period": {
+			names.AttrRetentionPeriod: {
 				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1,
@@ -142,7 +142,7 @@ func ResourceRule() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -162,26 +162,26 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).RBinClient(ctx)
 
 	in := &rbin.CreateRuleInput{
-		ResourceType:    types.ResourceType(d.Get("resource_type").(string)),
-		RetentionPeriod: expandRetentionPeriod(d.Get("retention_period").([]interface{})),
+		ResourceType:    types.ResourceType(d.Get(names.AttrResourceType).(string)),
+		RetentionPeriod: expandRetentionPeriod(d.Get(names.AttrRetentionPeriod).([]interface{})),
 		Tags:            getTagsIn(ctx),
 	}
 
-	if _, ok := d.GetOk("description"); ok {
-		in.Description = aws.String(d.Get("description").(string))
+	if _, ok := d.GetOk(names.AttrDescription); ok {
+		in.Description = aws.String(d.Get(names.AttrDescription).(string))
 	}
 
-	if v, ok := d.GetOk("resource_tags"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrResourceTags); ok && v.(*schema.Set).Len() > 0 {
 		in.ResourceTags = expandResourceTags(v.(*schema.Set).List())
 	}
 
 	out, err := conn.CreateRule(ctx, in)
 	if err != nil {
-		return create.DiagError(names.RBin, create.ErrActionCreating, ResNameRule, d.Get("resource_type").(string), err)
+		return create.DiagError(names.RBin, create.ErrActionCreating, ResNameRule, d.Get(names.AttrResourceType).(string), err)
 	}
 
 	if out == nil || out.Identifier == nil {
-		return create.DiagError(names.RBin, create.ErrActionCreating, ResNameRule, d.Get("resource_type").(string), errors.New("empty output"))
+		return create.DiagError(names.RBin, create.ErrActionCreating, ResNameRule, d.Get(names.AttrResourceType).(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.Identifier))
@@ -215,17 +215,17 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("rule/%s", aws.ToString(out.Identifier)),
 	}.String()
-	d.Set("arn", ruleArn)
+	d.Set(names.AttrARN, ruleArn)
 
-	d.Set("description", out.Description)
-	d.Set("resource_type", string(out.ResourceType))
-	d.Set("status", string(out.Status))
+	d.Set(names.AttrDescription, out.Description)
+	d.Set(names.AttrResourceType, string(out.ResourceType))
+	d.Set(names.AttrStatus, string(out.Status))
 
-	if err := d.Set("resource_tags", flattenResourceTags(out.ResourceTags)); err != nil {
+	if err := d.Set(names.AttrResourceTags, flattenResourceTags(out.ResourceTags)); err != nil {
 		return create.DiagError(names.RBin, create.ErrActionSetting, ResNameRule, d.Id(), err)
 	}
 
-	if err := d.Set("retention_period", flattenRetentionPeriod(out.RetentionPeriod)); err != nil {
+	if err := d.Set(names.AttrRetentionPeriod, flattenRetentionPeriod(out.RetentionPeriod)); err != nil {
 		return create.DiagError(names.RBin, create.ErrActionSetting, ResNameRule, d.Id(), err)
 	}
 
@@ -241,18 +241,18 @@ func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		Identifier: aws.String(d.Id()),
 	}
 
-	if d.HasChanges("description") {
-		in.Description = aws.String(d.Get("description").(string))
+	if d.HasChanges(names.AttrDescription) {
+		in.Description = aws.String(d.Get(names.AttrDescription).(string))
 		update = true
 	}
 
-	if d.HasChanges("resource_tags") {
-		in.ResourceTags = expandResourceTags(d.Get("resource_tags").(*schema.Set).List())
+	if d.HasChanges(names.AttrResourceTags) {
+		in.ResourceTags = expandResourceTags(d.Get(names.AttrResourceTags).(*schema.Set).List())
 		update = true
 	}
 
-	if d.HasChanges("retention_period") {
-		in.RetentionPeriod = expandRetentionPeriod(d.Get("retention_period").([]interface{}))
+	if d.HasChanges(names.AttrRetentionPeriod) {
+		in.RetentionPeriod = expandRetentionPeriod(d.Get(names.AttrRetentionPeriod).([]interface{}))
 		update = true
 	}
 

@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_api_gateway_integration", name="Integration")
@@ -43,7 +44,7 @@ func resourceIntegration() *schema.Resource {
 				resourceID := idParts[1]
 				httpMethod := idParts[2]
 				d.Set("http_method", httpMethod)
-				d.Set("resource_id", resourceID)
+				d.Set(names.AttrResourceID, resourceID)
 				d.Set("rest_api_id", restApiID)
 				d.SetId(fmt.Sprintf("agi-%s-%s-%s", restApiID, resourceID, httpMethod))
 				return []*schema.ResourceData{d}, nil
@@ -114,7 +115,7 @@ func resourceIntegration() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"resource_id": {
+			names.AttrResourceID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -143,13 +144,13 @@ func resourceIntegration() *schema.Resource {
 					},
 				},
 			},
-			"type": {
+			names.AttrType: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[types.IntegrationType](),
 			},
-			"uri": {
+			names.AttrURI: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -163,9 +164,9 @@ func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	input := &apigateway.PutIntegrationInput{
 		HttpMethod: aws.String(d.Get("http_method").(string)),
-		ResourceId: aws.String(d.Get("resource_id").(string)),
+		ResourceId: aws.String(d.Get(names.AttrResourceID).(string)),
 		RestApiId:  aws.String(d.Get("rest_api_id").(string)),
-		Type:       types.IntegrationType(d.Get("type").(string)),
+		Type:       types.IntegrationType(d.Get(names.AttrType).(string)),
 	}
 
 	if v, ok := d.GetOk("cache_key_parameters"); ok && v.(*schema.Set).Len() > 0 {
@@ -175,7 +176,7 @@ func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta
 	if v, ok := d.GetOk("cache_namespace"); ok {
 		input.CacheNamespace = aws.String(v.(string))
 	} else if input.CacheKeyParameters != nil {
-		input.CacheNamespace = aws.String(d.Get("resource_id").(string))
+		input.CacheNamespace = aws.String(d.Get(names.AttrResourceID).(string))
 	}
 
 	if v, ok := d.GetOk("connection_id"); ok {
@@ -218,7 +219,7 @@ func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.TlsConfig = expandTLSConfig(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("uri"); ok {
+	if v, ok := d.GetOk(names.AttrURI); ok {
 		input.Uri = aws.String(v.(string))
 	}
 
@@ -228,7 +229,7 @@ func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "creating API Gateway Integration: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("agi-%s-%s-%s", d.Get("rest_api_id").(string), d.Get("resource_id").(string), d.Get("http_method").(string)))
+	d.SetId(fmt.Sprintf("agi-%s-%s-%s", d.Get("rest_api_id").(string), d.Get(names.AttrResourceID).(string), d.Get("http_method").(string)))
 
 	return append(diags, resourceIntegrationRead(ctx, d, meta)...)
 }
@@ -237,7 +238,7 @@ func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	integration, err := findIntegrationByThreePartKey(ctx, conn, d.Get("http_method").(string), d.Get("resource_id").(string), d.Get("rest_api_id").(string))
+	integration, err := findIntegrationByThreePartKey(ctx, conn, d.Get("http_method").(string), d.Get(names.AttrResourceID).(string), d.Get("rest_api_id").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] API Gateway Integration (%s) not found, removing from state", d.Id())
@@ -268,8 +269,8 @@ func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	d.Set("request_templates", requestTemplates)
 	d.Set("timeout_milliseconds", integration.TimeoutInMillis)
-	d.Set("type", integration.Type)
-	d.Set("uri", integration.Uri)
+	d.Set(names.AttrType, integration.Type)
+	d.Set(names.AttrURI, integration.Uri)
 
 	if err := d.Set("tls_config", flattenTLSConfig(integration.TlsConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tls_config: %s", err)
@@ -398,11 +399,11 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	// The documentation https://docs.aws.amazon.com/apigateway/api-reference/link-relation/integration-update/ says
 	// that uri changes are only supported for non-mock types. Because the uri value is not used in mock
 	// resources, it means that the uri can always be updated
-	if d.HasChange("uri") {
+	if d.HasChange(names.AttrURI) {
 		operations = append(operations, types.PatchOperation{
 			Op:    types.OpReplace,
 			Path:  aws.String("/uri"),
-			Value: aws.String(d.Get("uri").(string)),
+			Value: aws.String(d.Get(names.AttrURI).(string)),
 		})
 	}
 
@@ -453,7 +454,7 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	input := &apigateway.UpdateIntegrationInput{
 		HttpMethod:      aws.String(d.Get("http_method").(string)),
 		PatchOperations: operations,
-		ResourceId:      aws.String(d.Get("resource_id").(string)),
+		ResourceId:      aws.String(d.Get(names.AttrResourceID).(string)),
 		RestApiId:       aws.String(d.Get("rest_api_id").(string)),
 	}
 
@@ -473,7 +474,7 @@ func resourceIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta
 	log.Printf("[DEBUG] Deleting API Gateway Integration: %s", d.Id())
 	_, err := conn.DeleteIntegration(ctx, &apigateway.DeleteIntegrationInput{
 		HttpMethod: aws.String(d.Get("http_method").(string)),
-		ResourceId: aws.String(d.Get("resource_id").(string)),
+		ResourceId: aws.String(d.Get(names.AttrResourceID).(string)),
 		RestApiId:  aws.String(d.Get("rest_api_id").(string)),
 	})
 

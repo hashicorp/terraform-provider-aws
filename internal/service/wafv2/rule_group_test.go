@@ -10,8 +10,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/wafv2"
+	"github.com/aws/aws-sdk-go-v2/service/wafv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -25,7 +25,7 @@ import (
 
 func TestAccWAFV2RuleGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.RuleGroup
+	var v awstypes.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
@@ -39,17 +39,17 @@ func TestAccWAFV2RuleGroup_basic(t *testing.T) {
 				Config: testAccRuleGroupConfig_basic(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
-					resource.TestCheckResourceAttr(resourceName, "description", ruleGroupName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "capacity", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -64,7 +64,7 @@ func TestAccWAFV2RuleGroup_basic(t *testing.T) {
 
 func TestAccWAFV2RuleGroup_nameGenerated(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.RuleGroup
+	var v awstypes.RuleGroup
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -77,8 +77,8 @@ func TestAccWAFV2RuleGroup_nameGenerated(t *testing.T) {
 				Config: testAccRuleGroupConfig_nameGenerated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", id.UniqueIdPrefix),
+					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, id.UniqueIdPrefix),
 				),
 			},
 			{
@@ -93,7 +93,7 @@ func TestAccWAFV2RuleGroup_nameGenerated(t *testing.T) {
 
 func TestAccWAFV2RuleGroup_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.RuleGroup
+	var v awstypes.RuleGroup
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -106,8 +106,8 @@ func TestAccWAFV2RuleGroup_namePrefix(t *testing.T) {
 				Config: testAccRuleGroupConfig_namePrefix("tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-acc-test-prefix-"),
 				),
 			},
 			{
@@ -122,7 +122,7 @@ func TestAccWAFV2RuleGroup_namePrefix(t *testing.T) {
 
 func TestAccWAFV2RuleGroup_updateRule(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.RuleGroup
+	var v awstypes.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
@@ -136,46 +136,46 @@ func TestAccWAFV2RuleGroup_updateRule(t *testing.T) {
 				Config: testAccRuleGroupConfig_basic(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
-					resource.TestCheckResourceAttr(resourceName, "description", ruleGroupName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "capacity", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
 				Config: testAccRuleGroupConfig_basicUpdate(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "capacity", "50"),
-					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
-					resource.TestCheckResourceAttr(resourceName, "description", "Updated"),
-					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Updated"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"name":                              "rule-1",
-						"priority":                          "1",
-						"action.#":                          "1",
-						"action.0.allow.#":                  "0",
-						"action.0.block.#":                  "0",
-						"action.0.count.#":                  "1",
-						"action.0.captcha.#":                "0",
-						"action.0.challenge.#":              "0",
-						"statement.#":                       "1",
-						"statement.0.geo_match_statement.#": "1",
-						"statement.0.geo_match_statement.0.country_codes.#": "2",
+						names.AttrName:                      "rule-1",
+						names.AttrPriority:                  acctest.Ct1,
+						"action.#":                          acctest.Ct1,
+						"action.0.allow.#":                  acctest.Ct0,
+						"action.0.block.#":                  acctest.Ct0,
+						"action.0.count.#":                  acctest.Ct1,
+						"action.0.captcha.#":                acctest.Ct0,
+						"action.0.challenge.#":              acctest.Ct0,
+						"statement.#":                       acctest.Ct1,
+						"statement.0.geo_match_statement.#": acctest.Ct1,
+						"statement.0.geo_match_statement.0.country_codes.#": acctest.Ct2,
 					}),
 				),
 			},
@@ -191,7 +191,7 @@ func TestAccWAFV2RuleGroup_updateRule(t *testing.T) {
 
 func TestAccWAFV2RuleGroup_updateRuleProperties(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.RuleGroup
+	var v awstypes.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 	ruleName2 := fmt.Sprintf("%s-2", ruleGroupName)
@@ -206,32 +206,32 @@ func TestAccWAFV2RuleGroup_updateRuleProperties(t *testing.T) {
 				Config: testAccRuleGroupConfig_basicUpdate(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "capacity", "50"),
-					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
-					resource.TestCheckResourceAttr(resourceName, "description", "Updated"),
-					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Updated"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"name":                 "rule-1",
-						"priority":             "1",
-						"action.#":             "1",
-						"action.0.allow.#":     "0",
-						"action.0.block.#":     "0",
-						"action.0.count.#":     "1",
-						"action.0.captcha.#":   "0",
-						"action.0.challenge.#": "0",
+						names.AttrName:         "rule-1",
+						names.AttrPriority:     acctest.Ct1,
+						"action.#":             acctest.Ct1,
+						"action.0.allow.#":     acctest.Ct0,
+						"action.0.block.#":     acctest.Ct0,
+						"action.0.count.#":     acctest.Ct1,
+						"action.0.captcha.#":   acctest.Ct0,
+						"action.0.challenge.#": acctest.Ct0,
 						"visibility_config.0.cloudwatch_metrics_enabled": "false",
 						"visibility_config.0.metric_name":                "friendly-rule-metric-name",
 						"visibility_config.0.sampled_requests_enabled":   "false",
-						"statement.#":                                       "1",
-						"statement.0.geo_match_statement.#":                 "1",
-						"statement.0.geo_match_statement.0.country_codes.#": "2",
+						"statement.#":                                       acctest.Ct1,
+						"statement.0.geo_match_statement.#":                 acctest.Ct1,
+						"statement.0.geo_match_statement.0.country_codes.#": acctest.Ct2,
 					}),
 				),
 			},
@@ -240,62 +240,62 @@ func TestAccWAFV2RuleGroup_updateRuleProperties(t *testing.T) {
 				Config: testAccRuleGroupConfig_updateMultiples(ruleGroupName, "rule-1", ruleName2, 1, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "capacity", "50"),
-					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
-					resource.TestCheckResourceAttr(resourceName, "description", "Updated"),
-					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Updated"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"name":                 "rule-1",
-						"priority":             "1",
-						"action.#":             "1",
-						"action.0.allow.#":     "0",
-						"action.0.block.#":     "0",
-						"action.0.count.#":     "1",
-						"action.0.captcha.#":   "0",
-						"action.0.challenge.#": "0",
-						"visibility_config.#":  "1",
+						names.AttrName:         "rule-1",
+						names.AttrPriority:     acctest.Ct1,
+						"action.#":             acctest.Ct1,
+						"action.0.allow.#":     acctest.Ct0,
+						"action.0.block.#":     acctest.Ct0,
+						"action.0.count.#":     acctest.Ct1,
+						"action.0.captcha.#":   acctest.Ct0,
+						"action.0.challenge.#": acctest.Ct0,
+						"visibility_config.#":  acctest.Ct1,
 						"visibility_config.0.cloudwatch_metrics_enabled": "false",
 						"visibility_config.0.metric_name":                "rule-1",
 						"visibility_config.0.sampled_requests_enabled":   "false",
-						"statement.#":                                       "1",
-						"statement.0.geo_match_statement.#":                 "1",
-						"statement.0.geo_match_statement.0.country_codes.#": "2",
+						"statement.#":                                       acctest.Ct1,
+						"statement.0.geo_match_statement.#":                 acctest.Ct1,
+						"statement.0.geo_match_statement.0.country_codes.#": acctest.Ct2,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"name":                 ruleName2,
-						"priority":             "2",
-						"action.#":             "1",
-						"action.0.allow.#":     "0",
-						"action.0.block.#":     "1",
-						"action.0.count.#":     "0",
-						"action.0.captcha.#":   "0",
-						"action.0.challenge.#": "0",
-						"visibility_config.#":  "1",
+						names.AttrName:         ruleName2,
+						names.AttrPriority:     acctest.Ct2,
+						"action.#":             acctest.Ct1,
+						"action.0.allow.#":     acctest.Ct0,
+						"action.0.block.#":     acctest.Ct1,
+						"action.0.count.#":     acctest.Ct0,
+						"action.0.captcha.#":   acctest.Ct0,
+						"action.0.challenge.#": acctest.Ct0,
+						"visibility_config.#":  acctest.Ct1,
 						"visibility_config.0.cloudwatch_metrics_enabled": "false",
 						"visibility_config.0.metric_name":                ruleName2,
 						"visibility_config.0.sampled_requests_enabled":   "false",
-						"statement.#": "1",
-						"statement.0.size_constraint_statement.#":                                 "1",
+						"statement.#": acctest.Ct1,
+						"statement.0.size_constraint_statement.#":                                 acctest.Ct1,
 						"statement.0.size_constraint_statement.0.comparison_operator":             "LT",
-						"statement.0.size_constraint_statement.0.field_to_match.#":                "1",
-						"statement.0.size_constraint_statement.0.field_to_match.0.query_string.#": "1",
+						"statement.0.size_constraint_statement.0.field_to_match.#":                acctest.Ct1,
+						"statement.0.size_constraint_statement.0.field_to_match.0.query_string.#": acctest.Ct1,
 						"statement.0.size_constraint_statement.0.size":                            "50",
-						"statement.0.size_constraint_statement.0.text_transformation.#":           "2",
+						"statement.0.size_constraint_statement.0.text_transformation.#":           acctest.Ct2,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.statement.0.size_constraint_statement.0.text_transformation.*", map[string]string{
-						"priority": "2",
-						"type":     "CMD_LINE",
+						names.AttrPriority: acctest.Ct2,
+						names.AttrType:     "CMD_LINE",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.statement.0.size_constraint_statement.0.text_transformation.*", map[string]string{
-						"priority": "5",
-						"type":     "NONE",
+						names.AttrPriority: "5",
+						names.AttrType:     "NONE",
 					}),
 				),
 			},
@@ -304,62 +304,62 @@ func TestAccWAFV2RuleGroup_updateRuleProperties(t *testing.T) {
 				Config: testAccRuleGroupConfig_updateMultiples(ruleGroupName, "rule-1", "updated", 5, 10),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "capacity", "50"),
-					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
-					resource.TestCheckResourceAttr(resourceName, "description", "Updated"),
-					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Updated"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"name":                 "rule-1",
-						"priority":             "5",
-						"action.#":             "1",
-						"action.0.allow.#":     "0",
-						"action.0.block.#":     "0",
-						"action.0.count.#":     "1",
-						"action.0.captcha.#":   "0",
-						"action.0.challenge.#": "0",
-						"visibility_config.#":  "1",
+						names.AttrName:         "rule-1",
+						names.AttrPriority:     "5",
+						"action.#":             acctest.Ct1,
+						"action.0.allow.#":     acctest.Ct0,
+						"action.0.block.#":     acctest.Ct0,
+						"action.0.count.#":     acctest.Ct1,
+						"action.0.captcha.#":   acctest.Ct0,
+						"action.0.challenge.#": acctest.Ct0,
+						"visibility_config.#":  acctest.Ct1,
 						"visibility_config.0.cloudwatch_metrics_enabled": "false",
 						"visibility_config.0.metric_name":                "rule-1",
 						"visibility_config.0.sampled_requests_enabled":   "false",
-						"statement.#":                                       "1",
-						"statement.0.geo_match_statement.#":                 "1",
-						"statement.0.geo_match_statement.0.country_codes.#": "2",
+						"statement.#":                                       acctest.Ct1,
+						"statement.0.geo_match_statement.#":                 acctest.Ct1,
+						"statement.0.geo_match_statement.0.country_codes.#": acctest.Ct2,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"name":                 "updated",
-						"priority":             "10",
-						"action.#":             "1",
-						"action.0.allow.#":     "0",
-						"action.0.block.#":     "1",
-						"action.0.count.#":     "0",
-						"action.0.captcha.#":   "0",
-						"action.0.challenge.#": "0",
-						"visibility_config.#":  "1",
+						names.AttrName:         "updated",
+						names.AttrPriority:     acctest.Ct10,
+						"action.#":             acctest.Ct1,
+						"action.0.allow.#":     acctest.Ct0,
+						"action.0.block.#":     acctest.Ct1,
+						"action.0.count.#":     acctest.Ct0,
+						"action.0.captcha.#":   acctest.Ct0,
+						"action.0.challenge.#": acctest.Ct0,
+						"visibility_config.#":  acctest.Ct1,
 						"visibility_config.0.cloudwatch_metrics_enabled": "false",
 						"visibility_config.0.metric_name":                "updated",
 						"visibility_config.0.sampled_requests_enabled":   "false",
-						"statement.#": "1",
-						"statement.0.size_constraint_statement.#":                                 "1",
+						"statement.#": acctest.Ct1,
+						"statement.0.size_constraint_statement.#":                                 acctest.Ct1,
 						"statement.0.size_constraint_statement.0.comparison_operator":             "LT",
-						"statement.0.size_constraint_statement.0.field_to_match.#":                "1",
-						"statement.0.size_constraint_statement.0.field_to_match.0.query_string.#": "1",
+						"statement.0.size_constraint_statement.0.field_to_match.#":                acctest.Ct1,
+						"statement.0.size_constraint_statement.0.field_to_match.0.query_string.#": acctest.Ct1,
 						"statement.0.size_constraint_statement.0.size":                            "50",
-						"statement.0.size_constraint_statement.0.text_transformation.#":           "2",
+						"statement.0.size_constraint_statement.0.text_transformation.#":           acctest.Ct2,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.statement.0.size_constraint_statement.0.text_transformation.*", map[string]string{
-						"priority": "2",
-						"type":     "CMD_LINE",
+						names.AttrPriority: acctest.Ct2,
+						names.AttrType:     "CMD_LINE",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.statement.0.size_constraint_statement.0.text_transformation.*", map[string]string{
-						"priority": "5",
-						"type":     "NONE",
+						names.AttrPriority: "5",
+						names.AttrType:     "NONE",
 					}),
 				),
 			},
@@ -375,7 +375,7 @@ func TestAccWAFV2RuleGroup_updateRuleProperties(t *testing.T) {
 
 func TestAccWAFV2RuleGroup_byteMatchStatement(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.RuleGroup
+	var v awstypes.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
@@ -389,22 +389,22 @@ func TestAccWAFV2RuleGroup_byteMatchStatement(t *testing.T) {
 				Config: testAccRuleGroupConfig_byteMatchStatement(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                        "1",
-						"statement.0.byte_match_statement.#": "1",
+						"statement.#":                        acctest.Ct1,
+						"statement.0.byte_match_statement.#": acctest.Ct1,
 						"statement.0.byte_match_statement.0.positional_constraint": "CONTAINS",
 						"statement.0.byte_match_statement.0.search_string":         "word",
-						"statement.0.byte_match_statement.0.text_transformation.#": "2",
+						"statement.0.byte_match_statement.0.text_transformation.#": acctest.Ct2,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.statement.0.byte_match_statement.0.text_transformation.*", map[string]string{
-						"priority": "5",
-						"type":     "NONE",
+						names.AttrPriority: "5",
+						names.AttrType:     "NONE",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.statement.0.byte_match_statement.0.text_transformation.*", map[string]string{
-						"priority": "2",
-						"type":     "LOWERCASE",
+						names.AttrPriority: acctest.Ct2,
+						names.AttrType:     "LOWERCASE",
 					}),
 				),
 			},
@@ -412,18 +412,18 @@ func TestAccWAFV2RuleGroup_byteMatchStatement(t *testing.T) {
 				Config: testAccRuleGroupConfig_byteMatchStatementUpdate(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                        "1",
-						"statement.0.byte_match_statement.#": "1",
+						"statement.#":                        acctest.Ct1,
+						"statement.0.byte_match_statement.#": acctest.Ct1,
 						"statement.0.byte_match_statement.0.positional_constraint": "EXACTLY",
 						"statement.0.byte_match_statement.0.search_string":         "sentence",
-						"statement.0.byte_match_statement.0.text_transformation.#": "1",
+						"statement.0.byte_match_statement.0.text_transformation.#": acctest.Ct1,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.statement.0.byte_match_statement.0.text_transformation.*", map[string]string{
-						"priority": "3",
-						"type":     "CMD_LINE",
+						names.AttrPriority: acctest.Ct3,
+						names.AttrType:     "CMD_LINE",
 					}),
 				),
 			},
@@ -439,7 +439,7 @@ func TestAccWAFV2RuleGroup_byteMatchStatement(t *testing.T) {
 
 func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.RuleGroup
+	var v awstypes.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
@@ -453,24 +453,24 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 				Config: testAccRuleGroupConfig_byteMatchStatementFieldToMatchAllQueryArguments(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                         "1",
-						"statement.0.byte_match_statement.#":                  "1",
-						"statement.0.byte_match_statement.0.field_to_match.#": "1",
-						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":   "1",
-						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                  "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":               "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.header_order.#":          "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.headers.#":               "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.ja3_fingerprint.#":       "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":             "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":          "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.single_header.#":         "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#": "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.uri_path.#":              "0",
+						"statement.#":                                         acctest.Ct1,
+						"statement.0.byte_match_statement.#":                  acctest.Ct1,
+						"statement.0.byte_match_statement.0.field_to_match.#": acctest.Ct1,
+						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":   acctest.Ct1,
+						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                  acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":               acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.header_order.#":          acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.headers.#":               acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.ja3_fingerprint.#":       acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":             acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":          acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.single_header.#":         acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#": acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.uri_path.#":              acctest.Ct0,
 					}),
 				),
 			},
@@ -478,24 +478,24 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 				Config: testAccRuleGroupConfig_byteMatchStatementFieldToMatchBody(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                         "1",
-						"statement.0.byte_match_statement.#":                  "1",
-						"statement.0.byte_match_statement.0.field_to_match.#": "1",
-						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":   "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                  "1",
-						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":               "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.header_order.#":          "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.headers.#":               "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.ja3_fingerprint.#":       "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":             "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":          "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.single_header.#":         "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#": "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.uri_path.#":              "0",
+						"statement.#":                                         acctest.Ct1,
+						"statement.0.byte_match_statement.#":                  acctest.Ct1,
+						"statement.0.byte_match_statement.0.field_to_match.#": acctest.Ct1,
+						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":   acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                  acctest.Ct1,
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":               acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.header_order.#":          acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.headers.#":               acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.ja3_fingerprint.#":       acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":             acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":          acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.single_header.#":         acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#": acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.uri_path.#":              acctest.Ct0,
 					}),
 				),
 			},
@@ -503,29 +503,29 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 				Config: testAccRuleGroupConfig_byteMatchStatementFieldToMatchCookies(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                         "1",
-						"statement.0.byte_match_statement.#":                  "1",
-						"statement.0.byte_match_statement.0.field_to_match.#": "1",
-						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":                        "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                                       "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":                                    "1",
+						"statement.#":                                         acctest.Ct1,
+						"statement.0.byte_match_statement.#":                  acctest.Ct1,
+						"statement.0.byte_match_statement.0.field_to_match.#": acctest.Ct1,
+						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":                        acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                                       acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":                                    acctest.Ct1,
 						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.match_scope":                        "ALL",
 						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.oversize_handling":                  "NO_MATCH",
-						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.match_pattern.#":                    "1",
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.match_pattern.#":                    acctest.Ct1,
 						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.match_pattern.0.included_cookies.0": "test",
 						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.match_pattern.0.included_cookies.1": "cookie_test",
-						"statement.0.byte_match_statement.0.field_to_match.0.header_order.#":                               "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.headers.#":                                    "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.ja3_fingerprint.#":                            "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":                                  "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                                     "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":                               "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.single_header.#":                              "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#":                      "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.uri_path.#":                                   "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.header_order.#":                               acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.headers.#":                                    acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.ja3_fingerprint.#":                            acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":                                  acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                                     acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":                               acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.single_header.#":                              acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#":                      acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.uri_path.#":                                   acctest.Ct0,
 					}),
 				),
 			},
@@ -533,18 +533,18 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 				Config: testAccRuleGroupConfig_byteMatchStatementFieldToMatchJSONBody(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                                                                      "1",
-						"statement.0.byte_match_statement.#":                                                               "1",
-						"statement.0.byte_match_statement.0.field_to_match.#":                                              "1",
-						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":                                  "1",
+						"statement.#":                                                                                      acctest.Ct1,
+						"statement.0.byte_match_statement.#":                                                               acctest.Ct1,
+						"statement.0.byte_match_statement.0.field_to_match.#":                                              acctest.Ct1,
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":                                  acctest.Ct1,
 						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.match_scope":                      "VALUE",
 						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.invalid_fallback_behavior":        "MATCH",
 						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.oversize_handling":                "CONTINUE",
-						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.match_pattern.#":                  "1",
-						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.match_pattern.0.included_paths.#": "2",
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.match_pattern.#":                  acctest.Ct1,
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.match_pattern.0.included_paths.#": acctest.Ct2,
 						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.match_pattern.0.included_paths.0": "/dogs/0/name",
 						"statement.0.byte_match_statement.0.field_to_match.0.json_body.0.match_pattern.0.included_paths.1": "/dogs/1/name",
 					}),
@@ -554,25 +554,25 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 				Config: testAccRuleGroupConfig_byteMatchStatementFieldToMatchHeaderOrder(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                         "1",
-						"statement.0.byte_match_statement.#":                  "1",
-						"statement.0.byte_match_statement.0.field_to_match.#": "1",
-						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":            "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                           "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":                        "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.header_order.#":                   "1",
+						"statement.#":                                         acctest.Ct1,
+						"statement.0.byte_match_statement.#":                  acctest.Ct1,
+						"statement.0.byte_match_statement.0.field_to_match.#": acctest.Ct1,
+						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":            acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                           acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":                        acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.header_order.#":                   acctest.Ct1,
 						"statement.0.byte_match_statement.0.field_to_match.0.header_order.0.oversize_handling": "MATCH",
-						"statement.0.byte_match_statement.0.field_to_match.0.headers.#":                        "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.ja3_fingerprint.#":                "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":                      "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                         "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":                   "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.single_header.#":                  "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#":          "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.uri_path.#":                       "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.headers.#":                        acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.ja3_fingerprint.#":                acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":                      acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                         acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":                   acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.single_header.#":                  acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#":          acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.uri_path.#":                       acctest.Ct0,
 					}),
 				),
 			},
@@ -580,30 +580,30 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 				Config: testAccRuleGroupConfig_byteMatchStatementFieldToMatchHeadersMatchPatternAll(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                         "1",
-						"statement.0.byte_match_statement.#":                  "1",
-						"statement.0.byte_match_statement.0.field_to_match.#": "1",
-						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":                        "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                                       "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":                                    "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.header_order.#":                               "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.headers.#":                                    "1",
+						"statement.#":                                         acctest.Ct1,
+						"statement.0.byte_match_statement.#":                  acctest.Ct1,
+						"statement.0.byte_match_statement.0.field_to_match.#": acctest.Ct1,
+						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":                        acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                                       acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":                                    acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.header_order.#":                               acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.headers.#":                                    acctest.Ct1,
 						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.oversize_handling":                  "MATCH",
 						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.match_scope":                        "ALL",
-						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.match_pattern.#":                    "1",
-						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.match_pattern.0.all.#":              "1",
-						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.match_pattern.0.included_headers.#": "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.match_pattern.0.excluded_headers.#": "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.ja3_fingerprint.#":                            "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":                                  "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                                     "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":                               "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.single_header.#":                              "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#":                      "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.uri_path.#":                                   "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.match_pattern.#":                    acctest.Ct1,
+						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.match_pattern.0.all.#":              acctest.Ct1,
+						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.match_pattern.0.included_headers.#": acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.match_pattern.0.excluded_headers.#": acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.ja3_fingerprint.#":                            acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":                                  acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                                     acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":                               acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.single_header.#":                              acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#":                      acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.uri_path.#":                                   acctest.Ct0,
 					}),
 				),
 			},
@@ -611,32 +611,32 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 				Config: testAccRuleGroupConfig_byteMatchStatementFieldToMatchHeadersMatchPatternIncludedHeaders(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                         "1",
-						"statement.0.byte_match_statement.#":                  "1",
-						"statement.0.byte_match_statement.0.field_to_match.#": "1",
-						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":                        "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                                       "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":                                    "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.header_order.#":                               "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.headers.#":                                    "1",
+						"statement.#":                                         acctest.Ct1,
+						"statement.0.byte_match_statement.#":                  acctest.Ct1,
+						"statement.0.byte_match_statement.0.field_to_match.#": acctest.Ct1,
+						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":                        acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                                       acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":                                    acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.header_order.#":                               acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.headers.#":                                    acctest.Ct1,
 						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.oversize_handling":                  "MATCH",
 						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.match_scope":                        "ALL",
-						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.match_pattern.#":                    "1",
-						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.match_pattern.0.all.#":              "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.match_pattern.0.included_headers.#": "2",
-						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.match_pattern.0.included_headers.0": "session",
+						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.match_pattern.#":                    acctest.Ct1,
+						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.match_pattern.0.all.#":              acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.match_pattern.0.included_headers.#": acctest.Ct2,
+						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.match_pattern.0.included_headers.0": names.AttrSession,
 						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.match_pattern.0.included_headers.1": "session-id",
-						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.match_pattern.0.excluded_headers.#": "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.ja3_fingerprint.#":                            "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":                                  "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                                     "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":                               "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.single_header.#":                              "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#":                      "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.uri_path.#":                                   "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.match_pattern.0.excluded_headers.#": acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.ja3_fingerprint.#":                            acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":                                  acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                                     acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":                               acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.single_header.#":                              acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#":                      acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.uri_path.#":                                   acctest.Ct0,
 					}),
 				),
 			},
@@ -644,32 +644,32 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 				Config: testAccRuleGroupConfig_byteMatchStatementFieldToMatchHeadersMatchPatternExcludedHeaders(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                         "1",
-						"statement.0.byte_match_statement.#":                  "1",
-						"statement.0.byte_match_statement.0.field_to_match.#": "1",
-						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":                        "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                                       "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":                                    "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.header_order.#":                               "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.headers.#":                                    "1",
+						"statement.#":                                         acctest.Ct1,
+						"statement.0.byte_match_statement.#":                  acctest.Ct1,
+						"statement.0.byte_match_statement.0.field_to_match.#": acctest.Ct1,
+						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":                        acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                                       acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":                                    acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.header_order.#":                               acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.headers.#":                                    acctest.Ct1,
 						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.oversize_handling":                  "MATCH",
 						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.match_scope":                        "ALL",
-						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.match_pattern.#":                    "1",
-						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.match_pattern.0.all.#":              "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.match_pattern.0.excluded_headers.#": "2",
-						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.match_pattern.0.excluded_headers.0": "session",
+						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.match_pattern.#":                    acctest.Ct1,
+						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.match_pattern.0.all.#":              acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.match_pattern.0.excluded_headers.#": acctest.Ct2,
+						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.match_pattern.0.excluded_headers.0": names.AttrSession,
 						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.match_pattern.0.excluded_headers.1": "session-id",
-						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.match_pattern.0.included_headers.#": "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.ja3_fingerprint.#":                            "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":                                  "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                                     "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":                               "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.single_header.#":                              "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#":                      "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.uri_path.#":                                   "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.match_pattern.0.included_headers.#": acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.ja3_fingerprint.#":                            acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":                                  acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                                     acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":                               acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.single_header.#":                              acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#":                      acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.uri_path.#":                                   acctest.Ct0,
 					}),
 				),
 			},
@@ -681,24 +681,24 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 				Config: testAccRuleGroupConfig_byteMatchStatementFieldToMatchMethod(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                         "1",
-						"statement.0.byte_match_statement.#":                  "1",
-						"statement.0.byte_match_statement.0.field_to_match.#": "1",
-						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":   "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                  "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":               "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.header_order.#":          "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.headers.#":               "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.ja3_fingerprint.#":       "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":             "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                "1",
-						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":          "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.single_header.#":         "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#": "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.uri_path.#":              "0",
+						"statement.#":                                         acctest.Ct1,
+						"statement.0.byte_match_statement.#":                  acctest.Ct1,
+						"statement.0.byte_match_statement.0.field_to_match.#": acctest.Ct1,
+						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":   acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                  acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":               acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.header_order.#":          acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.headers.#":               acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.ja3_fingerprint.#":       acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":             acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                acctest.Ct1,
+						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":          acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.single_header.#":         acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#": acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.uri_path.#":              acctest.Ct0,
 					}),
 				),
 			},
@@ -706,24 +706,24 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 				Config: testAccRuleGroupConfig_byteMatchStatementFieldToMatchQueryString(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                         "1",
-						"statement.0.byte_match_statement.#":                  "1",
-						"statement.0.byte_match_statement.0.field_to_match.#": "1",
-						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":   "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                  "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":               "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.header_order.#":          "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.headers.#":               "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.ja3_fingerprint.#":       "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":             "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":          "1",
-						"statement.0.byte_match_statement.0.field_to_match.0.single_header.#":         "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#": "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.uri_path.#":              "0",
+						"statement.#":                                         acctest.Ct1,
+						"statement.0.byte_match_statement.#":                  acctest.Ct1,
+						"statement.0.byte_match_statement.0.field_to_match.#": acctest.Ct1,
+						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":   acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                  acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":               acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.header_order.#":          acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.headers.#":               acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.ja3_fingerprint.#":       acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":             acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":          acctest.Ct1,
+						"statement.0.byte_match_statement.0.field_to_match.0.single_header.#":         acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#": acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.uri_path.#":              acctest.Ct0,
 					}),
 				),
 			},
@@ -731,25 +731,25 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 				Config: testAccRuleGroupConfig_byteMatchStatementFieldToMatchSingleHeader(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                         "1",
-						"statement.0.byte_match_statement.#":                  "1",
-						"statement.0.byte_match_statement.0.field_to_match.#": "1",
-						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":   "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                  "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":               "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.header_order.#":          "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.headers.#":               "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.ja3_fingerprint.#":       "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":             "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":          "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.single_header.#":         "1",
+						"statement.#":                                         acctest.Ct1,
+						"statement.0.byte_match_statement.#":                  acctest.Ct1,
+						"statement.0.byte_match_statement.0.field_to_match.#": acctest.Ct1,
+						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":   acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                  acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":               acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.header_order.#":          acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.headers.#":               acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.ja3_fingerprint.#":       acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":             acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":          acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.single_header.#":         acctest.Ct1,
 						"statement.0.byte_match_statement.0.field_to_match.0.single_header.0.name":    "a-forty-character-long-header-name-40-40",
-						"statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#": "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.uri_path.#":              "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#": acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.uri_path.#":              acctest.Ct0,
 					}),
 				),
 			},
@@ -757,25 +757,25 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 				Config: testAccRuleGroupConfig_byteMatchStatementFieldToMatchSingleQueryArgument(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                         "1",
-						"statement.0.byte_match_statement.#":                  "1",
-						"statement.0.byte_match_statement.0.field_to_match.#": "1",
-						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":        "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                       "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":                    "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.header_order.#":               "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.headers.#":                    "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.ja3_fingerprint.#":            "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":                  "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                     "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":               "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.single_header.#":              "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#":      "1",
+						"statement.#":                                         acctest.Ct1,
+						"statement.0.byte_match_statement.#":                  acctest.Ct1,
+						"statement.0.byte_match_statement.0.field_to_match.#": acctest.Ct1,
+						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":        acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                       acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":                    acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.header_order.#":               acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.headers.#":                    acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.ja3_fingerprint.#":            acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":                  acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                     acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":               acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.single_header.#":              acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#":      acctest.Ct1,
 						"statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.0.name": "a-max-30-characters-long-name-",
-						"statement.0.byte_match_statement.0.field_to_match.0.uri_path.#":                   "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.uri_path.#":                   acctest.Ct0,
 					}),
 				),
 			},
@@ -783,24 +783,24 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 				Config: testAccRuleGroupConfig_byteMatchStatementFieldToMatchURIPath(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                         "1",
-						"statement.0.byte_match_statement.#":                  "1",
-						"statement.0.byte_match_statement.0.field_to_match.#": "1",
-						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":   "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                  "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":               "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.header_order.#":          "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.headers.#":               "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.ja3_fingerprint.#":       "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":             "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":          "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.single_header.#":         "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#": "0",
-						"statement.0.byte_match_statement.0.field_to_match.0.uri_path.#":              "1",
+						"statement.#":                                         acctest.Ct1,
+						"statement.0.byte_match_statement.#":                  acctest.Ct1,
+						"statement.0.byte_match_statement.0.field_to_match.#": acctest.Ct1,
+						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":   acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                  acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":               acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.header_order.#":          acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.headers.#":               acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.ja3_fingerprint.#":       acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":             acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":          acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.single_header.#":         acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#": acctest.Ct0,
+						"statement.0.byte_match_statement.0.field_to_match.0.uri_path.#":              acctest.Ct1,
 					}),
 				),
 			},
@@ -816,7 +816,7 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 
 func TestAccWAFV2RuleGroup_changeNameForceNew(t *testing.T) {
 	ctx := acctest.Context(t)
-	var before, after wafv2.RuleGroup
+	var before, after awstypes.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	ruleGroupNewName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
@@ -831,13 +831,13 @@ func TestAccWAFV2RuleGroup_changeNameForceNew(t *testing.T) {
 				Config: testAccRuleGroupConfig_basic(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &before),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
-					resource.TestCheckResourceAttr(resourceName, "description", ruleGroupName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "capacity", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
@@ -847,13 +847,13 @@ func TestAccWAFV2RuleGroup_changeNameForceNew(t *testing.T) {
 				Config: testAccRuleGroupConfig_basic(ruleGroupNewName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &after),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupNewName),
-					resource.TestCheckResourceAttr(resourceName, "description", ruleGroupNewName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "capacity", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleGroupNewName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ruleGroupNewName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
@@ -865,7 +865,7 @@ func TestAccWAFV2RuleGroup_changeNameForceNew(t *testing.T) {
 
 func TestAccWAFV2RuleGroup_changeCapacityForceNew(t *testing.T) {
 	ctx := acctest.Context(t)
-	var before, after wafv2.RuleGroup
+	var before, after awstypes.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
@@ -879,13 +879,13 @@ func TestAccWAFV2RuleGroup_changeCapacityForceNew(t *testing.T) {
 				Config: testAccRuleGroupConfig_basic(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &before),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
-					resource.TestCheckResourceAttr(resourceName, "description", ruleGroupName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "capacity", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
@@ -895,13 +895,13 @@ func TestAccWAFV2RuleGroup_changeCapacityForceNew(t *testing.T) {
 				Config: testAccRuleGroupConfig_updateCapacity(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &after),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "capacity", "3"),
-					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
-					resource.TestCheckResourceAttr(resourceName, "description", ruleGroupName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "capacity", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
@@ -913,7 +913,7 @@ func TestAccWAFV2RuleGroup_changeCapacityForceNew(t *testing.T) {
 
 func TestAccWAFV2RuleGroup_changeMetricNameForceNew(t *testing.T) {
 	ctx := acctest.Context(t)
-	var before, after wafv2.RuleGroup
+	var before, after awstypes.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
@@ -927,13 +927,13 @@ func TestAccWAFV2RuleGroup_changeMetricNameForceNew(t *testing.T) {
 				Config: testAccRuleGroupConfig_basic(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &before),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
-					resource.TestCheckResourceAttr(resourceName, "description", ruleGroupName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "capacity", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
@@ -943,13 +943,13 @@ func TestAccWAFV2RuleGroup_changeMetricNameForceNew(t *testing.T) {
 				Config: testAccRuleGroupConfig_updateMetricName(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &after),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
-					resource.TestCheckResourceAttr(resourceName, "description", ruleGroupName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "capacity", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "updated-friendly-metric-name"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
@@ -961,7 +961,7 @@ func TestAccWAFV2RuleGroup_changeMetricNameForceNew(t *testing.T) {
 
 func TestAccWAFV2RuleGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.RuleGroup
+	var v awstypes.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
@@ -985,7 +985,7 @@ func TestAccWAFV2RuleGroup_disappears(t *testing.T) {
 
 func TestAccWAFV2RuleGroup_RuleLabels(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.RuleGroup
+	var v awstypes.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
@@ -999,10 +999,10 @@ func TestAccWAFV2RuleGroup_RuleLabels(t *testing.T) {
 				Config: testAccRuleGroupConfig_labels(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"rule_label.#":      "2",
+						"rule_label.#":      acctest.Ct2,
 						"rule_label.0.name": "Hashicorp:Test:Label1",
 						"rule_label.1.name": "Hashicorp:Test:Label2",
 					}),
@@ -1012,10 +1012,10 @@ func TestAccWAFV2RuleGroup_RuleLabels(t *testing.T) {
 				Config: testAccRuleGroupConfig_noLabels(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"rule_label.#": "0",
+						"rule_label.#": acctest.Ct0,
 					}),
 				),
 			},
@@ -1031,7 +1031,7 @@ func TestAccWAFV2RuleGroup_RuleLabels(t *testing.T) {
 
 func TestAccWAFV2RuleGroup_geoMatchStatement(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.RuleGroup
+	var v awstypes.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
@@ -1045,15 +1045,15 @@ func TestAccWAFV2RuleGroup_geoMatchStatement(t *testing.T) {
 				Config: testAccRuleGroupConfig_geoMatchStatement(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                             "1",
-						"statement.0.geo_match_statement.#":                       "1",
-						"statement.0.geo_match_statement.0.country_codes.#":       "2",
+						"statement.#":                                             acctest.Ct1,
+						"statement.0.geo_match_statement.#":                       acctest.Ct1,
+						"statement.0.geo_match_statement.0.country_codes.#":       acctest.Ct2,
 						"statement.0.geo_match_statement.0.country_codes.0":       "US",
 						"statement.0.geo_match_statement.0.country_codes.1":       "NL",
-						"statement.0.geo_match_statement.0.forwarded_ip_config.#": "0",
+						"statement.0.geo_match_statement.0.forwarded_ip_config.#": acctest.Ct0,
 					}),
 				),
 			},
@@ -1061,16 +1061,16 @@ func TestAccWAFV2RuleGroup_geoMatchStatement(t *testing.T) {
 				Config: testAccRuleGroupConfig_geoMatchStatementUpdate(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                             "1",
-						"statement.0.geo_match_statement.#":                       "1",
-						"statement.0.geo_match_statement.0.country_codes.#":       "3",
+						"statement.#":                                             acctest.Ct1,
+						"statement.0.geo_match_statement.#":                       acctest.Ct1,
+						"statement.0.geo_match_statement.0.country_codes.#":       acctest.Ct3,
 						"statement.0.geo_match_statement.0.country_codes.0":       "ZM",
 						"statement.0.geo_match_statement.0.country_codes.1":       "EE",
 						"statement.0.geo_match_statement.0.country_codes.2":       "MM",
-						"statement.0.geo_match_statement.0.forwarded_ip_config.#": "0",
+						"statement.0.geo_match_statement.0.forwarded_ip_config.#": acctest.Ct0,
 					}),
 				),
 			},
@@ -1086,7 +1086,7 @@ func TestAccWAFV2RuleGroup_geoMatchStatement(t *testing.T) {
 
 func TestAccWAFV2RuleGroup_GeoMatchStatement_forwardedIP(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.RuleGroup
+	var v awstypes.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
@@ -1100,15 +1100,15 @@ func TestAccWAFV2RuleGroup_GeoMatchStatement_forwardedIP(t *testing.T) {
 				Config: testAccRuleGroupConfig_geoMatchStatementForwardedIP(ruleGroupName, "MATCH", "X-Forwarded-For"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                                               "1",
-						"statement.0.geo_match_statement.#":                                         "1",
-						"statement.0.geo_match_statement.0.country_codes.#":                         "2",
+						"statement.#":                                                               acctest.Ct1,
+						"statement.0.geo_match_statement.#":                                         acctest.Ct1,
+						"statement.0.geo_match_statement.0.country_codes.#":                         acctest.Ct2,
 						"statement.0.geo_match_statement.0.country_codes.0":                         "US",
 						"statement.0.geo_match_statement.0.country_codes.1":                         "NL",
-						"statement.0.geo_match_statement.0.forwarded_ip_config.#":                   "1",
+						"statement.0.geo_match_statement.0.forwarded_ip_config.#":                   acctest.Ct1,
 						"statement.0.geo_match_statement.0.forwarded_ip_config.0.fallback_behavior": "MATCH",
 						"statement.0.geo_match_statement.0.forwarded_ip_config.0.header_name":       "X-Forwarded-For",
 					}),
@@ -1118,15 +1118,15 @@ func TestAccWAFV2RuleGroup_GeoMatchStatement_forwardedIP(t *testing.T) {
 				Config: testAccRuleGroupConfig_geoMatchStatementForwardedIP(ruleGroupName, "NO_MATCH", "Updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                                               "1",
-						"statement.0.geo_match_statement.#":                                         "1",
-						"statement.0.geo_match_statement.0.country_codes.#":                         "2",
+						"statement.#":                                                               acctest.Ct1,
+						"statement.0.geo_match_statement.#":                                         acctest.Ct1,
+						"statement.0.geo_match_statement.0.country_codes.#":                         acctest.Ct2,
 						"statement.0.geo_match_statement.0.country_codes.0":                         "US",
 						"statement.0.geo_match_statement.0.country_codes.1":                         "NL",
-						"statement.0.geo_match_statement.0.forwarded_ip_config.#":                   "1",
+						"statement.0.geo_match_statement.0.forwarded_ip_config.#":                   acctest.Ct1,
 						"statement.0.geo_match_statement.0.forwarded_ip_config.0.fallback_behavior": "NO_MATCH",
 						"statement.0.geo_match_statement.0.forwarded_ip_config.0.header_name":       "Updated",
 					}),
@@ -1144,7 +1144,7 @@ func TestAccWAFV2RuleGroup_GeoMatchStatement_forwardedIP(t *testing.T) {
 
 func TestAccWAFV2RuleGroup_LabelMatchStatement(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.RuleGroup
+	var v awstypes.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
@@ -1158,11 +1158,11 @@ func TestAccWAFV2RuleGroup_LabelMatchStatement(t *testing.T) {
 				Config: testAccRuleGroupConfig_labelMatchStatement(ruleGroupName, "LABEL", "Hashicorp:Test:Label1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                               "1",
-						"statement.0.label_match_statement.#":       "1",
+						"statement.#":                               acctest.Ct1,
+						"statement.0.label_match_statement.#":       acctest.Ct1,
 						"statement.0.label_match_statement.0.scope": "LABEL",
 						"statement.0.label_match_statement.0.key":   "Hashicorp:Test:Label1",
 					}),
@@ -1172,11 +1172,11 @@ func TestAccWAFV2RuleGroup_LabelMatchStatement(t *testing.T) {
 				Config: testAccRuleGroupConfig_labelMatchStatement(ruleGroupName, "NAMESPACE", "awswaf:managed:aws:bot-control:"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                               "1",
-						"statement.0.label_match_statement.#":       "1",
+						"statement.#":                               acctest.Ct1,
+						"statement.0.label_match_statement.#":       acctest.Ct1,
 						"statement.0.label_match_statement.0.scope": "NAMESPACE",
 						"statement.0.label_match_statement.0.key":   "awswaf:managed:aws:bot-control:",
 					}),
@@ -1194,7 +1194,7 @@ func TestAccWAFV2RuleGroup_LabelMatchStatement(t *testing.T) {
 
 func TestAccWAFV2RuleGroup_ipSetReferenceStatement(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.RuleGroup
+	var v awstypes.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
@@ -1208,12 +1208,12 @@ func TestAccWAFV2RuleGroup_ipSetReferenceStatement(t *testing.T) {
 				Config: testAccRuleGroupConfig_ipsetReferenceStatement(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#": "1",
-						"statement.0.ip_set_reference_statement.#":                              "1",
-						"statement.0.ip_set_reference_statement.0.ip_set_forwarded_ip_config.#": "0",
+						"statement.#": acctest.Ct1,
+						"statement.0.ip_set_reference_statement.#":                              acctest.Ct1,
+						"statement.0.ip_set_reference_statement.0.ip_set_forwarded_ip_config.#": acctest.Ct0,
 					}),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]*regexp.Regexp{
 						"statement.0.ip_set_reference_statement.0.arn": regexache.MustCompile(`regional/ipset/.+$`),
@@ -1232,7 +1232,7 @@ func TestAccWAFV2RuleGroup_ipSetReferenceStatement(t *testing.T) {
 
 func TestAccWAFV2RuleGroup_IPSetReferenceStatement_ipsetForwardedIP(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.RuleGroup
+	var v awstypes.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
@@ -1246,17 +1246,17 @@ func TestAccWAFV2RuleGroup_IPSetReferenceStatement_ipsetForwardedIP(t *testing.T
 				Config: testAccRuleGroupConfig_ipsetReferenceStatementIPSetForwardedIP(ruleGroupName, "MATCH", "X-Forwarded-For", "FIRST"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#": "1",
-						"statement.0.ip_set_reference_statement.#": "1",
+						"statement.#": acctest.Ct1,
+						"statement.0.ip_set_reference_statement.#": acctest.Ct1,
 					}),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]*regexp.Regexp{
 						"statement.0.ip_set_reference_statement.0.arn": regexache.MustCompile(`regional/ipset/.+$`),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.0.ip_set_reference_statement.0.ip_set_forwarded_ip_config.#":                   "1",
+						"statement.0.ip_set_reference_statement.0.ip_set_forwarded_ip_config.#":                   acctest.Ct1,
 						"statement.0.ip_set_reference_statement.0.ip_set_forwarded_ip_config.0.fallback_behavior": "MATCH",
 						"statement.0.ip_set_reference_statement.0.ip_set_forwarded_ip_config.0.header_name":       "X-Forwarded-For",
 						"statement.0.ip_set_reference_statement.0.ip_set_forwarded_ip_config.0.position":          "FIRST",
@@ -1267,17 +1267,17 @@ func TestAccWAFV2RuleGroup_IPSetReferenceStatement_ipsetForwardedIP(t *testing.T
 				Config: testAccRuleGroupConfig_ipsetReferenceStatementIPSetForwardedIP(ruleGroupName, "NO_MATCH", "X-Forwarded-For", "LAST"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#": "1",
-						"statement.0.ip_set_reference_statement.#": "1",
+						"statement.#": acctest.Ct1,
+						"statement.0.ip_set_reference_statement.#": acctest.Ct1,
 					}),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]*regexp.Regexp{
 						"statement.0.ip_set_reference_statement.0.arn": regexache.MustCompile(`regional/ipset/.+$`),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.0.ip_set_reference_statement.0.ip_set_forwarded_ip_config.#":                   "1",
+						"statement.0.ip_set_reference_statement.0.ip_set_forwarded_ip_config.#":                   acctest.Ct1,
 						"statement.0.ip_set_reference_statement.0.ip_set_forwarded_ip_config.0.fallback_behavior": "NO_MATCH",
 						"statement.0.ip_set_reference_statement.0.ip_set_forwarded_ip_config.0.header_name":       "X-Forwarded-For",
 						"statement.0.ip_set_reference_statement.0.ip_set_forwarded_ip_config.0.position":          "LAST",
@@ -1288,17 +1288,17 @@ func TestAccWAFV2RuleGroup_IPSetReferenceStatement_ipsetForwardedIP(t *testing.T
 				Config: testAccRuleGroupConfig_ipsetReferenceStatementIPSetForwardedIP(ruleGroupName, "MATCH", "Updated", "ANY"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#": "1",
-						"statement.0.ip_set_reference_statement.#": "1",
+						"statement.#": acctest.Ct1,
+						"statement.0.ip_set_reference_statement.#": acctest.Ct1,
 					}),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]*regexp.Regexp{
 						"statement.0.ip_set_reference_statement.0.arn": regexache.MustCompile(`regional/ipset/.+$`),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.0.ip_set_reference_statement.0.ip_set_forwarded_ip_config.#":                   "1",
+						"statement.0.ip_set_reference_statement.0.ip_set_forwarded_ip_config.#":                   acctest.Ct1,
 						"statement.0.ip_set_reference_statement.0.ip_set_forwarded_ip_config.0.fallback_behavior": "MATCH",
 						"statement.0.ip_set_reference_statement.0.ip_set_forwarded_ip_config.0.header_name":       "Updated",
 						"statement.0.ip_set_reference_statement.0.ip_set_forwarded_ip_config.0.position":          "ANY",
@@ -1309,12 +1309,12 @@ func TestAccWAFV2RuleGroup_IPSetReferenceStatement_ipsetForwardedIP(t *testing.T
 				Config: testAccRuleGroupConfig_ipsetReferenceStatement(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#": "1",
-						"statement.0.ip_set_reference_statement.#":                              "1",
-						"statement.0.ip_set_reference_statement.0.ip_set_forwarded_ip_config.#": "0",
+						"statement.#": acctest.Ct1,
+						"statement.0.ip_set_reference_statement.#":                              acctest.Ct1,
+						"statement.0.ip_set_reference_statement.0.ip_set_forwarded_ip_config.#": acctest.Ct0,
 					}),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]*regexp.Regexp{
 						"statement.0.ip_set_reference_statement.0.arn": regexache.MustCompile(`regional/ipset/.+$`),
@@ -1333,7 +1333,7 @@ func TestAccWAFV2RuleGroup_IPSetReferenceStatement_ipsetForwardedIP(t *testing.T
 
 func TestAccWAFV2RuleGroup_logicalRuleStatements(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.RuleGroup
+	var v awstypes.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
@@ -1347,14 +1347,14 @@ func TestAccWAFV2RuleGroup_logicalRuleStatements(t *testing.T) {
 				Config: testAccRuleGroupConfig_logicalStatementAnd(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                             "1",
-						"statement.0.and_statement.#":             "1",
-						"statement.0.and_statement.0.statement.#": "2",
-						"statement.0.and_statement.0.statement.0.geo_match_statement.#": "1",
-						"statement.0.and_statement.0.statement.1.geo_match_statement.#": "1",
+						"statement.#":                             acctest.Ct1,
+						"statement.0.and_statement.#":             acctest.Ct1,
+						"statement.0.and_statement.0.statement.#": acctest.Ct2,
+						"statement.0.and_statement.0.statement.0.geo_match_statement.#": acctest.Ct1,
+						"statement.0.and_statement.0.statement.1.geo_match_statement.#": acctest.Ct1,
 					}),
 				),
 			},
@@ -1362,16 +1362,16 @@ func TestAccWAFV2RuleGroup_logicalRuleStatements(t *testing.T) {
 				Config: testAccRuleGroupConfig_logicalStatementNotAnd(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                                         "1",
-						"statement.0.not_statement.#":                                         "1",
-						"statement.0.not_statement.0.statement.#":                             "1",
-						"statement.0.not_statement.0.statement.0.and_statement.#":             "1",
-						"statement.0.not_statement.0.statement.0.and_statement.0.statement.#": "2",
-						"statement.0.not_statement.0.statement.0.and_statement.0.statement.0.geo_match_statement.#": "1",
-						"statement.0.not_statement.0.statement.0.and_statement.0.statement.1.geo_match_statement.#": "1",
+						"statement.#":                                                         acctest.Ct1,
+						"statement.0.not_statement.#":                                         acctest.Ct1,
+						"statement.0.not_statement.0.statement.#":                             acctest.Ct1,
+						"statement.0.not_statement.0.statement.0.and_statement.#":             acctest.Ct1,
+						"statement.0.not_statement.0.statement.0.and_statement.0.statement.#": acctest.Ct2,
+						"statement.0.not_statement.0.statement.0.and_statement.0.statement.0.geo_match_statement.#": acctest.Ct1,
+						"statement.0.not_statement.0.statement.0.and_statement.0.statement.1.geo_match_statement.#": acctest.Ct1,
 					}),
 				),
 			},
@@ -1379,19 +1379,19 @@ func TestAccWAFV2RuleGroup_logicalRuleStatements(t *testing.T) {
 				Config: testAccRuleGroupConfig_logicalStatementOrNotAnd(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                                        "1",
-						"statement.0.or_statement.#":                                         "1",
-						"statement.0.or_statement.0.statement.#":                             "2",
-						"statement.0.or_statement.0.statement.0.not_statement.#":             "1",
-						"statement.0.or_statement.0.statement.0.not_statement.0.statement.#": "1",
-						"statement.0.or_statement.0.statement.0.not_statement.0.statement.0.geo_match_statement.#": "1",
-						"statement.0.or_statement.0.statement.1.and_statement.#":                                   "1",
-						"statement.0.or_statement.0.statement.1.and_statement.0.statement.#":                       "2",
-						"statement.0.or_statement.0.statement.1.and_statement.0.statement.0.geo_match_statement.#": "1",
-						"statement.0.or_statement.0.statement.1.and_statement.0.statement.1.geo_match_statement.#": "1",
+						"statement.#":                                                        acctest.Ct1,
+						"statement.0.or_statement.#":                                         acctest.Ct1,
+						"statement.0.or_statement.0.statement.#":                             acctest.Ct2,
+						"statement.0.or_statement.0.statement.0.not_statement.#":             acctest.Ct1,
+						"statement.0.or_statement.0.statement.0.not_statement.0.statement.#": acctest.Ct1,
+						"statement.0.or_statement.0.statement.0.not_statement.0.statement.0.geo_match_statement.#": acctest.Ct1,
+						"statement.0.or_statement.0.statement.1.and_statement.#":                                   acctest.Ct1,
+						"statement.0.or_statement.0.statement.1.and_statement.0.statement.#":                       acctest.Ct2,
+						"statement.0.or_statement.0.statement.1.and_statement.0.statement.0.geo_match_statement.#": acctest.Ct1,
+						"statement.0.or_statement.0.statement.1.and_statement.0.statement.1.geo_match_statement.#": acctest.Ct1,
 					}),
 				),
 			},
@@ -1407,7 +1407,7 @@ func TestAccWAFV2RuleGroup_logicalRuleStatements(t *testing.T) {
 
 func TestAccWAFV2RuleGroup_minimal(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.RuleGroup
+	var v awstypes.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
@@ -1421,13 +1421,13 @@ func TestAccWAFV2RuleGroup_minimal(t *testing.T) {
 				Config: testAccRuleGroupConfig_minimal(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "capacity", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
@@ -1439,7 +1439,7 @@ func TestAccWAFV2RuleGroup_minimal(t *testing.T) {
 
 func TestAccWAFV2RuleGroup_regexMatchStatement(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.RuleGroup
+	var v awstypes.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
@@ -1453,14 +1453,14 @@ func TestAccWAFV2RuleGroup_regexMatchStatement(t *testing.T) {
 				Config: testAccRuleGroupConfig_regexMatchStatement(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                               "1",
-						"statement.0.regex_match_statement.#":                       "1",
+						"statement.#":                                               acctest.Ct1,
+						"statement.0.regex_match_statement.#":                       acctest.Ct1,
 						"statement.0.regex_match_statement.0.regex_string":          "[a-z]([a-z0-9_-]*[a-z0-9])?",
-						"statement.0.regex_match_statement.0.field_to_match.#":      "1",
-						"statement.0.regex_match_statement.0.text_transformation.#": "1",
+						"statement.0.regex_match_statement.0.field_to_match.#":      acctest.Ct1,
+						"statement.0.regex_match_statement.0.text_transformation.#": acctest.Ct1,
 					}),
 				),
 			},
@@ -1476,7 +1476,7 @@ func TestAccWAFV2RuleGroup_regexMatchStatement(t *testing.T) {
 
 func TestAccWAFV2RuleGroup_regexPatternSetReferenceStatement(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.RuleGroup
+	var v awstypes.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
@@ -1490,13 +1490,13 @@ func TestAccWAFV2RuleGroup_regexPatternSetReferenceStatement(t *testing.T) {
 				Config: testAccRuleGroupConfig_regexPatternSetReferenceStatement(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#": "1",
-						"statement.0.regex_pattern_set_reference_statement.#":                       "1",
-						"statement.0.regex_pattern_set_reference_statement.0.field_to_match.#":      "1",
-						"statement.0.regex_pattern_set_reference_statement.0.text_transformation.#": "1",
+						"statement.#": acctest.Ct1,
+						"statement.0.regex_pattern_set_reference_statement.#":                       acctest.Ct1,
+						"statement.0.regex_pattern_set_reference_statement.0.field_to_match.#":      acctest.Ct1,
+						"statement.0.regex_pattern_set_reference_statement.0.text_transformation.#": acctest.Ct1,
 					}),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]*regexp.Regexp{
 						"statement.0.regex_pattern_set_reference_statement.0.arn": regexache.MustCompile(`regional/regexpatternset/.+$`),
@@ -1515,7 +1515,7 @@ func TestAccWAFV2RuleGroup_regexPatternSetReferenceStatement(t *testing.T) {
 
 func TestAccWAFV2RuleGroup_ruleAction(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.RuleGroup
+	var v awstypes.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
@@ -1529,21 +1529,21 @@ func TestAccWAFV2RuleGroup_ruleAction(t *testing.T) {
 				Config: testAccRuleGroupConfig_actionAllow(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "capacity", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"action.#":         "1",
-						"action.0.allow.#": "1",
-						"action.0.allow.0.custom_request_handling.#": "0",
-						"action.0.block.#":                           "0",
-						"action.0.count.#":                           "0",
-						"action.0.captcha.#":                         "0",
-						"action.0.challenge.#":                       "0",
+						"action.#":         acctest.Ct1,
+						"action.0.allow.#": acctest.Ct1,
+						"action.0.allow.0.custom_request_handling.#": acctest.Ct0,
+						"action.0.block.#":                           acctest.Ct0,
+						"action.0.count.#":                           acctest.Ct0,
+						"action.0.captcha.#":                         acctest.Ct0,
+						"action.0.challenge.#":                       acctest.Ct0,
 					}),
 				),
 			},
@@ -1551,21 +1551,21 @@ func TestAccWAFV2RuleGroup_ruleAction(t *testing.T) {
 				Config: testAccRuleGroupConfig_actionBlock(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "capacity", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"action.#":                           "1",
-						"action.0.allow.#":                   "0",
-						"action.0.block.#":                   "1",
-						"action.0.block.0.custom_response.#": "0",
-						"action.0.count.#":                   "0",
-						"action.0.captcha.#":                 "0",
-						"action.0.challenge.#":               "0",
+						"action.#":                           acctest.Ct1,
+						"action.0.allow.#":                   acctest.Ct0,
+						"action.0.block.#":                   acctest.Ct1,
+						"action.0.block.0.custom_response.#": acctest.Ct0,
+						"action.0.count.#":                   acctest.Ct0,
+						"action.0.captcha.#":                 acctest.Ct0,
+						"action.0.challenge.#":               acctest.Ct0,
 					}),
 				),
 			},
@@ -1573,21 +1573,21 @@ func TestAccWAFV2RuleGroup_ruleAction(t *testing.T) {
 				Config: testAccRuleGroupConfig_actionCount(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "capacity", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"action.#":         "1",
-						"action.0.allow.#": "0",
-						"action.0.block.#": "0",
-						"action.0.count.#": "1",
-						"action.0.count.0.custom_request_handling.#": "0",
-						"action.0.captcha.#":                         "0",
-						"action.0.challenge.#":                       "0",
+						"action.#":         acctest.Ct1,
+						"action.0.allow.#": acctest.Ct0,
+						"action.0.block.#": acctest.Ct0,
+						"action.0.count.#": acctest.Ct1,
+						"action.0.count.0.custom_request_handling.#": acctest.Ct0,
+						"action.0.captcha.#":                         acctest.Ct0,
+						"action.0.challenge.#":                       acctest.Ct0,
 					}),
 				),
 			},
@@ -1603,7 +1603,7 @@ func TestAccWAFV2RuleGroup_ruleAction(t *testing.T) {
 
 func TestAccWAFV2RuleGroup_RuleAction_customRequestHandling(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.RuleGroup
+	var v awstypes.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
@@ -1617,26 +1617,26 @@ func TestAccWAFV2RuleGroup_RuleAction_customRequestHandling(t *testing.T) {
 				Config: testAccRuleGroupConfig_actionAllowCustomRequestHandling(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "capacity", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"action.#":         "1",
-						"action.0.allow.#": "1",
-						"action.0.allow.0.custom_request_handling.#":                       "1",
-						"action.0.allow.0.custom_request_handling.0.insert_header.#":       "2",
+						"action.#":         acctest.Ct1,
+						"action.0.allow.#": acctest.Ct1,
+						"action.0.allow.0.custom_request_handling.#":                       acctest.Ct1,
+						"action.0.allow.0.custom_request_handling.0.insert_header.#":       acctest.Ct2,
 						"action.0.allow.0.custom_request_handling.0.insert_header.0.name":  "x-hdr1",
 						"action.0.allow.0.custom_request_handling.0.insert_header.0.value": "test-val1",
 						"action.0.allow.0.custom_request_handling.0.insert_header.1.name":  "x-hdr2",
 						"action.0.allow.0.custom_request_handling.0.insert_header.1.value": "test-val2",
-						"action.0.block.#":     "0",
-						"action.0.count.#":     "0",
-						"action.0.captcha.#":   "0",
-						"action.0.challenge.#": "0",
+						"action.0.block.#":     acctest.Ct0,
+						"action.0.count.#":     acctest.Ct0,
+						"action.0.captcha.#":   acctest.Ct0,
+						"action.0.challenge.#": acctest.Ct0,
 					}),
 				),
 			},
@@ -1644,26 +1644,26 @@ func TestAccWAFV2RuleGroup_RuleAction_customRequestHandling(t *testing.T) {
 				Config: testAccRuleGroupConfig_actionCountCustomRequestHandling(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "capacity", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"action.#":         "1",
-						"action.0.allow.#": "0",
-						"action.0.block.#": "0",
-						"action.0.count.#": "1",
-						"action.0.count.0.custom_request_handling.#":                       "1",
-						"action.0.count.0.custom_request_handling.0.insert_header.#":       "2",
+						"action.#":         acctest.Ct1,
+						"action.0.allow.#": acctest.Ct0,
+						"action.0.block.#": acctest.Ct0,
+						"action.0.count.#": acctest.Ct1,
+						"action.0.count.0.custom_request_handling.#":                       acctest.Ct1,
+						"action.0.count.0.custom_request_handling.0.insert_header.#":       acctest.Ct2,
 						"action.0.count.0.custom_request_handling.0.insert_header.0.name":  "x-hdr1",
 						"action.0.count.0.custom_request_handling.0.insert_header.0.value": "test-val1",
 						"action.0.count.0.custom_request_handling.0.insert_header.1.name":  "x-hdr2",
 						"action.0.count.0.custom_request_handling.0.insert_header.1.value": "test-val2",
-						"action.0.captcha.#":   "0",
-						"action.0.challenge.#": "0",
+						"action.0.captcha.#":   acctest.Ct0,
+						"action.0.challenge.#": acctest.Ct0,
 					}),
 				),
 			},
@@ -1679,7 +1679,7 @@ func TestAccWAFV2RuleGroup_RuleAction_customRequestHandling(t *testing.T) {
 
 func TestAccWAFV2RuleGroup_RuleAction_customResponse(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.RuleGroup
+	var v awstypes.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
@@ -1693,27 +1693,27 @@ func TestAccWAFV2RuleGroup_RuleAction_customResponse(t *testing.T) {
 				Config: testAccRuleGroupConfig_actionBlockCustomResponse(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "capacity", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"action.#":                           "1",
-						"action.0.allow.#":                   "0",
-						"action.0.block.#":                   "1",
-						"action.0.block.0.custom_response.#": "1",
+						"action.#":                           acctest.Ct1,
+						"action.0.allow.#":                   acctest.Ct0,
+						"action.0.block.#":                   acctest.Ct1,
+						"action.0.block.0.custom_response.#": acctest.Ct1,
 						"action.0.block.0.custom_response.0.response_code":           "429",
-						"action.0.block.0.custom_response.0.response_header.#":       "2",
+						"action.0.block.0.custom_response.0.response_header.#":       acctest.Ct2,
 						"action.0.block.0.custom_response.0.response_header.0.name":  "x-hdr1",
 						"action.0.block.0.custom_response.0.response_header.0.value": "test-val1",
 						"action.0.block.0.custom_response.0.response_header.1.name":  "x-hdr2",
 						"action.0.block.0.custom_response.0.response_header.1.value": "test-val2",
-						"action.0.count.#":     "0",
-						"action.0.captcha.#":   "0",
-						"action.0.challenge.#": "0",
+						"action.0.count.#":     acctest.Ct0,
+						"action.0.captcha.#":   acctest.Ct0,
+						"action.0.challenge.#": acctest.Ct0,
 					}),
 				),
 			},
@@ -1721,33 +1721,33 @@ func TestAccWAFV2RuleGroup_RuleAction_customResponse(t *testing.T) {
 				Config: testAccRuleGroupConfig_actionBlockCustomResponseBody(ruleGroupName, "test_body_1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "capacity", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "custom_response_body.*", map[string]string{
-						"key":          "test_body_1",
-						"content":      "test response 1",
-						"content_type": "TEXT_PLAIN",
+						names.AttrKey:         "test_body_1",
+						names.AttrContent:     "test response 1",
+						names.AttrContentType: "TEXT_PLAIN",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "custom_response_body.*", map[string]string{
-						"key":          "test_body_2",
-						"content":      "<html><body>test response 2</body></html>",
-						"content_type": "TEXT_HTML",
+						names.AttrKey:         "test_body_2",
+						names.AttrContent:     "<html><body>test response 2</body></html>",
+						names.AttrContentType: "TEXT_HTML",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"action.#":                           "1",
-						"action.0.allow.#":                   "0",
-						"action.0.block.#":                   "1",
-						"action.0.block.0.custom_response.#": "1",
+						"action.#":                           acctest.Ct1,
+						"action.0.allow.#":                   acctest.Ct0,
+						"action.0.block.#":                   acctest.Ct1,
+						"action.0.block.0.custom_response.#": acctest.Ct1,
 						"action.0.block.0.custom_response.0.response_code":            "429",
 						"action.0.block.0.custom_response.0.custom_response_body_key": "test_body_1",
-						"action.0.count.#":     "0",
-						"action.0.captcha.#":   "0",
-						"action.0.challenge.#": "0",
+						"action.0.count.#":     acctest.Ct0,
+						"action.0.captcha.#":   acctest.Ct0,
+						"action.0.challenge.#": acctest.Ct0,
 					}),
 				),
 			},
@@ -1755,34 +1755,34 @@ func TestAccWAFV2RuleGroup_RuleAction_customResponse(t *testing.T) {
 				Config: testAccRuleGroupConfig_actionBlockCustomResponseBody(ruleGroupName, "test_body_2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "custom_response_body.#", "2"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "capacity", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "custom_response_body.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "custom_response_body.*", map[string]string{
-						"key":          "test_body_1",
-						"content":      "test response 1",
-						"content_type": "TEXT_PLAIN",
+						names.AttrKey:         "test_body_1",
+						names.AttrContent:     "test response 1",
+						names.AttrContentType: "TEXT_PLAIN",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "custom_response_body.*", map[string]string{
-						"key":          "test_body_2",
-						"content":      "<html><body>test response 2</body></html>",
-						"content_type": "TEXT_HTML",
+						names.AttrKey:         "test_body_2",
+						names.AttrContent:     "<html><body>test response 2</body></html>",
+						names.AttrContentType: "TEXT_HTML",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"action.#":                           "1",
-						"action.0.allow.#":                   "0",
-						"action.0.block.#":                   "1",
-						"action.0.block.0.custom_response.#": "1",
+						"action.#":                           acctest.Ct1,
+						"action.0.allow.#":                   acctest.Ct0,
+						"action.0.block.#":                   acctest.Ct1,
+						"action.0.block.0.custom_response.#": acctest.Ct1,
 						"action.0.block.0.custom_response.0.response_code":            "429",
 						"action.0.block.0.custom_response.0.custom_response_body_key": "test_body_2",
-						"action.0.count.#":     "0",
-						"action.0.captcha.#":   "0",
-						"action.0.challenge.#": "0",
+						"action.0.count.#":     acctest.Ct0,
+						"action.0.captcha.#":   acctest.Ct0,
+						"action.0.challenge.#": acctest.Ct0,
 					}),
 				),
 			},
@@ -1798,7 +1798,7 @@ func TestAccWAFV2RuleGroup_RuleAction_customResponse(t *testing.T) {
 
 func TestAccWAFV2RuleGroup_sizeConstraintStatement(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.RuleGroup
+	var v awstypes.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
@@ -1812,16 +1812,16 @@ func TestAccWAFV2RuleGroup_sizeConstraintStatement(t *testing.T) {
 				Config: testAccRuleGroupConfig_sizeConstraintStatement(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#": "1",
-						"statement.0.size_constraint_statement.#":                           "1",
+						"statement.#": acctest.Ct1,
+						"statement.0.size_constraint_statement.#":                           acctest.Ct1,
 						"statement.0.size_constraint_statement.0.comparison_operator":       "GT",
 						"statement.0.size_constraint_statement.0.size":                      "100",
-						"statement.0.size_constraint_statement.0.field_to_match.#":          "1",
-						"statement.0.size_constraint_statement.0.field_to_match.0.method.#": "1",
-						"statement.0.size_constraint_statement.0.text_transformation.#":     "1",
+						"statement.0.size_constraint_statement.0.field_to_match.#":          acctest.Ct1,
+						"statement.0.size_constraint_statement.0.field_to_match.0.method.#": acctest.Ct1,
+						"statement.0.size_constraint_statement.0.text_transformation.#":     acctest.Ct1,
 					}),
 				),
 			},
@@ -1829,16 +1829,16 @@ func TestAccWAFV2RuleGroup_sizeConstraintStatement(t *testing.T) {
 				Config: testAccRuleGroupConfig_sizeConstraintStatementUpdate(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#": "1",
-						"statement.0.size_constraint_statement.#":                                 "1",
+						"statement.#": acctest.Ct1,
+						"statement.0.size_constraint_statement.#":                                 acctest.Ct1,
 						"statement.0.size_constraint_statement.0.comparison_operator":             "LT",
 						"statement.0.size_constraint_statement.0.size":                            "50",
-						"statement.0.size_constraint_statement.0.field_to_match.#":                "1",
-						"statement.0.size_constraint_statement.0.field_to_match.0.query_string.#": "1",
-						"statement.0.size_constraint_statement.0.text_transformation.#":           "2",
+						"statement.0.size_constraint_statement.0.field_to_match.#":                acctest.Ct1,
+						"statement.0.size_constraint_statement.0.field_to_match.0.query_string.#": acctest.Ct1,
+						"statement.0.size_constraint_statement.0.text_transformation.#":           acctest.Ct2,
 					}),
 				),
 			},
@@ -1854,7 +1854,7 @@ func TestAccWAFV2RuleGroup_sizeConstraintStatement(t *testing.T) {
 
 func TestAccWAFV2RuleGroup_sqliMatchStatement(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.RuleGroup
+	var v awstypes.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
@@ -1868,22 +1868,22 @@ func TestAccWAFV2RuleGroup_sqliMatchStatement(t *testing.T) {
 				Config: testAccRuleGroupConfig_sqliMatchStatement(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                         "1",
-						"statement.0.sqli_match_statement.#":                  "1",
-						"statement.0.sqli_match_statement.0.field_to_match.#": "1",
-						"statement.0.sqli_match_statement.0.field_to_match.0.all_query_arguments.#": "1",
-						"statement.0.sqli_match_statement.0.text_transformation.#":                  "2",
+						"statement.#":                                         acctest.Ct1,
+						"statement.0.sqli_match_statement.#":                  acctest.Ct1,
+						"statement.0.sqli_match_statement.0.field_to_match.#": acctest.Ct1,
+						"statement.0.sqli_match_statement.0.field_to_match.0.all_query_arguments.#": acctest.Ct1,
+						"statement.0.sqli_match_statement.0.text_transformation.#":                  acctest.Ct2,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.statement.0.sqli_match_statement.0.text_transformation.*", map[string]string{
-						"priority": "5",
-						"type":     "URL_DECODE",
+						names.AttrPriority: "5",
+						names.AttrType:     "URL_DECODE",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.statement.0.sqli_match_statement.0.text_transformation.*", map[string]string{
-						"priority": "2",
-						"type":     "LOWERCASE",
+						names.AttrPriority: acctest.Ct2,
+						names.AttrType:     "LOWERCASE",
 					}),
 				),
 			},
@@ -1891,26 +1891,26 @@ func TestAccWAFV2RuleGroup_sqliMatchStatement(t *testing.T) {
 				Config: testAccRuleGroupConfig_sqliMatchStatementUpdate(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                                "1",
-						"statement.0.sqli_match_statement.#":                         "1",
-						"statement.0.sqli_match_statement.0.field_to_match.#":        "1",
-						"statement.0.sqli_match_statement.0.field_to_match.0.body.#": "1",
-						"statement.0.sqli_match_statement.0.text_transformation.#":   "3",
+						"statement.#":                                                acctest.Ct1,
+						"statement.0.sqli_match_statement.#":                         acctest.Ct1,
+						"statement.0.sqli_match_statement.0.field_to_match.#":        acctest.Ct1,
+						"statement.0.sqli_match_statement.0.field_to_match.0.body.#": acctest.Ct1,
+						"statement.0.sqli_match_statement.0.text_transformation.#":   acctest.Ct3,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.statement.0.sqli_match_statement.0.text_transformation.*", map[string]string{
-						"priority": "5",
-						"type":     "URL_DECODE",
+						names.AttrPriority: "5",
+						names.AttrType:     "URL_DECODE",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.statement.0.sqli_match_statement.0.text_transformation.*", map[string]string{
-						"priority": "4",
-						"type":     "HTML_ENTITY_DECODE",
+						names.AttrPriority: acctest.Ct4,
+						names.AttrType:     "HTML_ENTITY_DECODE",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.statement.0.sqli_match_statement.0.text_transformation.*", map[string]string{
-						"priority": "3",
-						"type":     "COMPRESS_WHITE_SPACE",
+						names.AttrPriority: acctest.Ct3,
+						names.AttrType:     "COMPRESS_WHITE_SPACE",
 					}),
 				),
 			},
@@ -1926,7 +1926,7 @@ func TestAccWAFV2RuleGroup_sqliMatchStatement(t *testing.T) {
 
 func TestAccWAFV2RuleGroup_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.RuleGroup
+	var v awstypes.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
@@ -1937,11 +1937,11 @@ func TestAccWAFV2RuleGroup_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleGroupConfig_tags1(ruleGroupName, "key1", "value1"),
+				Config: testAccRuleGroupConfig_tags1(ruleGroupName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -1951,20 +1951,20 @@ func TestAccWAFV2RuleGroup_tags(t *testing.T) {
 				ImportStateIdFunc: testAccRuleGroupImportStateIdFunc(resourceName),
 			},
 			{
-				Config: testAccRuleGroupConfig_tags2(ruleGroupName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccRuleGroupConfig_tags2(ruleGroupName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccRuleGroupConfig_tags1(ruleGroupName, "key2", "value2"),
+				Config: testAccRuleGroupConfig_tags1(ruleGroupName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -1973,7 +1973,7 @@ func TestAccWAFV2RuleGroup_tags(t *testing.T) {
 
 func TestAccWAFV2RuleGroup_xssMatchStatement(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.RuleGroup
+	var v awstypes.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
@@ -1987,18 +1987,18 @@ func TestAccWAFV2RuleGroup_xssMatchStatement(t *testing.T) {
 				Config: testAccRuleGroupConfig_xssMatchStatement(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                               "1",
-						"statement.0.xss_match_statement.#":                         "1",
-						"statement.0.xss_match_statement.0.field_to_match.#":        "1",
-						"statement.0.xss_match_statement.0.field_to_match.0.body.#": "1",
-						"statement.0.xss_match_statement.0.text_transformation.#":   "1",
+						"statement.#":                                               acctest.Ct1,
+						"statement.0.xss_match_statement.#":                         acctest.Ct1,
+						"statement.0.xss_match_statement.0.field_to_match.#":        acctest.Ct1,
+						"statement.0.xss_match_statement.0.field_to_match.0.body.#": acctest.Ct1,
+						"statement.0.xss_match_statement.0.text_transformation.#":   acctest.Ct1,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.statement.0.xss_match_statement.0.text_transformation.*", map[string]string{
-						"priority": "2",
-						"type":     "NONE",
+						names.AttrPriority: acctest.Ct2,
+						names.AttrType:     "NONE",
 					}),
 				),
 			},
@@ -2006,18 +2006,18 @@ func TestAccWAFV2RuleGroup_xssMatchStatement(t *testing.T) {
 				Config: testAccRuleGroupConfig_xssMatchStatementUpdate(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                               "1",
-						"statement.0.xss_match_statement.#":                         "1",
-						"statement.0.xss_match_statement.0.field_to_match.#":        "1",
-						"statement.0.xss_match_statement.0.field_to_match.0.body.#": "1",
-						"statement.0.xss_match_statement.0.text_transformation.#":   "1",
+						"statement.#":                                               acctest.Ct1,
+						"statement.0.xss_match_statement.#":                         acctest.Ct1,
+						"statement.0.xss_match_statement.0.field_to_match.#":        acctest.Ct1,
+						"statement.0.xss_match_statement.0.field_to_match.0.body.#": acctest.Ct1,
+						"statement.0.xss_match_statement.0.text_transformation.#":   acctest.Ct1,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.statement.0.xss_match_statement.0.text_transformation.*", map[string]string{
-						"priority": "2",
-						"type":     "URL_DECODE",
+						names.AttrPriority: acctest.Ct2,
+						names.AttrType:     "URL_DECODE",
 					}),
 				),
 			},
@@ -2033,7 +2033,7 @@ func TestAccWAFV2RuleGroup_xssMatchStatement(t *testing.T) {
 
 func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.RuleGroup
+	var v awstypes.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
@@ -2047,16 +2047,16 @@ func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
 				Config: testAccRuleGroupConfig_rateBasedStatement(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#": "1",
-						"statement.0.rate_based_statement.0.custom_key.#":           "0",
+						"statement.#": acctest.Ct1,
+						"statement.0.rate_based_statement.0.custom_key.#":           acctest.Ct0,
 						"statement.0.rate_based_statement.0.aggregate_key_type":     "IP",
 						"statement.0.rate_based_statement.0.evaluation_window_sec":  "600",
-						"statement.0.rate_based_statement.0.forwarded_ip_config.#":  "0",
+						"statement.0.rate_based_statement.0.forwarded_ip_config.#":  acctest.Ct0,
 						"statement.0.rate_based_statement.0.limit":                  "50000",
-						"statement.0.rate_based_statement.0.scope_down_statement.#": "0",
+						"statement.0.rate_based_statement.0.scope_down_statement.#": acctest.Ct0,
 					}),
 				),
 			},
@@ -2064,19 +2064,19 @@ func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
 				Config: testAccRuleGroupConfig_rateBasedStatement_forwardedIPConfig(ruleGroupName, "MATCH", "X-Forwarded-For"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                                                "1",
-						"statement.0.rate_based_statement.#":                                         "1",
-						"statement.0.rate_based_statement.0.custom_key.#":                            "0",
+						"statement.#":                                                                acctest.Ct1,
+						"statement.0.rate_based_statement.#":                                         acctest.Ct1,
+						"statement.0.rate_based_statement.0.custom_key.#":                            acctest.Ct0,
 						"statement.0.rate_based_statement.0.aggregate_key_type":                      "FORWARDED_IP",
 						"statement.0.rate_based_statement.0.evaluation_window_sec":                   "300",
-						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                   "1",
+						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                   acctest.Ct1,
 						"statement.0.rate_based_statement.0.forwarded_ip_config.0.fallback_behavior": "MATCH",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.0.header_name":       "X-Forwarded-For",
 						"statement.0.rate_based_statement.0.limit":                                   "50000",
-						"statement.0.rate_based_statement.0.scope_down_statement.#":                  "0",
+						"statement.0.rate_based_statement.0.scope_down_statement.#":                  acctest.Ct0,
 					}),
 				),
 			},
@@ -2084,19 +2084,19 @@ func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
 				Config: testAccRuleGroupConfig_rateBasedStatement_forwardedIPConfig(ruleGroupName, "NO_MATCH", "Updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                                                "1",
-						"statement.0.rate_based_statement.#":                                         "1",
-						"statement.0.rate_based_statement.0.custom_key.#":                            "0",
+						"statement.#":                                                                acctest.Ct1,
+						"statement.0.rate_based_statement.#":                                         acctest.Ct1,
+						"statement.0.rate_based_statement.0.custom_key.#":                            acctest.Ct0,
 						"statement.0.rate_based_statement.0.aggregate_key_type":                      "FORWARDED_IP",
 						"statement.0.rate_based_statement.0.evaluation_window_sec":                   "300",
-						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                   "1",
+						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                   acctest.Ct1,
 						"statement.0.rate_based_statement.0.forwarded_ip_config.0.fallback_behavior": "NO_MATCH",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.0.header_name":       "Updated",
 						"statement.0.rate_based_statement.0.limit":                                   "50000",
-						"statement.0.rate_based_statement.0.scope_down_statement.#":                  "0",
+						"statement.0.rate_based_statement.0.scope_down_statement.#":                  acctest.Ct0,
 					}),
 				),
 			},
@@ -2104,27 +2104,27 @@ func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
 				Config: testAccRuleGroupConfig_rateBasedStatement_customKeysBasic(ruleGroupName, "cookie", "testcookie"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                                                    "1",
-						"statement.0.rate_based_statement.#":                                             "1",
-						"statement.0.rate_based_statement.0.custom_key.#":                                "1",
+						"statement.#":                                                                    acctest.Ct1,
+						"statement.0.rate_based_statement.#":                                             acctest.Ct1,
+						"statement.0.rate_based_statement.0.custom_key.#":                                acctest.Ct1,
 						"statement.0.rate_based_statement.0.aggregate_key_type":                          "CUSTOM_KEYS",
 						"statement.0.rate_based_statement.0.evaluation_window_sec":                       "300",
-						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                       "0",
+						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                       acctest.Ct0,
 						"statement.0.rate_based_statement.0.limit":                                       "50000",
-						"statement.0.rate_based_statement.0.scope_down_statement.#":                      "0",
-						"statement.0.rate_based_statement.0.custom_key.0.cookie.#":                       "1",
-						"statement.0.rate_based_statement.0.custom_key.0.forwarded_ip.#":                 "0",
-						"statement.0.rate_based_statement.0.custom_key.0.http_method.#":                  "0",
-						"statement.0.rate_based_statement.0.custom_key.0.header.#":                       "0",
-						"statement.0.rate_based_statement.0.custom_key.0.ip.#":                           "0",
-						"statement.0.rate_based_statement.0.custom_key.0.label_namespace.#":              "0",
-						"statement.0.rate_based_statement.0.custom_key.0.query_argument.#":               "0",
-						"statement.0.rate_based_statement.0.custom_key.0.query_string.#":                 "0",
-						"statement.0.rate_based_statement.0.custom_key.0.uri_path.#":                     "0",
-						"statement.0.rate_based_statement.0.custom_key.0.cookie.0.text_transformation.#": "1",
+						"statement.0.rate_based_statement.0.scope_down_statement.#":                      acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.cookie.#":                       acctest.Ct1,
+						"statement.0.rate_based_statement.0.custom_key.0.forwarded_ip.#":                 acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.http_method.#":                  acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.header.#":                       acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.ip.#":                           acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.label_namespace.#":              acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.query_argument.#":               acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.query_string.#":                 acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.uri_path.#":                     acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.cookie.0.text_transformation.#": acctest.Ct1,
 					}),
 				),
 			},
@@ -2132,27 +2132,27 @@ func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
 				Config: testAccRuleGroupConfig_rateBasedStatement_customKeysForwardedIP(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                                       "1",
-						"statement.0.rate_based_statement.#":                                "1",
-						"statement.0.rate_based_statement.0.custom_key.#":                   "2",
+						"statement.#":                                                       acctest.Ct1,
+						"statement.0.rate_based_statement.#":                                acctest.Ct1,
+						"statement.0.rate_based_statement.0.custom_key.#":                   acctest.Ct2,
 						"statement.0.rate_based_statement.0.aggregate_key_type":             "CUSTOM_KEYS",
 						"statement.0.rate_based_statement.0.evaluation_window_sec":          "300",
-						"statement.0.rate_based_statement.0.forwarded_ip_config.#":          "1",
+						"statement.0.rate_based_statement.0.forwarded_ip_config.#":          acctest.Ct1,
 						"statement.0.rate_based_statement.0.limit":                          "50000",
-						"statement.0.rate_based_statement.0.scope_down_statement.#":         "0",
-						"statement.0.rate_based_statement.0.custom_key.0.cookie.#":          "1",
-						"statement.0.rate_based_statement.0.custom_key.0.forwarded_ip.#":    "0",
-						"statement.0.rate_based_statement.0.custom_key.0.http_method.#":     "0",
-						"statement.0.rate_based_statement.0.custom_key.0.header.#":          "0",
-						"statement.0.rate_based_statement.0.custom_key.0.ip.#":              "0",
-						"statement.0.rate_based_statement.0.custom_key.0.label_namespace.#": "0",
-						"statement.0.rate_based_statement.0.custom_key.0.query_argument.#":  "0",
-						"statement.0.rate_based_statement.0.custom_key.0.query_string.#":    "0",
-						"statement.0.rate_based_statement.0.custom_key.0.uri_path.#":        "0",
-						"statement.0.rate_based_statement.0.custom_key.1.forwarded_ip.#":    "1",
+						"statement.0.rate_based_statement.0.scope_down_statement.#":         acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.cookie.#":          acctest.Ct1,
+						"statement.0.rate_based_statement.0.custom_key.0.forwarded_ip.#":    acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.http_method.#":     acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.header.#":          acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.ip.#":              acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.label_namespace.#": acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.query_argument.#":  acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.query_string.#":    acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.uri_path.#":        acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.1.forwarded_ip.#":    acctest.Ct1,
 					}),
 				),
 			},
@@ -2160,54 +2160,54 @@ func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
 				Config: testAccRuleGroupConfig_rateBasedStatement_customKeysHTTPMethod(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                                       "1",
-						"statement.0.rate_based_statement.#":                                "1",
-						"statement.0.rate_based_statement.0.custom_key.#":                   "1",
+						"statement.#":                                                       acctest.Ct1,
+						"statement.0.rate_based_statement.#":                                acctest.Ct1,
+						"statement.0.rate_based_statement.0.custom_key.#":                   acctest.Ct1,
 						"statement.0.rate_based_statement.0.aggregate_key_type":             "CUSTOM_KEYS",
 						"statement.0.rate_based_statement.0.evaluation_window_sec":          "300",
-						"statement.0.rate_based_statement.0.forwarded_ip_config.#":          "0",
+						"statement.0.rate_based_statement.0.forwarded_ip_config.#":          acctest.Ct0,
 						"statement.0.rate_based_statement.0.limit":                          "50000",
-						"statement.0.rate_based_statement.0.scope_down_statement.#":         "0",
-						"statement.0.rate_based_statement.0.custom_key.0.cookie.#":          "0",
-						"statement.0.rate_based_statement.0.custom_key.0.forwarded_ip.#":    "0",
-						"statement.0.rate_based_statement.0.custom_key.0.http_method.#":     "1",
-						"statement.0.rate_based_statement.0.custom_key.0.header.#":          "0",
-						"statement.0.rate_based_statement.0.custom_key.0.ip.#":              "0",
-						"statement.0.rate_based_statement.0.custom_key.0.label_namespace.#": "0",
-						"statement.0.rate_based_statement.0.custom_key.0.query_argument.#":  "0",
-						"statement.0.rate_based_statement.0.custom_key.0.query_string.#":    "0",
-						"statement.0.rate_based_statement.0.custom_key.0.uri_path.#":        "0",
+						"statement.0.rate_based_statement.0.scope_down_statement.#":         acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.cookie.#":          acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.forwarded_ip.#":    acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.http_method.#":     acctest.Ct1,
+						"statement.0.rate_based_statement.0.custom_key.0.header.#":          acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.ip.#":              acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.label_namespace.#": acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.query_argument.#":  acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.query_string.#":    acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.uri_path.#":        acctest.Ct0,
 					}),
 				),
 			},
 			{
-				Config: testAccRuleGroupConfig_rateBasedStatement_customKeysBasic(ruleGroupName, "header", "x-forwrded-for"),
+				Config: testAccRuleGroupConfig_rateBasedStatement_customKeysBasic(ruleGroupName, names.AttrHeader, "x-forwrded-for"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                                                    "1",
-						"statement.0.rate_based_statement.#":                                             "1",
-						"statement.0.rate_based_statement.0.custom_key.#":                                "1",
+						"statement.#":                                                                    acctest.Ct1,
+						"statement.0.rate_based_statement.#":                                             acctest.Ct1,
+						"statement.0.rate_based_statement.0.custom_key.#":                                acctest.Ct1,
 						"statement.0.rate_based_statement.0.aggregate_key_type":                          "CUSTOM_KEYS",
 						"statement.0.rate_based_statement.0.evaluation_window_sec":                       "300",
-						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                       "0",
+						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                       acctest.Ct0,
 						"statement.0.rate_based_statement.0.limit":                                       "50000",
-						"statement.0.rate_based_statement.0.scope_down_statement.#":                      "0",
-						"statement.0.rate_based_statement.0.custom_key.0.cookie.#":                       "0",
-						"statement.0.rate_based_statement.0.custom_key.0.forwarded_ip.#":                 "0",
-						"statement.0.rate_based_statement.0.custom_key.0.http_method.#":                  "0",
-						"statement.0.rate_based_statement.0.custom_key.0.header.#":                       "1",
-						"statement.0.rate_based_statement.0.custom_key.0.ip.#":                           "0",
-						"statement.0.rate_based_statement.0.custom_key.0.label_namespace.#":              "0",
-						"statement.0.rate_based_statement.0.custom_key.0.query_argument.#":               "0",
-						"statement.0.rate_based_statement.0.custom_key.0.query_string.#":                 "0",
-						"statement.0.rate_based_statement.0.custom_key.0.uri_path.#":                     "0",
-						"statement.0.rate_based_statement.0.custom_key.0.header.0.text_transformation.#": "1",
+						"statement.0.rate_based_statement.0.scope_down_statement.#":                      acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.cookie.#":                       acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.forwarded_ip.#":                 acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.http_method.#":                  acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.header.#":                       acctest.Ct1,
+						"statement.0.rate_based_statement.0.custom_key.0.ip.#":                           acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.label_namespace.#":              acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.query_argument.#":               acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.query_string.#":                 acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.uri_path.#":                     acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.header.0.text_transformation.#": acctest.Ct1,
 					}),
 				),
 			},
@@ -2215,55 +2215,55 @@ func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
 				Config: testAccRuleGroupConfig_rateBasedStatement_customKeysIP(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                                       "1",
-						"statement.0.rate_based_statement.#":                                "1",
-						"statement.0.rate_based_statement.0.custom_key.#":                   "2",
+						"statement.#":                                                       acctest.Ct1,
+						"statement.0.rate_based_statement.#":                                acctest.Ct1,
+						"statement.0.rate_based_statement.0.custom_key.#":                   acctest.Ct2,
 						"statement.0.rate_based_statement.0.aggregate_key_type":             "CUSTOM_KEYS",
 						"statement.0.rate_based_statement.0.evaluation_window_sec":          "300",
-						"statement.0.rate_based_statement.0.forwarded_ip_config.#":          "0",
+						"statement.0.rate_based_statement.0.forwarded_ip_config.#":          acctest.Ct0,
 						"statement.0.rate_based_statement.0.limit":                          "50000",
-						"statement.0.rate_based_statement.0.scope_down_statement.#":         "0",
-						"statement.0.rate_based_statement.0.custom_key.0.cookie.#":          "1",
-						"statement.0.rate_based_statement.0.custom_key.0.forwarded_ip.#":    "0",
-						"statement.0.rate_based_statement.0.custom_key.0.http_method.#":     "0",
-						"statement.0.rate_based_statement.0.custom_key.0.header.#":          "0",
-						"statement.0.rate_based_statement.0.custom_key.0.ip.#":              "0",
-						"statement.0.rate_based_statement.0.custom_key.0.label_namespace.#": "0",
-						"statement.0.rate_based_statement.0.custom_key.0.query_argument.#":  "0",
-						"statement.0.rate_based_statement.0.custom_key.0.query_string.#":    "0",
-						"statement.0.rate_based_statement.0.custom_key.0.uri_path.#":        "0",
-						"statement.0.rate_based_statement.0.custom_key.1.ip.#":              "1",
+						"statement.0.rate_based_statement.0.scope_down_statement.#":         acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.cookie.#":          acctest.Ct1,
+						"statement.0.rate_based_statement.0.custom_key.0.forwarded_ip.#":    acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.http_method.#":     acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.header.#":          acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.ip.#":              acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.label_namespace.#": acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.query_argument.#":  acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.query_string.#":    acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.uri_path.#":        acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.1.ip.#":              acctest.Ct1,
 					}),
 				),
 			},
 			{
-				Config: testAccRuleGroupConfig_rateBasedStatement_customKeysBasic(ruleGroupName, "query_argument", "key"),
+				Config: testAccRuleGroupConfig_rateBasedStatement_customKeysBasic(ruleGroupName, "query_argument", names.AttrKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                                                            "1",
-						"statement.0.rate_based_statement.#":                                                     "1",
-						"statement.0.rate_based_statement.0.custom_key.#":                                        "1",
+						"statement.#":                                                                            acctest.Ct1,
+						"statement.0.rate_based_statement.#":                                                     acctest.Ct1,
+						"statement.0.rate_based_statement.0.custom_key.#":                                        acctest.Ct1,
 						"statement.0.rate_based_statement.0.aggregate_key_type":                                  "CUSTOM_KEYS",
 						"statement.0.rate_based_statement.0.evaluation_window_sec":                               "300",
-						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                               "0",
+						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                               acctest.Ct0,
 						"statement.0.rate_based_statement.0.limit":                                               "50000",
-						"statement.0.rate_based_statement.0.scope_down_statement.#":                              "0",
-						"statement.0.rate_based_statement.0.custom_key.0.cookie.#":                               "0",
-						"statement.0.rate_based_statement.0.custom_key.0.forwarded_ip.#":                         "0",
-						"statement.0.rate_based_statement.0.custom_key.0.http_method.#":                          "0",
-						"statement.0.rate_based_statement.0.custom_key.0.header.#":                               "0",
-						"statement.0.rate_based_statement.0.custom_key.0.ip.#":                                   "0",
-						"statement.0.rate_based_statement.0.custom_key.0.label_namespace.#":                      "0",
-						"statement.0.rate_based_statement.0.custom_key.0.query_argument.#":                       "1",
-						"statement.0.rate_based_statement.0.custom_key.0.query_string.#":                         "0",
-						"statement.0.rate_based_statement.0.custom_key.0.uri_path.#":                             "0",
-						"statement.0.rate_based_statement.0.custom_key.0.query_argument.0.text_transformation.#": "1",
+						"statement.0.rate_based_statement.0.scope_down_statement.#":                              acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.cookie.#":                               acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.forwarded_ip.#":                         acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.http_method.#":                          acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.header.#":                               acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.ip.#":                                   acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.label_namespace.#":                      acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.query_argument.#":                       acctest.Ct1,
+						"statement.0.rate_based_statement.0.custom_key.0.query_string.#":                         acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.uri_path.#":                             acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.query_argument.0.text_transformation.#": acctest.Ct1,
 					}),
 				),
 			},
@@ -2271,27 +2271,27 @@ func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
 				Config: testAccRuleGroupConfig_rateBasedStatement_customKeysMinimal(ruleGroupName, "query_string"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                                                          "1",
-						"statement.0.rate_based_statement.#":                                                   "1",
-						"statement.0.rate_based_statement.0.custom_key.#":                                      "1",
+						"statement.#":                                                                          acctest.Ct1,
+						"statement.0.rate_based_statement.#":                                                   acctest.Ct1,
+						"statement.0.rate_based_statement.0.custom_key.#":                                      acctest.Ct1,
 						"statement.0.rate_based_statement.0.aggregate_key_type":                                "CUSTOM_KEYS",
 						"statement.0.rate_based_statement.0.evaluation_window_sec":                             "300",
-						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                             "0",
+						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                             acctest.Ct0,
 						"statement.0.rate_based_statement.0.limit":                                             "50000",
-						"statement.0.rate_based_statement.0.scope_down_statement.#":                            "0",
-						"statement.0.rate_based_statement.0.custom_key.0.cookie.#":                             "0",
-						"statement.0.rate_based_statement.0.custom_key.0.forwarded_ip.#":                       "0",
-						"statement.0.rate_based_statement.0.custom_key.0.http_method.#":                        "0",
-						"statement.0.rate_based_statement.0.custom_key.0.header.#":                             "0",
-						"statement.0.rate_based_statement.0.custom_key.0.ip.#":                                 "0",
-						"statement.0.rate_based_statement.0.custom_key.0.label_namespace.#":                    "0",
-						"statement.0.rate_based_statement.0.custom_key.0.query_argument.#":                     "0",
-						"statement.0.rate_based_statement.0.custom_key.0.query_string.#":                       "1",
-						"statement.0.rate_based_statement.0.custom_key.0.uri_path.#":                           "0",
-						"statement.0.rate_based_statement.0.custom_key.0.query_string.0.text_transformation.#": "1",
+						"statement.0.rate_based_statement.0.scope_down_statement.#":                            acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.cookie.#":                             acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.forwarded_ip.#":                       acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.http_method.#":                        acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.header.#":                             acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.ip.#":                                 acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.label_namespace.#":                    acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.query_argument.#":                     acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.query_string.#":                       acctest.Ct1,
+						"statement.0.rate_based_statement.0.custom_key.0.uri_path.#":                           acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.query_string.0.text_transformation.#": acctest.Ct1,
 					}),
 				),
 			},
@@ -2299,27 +2299,27 @@ func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
 				Config: testAccRuleGroupConfig_rateBasedStatement_customKeysMinimal(ruleGroupName, "uri_path"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                                                      "1",
-						"statement.0.rate_based_statement.#":                                               "1",
-						"statement.0.rate_based_statement.0.custom_key.#":                                  "1",
+						"statement.#":                                                                      acctest.Ct1,
+						"statement.0.rate_based_statement.#":                                               acctest.Ct1,
+						"statement.0.rate_based_statement.0.custom_key.#":                                  acctest.Ct1,
 						"statement.0.rate_based_statement.0.aggregate_key_type":                            "CUSTOM_KEYS",
 						"statement.0.rate_based_statement.0.evaluation_window_sec":                         "300",
-						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                         "0",
+						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                         acctest.Ct0,
 						"statement.0.rate_based_statement.0.limit":                                         "50000",
-						"statement.0.rate_based_statement.0.scope_down_statement.#":                        "0",
-						"statement.0.rate_based_statement.0.custom_key.0.cookie.#":                         "0",
-						"statement.0.rate_based_statement.0.custom_key.0.forwarded_ip.#":                   "0",
-						"statement.0.rate_based_statement.0.custom_key.0.http_method.#":                    "0",
-						"statement.0.rate_based_statement.0.custom_key.0.header.#":                         "0",
-						"statement.0.rate_based_statement.0.custom_key.0.ip.#":                             "0",
-						"statement.0.rate_based_statement.0.custom_key.0.label_namespace.#":                "0",
-						"statement.0.rate_based_statement.0.custom_key.0.query_argument.#":                 "0",
-						"statement.0.rate_based_statement.0.custom_key.0.query_string.#":                   "0",
-						"statement.0.rate_based_statement.0.custom_key.0.uri_path.#":                       "1",
-						"statement.0.rate_based_statement.0.custom_key.0.uri_path.0.text_transformation.#": "1",
+						"statement.0.rate_based_statement.0.scope_down_statement.#":                        acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.cookie.#":                         acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.forwarded_ip.#":                   acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.http_method.#":                    acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.header.#":                         acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.ip.#":                             acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.label_namespace.#":                acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.query_argument.#":                 acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.query_string.#":                   acctest.Ct0,
+						"statement.0.rate_based_statement.0.custom_key.0.uri_path.#":                       acctest.Ct1,
+						"statement.0.rate_based_statement.0.custom_key.0.uri_path.0.text_transformation.#": acctest.Ct1,
 					}),
 				),
 			},
@@ -2327,17 +2327,17 @@ func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
 				Config: testAccRuleGroupConfig_rateBasedStatement_customKeysMaxKeys(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                               "1",
-						"statement.0.rate_based_statement.#":                        "1",
+						"statement.#":                                               acctest.Ct1,
+						"statement.0.rate_based_statement.#":                        acctest.Ct1,
 						"statement.0.rate_based_statement.0.custom_key.#":           "5",
 						"statement.0.rate_based_statement.0.aggregate_key_type":     "CUSTOM_KEYS",
 						"statement.0.rate_based_statement.0.evaluation_window_sec":  "300",
-						"statement.0.rate_based_statement.0.forwarded_ip_config.#":  "0",
+						"statement.0.rate_based_statement.0.forwarded_ip_config.#":  acctest.Ct0,
 						"statement.0.rate_based_statement.0.limit":                  "50000",
-						"statement.0.rate_based_statement.0.scope_down_statement.#": "0",
+						"statement.0.rate_based_statement.0.scope_down_statement.#": acctest.Ct0,
 					}),
 				),
 			},
@@ -2345,19 +2345,19 @@ func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
 				Config: testAccRuleGroupConfig_rateBasedStatement_update(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                                                                     "1",
-						"statement.0.rate_based_statement.#":                                                              "1",
-						"statement.0.rate_based_statement.0.custom_key.#":                                                 "0",
+						"statement.#":                                                                                     acctest.Ct1,
+						"statement.0.rate_based_statement.#":                                                              acctest.Ct1,
+						"statement.0.rate_based_statement.0.custom_key.#":                                                 acctest.Ct0,
 						"statement.0.rate_based_statement.0.aggregate_key_type":                                           "IP",
 						"statement.0.rate_based_statement.0.evaluation_window_sec":                                        "300",
-						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                                        "0",
+						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                                        acctest.Ct0,
 						"statement.0.rate_based_statement.0.limit":                                                        "10000",
-						"statement.0.rate_based_statement.0.scope_down_statement.#":                                       "1",
-						"statement.0.rate_based_statement.0.scope_down_statement.0.geo_match_statement.#":                 "1",
-						"statement.0.rate_based_statement.0.scope_down_statement.0.geo_match_statement.0.country_codes.#": "2",
+						"statement.0.rate_based_statement.0.scope_down_statement.#":                                       acctest.Ct1,
+						"statement.0.rate_based_statement.0.scope_down_statement.0.geo_match_statement.#":                 acctest.Ct1,
+						"statement.0.rate_based_statement.0.scope_down_statement.0.geo_match_statement.0.country_codes.#": acctest.Ct2,
 						"statement.0.rate_based_statement.0.scope_down_statement.0.geo_match_statement.0.country_codes.0": "US",
 						"statement.0.rate_based_statement.0.scope_down_statement.0.geo_match_statement.0.country_codes.1": "NL",
 					}),
@@ -2375,7 +2375,7 @@ func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
 
 func TestAccWAFV2RuleGroup_RateBased_maxNested(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.RuleGroup
+	var v awstypes.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
@@ -2389,22 +2389,22 @@ func TestAccWAFV2RuleGroup_RateBased_maxNested(t *testing.T) {
 				Config: testAccRuleGroupConfig_multipleNestedRateBasedStatements(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                                                                                      "1",
-						"statement.0.rate_based_statement.#":                                                                               "1",
+						"statement.#":                                                                                                      acctest.Ct1,
+						"statement.0.rate_based_statement.#":                                                                               acctest.Ct1,
 						"statement.0.rate_based_statement.0.limit":                                                                         "300",
 						"statement.0.rate_based_statement.0.aggregate_key_type":                                                            "IP",
-						"statement.0.rate_based_statement.0.scope_down_statement.#":                                                        "1",
-						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.#":                                        "1",
-						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.0.statement.#":                            "1",
-						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.0.statement.0.or_statement.#":             "1",
-						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.0.statement.0.or_statement.0.statement.#": "3",
-						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.0.statement.0.or_statement.0.statement.0.regex_pattern_set_reference_statement.#": "1",
-						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.0.statement.0.or_statement.0.statement.1.regex_match_statement.#":                 "1",
-						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.0.statement.0.or_statement.0.statement.2.ip_set_reference_statement.#":            "1",
+						"statement.0.rate_based_statement.0.scope_down_statement.#":                                                        acctest.Ct1,
+						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.#":                                        acctest.Ct1,
+						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.0.statement.#":                            acctest.Ct1,
+						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.0.statement.0.or_statement.#":             acctest.Ct1,
+						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.0.statement.0.or_statement.0.statement.#": acctest.Ct3,
+						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.0.statement.0.or_statement.0.statement.0.regex_pattern_set_reference_statement.#": acctest.Ct1,
+						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.0.statement.0.or_statement.0.statement.1.regex_match_statement.#":                 acctest.Ct1,
+						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.0.statement.0.or_statement.0.statement.2.ip_set_reference_statement.#":            acctest.Ct1,
 					}),
 				),
 			},
@@ -2420,7 +2420,7 @@ func TestAccWAFV2RuleGroup_RateBased_maxNested(t *testing.T) {
 
 func TestAccWAFV2RuleGroup_Operators_maxNested(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.RuleGroup
+	var v awstypes.RuleGroup
 	ruleGroupName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_rule_group.test"
 
@@ -2434,21 +2434,21 @@ func TestAccWAFV2RuleGroup_Operators_maxNested(t *testing.T) {
 				Config: testAccRuleGroupConfig_multipleNestedOperatorStatements(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                                                                    "1",
-						"statement.0.and_statement.#":                                                                    "1",
-						"statement.0.and_statement.0.statement.#":                                                        "2",
-						"statement.0.and_statement.0.statement.0.not_statement.#":                                        "1",
-						"statement.0.and_statement.0.statement.0.not_statement.0.statement.#":                            "1",
-						"statement.0.and_statement.0.statement.0.not_statement.0.statement.0.or_statement.#":             "1",
-						"statement.0.and_statement.0.statement.0.not_statement.0.statement.0.or_statement.0.statement.#": "3",
-						"statement.0.and_statement.0.statement.0.not_statement.0.statement.0.or_statement.0.statement.0.regex_pattern_set_reference_statement.#": "1",
-						"statement.0.and_statement.0.statement.0.not_statement.0.statement.0.or_statement.0.statement.1.regex_match_statement.#":                 "1",
-						"statement.0.and_statement.0.statement.0.not_statement.0.statement.0.or_statement.0.statement.2.ip_set_reference_statement.#":            "1",
-						"statement.0.and_statement.0.statement.1.geo_match_statement.#":                                                                          "1",
+						"statement.#":                                                                                    acctest.Ct1,
+						"statement.0.and_statement.#":                                                                    acctest.Ct1,
+						"statement.0.and_statement.0.statement.#":                                                        acctest.Ct2,
+						"statement.0.and_statement.0.statement.0.not_statement.#":                                        acctest.Ct1,
+						"statement.0.and_statement.0.statement.0.not_statement.0.statement.#":                            acctest.Ct1,
+						"statement.0.and_statement.0.statement.0.not_statement.0.statement.0.or_statement.#":             acctest.Ct1,
+						"statement.0.and_statement.0.statement.0.not_statement.0.statement.0.or_statement.0.statement.#": acctest.Ct3,
+						"statement.0.and_statement.0.statement.0.not_statement.0.statement.0.or_statement.0.statement.0.regex_pattern_set_reference_statement.#": acctest.Ct1,
+						"statement.0.and_statement.0.statement.0.not_statement.0.statement.0.or_statement.0.statement.1.regex_match_statement.#":                 acctest.Ct1,
+						"statement.0.and_statement.0.statement.0.not_statement.0.statement.0.or_statement.0.statement.2.ip_set_reference_statement.#":            acctest.Ct1,
+						"statement.0.and_statement.0.statement.1.geo_match_statement.#":                                                                          acctest.Ct1,
 						"statement.0.and_statement.0.statement.1.geo_match_statement.0.country_codes.0":                                                          "NL",
 					}),
 				),
@@ -2464,13 +2464,13 @@ func TestAccWAFV2RuleGroup_Operators_maxNested(t *testing.T) {
 }
 
 func testAccPreCheckScopeRegional(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Client(ctx)
 
 	input := &wafv2.ListRuleGroupsInput{
-		Scope: aws.String(wafv2.ScopeRegional),
+		Scope: awstypes.ScopeRegional,
 	}
 
-	_, err := conn.ListRuleGroupsWithContext(ctx, input)
+	_, err := conn.ListRuleGroups(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -2488,9 +2488,9 @@ func testAccCheckRuleGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Client(ctx)
 
-			_, err := tfwafv2.FindRuleGroupByThreePartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["name"], rs.Primary.Attributes["scope"])
+			_, err := tfwafv2.FindRuleGroupByThreePartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes[names.AttrScope])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -2507,16 +2507,16 @@ func testAccCheckRuleGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckRuleGroupExists(ctx context.Context, n string, v *wafv2.RuleGroup) resource.TestCheckFunc {
+func testAccCheckRuleGroupExists(ctx context.Context, n string, v *awstypes.RuleGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Client(ctx)
 
-		output, err := tfwafv2.FindRuleGroupByThreePartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["name"], rs.Primary.Attributes["scope"])
+		output, err := tfwafv2.FindRuleGroupByThreePartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes[names.AttrScope])
 
 		if err != nil {
 			return err
@@ -2535,7 +2535,7 @@ func testAccRuleGroupImportStateIdFunc(resourceName string) resource.ImportState
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s/%s/%s", rs.Primary.ID, rs.Primary.Attributes["name"], rs.Primary.Attributes["scope"]), nil
+		return fmt.Sprintf("%s/%s/%s", rs.Primary.ID, rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes[names.AttrScope]), nil
 	}
 }
 

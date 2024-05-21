@@ -38,29 +38,29 @@ func testAccVirtualService_virtualNode(t *testing.T) {
 				Config: testAccVirtualServiceConfig_virtualNode(meshName, vnName1, vnName2, vsName, "aws_appmesh_virtual_node.test1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVirtualServiceExists(ctx, resourceName, &vs),
-					resource.TestCheckResourceAttr(resourceName, "name", vsName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, vsName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.0.virtual_node.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.0.virtual_node.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.0.virtual_node.0.virtual_node_name", vnName1),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
 					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualService/%s", meshName, vsName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualService/%s", meshName, vsName)),
 				),
 			},
 			{
 				Config: testAccVirtualServiceConfig_virtualNode(meshName, vnName1, vnName2, vsName, "aws_appmesh_virtual_node.test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVirtualServiceExists(ctx, resourceName, &vs),
-					resource.TestCheckResourceAttr(resourceName, "name", vsName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, vsName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.0.virtual_node.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.0.virtual_node.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.0.virtual_node.0.virtual_node_name", vnName2),
 				),
 			},
@@ -93,28 +93,28 @@ func testAccVirtualService_virtualRouter(t *testing.T) {
 				Config: testAccVirtualServiceConfig_virtualRouter(meshName, vrName1, vrName2, vsName, "aws_appmesh_virtual_router.test1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVirtualServiceExists(ctx, resourceName, &vs),
-					resource.TestCheckResourceAttr(resourceName, "name", vsName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, vsName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.0.virtual_router.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.0.virtual_router.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.0.virtual_router.0.virtual_router_name", vrName1),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
 					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualService/%s", meshName, vsName))),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualService/%s", meshName, vsName))),
 			},
 			{
 				Config: testAccVirtualServiceConfig_virtualRouter(meshName, vrName1, vrName2, vsName, "aws_appmesh_virtual_router.test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVirtualServiceExists(ctx, resourceName, &vs),
-					resource.TestCheckResourceAttr(resourceName, "name", vsName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, vsName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
-					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.0.virtual_router.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.0.virtual_router.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.provider.0.virtual_router.0.virtual_router_name", vrName2),
 				),
 			},
@@ -138,28 +138,28 @@ func testAccVirtualService_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckVirtualServiceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVirtualServiceConfig_tags1(meshName, vnName1, vnName2, vsName, "aws_appmesh_virtual_node.test1", "key1", "value1"),
+				Config: testAccVirtualServiceConfig_tags1(meshName, vnName1, vnName2, vsName, "aws_appmesh_virtual_node.test1", acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVirtualServiceExists(ctx, resourceName, &vs),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
-				Config: testAccVirtualServiceConfig_tags2(meshName, vnName1, vnName2, vsName, "aws_appmesh_virtual_node.test1", "key1", "value1updated", "key2", "value2"),
+				Config: testAccVirtualServiceConfig_tags2(meshName, vnName1, vnName2, vsName, "aws_appmesh_virtual_node.test1", acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVirtualServiceExists(ctx, resourceName, &vs),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccVirtualServiceConfig_tags1(meshName, vnName1, vnName2, vsName, "aws_appmesh_virtual_node.test1", "key2", "value2"),
+				Config: testAccVirtualServiceConfig_tags1(meshName, vnName1, vnName2, vsName, "aws_appmesh_virtual_node.test1", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVirtualServiceExists(ctx, resourceName, &vs),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
@@ -208,7 +208,7 @@ func testAccCheckVirtualServiceDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			_, err := tfappmesh.FindVirtualServiceByThreePartKey(ctx, conn, rs.Primary.Attributes["mesh_name"], rs.Primary.Attributes["mesh_owner"], rs.Primary.Attributes["name"])
+			_, err := tfappmesh.FindVirtualServiceByThreePartKey(ctx, conn, rs.Primary.Attributes["mesh_name"], rs.Primary.Attributes["mesh_owner"], rs.Primary.Attributes[names.AttrName])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -237,7 +237,7 @@ func testAccCheckVirtualServiceExists(ctx context.Context, n string, v *appmesh.
 			return fmt.Errorf("No App Mesh Virtual Service ID is set")
 		}
 
-		output, err := tfappmesh.FindVirtualServiceByThreePartKey(ctx, conn, rs.Primary.Attributes["mesh_name"], rs.Primary.Attributes["mesh_owner"], rs.Primary.Attributes["name"])
+		output, err := tfappmesh.FindVirtualServiceByThreePartKey(ctx, conn, rs.Primary.Attributes["mesh_name"], rs.Primary.Attributes["mesh_owner"], rs.Primary.Attributes[names.AttrName])
 
 		if err != nil {
 			return err

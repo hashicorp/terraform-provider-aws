@@ -57,8 +57,8 @@ func (r *resourceAssessment) Metadata(_ context.Context, request resource.Metada
 func (r *resourceAssessment) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
-			"description": schema.StringAttribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 			},
 			"framework_id": schema.StringAttribute{
@@ -67,8 +67,8 @@ func (r *resourceAssessment) Schema(ctx context.Context, req resource.SchemaRequ
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
 			// The roles attribute is split into "roles" and "roles_all" to account for roles
@@ -91,7 +91,7 @@ func (r *resourceAssessment) Schema(ctx context.Context, req resource.SchemaRequ
 					setplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"status": schema.StringAttribute{
+			names.AttrStatus: schema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -105,7 +105,7 @@ func (r *resourceAssessment) Schema(ctx context.Context, req resource.SchemaRequ
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"destination": schema.StringAttribute{
+						names.AttrDestination: schema.StringAttribute{
 							Required: true,
 						},
 						"destination_type": schema.StringAttribute{
@@ -117,7 +117,7 @@ func (r *resourceAssessment) Schema(ctx context.Context, req resource.SchemaRequ
 					},
 				},
 			},
-			"scope": schema.ListNestedBlock{
+			names.AttrScope: schema.ListNestedBlock{
 				Validators: []validator.List{
 					listvalidator.SizeAtLeast(1),
 					listvalidator.SizeAtMost(1),
@@ -130,7 +130,7 @@ func (r *resourceAssessment) Schema(ctx context.Context, req resource.SchemaRequ
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"id": schema.StringAttribute{
+									names.AttrID: schema.StringAttribute{
 										Required: true,
 									},
 								},
@@ -142,7 +142,7 @@ func (r *resourceAssessment) Schema(ctx context.Context, req resource.SchemaRequ
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"service_name": schema.StringAttribute{
+									names.AttrServiceName: schema.StringAttribute{
 										Required: true,
 									},
 								},
@@ -366,7 +366,7 @@ func (r *resourceAssessment) Delete(ctx context.Context, req resource.DeleteRequ
 }
 
 func (r *resourceAssessment) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func (r *resourceAssessment) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
@@ -399,13 +399,13 @@ func FindAssessmentByID(ctx context.Context, conn *auditmanager.Client, id strin
 
 var (
 	assessmentReportsDestinationAttrTypes = map[string]attr.Type{
-		"destination":      types.StringType,
-		"destination_type": types.StringType,
+		names.AttrDestination: types.StringType,
+		"destination_type":    types.StringType,
 	}
 
 	assessmentRolesAttrTypes = map[string]attr.Type{
-		"role_arn":  types.StringType,
-		"role_type": types.StringType,
+		names.AttrRoleARN: types.StringType,
+		"role_type":       types.StringType,
 	}
 
 	assessmentScopeAttrTypes = map[string]attr.Type{
@@ -414,11 +414,11 @@ var (
 	}
 
 	assessmentScopeAWSAccountsAttrTypes = map[string]attr.Type{ // nosemgrep:ci.aws-in-var-name
-		"id": types.StringType,
+		names.AttrID: types.StringType,
 	}
 
 	assessmentScopeAWSServicesAttrTypes = map[string]attr.Type{ // nosemgrep:ci.aws-in-var-name
-		"service_name": types.StringType,
+		names.AttrServiceName: types.StringType,
 	}
 )
 
@@ -566,8 +566,8 @@ func flattenAssessmentReportsDestination(ctx context.Context, apiObject *awstype
 	}
 
 	obj := map[string]attr.Value{
-		"destination":      flex.StringToFramework(ctx, apiObject.Destination),
-		"destination_type": flex.StringValueToFramework(ctx, apiObject.DestinationType),
+		names.AttrDestination: flex.StringToFramework(ctx, apiObject.Destination),
+		"destination_type":    flex.StringValueToFramework(ctx, apiObject.DestinationType),
 	}
 	objVal, d := types.ObjectValue(assessmentReportsDestinationAttrTypes, obj)
 	diags.Append(d...)
@@ -589,8 +589,8 @@ func flattenAssessmentRoles(ctx context.Context, apiObject []awstypes.Role) (typ
 	elems := []attr.Value{}
 	for _, role := range apiObject {
 		obj := map[string]attr.Value{
-			"role_arn":  flex.StringToFramework(ctx, role.RoleArn),
-			"role_type": flex.StringValueToFramework(ctx, role.RoleType),
+			names.AttrRoleARN: flex.StringToFramework(ctx, role.RoleArn),
+			"role_type":       flex.StringValueToFramework(ctx, role.RoleType),
 		}
 		objVal, d := types.ObjectValue(assessmentRolesAttrTypes, obj)
 		diags.Append(d...)
@@ -640,7 +640,7 @@ func flattenAssessmentScopeAWSAccounts(ctx context.Context, apiObject []awstypes
 	elems := []attr.Value{}
 	for _, account := range apiObject {
 		obj := map[string]attr.Value{
-			"id": flex.StringToFramework(ctx, account.Id),
+			names.AttrID: flex.StringToFramework(ctx, account.Id),
 		}
 		objVal, d := types.ObjectValue(assessmentScopeAWSAccountsAttrTypes, obj)
 		diags.Append(d...)
@@ -664,7 +664,7 @@ func flattenAssessmentScopeAWSServices(ctx context.Context, apiObject []awstypes
 	elems := []attr.Value{}
 	for _, service := range apiObject {
 		obj := map[string]attr.Value{
-			"service_name": flex.StringToFramework(ctx, service.ServiceName),
+			names.AttrServiceName: flex.StringToFramework(ctx, service.ServiceName),
 		}
 		objVal, d := types.ObjectValue(assessmentScopeAWSServicesAttrTypes, obj)
 		diags.Append(d...)

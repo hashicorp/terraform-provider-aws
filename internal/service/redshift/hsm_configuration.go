@@ -36,11 +36,11 @@ func resourceHSMConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -85,7 +85,7 @@ func resourceHSMConfigurationCreate(ctx context.Context, d *schema.ResourceData,
 
 	hsmConfigurationID := d.Get("hsm_configuration_identifier").(string)
 	input := &redshift.CreateHsmConfigurationInput{
-		Description:                aws.String(d.Get("description").(string)),
+		Description:                aws.String(d.Get(names.AttrDescription).(string)),
 		HsmConfigurationIdentifier: aws.String(hsmConfigurationID),
 		HsmIpAddress:               aws.String(d.Get("hsm_ip_address").(string)),
 		HsmPartitionName:           aws.String(d.Get("hsm_partition_name").(string)),
@@ -128,11 +128,11 @@ func resourceHSMConfigurationRead(ctx context.Context, d *schema.ResourceData, m
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("hsmconfiguration:%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("hsm_configuration_identifier", hsmConfiguration.HsmConfigurationIdentifier)
 	d.Set("hsm_ip_address", hsmConfiguration.HsmIpAddress)
 	d.Set("hsm_partition_name", hsmConfiguration.HsmPartitionName)
-	d.Set("description", hsmConfiguration.Description)
+	d.Set(names.AttrDescription, hsmConfiguration.Description)
 	d.Set("hsm_partition_password", d.Get("hsm_partition_password").(string))
 	d.Set("hsm_server_public_certificate", d.Get("hsm_server_public_certificate").(string))
 

@@ -36,12 +36,12 @@ func TestAccRedshiftClusterSnapshot_basic(t *testing.T) {
 				Config: testAccClusterSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterSnapshotExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "redshift", regexache.MustCompile(`snapshot:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "redshift", regexache.MustCompile(`snapshot:.+`)),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_account"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_identifier", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, rName),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_identifier", rName),
 					resource.TestCheckResourceAttr(resourceName, "manual_snapshot_retention_period", "-1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -53,11 +53,11 @@ func TestAccRedshiftClusterSnapshot_basic(t *testing.T) {
 				Config: testAccClusterSnapshotConfig_retention(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterSnapshotExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "redshift", regexache.MustCompile(`snapshot:.+`)),
-					resource.TestCheckResourceAttr(resourceName, "cluster_identifier", rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "redshift", regexache.MustCompile(`snapshot:.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, rName),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_identifier", rName),
-					resource.TestCheckResourceAttr(resourceName, "manual_snapshot_retention_period", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "manual_snapshot_retention_period", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 		},
@@ -77,11 +77,11 @@ func TestAccRedshiftClusterSnapshot_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterSnapshotDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterSnapshotConfig_tags1(rName, "key1", "value1"),
+				Config: testAccClusterSnapshotConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterSnapshotExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -90,20 +90,20 @@ func TestAccRedshiftClusterSnapshot_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterSnapshotConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccClusterSnapshotConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterSnapshotExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccClusterSnapshotConfig_tags1(rName, "key2", "value2"),
+				Config: testAccClusterSnapshotConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterSnapshotExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},

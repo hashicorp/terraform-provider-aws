@@ -62,7 +62,7 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			"create_time": schema.StringAttribute{
+			names.AttrCreateTime: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 				PlanModifiers: []planmodifier.String{
@@ -76,14 +76,14 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"endpoint": schema.ListAttribute{
+			names.AttrEndpoint: schema.ListAttribute{
 				CustomType:  fwtypes.NewListNestedObjectTypeOf[endpointModel](ctx),
 				ElementType: fwtypes.NewObjectTypeOf[endpointModel](ctx),
 				Computed:    true,
@@ -104,7 +104,7 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 				},
 			},
 			names.AttrID: framework.IDAttribute(),
-			"kms_key_id": schema.StringAttribute{
+			names.AttrKMSKeyID: schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -118,7 +118,7 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -132,7 +132,7 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 					listplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"security_group_ids": schema.SetAttribute{
+			names.AttrSecurityGroupIDs: schema.SetAttribute{
 				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
 				Optional:    true,
@@ -159,13 +159,13 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 					int64planmodifier.UseStateForUnknown(),
 				},
 			},
-			"status": schema.StringAttribute{
+			names.AttrStatus: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"subnet_ids": schema.SetAttribute{
+			names.AttrSubnetIDs: schema.SetAttribute{
 				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
 				Optional:    true,
@@ -205,7 +205,7 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 											int64planmodifier.RequiresReplace(),
 										},
 									},
-									"unit": schema.StringAttribute{
+									names.AttrUnit: schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.DataStorageUnit](),
 										Required:   true,
 									},
@@ -243,7 +243,7 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -397,7 +397,7 @@ func (r *serverlessCacheResource) Delete(ctx context.Context, request resource.D
 	conn := r.Meta().ElastiCacheClient(ctx)
 
 	tflog.Debug(ctx, "deleting ElastiCache Serverless Cache", map[string]interface{}{
-		"id": data.ID.ValueString(),
+		names.AttrID: data.ID.ValueString(),
 	})
 
 	input := &elasticache.DeleteServerlessCacheInput{

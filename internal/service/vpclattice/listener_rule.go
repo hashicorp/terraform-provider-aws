@@ -61,7 +61,7 @@ func ResourceListenerRule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"action": {
+			names.AttrAction: {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Required: true,
@@ -73,7 +73,7 @@ func ResourceListenerRule() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"status_code": {
+									names.AttrStatusCode: {
 										Type:     schema.TypeInt,
 										Required: true,
 									},
@@ -96,7 +96,7 @@ func ResourceListenerRule() *schema.Resource {
 													Type:     schema.TypeString,
 													Required: true,
 												},
-												"weight": {
+												names.AttrWeight: {
 													Type:         schema.TypeInt,
 													ValidateFunc: validation.IntBetween(0, 999),
 													Default:      100,
@@ -111,7 +111,7 @@ func ResourceListenerRule() *schema.Resource {
 					},
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -165,14 +165,14 @@ func ResourceListenerRule() *schema.Resource {
 																Type:     schema.TypeString,
 																Optional: true,
 															},
-															"prefix": {
+															names.AttrPrefix: {
 																Type:     schema.TypeString,
 																Optional: true,
 															},
 														},
 													},
 												},
-												"name": {
+												names.AttrName: {
 													Type:     schema.TypeString,
 													Required: true,
 												},
@@ -199,7 +199,7 @@ func ResourceListenerRule() *schema.Resource {
 																Type:     schema.TypeString,
 																Optional: true,
 															},
-															"prefix": {
+															names.AttrPrefix: {
 																Type:     schema.TypeString,
 																Optional: true,
 															},
@@ -215,13 +215,13 @@ func ResourceListenerRule() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(3, 63),
 			},
-			"priority": {
+			names.AttrPriority: {
 				Type:         schema.TypeInt,
 				Required:     true,
 				ValidateFunc: validation.IntBetween(1, 100),
@@ -252,9 +252,9 @@ const (
 func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	in := &vpclattice.CreateRuleInput{
-		Action:             expandRuleAction(d.Get("action").([]interface{})[0].(map[string]interface{})),
+		Action:             expandRuleAction(d.Get(names.AttrAction).([]interface{})[0].(map[string]interface{})),
 		ClientToken:        aws.String(id.UniqueId()),
 		ListenerIdentifier: aws.String(d.Get("listener_identifier").(string)),
 		Match:              expandRuleMatch(d.Get("match").([]interface{})[0].(map[string]interface{})),
@@ -263,7 +263,7 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 		Tags:               getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("priority"); ok {
+	if v, ok := d.GetOk(names.AttrPriority); ok {
 		in.Priority = aws.Int32(int32(v.(int)))
 	}
 
@@ -273,7 +273,7 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if out == nil || out.Arn == nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameListenerRule, d.Get("name").(string), errors.New("empty output"))
+		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameListenerRule, d.Get(names.AttrName).(string), errors.New("empty output"))
 	}
 
 	d.Set("rule_id", out.Id)
@@ -310,14 +310,14 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 		return create.DiagError(names.VPCLattice, create.ErrActionReading, ResNameListenerRule, d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
-	d.Set("priority", out.Priority)
-	d.Set("name", out.Name)
+	d.Set(names.AttrARN, out.Arn)
+	d.Set(names.AttrPriority, out.Priority)
+	d.Set(names.AttrName, out.Name)
 	d.Set("listener_identifier", listenerId)
 	d.Set("service_identifier", serviceId)
 	d.Set("rule_id", out.Id)
 
-	if err := d.Set("action", []interface{}{flattenRuleAction(out.Action)}); err != nil {
+	if err := d.Set(names.AttrAction, []interface{}{flattenRuleAction(out.Action)}); err != nil {
 		return create.DiagError(names.VPCLattice, create.ErrActionSetting, ResNameListenerRule, d.Id(), err)
 	}
 
@@ -335,15 +335,15 @@ func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 	listenerId := d.Get("listener_identifier").(string)
 	ruleId := d.Get("rule_id").(string)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		in := &vpclattice.UpdateRuleInput{
 			RuleIdentifier:     aws.String(ruleId),
 			ListenerIdentifier: aws.String(listenerId),
 			ServiceIdentifier:  aws.String(serviceId),
 		}
 
-		if d.HasChange("action") {
-			if v, ok := d.GetOk("action"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if d.HasChange(names.AttrAction) {
+			if v, ok := d.GetOk(names.AttrAction); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				in.Action = expandRuleAction(v.([]interface{})[0].(map[string]interface{}))
 			}
 		}
@@ -438,7 +438,7 @@ func flattenRuleActionMemberFixedResponse(apiObject *types.RuleActionMemberFixed
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Value.StatusCode; v != nil {
-		tfMap["status_code"] = aws.ToInt32(v)
+		tfMap[names.AttrStatusCode] = aws.ToInt32(v)
 	}
 
 	return tfMap
@@ -484,7 +484,7 @@ func flattenWeightedTargetGroup(apiObject *types.WeightedTargetGroup) map[string
 	}
 
 	if v := apiObject.Weight; v != nil {
-		tfMap["weight"] = aws.ToInt32(v)
+		tfMap[names.AttrWeight] = aws.ToInt32(v)
 	}
 
 	return tfMap
@@ -552,7 +552,7 @@ func flattenHeaderMatch(apiObject *types.HeaderMatch) map[string]interface{} {
 	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.ToString(v)
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	if v := apiObject.Match; v != nil {
@@ -609,7 +609,7 @@ func flattenHeaderMatchTypeMemberPrefix(apiObject *types.HeaderMatchTypeMemberPr
 	}
 
 	tfMap := map[string]interface{}{
-		"prefix": apiObject.Value,
+		names.AttrPrefix: apiObject.Value,
 	}
 
 	return tfMap
@@ -667,7 +667,7 @@ func flattenPathMatchTypeMemberPrefix(apiObject *types.PathMatchTypeMemberPrefix
 	}
 
 	tfMap := map[string]interface{}{
-		"prefix": apiObject.Value,
+		names.AttrPrefix: apiObject.Value,
 	}
 
 	return tfMap
@@ -688,7 +688,7 @@ func expandRuleAction(tfMap map[string]interface{}) types.RuleAction {
 func expandFixedResponseAction(tfMap map[string]interface{}) *types.RuleActionMemberFixedResponse {
 	apiObject := &types.RuleActionMemberFixedResponse{}
 
-	if v, ok := tfMap["status_code"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrStatusCode].(int); ok && v != 0 {
 		apiObject.Value.StatusCode = aws.Int32(int32(v))
 	}
 
@@ -734,7 +734,7 @@ func expandWeightedTargetGroup(tfMap map[string]interface{}) types.WeightedTarge
 		apiObject.TargetGroupIdentifier = aws.String(v)
 	}
 
-	if v, ok := tfMap["weight"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrWeight].(int); ok && v != 0 {
 		apiObject.Weight = aws.Int32(int32(v))
 	}
 
@@ -798,7 +798,7 @@ func expandHeaderMatch(tfMap map[string]interface{}) types.HeaderMatch {
 		apiObject.CaseSensitive = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["name"].(string); ok {
+	if v, ok := tfMap[names.AttrName].(string); ok {
 		apiObject.Name = aws.String(v)
 	}
 
@@ -807,7 +807,7 @@ func expandHeaderMatch(tfMap map[string]interface{}) types.HeaderMatch {
 		if matchV, ok := matchObj["exact"].(string); ok && matchV != "" {
 			apiObject.Match = expandHeaderMatchTypeMemberExact(matchObj)
 		}
-		if matchV, ok := matchObj["prefix"].(string); ok && matchV != "" {
+		if matchV, ok := matchObj[names.AttrPrefix].(string); ok && matchV != "" {
 			apiObject.Match = expandHeaderMatchTypeMemberPrefix(matchObj)
 		}
 		if matchV, ok := matchObj["contains"].(string); ok && matchV != "" {
@@ -830,7 +830,7 @@ func expandHeaderMatchTypeMemberContains(tfMap map[string]interface{}) types.Hea
 func expandHeaderMatchTypeMemberPrefix(tfMap map[string]interface{}) types.HeaderMatchType {
 	apiObject := &types.HeaderMatchTypeMemberPrefix{}
 
-	if v, ok := tfMap["prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPrefix].(string); ok && v != "" {
 		apiObject.Value = v
 	}
 	return apiObject
@@ -857,7 +857,7 @@ func expandPathMatch(tfMap map[string]interface{}) *types.PathMatch {
 		if matchV, ok := matchObj["exact"].(string); ok && matchV != "" {
 			apiObject.Match = expandPathMatchTypeMemberExact(matchObj)
 		}
-		if matchV, ok := matchObj["prefix"].(string); ok && matchV != "" {
+		if matchV, ok := matchObj[names.AttrPrefix].(string); ok && matchV != "" {
 			apiObject.Match = expandPathMatchTypeMemberPrefix(matchObj)
 		}
 	}
@@ -878,7 +878,7 @@ func expandPathMatchTypeMemberExact(tfMap map[string]interface{}) types.PathMatc
 func expandPathMatchTypeMemberPrefix(tfMap map[string]interface{}) types.PathMatchType {
 	apiObject := &types.PathMatchTypeMemberPrefix{}
 
-	if v, ok := tfMap["prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPrefix].(string); ok && v != "" {
 		apiObject.Value = v
 	}
 	return apiObject

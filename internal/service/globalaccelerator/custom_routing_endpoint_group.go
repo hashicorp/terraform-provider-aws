@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_globalaccelerator_custom_routing_endpoint_group", name="Custom Routing Endpoint Group")
@@ -42,7 +43,7 @@ func resourceCustomRoutingEndpointGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -177,7 +178,7 @@ func resourceCustomRoutingEndpointGroupRead(ctx context.Context, d *schema.Resou
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set("arn", endpointGroup.EndpointGroupArn)
+	d.Set(names.AttrARN, endpointGroup.EndpointGroupArn)
 	if err := d.Set("destination_configuration", flattenCustomRoutingDestinationDescriptions(endpointGroup.DestinationDescriptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting destination_configuration: %s", err)
 	}

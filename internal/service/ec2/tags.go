@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"time"
 
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
@@ -38,15 +39,15 @@ func createTags(ctx context.Context, conn ec2iface.EC2API, identifier string, ta
 }
 
 // tagSpecificationsFromMap returns the tag specifications for the given tag key/value map and resource type.
-func tagSpecificationsFromMap(ctx context.Context, m map[string]interface{}, t string) []*ec2.TagSpecification {
+func tagSpecificationsFromMap(ctx context.Context, m map[string]interface{}, t awstypes.ResourceType) []awstypes.TagSpecification {
 	if len(m) == 0 {
 		return nil
 	}
 
-	return []*ec2.TagSpecification{
+	return []awstypes.TagSpecification{
 		{
-			ResourceType: aws.String(t),
-			Tags:         Tags(tftags.New(ctx, m).IgnoreAWS()),
+			ResourceType: t,
+			Tags:         TagsV2(tftags.New(ctx, m).IgnoreAWS()),
 		},
 	}
 }

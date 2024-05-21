@@ -233,7 +233,7 @@ class MyConvertedCode extends TerraformStack {
 The following arguments are required:
 
 * `roleArn` - (Required) ARN of the role that allows the pipe to send data to the target.
-* `source` - (Required) Source resource of the pipe (typically an ARN).
+* `source` - (Required) Source resource of the pipe. This field typically requires an ARN (Amazon Resource Name). However, when using a self-managed Kafka cluster, you should use a different format. Instead of an ARN, use 'smk://' followed by the bootstrap server's address.
 * `target` - (Required) Target resource of the pipe (typically an ARN).
 
 The following arguments are optional:
@@ -623,4 +623,4 @@ Using `terraform import`, import pipes using the `name`. For example:
 % terraform import aws_pipes_pipe.example my-pipe
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-1a860b54f52a7aaa05aba46c72e3c39fe95c80a585397250f041eb4e41a13d7f -->
+<!-- cache-key: cdktf-0.20.1 input-06d66bd1915ac7e142176a131a526b0233b40f17674092819950a74548628706 -->

@@ -1,10 +1,110 @@
-## 5.48.0 (Unreleased)
+## 5.51.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_vpc_endpoint_service_private_dns_verification` ([#37176](https://github.com/hashicorp/terraform-provider-aws/issues/37176))
+
+ENHANCEMENTS:
+
+* data-source/aws_route53_traffic_policy_document: Add support for `application-load-balancer`, `elastic-beanstalk` and `network-load-balancer` `endpoint.type` values ([#37618](https://github.com/hashicorp/terraform-provider-aws/issues/37618))
+* resource/aws_api_gateway_deployment: Add `canary_settings` attribute ([#37573](https://github.com/hashicorp/terraform-provider-aws/issues/37573))
+* resource/aws_iam_openid_connect_provider: Allow `client_id_list` to be updated in-place ([#37612](https://github.com/hashicorp/terraform-provider-aws/issues/37612))
+* resource/aws_route53_health_check: Add plan-time validation of `cloudwatch_alarm_region` ([#37510](https://github.com/hashicorp/terraform-provider-aws/issues/37510))
+* resource/aws_route53_record: Add plan-time validation of `latency_routing_policy.region` ([#37510](https://github.com/hashicorp/terraform-provider-aws/issues/37510))
+* resource/aws_route53_vpc_association_authorization: Add plan-time validation of `vpc_region` ([#37510](https://github.com/hashicorp/terraform-provider-aws/issues/37510))
+* resource/aws_route53_zone_association: Add plan-time validation of `vpc_region` ([#37510](https://github.com/hashicorp/terraform-provider-aws/issues/37510))
+* resource/aws_wafv2_web_acl: Add `api_gateway`, `app_runner_service`, `cognito_user_pool`, and `verified_access_instance` configuration blocks to `association_config.request_body` ([#37588](https://github.com/hashicorp/terraform-provider-aws/issues/37588))
+
+BUG FIXES:
+
+* resource/aws_dynamodb_table_replica: Correctly set `kms_key_arn` on Read ([#37570](https://github.com/hashicorp/terraform-provider-aws/issues/37570))
+* resource/aws_kms_grant: Change `grant_token` to [`Sensitive`](https://developer.hashicorp.com/terraform/plugin/best-practices/sensitive-state#using-sensitive-flag-functionality) ([#37593](https://github.com/hashicorp/terraform-provider-aws/issues/37593))
+* resource/aws_m2_deployment: Fix `state` error on `deployment_id` during start/stop update ([#37581](https://github.com/hashicorp/terraform-provider-aws/issues/37581))
+
+## 5.50.0 (May 17, 2024)
+
+ENHANCEMENTS:
+
+* data-source/aws_budgets_budget: Add `tags` attribute ([#37361](https://github.com/hashicorp/terraform-provider-aws/issues/37361))
+* data-source/aws_instance: Add `launch_time` attribute ([#37002](https://github.com/hashicorp/terraform-provider-aws/issues/37002))
+* resource/aws_budgets_budget: Add `tags` argument ([#37361](https://github.com/hashicorp/terraform-provider-aws/issues/37361))
+* resource/aws_budgets_budget_action: Add `tags` argument ([#37361](https://github.com/hashicorp/terraform-provider-aws/issues/37361))
+* resource/aws_ecs_account_setting_default: Add support for `fargateTaskRetirementWaitPeriod` value in `Name` argument ([#37018](https://github.com/hashicorp/terraform-provider-aws/issues/37018))
+* resource/aws_ssm_resource_data_sync: Add plan-time validation of `s3_destination.kms_key_arn`, `s3_destination.region` and `s3_destination.sync_format` ([#37481](https://github.com/hashicorp/terraform-provider-aws/issues/37481))
+
+BUG FIXES:
+
+* data-source/aws_bedrock_foundation_models: Fix validation regex for the `by_provider` argument ([#37306](https://github.com/hashicorp/terraform-provider-aws/issues/37306))
+* resource/aws_dynamodb_table: Fix `UnknownOperationException: Tagging is not currently supported in DynamoDB Local` errors on resource Read ([#37472](https://github.com/hashicorp/terraform-provider-aws/issues/37472))
+* resource/aws_glue_job: Fix `interface conversion: interface {} is nil, not map[string]interface {}` panic when `notify_delay_after` is empty (`null`) ([#37347](https://github.com/hashicorp/terraform-provider-aws/issues/37347))
+* resource/aws_iam_server_certificate: Now correctly reads tags after update and on read. ([#37483](https://github.com/hashicorp/terraform-provider-aws/issues/37483))
+* resource/aws_lakeformation_data_cells_filter: Fix inconsistent `state` error when using `row_filter.all_rows_wildcard` ([#37433](https://github.com/hashicorp/terraform-provider-aws/issues/37433))
+* resource/aws_organizations_account: Allow import of accounts with IAM access to the AWS Billing and Cost Management console ([#35662](https://github.com/hashicorp/terraform-provider-aws/issues/35662))
+* resource/aws_ram_principal_association: Correct plan-time validation of `principal` to fix `panic: unexpected format for ID parts ([...]), the following id parts indexes are blank ([1])` ([#37450](https://github.com/hashicorp/terraform-provider-aws/issues/37450))
+* resource/aws_route53_record: Change region default to us-east-1 ([#37565](https://github.com/hashicorp/terraform-provider-aws/issues/37565))
+* resource/aws_vpc_endpoint_service: Fix destroy error when endpoint service is deleted out-of-band ([#37534](https://github.com/hashicorp/terraform-provider-aws/issues/37534))
+
+## 5.49.0 (May 10, 2024)
+
+FEATURES:
+
+* **New Data Source:** `aws_datazone_environment_blueprint` ([#36600](https://github.com/hashicorp/terraform-provider-aws/issues/36600))
+* **New Resource:** `aws_bedrockagent_data_source` ([#37158](https://github.com/hashicorp/terraform-provider-aws/issues/37158))
+* **New Resource:** `aws_datazone_domain` ([#36600](https://github.com/hashicorp/terraform-provider-aws/issues/36600))
+* **New Resource:** `aws_datazone_environment_blueprint_configuration` ([#36600](https://github.com/hashicorp/terraform-provider-aws/issues/36600))
+
+ENHANCEMENTS:
+
+* data-source/aws_iam_policy_document: Add `minified_json` attribute ([#35677](https://github.com/hashicorp/terraform-provider-aws/issues/35677))
+* resource/aws_dynamodb_table_export: Add plan-time validation of `table_arn` ([#37288](https://github.com/hashicorp/terraform-provider-aws/issues/37288))
+* resource/aws_kms_key: Add `rotation_period_in_days` argument ([#37140](https://github.com/hashicorp/terraform-provider-aws/issues/37140))
+* resource/aws_securitylake_subscriber_notification: Better handles importing resource ([#37332](https://github.com/hashicorp/terraform-provider-aws/issues/37332))
+* resource/aws_securitylake_subscriber_notification: Deprecates `endpoint_id` in favor of `subscriber_endpoint` ([#37332](https://github.com/hashicorp/terraform-provider-aws/issues/37332))
+* resource/aws_securitylake_subscriber_notification: Handles `configuration.https_notification_configuration.authorization_api_key_value` as sensitive value ([#37332](https://github.com/hashicorp/terraform-provider-aws/issues/37332))
+
+BUG FIXES:
+
+* data-source/aws_fsx_ontap_storage_virtual_machine: Correctly set `tags` on Read ([#37353](https://github.com/hashicorp/terraform-provider-aws/issues/37353))
+* data-source/aws_rds_orderable_db_instance: Fix `InvalidParameterValue: Invalid value 3412 for MaxRecords. Must be between 20 and 1000` errors ([#37251](https://github.com/hashicorp/terraform-provider-aws/issues/37251))
+* data-source/aws_resourceexplorer2_search: Fix 401 unauthorized error due to missing `view_arn` in the AWS API request ([#36778](https://github.com/hashicorp/terraform-provider-aws/issues/36778))
+* data-source/aws_resourceexplorer2_search: Fix panic caused by bad mappping between Terraform and AWS schemas ([#36778](https://github.com/hashicorp/terraform-provider-aws/issues/36778))
+* data-source/aws_resourceexplorer2_search: Fix state persistence and data types ([#36778](https://github.com/hashicorp/terraform-provider-aws/issues/36778))
+* resource/aws_bedrockagent_agent: Fix to use the configured `prepare_agent` value (or default value of `true` when omitted) for all create and update operations ([#37405](https://github.com/hashicorp/terraform-provider-aws/issues/37405))
+* resource/aws_elasticsearch_domain: Fix handling of unset `auto_tune_options.rollback_on_disable` argument ([#37394](https://github.com/hashicorp/terraform-provider-aws/issues/37394))
+* resource/aws_fsx_ontap_storage_virtual_machine: Correctly set `tags` and `tags_all` on resource Read ([#37353](https://github.com/hashicorp/terraform-provider-aws/issues/37353))
+* resource/aws_fsx_openzfs_file_system: Correctly set `tags` and `tags_all` on resource Read ([#37353](https://github.com/hashicorp/terraform-provider-aws/issues/37353))
+* resource/aws_kms_custom_key_store: Change `trust_anchor_certificate` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) ([#37092](https://github.com/hashicorp/terraform-provider-aws/issues/37092))
+* resource/aws_opensearch_domain: Fix handling of unset `auto_tune_options.rollback_on_disable` argument ([#37394](https://github.com/hashicorp/terraform-provider-aws/issues/37394))
+* resource/aws_opensearch_domain: Wait for `auto_tune_options` to be applied during creation ([#37394](https://github.com/hashicorp/terraform-provider-aws/issues/37394))
+* resource/aws_securitylake_aws_log_source: Correctly handles unspecified `source_version` ([#36268](https://github.com/hashicorp/terraform-provider-aws/issues/36268))
+* resource/aws_securitylake_aws_log_source: Prevents errors when creating multiple log sources concurrently ([#36268](https://github.com/hashicorp/terraform-provider-aws/issues/36268))
+* resource/aws_securitylake_custom_log_source: Prevents errors when creating multiple log sources concurrently ([#36268](https://github.com/hashicorp/terraform-provider-aws/issues/36268))
+* resource/aws_securitylake_custom_log_source: Validates length of `source_name` parameter ([#36268](https://github.com/hashicorp/terraform-provider-aws/issues/36268))
+* resource/aws_securitylake_subscriber: Allow more than one log source ([#36268](https://github.com/hashicorp/terraform-provider-aws/issues/36268))
+* resource/aws_securitylake_subscriber: Correctly handles unspecified `access_type` ([#36268](https://github.com/hashicorp/terraform-provider-aws/issues/36268))
+* resource/aws_securitylake_subscriber: Correctly handles unspecified `source_version` parameter for `aws_log_source_resource` and `custom_log_source_resource` ([#36268](https://github.com/hashicorp/terraform-provider-aws/issues/36268))
+* resource/aws_securitylake_subscriber: Correctly requires `source_name` parameter for `aws_log_source_resource` and `custom_log_source_resource` ([#36268](https://github.com/hashicorp/terraform-provider-aws/issues/36268))
+* resource/aws_securitylake_subscriber_notification: No longer recreates resource when not needed ([#37332](https://github.com/hashicorp/terraform-provider-aws/issues/37332))
+* resource/aws_securitylake_subscriber_notification: Requires value for `configuration.https_notification_configuration.endpoint` ([#37332](https://github.com/hashicorp/terraform-provider-aws/issues/37332))
+* resource/provider: Change the AWS SDK for Go v2 API client [`BackoffDelayer`](https://pkg.go.dev/github.com/aws/aws-sdk-go-v2@v1.26.1/aws/retry#BackoffDelayer) to maintain behavioral compatibility with AWS SDK for Go v1 ([#37404](https://github.com/hashicorp/terraform-provider-aws/issues/37404))
+
+## 5.48.0 (May  2, 2024)
+
+FEATURES:
+
+* **New Resource:** `aws_bedrockagent_agent_knowledge_base_association` ([#37185](https://github.com/hashicorp/terraform-provider-aws/issues/37185))
 
 ENHANCEMENTS:
 
 * resource/aws_cloudwatch_event_target: Add `force_destroy` argument ([#37130](https://github.com/hashicorp/terraform-provider-aws/issues/37130))
 * resource/aws_elasticache_replication_group: Increase default Delete timeout to 45 minutes ([#37182](https://github.com/hashicorp/terraform-provider-aws/issues/37182))
 * resource/aws_elasticache_replication_group: Use the configured Delete timeout when detaching from any global replication group ([#37182](https://github.com/hashicorp/terraform-provider-aws/issues/37182))
+* resource/aws_fsx_ontap_file_system: Add support for specifying 1 ha_pair with `SINGLE_AZ_1` and `MULTI_AZ_1` deployment types ([#36511](https://github.com/hashicorp/terraform-provider-aws/issues/36511))
+* resource/aws_fsx_ontap_file_system: Increase `storage_capacity` maximum to 1PiB ([#36511](https://github.com/hashicorp/terraform-provider-aws/issues/36511))
+* resource/aws_fsx_ontap_file_system: Support up to 12 `ha_pairs` ([#36511](https://github.com/hashicorp/terraform-provider-aws/issues/36511))
+* resource/aws_fsx_ontap_file_system: Update `throughput_capacity_per_ha_pair` to support all values from `throughput_capacity` ([#36511](https://github.com/hashicorp/terraform-provider-aws/issues/36511))
+* resource/aws_fsx_ontap_volume: Add `aggregate_configuration` configuration block ([#36511](https://github.com/hashicorp/terraform-provider-aws/issues/36511))
+* resource/aws_fsx_ontap_volume: Add `size_in_bytes` and `volume_style` arguments ([#36511](https://github.com/hashicorp/terraform-provider-aws/issues/36511))
 
 BUG FIXES:
 

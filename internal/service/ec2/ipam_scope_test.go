@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -20,7 +20,7 @@ import (
 
 func TestAccIPAMScope_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var scope ec2.IpamScope
+	var scope awstypes.IpamScope
 	resourceName := "aws_vpc_ipam_scope.test"
 	ipamName := "aws_vpc_ipam.test"
 
@@ -34,12 +34,12 @@ func TestAccIPAMScope_basic(t *testing.T) {
 				Config: testAccIPAMScopeConfig_basic("test"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPAMScopeExists(ctx, resourceName, &scope),
-					resource.TestCheckResourceAttr(resourceName, "description", "test"),
-					resource.TestCheckResourceAttrPair(resourceName, "ipam_arn", ipamName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "ipam_id", ipamName, "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
+					resource.TestCheckResourceAttrPair(resourceName, "ipam_arn", ipamName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "ipam_id", ipamName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "is_default", "false"),
-					resource.TestCheckResourceAttr(resourceName, "pool_count", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "pool_count", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -51,7 +51,7 @@ func TestAccIPAMScope_basic(t *testing.T) {
 				Config: testAccIPAMScopeConfig_basic("test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMScopeExists(ctx, resourceName, &scope),
-					resource.TestCheckResourceAttr(resourceName, "description", "test2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test2"),
 				),
 			},
 		},
@@ -60,7 +60,7 @@ func TestAccIPAMScope_basic(t *testing.T) {
 
 func TestAccIPAMScope_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var scope ec2.IpamScope
+	var scope awstypes.IpamScope
 	resourceName := "aws_vpc_ipam_scope.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -83,7 +83,7 @@ func TestAccIPAMScope_disappears(t *testing.T) {
 
 func TestAccIPAMScope_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var scope ec2.IpamScope
+	var scope awstypes.IpamScope
 	resourceName := "aws_vpc_ipam_scope.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -93,11 +93,11 @@ func TestAccIPAMScope_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckIPAMScopeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIPAMScopeConfig_tags("key1", "value1"),
+				Config: testAccIPAMScopeConfig_tags(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMScopeExists(ctx, resourceName, &scope),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -106,27 +106,27 @@ func TestAccIPAMScope_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccIPAMScopeConfig_tags2("key1", "value1updated", "key2", "value2"),
+				Config: testAccIPAMScopeConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMScopeExists(ctx, resourceName, &scope),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccIPAMScopeConfig_tags("key2", "value2"),
+				Config: testAccIPAMScopeConfig_tags(acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMScopeExists(ctx, resourceName, &scope),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckIPAMScopeExists(ctx context.Context, n string, v *ec2.IpamScope) resource.TestCheckFunc {
+func testAccCheckIPAMScopeExists(ctx context.Context, n string, v *awstypes.IpamScope) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -137,7 +137,7 @@ func testAccCheckIPAMScopeExists(ctx context.Context, n string, v *ec2.IpamScope
 			return fmt.Errorf("No IPAM Scope ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindIPAMScopeByID(ctx, conn, rs.Primary.ID)
 
@@ -153,7 +153,7 @@ func testAccCheckIPAMScopeExists(ctx context.Context, n string, v *ec2.IpamScope
 
 func testAccCheckIPAMScopeDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpc_ipam_scope" {

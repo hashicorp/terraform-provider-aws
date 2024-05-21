@@ -34,13 +34,13 @@ func TestAccIAMOpenIDConnectProvider_basic(t *testing.T) {
 				Config: testAccOpenIDConnectProviderConfig_basic(rString),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
-					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("oidc-provider/%s", url)),
-					resource.TestCheckResourceAttr(resourceName, "url", url),
-					resource.TestCheckResourceAttr(resourceName, "client_id_list.#", "1"),
+					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("oidc-provider/%s", url)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURL, url),
+					resource.TestCheckResourceAttr(resourceName, "client_id_list.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "client_id_list.0",
 						"266362248691-re108qaeld573ia0l6clj2i5ac7r7291.apps.testleusercontent.com"),
-					resource.TestCheckResourceAttr(resourceName, "thumbprint_list.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "thumbprint_list.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -52,14 +52,14 @@ func TestAccIAMOpenIDConnectProvider_basic(t *testing.T) {
 				Config: testAccOpenIDConnectProviderConfig_modified(rString),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "url", url),
-					resource.TestCheckResourceAttr(resourceName, "client_id_list.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURL, url),
+					resource.TestCheckResourceAttr(resourceName, "client_id_list.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "client_id_list.0",
 						"266362248691-re108qaeld573ia0l6clj2i5ac7r7291.apps.testleusercontent.com"),
-					resource.TestCheckResourceAttr(resourceName, "thumbprint_list.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "thumbprint_list.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "thumbprint_list.0", "cf23df2207d99a74fbe169e3eba035e633b65d94"),
 					resource.TestCheckResourceAttr(resourceName, "thumbprint_list.1", "c784713d6f9cb67b55dd84f4e4af7832d42b8f55"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 		},
@@ -113,6 +113,55 @@ func TestAccIAMOpenIDConnectProvider_clientIDListOrder(t *testing.T) {
 				),
 				ExpectNonEmptyPlan: false, // Expect an empty plan as only the order has been changed
 				PlanOnly:           true,  // Expect an empty plan as only the order has been changed
+			},
+		},
+	})
+}
+
+func TestAccIAMOpenIDConnectProvider_clientIDModification(t *testing.T) {
+	ctx := acctest.Context(t)
+	rString := sdkacctest.RandString(5)
+	resourceName := "aws_iam_openid_connect_provider.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOpenIDConnectProviderDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOpenIDConnectProviderConfig_clientIDList_first(rString),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccOpenIDConnectProviderConfig_clientIDList_add(rString),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "client_id_list.#", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "client_id_list.0", "abc.testle.com"),
+					resource.TestCheckResourceAttr(resourceName, "client_id_list.3", "xyz.testle.com"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccOpenIDConnectProviderConfig_clientIDList_remove(rString),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "client_id_list.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "client_id_list.0", "def.testle.com"),
+					resource.TestCheckResourceAttr(resourceName, "client_id_list.2", "xyz.testle.com"),
+				),
 			},
 		},
 	})
@@ -191,75 +240,6 @@ resource "aws_iam_openid_connect_provider" "test" {
 `, rName)
 }
 
-func testAccOpenIDConnectProviderConfig_tags0(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_openid_connect_provider" "test" {
-  url = "https://accounts.testle.com/%[1]s"
-
-  client_id_list = [
-    "266362248691-re108qaeld573ia0l6clj2i5ac7r7291.apps.testleusercontent.com",
-  ]
-
-  thumbprint_list = ["cf23df2207d99a74fbe169e3eba035e633b65d94"]
-}
-`, rName)
-}
-
-func testAccOpenIDConnectProviderConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_openid_connect_provider" "test" {
-  url = "https://accounts.testle.com/%[1]s"
-
-  client_id_list = [
-    "266362248691-re108qaeld573ia0l6clj2i5ac7r7291.apps.testleusercontent.com",
-  ]
-
-  thumbprint_list = ["cf23df2207d99a74fbe169e3eba035e633b65d94"]
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccOpenIDConnectProviderConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_openid_connect_provider" "test" {
-  url = "https://accounts.testle.com/%[1]s"
-
-  client_id_list = [
-    "266362248691-re108qaeld573ia0l6clj2i5ac7r7291.apps.testleusercontent.com",
-  ]
-
-  thumbprint_list = ["cf23df2207d99a74fbe169e3eba035e633b65d94"]
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
-}
-
-func testAccOpenIDConnectProviderConfig_tagsNull(rName, tagKey1 string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_openid_connect_provider" "test" {
-  url = "https://accounts.testle.com/%[1]s"
-
-  client_id_list = [
-    "266362248691-re108qaeld573ia0l6clj2i5ac7r7291.apps.testleusercontent.com",
-  ]
-
-  thumbprint_list = ["cf23df2207d99a74fbe169e3eba035e633b65d94"]
-
-  tags = {
-    %[2]q = null
-  }
-}
-`, rName, tagKey1)
-}
-
 func testAccOpenIDConnectProviderConfig_clientIDList_first(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_openid_connect_provider" "test" {
@@ -285,6 +265,39 @@ resource "aws_iam_openid_connect_provider" "test" {
     "def.testle.com",
     "ghi.testle.com",
     "abc.testle.com",
+  ]
+
+  thumbprint_list = ["oif8192f189fa2178f-testle.thumbprint.com"]
+}
+`, rName)
+}
+
+func testAccOpenIDConnectProviderConfig_clientIDList_add(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_openid_connect_provider" "test" {
+  url = "https://accounts.testle.com/%[1]s"
+
+  client_id_list = [
+    "abc.testle.com",
+    "def.testle.com",
+    "ghi.testle.com",
+    "xyz.testle.com",
+  ]
+
+  thumbprint_list = ["oif8192f189fa2178f-testle.thumbprint.com"]
+}
+`, rName)
+}
+
+func testAccOpenIDConnectProviderConfig_clientIDList_remove(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_openid_connect_provider" "test" {
+  url = "https://accounts.testle.com/%[1]s"
+
+  client_id_list = [
+    "def.testle.com",
+    "ghi.testle.com",
+    "xyz.testle.com",
   ]
 
   thumbprint_list = ["oif8192f189fa2178f-testle.thumbprint.com"]

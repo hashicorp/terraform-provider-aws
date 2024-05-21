@@ -36,8 +36,8 @@ func TestAccCEAnomalyMonitor_basic(t *testing.T) {
 				Config: testAccAnomalyMonitorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalyMonitorExists(ctx, resourceName, &monitor),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ce", regexache.MustCompile(`anomalymonitor/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ce", regexache.MustCompile(`anomalymonitor/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "monitor_type", "CUSTOM"),
 					resource.TestCheckResourceAttrSet(resourceName, "monitor_specification"),
 				),
@@ -92,7 +92,7 @@ func TestAccCEAnomalyMonitor_update(t *testing.T) {
 				Config: testAccAnomalyMonitorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalyMonitorExists(ctx, resourceName, &monitor),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
@@ -104,7 +104,7 @@ func TestAccCEAnomalyMonitor_update(t *testing.T) {
 				Config: testAccAnomalyMonitorConfig_basic(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalyMonitorExists(ctx, resourceName, &monitor),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 				),
 			},
 		},
@@ -124,11 +124,11 @@ func TestAccCEAnomalyMonitor_tags(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAnomalyMonitorConfig_tags1(rName, "key1", "value1"),
+				Config: testAccAnomalyMonitorConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAnomalyMonitorExists(ctx, resourceName, &monitor),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -137,20 +137,20 @@ func TestAccCEAnomalyMonitor_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAnomalyMonitorConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccAnomalyMonitorConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAnomalyMonitorExists(ctx, resourceName, &monitor),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccAnomalyMonitorConfig_tags1(rName, "key2", "value2"),
+				Config: testAccAnomalyMonitorConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalyMonitorExists(ctx, resourceName, &monitor),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -176,7 +176,7 @@ func TestAccCEAnomalyMonitor_Dimensional(t *testing.T) {
 				Config: testAccAnomalyMonitorConfig_dimensional(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalyMonitorExists(ctx, resourceName, &monitor),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "monitor_type", "DIMENSIONAL"),
 					resource.TestCheckResourceAttr(resourceName, "monitor_dimension", "SERVICE"),
 				),

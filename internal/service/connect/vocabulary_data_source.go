@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_connect_vocabulary")
@@ -24,11 +25,11 @@ func DataSourceVocabulary() *schema.Resource {
 		ReadWithoutTimeout: dataSourceVocabularyRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"content": {
+			names.AttrContent: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -36,12 +37,12 @@ func DataSourceVocabulary() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
-			"language_code": {
+			names.AttrLanguageCode: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -49,22 +50,22 @@ func DataSourceVocabulary() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"name", "vocabulary_id"},
+				ExactlyOneOf: []string{names.AttrName, "vocabulary_id"},
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"vocabulary_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"vocabulary_id", "name"},
+				ExactlyOneOf: []string{"vocabulary_id", names.AttrName},
 			},
 		},
 	}
@@ -76,7 +77,7 @@ func dataSourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	instanceID := d.Get("instance_id").(string)
+	instanceID := d.Get(names.AttrInstanceID).(string)
 
 	input := &connect.DescribeVocabularyInput{
 		InstanceId: aws.String(instanceID),
@@ -84,7 +85,7 @@ func dataSourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	if v, ok := d.GetOk("vocabulary_id"); ok {
 		input.VocabularyId = aws.String(v.(string))
-	} else if v, ok := d.GetOk("name"); ok {
+	} else if v, ok := d.GetOk(names.AttrName); ok {
 		name := v.(string)
 		vocabularySummary, err := dataSourceGetVocabularySummaryByName(ctx, conn, instanceID, name)
 
@@ -111,17 +112,17 @@ func dataSourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	vocabulary := resp.Vocabulary
 
-	d.Set("arn", vocabulary.Arn)
-	d.Set("content", vocabulary.Content)
+	d.Set(names.AttrARN, vocabulary.Arn)
+	d.Set(names.AttrContent, vocabulary.Content)
 	d.Set("failure_reason", vocabulary.FailureReason)
-	d.Set("instance_id", instanceID)
-	d.Set("language_code", vocabulary.LanguageCode)
+	d.Set(names.AttrInstanceID, instanceID)
+	d.Set(names.AttrLanguageCode, vocabulary.LanguageCode)
 	d.Set("last_modified_time", vocabulary.LastModifiedTime.Format(time.RFC3339))
-	d.Set("name", vocabulary.Name)
-	d.Set("state", vocabulary.State)
+	d.Set(names.AttrName, vocabulary.Name)
+	d.Set(names.AttrState, vocabulary.State)
 	d.Set("vocabulary_id", vocabulary.Id)
 
-	if err := d.Set("tags", KeyValueTags(ctx, vocabulary.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, KeyValueTags(ctx, vocabulary.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

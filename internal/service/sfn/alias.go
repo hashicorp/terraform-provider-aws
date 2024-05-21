@@ -39,19 +39,19 @@ func ResourceAlias() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_date": {
+			names.AttrCreationDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -66,7 +66,7 @@ func ResourceAlias() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"weight": {
+						names.AttrWeight: {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
@@ -85,8 +85,8 @@ func resourceAliasCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).SFNConn(ctx)
 
 	in := &sfn.CreateStateMachineAliasInput{
-		Name:        aws.String(d.Get("name").(string)),
-		Description: aws.String(d.Get("description").(string)),
+		Name:        aws.String(d.Get(names.AttrName).(string)),
+		Description: aws.String(d.Get(names.AttrDescription).(string)),
 	}
 
 	if v, ok := d.GetOk("routing_configuration"); ok && len(v.([]interface{})) > 0 {
@@ -95,11 +95,11 @@ func resourceAliasCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	out, err := conn.CreateStateMachineAliasWithContext(ctx, in)
 	if err != nil {
-		return create.DiagError(names.SFN, create.ErrActionCreating, ResNameAlias, d.Get("name").(string), err)
+		return create.DiagError(names.SFN, create.ErrActionCreating, ResNameAlias, d.Get(names.AttrName).(string), err)
 	}
 
 	if out == nil || out.StateMachineAliasArn == nil {
-		return create.DiagError(names.SFN, create.ErrActionCreating, ResNameAlias, d.Get("name").(string), errors.New("empty output"))
+		return create.DiagError(names.SFN, create.ErrActionCreating, ResNameAlias, d.Get(names.AttrName).(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.StringValue(out.StateMachineAliasArn))
@@ -122,10 +122,10 @@ func resourceAliasRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return create.DiagError(names.SFN, create.ErrActionReading, ResNameAlias, d.Id(), err)
 	}
 
-	d.Set("arn", out.StateMachineAliasArn)
-	d.Set("name", out.Name)
-	d.Set("description", out.Description)
-	d.Set("creation_date", aws.TimeValue(out.CreationDate).Format(time.RFC3339))
+	d.Set(names.AttrARN, out.StateMachineAliasArn)
+	d.Set(names.AttrName, out.Name)
+	d.Set(names.AttrDescription, out.Description)
+	d.Set(names.AttrCreationDate, aws.TimeValue(out.CreationDate).Format(time.RFC3339))
 	d.SetId(aws.StringValue(out.StateMachineAliasArn))
 
 	if err := d.Set("routing_configuration", flattenAliasRoutingConfiguration(out.RoutingConfiguration)); err != nil {
@@ -143,8 +143,8 @@ func resourceAliasUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		StateMachineAliasArn: aws.String(d.Id()),
 	}
 
-	if d.HasChanges("description") {
-		in.Description = aws.String(d.Get("description").(string))
+	if d.HasChanges(names.AttrDescription) {
+		in.Description = aws.String(d.Get(names.AttrDescription).(string))
 		update = true
 	}
 
@@ -216,7 +216,7 @@ func flattenAliasRoutingConfigurationItem(apiObject *sfn.RoutingConfigurationLis
 	}
 
 	if v := apiObject.Weight; v != nil {
-		tfMap["weight"] = aws.Int64Value(v)
+		tfMap[names.AttrWeight] = aws.Int64Value(v)
 	}
 
 	return tfMap
@@ -275,7 +275,7 @@ func expandAliasRoutingConfigurationItem(tfMap map[string]interface{}) *sfn.Rout
 		apiObject.StateMachineVersionArn = aws.String(v)
 	}
 
-	if v, ok := tfMap["weight"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrWeight].(int); ok && v != 0 {
 		apiObject.Weight = aws.Int64(int64(v))
 	}
 

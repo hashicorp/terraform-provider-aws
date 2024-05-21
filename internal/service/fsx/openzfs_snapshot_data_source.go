@@ -15,34 +15,37 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_fsx_openzfs_snapshot")
-func DataSourceOpenzfsSnapshot() *schema.Resource {
+// @SDKDataSource("aws_fsx_openzfs_snapshot", name="OpenZFS Snapshot")
+// @Tags
+func dataSourceOpenzfsSnapshot() *schema.Resource {
 	return &schema.Resource{
-		ReadWithoutTimeout: dataSourceOpenzfsSnapshotRead,
+		ReadWithoutTimeout: dataSourceOpenZFSSnapshotRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_time": {
+			names.AttrCreationTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": DataSourceSnapshotFiltersSchema(),
-			"most_recent": {
+			names.AttrFilter: snapshotFiltersSchema(),
+			names.AttrMostRecent: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"snapshot_id": {
+			names.AttrSnapshotID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -51,7 +54,7 @@ func DataSourceOpenzfsSnapshot() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"volume_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -60,10 +63,9 @@ func DataSourceOpenzfsSnapshot() *schema.Resource {
 	}
 }
 
-func dataSourceOpenzfsSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceOpenZFSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &fsx.DescribeSnapshotsInput{}
 
@@ -71,15 +73,15 @@ func dataSourceOpenzfsSnapshotRead(ctx context.Context, d *schema.ResourceData, 
 		input.SnapshotIds = flex.ExpandStringList(v.([]interface{}))
 	}
 
-	input.Filters = append(input.Filters, BuildSnapshotFiltersDataSource(
-		d.Get("filter").(*schema.Set),
+	input.Filters = append(input.Filters, newSnapshotFilterList(
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {
 		input.Filters = nil
 	}
 
-	snapshots, err := FindSnapshots(ctx, conn, input)
+	snapshots, err := findSnapshots(ctx, conn, input, tfslices.PredicateTrue[*fsx.Snapshot]())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading FSx Snapshots: %s", err)
@@ -90,7 +92,7 @@ func dataSourceOpenzfsSnapshotRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if len(snapshots) > 1 {
-		if !d.Get("most_recent").(bool) {
+		if !d.Get(names.AttrMostRecent).(bool) {
 			return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more "+
 				"specific search criteria, or set `most_recent` attribute to true.")
 		}
@@ -101,28 +103,14 @@ func dataSourceOpenzfsSnapshotRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	snapshot := snapshots[0]
-
 	d.SetId(aws.StringValue(snapshot.SnapshotId))
-	d.Set("arn", snapshot.ResourceARN)
-	d.Set("name", snapshot.Name)
-	d.Set("snapshot_id", snapshot.SnapshotId)
+	d.Set(names.AttrARN, snapshot.ResourceARN)
+	d.Set(names.AttrCreationTime, snapshot.CreationTime.Format(time.RFC3339))
+	d.Set(names.AttrName, snapshot.Name)
+	d.Set(names.AttrSnapshotID, snapshot.SnapshotId)
 	d.Set("volume_id", snapshot.VolumeId)
 
-	if err := d.Set("creation_time", snapshot.CreationTime.Format(time.RFC3339)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting creation_time: %s", err)
-	}
-
-	//Snapshot tags do not get returned with describe call so need to make a separate list tags call
-	tags, tagserr := listTags(ctx, conn, *snapshot.ResourceARN)
-
-	if tagserr != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Tags for FSx OpenZFS Snapshot (%s): %s", d.Id(), err)
-	}
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, snapshot.Tags)
 
 	return diags
 }

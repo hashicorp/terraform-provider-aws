@@ -14,16 +14,23 @@ import (
 	"go/parser"
 	"go/token"
 	"os"
+	"path"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
+	"text/template"
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
+	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
 func main() {
+	failed := false
+
 	g := common.NewGenerator()
 
 	serviceData, err := data.ReadAllServiceData()
@@ -70,24 +77,65 @@ func main() {
 		g.Fatalf("%s", err.Error())
 	}
 
-	for _, foo := range v.taggedResources {
-		sourceName := foo.FileName
+	for _, resource := range v.taggedResources {
+		sourceName := resource.FileName
 		ext := filepath.Ext(sourceName)
 		sourceName = strings.TrimSuffix(sourceName, ext)
+
+		resource.ProviderNameUpper = serviceRecord.ProviderNameUpper()
+		resource.ProviderPackage = servicePackage
+
 		filename := fmt.Sprintf("%s_tags_gen_test.go", sourceName)
 
 		d := g.NewGoFileDestination(filename)
+		templates, err := template.New("taggingtests").Parse(testGoTmpl)
+		if err != nil {
+			g.Fatalf("parsing base Go test template: %w", err)
+		}
 
-		foo.ProviderNameUpper = serviceRecord.ProviderNameUpper()
-		foo.ProviderPackage = servicePackage
-
-		if err := d.WriteTemplate("taggingtests", tmpl, foo); err != nil {
-			g.Fatalf("error generating XXX service package data: %s", err)
+		if err := d.WriteTemplateSet(templates, resource); err != nil {
+			g.Fatalf("error generating %q service package data: %s", servicePackage, err)
 		}
 
 		if err := d.Write(); err != nil {
 			g.Fatalf("generating file (%s): %s", filename, err)
 		}
+
+		configTmplFile := path.Join("testdata", "tmpl", fmt.Sprintf("%s_tags.gtpl", sourceName))
+		var configTmpl string
+		if _, err := os.Stat(configTmplFile); err == nil {
+			b, err := os.ReadFile(configTmplFile)
+			if err != nil {
+				g.Fatalf("reading %q: %w", configTmplFile, err)
+			}
+			configTmpl = string(b)
+			resource.GenerateConfig = true
+		} else if errors.Is(err, os.ErrNotExist) {
+			g.Errorf("no tags template found for %s at %q", sourceName, configTmplFile)
+			failed = true
+		} else {
+			g.Fatalf("opening config template %q: %w", configTmplFile, err)
+		}
+
+		if resource.GenerateConfig {
+			additionalTfVars := tfmaps.Keys(resource.AdditionalTfVars)
+			slices.Sort(additionalTfVars)
+			testDirPath := path.Join("testdata", resource.Name)
+
+			common := commonConfig{
+				AdditionalTfVars: additionalTfVars,
+				WithRName:        (resource.Generator != ""),
+			}
+
+			generateTestConfig(g, testDirPath, "tags", false, configTmplFile, configTmpl, common)
+			generateTestConfig(g, testDirPath, "tags", true, configTmplFile, configTmpl, common)
+			generateTestConfig(g, testDirPath, "tagsComputed1", false, configTmplFile, configTmpl, common)
+			generateTestConfig(g, testDirPath, "tagsComputed2", false, configTmplFile, configTmpl, common)
+		}
+	}
+
+	if failed {
+		os.Exit(1)
 	}
 }
 
@@ -103,16 +151,20 @@ type ResourceDatum struct {
 	ProviderNameUpper string
 	Name              string
 	TypeName          string
-	ExistsTypePackage string
 	ExistsTypeName    string
 	FileName          string
 	Generator         string
+	ImportStateID     string
 	ImportIgnore      []string
 	Implementation    implementation
 	Serialize         bool
 	PreCheck          bool
 	SkipEmptyTags     bool // TODO: Remove when we have a strategy for resources that have a minimum tag value length of 1
+	NoRemoveTags      bool
 	GoImports         []goImport
+	GenerateConfig    bool
+	InitCodeBlocks    []codeBlock
+	AdditionalTfVars  map[string]string
 }
 
 type goImport struct {
@@ -120,8 +172,27 @@ type goImport struct {
 	Alias string
 }
 
-//go:embed file.tmpl
-var tmpl string
+type codeBlock struct {
+	Code string
+}
+
+type commonConfig struct {
+	AdditionalTfVars []string
+	WithRName        bool
+}
+
+type ConfigDatum struct {
+	Tags            string
+	WithDefaultTags bool
+	ComputedTag     bool
+	commonConfig
+}
+
+//go:embed test.go.gtpl
+var testGoTmpl string
+
+//go:embed test.tf.gtpl
+var testTfTmpl string
 
 // Annotation processing.
 var (
@@ -180,10 +251,12 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 	// Look first for tagging annotations.
 	d := ResourceDatum{
-		FileName: v.fileName,
+		FileName:         v.fileName,
+		AdditionalTfVars: make(map[string]string),
 	}
 	tagged := false
 	skip := false
+	generatorSeen := false
 
 	for _, line := range funcDecl.Doc.List {
 		line := line.Text
@@ -220,39 +293,39 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			case "Testing":
 				args := common.ParseArgs(m[3])
 				if attr, ok := args.Keyword["existsType"]; ok {
-					dotIx := strings.LastIndex(attr, ".")
-					pkg := attr[:dotIx]
-					d.ExistsTypePackage = pkg
-					slashIx := strings.LastIndex(attr, "/")
-					typeName := attr[slashIx+1:]
-					d.ExistsTypeName = typeName
+					if typeName, importSpec, err := parseIdentifierSpec(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("%s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
+						continue
+					} else {
+						d.ExistsTypeName = typeName
+						if importSpec != nil {
+							d.GoImports = append(d.GoImports, *importSpec)
+						}
+					}
 				}
 				if attr, ok := args.Keyword["generator"]; ok {
-					parts := strings.Split(attr, ";")
-					switch len(parts) {
-					case 1:
-						d.Generator = parts[0]
-
-					case 2:
-						d.Generator = parts[1]
-						d.GoImports = append(d.GoImports, goImport{
-							Path: parts[0],
-						})
-
-					case 3:
-						d.Generator = parts[2]
-						d.GoImports = append(d.GoImports, goImport{
-							Path:  parts[0],
-							Alias: parts[1],
-						})
-
-					default:
-						v.errs = append(v.errs, fmt.Errorf("invalid generator value: %q at %s.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					if attr == "false" {
+						generatorSeen = true
+					} else if funcName, importSpec, err := parseIdentifierSpec(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("%s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
 						continue
+					} else {
+						d.Generator = funcName
+						if importSpec != nil {
+							d.GoImports = append(d.GoImports, *importSpec)
+						}
+						generatorSeen = true
 					}
 				}
 				if attr, ok := args.Keyword["importIgnore"]; ok {
 					d.ImportIgnore = strings.Split(attr, ";")
+
+					for i, val := range d.ImportIgnore {
+						d.ImportIgnore[i] = names.ConstOrQuote(val)
+					}
+				}
+				if attr, ok := args.Keyword["importStateId"]; ok {
+					d.ImportStateID = attr
 				}
 				if attr, ok := args.Keyword["name"]; ok {
 					d.Name = strings.ReplaceAll(attr, " ", "")
@@ -274,12 +347,17 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					}
 				}
 				if attr, ok := args.Keyword["tagsTest"]; ok {
-					if b, err := strconv.ParseBool(attr); err != nil {
-						v.errs = append(v.errs, fmt.Errorf("invalid tagsTest value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
-						continue
-					} else if !b {
+					switch attr {
+					case "true":
+						// no-op
+
+					case "false":
 						v.g.Infof("Skipping tags test for %s.%s", v.packageName, v.functionName)
 						skip = true
+
+					default:
+						v.errs = append(v.errs, fmt.Errorf("invalid tagsTest value: %q at %s.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
 					}
 				}
 				if attr, ok := args.Keyword["skipEmptyTags"]; ok {
@@ -290,8 +368,42 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						d.SkipEmptyTags = b
 					}
 				}
+				if attr, ok := args.Keyword["noRemoveTags"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid noRemoveTags value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						d.NoRemoveTags = b
+					}
+				}
+				if attr, ok := args.Keyword["tlsKey"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid skipEmptyTags value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else if b {
+						d.InitCodeBlocks = append(d.InitCodeBlocks, codeBlock{
+							Code: `privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+							certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, "example.com")`,
+						})
+						d.AdditionalTfVars["certificate_pem"] = "certificatePEM"
+						d.AdditionalTfVars["private_key_pem"] = "privateKeyPEM"
+					}
+				}
 			}
 		}
+	}
+
+	if !generatorSeen {
+		d.Generator = "sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)"
+		d.GoImports = append(d.GoImports,
+			goImport{
+				Path:  "github.com/hashicorp/terraform-plugin-testing/helper/acctest",
+				Alias: "sdkacctest",
+			},
+			goImport{
+				Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
+			},
+		)
 	}
 
 	if tagged && !skip {
@@ -309,4 +421,64 @@ func (v *visitor) Visit(node ast.Node) ast.Visitor {
 	}
 
 	return v
+}
+
+func generateTestConfig(g *common.Generator, dirPath, test string, withDefaults bool, configTmplFile, configTmpl string, common commonConfig) {
+	testName := test
+	if withDefaults {
+		testName += "_defaults"
+	}
+	dirPath = path.Join(dirPath, testName)
+	if err := os.MkdirAll(dirPath, 0755); err != nil {
+		g.Fatalf("creating test directory %q: %w", dirPath, err)
+	}
+
+	mainPath := path.Join(dirPath, "main_gen.tf")
+	tf := g.NewUnformattedFileDestination(mainPath)
+
+	tfTemplates, err := template.New("taggingtests").Parse(testTfTmpl)
+	if err != nil {
+		g.Fatalf("parsing base Terraform config template: %s", err)
+	}
+
+	_, err = tfTemplates.New("body").Parse(configTmpl)
+	if err != nil {
+		g.Fatalf("parsing config template %q: %s", configTmplFile, err)
+	}
+
+	configData := ConfigDatum{
+		Tags:            test,
+		WithDefaultTags: withDefaults,
+		ComputedTag:     (test == "tagsComputed"),
+		commonConfig:    common,
+	}
+	if err := tf.WriteTemplateSet(tfTemplates, configData); err != nil {
+		g.Fatalf("error generating Terraform file %q: %s", mainPath, err)
+	}
+
+	if err := tf.Write(); err != nil {
+		g.Fatalf("generating file (%s): %s", mainPath, err)
+	}
+}
+
+func parseIdentifierSpec(s string) (string, *goImport, error) {
+	parts := strings.Split(s, ";")
+	switch len(parts) {
+	case 1:
+		return parts[0], nil, nil
+
+	case 2:
+		return parts[1], &goImport{
+			Path: parts[0],
+		}, nil
+
+	case 3:
+		return parts[2], &goImport{
+			Path:  parts[0],
+			Alias: parts[1],
+		}, nil
+
+	default:
+		return "", nil, fmt.Errorf("invalid generator value: %q", s)
+	}
 }

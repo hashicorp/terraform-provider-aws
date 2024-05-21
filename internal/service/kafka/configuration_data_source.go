@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_msk_configuration", name="Configuration")
@@ -23,11 +24,11 @@ func dataSourceConfiguration() *schema.Resource {
 		ReadWithoutTimeout: dataSourceConfigurationRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -42,7 +43,7 @@ func dataSourceConfiguration() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -60,7 +61,7 @@ func dataSourceConfigurationRead(ctx context.Context, d *schema.ResourceData, me
 
 	input := &kafka.ListConfigurationsInput{}
 	configuration, err := findConfiguration(ctx, conn, input, func(v *types.Configuration) bool {
-		return aws.ToString(v.Name) == d.Get("name").(string)
+		return aws.ToString(v.Name) == d.Get(names.AttrName).(string)
 	})
 
 	if err != nil {
@@ -77,11 +78,11 @@ func dataSourceConfigurationRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	d.SetId(configurationARN)
-	d.Set("arn", configurationARN)
-	d.Set("description", configuration.Description)
+	d.Set(names.AttrARN, configurationARN)
+	d.Set(names.AttrDescription, configuration.Description)
 	d.Set("kafka_versions", configuration.KafkaVersions)
 	d.Set("latest_revision", revision)
-	d.Set("name", configuration.Name)
+	d.Set(names.AttrName, configuration.Name)
 	d.Set("server_properties", string(revisionOutput.ServerProperties))
 
 	return diags

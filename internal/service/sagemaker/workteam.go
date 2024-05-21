@@ -38,11 +38,11 @@ func ResourceWorkteam() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 200),
@@ -60,7 +60,7 @@ func ResourceWorkteam() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"client_id": {
+									names.AttrClientID: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -145,7 +145,7 @@ func resourceWorkteamCreate(ctx context.Context, d *schema.ResourceData, meta in
 	input := &sagemaker.CreateWorkteamInput{
 		WorkteamName:      aws.String(name),
 		WorkforceName:     aws.String(d.Get("workforce_name").(string)),
-		Description:       aws.String(d.Get("description").(string)),
+		Description:       aws.String(d.Get(names.AttrDescription).(string)),
 		MemberDefinitions: expandWorkteamMemberDefinition(d.Get("member_definition").([]interface{})),
 		Tags:              getTagsIn(ctx),
 	}
@@ -185,9 +185,9 @@ func resourceWorkteamRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	arn := aws.StringValue(workteam.WorkteamArn)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("subdomain", workteam.SubDomain)
-	d.Set("description", workteam.Description)
+	d.Set(names.AttrDescription, workteam.Description)
 	d.Set("workteam_name", workteam.WorkteamName)
 
 	if err := d.Set("member_definition", flattenWorkteamMemberDefinition(workteam.MemberDefinitions)); err != nil {
@@ -205,14 +205,14 @@ func resourceWorkteamUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &sagemaker.UpdateWorkteamInput{
 			WorkteamName:      aws.String(d.Id()),
 			MemberDefinitions: expandWorkteamMemberDefinition(d.Get("member_definition").([]interface{})),
 		}
 
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
 		if d.HasChange("notification_configuration") {
@@ -303,7 +303,7 @@ func expandWorkteamCognitoMemberDefinition(l []interface{}) *sagemaker.CognitoMe
 	m := l[0].(map[string]interface{})
 
 	config := &sagemaker.CognitoMemberDefinition{
-		ClientId:  aws.String(m["client_id"].(string)),
+		ClientId:  aws.String(m[names.AttrClientID].(string)),
 		UserPool:  aws.String(m["user_pool"].(string)),
 		UserGroup: aws.String(m["user_group"].(string)),
 	}
@@ -317,9 +317,9 @@ func flattenWorkteamCognitoMemberDefinition(config *sagemaker.CognitoMemberDefin
 	}
 
 	m := map[string]interface{}{
-		"client_id":  aws.StringValue(config.ClientId),
-		"user_pool":  aws.StringValue(config.UserPool),
-		"user_group": aws.StringValue(config.UserGroup),
+		names.AttrClientID: aws.StringValue(config.ClientId),
+		"user_pool":        aws.StringValue(config.UserPool),
+		"user_group":       aws.StringValue(config.UserGroup),
 	}
 
 	return []map[string]interface{}{m}

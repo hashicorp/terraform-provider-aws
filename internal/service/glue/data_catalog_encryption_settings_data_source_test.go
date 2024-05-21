@@ -26,7 +26,7 @@ func testAccDataCatalogEncryptionSettingsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccDataCatalogEncryptionSettingsDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "catalog_id", resourceName, "catalog_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrCatalogID, resourceName, names.AttrCatalogID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "data_catalog_encryption_settings", resourceName, "data_catalog_encryption_settings"),
 				),
 			},

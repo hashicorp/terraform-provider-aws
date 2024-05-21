@@ -38,11 +38,11 @@ func TestAccCloudFrontKeyValueStoreKey_basic(t *testing.T) {
 				Config: testAccKeyConfig_basic(rName, value),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "key", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKey, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "key_value_store_arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "total_size_in_bytes"),
-					resource.TestCheckResourceAttr(resourceName, "value", value),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, value),
 				),
 			},
 			{
@@ -76,11 +76,11 @@ func TestAccCloudFrontKeyValueStoreKey_mutex(t *testing.T) {
 			{
 				Config: testAccKeyConfig_mutex(rNames, rName, value),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("aws_cloudfrontkeyvaluestore_key.test.0", "key", rNames[0]),
-					resource.TestCheckResourceAttr("aws_cloudfrontkeyvaluestore_key.test.1", "key", rNames[1]),
-					resource.TestCheckResourceAttr("aws_cloudfrontkeyvaluestore_key.test.2", "key", rNames[2]),
-					resource.TestCheckResourceAttr("aws_cloudfrontkeyvaluestore_key.test.3", "key", rNames[3]),
-					resource.TestCheckResourceAttr("aws_cloudfrontkeyvaluestore_key.test.4", "key", rNames[4]),
+					resource.TestCheckResourceAttr("aws_cloudfrontkeyvaluestore_key.test.0", names.AttrKey, rNames[0]),
+					resource.TestCheckResourceAttr("aws_cloudfrontkeyvaluestore_key.test.1", names.AttrKey, rNames[1]),
+					resource.TestCheckResourceAttr("aws_cloudfrontkeyvaluestore_key.test.2", names.AttrKey, rNames[2]),
+					resource.TestCheckResourceAttr("aws_cloudfrontkeyvaluestore_key.test.3", names.AttrKey, rNames[3]),
+					resource.TestCheckResourceAttr("aws_cloudfrontkeyvaluestore_key.test.4", names.AttrKey, rNames[4]),
 				),
 			},
 		},
@@ -108,11 +108,11 @@ func TestAccCloudFrontKeyValueStoreKey_value(t *testing.T) {
 				Config: testAccKeyConfig_basic(rName, value1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "key", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKey, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "key_value_store_arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "total_size_in_bytes"),
-					resource.TestCheckResourceAttr(resourceName, "value", value1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, value1),
 				),
 			},
 			{
@@ -124,11 +124,11 @@ func TestAccCloudFrontKeyValueStoreKey_value(t *testing.T) {
 				Config: testAccKeyConfig_basic(rName, value2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "key", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKey, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "key_value_store_arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "total_size_in_bytes"),
-					resource.TestCheckResourceAttr(resourceName, "value", value2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, value2),
 				),
 			},
 		},
@@ -171,7 +171,7 @@ func testAccCheckKeyDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfcloudfrontkeyvaluestore.FindKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes["key_value_store_arn"], rs.Primary.Attributes["key"])
+			_, err := tfcloudfrontkeyvaluestore.FindKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes["key_value_store_arn"], rs.Primary.Attributes[names.AttrKey])
 
 			if tfresource.NotFound(err) {
 				return nil
@@ -197,7 +197,7 @@ func testAccCheckKeyExists(ctx context.Context, n string) resource.TestCheckFunc
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontKeyValueStoreClient(ctx)
 
-		_, err := tfcloudfrontkeyvaluestore.FindKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes["key_value_store_arn"], rs.Primary.Attributes["key"])
+		_, err := tfcloudfrontkeyvaluestore.FindKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes["key_value_store_arn"], rs.Primary.Attributes[names.AttrKey])
 
 		return err
 	}

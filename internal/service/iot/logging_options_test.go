@@ -17,8 +17,8 @@ func TestAccIoTLoggingOptions_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		"basic":  testAccLoggingOptions_basic,
-		"update": testAccLoggingOptions_update,
+		acctest.CtBasic: testAccLoggingOptions_basic,
+		"update":        testAccLoggingOptions_update,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -40,7 +40,7 @@ func testAccLoggingOptions_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "default_log_level", "WARN"),
 					resource.TestCheckResourceAttr(resourceName, "disable_all_logs", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
 				),
 			},
 		},
@@ -63,7 +63,7 @@ func testAccLoggingOptions_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "default_log_level", "WARN"),
 					resource.TestCheckResourceAttr(resourceName, "disable_all_logs", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
 				),
 			},
 			{
@@ -71,7 +71,7 @@ func testAccLoggingOptions_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "default_log_level", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "disable_all_logs", "true"),
-					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
 				),
 			},
 		},

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_nat_gateways")
@@ -26,14 +27,14 @@ func DataSourceNATGateways() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"filter": customFiltersSchema(),
-			"ids": {
+			names.AttrFilter: customFiltersSchema(),
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": tftags.TagsSchemaComputed(),
-			"vpc_id": {
+			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -48,7 +49,7 @@ func dataSourceNATGatewaysRead(ctx context.Context, d *schema.ResourceData, meta
 
 	input := &ec2.DescribeNatGatewaysInput{}
 
-	if v, ok := d.GetOk("vpc_id"); ok {
+	if v, ok := d.GetOk(names.AttrVPCID); ok {
 		input.Filter = append(input.Filter, newAttributeFilterList(
 			map[string]string{
 				"vpc-id": v.(string),
@@ -56,14 +57,14 @@ func dataSourceNATGatewaysRead(ctx context.Context, d *schema.ResourceData, meta
 		)...)
 	}
 
-	if tags, ok := d.GetOk("tags"); ok {
+	if tags, ok := d.GetOk(names.AttrTags); ok {
 		input.Filter = append(input.Filter, newTagFilterList(
 			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
 	}
 
 	input.Filter = append(input.Filter, newCustomFilterList(
-		d.Get("filter").(*schema.Set),
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	if len(input.Filter) == 0 {
@@ -83,7 +84,7 @@ func dataSourceNATGatewaysRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("ids", natGatewayIDs)
+	d.Set(names.AttrIDs, natGatewayIDs)
 
 	return diags
 }

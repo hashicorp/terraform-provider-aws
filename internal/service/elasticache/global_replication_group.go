@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -61,7 +62,7 @@ func resourceGlobalReplicationGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -91,7 +92,7 @@ func resourceGlobalReplicationGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -212,7 +213,7 @@ func resourceGlobalReplicationGroup() *schema.Resource {
 }
 
 func customizeDiffGlobalReplicationGroupEngineVersionErrorOnDowngrade(_ context.Context, diff *schema.ResourceDiff, _ any) error {
-	if diff.Id() == "" || !diff.HasChange("engine_version") {
+	if diff.Id() == "" || !diff.HasChange(names.AttrEngineVersion) {
 		return nil
 	}
 
@@ -241,14 +242,14 @@ func paramGroupNameRequiresMajorVersionUpgrade(diff sdkv2.ResourceDiffer) error 
 	}
 
 	if diff.Id() == "" {
-		if !diff.HasChange("engine_version") {
+		if !diff.HasChange(names.AttrEngineVersion) {
 			return errors.New("cannot change parameter group name without upgrading major engine version")
 		}
 	}
 
 	// cannot check for major version upgrade at plan time for new resource
 	if diff.Id() != "" {
-		o, n := diff.GetChange("engine_version")
+		o, n := diff.GetChange(names.AttrEngineVersion)
 
 		newVersion, _ := normalizeEngineVersion(n.(string))
 		oldVersion, _ := gversion.NewVersion(o.(string))
@@ -313,7 +314,7 @@ func resourceGlobalReplicationGroupCreate(ctx context.Context, d *schema.Resourc
 		}
 	}
 
-	if v, ok := d.GetOk("engine_version"); ok {
+	if v, ok := d.GetOk(names.AttrEngineVersion); ok {
 		requestedVersion, _ := normalizeEngineVersion(v.(string))
 
 		engineVersion, err := gversion.NewVersion(aws.StringValue(globalReplicationGroup.EngineVersion))
@@ -387,7 +388,7 @@ func resourceGlobalReplicationGroupRead(ctx context.Context, d *schema.ResourceD
 		return diags
 	}
 
-	d.Set("arn", globalReplicationGroup.ARN)
+	d.Set(names.AttrARN, globalReplicationGroup.ARN)
 	d.Set("at_rest_encryption_enabled", globalReplicationGroup.AtRestEncryptionEnabled)
 	d.Set("auth_token_enabled", globalReplicationGroup.AuthTokenEnabled)
 	d.Set("cache_node_type", globalReplicationGroup.CacheNodeType)
@@ -429,8 +430,8 @@ func resourceGlobalReplicationGroupUpdate(ctx context.Context, d *schema.Resourc
 		}
 	}
 
-	if d.HasChange("engine_version") {
-		o, n := d.GetChange("engine_version")
+	if d.HasChange(names.AttrEngineVersion) {
+		o, n := d.GetChange(names.AttrEngineVersion)
 
 		newVersion, _ := normalizeEngineVersion(n.(string))
 		oldVersion, _ := gversion.NewVersion(o.(string))
@@ -449,7 +450,7 @@ func resourceGlobalReplicationGroupUpdate(ctx context.Context, d *schema.Resourc
 	}
 
 	if d.HasChange("global_replication_group_description") {
-		if err := updateGlobalReplicationGroup(ctx, conn, d.Id(), globalReplicationGroupDescriptionUpdater(d.Get("global_replication_group_description").(string)), "description", d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if err := updateGlobalReplicationGroup(ctx, conn, d.Id(), globalReplicationGroupDescriptionUpdater(d.Get("global_replication_group_description").(string)), names.AttrDescription, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}

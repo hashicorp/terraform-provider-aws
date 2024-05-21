@@ -262,7 +262,7 @@ func testAccCheckAvailabilityZoneState(n string) resource.TestCheckFunc {
 			return fmt.Errorf("AZ resource ID not set.")
 		}
 
-		if _, ok := rs.Primary.Attributes["state"]; !ok {
+		if _, ok := rs.Primary.Attributes[names.AttrState]; !ok {
 			return fmt.Errorf("AZs state filter is missing, should be set.")
 		}
 

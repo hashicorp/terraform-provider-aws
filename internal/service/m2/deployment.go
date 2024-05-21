@@ -81,7 +81,7 @@ func (r *deploymentResource) Schema(ctx context.Context, request resource.Schema
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -240,15 +240,32 @@ func (r *deploymentResource) Update(ctx context.Context, request resource.Update
 
 			return
 		}
+
+		// Start the application if plan says to.
+		if new.Start.ValueBool() {
+			applicationID := new.ApplicationID.ValueString()
+			if _, err := startApplication(ctx, conn, applicationID, timeout); err != nil {
+				response.Diagnostics.AddError(fmt.Sprintf("starting Mainframe Modernization Application (%s)", applicationID), err.Error())
+				return
+			}
+		}
+
+		response.Diagnostics.Append(response.State.Set(ctx, new)...)
+		return
 	}
 
-	// Start the application if plan says to.
-	if new.Start.ValueBool() {
+	// Start/stop deployment if no other update is needed
+	if !old.Start.Equal(new.Start) {
 		applicationID := new.ApplicationID.ValueString()
-		if _, err := startApplication(ctx, conn, applicationID, timeout); err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("starting Mainframe Modernization Application (%s)", applicationID), err.Error())
-
-			return
+		new.DeploymentID = old.DeploymentID
+		if new.Start.ValueBool() {
+			if _, err := startApplication(ctx, conn, applicationID, timeout); err != nil {
+				response.Diagnostics.AddError(fmt.Sprintf("starting Mainframe Modernization Application (%s)", applicationID), err.Error())
+			}
+		} else {
+			if _, err := stopApplicationIfRunning(ctx, conn, applicationID, new.ForceStop.ValueBool(), timeout); err != nil {
+				response.Diagnostics.AddError(fmt.Sprintf("stopping Mainframe Modernization Application (%s)", applicationID), err.Error())
+			}
 		}
 	}
 

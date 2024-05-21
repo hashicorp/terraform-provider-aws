@@ -42,19 +42,19 @@ func TestAccCodePipelineWebhook_basic(t *testing.T) {
 				Config: testAccWebhookConfig_basic(rName, ghToken),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebhookExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codepipeline", regexache.MustCompile(fmt.Sprintf("webhook:%s", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "codepipeline", regexache.MustCompile(fmt.Sprintf("webhook:%s", rName))),
 					resource.TestCheckResourceAttr(resourceName, "authentication", "GITHUB_HMAC"),
 					resource.TestCheckResourceAttr(resourceName, "target_action", "Source"),
-					resource.TestCheckResourceAttrPair(resourceName, "target_pipeline", "aws_codepipeline.test", "name"),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_pipeline", "aws_codepipeline.test", names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter.*", map[string]string{
 						"json_path":    "$.ref",
 						"match_equals": "refs/head/{Branch}",
 					}),
-					resource.TestCheckResourceAttrSet(resourceName, "url"),
-					resource.TestCheckResourceAttr(resourceName, "authentication_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrURL),
+					resource.TestCheckResourceAttr(resourceName, "authentication_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "authentication_configuration.0.secret_token", "super-secret"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -66,7 +66,7 @@ func TestAccCodePipelineWebhook_basic(t *testing.T) {
 				Config: testAccWebhookConfig_filters(rName, ghToken),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebhookExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter.*", map[string]string{
 						"json_path":    "$.ref",
 						"match_equals": "refs/head/{Branch}",
@@ -81,7 +81,7 @@ func TestAccCodePipelineWebhook_basic(t *testing.T) {
 				Config: testAccWebhookConfig_basic(rName, ghToken),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebhookExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter.*", map[string]string{
 						"json_path":    "$.ref",
 						"match_equals": "refs/head/{Branch}",
@@ -112,9 +112,9 @@ func TestAccCodePipelineWebhook_ipAuth(t *testing.T) {
 				Config: testAccWebhookConfig_ipAuth(rName, ghToken),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebhookExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "id"),
-					resource.TestCheckResourceAttrSet(resourceName, "url"),
-					resource.TestCheckResourceAttr(resourceName, "authentication_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrURL),
+					resource.TestCheckResourceAttr(resourceName, "authentication_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "authentication_configuration.0.allowed_ip_range", "0.0.0.0/0"),
 				),
 			},
@@ -147,8 +147,8 @@ func TestAccCodePipelineWebhook_unauthenticated(t *testing.T) {
 				Config: testAccWebhookConfig_unauthenticated(rName, ghToken),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebhookExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "id"),
-					resource.TestCheckResourceAttrSet(resourceName, "url"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrURL),
 				),
 			},
 			{
@@ -177,20 +177,20 @@ func TestAccCodePipelineWebhook_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckWebhookDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebhookConfig_tags1(rName, ghToken, "key1", "value1"),
+				Config: testAccWebhookConfig_tags1(rName, ghToken, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebhookExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
-				Config: testAccWebhookConfig_tags2(rName, ghToken, "key1", "value1updated", "key2", "value2"),
+				Config: testAccWebhookConfig_tags2(rName, ghToken, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebhookExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
@@ -199,11 +199,11 @@ func TestAccCodePipelineWebhook_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccWebhookConfig_tags1(rName, ghToken, "key2", "value2"),
+				Config: testAccWebhookConfig_tags1(rName, ghToken, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebhookExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -258,9 +258,9 @@ func TestAccCodePipelineWebhook_UpdateAuthentication_secretToken(t *testing.T) {
 				Config: testAccWebhookConfig_basic(rName, ghToken),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebhookExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttrSet(resourceName, "id"),
-					resource.TestCheckResourceAttrSet(resourceName, "url"),
-					resource.TestCheckResourceAttr(resourceName, "authentication_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrURL),
+					resource.TestCheckResourceAttr(resourceName, "authentication_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "authentication_configuration.0.secret_token", "super-secret"),
 				),
 			},
@@ -268,9 +268,9 @@ func TestAccCodePipelineWebhook_UpdateAuthentication_secretToken(t *testing.T) {
 				Config: testAccWebhookConfig_secretTokenUpdated(rName, ghToken),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebhookExists(ctx, resourceName, &v2),
-					resource.TestCheckResourceAttrSet(resourceName, "id"),
-					resource.TestCheckResourceAttrSet(resourceName, "url"),
-					resource.TestCheckResourceAttr(resourceName, "authentication_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrURL),
+					resource.TestCheckResourceAttr(resourceName, "authentication_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "authentication_configuration.0.secret_token", "even-more-secret"),
 					func(s *terraform.State) error {
 						if aws.ToString(v2.Url) == aws.ToString(v1.Url) {

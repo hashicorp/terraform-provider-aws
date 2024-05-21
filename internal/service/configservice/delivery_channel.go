@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_config_delivery_channel", name="Delivery Channel")
@@ -36,18 +37,18 @@ func resourceDeliveryChannel() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				Default:      defaultDeliveryChannelName,
 				ValidateFunc: validation.StringLenBetween(0, 256),
 			},
-			"s3_bucket_name": {
+			names.AttrS3BucketName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"s3_key_prefix": {
+			names.AttrS3KeyPrefix: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -70,7 +71,7 @@ func resourceDeliveryChannel() *schema.Resource {
 					},
 				},
 			},
-			"sns_topic_arn": {
+			names.AttrSNSTopicARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
@@ -83,15 +84,15 @@ func resourceDeliveryChannelPut(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &configservice.PutDeliveryChannelInput{
 		DeliveryChannel: &types.DeliveryChannel{
 			Name:         aws.String(name),
-			S3BucketName: aws.String(d.Get("s3_bucket_name").(string)),
+			S3BucketName: aws.String(d.Get(names.AttrS3BucketName).(string)),
 		},
 	}
 
-	if v, ok := d.GetOk("s3_key_prefix"); ok {
+	if v, ok := d.GetOk(names.AttrS3KeyPrefix); ok {
 		input.DeliveryChannel.S3KeyPrefix = aws.String(v.(string))
 	}
 
@@ -109,7 +110,7 @@ func resourceDeliveryChannelPut(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	if v, ok := d.GetOk("sns_topic_arn"); ok {
+	if v, ok := d.GetOk(names.AttrSNSTopicARN); ok {
 		input.DeliveryChannel.SnsTopicARN = aws.String(v.(string))
 	}
 
@@ -144,14 +145,14 @@ func resourceDeliveryChannelRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "reading ConfigService Delivery Channel (%s): %s", d.Id(), err)
 	}
 
-	d.Set("name", channel.Name)
-	d.Set("s3_bucket_name", channel.S3BucketName)
-	d.Set("s3_key_prefix", channel.S3KeyPrefix)
+	d.Set(names.AttrName, channel.Name)
+	d.Set(names.AttrS3BucketName, channel.S3BucketName)
+	d.Set(names.AttrS3KeyPrefix, channel.S3KeyPrefix)
 	d.Set("s3_kms_key_arn", channel.S3KmsKeyArn)
 	if channel.ConfigSnapshotDeliveryProperties != nil {
 		d.Set("snapshot_delivery_properties", flattenSnapshotDeliveryProperties(channel.ConfigSnapshotDeliveryProperties))
 	}
-	d.Set("sns_topic_arn", channel.SnsTopicARN)
+	d.Set(names.AttrSNSTopicARN, channel.SnsTopicARN)
 
 	return diags
 }

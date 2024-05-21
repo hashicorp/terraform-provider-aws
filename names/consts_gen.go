@@ -234,6 +234,7 @@ const (
 	WellArchitected              = "wellarchitected"
 	WorkLink                     = "worklink"
 	WorkSpaces                   = "workspaces"
+	WorkSpacesWeb                = "workspacesweb"
 	XRay                         = "xray"
 )
 
@@ -472,5 +473,6 @@ const (
 	WellArchitectedServiceID              = "WellArchitected"
 	WorkLinkServiceID                     = "WorkLink"
 	WorkSpacesServiceID                   = "WorkSpaces"
+	WorkSpacesWebServiceID                = "WorkSpaces Web"
 	XRayServiceID                         = "XRay"
 )

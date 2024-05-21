@@ -56,7 +56,7 @@ func ResourceAnalysis() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -67,7 +67,7 @@ func ResourceAnalysis() *schema.Resource {
 					ForceNew:     true,
 					ValidateFunc: verify.ValidAccountID,
 				},
-				"created_time": {
+				names.AttrCreatedTime: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -85,13 +85,13 @@ func ResourceAnalysis() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"name": {
+				names.AttrName: {
 					Type:         schema.TypeString,
 					Required:     true,
 					ValidateFunc: validation.StringLenBetween(1, 2048),
 				},
-				"parameters": quicksightschema.ParametersSchema(),
-				"permissions": {
+				names.AttrParameters: quicksightschema.ParametersSchema(),
+				names.AttrPermissions: {
 					Type:     schema.TypeSet,
 					Optional: true,
 					MinItems: 1,
@@ -105,7 +105,7 @@ func ResourceAnalysis() *schema.Resource {
 								MaxItems: 16,
 								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
-							"principal": {
+							names.AttrPrincipal: {
 								Type:         schema.TypeString,
 								Required:     true,
 								ValidateFunc: validation.StringLenBetween(1, 256),
@@ -123,7 +123,7 @@ func ResourceAnalysis() *schema.Resource {
 					),
 				},
 				"source_entity": quicksightschema.AnalysisSourceEntitySchema(),
-				"status": {
+				names.AttrStatus: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -158,7 +158,7 @@ func resourceAnalysisCreate(ctx context.Context, d *schema.ResourceData, meta in
 	input := &quicksight.CreateAnalysisInput{
 		AwsAccountId: aws.String(awsAccountId),
 		AnalysisId:   aws.String(analysisId),
-		Name:         aws.String(d.Get("name").(string)),
+		Name:         aws.String(d.Get(names.AttrName).(string)),
 		Tags:         getTagsIn(ctx),
 	}
 
@@ -170,17 +170,17 @@ func resourceAnalysisCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.Definition = quicksightschema.ExpandAnalysisDefinition(d.Get("definition").([]interface{}))
 	}
 
-	if v, ok := d.GetOk("parameters"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Parameters = quicksightschema.ExpandParameters(d.Get("parameters").([]interface{}))
+	if v, ok := d.GetOk(names.AttrParameters); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.Parameters = quicksightschema.ExpandParameters(d.Get(names.AttrParameters).([]interface{}))
 	}
 
-	if v, ok := d.Get("permissions").(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := d.Get(names.AttrPermissions).(*schema.Set); ok && v.Len() > 0 {
 		input.Permissions = expandResourcePermissions(v.List())
 	}
 
 	_, err := conn.CreateAnalysisWithContext(ctx, input)
 	if err != nil {
-		return create.DiagError(names.QuickSight, create.ErrActionCreating, ResNameAnalysis, d.Get("name").(string), err)
+		return create.DiagError(names.QuickSight, create.ErrActionCreating, ResNameAnalysis, d.Get(names.AttrName).(string), err)
 	}
 
 	if _, err := waitAnalysisCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
@@ -217,12 +217,12 @@ func resourceAnalysisRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return create.DiagError(names.QuickSight, create.ErrActionReading, ResNameAnalysis, d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
+	d.Set(names.AttrARN, out.Arn)
 	d.Set("aws_account_id", awsAccountId)
-	d.Set("created_time", out.CreatedTime.Format(time.RFC3339))
+	d.Set(names.AttrCreatedTime, out.CreatedTime.Format(time.RFC3339))
 	d.Set("last_updated_time", out.LastUpdatedTime.Format(time.RFC3339))
-	d.Set("name", out.Name)
-	d.Set("status", out.Status)
+	d.Set(names.AttrName, out.Name)
+	d.Set(names.AttrStatus, out.Status)
 	d.Set("analysis_id", out.AnalysisId)
 
 	descResp, err := conn.DescribeAnalysisDefinitionWithContext(ctx, &quicksight.DescribeAnalysisDefinitionInput{
@@ -247,7 +247,7 @@ func resourceAnalysisRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag.Errorf("describing QuickSight Analysis (%s) Permissions: %s", d.Id(), err)
 	}
 
-	if err := d.Set("permissions", flattenPermissions(permsResp.Permissions)); err != nil {
+	if err := d.Set(names.AttrPermissions, flattenPermissions(permsResp.Permissions)); err != nil {
 		return diag.Errorf("setting permissions: %s", err)
 	}
 
@@ -262,11 +262,11 @@ func resourceAnalysisUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		return diag.FromErr(err)
 	}
 
-	if d.HasChangesExcept("permissions", "tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrPermissions, names.AttrTags, names.AttrTagsAll) {
 		in := &quicksight.UpdateAnalysisInput{
 			AwsAccountId: aws.String(awsAccountId),
 			AnalysisId:   aws.String(analysisId),
-			Name:         aws.String(d.Get("name").(string)),
+			Name:         aws.String(d.Get(names.AttrName).(string)),
 		}
 
 		_, createdFromEntity := d.GetOk("source_entity")
@@ -276,8 +276,8 @@ func resourceAnalysisUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			in.Definition = quicksightschema.ExpandAnalysisDefinition(d.Get("definition").([]interface{}))
 		}
 
-		if v, ok := d.GetOk("parameters"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			in.Parameters = quicksightschema.ExpandParameters(d.Get("parameters").([]interface{}))
+		if v, ok := d.GetOk(names.AttrParameters); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			in.Parameters = quicksightschema.ExpandParameters(d.Get(names.AttrParameters).([]interface{}))
 		}
 
 		log.Printf("[DEBUG] Updating QuickSight Analysis (%s): %#v", d.Id(), in)
@@ -291,8 +291,8 @@ func resourceAnalysisUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
-	if d.HasChange("permissions") {
-		oraw, nraw := d.GetChange("permissions")
+	if d.HasChange(names.AttrPermissions) {
+		oraw, nraw := d.GetChange(names.AttrPermissions)
 		o := oraw.(*schema.Set)
 		n := nraw.(*schema.Set)
 

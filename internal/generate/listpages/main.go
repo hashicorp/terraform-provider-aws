@@ -36,6 +36,7 @@ var (
 	paginator       = flag.String("Paginator", "NextToken", "name of the pagination token field")
 	export          = flag.Bool("Export", false, "whether to export the list functions")
 	sdkVersion      = flag.Int("AWSSDKVersion", sdkV1, "Version of the AWS Go SDK to use i.e. 1 or 2")
+	v2Suffix        = flag.Bool("V2Suffix", false, "whether to append a V2 suffix to the list functions")
 )
 
 func usage() {
@@ -113,7 +114,7 @@ func main() {
 	}
 
 	for _, functionName := range functions {
-		g.generateFunction(functionName, awsService, awsUpper, *export, *sdkVersion)
+		g.generateFunction(functionName, awsService, awsUpper, *export, *sdkVersion, *v2Suffix)
 	}
 
 	src := g.format()
@@ -200,9 +201,10 @@ type FuncSpec struct {
 	ResultType      string
 	InputPaginator  string
 	OutputPaginator string
+	V2Suffix        bool
 }
 
-func (g *Generator) generateFunction(functionName, awsService, awsServiceUpper string, export bool, sdkVersion int) {
+func (g *Generator) generateFunction(functionName, awsService, awsServiceUpper string, export bool, sdkVersion int, v2Suffix bool) {
 	var function *ast.FuncDecl
 
 	for _, file := range g.pkg.files {
@@ -245,6 +247,7 @@ func (g *Generator) generateFunction(functionName, awsService, awsServiceUpper s
 		ResultType:      g.expandTypeField(function.Type.Results, sdkVersion, true), // Assumes we can take the first return parameter
 		InputPaginator:  g.inputPaginator,
 		OutputPaginator: g.outputPaginator,
+		V2Suffix:        v2Suffix,
 	}
 
 	err := g.tmpl.Execute(&g.buf, funcSpec)

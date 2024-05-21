@@ -41,22 +41,22 @@ func resourceParameterGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 				Default:  "Managed by Terraform",
 			},
-			"family": {
+			names.AttrFamily: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
@@ -64,16 +64,16 @@ func resourceParameterGroup() *schema.Resource {
 					return strings.ToLower(val.(string))
 				},
 			},
-			"parameter": {
+			names.AttrParameter: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -93,11 +93,11 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &elasticache.CreateCacheParameterGroupInput{
 		CacheParameterGroupName:   aws.String(name),
-		CacheParameterGroupFamily: aws.String(d.Get("family").(string)),
-		Description:               aws.String(d.Get("description").(string)),
+		CacheParameterGroupFamily: aws.String(d.Get(names.AttrFamily).(string)),
+		Description:               aws.String(d.Get(names.AttrDescription).(string)),
 		Tags:                      getTagsIn(ctx),
 	}
 
@@ -115,7 +115,7 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	d.SetId(aws.StringValue(output.CacheParameterGroup.CacheParameterGroupName))
-	d.Set("arn", output.CacheParameterGroup.ARN)
+	d.Set(names.AttrARN, output.CacheParameterGroup.ARN)
 
 	return append(diags, resourceParameterGroupUpdate(ctx, d, meta)...)
 }
@@ -136,10 +136,10 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading ElastiCache Parameter Group (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", parameterGroup.ARN)
-	d.Set("description", parameterGroup.Description)
-	d.Set("family", parameterGroup.CacheParameterGroupFamily)
-	d.Set("name", parameterGroup.CacheParameterGroupName)
+	d.Set(names.AttrARN, parameterGroup.ARN)
+	d.Set(names.AttrDescription, parameterGroup.Description)
+	d.Set(names.AttrFamily, parameterGroup.CacheParameterGroupFamily)
+	d.Set(names.AttrName, parameterGroup.CacheParameterGroupName)
 
 	// Only include user customized parameters as there's hundreds of system/default ones.
 	input := &elasticache.DescribeCacheParametersInput{
@@ -153,7 +153,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading ElastiCache Parameter Group (%s) parameters: %s", d.Id(), err)
 	}
 
-	d.Set("parameter", flattenParameters(output.Parameters))
+	d.Set(names.AttrParameter, flattenParameters(output.Parameters))
 
 	return diags
 }
@@ -162,8 +162,8 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
-	if d.HasChange("parameter") {
-		o, n := d.GetChange("parameter")
+	if d.HasChange(names.AttrParameter) {
+		o, n := d.GetChange(names.AttrParameter)
 		toRemove, toAdd := parameterChanges(o, n)
 
 		// We can only modify 20 parameters at a time, so walk them until
@@ -178,7 +178,7 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 				paramsToModify, toRemove = toRemove[:maxParams], toRemove[maxParams:]
 			}
 
-			err := resourceResetParameterGroup(ctx, conn, d.Get("name").(string), paramsToModify)
+			err := resourceResetParameterGroup(ctx, conn, d.Get(names.AttrName).(string), paramsToModify)
 
 			// When attempting to reset the reserved-memory parameter, the API
 			// can return two types of error.
@@ -222,7 +222,7 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 					}
 
 					// The reserved-memory-percent parameter does not exist in redis2.6 and redis2.8
-					family := d.Get("family").(string)
+					family := d.Get(names.AttrFamily).(string)
 					if family == "redis2.6" || family == "redis2.8" {
 						log.Printf("[WARN] Cannot reset ElastiCache Parameter Group (%s) reserved-memory parameter with %s family", d.Id(), family)
 						break
@@ -234,13 +234,13 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 							ParameterValue: aws.String("0"),
 						},
 					}
-					err = resourceModifyParameterGroup(ctx, conn, d.Get("name").(string), paramsToModify)
+					err = resourceModifyParameterGroup(ctx, conn, d.Get(names.AttrName).(string), paramsToModify)
 					if err != nil {
 						log.Printf("[WARN] Error attempting reserved-memory workaround to switch to reserved-memory-percent: %s", err)
 						break
 					}
 
-					err = resourceResetParameterGroup(ctx, conn, d.Get("name").(string), workaroundParams)
+					err = resourceResetParameterGroup(ctx, conn, d.Get(names.AttrName).(string), workaroundParams)
 					if err != nil {
 						log.Printf("[WARN] Error attempting reserved-memory workaround to reset reserved-memory-percent: %s", err)
 					}
@@ -250,7 +250,7 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 
 				// Retry any remaining parameter resets with reserved-memory potentially removed
 				if len(paramsToModify) > 0 {
-					err = resourceResetParameterGroup(ctx, conn, d.Get("name").(string), paramsToModify)
+					err = resourceResetParameterGroup(ctx, conn, d.Get(names.AttrName).(string), paramsToModify)
 				}
 			}
 
@@ -267,7 +267,7 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 				paramsToModify, toAdd = toAdd[:maxParams], toAdd[maxParams:]
 			}
 
-			err := resourceModifyParameterGroup(ctx, conn, d.Get("name").(string), paramsToModify)
+			err := resourceModifyParameterGroup(ctx, conn, d.Get(names.AttrName).(string), paramsToModify)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "modifying ElastiCache Parameter Group: %s", err)
 			}
@@ -311,7 +311,7 @@ func deleteParameterGroup(ctx context.Context, conn *elasticache.ElastiCache, na
 }
 
 var (
-	parameterHash = sdkv2.SimpleSchemaSetFunc("name", "value")
+	parameterHash = sdkv2.SimpleSchemaSetFunc(names.AttrName, names.AttrValue)
 )
 
 func parameterChanges(o, n interface{}) (remove, addOrUpdate []*elasticache.ParameterNameValue) {
@@ -327,12 +327,12 @@ func parameterChanges(o, n interface{}) (remove, addOrUpdate []*elasticache.Para
 	om := make(map[string]*elasticache.ParameterNameValue, os.Len())
 	for _, raw := range os.List() {
 		param := raw.(map[string]interface{})
-		om[param["name"].(string)] = expandParameter(param)
+		om[param[names.AttrName].(string)] = expandParameter(param)
 	}
 	nm := make(map[string]*elasticache.ParameterNameValue, len(addOrUpdate))
 	for _, raw := range ns.List() {
 		param := raw.(map[string]interface{})
-		nm[param["name"].(string)] = expandParameter(param)
+		nm[param[names.AttrName].(string)] = expandParameter(param)
 	}
 
 	// Remove: key is in old, but not in new
@@ -432,8 +432,8 @@ func findCacheParameterGroups(ctx context.Context, conn *elasticache.ElastiCache
 
 func expandParameter(tfMap map[string]interface{}) *elasticache.ParameterNameValue {
 	return &elasticache.ParameterNameValue{
-		ParameterName:  aws.String(tfMap["name"].(string)),
-		ParameterValue: aws.String(tfMap["value"].(string)),
+		ParameterName:  aws.String(tfMap[names.AttrName].(string)),
+		ParameterValue: aws.String(tfMap[names.AttrValue].(string)),
 	}
 }
 
@@ -443,8 +443,8 @@ func flattenParameters(apiObjects []*elasticache.Parameter) []interface{} {
 	for _, apiObject := range apiObjects {
 		if apiObject.ParameterValue != nil {
 			tfList = append(tfList, map[string]interface{}{
-				"name":  strings.ToLower(aws.StringValue(apiObject.ParameterName)),
-				"value": aws.StringValue(apiObject.ParameterValue),
+				names.AttrName:  strings.ToLower(aws.StringValue(apiObject.ParameterName)),
+				names.AttrValue: aws.StringValue(apiObject.ParameterValue),
 			})
 		}
 	}

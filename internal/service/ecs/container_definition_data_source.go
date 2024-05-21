@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ecs_container_definition")
@@ -61,7 +62,7 @@ func DataSourceContainerDefinition() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"environment": {
+			names.AttrEnvironment: {
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -110,7 +111,7 @@ func dataSourceContainerDefinitionRead(ctx context.Context, d *schema.ResourceDa
 		for _, keyValuePair := range def.Environment {
 			environment[aws.StringValue(keyValuePair.Name)] = aws.StringValue(keyValuePair.Value)
 		}
-		d.Set("environment", environment)
+		d.Set(names.AttrEnvironment, environment)
 	}
 
 	if d.Id() == "" {
