@@ -36,14 +36,14 @@ func (d *dataSourceProtection) Metadata(_ context.Context, req datasource.Metada
 func (d *dataSourceProtection) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
-			"resource_arn": schema.StringAttribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrResourceARN: schema.StringAttribute{
 				Optional: true,
 			},
 			"protection_id": schema.StringAttribute{
 				Optional: true,
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 		},
 	}
 }

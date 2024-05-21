@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccProtectionDataSource_route53HostedZone(t *testing.T) {
+func TestAccShieldProtectionDataSource_route53HostedZone(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandString(10)
 
@@ -33,13 +33,13 @@ func TestAccProtectionDataSource_route53HostedZone(t *testing.T) {
 		CheckDestroy:             testAccCheckProtectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProtectionDataSource_route53HostedZoneByArn(rName),
+				Config: testAccShieldProtectionDataSource_route53HostedZoneByARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "protection_id", protectionResourceName, names.AttrID),
 				),
 			},
 			{
-				Config: testAccProtectionDataSource_route53HostedZoneById(rName),
+				Config: testAccShieldProtectionDataSource_route53HostedZoneById(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "protection_id", protectionResourceName, names.AttrID),
 				),
@@ -48,7 +48,7 @@ func TestAccProtectionDataSource_route53HostedZone(t *testing.T) {
 	})
 }
 
-func TestAccProtectionDataSource_cloudfront(t *testing.T) {
+func TestAccShieldProtectionDataSource_cloudfront(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandString(10)
 
@@ -67,13 +67,13 @@ func TestAccProtectionDataSource_cloudfront(t *testing.T) {
 		CheckDestroy:             testAccCheckProtectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProtectionDataSource_cloudfrontByArn(rName, testAccProtectionDataSourceCloudFrontRetainConfig()),
+				Config: testAccShieldProtectionDataSource_cloudfrontByARN(rName, testAccShieldProtectionDataSourceCloudFrontRetainConfig()),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "protection_id", protectionResourceName, names.AttrID),
 				),
 			},
 			{
-				Config: testAccProtectionDataSource_cloudfrontById(rName, testAccProtectionDataSourceCloudFrontRetainConfig()),
+				Config: testAccShieldProtectionDataSource_cloudfrontById(rName, testAccShieldProtectionDataSourceCloudFrontRetainConfig()),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "protection_id", protectionResourceName, names.AttrID),
 				),
@@ -82,7 +82,7 @@ func TestAccProtectionDataSource_cloudfront(t *testing.T) {
 	})
 }
 
-func TestAccProtectionDataSource_alb(t *testing.T) {
+func TestAccShieldProtectionDataSource_alb(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandString(10)
 
@@ -100,13 +100,13 @@ func TestAccProtectionDataSource_alb(t *testing.T) {
 		CheckDestroy:             testAccCheckProtectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProtectionDataSource_albByArn(rName),
+				Config: testAccShieldProtectionDataSource_albByARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "protection_id", protectionResourceName, names.AttrID),
 				),
 			},
 			{
-				Config: testAccProtectionDataSource_albById(rName),
+				Config: testAccShieldProtectionDataSource_albById(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "protection_id", protectionResourceName, names.AttrID),
 				),
@@ -115,7 +115,7 @@ func TestAccProtectionDataSource_alb(t *testing.T) {
 	})
 }
 
-func TestAccProtectionDataSource_elasticIPAddress(t *testing.T) {
+func TestAccShieldProtectionDataSource_elasticIPAddress(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandString(10)
 
@@ -133,13 +133,13 @@ func TestAccProtectionDataSource_elasticIPAddress(t *testing.T) {
 		CheckDestroy:             testAccCheckProtectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProtectionDataSource_elasticIPAddressByArn(rName),
+				Config: testAccShieldProtectionDataSource_elasticIPAddressByARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "protection_id", protectionResourceName, names.AttrID),
 				),
 			},
 			{
-				Config: testAccProtectionDataSource_elasticIPAddressById(rName),
+				Config: testAccShieldProtectionDataSource_elasticIPAddressById(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "protection_id", protectionResourceName, names.AttrID),
 				),
@@ -148,7 +148,7 @@ func TestAccProtectionDataSource_elasticIPAddress(t *testing.T) {
 	})
 }
 
-func TestAccProtectionDataSource_globalAccelerator(t *testing.T) {
+func TestAccShieldProtectionDataSource_globalAccelerator(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandString(10)
 
@@ -166,13 +166,13 @@ func TestAccProtectionDataSource_globalAccelerator(t *testing.T) {
 		CheckDestroy:             testAccCheckProtectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProtectionDataSource_globalAcceleratorByArn(rName),
+				Config: testAccShieldProtectionDataSource_globalAcceleratorByARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "protection_id", protectionResourceName, names.AttrID),
 				),
 			},
 			{
-				Config: testAccProtectionDataSource_globalAcceleratorById(rName),
+				Config: testAccShieldProtectionDataSource_globalAcceleratorById(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "protection_id", protectionResourceName, names.AttrID),
 				),
@@ -181,7 +181,7 @@ func TestAccProtectionDataSource_globalAccelerator(t *testing.T) {
 	})
 }
 
-func testAccProtectionDataSourceConfig_route53HostedZone(hostedZoneName string) string {
+func testAccShieldProtectionDataSourceConfig_route53HostedZone(hostedZoneName string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_zone" "test" {
   name    = "%[1]s.com."
@@ -203,9 +203,9 @@ resource "aws_shield_protection" "test" {
 `, hostedZoneName)
 }
 
-func testAccProtectionDataSource_route53HostedZoneByArn(hostedZoneName string) string {
+func testAccShieldProtectionDataSource_route53HostedZoneByARN(hostedZoneName string) string {
 	return acctest.ConfigCompose(
-		testAccProtectionDataSourceConfig_route53HostedZone(hostedZoneName),
+		testAccShieldProtectionDataSourceConfig_route53HostedZone(hostedZoneName),
 		fmt.Sprint(`
 data "aws_shield_protection" "test" {
   resource_arn = "arn:${data.aws_partition.current.partition}:route53:::hostedzone/${aws_route53_zone.test.zone_id}"
@@ -217,9 +217,9 @@ data "aws_shield_protection" "test" {
 `))
 }
 
-func testAccProtectionDataSource_route53HostedZoneById(hostedZoneName string) string {
+func testAccShieldProtectionDataSource_route53HostedZoneById(hostedZoneName string) string {
 	return acctest.ConfigCompose(
-		testAccProtectionDataSourceConfig_route53HostedZone(hostedZoneName),
+		testAccShieldProtectionDataSourceConfig_route53HostedZone(hostedZoneName),
 		fmt.Sprint(`
 data "aws_shield_protection" "test" {
 	protection_id = aws_shield_protection.test.id
@@ -227,7 +227,7 @@ data "aws_shield_protection" "test" {
 `))
 }
 
-func TestAccProtectionDataSource_elb(t *testing.T) {
+func TestAccShieldProtectionDataSource_elb(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandString(10)
 
@@ -245,13 +245,13 @@ func TestAccProtectionDataSource_elb(t *testing.T) {
 		CheckDestroy:             testAccCheckProtectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProtectionDataSource_elbByArn(rName),
+				Config: testAccShieldProtectionDataSource_elbByARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "protection_id", protectionResourceName, names.AttrID),
 				),
 			},
 			{
-				Config: testAccProtectionDataSource_elbById(rName),
+				Config: testAccShieldProtectionDataSource_elbById(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "protection_id", protectionResourceName, names.AttrID),
 				),
@@ -260,7 +260,7 @@ func TestAccProtectionDataSource_elb(t *testing.T) {
 	})
 }
 
-func testAccProtectionDataSourceConfig_elb(rName string) string {
+func testAccShieldProtectionDataSourceConfig_elb(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -326,9 +326,9 @@ resource "aws_shield_protection" "test" {
 `, rName)
 }
 
-func testAccProtectionDataSource_elbByArn(rName string) string {
+func testAccShieldProtectionDataSource_elbByARN(rName string) string {
 	return acctest.ConfigCompose(
-		testAccProtectionDataSourceConfig_elb(rName),
+		testAccShieldProtectionDataSourceConfig_elb(rName),
 		fmt.Sprint(`
 data "aws_shield_protection" "test" {
   resource_arn = aws_elb.test.arn
@@ -340,9 +340,9 @@ data "aws_shield_protection" "test" {
 `))
 }
 
-func testAccProtectionDataSource_elbById(rName string) string {
+func testAccShieldProtectionDataSource_elbById(rName string) string {
 	return acctest.ConfigCompose(
-		testAccProtectionDataSourceConfig_elb(rName),
+		testAccShieldProtectionDataSourceConfig_elb(rName),
 		fmt.Sprint(`
 data "aws_shield_protection" "test" {
   protection_id = aws_shield_protection.test.id
@@ -350,7 +350,7 @@ data "aws_shield_protection" "test" {
 `))
 }
 
-func testAccProtectionDataSourceConfig_alb(rName string) string {
+func testAccShieldProtectionDataSourceConfig_alb(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -435,9 +435,9 @@ resource "aws_shield_protection" "test" {
 `, rName)
 }
 
-func testAccProtectionDataSource_albByArn(rName string) string {
+func testAccShieldProtectionDataSource_albByARN(rName string) string {
 	return acctest.ConfigCompose(
-		testAccProtectionDataSourceConfig_alb(rName),
+		testAccShieldProtectionDataSourceConfig_alb(rName),
 		fmt.Sprint(`
 data "aws_shield_protection" "test" {
   resource_arn = aws_lb.test.arn
@@ -449,9 +449,9 @@ data "aws_shield_protection" "test" {
 `))
 }
 
-func testAccProtectionDataSource_albById(rName string) string {
+func testAccShieldProtectionDataSource_albById(rName string) string {
 	return acctest.ConfigCompose(
-		testAccProtectionDataSourceConfig_alb(rName),
+		testAccShieldProtectionDataSourceConfig_alb(rName),
 		fmt.Sprint(`
 data "aws_shield_protection" "test" {
   protection_id = aws_shield_protection.test.id
@@ -462,14 +462,14 @@ data "aws_shield_protection" "test" {
 // Set the environment variable TF_TEST_CLOUDFRONT_RETAIN
 // when doing manual tests so that the test is not waiting for
 // the distribution to be removed completely.
-func testAccProtectionDataSourceCloudFrontRetainConfig() string {
+func testAccShieldProtectionDataSourceCloudFrontRetainConfig() string {
 	if _, ok := os.LookupEnv("TF_TEST_CLOUDFRONT_RETAIN"); ok {
 		return "retain_on_delete = true"
 	}
 	return ""
 }
 
-func testAccProtectionDataSourceConfig_cloudfront(rName string, retainOnDelete string) string {
+func testAccShieldProtectionDataSourceConfig_cloudfront(rName string, retainOnDelete string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_distribution" "test" {
   origin {
@@ -538,9 +538,9 @@ resource "aws_shield_protection" "test" {
 `, rName, retainOnDelete)
 }
 
-func testAccProtectionDataSource_cloudfrontByArn(rName string, retainOnDelete string) string {
+func testAccShieldProtectionDataSource_cloudfrontByARN(rName string, retainOnDelete string) string {
 	return acctest.ConfigCompose(
-		testAccProtectionDataSourceConfig_cloudfront(rName, retainOnDelete),
+		testAccShieldProtectionDataSourceConfig_cloudfront(rName, retainOnDelete),
 		fmt.Sprint(`
 data "aws_shield_protection" "test" {
   resource_arn = aws_cloudfront_distribution.test.arn
@@ -552,9 +552,9 @@ data "aws_shield_protection" "test" {
 `))
 }
 
-func testAccProtectionDataSource_cloudfrontById(rName string, retainOnDelete string) string {
+func testAccShieldProtectionDataSource_cloudfrontById(rName string, retainOnDelete string) string {
 	return acctest.ConfigCompose(
-		testAccProtectionDataSourceConfig_cloudfront(rName, retainOnDelete),
+		testAccShieldProtectionDataSourceConfig_cloudfront(rName, retainOnDelete),
 		fmt.Sprint(`
 data "aws_shield_protection" "test" {
   protection_id = aws_shield_protection.test.id
@@ -562,7 +562,7 @@ data "aws_shield_protection" "test" {
 `))
 }
 
-func testAccProtectionDataSourceConfig_elasticIPAddress(rName string) string {
+func testAccShieldProtectionDataSourceConfig_elasticIPAddress(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -595,9 +595,9 @@ resource "aws_shield_protection" "test" {
 `, rName)
 }
 
-func testAccProtectionDataSource_elasticIPAddressByArn(rName string) string {
+func testAccShieldProtectionDataSource_elasticIPAddressByARN(rName string) string {
 	return acctest.ConfigCompose(
-		testAccProtectionDataSourceConfig_elasticIPAddress(rName),
+		testAccShieldProtectionDataSourceConfig_elasticIPAddress(rName),
 		fmt.Sprintf(`
 data "aws_shield_protection" "test" {
   resource_arn = "arn:${data.aws_partition.current.partition}:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:eip-allocation/${aws_eip.test.id}"
@@ -609,9 +609,9 @@ data "aws_shield_protection" "test" {
 `))
 }
 
-func testAccProtectionDataSource_elasticIPAddressById(rName string) string {
+func testAccShieldProtectionDataSource_elasticIPAddressById(rName string) string {
 	return acctest.ConfigCompose(
-		testAccProtectionDataSourceConfig_elasticIPAddress(rName),
+		testAccShieldProtectionDataSourceConfig_elasticIPAddress(rName),
 		fmt.Sprintf(`
 data "aws_shield_protection" "test" {
   protection_id = aws_shield_protection.test.id
@@ -619,7 +619,7 @@ data "aws_shield_protection" "test" {
 `))
 }
 
-func testAccProtectionDataSourceConfig_globalAccelerator(rName string) string {
+func testAccShieldProtectionDataSourceConfig_globalAccelerator(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_shield_protection" "test" {
   name         = %[1]q
@@ -634,9 +634,9 @@ resource "aws_globalaccelerator_accelerator" "test" {
 `, rName)
 }
 
-func testAccProtectionDataSource_globalAcceleratorByArn(rName string) string {
+func testAccShieldProtectionDataSource_globalAcceleratorByARN(rName string) string {
 	return acctest.ConfigCompose(
-		testAccProtectionDataSourceConfig_globalAccelerator(rName),
+		testAccShieldProtectionDataSourceConfig_globalAccelerator(rName),
 		fmt.Sprint(`
 data "aws_shield_protection" "test" {
   resource_arn = aws_globalaccelerator_accelerator.test.id
@@ -648,9 +648,9 @@ data "aws_shield_protection" "test" {
 `))
 }
 
-func testAccProtectionDataSource_globalAcceleratorById(rName string) string {
+func testAccShieldProtectionDataSource_globalAcceleratorById(rName string) string {
 	return acctest.ConfigCompose(
-		testAccProtectionDataSourceConfig_globalAccelerator(rName),
+		testAccShieldProtectionDataSourceConfig_globalAccelerator(rName),
 		fmt.Sprint(`
 data "aws_shield_protection" "test" {
   protection_id = aws_shield_protection.test.id
