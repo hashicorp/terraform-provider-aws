@@ -69,10 +69,6 @@ func dataSourceServerCertificates() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrPrefix: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
 						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
