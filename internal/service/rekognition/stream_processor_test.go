@@ -221,34 +221,34 @@ func testAccStreamProcessorConfig_basic(setup, rName string) string {
 %[1]q
 
 resource "aws_rekognition_stream_processor" "test" {
-	role_arn = aws_iam_role.test.arn
-	name     = "%[1]q-acctest-processor"
-  
-	data_sharing_preference {
-	  opt_in = true
-	}
-  
-	output {
-	  s3_destination {
-		bucket = aws_s3_bucket.test.bucket
-	  }
-	}
-  
-	settings {
-	  connected_home {
-		labels = ["PERSON", "ALL"]
-	  }
-	}
-  
-	input {
-	  kinesis_video_stream {
-		arn = aws_kinesis_video_stream.test.arn
-	  }
-	}
-  
-	notification_channel {
-	  sns_topic_arn = aws_sns_topic.test.arn
-	}
+  role_arn = aws_iam_role.test.arn
+  name     = "%[1]q-acctest-processor"
+
+  data_sharing_preference {
+    opt_in = true
   }
+
+  output {
+    s3_destination {
+      bucket = aws_s3_bucket.test.bucket
+    }
+  }
+
+  settings {
+    connected_home {
+      labels = ["PERSON", "ALL"]
+    }
+  }
+
+  input {
+    kinesis_video_stream {
+      arn = aws_kinesis_video_stream.test.arn
+    }
+  }
+
+  notification_channel {
+    sns_topic_arn = aws_sns_topic.test.arn
+  }
+}
 `, setup, rName)
 }
