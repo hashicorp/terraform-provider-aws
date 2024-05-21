@@ -300,7 +300,7 @@ Similarly, use the `build` target to install the provider binary locally using `
 
 #### go_generate
 
-`go_generate` checks to make sure nothing changes after you run the code generators. In other words, generated code and commited code should be in sync or we'll say, "bye bye bye."
+`go_generate` checks to make sure nothing changes after you run the code generators. In other words, generated code and committed code should be in sync or we'll say, "bye bye bye."
 
 Use the `gencheck` target to run the check:
 
