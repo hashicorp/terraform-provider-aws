@@ -33,10 +33,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 		},
 		{
 			Factory: newResourceStreamProcessor,
-			Name:    "StreamProcessor",
-			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			},
+			Name:    "Stream Processor",
 		},
 	}
 }
