@@ -343,19 +343,3 @@ func statusCarrierGateway(ctx context.Context, conn *ec2.Client, id string) retr
 		return output, string(output.State), nil
 	}
 }
-
-func statusVPCEndpointState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindVPCEndpointByIDV2(ctx, conn, id)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, string(output.State), nil
-	}
-}
