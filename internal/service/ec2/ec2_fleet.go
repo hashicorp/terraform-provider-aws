@@ -776,7 +776,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 			targetStates = append(targetStates, string(awstypes.FleetStateCodeDeleted), string(awstypes.FleetStateCodeDeletedRunning), string(awstypes.FleetStateCodeDeletedTerminatingInstances))
 		}
 
-		if _, err := waitFleet(ctx, conn, d.Id(), enum.Slice(awstypes.FleetStateCodeSubmitted), targetStates, d.Timeout(schema.TimeoutCreate), 0); err != nil {
+		if err := waitFleet(ctx, conn, d.Id(), enum.Slice(awstypes.FleetStateCodeSubmitted), targetStates, d.Timeout(schema.TimeoutCreate), 0); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for EC2 Fleet (%s) create: %s", d.Id(), err)
 		}
 	}
@@ -889,7 +889,7 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			return sdkdiag.AppendErrorf(diags, "modifying EC2 Fleet (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitFleet(ctx, conn, d.Id(), enum.Slice(awstypes.FleetStateCodeModifying), enum.Slice(awstypes.FleetStateCodeActive), d.Timeout(schema.TimeoutUpdate), 0); err != nil {
+		if err := waitFleet(ctx, conn, d.Id(), enum.Slice(awstypes.FleetStateCodeModifying), enum.Slice(awstypes.FleetStateCodeActive), d.Timeout(schema.TimeoutUpdate), 0); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for EC2 Fleet (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -932,7 +932,7 @@ func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 			targetStates = append(targetStates, string(awstypes.FleetStateCodeDeletedRunning))
 		}
 
-		if _, err := waitFleet(ctx, conn, d.Id(), pendingStates, targetStates, d.Timeout(schema.TimeoutDelete), delay); err != nil {
+		if err := waitFleet(ctx, conn, d.Id(), pendingStates, targetStates, d.Timeout(schema.TimeoutDelete), delay); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for EC2 Fleet (%s) delete: %s", d.Id(), err)
 		}
 	}

@@ -173,7 +173,7 @@ func resourceCapacityReservationCreate(ctx context.Context, d *schema.ResourceDa
 
 	d.SetId(aws.ToString(output.CapacityReservation.CapacityReservationId))
 
-	if _, err := waitCapacityReservationActive(ctx, conn, d.Id()); err != nil {
+	if err := waitCapacityReservationActive(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Capacity Reservation (%s) create: %s", d.Id(), err)
 	}
 
@@ -243,7 +243,7 @@ func resourceCapacityReservationUpdate(ctx context.Context, d *schema.ResourceDa
 			return sdkdiag.AppendErrorf(diags, "updating EC2 Capacity Reservation (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitCapacityReservationActive(ctx, conn, d.Id()); err != nil {
+		if err := waitCapacityReservationActive(ctx, conn, d.Id()); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for EC2 Capacity Reservation (%s) update: %s", d.Id(), err)
 		}
 	}

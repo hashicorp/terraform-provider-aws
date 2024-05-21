@@ -61,7 +61,7 @@ const (
 	CapacityReservationDeletedTimeout = 2 * time.Minute
 )
 
-func waitCapacityReservationActive(ctx context.Context, conn *ec2.Client, id string) (*awstypes.CapacityReservation, error) {
+func waitCapacityReservationActive(ctx context.Context, conn *ec2.Client, id string) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.CapacityReservationStatePending),
 		Target:  enum.Slice(awstypes.CapacityReservationStateActive),
@@ -69,13 +69,9 @@ func waitCapacityReservationActive(ctx context.Context, conn *ec2.Client, id str
 		Timeout: CapacityReservationActiveTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	_, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*awstypes.CapacityReservation); ok {
-		return output, err
-	}
-
-	return nil, err
+	return err
 }
 
 func waitCapacityReservationDeleted(ctx context.Context, conn *ec2.Client, id string) (*awstypes.CapacityReservation, error) {
@@ -95,7 +91,7 @@ func waitCapacityReservationDeleted(ctx context.Context, conn *ec2.Client, id st
 	return nil, err
 }
 
-func waitFleet(ctx context.Context, conn *ec2.Client, id string, pending, target []string, timeout, delay time.Duration) (*awstypes.FleetData, error) {
+func waitFleet(ctx context.Context, conn *ec2.Client, id string, pending, target []string, timeout, delay time.Duration) error {
 	stateConf := &retry.StateChangeConf{
 		Pending:    pending,
 		Target:     target,
@@ -105,13 +101,9 @@ func waitFleet(ctx context.Context, conn *ec2.Client, id string, pending, target
 		MinTimeout: 1 * time.Second,
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	_, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*awstypes.FleetData); ok {
-		return output, err
-	}
-
-	return nil, err
+	return err
 }
 
 func waitHostCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.Host, error) {
