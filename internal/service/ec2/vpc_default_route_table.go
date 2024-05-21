@@ -148,7 +148,7 @@ func resourceDefaultRouteTableCreate(ctx context.Context, d *schema.ResourceData
 
 	routeTableID := d.Get("default_route_table_id").(string)
 
-	routeTable, err := findRouteTableByIDV2(ctx, conn, routeTableID)
+	routeTable, err := findRouteTableByID(ctx, conn, routeTableID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Default Route Table (%s): %s", routeTableID, err)
@@ -184,20 +184,20 @@ func resourceDefaultRouteTableCreate(ctx context.Context, d *schema.ResourceData
 		}
 
 		var destination string
-		var routeFinder routeFinderV2
+		var routeFinder routeFinder
 
 		if v.DestinationCidrBlock != nil {
 			input.DestinationCidrBlock = v.DestinationCidrBlock
 			destination = aws.ToString(v.DestinationCidrBlock)
-			routeFinder = findRouteByIPv4DestinationV2
+			routeFinder = findRouteByIPv4Destination
 		} else if v.DestinationIpv6CidrBlock != nil {
 			input.DestinationIpv6CidrBlock = v.DestinationIpv6CidrBlock
 			destination = aws.ToString(v.DestinationIpv6CidrBlock)
-			routeFinder = findRouteByIPv6DestinationV2
+			routeFinder = findRouteByIPv6Destination
 		} else if v.DestinationPrefixListId != nil {
 			input.DestinationPrefixListId = v.DestinationPrefixListId
 			destination = aws.ToString(v.DestinationPrefixListId)
-			routeFinder = findRouteByPrefixListIDDestinationV2
+			routeFinder = findRouteByPrefixListIDDestination
 		}
 
 		_, err := conn.DeleteRoute(ctx, input)
@@ -210,7 +210,7 @@ func resourceDefaultRouteTableCreate(ctx context.Context, d *schema.ResourceData
 			return sdkdiag.AppendErrorf(diags, "deleting Route in EC2 Default Route Table (%s) with destination (%s): %s", d.Id(), destination, err)
 		}
 
-		if _, err := waitRouteDeletedV2(ctx, conn, routeFinder, routeTableID, destination, d.Timeout(schema.TimeoutCreate)); err != nil {
+		if _, err := waitRouteDeleted(ctx, conn, routeFinder, routeTableID, destination, d.Timeout(schema.TimeoutCreate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Route in EC2 Default Route Table (%s) with destination (%s) delete: %s", d.Id(), destination, err)
 		}
 	}
@@ -255,7 +255,7 @@ func resourceDefaultRouteTableRead(ctx context.Context, d *schema.ResourceData, 
 func resourceDefaultRouteTableImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	routeTable, err := findMainRouteTableByVPCIDV2(ctx, conn, d.Id())
+	routeTable, err := findMainRouteTableByVPCID(ctx, conn, d.Id())
 
 	if err != nil {
 		return nil, err
