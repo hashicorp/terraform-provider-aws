@@ -10,8 +10,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -24,7 +24,7 @@ import (
 
 func TestAccIPAMPoolCIDRAllocation_ipv4Basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var allocation ec2.IpamPoolAllocation
+	var allocation awstypes.IpamPoolAllocation
 	resourceName := "aws_vpc_ipam_pool_cidr_allocation.test"
 	cidr := "172.2.0.0/28"
 
@@ -55,7 +55,7 @@ func TestAccIPAMPoolCIDRAllocation_ipv4Basic(t *testing.T) {
 
 func TestAccIPAMPoolCIDRAllocation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var allocation ec2.IpamPoolAllocation
+	var allocation awstypes.IpamPoolAllocation
 	resourceName := "aws_vpc_ipam_pool_cidr_allocation.test"
 	cidr := "172.2.0.0/28"
 
@@ -79,7 +79,7 @@ func TestAccIPAMPoolCIDRAllocation_disappears(t *testing.T) {
 
 func TestAccIPAMPoolCIDRAllocation_ipv4BasicNetmask(t *testing.T) {
 	ctx := acctest.Context(t)
-	var allocation ec2.IpamPoolAllocation
+	var allocation awstypes.IpamPoolAllocation
 	resourceName := "aws_vpc_ipam_pool_cidr_allocation.test"
 	netmask := "28"
 
@@ -108,7 +108,7 @@ func TestAccIPAMPoolCIDRAllocation_ipv4BasicNetmask(t *testing.T) {
 
 func TestAccIPAMPoolCIDRAllocation_ipv4DisallowedCIDR(t *testing.T) {
 	ctx := acctest.Context(t)
-	var allocation ec2.IpamPoolAllocation
+	var allocation awstypes.IpamPoolAllocation
 	resourceName := "aws_vpc_ipam_pool_cidr_allocation.test"
 	disallowedCidr := "172.2.0.0/28"
 	netmaskLength := "28"
@@ -138,7 +138,7 @@ func TestAccIPAMPoolCIDRAllocation_ipv4DisallowedCIDR(t *testing.T) {
 
 func TestAccIPAMPoolCIDRAllocation_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
-	var allocation1, allocation2 ec2.IpamPoolAllocation
+	var allocation1, allocation2 awstypes.IpamPoolAllocation
 	resourceName := "aws_vpc_ipam_pool_cidr_allocation.test1"
 	resourceName2 := "aws_vpc_ipam_pool_cidr_allocation.test2"
 	cidr1 := "172.2.0.0/28"
@@ -181,7 +181,7 @@ func TestAccIPAMPoolCIDRAllocation_multiple(t *testing.T) {
 
 func TestAccIPAMPoolCIDRAllocation_differentRegion(t *testing.T) {
 	ctx := acctest.Context(t)
-	var allocation ec2.IpamPoolAllocation
+	var allocation awstypes.IpamPoolAllocation
 	var providers []*schema.Provider
 	resourceName := "aws_vpc_ipam_pool_cidr_allocation.test"
 	cidr := "172.2.0.0/28"
@@ -214,17 +214,17 @@ func TestAccIPAMPoolCIDRAllocation_differentRegion(t *testing.T) {
 	})
 }
 
-func testAccCheckIPAMCIDRPrefix(allocation *ec2.IpamPoolAllocation, expected string) resource.TestCheckFunc {
+func testAccCheckIPAMCIDRPrefix(allocation *awstypes.IpamPoolAllocation, expected string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if strings.Split(aws.StringValue(allocation.Cidr), "/")[1] != expected {
-			return fmt.Errorf("Bad cidr prefix: %s", aws.StringValue(allocation.Cidr))
+		if strings.Split(aws.ToString(allocation.Cidr), "/")[1] != expected {
+			return fmt.Errorf("Bad cidr prefix: %s", aws.ToString(allocation.Cidr))
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckIPAMPoolCIDRAllocationExists(ctx context.Context, n string, v *ec2.IpamPoolAllocation) resource.TestCheckFunc {
+func testAccCheckIPAMPoolCIDRAllocationExists(ctx context.Context, n string, v *awstypes.IpamPoolAllocation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -241,7 +241,7 @@ func testAccCheckIPAMPoolCIDRAllocationExists(ctx context.Context, n string, v *
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindIPAMPoolAllocationByTwoPartKey(ctx, conn, allocationID, poolID)
 
@@ -255,7 +255,7 @@ func testAccCheckIPAMPoolCIDRAllocationExists(ctx context.Context, n string, v *
 	}
 }
 
-func testAccCheckIPAMPoolCIDRAllocationExistsWithProvider(ctx context.Context, n string, v *ec2.IpamPoolAllocation, providerF func() *schema.Provider) resource.TestCheckFunc {
+func testAccCheckIPAMPoolCIDRAllocationExistsWithProvider(ctx context.Context, n string, v *awstypes.IpamPoolAllocation, providerF func() *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -272,7 +272,7 @@ func testAccCheckIPAMPoolCIDRAllocationExistsWithProvider(ctx context.Context, n
 			return err
 		}
 
-		conn := providerF().Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := providerF().Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindIPAMPoolAllocationByTwoPartKey(ctx, conn, allocationID, poolID)
 
@@ -288,7 +288,7 @@ func testAccCheckIPAMPoolCIDRAllocationExistsWithProvider(ctx context.Context, n
 
 func testAccCheckIPAMPoolAllocationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpc_ipam_pool_cidr_allocation" {

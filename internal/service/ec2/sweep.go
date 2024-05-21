@@ -2657,7 +2657,7 @@ func sweepIPAMs(region string) error {
 		}
 
 		for _, v := range page.Ipams {
-			r := ResourceIPAM()
+			r := resourceIPAM()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.IpamId))
 			d.Set("cascade", true)
@@ -2703,7 +2703,7 @@ func sweepIPAMResourceDiscoveries(region string) error {
 		for _, v := range page.IpamResourceDiscoveries {
 			// do not attempt to delete default resource created by each ipam
 			if !aws.ToBool(v.IsDefault) {
-				r := ResourceIPAMResourceDiscovery()
+				r := resourceIPAMResourceDiscovery()
 				d := r.Data(nil)
 				d.SetId(aws.ToString(v.IpamResourceDiscoveryId))
 

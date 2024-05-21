@@ -8,8 +8,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -21,7 +22,7 @@ import (
 
 func TestAccIPAMPool_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool ec2.IpamPool
+	var pool awstypes.IpamPool
 	resourceName := "aws_vpc_ipam_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -82,7 +83,7 @@ func TestAccIPAMPool_basic(t *testing.T) {
 
 func TestAccIPAMPool_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool ec2.IpamPool
+	var pool awstypes.IpamPool
 	resourceName := "aws_vpc_ipam_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -105,7 +106,7 @@ func TestAccIPAMPool_disappears(t *testing.T) {
 
 func TestAccIPAMPool_ipv6Basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool ec2.IpamPool
+	var pool awstypes.IpamPool
 	resourceName := "aws_vpc_ipam_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -133,7 +134,7 @@ func TestAccIPAMPool_ipv6Basic(t *testing.T) {
 
 func TestAccIPAMPool_ipv6Contiguous(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool ec2.IpamPool
+	var pool awstypes.IpamPool
 	resourceName := "aws_vpc_ipam_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -162,7 +163,7 @@ func TestAccIPAMPool_ipv6Contiguous(t *testing.T) {
 
 func TestAccIPAMPool_cascade(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool ec2.IpamPool
+	var pool awstypes.IpamPool
 	resourceName := "aws_vpc_ipam_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -190,7 +191,7 @@ func TestAccIPAMPool_cascade(t *testing.T) {
 
 func TestAccIPAMPool_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pool ec2.IpamPool
+	var pool awstypes.IpamPool
 	resourceName := "aws_vpc_ipam_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -233,7 +234,7 @@ func TestAccIPAMPool_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckIPAMPoolExists(ctx context.Context, n string, v *ec2.IpamPool) resource.TestCheckFunc {
+func testAccCheckIPAMPoolExists(ctx context.Context, n string, v *awstypes.IpamPool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -244,7 +245,7 @@ func testAccCheckIPAMPoolExists(ctx context.Context, n string, v *ec2.IpamPool) 
 			return fmt.Errorf("No IPAM Pool ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindIPAMPoolByID(ctx, conn, rs.Primary.ID)
 
@@ -260,7 +261,7 @@ func testAccCheckIPAMPoolExists(ctx context.Context, n string, v *ec2.IpamPool) 
 
 func testAccCheckIPAMPoolDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpc_ipam_pool" {
@@ -344,12 +345,12 @@ resource "aws_vpc_ipam_pool" "test" {
 }
 `)
 
-func testAccCheckIPAMPoolCIDRCreate(ctx context.Context, ipampool *ec2.IpamPool) resource.TestCheckFunc {
+func testAccCheckIPAMPoolCIDRCreate(ctx context.Context, ipampool *awstypes.IpamPool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		_, err := conn.ProvisionIpamPoolCidrWithContext(ctx, &ec2.ProvisionIpamPoolCidrInput{
-			IpamPoolId: aws.String(*ipampool.IpamPoolId),
+		_, err := conn.ProvisionIpamPoolCidr(ctx, &ec2.ProvisionIpamPoolCidrInput{
+			IpamPoolId: ipampool.IpamPoolId,
 			Cidr:       aws.String("10.0.0.0/16"),
 		})
 

@@ -185,7 +185,7 @@ The following arguments are optional:
 ### `endpoint`
 
 * `id` - (Required) ID of an endpoint you want to assign.
-* `type` - (Optional) Type of the endpoint. Valid values are `value` , `cloudfront` , `elastic-load-balancer`, `s3-website`
+* `type` - (Optional) Type of the endpoint. Valid values are `value` , `cloudfront` , `application-load-balancer`, `elastic-load-balancer`, `s3-website`
 * `region` - (Optional) To route traffic to an Amazon S3 bucket that is configured as a website endpoint, specify the region in which you created the bucket for `region`.
 * `value` - (Optional) Value of the `type`.
 
