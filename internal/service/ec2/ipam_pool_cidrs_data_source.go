@@ -69,7 +69,7 @@ func dataSourceIPAMPoolCIDRsRead(ctx context.Context, d *schema.ResourceData, me
 		input.Filters = nil
 	}
 
-	output, err := FindIPAMPoolCIDRs(ctx, conn, input)
+	output, err := findIPAMPoolCIDRs(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading IPAM Pool CIDRs: %s", err)

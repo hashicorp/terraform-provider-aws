@@ -49,6 +49,13 @@ var (
 	FindEIPDomainNameAttributeByAllocationID               = findEIPDomainNameAttributeByAllocationID
 	FindFastSnapshotRestoreByTwoPartKey                    = findFastSnapshotRestoreByTwoPartKey
 	FindInstanceMetadataDefaults                           = findInstanceMetadataDefaults
+	FindIPAMByID                                           = findIPAMByID
+	FindIPAMPoolAllocationByTwoPartKey                     = findIPAMPoolAllocationByTwoPartKey
+	FindIPAMPoolByID                                       = findIPAMPoolByID
+	FindIPAMPoolCIDRByTwoPartKey                           = findIPAMPoolCIDRByTwoPartKey
+	FindIPAMResourceDiscoveryAssociationByID               = findIPAMResourceDiscoveryAssociationByID
+	FindIPAMResourceDiscoveryByID                          = findIPAMResourceDiscoveryByID
+	FindIPAMScopeByID                                      = findIPAMScopeByID
 	FindKeyPairByName                                      = findKeyPairByName
 	FindNetworkACLByIDV2                                   = findNetworkACLByIDV2
 	FindNetworkInterfaceByIDV2                             = findNetworkInterfaceByIDV2

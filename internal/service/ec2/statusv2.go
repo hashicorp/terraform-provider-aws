@@ -345,9 +345,9 @@ func statusCarrierGateway(ctx context.Context, conn *ec2.Client, id string) retr
 	}
 }
 
-func StatusIPAMState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusIPAMState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindIPAMByID(ctx, conn, id)
+		output, err := findIPAMByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -361,9 +361,9 @@ func StatusIPAMState(ctx context.Context, conn *ec2.Client, id string) retry.Sta
 	}
 }
 
-func StatusIPAMPoolState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusIPAMPoolState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindIPAMPoolByID(ctx, conn, id)
+		output, err := findIPAMPoolByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -377,10 +377,10 @@ func StatusIPAMPoolState(ctx context.Context, conn *ec2.Client, id string) retry
 	}
 }
 
-func StatusIPAMPoolCIDRState(ctx context.Context, conn *ec2.Client, cidrBlock, poolID, poolCidrId string) retry.StateRefreshFunc {
+func statusIPAMPoolCIDRState(ctx context.Context, conn *ec2.Client, cidrBlock, poolID, poolCidrId string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		if cidrBlock == "" {
-			output, err := FindIPAMPoolCIDRByPoolCIDRId(ctx, conn, poolCidrId, poolID)
+			output, err := findIPAMPoolCIDRByPoolCIDRId(ctx, conn, poolCidrId, poolID)
 
 			if tfresource.NotFound(err) {
 				return nil, "", nil
@@ -392,7 +392,7 @@ func StatusIPAMPoolCIDRState(ctx context.Context, conn *ec2.Client, cidrBlock, p
 			cidrBlock = aws.ToString(output.Cidr)
 		}
 
-		output, err := FindIPAMPoolCIDRByTwoPartKey(ctx, conn, cidrBlock, poolID)
+		output, err := findIPAMPoolCIDRByTwoPartKey(ctx, conn, cidrBlock, poolID)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -411,9 +411,9 @@ const (
 	IpamPoolCIDRAllocationCreateComplete = "create-complete" // nosemgrep:ci.caps2-in-const-name, ci.caps2-in-var-name, ci.caps5-in-const-name, ci.caps5-in-var-name
 )
 
-func StatusIPAMPoolCIDRAllocationState(ctx context.Context, conn *ec2.Client, allocationID, poolID string) retry.StateRefreshFunc {
+func statusIPAMPoolCIDRAllocationState(ctx context.Context, conn *ec2.Client, allocationID, poolID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindIPAMPoolAllocationByTwoPartKey(ctx, conn, allocationID, poolID)
+		output, err := findIPAMPoolAllocationByTwoPartKey(ctx, conn, allocationID, poolID)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -427,9 +427,9 @@ func StatusIPAMPoolCIDRAllocationState(ctx context.Context, conn *ec2.Client, al
 	}
 }
 
-func StatusIPAMResourceDiscoveryState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusIPAMResourceDiscoveryState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindIPAMResourceDiscoveryByID(ctx, conn, id)
+		output, err := findIPAMResourceDiscoveryByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -443,9 +443,9 @@ func StatusIPAMResourceDiscoveryState(ctx context.Context, conn *ec2.Client, id 
 	}
 }
 
-func StatusIPAMResourceDiscoveryAssociationStatus(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusIPAMResourceDiscoveryAssociationStatus(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindIPAMResourceDiscoveryAssociationByID(ctx, conn, id)
+		output, err := findIPAMResourceDiscoveryAssociationByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -459,9 +459,9 @@ func StatusIPAMResourceDiscoveryAssociationStatus(ctx context.Context, conn *ec2
 	}
 }
 
-func StatusIPAMScopeState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusIPAMScopeState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindIPAMScopeByID(ctx, conn, id)
+		output, err := findIPAMScopeByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

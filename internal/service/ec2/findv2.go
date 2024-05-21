@@ -1311,8 +1311,8 @@ func findCarrierGatewayByID(ctx context.Context, conn *ec2.Client, id string) (*
 	return output, nil
 }
 
-func FindIPAM(ctx context.Context, conn *ec2.Client, input *ec2.DescribeIpamsInput) (*awstypes.Ipam, error) {
-	output, err := FindIPAMs(ctx, conn, input)
+func findIPAM(ctx context.Context, conn *ec2.Client, input *ec2.DescribeIpamsInput) (*awstypes.Ipam, error) {
+	output, err := findIPAMs(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -1321,7 +1321,7 @@ func FindIPAM(ctx context.Context, conn *ec2.Client, input *ec2.DescribeIpamsInp
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func FindIPAMs(ctx context.Context, conn *ec2.Client, input *ec2.DescribeIpamsInput) ([]awstypes.Ipam, error) {
+func findIPAMs(ctx context.Context, conn *ec2.Client, input *ec2.DescribeIpamsInput) ([]awstypes.Ipam, error) {
 	var output []awstypes.Ipam
 
 	pages := ec2.NewDescribeIpamsPaginator(conn, input)
@@ -1345,12 +1345,12 @@ func FindIPAMs(ctx context.Context, conn *ec2.Client, input *ec2.DescribeIpamsIn
 	return output, nil
 }
 
-func FindIPAMByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Ipam, error) {
+func findIPAMByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.Ipam, error) {
 	input := &ec2.DescribeIpamsInput{
 		IpamIds: []string{id},
 	}
 
-	output, err := FindIPAM(ctx, conn, input)
+	output, err := findIPAM(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -1373,8 +1373,8 @@ func FindIPAMByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.I
 	return output, nil
 }
 
-func FindIPAMPool(ctx context.Context, conn *ec2.Client, input *ec2.DescribeIpamPoolsInput) (*awstypes.IpamPool, error) {
-	output, err := FindIPAMPools(ctx, conn, input)
+func findIPAMPool(ctx context.Context, conn *ec2.Client, input *ec2.DescribeIpamPoolsInput) (*awstypes.IpamPool, error) {
+	output, err := findIPAMPools(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -1383,7 +1383,7 @@ func FindIPAMPool(ctx context.Context, conn *ec2.Client, input *ec2.DescribeIpam
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func FindIPAMPools(ctx context.Context, conn *ec2.Client, input *ec2.DescribeIpamPoolsInput) ([]awstypes.IpamPool, error) {
+func findIPAMPools(ctx context.Context, conn *ec2.Client, input *ec2.DescribeIpamPoolsInput) ([]awstypes.IpamPool, error) {
 	var output []awstypes.IpamPool
 
 	pages := ec2.NewDescribeIpamPoolsPaginator(conn, input)
@@ -1407,12 +1407,12 @@ func FindIPAMPools(ctx context.Context, conn *ec2.Client, input *ec2.DescribeIpa
 	return output, nil
 }
 
-func FindIPAMPoolByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.IpamPool, error) {
+func findIPAMPoolByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.IpamPool, error) {
 	input := &ec2.DescribeIpamPoolsInput{
 		IpamPoolIds: []string{id},
 	}
 
-	output, err := FindIPAMPool(ctx, conn, input)
+	output, err := findIPAMPool(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -1435,8 +1435,8 @@ func FindIPAMPoolByID(ctx context.Context, conn *ec2.Client, id string) (*awstyp
 	return output, nil
 }
 
-func FindIPAMPoolAllocation(ctx context.Context, conn *ec2.Client, input *ec2.GetIpamPoolAllocationsInput) (*awstypes.IpamPoolAllocation, error) {
-	output, err := FindIPAMPoolAllocations(ctx, conn, input)
+func findIPAMPoolAllocation(ctx context.Context, conn *ec2.Client, input *ec2.GetIpamPoolAllocationsInput) (*awstypes.IpamPoolAllocation, error) {
+	output, err := findIPAMPoolAllocations(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -1445,7 +1445,7 @@ func FindIPAMPoolAllocation(ctx context.Context, conn *ec2.Client, input *ec2.Ge
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func FindIPAMPoolAllocations(ctx context.Context, conn *ec2.Client, input *ec2.GetIpamPoolAllocationsInput) ([]awstypes.IpamPoolAllocation, error) {
+func findIPAMPoolAllocations(ctx context.Context, conn *ec2.Client, input *ec2.GetIpamPoolAllocationsInput) ([]awstypes.IpamPoolAllocation, error) {
 	var output []awstypes.IpamPoolAllocation
 
 	pages := ec2.NewGetIpamPoolAllocationsPaginator(conn, input)
@@ -1469,13 +1469,13 @@ func FindIPAMPoolAllocations(ctx context.Context, conn *ec2.Client, input *ec2.G
 	return output, nil
 }
 
-func FindIPAMPoolAllocationByTwoPartKey(ctx context.Context, conn *ec2.Client, allocationID, poolID string) (*awstypes.IpamPoolAllocation, error) {
+func findIPAMPoolAllocationByTwoPartKey(ctx context.Context, conn *ec2.Client, allocationID, poolID string) (*awstypes.IpamPoolAllocation, error) {
 	input := &ec2.GetIpamPoolAllocationsInput{
 		IpamPoolAllocationId: aws.String(allocationID),
 		IpamPoolId:           aws.String(poolID),
 	}
 
-	output, err := FindIPAMPoolAllocation(ctx, conn, input)
+	output, err := findIPAMPoolAllocation(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -1491,8 +1491,8 @@ func FindIPAMPoolAllocationByTwoPartKey(ctx context.Context, conn *ec2.Client, a
 	return output, nil
 }
 
-func FindIPAMPoolCIDR(ctx context.Context, conn *ec2.Client, input *ec2.GetIpamPoolCidrsInput) (*awstypes.IpamPoolCidr, error) {
-	output, err := FindIPAMPoolCIDRs(ctx, conn, input)
+func findIPAMPoolCIDR(ctx context.Context, conn *ec2.Client, input *ec2.GetIpamPoolCidrsInput) (*awstypes.IpamPoolCidr, error) {
+	output, err := findIPAMPoolCIDRs(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -1501,7 +1501,7 @@ func FindIPAMPoolCIDR(ctx context.Context, conn *ec2.Client, input *ec2.GetIpamP
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func FindIPAMPoolCIDRs(ctx context.Context, conn *ec2.Client, input *ec2.GetIpamPoolCidrsInput) ([]awstypes.IpamPoolCidr, error) {
+func findIPAMPoolCIDRs(ctx context.Context, conn *ec2.Client, input *ec2.GetIpamPoolCidrsInput) ([]awstypes.IpamPoolCidr, error) {
 	var output []awstypes.IpamPoolCidr
 
 	pages := ec2.NewGetIpamPoolCidrsPaginator(conn, input)
@@ -1525,7 +1525,7 @@ func FindIPAMPoolCIDRs(ctx context.Context, conn *ec2.Client, input *ec2.GetIpam
 	return output, nil
 }
 
-func FindIPAMPoolCIDRByTwoPartKey(ctx context.Context, conn *ec2.Client, cidrBlock, poolID string) (*awstypes.IpamPoolCidr, error) {
+func findIPAMPoolCIDRByTwoPartKey(ctx context.Context, conn *ec2.Client, cidrBlock, poolID string) (*awstypes.IpamPoolCidr, error) {
 	input := &ec2.GetIpamPoolCidrsInput{
 		Filters: newAttributeFilterListV2(map[string]string{
 			"cidr": cidrBlock,
@@ -1533,7 +1533,7 @@ func FindIPAMPoolCIDRByTwoPartKey(ctx context.Context, conn *ec2.Client, cidrBlo
 		IpamPoolId: aws.String(poolID),
 	}
 
-	output, err := FindIPAMPoolCIDR(ctx, conn, input)
+	output, err := findIPAMPoolCIDR(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -1556,7 +1556,7 @@ func FindIPAMPoolCIDRByTwoPartKey(ctx context.Context, conn *ec2.Client, cidrBlo
 	return output, nil
 }
 
-func FindIPAMPoolCIDRByPoolCIDRId(ctx context.Context, conn *ec2.Client, poolCidrId, poolID string) (*awstypes.IpamPoolCidr, error) {
+func findIPAMPoolCIDRByPoolCIDRId(ctx context.Context, conn *ec2.Client, poolCidrId, poolID string) (*awstypes.IpamPoolCidr, error) {
 	input := &ec2.GetIpamPoolCidrsInput{
 		Filters: newAttributeFilterListV2(map[string]string{
 			"ipam-pool-cidr-id": poolCidrId,
@@ -1564,7 +1564,7 @@ func FindIPAMPoolCIDRByPoolCIDRId(ctx context.Context, conn *ec2.Client, poolCid
 		IpamPoolId: aws.String(poolID),
 	}
 
-	output, err := FindIPAMPoolCIDR(ctx, conn, input)
+	output, err := findIPAMPoolCIDR(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -1588,8 +1588,8 @@ func FindIPAMPoolCIDRByPoolCIDRId(ctx context.Context, conn *ec2.Client, poolCid
 	return output, nil
 }
 
-func FindIPAMResourceDiscovery(ctx context.Context, conn *ec2.Client, input *ec2.DescribeIpamResourceDiscoveriesInput) (*awstypes.IpamResourceDiscovery, error) {
-	output, err := FindIPAMResourceDiscoveries(ctx, conn, input)
+func findIPAMResourceDiscovery(ctx context.Context, conn *ec2.Client, input *ec2.DescribeIpamResourceDiscoveriesInput) (*awstypes.IpamResourceDiscovery, error) {
+	output, err := findIPAMResourceDiscoveries(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -1598,7 +1598,7 @@ func FindIPAMResourceDiscovery(ctx context.Context, conn *ec2.Client, input *ec2
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func FindIPAMResourceDiscoveries(ctx context.Context, conn *ec2.Client, input *ec2.DescribeIpamResourceDiscoveriesInput) ([]awstypes.IpamResourceDiscovery, error) {
+func findIPAMResourceDiscoveries(ctx context.Context, conn *ec2.Client, input *ec2.DescribeIpamResourceDiscoveriesInput) ([]awstypes.IpamResourceDiscovery, error) {
 	var output []awstypes.IpamResourceDiscovery
 
 	pages := ec2.NewDescribeIpamResourceDiscoveriesPaginator(conn, input)
@@ -1622,12 +1622,12 @@ func FindIPAMResourceDiscoveries(ctx context.Context, conn *ec2.Client, input *e
 	return output, nil
 }
 
-func FindIPAMResourceDiscoveryByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.IpamResourceDiscovery, error) {
+func findIPAMResourceDiscoveryByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.IpamResourceDiscovery, error) {
 	input := &ec2.DescribeIpamResourceDiscoveriesInput{
 		IpamResourceDiscoveryIds: []string{id},
 	}
 
-	output, err := FindIPAMResourceDiscovery(ctx, conn, input)
+	output, err := findIPAMResourceDiscovery(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -1650,8 +1650,8 @@ func FindIPAMResourceDiscoveryByID(ctx context.Context, conn *ec2.Client, id str
 	return output, nil
 }
 
-func FindIPAMResourceDiscoveryAssociation(ctx context.Context, conn *ec2.Client, input *ec2.DescribeIpamResourceDiscoveryAssociationsInput) (*awstypes.IpamResourceDiscoveryAssociation, error) {
-	output, err := FindIPAMResourceDiscoveryAssociations(ctx, conn, input)
+func findIPAMResourceDiscoveryAssociation(ctx context.Context, conn *ec2.Client, input *ec2.DescribeIpamResourceDiscoveryAssociationsInput) (*awstypes.IpamResourceDiscoveryAssociation, error) {
+	output, err := findIPAMResourceDiscoveryAssociations(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -1660,7 +1660,7 @@ func FindIPAMResourceDiscoveryAssociation(ctx context.Context, conn *ec2.Client,
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func FindIPAMResourceDiscoveryAssociations(ctx context.Context, conn *ec2.Client, input *ec2.DescribeIpamResourceDiscoveryAssociationsInput) ([]awstypes.IpamResourceDiscoveryAssociation, error) {
+func findIPAMResourceDiscoveryAssociations(ctx context.Context, conn *ec2.Client, input *ec2.DescribeIpamResourceDiscoveryAssociationsInput) ([]awstypes.IpamResourceDiscoveryAssociation, error) {
 	var output []awstypes.IpamResourceDiscoveryAssociation
 
 	pages := ec2.NewDescribeIpamResourceDiscoveryAssociationsPaginator(conn, input)
@@ -1684,12 +1684,12 @@ func FindIPAMResourceDiscoveryAssociations(ctx context.Context, conn *ec2.Client
 	return output, nil
 }
 
-func FindIPAMResourceDiscoveryAssociationByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.IpamResourceDiscoveryAssociation, error) {
+func findIPAMResourceDiscoveryAssociationByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.IpamResourceDiscoveryAssociation, error) {
 	input := &ec2.DescribeIpamResourceDiscoveryAssociationsInput{
 		IpamResourceDiscoveryAssociationIds: []string{id},
 	}
 
-	output, err := FindIPAMResourceDiscoveryAssociation(ctx, conn, input)
+	output, err := findIPAMResourceDiscoveryAssociation(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -1712,8 +1712,8 @@ func FindIPAMResourceDiscoveryAssociationByID(ctx context.Context, conn *ec2.Cli
 	return output, nil
 }
 
-func FindIPAMScope(ctx context.Context, conn *ec2.Client, input *ec2.DescribeIpamScopesInput) (*awstypes.IpamScope, error) {
-	output, err := FindIPAMScopes(ctx, conn, input)
+func findIPAMScope(ctx context.Context, conn *ec2.Client, input *ec2.DescribeIpamScopesInput) (*awstypes.IpamScope, error) {
+	output, err := findIPAMScopes(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -1722,7 +1722,7 @@ func FindIPAMScope(ctx context.Context, conn *ec2.Client, input *ec2.DescribeIpa
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func FindIPAMScopes(ctx context.Context, conn *ec2.Client, input *ec2.DescribeIpamScopesInput) ([]awstypes.IpamScope, error) {
+func findIPAMScopes(ctx context.Context, conn *ec2.Client, input *ec2.DescribeIpamScopesInput) ([]awstypes.IpamScope, error) {
 	var output []awstypes.IpamScope
 
 	pages := ec2.NewDescribeIpamScopesPaginator(conn, input)
@@ -1746,12 +1746,12 @@ func FindIPAMScopes(ctx context.Context, conn *ec2.Client, input *ec2.DescribeIp
 	return output, nil
 }
 
-func FindIPAMScopeByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.IpamScope, error) {
+func findIPAMScopeByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.IpamScope, error) {
 	input := &ec2.DescribeIpamScopesInput{
 		IpamScopeIds: []string{id},
 	}
 
-	output, err := FindIPAMScope(ctx, conn, input)
+	output, err := findIPAMScope(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
