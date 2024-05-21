@@ -67,6 +67,7 @@ import (
 	dax_sdkv2 "github.com/aws/aws-sdk-go-v2/service/dax"
 	devopsguru_sdkv2 "github.com/aws/aws-sdk-go-v2/service/devopsguru"
 	directoryservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directoryservice"
+	dlm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/dlm"
 	docdbelastic_sdkv2 "github.com/aws/aws-sdk-go-v2/service/docdbelastic"
 	dynamodb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -190,7 +191,6 @@ import (
 	devicefarm_sdkv1 "github.com/aws/aws-sdk-go/service/devicefarm"
 	directconnect_sdkv1 "github.com/aws/aws-sdk-go/service/directconnect"
 	directoryservice_sdkv1 "github.com/aws/aws-sdk-go/service/directoryservice"
-	dlm_sdkv1 "github.com/aws/aws-sdk-go/service/dlm"
 	docdb_sdkv1 "github.com/aws/aws-sdk-go/service/docdb"
 	ec2_sdkv1 "github.com/aws/aws-sdk-go/service/ec2"
 	ecs_sdkv1 "github.com/aws/aws-sdk-go/service/ecs"
@@ -513,8 +513,8 @@ func (c *AWSClient) DAXClient(ctx context.Context) *dax_sdkv2.Client {
 	return errs.Must(client[*dax_sdkv2.Client](ctx, c, names.DAX, make(map[string]any)))
 }
 
-func (c *AWSClient) DLMConn(ctx context.Context) *dlm_sdkv1.DLM {
-	return errs.Must(conn[*dlm_sdkv1.DLM](ctx, c, names.DLM, make(map[string]any)))
+func (c *AWSClient) DLMClient(ctx context.Context) *dlm_sdkv2.Client {
+	return errs.Must(client[*dlm_sdkv2.Client](ctx, c, names.DLM, make(map[string]any)))
 }
 
 func (c *AWSClient) DMSConn(ctx context.Context) *databasemigrationservice_sdkv1.DatabaseMigrationService {
