@@ -19,9 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/names"
-
 	tfappfabric "github.com/hashicorp/terraform-provider-aws/internal/service/appfabric"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAppFabricIngestion_basic(t *testing.T) {
@@ -37,7 +36,6 @@ func TestAccAppFabricIngestion_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

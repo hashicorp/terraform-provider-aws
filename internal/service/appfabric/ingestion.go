@@ -63,7 +63,7 @@ func (r *resourceIngestion) Schema(ctx context.Context, req resource.SchemaReque
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"arn": schema.StringAttribute{
+			"app_bundle_arn": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
@@ -73,11 +73,8 @@ func (r *resourceIngestion) Schema(ctx context.Context, req resource.SchemaReque
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"app_bundle_arn": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrID: framework.IDAttribute(),
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrID:  framework.IDAttribute(),
 			"ingestion_type": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -109,60 +106,15 @@ func (r *resourceIngestion) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	in := &appfabric.CreateIngestionInput{
-		App:                 aws.String(plan.App.ValueString()),
-		AppBundleIdentifier: aws.String(plan.AppBundleIdentifier.ValueString()),
-		IngestionType:       awstypes.IngestionType(plan.IngestionType.ValueString()),
-		TenantId:            aws.String(plan.TenantId.ValueString()),
-		Tags:                getTagsIn(ctx),
-	}
-
-	out, err := conn.CreateIngestion(ctx, in)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppFabric, create.ErrActionCreating, ResNameIngestion, plan.App.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil || out.Ingestion == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppFabric, create.ErrActionCreating, ResNameIngestion, plan.App.String(), nil),
-			errors.New("empty output").Error(),
-		)
-		return
-	}
-
-	plan.App = flex.StringToFramework(ctx, out.Ingestion.App)
-	plan.AppBundleArn = flex.StringToFramework(ctx, out.Ingestion.AppBundleArn)
-	plan.AppBundleIdentifier = flex.StringToFramework(ctx, out.Ingestion.AppBundleArn)
-	plan.ARN = flex.StringToFramework(ctx, out.Ingestion.Arn)
-	plan.ID = types.StringValue(createIngestionID(string(*out.Ingestion.AppBundleArn), string(*out.Ingestion.Arn)))
-	plan.IngestionType = flex.StringToFramework(ctx, aws.String(string(out.Ingestion.IngestionType)))
-	plan.State = flex.StringToFramework(ctx, aws.String(string(out.Ingestion.State)))
-	plan.TenantId = flex.StringToFramework(ctx, out.Ingestion.TenantId)
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
-}
-
-func (r *resourceIngestion) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().AppFabricClient(ctx)
-
-	var plan resourceIngestionData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	input := &appfabric.CreateIngestionInput{}
+	resp.Diagnostics.Append(flex.Expand(ctx, plan, input)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	in := &appfabric.CreateIngestionInput{
-		App:                 aws.String(plan.App.ValueString()),
-		AppBundleIdentifier: aws.String(plan.AppBundleIdentifier.ValueString()),
-		IngestionType:       awstypes.IngestionType(plan.IngestionType.ValueString()),
-		TenantId:            aws.String(plan.TenantId.ValueString()),
-		Tags:                getTagsIn(ctx),
-	}
+	input.Tags = getTagsIn(ctx)
 
-	out, err := conn.CreateIngestion(ctx, in)
+	out, err := conn.CreateIngestion(ctx, input)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.AppFabric, create.ErrActionCreating, ResNameIngestion, plan.App.String(), err),
@@ -213,16 +165,59 @@ func (r *resourceIngestion) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
-	state.App = flex.StringToFramework(ctx, out.App)
-	state.AppBundleArn = flex.StringToFramework(ctx, out.AppBundleArn)
-	state.AppBundleIdentifier = flex.StringToFramework(ctx, out.AppBundleArn)
-	state.ARN = flex.StringToFramework(ctx, out.Arn)
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	state.ID = types.StringValue(createIngestionID(string(*out.AppBundleArn), string(*out.Arn)))
-	state.IngestionType = flex.StringToFramework(ctx, aws.String(string(out.IngestionType)))
-	state.State = flex.StringToFramework(ctx, aws.String(string(out.State)))
-	state.TenantId = flex.StringToFramework(ctx, out.TenantId)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+}
+
+func (r *resourceIngestion) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	conn := r.Meta().AppFabricClient(ctx)
+
+	var plan resourceIngestionData
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	in := &appfabric.CreateIngestionInput{
+		App:                 aws.String(plan.App.ValueString()),
+		AppBundleIdentifier: aws.String(plan.AppBundleIdentifier.ValueString()),
+		IngestionType:       awstypes.IngestionType(plan.IngestionType.ValueString()),
+		TenantId:            aws.String(plan.TenantId.ValueString()),
+		Tags:                getTagsIn(ctx),
+	}
+
+	out, err := conn.CreateIngestion(ctx, in)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.AppFabric, create.ErrActionCreating, ResNameIngestion, plan.App.String(), err),
+			err.Error(),
+		)
+		return
+	}
+	if out == nil || out.Ingestion == nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.AppFabric, create.ErrActionCreating, ResNameIngestion, plan.App.String(), nil),
+			errors.New("empty output").Error(),
+		)
+		return
+	}
+
+	plan.App = flex.StringToFramework(ctx, out.Ingestion.App)
+	plan.AppBundleArn = flex.StringToFramework(ctx, out.Ingestion.AppBundleArn)
+	plan.AppBundleIdentifier = flex.StringToFramework(ctx, out.Ingestion.AppBundleArn)
+	plan.ARN = flex.StringToFramework(ctx, out.Ingestion.Arn)
+	plan.ID = types.StringValue(createIngestionID(string(*out.Ingestion.AppBundleArn), string(*out.Ingestion.Arn)))
+	plan.IngestionType = flex.StringToFramework(ctx, aws.String(string(out.Ingestion.IngestionType)))
+	plan.State = flex.StringToFramework(ctx, aws.String(string(out.Ingestion.State)))
+	plan.TenantId = flex.StringToFramework(ctx, out.Ingestion.TenantId)
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *resourceIngestion) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
