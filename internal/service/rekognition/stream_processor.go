@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -160,7 +161,7 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 				},
 				Description: "The Amazon Simple Notification Service topic to which Amazon Rekognition publishes the object detection results and completion status of a video analysis operation.",
 				Attributes: map[string]schema.Attribute{
-					"sns_topic_arn": schema.StringAttribute{
+					names.AttrSNSTopicARN: schema.StringAttribute{
 						Description: "The Amazon Resource Number (ARN) of the Amazon Amazon Simple Notification Service topic to which Amazon Rekognition posts the completion status.",
 						CustomType:  fwtypes.ARNType,
 						Required:    true,
@@ -689,7 +690,7 @@ func (r *resourceStreamProcessor) ModifyPlan(ctx context.Context, request resour
 func waitStreamProcessorCreated(ctx context.Context, conn *rekognition.Client, id string, timeout time.Duration) (*rekognition.DescribeStreamProcessorOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
-		Target:                    []string{string(awstypes.StreamProcessorStatusStopped)},
+		Target:                    enum.Slice(awstypes.StreamProcessorStatusStopped),
 		Refresh:                   statusStreamProcessor(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -706,8 +707,8 @@ func waitStreamProcessorCreated(ctx context.Context, conn *rekognition.Client, i
 
 func waitStreamProcessorUpdated(ctx context.Context, conn *rekognition.Client, id string, timeout time.Duration) (*rekognition.DescribeStreamProcessorOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{string(awstypes.StreamProcessorStatusUpdating)},
-		Target:                    []string{string(awstypes.StreamProcessorStatusStopped)},
+		Pending:                   enum.Slice(awstypes.StreamProcessorStatusUpdating),
+		Target:                    enum.Slice(awstypes.StreamProcessorStatusStopped),
 		Refresh:                   statusStreamProcessor(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -724,14 +725,14 @@ func waitStreamProcessorUpdated(ctx context.Context, conn *rekognition.Client, i
 
 func waitStreamProcessorDeleted(ctx context.Context, conn *rekognition.Client, id string, timeout time.Duration) (*rekognition.DescribeStreamProcessorOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{
-			string(awstypes.StreamProcessorStatusStopped),
-			string(awstypes.StreamProcessorStatusStarting),
-			string(awstypes.StreamProcessorStatusRunning),
-			string(awstypes.StreamProcessorStatusFailed),
-			string(awstypes.StreamProcessorStatusStopping),
-			string(awstypes.StreamProcessorStatusUpdating),
-		},
+		Pending: enum.Slice(
+			awstypes.StreamProcessorStatusStopped,
+			awstypes.StreamProcessorStatusStarting,
+			awstypes.StreamProcessorStatusRunning,
+			awstypes.StreamProcessorStatusFailed,
+			awstypes.StreamProcessorStatusStopping,
+			awstypes.StreamProcessorStatusUpdating,
+		),
 		Target:  []string{},
 		Refresh: statusStreamProcessor(ctx, conn, id),
 		Timeout: timeout,

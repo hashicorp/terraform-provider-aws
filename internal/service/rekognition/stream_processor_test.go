@@ -373,7 +373,7 @@ resource "aws_rekognition_stream_processor" "test" {
       top    = 0.5
       height = 0.5
       width  = 0.5
-	}
+    }
   }
 
   settings {
