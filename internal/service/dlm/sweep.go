@@ -41,7 +41,7 @@ func sweepLifecyclePolicies(region string) error {
 	}
 
 	for _, lifecyclePolicy := range policies.Policies {
-		r := ResourceLifecyclePolicy()
+		r := resourceLifecyclePolicy()
 		d := r.Data(nil)
 
 		id := aws.ToString(lifecyclePolicy.PolicyId)

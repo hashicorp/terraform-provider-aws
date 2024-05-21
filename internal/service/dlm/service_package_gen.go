@@ -29,7 +29,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceLifecyclePolicy,
+			Factory:  resourceLifecyclePolicy,
 			TypeName: "aws_dlm_lifecycle_policy",
 			Name:     "Lifecycle Policy",
 			Tags: &types.ServicePackageResourceTags{

@@ -5,20 +5,20 @@ package dlm_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dlm"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/dlm/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfdlm "github.com/hashicorp/terraform-provider-aws/internal/service/dlm"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -534,23 +534,17 @@ func testAccCheckLifecyclePolicyDestroy(ctx context.Context) resource.TestCheckF
 				continue
 			}
 
-			input := dlm.GetLifecyclePolicyInput{
-				PolicyId: aws.String(rs.Primary.ID),
-			}
+			_, err := tfdlm.FindLifecyclePolicyByID(ctx, conn, rs.Primary.ID)
 
-			out, err := conn.GetLifecyclePolicy(ctx, &input)
-
-			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-				return nil
+			if tfresource.NotFound(err) {
+				continue
 			}
 
 			if err != nil {
-				return fmt.Errorf("error getting DLM Lifecycle Policy (%s): %s", rs.Primary.ID, err)
+				return err
 			}
 
-			if out.Policy != nil {
-				return fmt.Errorf("DLM lifecycle policy still exists: %#v", out)
-			}
+			return create.Error(names.DLM, create.ErrActionCheckingDestroyed, tfdlm.ResNameLifecyclePolicy, rs.Primary.ID, errors.New("not destroyed"))
 		}
 
 		return nil
@@ -561,19 +555,15 @@ func checkLifecyclePolicyExists(ctx context.Context, name string) resource.TestC
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return create.Error(names.DLM, create.ErrActionCheckingExistence, tfdlm.ResNameLifecyclePolicy, name, errors.New("not found"))
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DLMClient(ctx)
 
-		input := dlm.GetLifecyclePolicyInput{
-			PolicyId: aws.String(rs.Primary.ID),
-		}
-
-		_, err := conn.GetLifecyclePolicy(ctx, &input)
+		_, err := tfdlm.FindLifecyclePolicyByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("error getting DLM Lifecycle Policy (%s): %s", rs.Primary.ID, err)
+			return create.Error(names.DLM, create.ErrActionCheckingExistence, tfdlm.ResNameLifecyclePolicy, rs.Primary.ID, err)
 		}
 
 		return nil

@@ -29,7 +29,7 @@ import (
 
 // @SDKResource("aws_dlm_lifecycle_policy", name="Lifecycle Policy")
 // @Tags(identifierAttribute="arn")
-func ResourceLifecyclePolicy() *schema.Resource {
+func resourceLifecyclePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLifecyclePolicyCreate,
 		ReadWithoutTimeout:   resourceLifecyclePolicyRead,
@@ -483,6 +483,10 @@ func ResourceLifecyclePolicy() *schema.Resource {
 	}
 }
 
+const (
+	ResNameLifecyclePolicy = "Lifecycle Policy"
+)
+
 func resourceLifecyclePolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	const createRetryTimeout = 2 * time.Minute
 	var diags diag.Diagnostics
@@ -514,11 +518,9 @@ func resourceLifecyclePolicyRead(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).DLMClient(ctx)
 
 	log.Printf("[INFO] Reading DLM lifecycle policy: %s", d.Id())
-	out, err := conn.GetLifecyclePolicy(ctx, &dlm.GetLifecyclePolicyInput{
-		PolicyId: aws.String(d.Id()),
-	})
+	out, err := findLifecyclePolicyByID(ctx, conn, d.Id())
 
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DLM Lifecycle Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
