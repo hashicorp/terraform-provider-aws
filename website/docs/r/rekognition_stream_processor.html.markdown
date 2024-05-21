@@ -80,11 +80,10 @@ resource "aws_rekognition_stream_processor" "example" {
 }
 ```
 
-### Basic Usage
+### Face Detection Usage
 
 ```terraform
-resource "aws_rekognition_stream_processor" "example" {
-}
+TODO
 ```
 
 ## Argument Reference
