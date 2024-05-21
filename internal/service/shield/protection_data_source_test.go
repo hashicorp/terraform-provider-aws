@@ -67,13 +67,13 @@ func TestAccShieldProtectionDataSource_cloudfront(t *testing.T) {
 		CheckDestroy:             testAccCheckProtectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProtectionDataSource_cloudfrontByARN(rName, testAccShieldProtectionDataSourceCloudFrontRetainConfig()),
+				Config: testAccProtectionDataSource_cloudfrontByARN(rName, testAccProtectionDataSourceCloudFrontRetainConfig()),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "protection_id", protectionResourceName, names.AttrID),
 				),
 			},
 			{
-				Config: testAccProtectionDataSource_cloudfrontById(rName, testAccShieldProtectionDataSourceCloudFrontRetainConfig()),
+				Config: testAccProtectionDataSource_cloudfrontById(rName, testAccProtectionDataSourceCloudFrontRetainConfig()),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "protection_id", protectionResourceName, names.AttrID),
 				),
