@@ -71,7 +71,7 @@ func TestAccEC2SpotFleetRequest_context(t *testing.T) {
 	contextId := "test_context"
 
 	// Receiving this error is confirmation that the Context ID was included in the spot fleet request.
-	errRegexp, err := regexp.Compile(fmt.Sprintf(`Error: creating EC2 Spot Fleet Request: UnauthorizedOperation: The account "\d+" is not allowed to access Context "%s".`, contextId))
+	errRegexp, err := regexp.Compile(fmt.Sprintf(`UnauthorizedOperation: The account "\d+" is not allowed to access Context "%s".`, contextId))
 	if err != nil {
 		t.Fatalf("error compiling expected error regexp: %s", err)
 	}

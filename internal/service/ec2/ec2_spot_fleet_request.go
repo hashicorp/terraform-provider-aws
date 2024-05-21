@@ -1045,7 +1045,13 @@ func resourceSpotFleetRequestRead(ctx context.Context, d *schema.ResourceData, m
 	config := output.SpotFleetRequestConfig
 
 	d.Set("allocation_strategy", config.AllocationStrategy)
-	d.Set("instance_pools_to_use_count", config.InstancePoolsToUseCount)
+
+	// The default of this argument does not get set in the create operation
+	// Therefore if the API does not return a value, being a *int32 type it will result in 0 and always create a diff.
+	if config.InstancePoolsToUseCount != nil {
+		d.Set("instance_pools_to_use_count", config.InstancePoolsToUseCount)
+	}
+
 	d.Set("client_token", config.ClientToken)
 	d.Set("context", config.Context)
 	d.Set("excess_capacity_termination_policy", config.ExcessCapacityTerminationPolicy)
