@@ -271,6 +271,9 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 					"kinesis_data_stream": schema.SingleNestedBlock{
 						CustomType:  fwtypes.NewObjectTypeOf[kinesisDataStreamModel](ctx),
 						Description: "The Amazon Kinesis Data Streams stream to which the Amazon Rekognition stream processor streams the analysis results.",
+						Validators: []validator.Object{
+							objectvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("s3_destination")),
+						},
 						Attributes: map[string]schema.Attribute{
 							"arn": schema.StringAttribute{
 								CustomType:  fwtypes.ARNType,
@@ -288,6 +291,9 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 					"s3_destination": schema.SingleNestedBlock{
 						CustomType:  fwtypes.NewObjectTypeOf[s3DestinationModel](ctx),
 						Description: "The Amazon S3 bucket location to which Amazon Rekognition publishes the detailed inference results of a video analysis operation.",
+						Validators: []validator.Object{
+							objectvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("kinesis_data_stream")),
+						},
 						Attributes: map[string]schema.Attribute{
 							names.AttrBucket: schema.StringAttribute{
 								Description: "The name of the Amazon S3 bucket you want to associate with the streaming video project.",
@@ -318,12 +324,18 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 				CustomType:  fwtypes.NewObjectTypeOf[settingsModel](ctx),
 				Description: "Input parameters used in a streaming video analyzed by a stream processor.",
 				Validators: []validator.Object{
-					objectvalidator.IsRequired(),
+					objectvalidator.AtLeastOneOf(
+						path.MatchRelative().AtName("connected_home"),
+						path.MatchRelative().AtName("face_search"),
+					),
 				},
 				Blocks: map[string]schema.Block{
 					"connected_home": schema.SingleNestedBlock{
 						CustomType:  fwtypes.NewObjectTypeOf[connectedHomeModel](ctx),
 						Description: "Label detection settings to use on a streaming video.",
+						Validators: []validator.Object{
+							objectvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("face_search")),
+						},
 						Attributes: map[string]schema.Attribute{
 							"labels": schema.ListAttribute{
 								Description: "Specifies what you want to detect in the video, such as people, packages, or pets.",
@@ -347,6 +359,9 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 					"face_search": schema.SingleNestedBlock{
 						CustomType:  fwtypes.NewObjectTypeOf[faceSearchModel](ctx),
 						Description: "Face search settings to use on a streaming video.",
+						Validators: []validator.Object{
+							objectvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("connected_home")),
+						},
 						Attributes: map[string]schema.Attribute{
 							"collection_id": schema.StringAttribute{
 								Description: "The ID of a collection that contains faces that you want to search for.",
@@ -416,7 +431,7 @@ func (r *resourceStreamProcessor) Create(ctx context.Context, req resource.Creat
 	}
 
 	plan.ARN = fwflex.StringToFramework(ctx, out.StreamProcessorArn)
-	plan.ID = plan.ARN
+	plan.ID = plan.Name
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	created, err := waitStreamProcessorCreated(ctx, conn, plan.Name.ValueString(), createTimeout)
@@ -445,7 +460,7 @@ func (r *resourceStreamProcessor) Read(ctx context.Context, req resource.ReadReq
 		return
 	}
 
-	out, err := findStreamProcessorByID(ctx, conn, state.Name.ValueString())
+	out, err := findStreamProcessorByID(ctx, conn, state.ID.ValueString())
 	if tfresource.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -453,7 +468,7 @@ func (r *resourceStreamProcessor) Read(ctx context.Context, req resource.ReadReq
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Rekognition, create.ErrActionSetting, ResNameStreamProcessor, state.Name.String(), err),
+			create.ProblemStandardMessage(names.Rekognition, create.ErrActionSetting, ResNameStreamProcessor, state.ID.String(), err),
 			err.Error(),
 		)
 		return
@@ -632,7 +647,7 @@ func (r *resourceStreamProcessor) Delete(ctx context.Context, req resource.Delet
 
 	// TIP: -- 3. Populate a delete input structure
 	in := &rekognition.DeleteStreamProcessorInput{
-		Name: aws.String(state.Name.ValueString()),
+		Name: aws.String(state.ID.ValueString()),
 	}
 
 	_, err := conn.DeleteStreamProcessor(ctx, in)
@@ -642,7 +657,7 @@ func (r *resourceStreamProcessor) Delete(ctx context.Context, req resource.Delet
 			return
 		}
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Rekognition, create.ErrActionDeleting, ResNameStreamProcessor, state.Name.String(), err),
+			create.ProblemStandardMessage(names.Rekognition, create.ErrActionDeleting, ResNameStreamProcessor, state.ID.String(), err),
 			err.Error(),
 		)
 		return
@@ -650,10 +665,10 @@ func (r *resourceStreamProcessor) Delete(ctx context.Context, req resource.Delet
 
 	// TIP: -- 5. Use a waiter to wait for delete to complete
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitStreamProcessorDeleted(ctx, conn, state.Name.ValueString(), deleteTimeout)
+	_, err = waitStreamProcessorDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Rekognition, create.ErrActionWaitingForDeletion, ResNameStreamProcessor, state.Name.String(), err),
+			create.ProblemStandardMessage(names.Rekognition, create.ErrActionWaitingForDeletion, ResNameStreamProcessor, state.ID.String(), err),
 			err.Error(),
 		)
 		return
