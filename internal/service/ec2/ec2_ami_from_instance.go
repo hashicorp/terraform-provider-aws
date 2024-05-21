@@ -274,7 +274,7 @@ func resourceAMIFromInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 	d.SetId(aws.ToString(output.ImageId))
 	d.Set("manage_ebs_snapshots", true)
 
-	if _, err := WaitImageAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitImageAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 AMI (%s) from EC2 Instance (%s): waiting for completion: %s", name, instanceID, err)
 	}
 

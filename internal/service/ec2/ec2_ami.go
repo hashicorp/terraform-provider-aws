@@ -373,7 +373,7 @@ func resourceAMICreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "setting EC2 AMI (%s) tags: %s", d.Id(), err)
 	}
 
-	if _, err := WaitImageAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitImageAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 AMI (%s): waiting for completion: %s", name, err)
 	}
 
@@ -412,7 +412,7 @@ func resourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interface
 		// before we continue. We should never take this branch in normal
 		// circumstances since we would've waited for availability during
 		// the "Create" step.
-		image, err = WaitImageAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+		image, err = waitImageAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for EC2 AMI (%s) create: %s", d.Id(), err)
@@ -533,7 +533,7 @@ func resourceAMIDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 	}
 
-	if _, err := WaitImageDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitImageDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 AMI (%s) delete: %s", d.Id(), err)
 	}
 

@@ -217,7 +217,7 @@ func findVolumeAttachment(ctx context.Context, conn *ec2.Client, volumeID, insta
 		VolumeIds: []string{volumeID},
 	}
 
-	output, err := FindEBSVolumeV2(ctx, conn, input)
+	output, err := findEBSVolumeV2(ctx, conn, input)
 
 	if err != nil {
 		return nil, err

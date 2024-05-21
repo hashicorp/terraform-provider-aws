@@ -3840,7 +3840,7 @@ func flattenInstanceLaunchTemplate(ctx context.Context, conn *ec2.Client, instan
 		return nil, err
 	}
 
-	_, err = FindLaunchTemplateVersionByTwoPartKey(ctx, conn, launchTemplateID, currentLaunchTemplateVersion)
+	_, err = findLaunchTemplateVersionByTwoPartKey(ctx, conn, launchTemplateID, currentLaunchTemplateVersion)
 
 	if tfresource.NotFound(err) {
 		return []interface{}{tfMap}, nil

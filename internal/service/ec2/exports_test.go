@@ -61,6 +61,7 @@ var (
 	FindFastSnapshotRestoreByTwoPartKey                    = findFastSnapshotRestoreByTwoPartKey
 	FindFleetByID                                          = findFleetByID
 	FindHostByID                                           = findHostByID
+	FindImageLaunchPermission                              = findImageLaunchPermission
 	FindInstanceMetadataDefaults                           = findInstanceMetadataDefaults
 	FindIPAMByID                                           = findIPAMByID
 	FindIPAMPoolAllocationByTwoPartKey                     = findIPAMPoolAllocationByTwoPartKey

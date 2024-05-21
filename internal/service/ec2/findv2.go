@@ -595,7 +595,7 @@ func findLaunchTemplateVersions(ctx context.Context, conn *ec2.Client, input *ec
 	return output, nil
 }
 
-func FindLaunchTemplateVersionByTwoPartKey(ctx context.Context, conn *ec2.Client, launchTemplateID, version string) (*awstypes.LaunchTemplateVersion, error) {
+func findLaunchTemplateVersionByTwoPartKey(ctx context.Context, conn *ec2.Client, launchTemplateID, version string) (*awstypes.LaunchTemplateVersion, error) {
 	input := &ec2.DescribeLaunchTemplateVersionsInput{
 		LaunchTemplateId: aws.String(launchTemplateID),
 		Versions:         []string{version},
@@ -1354,7 +1354,7 @@ func findEBSVolumesV2(ctx context.Context, conn *ec2.Client, input *ec2.Describe
 	return output, nil
 }
 
-func FindEBSVolumeV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVolumesInput) (*awstypes.Volume, error) {
+func findEBSVolumeV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVolumesInput) (*awstypes.Volume, error) {
 	output, err := findEBSVolumesV2(ctx, conn, input)
 
 	if err != nil {
@@ -3087,7 +3087,7 @@ func findIPAMScopeByID(ctx context.Context, conn *ec2.Client, id string) (*awsty
 	return output, nil
 }
 
-func FindImages(ctx context.Context, conn *ec2.Client, input *ec2.DescribeImagesInput) ([]awstypes.Image, error) {
+func findImages(ctx context.Context, conn *ec2.Client, input *ec2.DescribeImagesInput) ([]awstypes.Image, error) {
 	var output []awstypes.Image
 
 	pages := ec2.NewDescribeImagesPaginator(conn, input)
@@ -3111,8 +3111,8 @@ func FindImages(ctx context.Context, conn *ec2.Client, input *ec2.DescribeImages
 	return output, nil
 }
 
-func FindImage(ctx context.Context, conn *ec2.Client, input *ec2.DescribeImagesInput) (*awstypes.Image, error) {
-	output, err := FindImages(ctx, conn, input)
+func findImage(ctx context.Context, conn *ec2.Client, input *ec2.DescribeImagesInput) (*awstypes.Image, error) {
+	output, err := findImages(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -3126,7 +3126,7 @@ func FindImageByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.
 		ImageIds: []string{id},
 	}
 
-	output, err := FindImage(ctx, conn, input)
+	output, err := findImage(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -3149,7 +3149,7 @@ func FindImageByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.
 	return output, nil
 }
 
-func FindImageAttribute(ctx context.Context, conn *ec2.Client, input *ec2.DescribeImageAttributeInput) (*ec2.DescribeImageAttributeOutput, error) {
+func findImageAttribute(ctx context.Context, conn *ec2.Client, input *ec2.DescribeImageAttributeInput) (*ec2.DescribeImageAttributeOutput, error) {
 	output, err := conn.DescribeImageAttribute(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidAMIIDNotFound, errCodeInvalidAMIIDUnavailable) {
@@ -3170,13 +3170,13 @@ func FindImageAttribute(ctx context.Context, conn *ec2.Client, input *ec2.Descri
 	return output, nil
 }
 
-func FindImageLaunchPermissionsByID(ctx context.Context, conn *ec2.Client, id string) ([]awstypes.LaunchPermission, error) {
+func findImageLaunchPermissionsByID(ctx context.Context, conn *ec2.Client, id string) ([]awstypes.LaunchPermission, error) {
 	input := &ec2.DescribeImageAttributeInput{
 		Attribute: awstypes.ImageAttributeNameLaunchPermission,
 		ImageId:   aws.String(id),
 	}
 
-	output, err := FindImageAttribute(ctx, conn, input)
+	output, err := findImageAttribute(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -3189,8 +3189,8 @@ func FindImageLaunchPermissionsByID(ctx context.Context, conn *ec2.Client, id st
 	return output.LaunchPermissions, nil
 }
 
-func FindImageLaunchPermission(ctx context.Context, conn *ec2.Client, imageID, accountID, group, organizationARN, organizationalUnitARN string) (*awstypes.LaunchPermission, error) {
-	output, err := FindImageLaunchPermissionsByID(ctx, conn, imageID)
+func findImageLaunchPermission(ctx context.Context, conn *ec2.Client, imageID, accountID, group, organizationARN, organizationalUnitARN string) (*awstypes.LaunchPermission, error) {
+	output, err := findImageLaunchPermissionsByID(ctx, conn, imageID)
 
 	if err != nil {
 		return nil, err

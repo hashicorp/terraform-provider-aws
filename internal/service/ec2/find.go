@@ -99,7 +99,7 @@ func FindEBSVolumeByID(ctx context.Context, conn *ec2_sdkv2.Client, id string) (
 		VolumeIds: []string{id},
 	}
 
-	output, err := FindEBSVolumeV2(ctx, conn, input)
+	output, err := findEBSVolumeV2(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -137,7 +137,7 @@ func FindEBSVolumeByIDV1(ctx context.Context, conn *ec2_sdkv2.Client, id string)
 		VolumeIds: []string{id},
 	}
 
-	output, err := FindEBSVolumeV2(ctx, conn, input)
+	output, err := findEBSVolumeV2(ctx, conn, input)
 
 	if err != nil {
 		return nil, err

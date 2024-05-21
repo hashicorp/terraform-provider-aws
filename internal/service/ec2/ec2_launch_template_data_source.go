@@ -815,7 +815,7 @@ func dataSourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, m
 	d.SetId(aws.ToString(lt.LaunchTemplateId))
 
 	version := strconv.FormatInt(aws.ToInt64(lt.LatestVersionNumber), 10)
-	ltv, err := FindLaunchTemplateVersionByTwoPartKey(ctx, conn, d.Id(), version)
+	ltv, err := findLaunchTemplateVersionByTwoPartKey(ctx, conn, d.Id(), version)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Launch Template (%s) Version (%s): %s", d.Id(), version, err)

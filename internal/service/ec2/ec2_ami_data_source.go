@@ -253,7 +253,7 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.Owners = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
-	images, err := FindImages(ctx, conn, input)
+	images, err := findImages(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 AMIs: %s", err)

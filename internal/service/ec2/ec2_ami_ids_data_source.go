@@ -89,7 +89,7 @@ func dataSourceAMIIDsRead(ctx context.Context, d *schema.ResourceData, meta inte
 		input.Filters = newCustomFilterListV2(v.(*schema.Set))
 	}
 
-	images, err := FindImages(ctx, conn, input)
+	images, err := findImages(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 AMIs: %s", err)

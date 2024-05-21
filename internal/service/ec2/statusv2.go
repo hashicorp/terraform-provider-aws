@@ -852,7 +852,7 @@ func statusIPAMScope(ctx context.Context, conn *ec2.Client, id string) retry.Sta
 	}
 }
 
-func StatusImageState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusImageState(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindImageByID(ctx, conn, id)
 
