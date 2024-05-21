@@ -12,7 +12,73 @@ Terraform resource for managing an AWS Rekognition Stream Processor.
 
 ~> **Note:** This resource must be configured specifically for your use case, and not all options are compatible with one another. See [Stream Processor API documentation](https://docs.aws.amazon.com/rekognition/latest/APIReference/API_CreateStreamProcessor.html#rekognition-CreateStreamProcessor-request-Input) for configuration information.
 
-## Example Usage
+## Label Detection Usage
+
+```terraform
+Resource "aws_iam_role" "example" {
+  name = "example-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      },
+    ]
+  })
+}
+
+resource "aws_s3_bucket" "example" {
+  bucket = "example-bucket"
+}
+
+resource "aws_sns_topic" "example" {
+  name = "example-topic"
+}
+
+resource "aws_kinesis_video_stream" "example" {
+  name                    = "example-kinesis-input"
+  data_retention_in_hours = 1
+  device_name             = "kinesis-video-device-name"
+  media_type              = "video/h264"
+}
+
+resource "aws_rekognition_stream_processor" "example" {
+  role_arn = aws_iam_role.example.arn
+  name     = "example-processor"
+
+  data_sharing_preference {
+    opt_in = true
+  }
+
+  output {
+    s3_destination {
+      bucket = aws_s3_bucket.example.bucket
+    }
+  }
+
+  settings {
+    connected_home {
+      labels = ["PERSON", "PET"]
+    }
+  }
+
+  input {
+    kinesis_video_stream {
+      arn = aws_kinesis_video_stream.example.arn
+    }
+  }
+
+  notification_channel {
+    sns_topic_arn = aws_sns_topic.example.arn
+  }
+}
+```
 
 ### Basic Usage
 
