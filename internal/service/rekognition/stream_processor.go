@@ -231,6 +231,10 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 							Validators: []validator.List{
 								listvalidator.SizeBetween(3, 10),
 								listvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("bounding_box")),
+								listvalidator.AlsoRequires(
+									path.MatchRelative().AtName("x"),
+									path.MatchRelative().AtName("y"),
+								),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -258,7 +262,10 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 				CustomType:  fwtypes.NewObjectTypeOf[outputModel](ctx),
 				Description: "Kinesis data stream stream or Amazon S3 bucket location to which Amazon Rekognition Video puts the analysis results.",
 				Validators: []validator.Object{
-					objectvalidator.IsRequired(),
+					objectvalidator.AtLeastOneOf(
+						path.MatchRelative().AtName("kinesis_data_stream"),
+						path.MatchRelative().AtName("s3_destination"),
+					),
 				},
 				Blocks: map[string]schema.Block{
 					"kinesis_data_stream": schema.SingleNestedBlock{
