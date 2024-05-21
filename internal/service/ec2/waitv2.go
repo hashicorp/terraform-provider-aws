@@ -815,7 +815,7 @@ func waitSpotFleetRequestFulfilled(ctx context.Context, conn *ec2.Client, id str
 			if output, err := findSpotFleetRequestHistoryRecords(ctx, conn, input); err == nil {
 				for _, v := range output {
 					if eventType := v.EventType; eventType == awstypes.EventTypeError || eventType == awstypes.EventTypeInformation {
-						errs = append(errs, errors.New(string(v.EventType)))
+						errs = append(errs, errors.New(aws.ToString(v.EventInformation.EventDescription)))
 					}
 				}
 			}
