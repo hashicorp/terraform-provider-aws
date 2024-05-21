@@ -129,9 +129,14 @@ func resourceIPAMPoolCIDRAllocationCreate(ctx context.Context, d *schema.Resourc
 		return sdkdiag.AppendErrorf(diags, "creating IPAM Pool CIDR Allocation: %s", err)
 	}
 
-	d.SetId(IPAMPoolCIDRAllocationCreateResourceID(aws.ToString(output.IpamPoolAllocation.IpamPoolAllocationId), ipamPoolID))
+	allocationID := aws.ToString(output.IpamPoolAllocation.IpamPoolAllocationId)
+	d.SetId(IPAMPoolCIDRAllocationCreateResourceID(allocationID, ipamPoolID))
 
-	if _, err := waitIPAMPoolCIDRAllocationCreated(ctx, conn, aws.ToString(output.IpamPoolAllocation.IpamPoolAllocationId), ipamPoolID, d.Timeout(schema.TimeoutCreate)); err != nil {
+	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+		return findIPAMPoolAllocationByTwoPartKey(ctx, conn, allocationID, ipamPoolID)
+	})
+
+	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for IPAM Pool CIDR Allocation (%s) create: %s", d.Id(), err)
 	}
 

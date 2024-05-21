@@ -124,7 +124,7 @@ func resourceIPAMResourceDiscoveryCreate(ctx context.Context, d *schema.Resource
 
 	d.SetId(aws.ToString(output.IpamResourceDiscovery.IpamResourceDiscoveryId))
 
-	if _, err := waitIPAMResourceDiscoveryAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitIPAMResourceDiscoveryCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for IPAM Resource Discovery (%s) create: %s", d.Id(), err)
 	}
 

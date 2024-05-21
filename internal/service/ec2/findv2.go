@@ -1853,10 +1853,10 @@ func findIPAMPoolCIDRByTwoPartKey(ctx context.Context, conn *ec2.Client, cidrBlo
 	return output, nil
 }
 
-func findIPAMPoolCIDRByPoolCIDRId(ctx context.Context, conn *ec2.Client, poolCidrId, poolID string) (*awstypes.IpamPoolCidr, error) {
+func findIPAMPoolCIDRByPoolCIDRIDAndPoolID(ctx context.Context, conn *ec2.Client, poolCIDRID, poolID string) (*awstypes.IpamPoolCidr, error) {
 	input := &ec2.GetIpamPoolCidrsInput{
 		Filters: newAttributeFilterListV2(map[string]string{
-			"ipam-pool-cidr-id": poolCidrId,
+			"ipam-pool-cidr-id": poolCIDRID,
 		}),
 		IpamPoolId: aws.String(poolID),
 	}
@@ -1868,8 +1868,7 @@ func findIPAMPoolCIDRByPoolCIDRId(ctx context.Context, conn *ec2.Client, poolCid
 	}
 
 	// Eventual consistency check
-	cidrBlock := aws.ToString(output.Cidr)
-	if cidrBlock == "" {
+	if aws.ToString(output.Cidr) == "" {
 		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}

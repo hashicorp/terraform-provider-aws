@@ -40,7 +40,6 @@ const (
 	RouteTableAssociationCreatedNotFoundChecks = 1000 // Should exceed any reasonable custom timeout value.
 	SecurityGroupNotFoundChecks                = 1000 // Should exceed any reasonable custom timeout value.
 	InternetGatewayNotFoundChecks              = 1000 // Should exceed any reasonable custom timeout value.
-	IPAMPoolCIDRNotFoundChecks                 = 1000 // Should exceed any reasonable custom timeout value.
 )
 
 const (
