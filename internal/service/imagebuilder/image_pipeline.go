@@ -36,7 +36,7 @@ func ResourceImagePipeline() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -63,7 +63,7 @@ func ResourceImagePipeline() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
@@ -106,7 +106,7 @@ func ResourceImagePipeline() *schema.Resource {
 											Type: schema.TypeString,
 										},
 									},
-									"repository_name": {
+									names.AttrRepositoryName: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -147,7 +147,7 @@ func ResourceImagePipeline() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^arn:aws[^:]*:imagebuilder:[^:]+:(?:\d{12}|aws):infrastructure-configuration/[0-9a-z_-]+$`), "valid infrastructure configuration ARN must be provided"),
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -157,7 +157,7 @@ func ResourceImagePipeline() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"schedule": {
+			names.AttrSchedule: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -169,7 +169,7 @@ func ResourceImagePipeline() *schema.Resource {
 							Default:      imagebuilder.PipelineExecutionStartConditionExpressionMatchAndDependencyUpdatesAvailable,
 							ValidateFunc: validation.StringInSlice(imagebuilder.PipelineExecutionStartCondition_Values(), false),
 						},
-						"schedule_expression": {
+						names.AttrScheduleExpression: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 1024),
@@ -185,7 +185,7 @@ func ResourceImagePipeline() *schema.Resource {
 					},
 				},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      imagebuilder.PipelineStatusEnabled,
@@ -213,7 +213,7 @@ func resourceImagePipelineCreate(ctx context.Context, d *schema.ResourceData, me
 		input.ContainerRecipeArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -237,15 +237,15 @@ func resourceImagePipelineCreate(ctx context.Context, d *schema.ResourceData, me
 		input.InfrastructureConfigurationArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk(names.AttrName); ok {
 		input.Name = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("schedule"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrSchedule); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Schedule = expandPipelineSchedule(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("status"); ok {
+	if v, ok := d.GetOk(names.AttrStatus); ok {
 		input.Status = aws.String(v.(string))
 	}
 
@@ -290,13 +290,13 @@ func resourceImagePipelineRead(ctx context.Context, d *schema.ResourceData, meta
 
 	imagePipeline := output.ImagePipeline
 
-	d.Set("arn", imagePipeline.Arn)
+	d.Set(names.AttrARN, imagePipeline.Arn)
 	d.Set("container_recipe_arn", imagePipeline.ContainerRecipeArn)
 	d.Set("date_created", imagePipeline.DateCreated)
 	d.Set("date_last_run", imagePipeline.DateLastRun)
 	d.Set("date_next_run", imagePipeline.DateNextRun)
 	d.Set("date_updated", imagePipeline.DateUpdated)
-	d.Set("description", imagePipeline.Description)
+	d.Set(names.AttrDescription, imagePipeline.Description)
 	d.Set("distribution_configuration_arn", imagePipeline.DistributionConfigurationArn)
 	d.Set("enhanced_image_metadata_enabled", imagePipeline.EnhancedImageMetadataEnabled)
 	d.Set("image_recipe_arn", imagePipeline.ImageRecipeArn)
@@ -311,14 +311,14 @@ func resourceImagePipelineRead(ctx context.Context, d *schema.ResourceData, meta
 		d.Set("image_tests_configuration", nil)
 	}
 	d.Set("infrastructure_configuration_arn", imagePipeline.InfrastructureConfigurationArn)
-	d.Set("name", imagePipeline.Name)
+	d.Set(names.AttrName, imagePipeline.Name)
 	d.Set("platform", imagePipeline.Platform)
 	if imagePipeline.Schedule != nil {
-		d.Set("schedule", []interface{}{flattenSchedule(imagePipeline.Schedule)})
+		d.Set(names.AttrSchedule, []interface{}{flattenSchedule(imagePipeline.Schedule)})
 	} else {
-		d.Set("schedule", nil)
+		d.Set(names.AttrSchedule, nil)
 	}
-	d.Set("status", imagePipeline.Status)
+	d.Set(names.AttrStatus, imagePipeline.Status)
 
 	setTagsOut(ctx, imagePipeline.Tags)
 
@@ -330,14 +330,14 @@ func resourceImagePipelineUpdate(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	if d.HasChanges(
-		"description",
+		names.AttrDescription,
 		"distribution_configuration_arn",
 		"enhanced_image_metadata_enabled",
 		"image_scanning_configuration",
 		"image_tests_configuration",
 		"infrastructure_configuration_arn",
-		"schedule",
-		"status",
+		names.AttrSchedule,
+		names.AttrStatus,
 	) {
 		input := &imagebuilder.UpdateImagePipelineInput{
 			ClientToken:                  aws.String(id.UniqueId()),
@@ -349,7 +349,7 @@ func resourceImagePipelineUpdate(ctx context.Context, d *schema.ResourceData, me
 			input.ContainerRecipeArn = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("description"); ok {
+		if v, ok := d.GetOk(names.AttrDescription); ok {
 			input.Description = aws.String(v.(string))
 		}
 
@@ -373,11 +373,11 @@ func resourceImagePipelineUpdate(ctx context.Context, d *schema.ResourceData, me
 			input.InfrastructureConfigurationArn = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("schedule"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if v, ok := d.GetOk(names.AttrSchedule); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input.Schedule = expandPipelineSchedule(v.([]interface{})[0].(map[string]interface{}))
 		}
 
-		if v, ok := d.GetOk("status"); ok {
+		if v, ok := d.GetOk(names.AttrStatus); ok {
 			input.Status = aws.String(v.(string))
 		}
 
@@ -441,7 +441,7 @@ func expandECRConfiguration(tfMap map[string]interface{}) *imagebuilder.EcrConfi
 		apiObject.ContainerTags = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := tfMap["repository_name"].(string); ok {
+	if v, ok := tfMap[names.AttrRepositoryName].(string); ok {
 		apiObject.RepositoryName = aws.String(v)
 	}
 
@@ -477,7 +477,7 @@ func expandPipelineSchedule(tfMap map[string]interface{}) *imagebuilder.Schedule
 		apiObject.PipelineExecutionStartCondition = aws.String(v)
 	}
 
-	if v, ok := tfMap["schedule_expression"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrScheduleExpression].(string); ok && v != "" {
 		apiObject.ScheduleExpression = aws.String(v)
 	}
 
@@ -514,7 +514,7 @@ func flattenECRConfiguration(apiObject *imagebuilder.EcrConfiguration) map[strin
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.RepositoryName; v != nil {
-		tfMap["repository_name"] = aws.StringValue(v)
+		tfMap[names.AttrRepositoryName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.ContainerTags; v != nil {
@@ -554,7 +554,7 @@ func flattenSchedule(apiObject *imagebuilder.Schedule) map[string]interface{} {
 	}
 
 	if v := apiObject.ScheduleExpression; v != nil {
-		tfMap["schedule_expression"] = aws.StringValue(v)
+		tfMap[names.AttrScheduleExpression] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Timezone; v != nil {

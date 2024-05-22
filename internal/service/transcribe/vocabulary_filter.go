@@ -41,7 +41,7 @@ func ResourceVocabularyFilter() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -49,7 +49,7 @@ func ResourceVocabularyFilter() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"language_code": {
+			names.AttrLanguageCode: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -95,11 +95,12 @@ const (
 )
 
 func resourceVocabularyFilterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
 	in := &transcribe.CreateVocabularyFilterInput{
 		VocabularyFilterName: aws.String(d.Get("vocabulary_filter_name").(string)),
-		LanguageCode:         types.LanguageCode(d.Get("language_code").(string)),
+		LanguageCode:         types.LanguageCode(d.Get(names.AttrLanguageCode).(string)),
 		Tags:                 getTagsIn(ctx),
 	}
 
@@ -113,19 +114,20 @@ func resourceVocabularyFilterCreate(ctx context.Context, d *schema.ResourceData,
 
 	out, err := conn.CreateVocabularyFilter(ctx, in)
 	if err != nil {
-		return create.DiagError(names.Transcribe, create.ErrActionCreating, ResNameVocabularyFilter, d.Get("vocabulary_filter_name").(string), err)
+		return create.AppendDiagError(diags, names.Transcribe, create.ErrActionCreating, ResNameVocabularyFilter, d.Get("vocabulary_filter_name").(string), err)
 	}
 
 	if out == nil {
-		return create.DiagError(names.Transcribe, create.ErrActionCreating, ResNameVocabularyFilter, d.Get("vocabulary_filter_name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.Transcribe, create.ErrActionCreating, ResNameVocabularyFilter, d.Get("vocabulary_filter_name").(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.VocabularyFilterName))
 
-	return resourceVocabularyFilterRead(ctx, d, meta)
+	return append(diags, resourceVocabularyFilterRead(ctx, d, meta)...)
 }
 
 func resourceVocabularyFilterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
 	out, err := FindVocabularyFilterByName(ctx, conn, d.Id())
@@ -133,11 +135,11 @@ func resourceVocabularyFilterRead(ctx context.Context, d *schema.ResourceData, m
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Transcribe VocabularyFilter (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Transcribe, create.ErrActionReading, ResNameVocabularyFilter, d.Id(), err)
+		return create.AppendDiagError(diags, names.Transcribe, create.ErrActionReading, ResNameVocabularyFilter, d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -148,9 +150,9 @@ func resourceVocabularyFilterRead(ctx context.Context, d *schema.ResourceData, m
 		Resource:  fmt.Sprintf("vocabulary-filter/%s", d.Id()),
 	}.String()
 
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("vocabulary_filter_name", out.VocabularyFilterName)
-	d.Set("language_code", out.LanguageCode)
+	d.Set(names.AttrLanguageCode, out.LanguageCode)
 
 	// GovCloud does not set a download URI
 	downloadUri := aws.ToString(out.DownloadUri)
@@ -159,13 +161,14 @@ func resourceVocabularyFilterRead(ctx context.Context, d *schema.ResourceData, m
 	}
 	d.Set("download_uri", downloadUri)
 
-	return nil
+	return diags
 }
 
 func resourceVocabularyFilterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		in := &transcribe.UpdateVocabularyFilterInput{
 			VocabularyFilterName: aws.String(d.Id()),
 		}
@@ -181,14 +184,15 @@ func resourceVocabularyFilterUpdate(ctx context.Context, d *schema.ResourceData,
 		log.Printf("[DEBUG] Updating Transcribe VocabularyFilter (%s): %#v", d.Id(), in)
 		_, err := conn.UpdateVocabularyFilter(ctx, in)
 		if err != nil {
-			return create.DiagError(names.Transcribe, create.ErrActionUpdating, ResNameVocabularyFilter, d.Id(), err)
+			return create.AppendDiagError(diags, names.Transcribe, create.ErrActionUpdating, ResNameVocabularyFilter, d.Id(), err)
 		}
 	}
 
-	return resourceVocabularyFilterRead(ctx, d, meta)
+	return append(diags, resourceVocabularyFilterRead(ctx, d, meta)...)
 }
 
 func resourceVocabularyFilterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
 	log.Printf("[INFO] Deleting Transcribe VocabularyFilter %s", d.Id())
@@ -200,13 +204,13 @@ func resourceVocabularyFilterDelete(ctx context.Context, d *schema.ResourceData,
 	if err != nil {
 		var bre *types.BadRequestException
 		if errors.As(err, &bre) {
-			return nil
+			return diags
 		}
 
-		return create.DiagError(names.Transcribe, create.ErrActionDeleting, ResNameVocabularyFilter, d.Id(), err)
+		return create.AppendDiagError(diags, names.Transcribe, create.ErrActionDeleting, ResNameVocabularyFilter, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindVocabularyFilterByName(ctx context.Context, conn *transcribe.Client, id string) (*transcribe.GetVocabularyFilterOutput, error) {

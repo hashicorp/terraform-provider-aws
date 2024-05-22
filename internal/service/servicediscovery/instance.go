@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_service_discovery_instance")
@@ -34,7 +35,7 @@ func ResourceInstance() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"attributes": {
+			names.AttrAttributes: {
 				Type:     schema.TypeMap,
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -45,7 +46,7 @@ func ResourceInstance() *schema.Resource {
 					validation.MapValueMatch(regexache.MustCompile(`^([0-9A-Za-z!-~][0-9A-Za-z \t!-~]*){0,1}[0-9A-Za-z!-~]{0,1}$`), ""),
 				),
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -67,9 +68,9 @@ func ResourceInstance() *schema.Resource {
 func resourceInstancePut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 
-	instanceID := d.Get("instance_id").(string)
+	instanceID := d.Get(names.AttrInstanceID).(string)
 	input := &servicediscovery.RegisterInstanceInput{
-		Attributes:       flex.ExpandStringMap(d.Get("attributes").(map[string]interface{})),
+		Attributes:       flex.ExpandStringMap(d.Get(names.AttrAttributes).(map[string]interface{})),
 		CreatorRequestId: aws.String(id.UniqueId()),
 		InstanceId:       aws.String(instanceID),
 		ServiceId:        aws.String(d.Get("service_id").(string)),
@@ -96,7 +97,7 @@ func resourceInstancePut(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 
-	instance, err := FindInstanceByServiceIDAndInstanceID(ctx, conn, d.Get("service_id").(string), d.Get("instance_id").(string))
+	instance, err := FindInstanceByServiceIDAndInstanceID(ctx, conn, d.Get("service_id").(string), d.Get(names.AttrInstanceID).(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Service Discovery Instance (%s) not found, removing from state", d.Id())
@@ -115,8 +116,8 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		delete(attributes, "AWS_INSTANCE_IPV4")
 	}
 
-	d.Set("attributes", aws.StringValueMap(attributes))
-	d.Set("instance_id", instance.Id)
+	d.Set(names.AttrAttributes, aws.StringValueMap(attributes))
+	d.Set(names.AttrInstanceID, instance.Id)
 
 	return nil
 }
@@ -124,7 +125,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 
-	err := deregisterInstance(ctx, conn, d.Get("service_id").(string), d.Get("instance_id").(string))
+	err := deregisterInstance(ctx, conn, d.Get("service_id").(string), d.Get(names.AttrInstanceID).(string))
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -141,7 +142,7 @@ func resourceInstanceImport(ctx context.Context, d *schema.ResourceData, meta in
 
 	instanceID := parts[1]
 	serviceID := parts[0]
-	d.Set("instance_id", instanceID)
+	d.Set(names.AttrInstanceID, instanceID)
 	d.Set("service_id", serviceID)
 	d.SetId(instanceID)
 

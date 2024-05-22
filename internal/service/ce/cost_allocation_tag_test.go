@@ -34,8 +34,8 @@ func TestAccCECostAllocationTag_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostAllocationTagExists(ctx, resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, "tag_key", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", "Active"),
-					resource.TestCheckResourceAttr(resourceName, "type", "UserDefined"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Active"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "UserDefined"),
 				),
 			},
 			{
@@ -48,16 +48,16 @@ func TestAccCECostAllocationTag_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostAllocationTagExists(ctx, resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, "tag_key", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", "Inactive"),
-					resource.TestCheckResourceAttr(resourceName, "type", "UserDefined"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Inactive"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "UserDefined"),
 				),
 			}, {
 				Config: testAccCostAllocationTagConfig_basic(rName, "Active"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostAllocationTagExists(ctx, resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, "tag_key", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", "Active"),
-					resource.TestCheckResourceAttr(resourceName, "type", "UserDefined"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Active"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "UserDefined"),
 				),
 			},
 		},

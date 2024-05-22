@@ -136,7 +136,7 @@ func testAccCheckRolePolicyAttachmentDestroy(ctx context.Context) resource.TestC
 				continue
 			}
 
-			_, err := tfiam.FindAttachedRolePolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes["role"], rs.Primary.Attributes["policy_arn"])
+			_, err := tfiam.FindAttachedRolePolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrRole], rs.Primary.Attributes["policy_arn"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -162,7 +162,7 @@ func testAccCheckRolePolicyAttachmentExists(ctx context.Context, n string) resou
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
-		_, err := tfiam.FindAttachedRolePolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes["role"], rs.Primary.Attributes["policy_arn"])
+		_, err := tfiam.FindAttachedRolePolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrRole], rs.Primary.Attributes["policy_arn"])
 
 		return err
 	}
@@ -196,7 +196,7 @@ func testAccRolePolicyAttachmentImportStateIdFunc(resourceName string) resource.
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["role"], rs.Primary.Attributes["policy_arn"]), nil
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes[names.AttrRole], rs.Primary.Attributes["policy_arn"]), nil
 	}
 }
 

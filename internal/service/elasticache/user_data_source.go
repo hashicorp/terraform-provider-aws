@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_elasticache_user", name="User")
@@ -33,7 +34,7 @@ func dataSourceUser() *schema.Resource {
 							Optional: true,
 							Type:     schema.TypeInt,
 						},
-						"type": {
+						names.AttrType: {
 							Optional: true,
 							Type:     schema.TypeString,
 						},
@@ -59,7 +60,7 @@ func dataSourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"user_name": {
+			names.AttrUserName: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -82,7 +83,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if v := user.Authentication; v != nil {
 		tfMap := map[string]interface{}{
 			"password_count": aws.Int64Value(v.PasswordCount),
-			"type":           aws.StringValue(v.Type),
+			names.AttrType:   aws.StringValue(v.Type),
 		}
 
 		if err := d.Set("authentication_mode", []interface{}{tfMap}); err != nil {
@@ -91,7 +92,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 	d.Set("engine", user.Engine)
 	d.Set("user_id", user.UserId)
-	d.Set("user_name", user.UserName)
+	d.Set(names.AttrUserName, user.UserName)
 
 	return diags
 }

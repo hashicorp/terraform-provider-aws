@@ -27,8 +27,8 @@ func testAccAccount_basic(t *testing.T) {
 			{
 				Config: testAccAccountConfig_role0(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_role_arn", "aws_iam_role.test.0", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "throttle_settings.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_role_arn", "aws_iam_role.test.0", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "throttle_settings.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "api_key_version"),
 					resource.TestCheckResourceAttrSet(resourceName, "features.#"),
 				),
@@ -41,15 +41,15 @@ func testAccAccount_basic(t *testing.T) {
 			{
 				Config: testAccAccountConfig_role1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_role_arn", "aws_iam_role.test.1", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "throttle_settings.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_role_arn", "aws_iam_role.test.1", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "throttle_settings.#", acctest.Ct1),
 				),
 			},
 			{
 				Config: testAccAccountConfig_empty,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_role_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "throttle_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "throttle_settings.#", acctest.Ct1),
 				),
 			},
 		},

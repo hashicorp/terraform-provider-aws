@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudfront_field_level_encryption_config", name="Field-level Encryption Config")
@@ -38,7 +39,7 @@ func resourceFieldLevelEncryptionConfig() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"comment": {
+			names.AttrComment: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -59,11 +60,11 @@ func resourceFieldLevelEncryptionConfig() *schema.Resource {
 										Required: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"content_type": {
+												names.AttrContentType: {
 													Type:     schema.TypeString,
 													Required: true,
 												},
-												"format": {
+												names.AttrFormat: {
 													Type:             schema.TypeString,
 													Required:         true,
 													ValidateDiagFunc: enum.Validate[awstypes.Format](),
@@ -139,7 +140,7 @@ func resourceFieldLevelEncryptionConfigCreate(ctx context.Context, d *schema.Res
 		CallerReference: aws.String(id.UniqueId()),
 	}
 
-	if v, ok := d.GetOk("comment"); ok {
+	if v, ok := d.GetOk(names.AttrComment); ok {
 		apiObject.Comment = aws.String(v.(string))
 	}
 
@@ -184,7 +185,7 @@ func resourceFieldLevelEncryptionConfigRead(ctx context.Context, d *schema.Resou
 
 	apiObject := output.FieldLevelEncryptionConfig
 	d.Set("caller_reference", apiObject.CallerReference)
-	d.Set("comment", apiObject.Comment)
+	d.Set(names.AttrComment, apiObject.Comment)
 	if apiObject.ContentTypeProfileConfig != nil {
 		if err := d.Set("content_type_profile_config", []interface{}{flattenContentTypeProfileConfig(apiObject.ContentTypeProfileConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting content_type_profile_config: %s", err)
@@ -212,7 +213,7 @@ func resourceFieldLevelEncryptionConfigUpdate(ctx context.Context, d *schema.Res
 		CallerReference: aws.String(d.Get("caller_reference").(string)),
 	}
 
-	if v, ok := d.GetOk("comment"); ok {
+	if v, ok := d.GetOk(names.AttrComment); ok {
 		apiObject.Comment = aws.String(v.(string))
 	}
 
@@ -326,11 +327,11 @@ func expandContentTypeProfile(tfMap map[string]interface{}) *awstypes.ContentTyp
 
 	apiObject := &awstypes.ContentTypeProfile{}
 
-	if v, ok := tfMap["content_type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrContentType].(string); ok && v != "" {
 		apiObject.ContentType = aws.String(v)
 	}
 
-	if v, ok := tfMap["format"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrFormat].(string); ok && v != "" {
 		apiObject.Format = awstypes.Format(v)
 	}
 
@@ -483,11 +484,11 @@ func flattenContentTypeProfile(apiObject *awstypes.ContentTypeProfile) map[strin
 	}
 
 	tfMap := map[string]interface{}{
-		"format": apiObject.Format,
+		names.AttrFormat: apiObject.Format,
 	}
 
 	if v := apiObject.ContentType; v != nil {
-		tfMap["content_type"] = aws.ToString(v)
+		tfMap[names.AttrContentType] = aws.ToString(v)
 	}
 
 	if v := apiObject.ProfileId; v != nil {

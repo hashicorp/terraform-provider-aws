@@ -6,16 +6,18 @@ package organizations
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/organizations"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_organizations_organizational_unit_descendant_accounts")
-func DataSourceOrganizationalUnitDescendantAccounts() *schema.Resource {
+// @SDKDataSource("aws_organizations_organizational_unit_descendant_accounts", name="Organizational Unit Descendant Accounts")
+func dataSourceOrganizationalUnitDescendantAccounts() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOrganizationalUnitDescendantAccountsRead,
 
@@ -25,23 +27,23 @@ func DataSourceOrganizationalUnitDescendantAccounts() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"email": {
+						names.AttrEmail: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"status": {
+						names.AttrStatus: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -58,7 +60,7 @@ func DataSourceOrganizationalUnitDescendantAccounts() *schema.Resource {
 
 func dataSourceOrganizationalUnitDescendantAccountsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
+	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
 	parentID := d.Get("parent_id").(string)
 	accounts, err := findAllAccountsForParentAndBelow(ctx, conn, parentID)
@@ -77,10 +79,10 @@ func dataSourceOrganizationalUnitDescendantAccountsRead(ctx context.Context, d *
 }
 
 // findAllAccountsForParent recurses down an OU tree, returning all accounts at the specified parent and below.
-func findAllAccountsForParentAndBelow(ctx context.Context, conn *organizations.Organizations, id string) ([]*organizations.Account, error) {
-	var output []*organizations.Account
+func findAllAccountsForParentAndBelow(ctx context.Context, conn *organizations.Client, id string) ([]awstypes.Account, error) {
+	var output []awstypes.Account
 
-	accounts, err := findAccountsForParent(ctx, conn, id)
+	accounts, err := findAccountsForParentByID(ctx, conn, id)
 
 	if err != nil {
 		return nil, err
@@ -95,7 +97,7 @@ func findAllAccountsForParentAndBelow(ctx context.Context, conn *organizations.O
 	}
 
 	for _, ou := range ous {
-		accounts, err = findAllAccountsForParentAndBelow(ctx, conn, aws.StringValue(ou.Id))
+		accounts, err = findAllAccountsForParentAndBelow(ctx, conn, aws.ToString(ou.Id))
 
 		if err != nil {
 			return nil, err

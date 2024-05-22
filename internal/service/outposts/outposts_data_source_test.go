@@ -40,11 +40,11 @@ func testAccCheckOutpostsAttributes(dataSourceName string) resource.TestCheckFun
 			return fmt.Errorf("Not found: %s", dataSourceName)
 		}
 
-		if v := rs.Primary.Attributes["arns.#"]; v == "0" {
+		if v := rs.Primary.Attributes["arns.#"]; v == acctest.Ct0 {
 			return fmt.Errorf("expected at least one arns result, got none")
 		}
 
-		if v := rs.Primary.Attributes["ids.#"]; v == "0" {
+		if v := rs.Primary.Attributes["ids.#"]; v == acctest.Ct0 {
 			return fmt.Errorf("expected at least one ids result, got none")
 		}
 

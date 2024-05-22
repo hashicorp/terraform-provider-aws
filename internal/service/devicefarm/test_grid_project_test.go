@@ -44,10 +44,10 @@ func TestAccDeviceFarmTestGridProject_basic(t *testing.T) {
 				Config: testAccTestGridProjectConfig_project(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectTestGridProjectExists(ctx, resourceName, &proj),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "devicefarm", regexache.MustCompile(`testgrid-project:.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "devicefarm", regexache.MustCompile(`testgrid-project:.+`)),
 				),
 			},
 			{
@@ -59,8 +59,8 @@ func TestAccDeviceFarmTestGridProject_basic(t *testing.T) {
 				Config: testAccTestGridProjectConfig_project(rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectTestGridProjectExists(ctx, resourceName, &proj),
-					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "devicefarm", regexache.MustCompile(`testgrid-project:.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "devicefarm", regexache.MustCompile(`testgrid-project:.+`)),
 				),
 			},
 		},
@@ -89,9 +89,9 @@ func TestAccDeviceFarmTestGridProject_vpc(t *testing.T) {
 				Config: testAccTestGridProjectConfig_projectVPC(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectTestGridProjectExists(ctx, resourceName, &proj),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.vpc_id", "aws_vpc.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.vpc_id", "aws_vpc.test", names.AttrID),
 				),
 			},
 			{
@@ -122,11 +122,11 @@ func TestAccDeviceFarmTestGridProject_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckProjectTestGridProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTestGridProjectConfig_projectTags1(rName, "key1", "value1"),
+				Config: testAccTestGridProjectConfig_projectTags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectTestGridProjectExists(ctx, resourceName, &proj),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -135,20 +135,20 @@ func TestAccDeviceFarmTestGridProject_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTestGridProjectConfig_projectTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccTestGridProjectConfig_projectTags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectTestGridProjectExists(ctx, resourceName, &proj),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccTestGridProjectConfig_projectTags1(rName, "key2", "value2"),
+				Config: testAccTestGridProjectConfig_projectTags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectTestGridProjectExists(ctx, resourceName, &proj),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},

@@ -40,7 +40,7 @@ func TestAccWorkLinkFleet_basic(t *testing.T) {
 					testAccCheckFleetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "optimize_for_end_user_location", "true"),
 					resource.TestCheckResourceAttrSet(resourceName, "company_code"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_time"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedTime),
 				),
 			},
 			{
@@ -67,14 +67,14 @@ func TestAccWorkLinkFleet_displayName(t *testing.T) {
 				Config: testAccFleetConfig_displayName(suffix, "display1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "display_name", "display1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, "display1"),
 				),
 			},
 			{
 				Config: testAccFleetConfig_displayName(suffix, "display2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "display_name", "display2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, "display2"),
 				),
 			},
 			{
@@ -135,7 +135,7 @@ func TestAccWorkLinkFleet_auditStreamARN(t *testing.T) {
 				Config: testAccFleetConfig_auditStreamARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "audit_stream_arn", "aws_kinesis_stream.test_stream", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "audit_stream_arn", "aws_kinesis_stream.test_stream", names.AttrARN),
 				),
 			},
 			{
@@ -162,20 +162,20 @@ func TestAccWorkLinkFleet_network(t *testing.T) {
 				Config: testAccFleetConfig_network(rName, "192.168.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "network.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "network.0.vpc_id", "aws_vpc.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "network.0.subnet_ids.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "network.0.security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "network.0.vpc_id", "aws_vpc.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "network.0.subnet_ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "network.0.security_group_ids.#", acctest.Ct1),
 				),
 			},
 			{
 				Config: testAccFleetConfig_network(rName, "10.0.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "network.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "network.0.vpc_id", "aws_vpc.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "network.0.subnet_ids.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "network.0.security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "network.0.vpc_id", "aws_vpc.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "network.0.subnet_ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "network.0.security_group_ids.#", acctest.Ct1),
 				),
 			},
 			{
@@ -241,7 +241,7 @@ func TestAccWorkLinkFleet_identityProvider(t *testing.T) {
 				Config: testAccFleetConfig_identityProvider(rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "identity_provider.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "identity_provider.0.type", "SAML"),
 				),
 			},

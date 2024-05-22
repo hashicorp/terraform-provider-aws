@@ -49,7 +49,7 @@ func resourceDataRepositoryAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -76,7 +76,7 @@ func resourceDataRepositoryAssociation() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"file_system_id": {
+			names.AttrFileSystemID: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
@@ -168,7 +168,7 @@ func resourceDataRepositoryAssociationCreate(ctx context.Context, d *schema.Reso
 	input := &fsx.CreateDataRepositoryAssociationInput{
 		ClientRequestToken: aws.String(id.UniqueId()),
 		DataRepositoryPath: aws.String(d.Get("data_repository_path").(string)),
-		FileSystemId:       aws.String(d.Get("file_system_id").(string)),
+		FileSystemId:       aws.String(d.Get(names.AttrFileSystemID).(string)),
 		FileSystemPath:     aws.String(d.Get("file_system_path").(string)),
 		Tags:               getTagsIn(ctx),
 	}
@@ -216,10 +216,10 @@ func resourceDataRepositoryAssociationRead(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendErrorf(diags, "reading FSx for Lustre Data Repository Association (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", association.ResourceARN)
+	d.Set(names.AttrARN, association.ResourceARN)
 	d.Set("batch_import_meta_data_on_create", association.BatchImportMetaDataOnCreate)
 	d.Set("data_repository_path", association.DataRepositoryPath)
-	d.Set("file_system_id", association.FileSystemId)
+	d.Set(names.AttrFileSystemID, association.FileSystemId)
 	d.Set("file_system_path", association.FileSystemPath)
 	d.Set("imported_file_chunk_size", association.ImportedFileChunkSize)
 	if err := d.Set("s3", flattenDataRepositoryAssociationS3(association.S3)); err != nil {
@@ -235,7 +235,7 @@ func resourceDataRepositoryAssociationUpdate(ctx context.Context, d *schema.Reso
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &fsx.UpdateDataRepositoryAssociationInput{
 			AssociationId:      aws.String(d.Id()),
 			ClientRequestToken: aws.String(id.UniqueId()),

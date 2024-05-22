@@ -39,9 +39,9 @@ func testAccVoiceConnectorGroup_basic(t *testing.T) {
 				Config: testAccVoiceConnectorGroupConfig_basic(vcgName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorGroupExists(ctx, resourceName, voiceConnectorGroup),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("vcg-%s", vcgName)),
-					resource.TestCheckResourceAttr(resourceName, "connector.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "connector.0.priority", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("vcg-%s", vcgName)),
+					resource.TestCheckResourceAttr(resourceName, "connector.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "connector.0.priority", acctest.Ct1),
 				),
 			},
 			{
@@ -101,15 +101,15 @@ func testAccVoiceConnectorGroup_update(t *testing.T) {
 				Config: testAccVoiceConnectorGroupConfig_basic(vcgName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorGroupExists(ctx, resourceName, voiceConnectorGroup),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("vcg-%s", vcgName)),
-					resource.TestCheckResourceAttr(resourceName, "connector.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("vcg-%s", vcgName)),
+					resource.TestCheckResourceAttr(resourceName, "connector.#", acctest.Ct1),
 				),
 			},
 			{
 				Config: testAccVoiceConnectorGroupConfig_updated(vcgName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("vcg-updated-%s", vcgName)),
-					resource.TestCheckResourceAttr(resourceName, "connector.0.priority", "3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("vcg-updated-%s", vcgName)),
+					resource.TestCheckResourceAttr(resourceName, "connector.0.priority", acctest.Ct3),
 				),
 			},
 			{

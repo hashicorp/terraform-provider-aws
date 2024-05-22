@@ -48,8 +48,8 @@ func (r *resourceResourceCollection) Metadata(_ context.Context, req resource.Me
 func (r *resourceResourceCollection) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": framework.IDAttribute(),
-			"type": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrType: schema.StringAttribute{
 				Required:   true,
 				CustomType: fwtypes.StringEnumType[awstypes.ResourceCollectionType](),
 				PlanModifiers: []planmodifier.String{
@@ -76,7 +76,7 @@ func (r *resourceResourceCollection) Schema(ctx context.Context, req resource.Sc
 					},
 				},
 			},
-			"tags": schema.ListNestedBlock{
+			names.AttrTags: schema.ListNestedBlock{
 				// Attempting to specify multiple app boundary keys will result in a ValidationException
 				//
 				//   ValidationException: Multiple app boundary keys are not supported
@@ -252,7 +252,7 @@ func (r *resourceResourceCollection) Delete(ctx context.Context, req resource.De
 }
 
 func (r *resourceResourceCollection) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func findResourceCollectionByID(ctx context.Context, conn *devopsguru.Client, id string) (*awstypes.ResourceCollectionFilter, error) {

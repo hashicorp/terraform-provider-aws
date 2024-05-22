@@ -21,7 +21,7 @@ func DataSourceLinks() *schema.Resource {
 		ReadWithoutTimeout: dataSourceLinksRead,
 
 		Schema: map[string]*schema.Schema{
-			"arns": {
+			names.AttrARNs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -54,7 +54,7 @@ func dataSourceLinksRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("arns", arns)
+	d.Set(names.AttrARNs, arns)
 
 	return nil
 }

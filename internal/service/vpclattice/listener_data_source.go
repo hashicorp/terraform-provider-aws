@@ -27,15 +27,15 @@ func DataSourceListener() *schema.Resource {
 		ReadWithoutTimeout: dataSourceListenerRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"default_action": {
+			names.AttrDefaultAction: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -45,7 +45,7 @@ func DataSourceListener() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"status_code": {
+									names.AttrStatusCode: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
@@ -66,7 +66,7 @@ func DataSourceListener() *schema.Resource {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												"weight": {
+												names.AttrWeight: {
 													Type:     schema.TypeInt,
 													Computed: true,
 												},
@@ -91,15 +91,15 @@ func DataSourceListener() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"port": {
+			names.AttrPort: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"protocol": {
+			names.AttrProtocol: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -115,7 +115,7 @@ func DataSourceListener() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -125,6 +125,7 @@ const (
 )
 
 func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	serviceId := d.Get("service_identifier").(string)
@@ -132,24 +133,24 @@ func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	out, err := findListenerByListenerIdAndServiceId(ctx, conn, listenerId, serviceId)
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionReading, DSNameListener, d.Id(), err)
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionReading, DSNameListener, d.Id(), err)
 	}
 
 	// Set simple arguments
 	d.SetId(aws.ToString(out.Id))
-	d.Set("arn", out.Arn)
-	d.Set("created_at", aws.ToTime(out.CreatedAt).String())
+	d.Set(names.AttrARN, out.Arn)
+	d.Set(names.AttrCreatedAt, aws.ToTime(out.CreatedAt).String())
 	d.Set("last_updated_at", aws.ToTime(out.LastUpdatedAt).String())
 	d.Set("listener_id", out.Id)
-	d.Set("name", out.Name)
-	d.Set("port", out.Port)
-	d.Set("protocol", out.Protocol)
+	d.Set(names.AttrName, out.Name)
+	d.Set(names.AttrPort, out.Port)
+	d.Set(names.AttrProtocol, out.Protocol)
 	d.Set("service_arn", out.ServiceArn)
 	d.Set("service_id", out.ServiceId)
 
 	// Flatten complex default_action attribute - uses flatteners from listener.go
-	if err := d.Set("default_action", flattenListenerRuleActionsDataSource(out.DefaultAction)); err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionSetting, DSNameListener, d.Id(), err)
+	if err := d.Set(names.AttrDefaultAction, flattenListenerRuleActionsDataSource(out.DefaultAction)); err != nil {
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionSetting, DSNameListener, d.Id(), err)
 	}
 
 	// Set tags
@@ -157,15 +158,15 @@ func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta in
 	tags, err := listTags(ctx, conn, aws.ToString(out.Arn))
 
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionReading, DSNameListener, d.Id(), err)
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionReading, DSNameListener, d.Id(), err)
 	}
 
 	//lintignore:AWSR002
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionSetting, DSNameListener, d.Id(), err)
+	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionSetting, DSNameListener, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findListenerByListenerIdAndServiceId(ctx context.Context, conn *vpclattice.Client, listener_id string, service_id string) (*vpclattice.GetListenerOutput, error) {
@@ -216,7 +217,7 @@ func flattenRuleActionMemberFixedResponseDataSource(response *types.FixedRespons
 	tfMap := map[string]interface{}{}
 
 	if v := response.StatusCode; v != nil {
-		tfMap["status_code"] = aws.ToInt32(v)
+		tfMap[names.AttrStatusCode] = aws.ToInt32(v)
 	}
 
 	return []interface{}{tfMap}
@@ -246,7 +247,7 @@ func flattenDefaultActionForwardTargetGroupsDataSource(groups []types.WeightedTa
 	for _, targetGroup := range groups {
 		m := map[string]interface{}{
 			"target_group_identifier": aws.ToString(targetGroup.TargetGroupIdentifier),
-			"weight":                  aws.ToInt32(targetGroup.Weight),
+			names.AttrWeight:          aws.ToInt32(targetGroup.Weight),
 		}
 		targetGroups = append(targetGroups, m)
 	}

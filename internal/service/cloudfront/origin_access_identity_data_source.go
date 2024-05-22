@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_cloudfront_origin_access_identity", name="Origin Access Identity")
@@ -27,7 +28,7 @@ func dataSourceOriginAccessIdentity() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"comment": {
+			names.AttrComment: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -39,7 +40,7 @@ func dataSourceOriginAccessIdentity() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"id": {
+			names.AttrID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -55,7 +56,7 @@ func dataSourceOriginAccessIdentityRead(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
-	id := d.Get("id").(string)
+	id := d.Get(names.AttrID).(string)
 	output, err := findOriginAccessIdentityByID(ctx, conn, id)
 
 	if err != nil {
@@ -66,7 +67,7 @@ func dataSourceOriginAccessIdentityRead(ctx context.Context, d *schema.ResourceD
 	d.SetId(aws.ToString(output.CloudFrontOriginAccessIdentity.Id))
 	d.Set("caller_reference", apiObject.CallerReference)
 	d.Set("cloudfront_access_identity_path", "origin-access-identity/cloudfront/"+d.Id())
-	d.Set("comment", apiObject.Comment)
+	d.Set(names.AttrComment, apiObject.Comment)
 	d.Set("etag", output.ETag)
 	d.Set("iam_arn", originAccessIdentityARN(meta.(*conns.AWSClient), d.Id()))
 	d.Set("s3_canonical_user_id", output.CloudFrontOriginAccessIdentity.S3CanonicalUserId)

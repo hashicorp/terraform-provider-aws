@@ -44,15 +44,15 @@ func testAccLoadBalancerCertificate_basic(t *testing.T) {
 				Config: testAccLoadBalancerCertificateConfig_basic(rName, lbName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerCertificateExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "lightsail", regexache.MustCompile(`LoadBalancerTlsCertificate/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
-					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "lightsail", regexache.MustCompile(`LoadBalancerTlsCertificate/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
+					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", domainName),
 					// When using a .test domain, Domain Validation Records return a single FAILED entry
-					resource.TestCheckResourceAttr(resourceName, "domain_validation_records.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "domain_validation_records.#", acctest.Ct1),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 		},
@@ -81,7 +81,7 @@ func testAccLoadBalancerCertificate_subjectAlternativeNames(t *testing.T) {
 				Config: testAccLoadBalancerCertificateConfig_subjectAlternativeNames(rName, lbName, domainName, subjectAlternativeName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerCertificateExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", subjectAlternativeName),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", domainName),
 				),
@@ -115,11 +115,11 @@ func testAccLoadBalancerCertificate_domainValidationRecords(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerCertificateExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "domain_validation_records.*", map[string]string{
-						"domain_name":          domainName,
+						names.AttrDomainName:   domainName,
 						"resource_record_type": "CNAME",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "domain_validation_records.*", map[string]string{
-						"domain_name":          subjectAlternativeName,
+						names.AttrDomainName:   subjectAlternativeName,
 						"resource_record_type": "CNAME",
 					}),
 				),

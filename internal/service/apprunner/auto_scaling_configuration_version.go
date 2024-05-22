@@ -39,7 +39,7 @@ func resourceAutoScalingConfigurationVersion() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -85,7 +85,7 @@ func resourceAutoScalingConfigurationVersion() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.IntBetween(1, 25),
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -152,7 +152,7 @@ func resourceAutoScalingConfigurationRead(ctx context.Context, d *schema.Resourc
 		return sdkdiag.AppendErrorf(diags, "reading App Runner AutoScaling Configuration Version (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", config.AutoScalingConfigurationArn)
+	d.Set(names.AttrARN, config.AutoScalingConfigurationArn)
 	d.Set("auto_scaling_configuration_name", config.AutoScalingConfigurationName)
 	d.Set("auto_scaling_configuration_revision", config.AutoScalingConfigurationRevision)
 	d.Set("has_associated_service", config.HasAssociatedService)
@@ -161,7 +161,7 @@ func resourceAutoScalingConfigurationRead(ctx context.Context, d *schema.Resourc
 	d.Set("max_concurrency", config.MaxConcurrency)
 	d.Set("max_size", config.MaxSize)
 	d.Set("min_size", config.MinSize)
-	d.Set("status", config.Status)
+	d.Set(names.AttrStatus, config.Status)
 
 	return diags
 }

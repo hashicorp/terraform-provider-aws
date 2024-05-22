@@ -36,7 +36,7 @@ func TestAccSESReceiptRuleSet_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReceiptRuleSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "rule_set_name", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ses", fmt.Sprintf("receipt-rule-set/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "ses", fmt.Sprintf("receipt-rule-set/%s", rName)),
 				),
 			},
 			{

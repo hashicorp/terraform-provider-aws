@@ -44,11 +44,11 @@ func testAccTransitGatewayConnectPeer_basic(t *testing.T, semaphore tfsync.Semap
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn", "64512"),
 					resource.TestCheckResourceAttrSet(resourceName, "bgp_peer_address"),
 					acctest.CheckResourceAttrGreaterThanValue(resourceName, "bgp_transit_gateway_addresses.#", 0),
-					resource.TestCheckResourceAttr(resourceName, "inside_cidr_blocks.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inside_cidr_blocks.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "peer_address", "1.1.1.1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, "transit_gateway_address"),
-					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_attachment_id", transitGatewayConnectResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayAttachmentID, transitGatewayConnectResourceName, names.AttrID),
 				),
 			},
 			{
@@ -135,7 +135,7 @@ func testAccTransitGatewayConnectPeer_insideCIDRBlocks(t *testing.T, semaphore t
 				Config: testAccTransitGatewayConnectPeerConfig_insideCIDRBlocks2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayConnectPeerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "inside_cidr_blocks.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "inside_cidr_blocks.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemAttr(resourceName, "inside_cidr_blocks.*", "169.254.200.0/29"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "inside_cidr_blocks.*", "fd00::/125"),
 				),
@@ -166,11 +166,11 @@ func testAccTransitGatewayConnectPeer_tags(t *testing.T, semaphore tfsync.Semaph
 		CheckDestroy:             testAccCheckTransitGatewayConnectPeerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTransitGatewayConnectPeerConfig_tags1(rName, "key1", "value1"),
+				Config: testAccTransitGatewayConnectPeerConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayConnectPeerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -179,20 +179,20 @@ func testAccTransitGatewayConnectPeer_tags(t *testing.T, semaphore tfsync.Semaph
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTransitGatewayConnectPeerConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccTransitGatewayConnectPeerConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayConnectPeerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccTransitGatewayConnectPeerConfig_tags1(rName, "key2", "value2"),
+				Config: testAccTransitGatewayConnectPeerConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayConnectPeerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},

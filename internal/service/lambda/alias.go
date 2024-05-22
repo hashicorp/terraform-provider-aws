@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_lambda_alias", name="Alias")
@@ -35,11 +36,11 @@ func resourceAlias() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -57,7 +58,7 @@ func resourceAlias() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -84,9 +85,9 @@ func resourceAliasCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &lambda.CreateAliasInput{
-		Description:     aws.String(d.Get("description").(string)),
+		Description:     aws.String(d.Get(names.AttrDescription).(string)),
 		FunctionName:    aws.String(d.Get("function_name").(string)),
 		FunctionVersion: aws.String(d.Get("function_version").(string)),
 		Name:            aws.String(name),
@@ -108,7 +109,7 @@ func resourceAliasRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
-	output, err := findAliasByTwoPartKey(ctx, conn, d.Get("function_name").(string), d.Get("name").(string))
+	output, err := findAliasByTwoPartKey(ctx, conn, d.Get("function_name").(string), d.Get(names.AttrName).(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Lambda Alias %s not found, removing from state", d.Id())
@@ -122,11 +123,11 @@ func resourceAliasRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	aliasARN := aws.ToString(output.AliasArn)
 	d.SetId(aliasARN) // For import.
-	d.Set("arn", aliasARN)
-	d.Set("description", output.Description)
+	d.Set(names.AttrARN, aliasARN)
+	d.Set(names.AttrDescription, output.Description)
 	d.Set("function_version", output.FunctionVersion)
 	d.Set("invoke_arn", invokeARN(meta.(*conns.AWSClient), aliasARN))
-	d.Set("name", output.Name)
+	d.Set(names.AttrName, output.Name)
 	if err := d.Set("routing_config", flattenAliasRoutingConfiguration(output.RoutingConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting routing_config: %s", err)
 	}
@@ -139,10 +140,10 @@ func resourceAliasUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
 	input := &lambda.UpdateAliasInput{
-		Description:     aws.String(d.Get("description").(string)),
+		Description:     aws.String(d.Get(names.AttrDescription).(string)),
 		FunctionName:    aws.String(d.Get("function_name").(string)),
 		FunctionVersion: aws.String(d.Get("function_version").(string)),
-		Name:            aws.String(d.Get("name").(string)),
+		Name:            aws.String(d.Get(names.AttrName).(string)),
 		RoutingConfig:   expandAliasRoutingConfiguration(d.Get("routing_config").([]interface{})),
 	}
 
@@ -162,7 +163,7 @@ func resourceAliasDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	log.Printf("[INFO] Deleting Lambda Alias: %s", d.Id())
 	_, err := conn.DeleteAlias(ctx, &lambda.DeleteAliasInput{
 		FunctionName: aws.String(d.Get("function_name").(string)),
-		Name:         aws.String(d.Get("name").(string)),
+		Name:         aws.String(d.Get(names.AttrName).(string)),
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -186,7 +187,7 @@ func resourceAliasImport(ctx context.Context, d *schema.ResourceData, meta inter
 	alias := idParts[1]
 
 	d.Set("function_name", functionName)
-	d.Set("name", alias)
+	d.Set(names.AttrName, alias)
 	return []*schema.ResourceData{d}, nil
 }
 

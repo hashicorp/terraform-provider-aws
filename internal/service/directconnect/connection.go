@@ -30,7 +30,7 @@ func ResourceConnection() *schema.Resource {
 	// Resource with v0 schema (provider v5.0.1).
 	resourceV0 := &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -76,7 +76,7 @@ func ResourceConnection() *schema.Resource {
 				Default:  false,
 				ForceNew: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -93,13 +93,13 @@ func ResourceConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"provider_name": {
+			names.AttrProviderName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"skip_destroy": {
+			names.AttrSkipDestroy: {
 				Type:     schema.TypeBool,
 				Default:  false,
 				Optional: true,
@@ -150,7 +150,7 @@ func ResourceConnection() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -196,7 +196,7 @@ func ResourceConnection() *schema.Resource {
 				Default:  false,
 				ForceNew: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -213,13 +213,13 @@ func ResourceConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"provider_name": {
+			names.AttrProviderName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"skip_destroy": {
+			names.AttrSkipDestroy: {
 				Type:     schema.TypeBool,
 				Default:  false,
 				Optional: true,
@@ -240,7 +240,7 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &directconnect.CreateConnectionInput{
 		Bandwidth:      aws.String(d.Get("bandwidth").(string)),
 		ConnectionName: aws.String(name),
@@ -249,7 +249,7 @@ func resourceConnectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 		Tags:           getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("provider_name"); ok {
+	if v, ok := d.GetOk(names.AttrProviderName); ok {
 		input.ProviderName = aws.String(v.(string))
 	}
 
@@ -287,7 +287,7 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta in
 		AccountID: aws.StringValue(connection.OwnerAccount),
 		Resource:  fmt.Sprintf("dxcon/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("aws_device", connection.AwsDeviceV2)
 	d.Set("bandwidth", connection.Bandwidth)
 	d.Set("encryption_mode", connection.EncryptionMode)
@@ -295,11 +295,11 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("jumbo_frame_capable", connection.JumboFrameCapable)
 	d.Set("location", connection.Location)
 	d.Set("macsec_capable", connection.MacSecCapable)
-	d.Set("name", connection.ConnectionName)
+	d.Set(names.AttrName, connection.ConnectionName)
 	d.Set("owner_account_id", connection.OwnerAccount)
 	d.Set("partner_name", connection.PartnerName)
 	d.Set("port_encryption_status", connection.PortEncryptionStatus)
-	d.Set("provider_name", connection.ProviderName)
+	d.Set(names.AttrProviderName, connection.ProviderName)
 	d.Set("vlan_id", connection.Vlan)
 
 	// d.Set("request_macsec", d.Get("request_macsec").(bool))
@@ -339,7 +339,7 @@ func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
-	if _, ok := d.GetOk("skip_destroy"); ok {
+	if _, ok := d.GetOk(names.AttrSkipDestroy); ok {
 		return diags
 	}
 

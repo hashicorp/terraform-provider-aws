@@ -40,24 +40,24 @@ func TestAccStorageGatewaySMBFileShare_Authentication_activeDirectory(t *testing
 				Config: testAccSMBFileShareConfig_authenticationActiveDirectory(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSMBFileShareExists(ctx, resourceName, &smbFileShare),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexache.MustCompile(`share/share-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`share/share-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "authentication", "ActiveDirectory"),
 					resource.TestCheckResourceAttr(resourceName, "default_storage_class", "S3_STANDARD"),
 					resource.TestMatchResourceAttr(resourceName, "fileshare_id", regexache.MustCompile(`^share-`)),
 					resource.TestMatchResourceAttr(resourceName, "file_share_name", regexache.MustCompile(`^tf-acc-test-`)),
-					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "guess_mime_type_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "invalid_user_list.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "invalid_user_list.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "kms_encrypted", "false"),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_arn", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "location_arn", bucketResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),
+					resource.TestCheckResourceAttrPair(resourceName, "location_arn", bucketResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "object_acl", storagegateway.ObjectACLPrivate),
-					resource.TestMatchResourceAttr(resourceName, "path", regexache.MustCompile(`^/.+`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrPath, regexache.MustCompile(`^/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "read_only", "false"),
 					resource.TestCheckResourceAttr(resourceName, "requester_pays", "false"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "valid_user_list.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "admin_user_list.#", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, iamResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "valid_user_list.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "admin_user_list.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "access_based_enumeration", "false"),
 					resource.TestCheckResourceAttr(resourceName, "notification_policy", "{}"),
 				),
@@ -90,25 +90,25 @@ func TestAccStorageGatewaySMBFileShare_Authentication_guestAccess(t *testing.T) 
 				Config: testAccSMBFileShareConfig_authenticationGuestAccess(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSMBFileShareExists(ctx, resourceName, &smbFileShare),
-					resource.TestCheckResourceAttr(resourceName, "admin_user_list.#", "0"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexache.MustCompile(`share/share-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "admin_user_list.#", acctest.Ct0),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`share/share-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "authentication", "GuestAccess"),
-					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "case_sensitivity", "ClientSpecified"),
 					resource.TestCheckResourceAttr(resourceName, "default_storage_class", "S3_STANDARD"),
 					resource.TestMatchResourceAttr(resourceName, "fileshare_id", regexache.MustCompile(`^share-`)),
 					resource.TestMatchResourceAttr(resourceName, "file_share_name", regexache.MustCompile(`^tf-acc-test-`)),
-					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "guess_mime_type_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "invalid_user_list.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "invalid_user_list.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "kms_encrypted", "false"),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_arn", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "location_arn", bucketResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),
+					resource.TestCheckResourceAttrPair(resourceName, "location_arn", bucketResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "object_acl", storagegateway.ObjectACLPrivate),
 					resource.TestCheckResourceAttr(resourceName, "read_only", "false"),
 					resource.TestCheckResourceAttr(resourceName, "requester_pays", "false"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "valid_user_list.#", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, iamResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "valid_user_list.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "access_based_enumeration", "false"),
 					resource.TestCheckResourceAttr(resourceName, "notification_policy", "{}"),
 				),
@@ -321,11 +321,11 @@ func TestAccStorageGatewaySMBFileShare_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckSMBFileShareDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSMBFileShareConfig_tags1(rName, "key1", "value1"),
+				Config: testAccSMBFileShareConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSMBFileShareExists(ctx, resourceName, &smbFileShare),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -334,20 +334,20 @@ func TestAccStorageGatewaySMBFileShare_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSMBFileShareConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccSMBFileShareConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSMBFileShareExists(ctx, resourceName, &smbFileShare),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccSMBFileShareConfig_tags1(rName, "key2", "value2"),
+				Config: testAccSMBFileShareConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSMBFileShareExists(ctx, resourceName, &smbFileShare),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -459,21 +459,21 @@ func TestAccStorageGatewaySMBFileShare_invalidUserList(t *testing.T) {
 				Config: testAccSMBFileShareConfig_invalidUserListSingle(rName, domainName, "invaliduser1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSMBFileShareExists(ctx, resourceName, &smbFileShare),
-					resource.TestCheckResourceAttr(resourceName, "invalid_user_list.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "invalid_user_list.#", acctest.Ct1),
 				),
 			},
 			{
 				Config: testAccSMBFileShareConfig_invalidUserListMultiple(rName, domainName, "invaliduser2", "invaliduser3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSMBFileShareExists(ctx, resourceName, &smbFileShare),
-					resource.TestCheckResourceAttr(resourceName, "invalid_user_list.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "invalid_user_list.#", acctest.Ct2),
 				),
 			},
 			{
 				Config: testAccSMBFileShareConfig_invalidUserListSingle(rName, domainName, "invaliduser4"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSMBFileShareExists(ctx, resourceName, &smbFileShare),
-					resource.TestCheckResourceAttr(resourceName, "invalid_user_list.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "invalid_user_list.#", acctest.Ct1),
 				),
 			},
 			{
@@ -536,7 +536,7 @@ func TestAccStorageGatewaySMBFileShare_kmsKeyARN(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSMBFileShareExists(ctx, resourceName, &smbFileShare),
 					resource.TestCheckResourceAttr(resourceName, "kms_encrypted", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", keyName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, keyName, names.AttrARN),
 				),
 			},
 			{
@@ -544,7 +544,7 @@ func TestAccStorageGatewaySMBFileShare_kmsKeyARN(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSMBFileShareExists(ctx, resourceName, &smbFileShare),
 					resource.TestCheckResourceAttr(resourceName, "kms_encrypted", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", keyUpdatedName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, keyUpdatedName, names.AttrARN),
 				),
 			},
 			{
@@ -685,21 +685,21 @@ func TestAccStorageGatewaySMBFileShare_validUserList(t *testing.T) {
 				Config: testAccSMBFileShareConfig_validUserListSingle(rName, domainName, "validuser1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSMBFileShareExists(ctx, resourceName, &smbFileShare),
-					resource.TestCheckResourceAttr(resourceName, "valid_user_list.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "valid_user_list.#", acctest.Ct1),
 				),
 			},
 			{
 				Config: testAccSMBFileShareConfig_validUserListMultiple(rName, domainName, "validuser2", "validuser3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSMBFileShareExists(ctx, resourceName, &smbFileShare),
-					resource.TestCheckResourceAttr(resourceName, "valid_user_list.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "valid_user_list.#", acctest.Ct2),
 				),
 			},
 			{
 				Config: testAccSMBFileShareConfig_validUserListSingle(rName, domainName, "validuser4"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSMBFileShareExists(ctx, resourceName, &smbFileShare),
-					resource.TestCheckResourceAttr(resourceName, "valid_user_list.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "valid_user_list.#", acctest.Ct1),
 				),
 			},
 			{
@@ -772,7 +772,7 @@ func TestAccStorageGatewaySMBFileShare_audit(t *testing.T) {
 				Config: testAccSMBFileShareConfig_auditDestination(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSMBFileShareExists(ctx, resourceName, &smbFileShare),
-					resource.TestCheckResourceAttrPair(resourceName, "audit_destination_arn", logResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "audit_destination_arn", logResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -784,7 +784,7 @@ func TestAccStorageGatewaySMBFileShare_audit(t *testing.T) {
 				Config: testAccSMBFileShareConfig_auditDestinationUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSMBFileShareExists(ctx, resourceName, &smbFileShare),
-					resource.TestCheckResourceAttrPair(resourceName, "audit_destination_arn", logResourceNameSecond, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "audit_destination_arn", logResourceNameSecond, names.AttrARN),
 				),
 			},
 		},
@@ -807,7 +807,7 @@ func TestAccStorageGatewaySMBFileShare_cacheAttributes(t *testing.T) {
 				Config: testAccSMBFileShareConfig_cacheAttributes(rName, 300),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSMBFileShareExists(ctx, resourceName, &smbFileShare),
-					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "cache_attributes.0.cache_stale_timeout_in_seconds", "300"),
 				),
 			},
@@ -820,7 +820,7 @@ func TestAccStorageGatewaySMBFileShare_cacheAttributes(t *testing.T) {
 				Config: testAccSMBFileShareConfig_cacheAttributes(rName, 500),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSMBFileShareExists(ctx, resourceName, &smbFileShare),
-					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "cache_attributes.0.cache_stale_timeout_in_seconds", "500"),
 				),
 			},
@@ -828,7 +828,7 @@ func TestAccStorageGatewaySMBFileShare_cacheAttributes(t *testing.T) {
 				Config: testAccSMBFileShareConfig_cacheAttributes(rName, 300),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSMBFileShareExists(ctx, resourceName, &smbFileShare),
-					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "cache_attributes.0.cache_stale_timeout_in_seconds", "300"),
 				),
 			},
@@ -919,21 +919,21 @@ func TestAccStorageGatewaySMBFileShare_adminUserList(t *testing.T) {
 				Config: testAccSMBFileShareConfig_adminUserListSingle(rName, domainName, "adminuser1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSMBFileShareExists(ctx, resourceName, &smbFileShare),
-					resource.TestCheckResourceAttr(resourceName, "admin_user_list.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "admin_user_list.#", acctest.Ct1),
 				),
 			},
 			{
 				Config: testAccSMBFileShareConfig_adminUserListMultiple(rName, domainName, "adminuser2", "adminuser3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSMBFileShareExists(ctx, resourceName, &smbFileShare),
-					resource.TestCheckResourceAttr(resourceName, "admin_user_list.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "admin_user_list.#", acctest.Ct2),
 				),
 			},
 			{
 				Config: testAccSMBFileShareConfig_adminUserListSingle(rName, domainName, "adminuser4"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSMBFileShareExists(ctx, resourceName, &smbFileShare),
-					resource.TestCheckResourceAttr(resourceName, "admin_user_list.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "admin_user_list.#", acctest.Ct1),
 				),
 			},
 			{

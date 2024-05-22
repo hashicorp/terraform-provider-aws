@@ -41,7 +41,7 @@ For more information please read the AWS RDS documentation about [DB Instance Cl
 By default, RDS applies updates to DB Instances in-place, which can lead to service interruptions.
 Low-downtime updates minimize service interruptions by performing the updates with an [RDS Blue/Green deployment][blue-green] and switching over the instances when complete.
 
-Low-downtime updates are only available for DB Instances using MySQL and MariaDB,
+Low-downtime updates are only available for DB Instances using MySQL, MariaDB and PostgreSQL,
 as other engines are not supported by RDS Blue/Green deployments.
 They cannot be used with DB Instances with replicas.
 
@@ -69,9 +69,9 @@ class MyConvertedCode extends TerraformStack {
       allocatedStorage: 10,
       dbName: "mydb",
       engine: "mysql",
-      engineVersion: "5.7",
+      engineVersion: "8.0",
       instanceClass: "db.t3.micro",
-      parameterGroupName: "default.mysql5.7",
+      parameterGroupName: "default.mysql8.0",
       password: "foobarbaz",
       skipFinalSnapshot: true,
       username: "foo",
@@ -340,10 +340,10 @@ class MyConvertedCode extends TerraformStack {
       allocatedStorage: 10,
       dbName: "mydb",
       engine: "mysql",
-      engineVersion: "5.7",
+      engineVersion: "8.0",
       instanceClass: "db.t3.micro",
       manageMasterUserPassword: true,
-      parameterGroupName: "default.mysql5.7",
+      parameterGroupName: "default.mysql8.0",
       username: "foo",
     });
   }
@@ -377,11 +377,11 @@ class MyConvertedCode extends TerraformStack {
       allocatedStorage: 10,
       dbName: "mydb",
       engine: "mysql",
-      engineVersion: "5.7",
+      engineVersion: "8.0",
       instanceClass: "db.t3.micro",
       manageMasterUserPassword: true,
       masterUserSecretKmsKeyId: example.keyId,
-      parameterGroupName: "default.mysql5.7",
+      parameterGroupName: "default.mysql8.0",
       username: "foo",
     });
   }
@@ -446,7 +446,7 @@ for additional read replica constraints.
 * `domainOu` - (Optional, but required if domain_fqdn is provided) The self managed Active Directory organizational unit for your DB instance to join. Conflicts with `domain` and `domainIamRoleName`.
 * `enabledCloudwatchLogsExports` - (Optional) Set of log types to enable for exporting to CloudWatch logs. If omitted, no logs will be exported. For supported values, see the EnableCloudwatchLogsExports.member.N parameter in [API action CreateDBInstance](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html).
 * `engine` - (Required unless a `snapshotIdentifier` or `replicateSourceDb` is provided) The database engine to use. For supported values, see the Engine parameter in [API action CreateDBInstance](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html). Note that for Amazon Aurora instances the engine must match the [DB cluster](/docs/providers/aws/r/rds_cluster.html)'s engine'. For information on the difference between the available Aurora MySQL engines see [Comparison between Aurora MySQL 1 and Aurora MySQL 2](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/AuroraMySQL.Updates.20180206.html) in the Amazon RDS User Guide.
-* `engineVersion` - (Optional) The engine version to use. If `autoMinorVersionUpgrade` is enabled, you can provide a prefix of the version such as `5.7` (for `5.7.10`). The actual engine version used is returned in the attribute `engineVersionActual`, see [Attribute Reference](#attribute-reference) below. For supported values, see the EngineVersion parameter in [API action CreateDBInstance](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html). Note that for Amazon Aurora instances the engine version must match the [DB cluster](/docs/providers/aws/r/rds_cluster.html)'s engine version'.
+* `engineVersion` - (Optional) The engine version to use. If `autoMinorVersionUpgrade` is enabled, you can provide a prefix of the version such as `8.0` (for `8.0.36`). The actual engine version used is returned in the attribute `engineVersionActual`, see [Attribute Reference](#attribute-reference) below. For supported values, see the EngineVersion parameter in [API action CreateDBInstance](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html). Note that for Amazon Aurora instances the engine version must match the [DB cluster](/docs/providers/aws/r/rds_cluster.html)'s engine version'.
 * `finalSnapshotIdentifier` - (Optional) The name of your final DB snapshot
 when this DB instance is deleted. Must be provided if `skipFinalSnapshot` is
 set to `false`. The value must begin with a letter, only contain alphanumeric characters and hyphens, and not end with a hyphen or contain two consecutive hyphens. Must not be provided when deleting a read replica.
@@ -706,4 +706,4 @@ Using `terraform import`, import DB Instances using the `identifier`. For exampl
 % terraform import aws_db_instance.default mydb-rds-instance
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-f4b1d81928d74671bc3c00443f69a699ebc4c22d1701bc6a3e263ae1d6fd27bf -->
+<!-- cache-key: cdktf-0.20.1 input-19a084f1d95a764a60e49c2d9dda089e1b79e0ddbf988b584006fa874b9921cc -->

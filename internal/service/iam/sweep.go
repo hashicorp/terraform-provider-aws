@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -257,7 +258,7 @@ func sweepInstanceProfile(ctx context.Context, client *conns.AWSClient) ([]sweep
 			if r := len(roles); r > 1 {
 				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("unexpected number of roles for IAM Instance Profile (%s): %d", name, r))
 			} else if r == 1 {
-				d.Set("role", roles[0].RoleName)
+				d.Set(names.AttrRole, roles[0].RoleName)
 			}
 
 			sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))
@@ -327,8 +328,8 @@ func sweepServiceSpecificCredentials(ctx context.Context, client *conns.AWSClien
 		})
 		if err != nil {
 			tflog.Warn(ctx, "Skipping resource", map[string]any{
-				"error":     err.Error(),
-				"user_name": user.UserName,
+				"error":            err.Error(),
+				names.AttrUserName: user.UserName,
 			})
 			continue
 		}
@@ -620,7 +621,7 @@ func sweepUsers(region string) error {
 					r := resourceUser()
 					d := r.Data(nil)
 					d.SetId(aws.ToString(user.UserName))
-					d.Set("force_destroy", true)
+					d.Set(names.AttrForceDestroy, true)
 
 					// In general, sweeping should use the resource's Delete function. If Delete
 					// is missing something that affects sweeping, fix Delete. Most of the time,
@@ -685,7 +686,7 @@ func roleNameFilter(name string) bool {
 		"KinesisFirehoseServiceRole-test",
 		"rds",
 		"resource-test-terraform-",
-		"role",
+		names.AttrRole,
 		"sns-delivery-status",
 		"ssm_role",
 		"ssm-role",
@@ -784,8 +785,8 @@ func sweepSigningCertificates(ctx context.Context, client *conns.AWSClient) ([]s
 		})
 		if err != nil {
 			tflog.Warn(ctx, "Skipping resource", map[string]any{
-				"error":     err.Error(),
-				"user_name": user.UserName,
+				"error":            err.Error(),
+				names.AttrUserName: user.UserName,
 			})
 			continue
 		}

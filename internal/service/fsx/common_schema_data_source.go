@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func newSnapshotFilterList(s *schema.Set) []*fsx.SnapshotFilter {
@@ -19,8 +20,8 @@ func newSnapshotFilterList(s *schema.Set) []*fsx.SnapshotFilter {
 	return tfslices.ApplyToAll(s.List(), func(tfList interface{}) *fsx.SnapshotFilter {
 		tfMap := tfList.(map[string]interface{})
 		return &fsx.SnapshotFilter{
-			Name:   aws.String(tfMap["name"].(string)),
-			Values: flex.ExpandStringList(tfMap["values"].([]interface{})),
+			Name:   aws.String(tfMap[names.AttrName].(string)),
+			Values: flex.ExpandStringList(tfMap[names.AttrValues].([]interface{})),
 		}
 	})
 }
@@ -31,11 +32,11 @@ func snapshotFiltersSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"name": {
+				names.AttrName: {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				"values": {
+				names.AttrValues: {
 					Type:     schema.TypeList,
 					Required: true,
 					Elem: &schema.Schema{
@@ -55,8 +56,8 @@ func newStorageVirtualMachineFilterList(s *schema.Set) []*fsx.StorageVirtualMach
 	return tfslices.ApplyToAll(s.List(), func(tfList interface{}) *fsx.StorageVirtualMachineFilter {
 		tfMap := tfList.(map[string]interface{})
 		return &fsx.StorageVirtualMachineFilter{
-			Name:   aws.String(tfMap["name"].(string)),
-			Values: flex.ExpandStringList(tfMap["values"].([]interface{})),
+			Name:   aws.String(tfMap[names.AttrName].(string)),
+			Values: flex.ExpandStringList(tfMap[names.AttrValues].([]interface{})),
 		}
 	})
 }
@@ -67,11 +68,11 @@ func storageVirtualMachineFiltersSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"name": {
+				names.AttrName: {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				"values": {
+				names.AttrValues: {
 					Type:     schema.TypeList,
 					Required: true,
 					Elem: &schema.Schema{

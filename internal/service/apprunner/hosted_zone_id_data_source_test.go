@@ -28,13 +28,13 @@ func TestAccAppRunnerHostedZoneIDDataSource_basic(t *testing.T) {
 			{
 				Config: testAccHostedZoneIDDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(datasourceName, "id"),
+					resource.TestCheckResourceAttrSet(datasourceName, names.AttrID),
 				),
 			},
 			{
 				Config: testAccHostedZoneIDDataSourceConfig_explicitRegion(names.APNortheast1RegionID),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "id", "Z08491812XW6IPYLR6CCA"),
+					resource.TestCheckResourceAttr(datasourceName, names.AttrID, "Z08491812XW6IPYLR6CCA"),
 				),
 			},
 		},

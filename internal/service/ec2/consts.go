@@ -4,8 +4,10 @@
 package ec2
 
 import (
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -140,13 +142,13 @@ func vpnTunnelOptionsIKEVersion_Values() []string {
 }
 
 const (
-	vpnTunnelCloudWatchLogOutputFormatJSON = "json"
+	vpnTunnelCloudWatchLogOutputFormatJSON = names.AttrJSON
 	vpnTunnelCloudWatchLogOutputFormatText = "text"
 )
 
 func vpnTunnelCloudWatchLogOutputFormat_Values() []string {
 	return []string{
-		vpnTunnelCloudWatchLogOutputFormatJSON,
+		names.AttrJSON,
 		vpnTunnelCloudWatchLogOutputFormatText,
 	}
 }
@@ -266,7 +268,7 @@ const (
 )
 
 const (
-	TargetStorageTierStandard = "standard"
+	TargetStorageTierStandard awstypes.TargetStorageTier = "standard"
 )
 
 const (

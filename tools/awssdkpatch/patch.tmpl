@@ -14,6 +14,13 @@ var x identifier
 arn.x
 
 @@
+var x identifier
+@@
+-import "github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
++import "github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+tfawserr.x
+
+@@
 @@
 -aws.BoolValue
 +aws.ToBool
@@ -34,19 +41,19 @@ arn.x
 +aws.ToString
 
 @@
-var x identifier
+var x expression
 @@
 -aws.StringSlice([]string{x})
 +[]string{x}
 
 @@
-var x identifier
+var x expression
 @@
 -aws.StringValueSlice(x)
 +x
 
 @@
-var x identifier
+var x expression
 @@
 -aws.StringValueMap(x)
 +x
@@ -59,18 +66,18 @@ var x identifier
 
 # Step 2: Convert AWS SDK v1 (service) to v2
 @@
-var x identifier
+var {{ .ImportAlias }}, x identifier
 @@
--import "github.com/aws/aws-sdk-go/service/{{ .GoV1Package }}"
-+import "github.com/aws/aws-sdk-go-v2/service/{{ .GoV2Package }}"
-{{ .GoV1Package }}.x
+-import {{ .ImportAlias }} "github.com/aws/aws-sdk-go/service/{{ .GoV1Package }}"
++import {{ .ImportAlias }} "github.com/aws/aws-sdk-go-v2/service/{{ .GoV2Package }}"
+{{ .ImportAlias }}.x
 
 # 2a: Most types are in the service's types package so do a simple mass-substitution
 # to get most things right
 @@
 var x identifier
 @@
--{{ .GoV1Package }}.x
+-{{ .ImportAlias }}.x
 +awstypes.x
 
 @@
@@ -82,7 +89,7 @@ awstypes.x
 @@
 @@
 -awstypes.{{ .GoV1ClientTypeName }}
-+{{ .GoV2Package }}.Client
++{{ .ImportAlias }}.Client
 
 @@
 @@
@@ -91,12 +98,12 @@ awstypes.x
 
 # 2b: Types used for passing Input and Outputs to a service's CRUD operations
 # remain in the main service package, so 'unconvert' these from 2a above
-{{ $goV2Package := .GoV2Package }}
+{{ $importAlias := .ImportAlias }}
 {{ range $typeName := .InputOutputTypes }}
 @@
 @@
 -awstypes.{{ $typeName }}
-+{{ $goV2Package }}.{{ $typeName }}
++{{ $importAlias }}.{{ $typeName }}
 {{ end }}
 
 {{ range $funcName := .ContextFunctions }}
@@ -169,3 +176,77 @@ var x identifier
 @@
 +import "github.com/hashicorp/terraform-provider-aws/internal/enum"
 enum.x
+
+{{- if .MultiClient }}
+# Replace generated Tags function with the V2 variant.
+@@
+@@
+-Tags(...)
++TagsV2(...)
+
+# Replace generated KeyValueTags function with the V2 variant.
+@@
+@@
+-KeyValueTags(...)
++keyValueTagsV2(...)
+
+# Replace generated getTagsIn function with the V2 variant.
+@@
+@@
+-getTagsIn(...)
++getTagsInV2(...)
+
+# Replace generated getTagSpecificationsIn function with the V2 variant.
+@@
+@@
+-getTagSpecificationsIn(...)
++getTagSpecificationsInV2(...)
+
+# Replace generated setTagsOut function with the V2 variant.
+@@
+@@
+-setTagsOut(...)
++setTagsOutV2(...)
+
+# Replace generated createTags function with the V2 variant.
+@@
+@@
+-createTags(...)
++createTagsV2(...)
+
+# Replace generated updateTags function with the V2 variant.
+@@
+@@
+-updateTags(...)
++updateTagsV2(...)
+
+# Replace generated newFilter function with the V2 variant.
+@@
+@@
+-newFilter(...)
++newFilterV2(...)
+
+# Replace generated newAttributeFilterList function with the V2 variant.
+@@
+@@
+-newAttributeFilterList(...)
++newAttributeFilterListV2(...)
+
+# Replace generated newCustomFilterList function with the V2 variant.
+@@
+@@
+-newCustomFilterList(...)
++newCustomFilterListV2(...)
+
+# Replace generated newCustomFilterListFramework function with the V2 variant.
+@@
+@@
+-newCustomFilterListFramework(...)
++newCustomFilterListFrameworkV2(...)
+
+# Replace generated newTagFilterList function with the V2 variant.
+@@
+@@
+-newTagFilterList(...)
++newTagFilterListV2(...)
+{{- end }}

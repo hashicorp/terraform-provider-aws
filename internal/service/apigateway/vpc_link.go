@@ -42,15 +42,15 @@ func resourceVPCLink() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -73,14 +73,14 @@ func resourceVPCLinkCreate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &apigateway.CreateVpcLinkInput{
 		Name:       aws.String(name),
 		Tags:       getTagsIn(ctx),
 		TargetArns: flex.ExpandStringValueList(d.Get("target_arns").([]interface{})),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -115,9 +115,9 @@ func resourceVPCLinkRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway VPC Link (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", vpcLinkARN(meta.(*conns.AWSClient), d.Id()))
-	d.Set("description", vpcLink.Description)
-	d.Set("name", vpcLink.Name)
+	d.Set(names.AttrARN, vpcLinkARN(meta.(*conns.AWSClient), d.Id()))
+	d.Set(names.AttrDescription, vpcLink.Description)
+	d.Set(names.AttrName, vpcLink.Name)
 	d.Set("target_arns", vpcLink.TargetArns)
 
 	setTagsOut(ctx, vpcLink.Tags)
@@ -129,22 +129,22 @@ func resourceVPCLinkUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		operations := make([]types.PatchOperation, 0)
 
-		if d.HasChange("description") {
+		if d.HasChange(names.AttrDescription) {
 			operations = append(operations, types.PatchOperation{
 				Op:    types.Op("replace"),
 				Path:  aws.String("/description"),
-				Value: aws.String(d.Get("description").(string)),
+				Value: aws.String(d.Get(names.AttrDescription).(string)),
 			})
 		}
 
-		if d.HasChange("name") {
+		if d.HasChange(names.AttrName) {
 			operations = append(operations, types.PatchOperation{
 				Op:    types.Op("replace"),
 				Path:  aws.String("/name"),
-				Value: aws.String(d.Get("name").(string)),
+				Value: aws.String(d.Get(names.AttrName).(string)),
 			})
 		}
 

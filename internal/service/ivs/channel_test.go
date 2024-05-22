@@ -45,9 +45,9 @@ func TestAccIVSChannel_basic(t *testing.T) {
 					testAccCheckChannelExists(ctx, resourceName, &channel),
 					resource.TestCheckResourceAttrSet(resourceName, "ingest_endpoint"),
 					resource.TestCheckResourceAttrSet(resourceName, "playback_url"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ivs", regexache.MustCompile(`channel/.+`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct0),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ivs", regexache.MustCompile(`channel/.+`)),
 				),
 			},
 			{
@@ -76,11 +76,11 @@ func TestAccIVSChannel_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckChannelDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccChannelConfig_tags1("key1", "value1"),
+				Config: testAccChannelConfig_tags1(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckChannelExists(ctx, resourceName, &channel),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -89,20 +89,20 @@ func TestAccIVSChannel_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccChannelConfig_tags2("key1", "value1updated", "key2", "value2"),
+				Config: testAccChannelConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckChannelExists(ctx, resourceName, &channel),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccChannelConfig_tags1("key2", "value2"),
+				Config: testAccChannelConfig_tags1(acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckChannelExists(ctx, resourceName, &channel),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -147,8 +147,8 @@ func TestAccIVSChannel_update(t *testing.T) {
 					testAccCheckChannelNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "authorized", authorized),
 					resource.TestCheckResourceAttr(resourceName, "latency_mode", latencyMode),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "type", channelType),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, channelType),
 				),
 			},
 		},
@@ -204,7 +204,7 @@ func TestAccIVSChannel_recordingConfiguration(t *testing.T) {
 				Config: testAccChannelConfig_recordingConfiguration(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckChannelExists(ctx, resourceName, &channel),
-					resource.TestCheckResourceAttrPair(resourceName, "recording_configuration_arn", recordingConfigurationResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "recording_configuration_arn", recordingConfigurationResourceName, names.AttrID),
 				),
 			},
 			{

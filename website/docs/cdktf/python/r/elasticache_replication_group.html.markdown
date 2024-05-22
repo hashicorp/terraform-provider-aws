@@ -337,7 +337,7 @@ This resource exports the following attributes in addition to the arguments abov
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `60m`)
-* `delete` - (Default `40m`)
+* `delete` - (Default `45m`)
 * `update` - (Default `40m`)
 
 ## Import
@@ -365,4 +365,4 @@ Using `terraform import`, import ElastiCache Replication Groups using the `repli
 % terraform import aws_elasticache_replication_group.my_replication_group replication-group-1
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-6ce698e4fe3f3d72a384064dbc2302f1a27c68d094d09caaffb378fd8730393b -->
+<!-- cache-key: cdktf-0.20.1 input-10b8b8327add4ca2c312f6193624fd2f09afd1f475ca281760fdc359c19e7edb -->

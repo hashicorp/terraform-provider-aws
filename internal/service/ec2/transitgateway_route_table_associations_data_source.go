@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ec2_transit_gateway_route_table_associations")
@@ -26,8 +27,8 @@ func DataSourceTransitGatewayRouteTableAssociations() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"filter": customFiltersSchema(),
-			"ids": {
+			names.AttrFilter: customFiltersSchema(),
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -52,7 +53,7 @@ func dataSourceTransitGatewayRouteTableAssociationsRead(ctx context.Context, d *
 	}
 
 	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get("filter").(*schema.Set),
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {
@@ -72,7 +73,7 @@ func dataSourceTransitGatewayRouteTableAssociationsRead(ctx context.Context, d *
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("ids", routeTableAssociationIDs)
+	d.Set(names.AttrIDs, routeTableAssociationIDs)
 
 	return diags
 }

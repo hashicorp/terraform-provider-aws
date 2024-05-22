@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_networkmanager_link")
@@ -19,7 +20,7 @@ func DataSourceLink() *schema.Resource {
 		ReadWithoutTimeout: dataSourceLinkRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -39,7 +40,7 @@ func DataSourceLink() *schema.Resource {
 					},
 				},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -51,7 +52,7 @@ func DataSourceLink() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"provider_name": {
+			names.AttrProviderName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -59,8 +60,8 @@ func DataSourceLink() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
-			"type": {
+			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -83,7 +84,7 @@ func dataSourceLinkRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.SetId(linkID)
-	d.Set("arn", link.LinkArn)
+	d.Set(names.AttrARN, link.LinkArn)
 	if link.Bandwidth != nil {
 		if err := d.Set("bandwidth", []interface{}{flattenBandwidth(link.Bandwidth)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting bandwidth: %s", err)
@@ -91,14 +92,14 @@ func dataSourceLinkRead(ctx context.Context, d *schema.ResourceData, meta interf
 	} else {
 		d.Set("bandwidth", nil)
 	}
-	d.Set("description", link.Description)
+	d.Set(names.AttrDescription, link.Description)
 	d.Set("global_network_id", link.GlobalNetworkId)
 	d.Set("link_id", link.LinkId)
-	d.Set("provider_name", link.Provider)
+	d.Set(names.AttrProviderName, link.Provider)
 	d.Set("site_id", link.SiteId)
-	d.Set("type", link.Type)
+	d.Set(names.AttrType, link.Type)
 
-	if err := d.Set("tags", KeyValueTags(ctx, link.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, KeyValueTags(ctx, link.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

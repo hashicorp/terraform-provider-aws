@@ -34,16 +34,16 @@ func TestAccVPCNetworkInsightsPath_basic(t *testing.T) {
 				Config: testAccVPCNetworkInsightsPathConfig_basic(rName, "tcp"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkInsightsPathExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`network-insights-path/.+$`)),
-					resource.TestCheckResourceAttrPair(resourceName, "destination", "aws_network_interface.test.1", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_arn", "aws_network_interface.test.1", "arn"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`network-insights-path/.+$`)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDestination, "aws_network_interface.test.1", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDestinationARN, "aws_network_interface.test.1", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "destination_ip", ""),
-					resource.TestCheckResourceAttr(resourceName, "destination_port", "0"),
-					resource.TestCheckResourceAttr(resourceName, "protocol", "tcp"),
-					resource.TestCheckResourceAttrPair(resourceName, "source", "aws_network_interface.test.0", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "source_arn", "aws_network_interface.test.0", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "destination_port", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "tcp"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSource, "aws_network_interface.test.0", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "source_arn", "aws_network_interface.test.0", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "source_ip", ""),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -90,11 +90,11 @@ func TestAccVPCNetworkInsightsPath_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckNetworkInsightsPathDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCNetworkInsightsPathConfig_tags1(rName, "key1", "value1"),
+				Config: testAccVPCNetworkInsightsPathConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsPathExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -103,20 +103,20 @@ func TestAccVPCNetworkInsightsPath_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVPCNetworkInsightsPathConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccVPCNetworkInsightsPathConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsPathExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccVPCNetworkInsightsPathConfig_tags1(rName, "key2", "value2"),
+				Config: testAccVPCNetworkInsightsPathConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsPathExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -138,10 +138,10 @@ func TestAccVPCNetworkInsightsPath_sourceAndDestinationARN(t *testing.T) {
 				Config: testAccVPCNetworkInsightsPathConfig_sourceAndDestinationARN(rName, "tcp"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsPathExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "destination", "aws_network_interface.test.1", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_arn", "aws_network_interface.test.1", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "source", "aws_network_interface.test.0", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "source_arn", "aws_network_interface.test.0", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDestination, "aws_network_interface.test.1", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDestinationARN, "aws_network_interface.test.1", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSource, "aws_network_interface.test.0", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "source_arn", "aws_network_interface.test.0", names.AttrARN),
 				),
 			},
 			{

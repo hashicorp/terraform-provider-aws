@@ -41,7 +41,7 @@ func ResourceEmailIdentity() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -92,7 +92,7 @@ func ResourceEmailIdentity() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"status": {
+						names.AttrStatus: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -186,7 +186,7 @@ func resourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta
 
 	arn := emailIdentityNameToARN(meta, d.Id())
 
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("configuration_set_name", out.ConfigurationSetName)
 	d.Set("email_identity", d.Id())
 
@@ -344,7 +344,7 @@ func flattenDKIMAttributes(apiObject *types.DkimAttributes) map[string]interface
 		"current_signing_key_length": string(apiObject.CurrentSigningKeyLength),
 		"next_signing_key_length":    string(apiObject.NextSigningKeyLength),
 		"signing_attributes_origin":  string(apiObject.SigningAttributesOrigin),
-		"status":                     string(apiObject.Status),
+		names.AttrStatus:             string(apiObject.Status),
 	}
 
 	if v := apiObject.LastKeyGenerationTimestamp; v != nil {

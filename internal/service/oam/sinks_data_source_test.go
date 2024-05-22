@@ -35,7 +35,7 @@ func TestAccObservabilityAccessManagerSinksDataSource_basic(t *testing.T) {
 			{
 				Config: testAccSinksDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "arns.#", acctest.Ct1),
 					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arns.0", "oam", regexache.MustCompile(`sink/+.`)),
 				),
 			},

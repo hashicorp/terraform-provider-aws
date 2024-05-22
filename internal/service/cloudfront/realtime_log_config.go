@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudfront_realtime_log_config", name="Real-time Log Config")
@@ -36,11 +37,11 @@ func resourceRealtimeLogConfig() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeList,
 				Required: true,
 				MinItems: 1,
@@ -54,12 +55,12 @@ func resourceRealtimeLogConfig() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"role_arn": {
+									names.AttrRoleARN: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
 									},
-									"stream_arn": {
+									names.AttrStreamARN: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
@@ -80,7 +81,7 @@ func resourceRealtimeLogConfig() *schema.Resource {
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -98,12 +99,12 @@ func resourceRealtimeLogConfigCreate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &cloudfront.CreateRealtimeLogConfigInput{
 		Name: aws.String(name),
 	}
 
-	if v, ok := d.GetOk("endpoint"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk(names.AttrEndpoint); ok && len(v.([]interface{})) > 0 {
 		input.EndPoints = expandEndPoints(v.([]interface{}))
 	}
 
@@ -142,12 +143,12 @@ func resourceRealtimeLogConfigRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading CloudFront Real-time Log Config (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", logConfig.ARN)
-	if err := d.Set("endpoint", flattenEndPoints(logConfig.EndPoints)); err != nil {
+	d.Set(names.AttrARN, logConfig.ARN)
+	if err := d.Set(names.AttrEndpoint, flattenEndPoints(logConfig.EndPoints)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoint: %s", err)
 	}
 	d.Set("fields", logConfig.Fields)
-	d.Set("name", logConfig.Name)
+	d.Set(names.AttrName, logConfig.Name)
 	d.Set("sampling_rate", logConfig.SamplingRate)
 
 	return diags
@@ -165,7 +166,7 @@ func resourceRealtimeLogConfigUpdate(ctx context.Context, d *schema.ResourceData
 		ARN: aws.String(d.Id()),
 	}
 
-	if v, ok := d.GetOk("endpoint"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk(names.AttrEndpoint); ok && len(v.([]interface{})) > 0 {
 		input.EndPoints = expandEndPoints(v.([]interface{}))
 	}
 
@@ -286,11 +287,11 @@ func expandKinesisStreamConfig(tfMap map[string]interface{}) *awstypes.KinesisSt
 
 	apiObject := &awstypes.KinesisStreamConfig{}
 
-	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrRoleARN].(string); ok && v != "" {
 		apiObject.RoleARN = aws.String(v)
 	}
 
-	if v, ok := tfMap["stream_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrStreamARN].(string); ok && v != "" {
 		apiObject.StreamARN = aws.String(v)
 	}
 
@@ -339,11 +340,11 @@ func flattenKinesisStreamConfig(apiObject *awstypes.KinesisStreamConfig) map[str
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.RoleARN; v != nil {
-		tfMap["role_arn"] = aws.ToString(v)
+		tfMap[names.AttrRoleARN] = aws.ToString(v)
 	}
 
 	if v := apiObject.StreamARN; v != nil {
-		tfMap["stream_arn"] = aws.ToString(v)
+		tfMap[names.AttrStreamARN] = aws.ToString(v)
 	}
 
 	return tfMap

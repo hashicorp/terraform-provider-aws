@@ -47,16 +47,16 @@ func TestAccAppIntegrationsDataIntegration_basic(t *testing.T) {
 				Config: testAccDataIntegrationConfig_basic(rName, description, sourceUri, firstExecutionFrom),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataIntegrationExists(ctx, resourceName, &dataIntegration),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key", "aws_kms_key.test", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKey, "aws_kms_key.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "source_uri", sourceUri),
-					resource.TestCheckResourceAttr(resourceName, "schedule_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "schedule_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "schedule_config.0.first_execution_from", firstExecutionFrom),
 					resource.TestCheckResourceAttr(resourceName, "schedule_config.0.object", "Account"),
 					resource.TestCheckResourceAttr(resourceName, "schedule_config.0.schedule_expression", "rate(1 hour)"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
 				),
 			},
@@ -98,7 +98,7 @@ func TestAccAppIntegrationsDataIntegration_updateDescription(t *testing.T) {
 				Config: testAccDataIntegrationConfig_basic(rName, originalDescription, sourceUri, firstExecutionFrom),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataIntegrationExists(ctx, resourceName, &dataIntegration),
-					resource.TestCheckResourceAttr(resourceName, "description", originalDescription),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, originalDescription),
 				),
 			},
 			{
@@ -110,7 +110,7 @@ func TestAccAppIntegrationsDataIntegration_updateDescription(t *testing.T) {
 				Config: testAccDataIntegrationConfig_basic(rName, updatedDescription, sourceUri, firstExecutionFrom),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataIntegrationExists(ctx, resourceName, &dataIntegration),
-					resource.TestCheckResourceAttr(resourceName, "description", updatedDescription),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, updatedDescription),
 				),
 			},
 		},
@@ -146,7 +146,7 @@ func TestAccAppIntegrationsDataIntegration_updateName(t *testing.T) {
 				Config: testAccDataIntegrationConfig_basic(rName, description, sourceUri, firstExecutionFrom),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataIntegrationExists(ctx, resourceName, &dataIntegration),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
@@ -158,7 +158,7 @@ func TestAccAppIntegrationsDataIntegration_updateName(t *testing.T) {
 				Config: testAccDataIntegrationConfig_basic(rName2, description, sourceUri, firstExecutionFrom),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataIntegrationExists(ctx, resourceName, &dataIntegration),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 				),
 			},
 		},
@@ -193,7 +193,7 @@ func TestAccAppIntegrationsDataIntegration_updateTags(t *testing.T) {
 				Config: testAccDataIntegrationConfig_basic(rName, description, sourceUri, firstExecutionFrom),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataIntegrationExists(ctx, resourceName, &dataIntegration),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
 				),
 			},
@@ -206,7 +206,7 @@ func TestAccAppIntegrationsDataIntegration_updateTags(t *testing.T) {
 				Config: testAccDataIntegrationConfig_tags(rName, description, sourceUri, firstExecutionFrom),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataIntegrationExists(ctx, resourceName, &dataIntegration),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2a"),
 				),
@@ -215,7 +215,7 @@ func TestAccAppIntegrationsDataIntegration_updateTags(t *testing.T) {
 				Config: testAccDataIntegrationConfig_tagsUpdated(rName, description, sourceUri, firstExecutionFrom),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataIntegrationExists(ctx, resourceName, &dataIntegration),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct3),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2b"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "Value3"),

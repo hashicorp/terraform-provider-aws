@@ -37,14 +37,14 @@ func TestAccConfigServiceConfigurationAggregator_account(t *testing.T) {
 				Config: testAccConfigurationAggregatorConfig_account(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &ca),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "config", regexache.MustCompile(`config-aggregator/config-aggregator-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.0.account_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "config", regexache.MustCompile(`config-aggregator/config-aggregator-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.0.account_ids.#", acctest.Ct1),
 					acctest.CheckResourceAttrAccountID(resourceName, "account_aggregation_source.0.account_ids.0"),
-					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.0.regions.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "account_aggregation_source.0.regions.0", "data.aws_region.current", "name"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.0.regions.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "account_aggregation_source.0.regions.0", "data.aws_region.current", names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -72,9 +72,9 @@ func TestAccConfigServiceConfigurationAggregator_organization(t *testing.T) {
 				Config: testAccConfigurationAggregatorConfig_organization(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &ca),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "organization_aggregation_source.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "organization_aggregation_source.0.role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "organization_aggregation_source.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "organization_aggregation_source.0.role_arn", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "organization_aggregation_source.0.all_regions", "true"),
 				),
 			},
@@ -101,15 +101,15 @@ func TestAccConfigServiceConfigurationAggregator_switch(t *testing.T) {
 			{
 				Config: testAccConfigurationAggregatorConfig_account(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "organization_aggregation_source.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "organization_aggregation_source.#", acctest.Ct0),
 				),
 			},
 			{
 				Config: testAccConfigurationAggregatorConfig_organization(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "organization_aggregation_source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "organization_aggregation_source.#", acctest.Ct1),
 				),
 			},
 		},
@@ -129,20 +129,20 @@ func TestAccConfigServiceConfigurationAggregator_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckConfigurationAggregatorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationAggregatorConfig_tags1(rName, "key1", "value1"),
+				Config: testAccConfigurationAggregatorConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &ca),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
-				Config: testAccConfigurationAggregatorConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccConfigurationAggregatorConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &ca),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
@@ -151,11 +151,11 @@ func TestAccConfigServiceConfigurationAggregator_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccConfigurationAggregatorConfig_tags1(rName, "key2", "value2"),
+				Config: testAccConfigurationAggregatorConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &ca),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},

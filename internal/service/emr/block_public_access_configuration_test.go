@@ -38,28 +38,28 @@ func TestAccEMRBlockPublicAccessConfiguration_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBlockPublicAccessConfigurationAttributes_enabledOnly(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "block_public_security_group_rules", "true"),
-					resource.TestCheckResourceAttr(resourceName, "permitted_public_security_group_rule_range.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "permitted_public_security_group_rule_range.#", acctest.Ct0),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
 			},
 			{
 				Config: testAccBlockPublicAccessConfigurationConfig_basic(false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBlockPublicAccessConfigurationAttributes_disabled(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "block_public_security_group_rules", "false"),
-					resource.TestCheckResourceAttr(resourceName, "permitted_public_security_group_rule_range.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "permitted_public_security_group_rule_range.#", acctest.Ct0),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
 			},
 		},
 	})
@@ -91,7 +91,7 @@ func TestAccEMRBlockPublicAccessConfiguration_disappears(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
 			},
 		},
 	})
@@ -116,7 +116,7 @@ func TestAccEMRBlockPublicAccessConfiguration_default(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBlockPublicAccessConfigurationAttributes_default(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "block_public_security_group_rules", "true"),
-					resource.TestCheckResourceAttr(resourceName, "permitted_public_security_group_rule_range.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "permitted_public_security_group_rule_range.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "permitted_public_security_group_rule_range.0.min_range", "22"),
 					resource.TestCheckResourceAttr(resourceName, "permitted_public_security_group_rule_range.0.max_range", "22"),
 				),
@@ -125,7 +125,7 @@ func TestAccEMRBlockPublicAccessConfiguration_default(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
 			},
 		},
 	})
@@ -150,7 +150,7 @@ func TestAccEMRBlockPublicAccessConfiguration_enabledMultiRange(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBlockPublicAccessConfigurationAttributes_enabledMultiRange(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "block_public_security_group_rules", "true"),
-					resource.TestCheckResourceAttr(resourceName, "permitted_public_security_group_rule_range.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "permitted_public_security_group_rule_range.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "permitted_public_security_group_rule_range.0.min_range", "22"),
 					resource.TestCheckResourceAttr(resourceName, "permitted_public_security_group_rule_range.0.max_range", "22"),
 					resource.TestCheckResourceAttr(resourceName, "permitted_public_security_group_rule_range.1.min_range", "100"),
@@ -161,7 +161,7 @@ func TestAccEMRBlockPublicAccessConfiguration_enabledMultiRange(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
 			},
 		},
 	})

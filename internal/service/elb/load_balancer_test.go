@@ -136,7 +136,7 @@ func TestValidLoadBalancerAccessLogsInterval(t *testing.T) {
 	}
 
 	for _, tc := range invalidCases {
-		_, errors := tfelb.ValidAccessLogsInterval(tc.Value, "interval")
+		_, errors := tfelb.ValidAccessLogsInterval(tc.Value, names.AttrInterval)
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected %q to trigger a validation error.", tc.Value)
 		}
@@ -186,7 +186,7 @@ func TestValidLoadBalancerHealthCheckTarget(t *testing.T) {
 	}
 
 	for _, tc := range validCases {
-		_, errors := tfelb.ValidHeathCheckTarget(tc.Value, "target")
+		_, errors := tfelb.ValidHeathCheckTarget(tc.Value, names.AttrTarget)
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected %q not to trigger a validation error.", tc.Value)
 		}
@@ -233,7 +233,7 @@ func TestValidLoadBalancerHealthCheckTarget(t *testing.T) {
 	}
 
 	for _, tc := range invalidCases {
-		_, errors := tfelb.ValidHeathCheckTarget(tc.Value, "target")
+		_, errors := tfelb.ValidHeathCheckTarget(tc.Value, names.AttrTarget)
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected %q to trigger a validation error.", tc.Value)
 		}
@@ -257,17 +257,17 @@ func TestAccELBLoadBalancer_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
 					testAccCheckLoadBalancerAttributes(&conf),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.#", acctest.Ct0),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", acctest.Ct3),
 					resource.TestCheckResourceAttr(resourceName, "connection_draining", "false"),
 					resource.TestCheckResourceAttr(resourceName, "connection_draining_timeout", "300"),
 					resource.TestCheckResourceAttr(resourceName, "cross_zone_load_balancing", "true"),
 					resource.TestCheckResourceAttr(resourceName, "desync_mitigation_mode", "defensive"),
-					resource.TestCheckResourceAttrSet(resourceName, "dns_name"),
-					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrDNSName),
+					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "idle_timeout", "60"),
-					resource.TestCheckResourceAttr(resourceName, "instances.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "instances.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "internal", "false"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
 						"instance_port":     "8000",
@@ -275,13 +275,13 @@ func TestAccELBLoadBalancer_basic(t *testing.T) {
 						"lb_port":           "80",
 						"lb_protocol":       "http",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
+					resource.TestCheckResourceAttr(resourceName, "security_groups.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "source_security_group"),
 					resource.TestCheckResourceAttrSet(resourceName, "source_security_group_id"),
-					resource.TestCheckResourceAttr(resourceName, "subnets.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "subnets.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, "zone_id"),
 				),
 			},
@@ -333,8 +333,8 @@ func TestAccELBLoadBalancer_nameGenerated(t *testing.T) {
 				Config: testAccLoadBalancerConfig_nameGenerated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrNameGeneratedWithPrefix(resourceName, "name", "tf-lb-"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-lb-"),
+					acctest.CheckResourceAttrNameGeneratedWithPrefix(resourceName, names.AttrName, "tf-lb-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-lb-"),
 				),
 			},
 			{
@@ -361,8 +361,8 @@ func TestAccELBLoadBalancer_namePrefix(t *testing.T) {
 				Config: testAccLoadBalancerConfig_namePrefix("tf-px-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-px-"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-px-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-px-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-px-"),
 				),
 			},
 			{
@@ -387,12 +387,12 @@ func TestAccELBLoadBalancer_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerConfig_tags1(rName, "key1", "value1"),
+				Config: testAccLoadBalancerConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
 					testAccCheckLoadBalancerAttributes(&conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -401,22 +401,22 @@ func TestAccELBLoadBalancer_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccLoadBalancerConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccLoadBalancerConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
 					testAccCheckLoadBalancerAttributes(&conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccLoadBalancerConfig_tags1(rName, "key2", "value2"),
+				Config: testAccLoadBalancerConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
 					testAccCheckLoadBalancerAttributes(&conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -439,7 +439,7 @@ func TestAccELBLoadBalancer_fullCharacterRange(t *testing.T) {
 				Config: testAccLoadBalancerConfig_fullRangeOfCharacters(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 		},
@@ -469,7 +469,7 @@ func TestAccELBLoadBalancer_AccessLogs_enabled(t *testing.T) {
 				Config: testAccLoadBalancerConfig_accessLogsOn(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "access_logs.0.bucket", rName),
 					resource.TestCheckResourceAttr(resourceName, "access_logs.0.interval", "5"),
 					resource.TestCheckResourceAttr(resourceName, "access_logs.0.enabled", "true"),
@@ -480,7 +480,7 @@ func TestAccELBLoadBalancer_AccessLogs_enabled(t *testing.T) {
 				Config: testAccLoadBalancerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.#", acctest.Ct0),
 				),
 			},
 		},
@@ -509,7 +509,7 @@ func TestAccELBLoadBalancer_AccessLogs_disabled(t *testing.T) {
 				Config: testAccLoadBalancerConfig_accessLogsDisabled(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "access_logs.0.bucket", rName),
 					resource.TestCheckResourceAttr(resourceName, "access_logs.0.interval", "5"),
 					resource.TestCheckResourceAttr(resourceName, "access_logs.0.enabled", "false"),
@@ -519,7 +519,7 @@ func TestAccELBLoadBalancer_AccessLogs_disabled(t *testing.T) {
 				Config: testAccLoadBalancerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.#", acctest.Ct0),
 				),
 			},
 		},
@@ -542,7 +542,7 @@ func TestAccELBLoadBalancer_generatesNameForZeroValue(t *testing.T) {
 				Config: testAccLoadBalancerConfig_zeroValueName,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
-					resource.TestMatchResourceAttr(resourceName, "name", generatedNameRegexp),
+					resource.TestMatchResourceAttr(resourceName, names.AttrName, generatedNameRegexp),
 				),
 			},
 		},
@@ -565,7 +565,7 @@ func TestAccELBLoadBalancer_availabilityZones(t *testing.T) {
 				Config: testAccLoadBalancerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", acctest.Ct3),
 				),
 			},
 
@@ -573,7 +573,7 @@ func TestAccELBLoadBalancer_availabilityZones(t *testing.T) {
 				Config: testAccLoadBalancerConfig_availabilityZonesUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", acctest.Ct2),
 				),
 			},
 		},
@@ -638,21 +638,21 @@ func TestAccELBLoadBalancer_Swap_subnets(t *testing.T) {
 				Config: testAccLoadBalancerConfig_subnets(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "subnets.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "subnets.#", acctest.Ct2),
 				),
 			},
 			{
 				Config: testAccLoadBalancerConfig_subnetSwap(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, "aws_elb.test", &conf),
-					resource.TestCheckResourceAttr("aws_elb.test", "subnets.#", "2"),
+					resource.TestCheckResourceAttr("aws_elb.test", "subnets.#", acctest.Ct2),
 				),
 			},
 			{
 				Config: testAccLoadBalancerConfig_subnetCompleteSwap(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, "aws_elb.test", &conf),
-					resource.TestCheckResourceAttr("aws_elb.test", "subnets.#", "2"),
+					resource.TestCheckResourceAttr("aws_elb.test", "subnets.#", acctest.Ct2),
 				),
 			},
 		},
@@ -715,7 +715,7 @@ func TestAccELBLoadBalancer_listener(t *testing.T) {
 				Config: testAccLoadBalancerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "listener.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "listener.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
 						"instance_port":     "8000",
 						"instance_protocol": "http",
@@ -728,7 +728,7 @@ func TestAccELBLoadBalancer_listener(t *testing.T) {
 				Config: testAccLoadBalancerConfig_listenerMultipleListeners(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "listener.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "listener.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
 						"instance_port":     "8000",
 						"instance_protocol": "http",
@@ -747,7 +747,7 @@ func TestAccELBLoadBalancer_listener(t *testing.T) {
 				Config: testAccLoadBalancerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "listener.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "listener.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
 						"instance_port":     "8000",
 						"instance_protocol": "http",
@@ -760,7 +760,7 @@ func TestAccELBLoadBalancer_listener(t *testing.T) {
 				Config: testAccLoadBalancerConfig_listenerUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "listener.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "listener.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
 						"instance_port":     "8080",
 						"instance_protocol": "http",
@@ -784,7 +784,7 @@ func TestAccELBLoadBalancer_listener(t *testing.T) {
 				Config: testAccLoadBalancerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "listener.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "listener.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
 						"instance_port":     "8000",
 						"instance_protocol": "http",
@@ -815,7 +815,7 @@ func TestAccELBLoadBalancer_listener(t *testing.T) {
 				Config: testAccLoadBalancerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "listener.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "listener.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
 						"instance_port":     "8000",
 						"instance_protocol": "http",
@@ -851,7 +851,7 @@ func TestAccELBLoadBalancer_healthCheck(t *testing.T) {
 				Config: testAccLoadBalancerConfig_healthCheckUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "10"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", acctest.Ct10),
 				),
 			},
 		},
@@ -935,14 +935,14 @@ func TestAccELBLoadBalancer_securityGroups(t *testing.T) {
 				Config: testAccLoadBalancerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					// ELBs get a default security group
-					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_groups.#", acctest.Ct1),
 				),
 			},
 			{
 				Config: testAccLoadBalancerConfig_securityGroups(rName),
 				Check: resource.ComposeTestCheckFunc(
 					// Count should still be one as we swap in a custom security group
-					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_groups.#", acctest.Ct1),
 				),
 			},
 		},

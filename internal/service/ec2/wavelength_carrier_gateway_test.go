@@ -9,7 +9,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +23,7 @@ import (
 
 func TestAccWavelengthCarrierGateway_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.CarrierGateway
+	var v awstypes.CarrierGateway
 	resourceName := "aws_ec2_carrier_gateway.test"
 	vpcResourceName := "aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -37,10 +38,10 @@ func TestAccWavelengthCarrierGateway_basic(t *testing.T) {
 				Config: testAccWavelengthCarrierGatewayConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCarrierGatewayExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`carrier-gateway/cagw-.+`)),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpcResourceName, "id"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`carrier-gateway/cagw-.+`)),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, vpcResourceName, names.AttrID),
 				),
 			},
 			{
@@ -54,7 +55,7 @@ func TestAccWavelengthCarrierGateway_basic(t *testing.T) {
 
 func TestAccWavelengthCarrierGateway_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.CarrierGateway
+	var v awstypes.CarrierGateway
 	resourceName := "aws_ec2_carrier_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -78,7 +79,7 @@ func TestAccWavelengthCarrierGateway_disappears(t *testing.T) {
 
 func TestAccWavelengthCarrierGateway_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.CarrierGateway
+	var v awstypes.CarrierGateway
 	resourceName := "aws_ec2_carrier_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -89,11 +90,11 @@ func TestAccWavelengthCarrierGateway_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckCarrierGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWavelengthCarrierGatewayConfig_tags1(rName, "key1", "value1"),
+				Config: testAccWavelengthCarrierGatewayConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCarrierGatewayExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -102,20 +103,20 @@ func TestAccWavelengthCarrierGateway_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccWavelengthCarrierGatewayConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccWavelengthCarrierGatewayConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCarrierGatewayExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccWavelengthCarrierGatewayConfig_tags1(rName, "key2", "value2"),
+				Config: testAccWavelengthCarrierGatewayConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCarrierGatewayExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -124,7 +125,7 @@ func TestAccWavelengthCarrierGateway_tags(t *testing.T) {
 
 func testAccCheckCarrierGatewayDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_carrier_gateway" {
@@ -148,7 +149,7 @@ func testAccCheckCarrierGatewayDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckCarrierGatewayExists(ctx context.Context, n string, v *ec2.CarrierGateway) resource.TestCheckFunc {
+func testAccCheckCarrierGatewayExists(ctx context.Context, n string, v *awstypes.CarrierGateway) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -159,7 +160,7 @@ func testAccCheckCarrierGatewayExists(ctx context.Context, n string, v *ec2.Carr
 			return fmt.Errorf("No EC2 Carrier Gateway ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindCarrierGatewayByID(ctx, conn, rs.Primary.ID)
 
@@ -174,16 +175,16 @@ func testAccCheckCarrierGatewayExists(ctx context.Context, n string, v *ec2.Carr
 }
 
 func testAccPreCheckWavelengthZoneAvailable(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeAvailabilityZonesInput{
-		Filters: tfec2.NewAttributeFilterList(map[string]string{
+		Filters: tfec2.NewAttributeFilterListV2(map[string]string{
 			"zone-type":     "wavelength-zone",
 			"opt-in-status": "opted-in",
 		}),
 	}
 
-	output, err := tfec2.FindAvailabilityZones(ctx, conn, input)
+	output, err := tfec2.FindAvailabilityZonesV2(ctx, conn, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

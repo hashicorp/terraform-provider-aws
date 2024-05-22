@@ -32,9 +32,9 @@ func TestAccServiceCatalogAppRegistryApplicationDataSource_basic(t *testing.T) {
 			{
 				Config: testAccApplicationDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "id", applicationResourceName, "id"),
-					resource.TestCheckResourceAttr(dataSourceName, "name", rName),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "servicecatalog", regexache.MustCompile(`/applications/+.`)),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, applicationResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, rName),
+					acctest.MatchResourceAttrRegionalARN(dataSourceName, names.AttrARN, "servicecatalog", regexache.MustCompile(`/applications/+.`)),
 				),
 			},
 		},

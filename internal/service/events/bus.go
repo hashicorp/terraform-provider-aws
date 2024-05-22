@@ -36,7 +36,7 @@ func resourceBus() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -46,7 +46,7 @@ func resourceBus() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validSourceName,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -64,7 +64,7 @@ func resourceBusCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
-	eventBusName := d.Get("name").(string)
+	eventBusName := d.Get(names.AttrName).(string)
 	input := &eventbridge.CreateEventBusInput{
 		Name: aws.String(eventBusName),
 		Tags: getTagsIn(ctx),
@@ -122,8 +122,8 @@ func resourceBusRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return sdkdiag.AppendErrorf(diags, "reading EventBridge Event Bus (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.Arn)
-	d.Set("name", output.Name)
+	d.Set(names.AttrARN, output.Arn)
+	d.Set(names.AttrName, output.Name)
 
 	return diags
 }

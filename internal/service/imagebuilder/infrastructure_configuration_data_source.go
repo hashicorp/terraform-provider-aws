@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_imagebuilder_infrastructure_configuration")
@@ -22,7 +23,7 @@ func DataSourceInfrastructureConfiguration() *schema.Resource {
 		ReadWithoutTimeout: dataSourceInfrastructureConfigurationRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -35,7 +36,7 @@ func DataSourceInfrastructureConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -78,11 +79,11 @@ func DataSourceInfrastructureConfiguration() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"s3_bucket_name": {
+									names.AttrS3BucketName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"s3_key_prefix": {
+									names.AttrS3KeyPrefix: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -92,25 +93,25 @@ func DataSourceInfrastructureConfiguration() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"resource_tags": tftags.TagsSchemaComputed(),
-			"security_group_ids": {
+			names.AttrResourceTags: tftags.TagsSchemaComputed(),
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"sns_topic_arn": {
+			names.AttrSNSTopicARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"subnet_id": {
+			names.AttrSubnetID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"terminate_instance_on_failure": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -126,7 +127,7 @@ func dataSourceInfrastructureConfigurationRead(ctx context.Context, d *schema.Re
 
 	input := &imagebuilder.GetInfrastructureConfigurationInput{}
 
-	if v, ok := d.GetOk("arn"); ok {
+	if v, ok := d.GetOk(names.AttrARN); ok {
 		input.InfrastructureConfigurationArn = aws.String(v.(string))
 	}
 
@@ -143,10 +144,10 @@ func dataSourceInfrastructureConfigurationRead(ctx context.Context, d *schema.Re
 	infrastructureConfiguration := output.InfrastructureConfiguration
 
 	d.SetId(aws.StringValue(infrastructureConfiguration.Arn))
-	d.Set("arn", infrastructureConfiguration.Arn)
+	d.Set(names.AttrARN, infrastructureConfiguration.Arn)
 	d.Set("date_created", infrastructureConfiguration.DateCreated)
 	d.Set("date_updated", infrastructureConfiguration.DateUpdated)
-	d.Set("description", infrastructureConfiguration.Description)
+	d.Set(names.AttrDescription, infrastructureConfiguration.Description)
 
 	if infrastructureConfiguration.InstanceMetadataOptions != nil {
 		d.Set("instance_metadata_options", []interface{}{flattenInstanceMetadataOptions(infrastructureConfiguration.InstanceMetadataOptions)})
@@ -162,12 +163,12 @@ func dataSourceInfrastructureConfigurationRead(ctx context.Context, d *schema.Re
 	} else {
 		d.Set("logging", nil)
 	}
-	d.Set("name", infrastructureConfiguration.Name)
-	d.Set("resource_tags", KeyValueTags(ctx, infrastructureConfiguration.ResourceTags).Map())
-	d.Set("security_group_ids", aws.StringValueSlice(infrastructureConfiguration.SecurityGroupIds))
-	d.Set("sns_topic_arn", infrastructureConfiguration.SnsTopicArn)
-	d.Set("subnet_id", infrastructureConfiguration.SubnetId)
-	d.Set("tags", KeyValueTags(ctx, infrastructureConfiguration.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
+	d.Set(names.AttrName, infrastructureConfiguration.Name)
+	d.Set(names.AttrResourceTags, KeyValueTags(ctx, infrastructureConfiguration.ResourceTags).Map())
+	d.Set(names.AttrSecurityGroupIDs, aws.StringValueSlice(infrastructureConfiguration.SecurityGroupIds))
+	d.Set(names.AttrSNSTopicARN, infrastructureConfiguration.SnsTopicArn)
+	d.Set(names.AttrSubnetID, infrastructureConfiguration.SubnetId)
+	d.Set(names.AttrTags, KeyValueTags(ctx, infrastructureConfiguration.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 	d.Set("terminate_instance_on_failure", infrastructureConfiguration.TerminateInstanceOnFailure)
 
 	return diags

@@ -46,7 +46,7 @@ func resourceONTAPFileSystem() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -78,13 +78,13 @@ func resourceONTAPFileSystem() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"iops": {
+						names.AttrIOPS: {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Computed:     true,
 							ValidateFunc: validation.IntBetween(0, 2400000),
 						},
-						"mode": {
+						names.AttrMode: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      fsx.DiskIopsConfigurationModeAutomatic,
@@ -93,7 +93,7 @@ func resourceONTAPFileSystem() *schema.Resource {
 					},
 				},
 			},
-			"dns_name": {
+			names.AttrDNSName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -104,7 +104,7 @@ func resourceONTAPFileSystem() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
 			},
-			"endpoints": {
+			names.AttrEndpoints: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -114,7 +114,7 @@ func resourceONTAPFileSystem() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"dns_name": {
+									names.AttrDNSName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -131,7 +131,7 @@ func resourceONTAPFileSystem() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"dns_name": {
+									names.AttrDNSName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -159,7 +159,7 @@ func resourceONTAPFileSystem() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.IntBetween(1, 12),
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -173,7 +173,7 @@ func resourceONTAPFileSystem() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -189,7 +189,7 @@ func resourceONTAPFileSystem() *schema.Resource {
 				MaxItems: 50,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
@@ -201,14 +201,14 @@ func resourceONTAPFileSystem() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.IntBetween(1024, 1024*1024),
 			},
-			"storage_type": {
+			names.AttrStorageType: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				Default:      fsx.StorageTypeSsd,
 				ValidateFunc: validation.StringInSlice(fsx.StorageType_Values(), false),
 			},
-			"subnet_ids": {
+			names.AttrSubnetIDs: {
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
@@ -232,7 +232,7 @@ func resourceONTAPFileSystem() *schema.Resource {
 				ValidateFunc: validation.IntInSlice([]int{128, 256, 512, 1024, 2048, 3072, 4096, 6144}),
 				ExactlyOneOf: []string{"throughput_capacity", "throughput_capacity_per_ha_pair"},
 			},
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -273,8 +273,8 @@ func resourceONTAPFileSystemCreate(ctx context.Context, d *schema.ResourceData, 
 			PreferredSubnetId:            aws.String(d.Get("preferred_subnet_id").(string)),
 		},
 		StorageCapacity: aws.Int64(int64(d.Get("storage_capacity").(int))),
-		StorageType:     aws.String(d.Get("storage_type").(string)),
-		SubnetIds:       flex.ExpandStringList(d.Get("subnet_ids").([]interface{})),
+		StorageType:     aws.String(d.Get(names.AttrStorageType).(string)),
+		SubnetIds:       flex.ExpandStringList(d.Get(names.AttrSubnetIDs).([]interface{})),
 		Tags:            getTagsIn(ctx),
 	}
 
@@ -305,7 +305,7 @@ func resourceONTAPFileSystemCreate(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
-	if v, ok := d.GetOk("kms_key_id"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
@@ -313,7 +313,7 @@ func resourceONTAPFileSystemCreate(ctx context.Context, d *schema.ResourceData, 
 		input.OntapConfiguration.RouteTableIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("security_group_ids"); ok {
+	if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok {
 		input.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
@@ -358,29 +358,29 @@ func resourceONTAPFileSystemRead(ctx context.Context, d *schema.ResourceData, me
 
 	ontapConfig := filesystem.OntapConfiguration
 
-	d.Set("arn", filesystem.ResourceARN)
+	d.Set(names.AttrARN, filesystem.ResourceARN)
 	d.Set("automatic_backup_retention_days", ontapConfig.AutomaticBackupRetentionDays)
 	d.Set("daily_automatic_backup_start_time", ontapConfig.DailyAutomaticBackupStartTime)
 	d.Set("deployment_type", ontapConfig.DeploymentType)
 	if err := d.Set("disk_iops_configuration", flattenOntapFileDiskIopsConfiguration(ontapConfig.DiskIopsConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting disk_iops_configuration: %s", err)
 	}
-	d.Set("dns_name", filesystem.DNSName)
+	d.Set(names.AttrDNSName, filesystem.DNSName)
 	d.Set("endpoint_ip_address_range", ontapConfig.EndpointIpAddressRange)
-	if err := d.Set("endpoints", flattenOntapFileSystemEndpoints(ontapConfig.Endpoints)); err != nil {
+	if err := d.Set(names.AttrEndpoints, flattenOntapFileSystemEndpoints(ontapConfig.Endpoints)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoints: %s", err)
 	}
 	d.Set("fsx_admin_password", d.Get("fsx_admin_password").(string))
 	haPairs := aws.Int64Value(ontapConfig.HAPairs)
 	d.Set("ha_pairs", haPairs)
-	d.Set("kms_key_id", filesystem.KmsKeyId)
+	d.Set(names.AttrKMSKeyID, filesystem.KmsKeyId)
 	d.Set("network_interface_ids", aws.StringValueSlice(filesystem.NetworkInterfaceIds))
-	d.Set("owner_id", filesystem.OwnerId)
+	d.Set(names.AttrOwnerID, filesystem.OwnerId)
 	d.Set("preferred_subnet_id", ontapConfig.PreferredSubnetId)
 	d.Set("route_table_ids", aws.StringValueSlice(ontapConfig.RouteTableIds))
 	d.Set("storage_capacity", filesystem.StorageCapacity)
-	d.Set("storage_type", filesystem.StorageType)
-	d.Set("subnet_ids", aws.StringValueSlice(filesystem.SubnetIds))
+	d.Set(names.AttrStorageType, filesystem.StorageType)
+	d.Set(names.AttrSubnetIDs, aws.StringValueSlice(filesystem.SubnetIds))
 	if aws.StringValue(ontapConfig.DeploymentType) == fsx.OntapDeploymentTypeSingleAz2 {
 		d.Set("throughput_capacity", nil)
 		d.Set("throughput_capacity_per_ha_pair", ontapConfig.ThroughputCapacityPerHAPair)
@@ -388,7 +388,7 @@ func resourceONTAPFileSystemRead(ctx context.Context, d *schema.ResourceData, me
 		d.Set("throughput_capacity", ontapConfig.ThroughputCapacity)
 		d.Set("throughput_capacity_per_ha_pair", ontapConfig.ThroughputCapacityPerHAPair)
 	}
-	d.Set("vpc_id", filesystem.VpcId)
+	d.Set(names.AttrVPCID, filesystem.VpcId)
 	d.Set("weekly_maintenance_start_time", ontapConfig.WeeklyMaintenanceStartTime)
 
 	setTagsOut(ctx, filesystem.Tags)
@@ -400,7 +400,7 @@ func resourceONTAPFileSystemUpdate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &fsx.UpdateFileSystemInput{
 			ClientRequestToken: aws.String(id.UniqueId()),
 			FileSystemId:       aws.String(d.Id()),
@@ -501,10 +501,10 @@ func expandOntapFileDiskIopsConfiguration(cfg []interface{}) *fsx.DiskIopsConfig
 
 	out := fsx.DiskIopsConfiguration{}
 
-	if v, ok := conf["mode"].(string); ok && len(v) > 0 {
+	if v, ok := conf[names.AttrMode].(string); ok && len(v) > 0 {
 		out.Mode = aws.String(v)
 	}
-	if v, ok := conf["iops"].(int); ok {
+	if v, ok := conf[names.AttrIOPS].(int); ok {
 		out.Iops = aws.Int64(int64(v))
 	}
 
@@ -518,10 +518,10 @@ func flattenOntapFileDiskIopsConfiguration(rs *fsx.DiskIopsConfiguration) []inte
 
 	m := make(map[string]interface{})
 	if rs.Mode != nil {
-		m["mode"] = aws.StringValue(rs.Mode)
+		m[names.AttrMode] = aws.StringValue(rs.Mode)
 	}
 	if rs.Iops != nil {
-		m["iops"] = aws.Int64Value(rs.Iops)
+		m[names.AttrIOPS] = aws.Int64Value(rs.Iops)
 	}
 
 	return []interface{}{m}
@@ -550,7 +550,7 @@ func flattenOntapFileSystemEndpoint(rs *fsx.FileSystemEndpoint) []interface{} {
 
 	m := make(map[string]interface{})
 	if rs.DNSName != nil {
-		m["dns_name"] = aws.StringValue(rs.DNSName)
+		m[names.AttrDNSName] = aws.StringValue(rs.DNSName)
 	}
 	if rs.IpAddresses != nil {
 		m["ip_addresses"] = flex.FlattenStringSet(rs.IpAddresses)

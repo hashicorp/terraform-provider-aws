@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccBedrockAgent_basic(t *testing.T) {
+func TestAccBedrockAgentAgent_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent.test"
@@ -36,8 +36,9 @@ func TestAccBedrockAgent_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "description", "basic claude"),
+					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "basic claude"),
+					resource.TestCheckResourceAttr(resourceName, "prepare_agent", "true"),
 				),
 			},
 			{
@@ -49,7 +50,7 @@ func TestAccBedrockAgent_basic(t *testing.T) {
 	})
 }
 
-func TestAccBedrockAgent_full(t *testing.T) {
+func TestAccBedrockAgentAgent_full(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent.test"
@@ -66,8 +67,8 @@ func TestAccBedrockAgent_full(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "description", "basic claude"),
+					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "basic claude"),
 				),
 			},
 			{
@@ -79,7 +80,7 @@ func TestAccBedrockAgent_full(t *testing.T) {
 	})
 }
 
-func TestAccBedrockAgent_update(t *testing.T) {
+func TestAccBedrockAgentAgent_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent.test"
@@ -96,8 +97,8 @@ func TestAccBedrockAgent_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_name", rName+"-1"),
-					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "description", "basic claude"),
+					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "basic claude"),
 				),
 			},
 			{
@@ -105,8 +106,8 @@ func TestAccBedrockAgent_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_name", rName+"-2"),
-					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "description", "basic claude"),
+					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "basic claude"),
 				),
 			},
 			{
@@ -114,8 +115,8 @@ func TestAccBedrockAgent_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_name", rName+"-3"),
-					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "description", "basic claude again"),
+					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "basic claude again"),
 				),
 			},
 			{
@@ -127,7 +128,7 @@ func TestAccBedrockAgent_update(t *testing.T) {
 	})
 }
 
-func TestAccBedrockAgent_tags(t *testing.T) {
+func TestAccBedrockAgentAgent_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent.test"
@@ -140,11 +141,11 @@ func TestAccBedrockAgent_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckAgentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentConfig_tags1(rName, "anthropic.claude-v2", "key1", "value1"),
+				Config: testAccAgentConfig_tags1(rName, "anthropic.claude-v2", acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAgentExists(ctx, resourceName, &agent),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -153,20 +154,20 @@ func TestAccBedrockAgent_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAgentConfig_tags2(rName, "anthropic.claude-v2", "key1", "value1updated", "key2", "value2"),
+				Config: testAccAgentConfig_tags2(rName, "anthropic.claude-v2", acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAgentExists(ctx, resourceName, &agent),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccAgentConfig_tags1(rName, "anthropic.claude-v2", "key2", "value2"),
+				Config: testAccAgentConfig_tags1(rName, "anthropic.claude-v2", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAgentExists(ctx, resourceName, &agent),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -258,8 +259,8 @@ data "aws_iam_policy_document" "test_agent_permissions" {
 }
 
 resource "aws_iam_role_policy" "test_agent" {
+  role   = aws_iam_role.test_agent.id
   policy = data.aws_iam_policy_document.test_agent_permissions.json
-  role   = aws_iam_role.test.id
 }
 
 resource "aws_iam_role_policy_attachment" "test_agent_s3" {
