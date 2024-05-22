@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccEC2Subnet_tags(t *testing.T) {
+func TestAccVPCSubnet_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v ec2.Subnet
 	resourceName := "aws_subnet.test"
@@ -189,7 +189,7 @@ func TestAccEC2Subnet_tags(t *testing.T) {
 	})
 }
 
-func TestAccEC2Subnet_tags_null(t *testing.T) {
+func TestAccVPCSubnet_tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v ec2.Subnet
 	resourceName := "aws_subnet.test"
@@ -249,7 +249,7 @@ func TestAccEC2Subnet_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccEC2Subnet_tags_AddOnUpdate(t *testing.T) {
+func TestAccVPCSubnet_tags_AddOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v ec2.Subnet
 	resourceName := "aws_subnet.test"
@@ -326,7 +326,7 @@ func TestAccEC2Subnet_tags_AddOnUpdate(t *testing.T) {
 	})
 }
 
-func TestAccEC2Subnet_tags_EmptyTag_OnCreate(t *testing.T) {
+func TestAccVPCSubnet_tags_EmptyTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v ec2.Subnet
 	resourceName := "aws_subnet.test"
@@ -412,7 +412,7 @@ func TestAccEC2Subnet_tags_EmptyTag_OnCreate(t *testing.T) {
 	})
 }
 
-func TestAccEC2Subnet_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
+func TestAccVPCSubnet_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v ec2.Subnet
 	resourceName := "aws_subnet.test"
@@ -539,7 +539,7 @@ func TestAccEC2Subnet_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	})
 }
 
-func TestAccEC2Subnet_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
+func TestAccVPCSubnet_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v ec2.Subnet
 	resourceName := "aws_subnet.test"
@@ -622,7 +622,7 @@ func TestAccEC2Subnet_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	})
 }
 
-func TestAccEC2Subnet_tags_DefaultTags_providerOnly(t *testing.T) {
+func TestAccVPCSubnet_tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v ec2.Subnet
 	resourceName := "aws_subnet.test"
@@ -806,7 +806,7 @@ func TestAccEC2Subnet_tags_DefaultTags_providerOnly(t *testing.T) {
 	})
 }
 
-func TestAccEC2Subnet_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func TestAccVPCSubnet_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v ec2.Subnet
 	resourceName := "aws_subnet.test"
@@ -967,7 +967,7 @@ func TestAccEC2Subnet_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	})
 }
 
-func TestAccEC2Subnet_tags_DefaultTags_overlapping(t *testing.T) {
+func TestAccVPCSubnet_tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v ec2.Subnet
 	resourceName := "aws_subnet.test"
@@ -1143,7 +1143,7 @@ func TestAccEC2Subnet_tags_DefaultTags_overlapping(t *testing.T) {
 	})
 }
 
-func TestAccEC2Subnet_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
+func TestAccVPCSubnet_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v ec2.Subnet
 	resourceName := "aws_subnet.test"
@@ -1234,7 +1234,7 @@ func TestAccEC2Subnet_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	})
 }
 
-func TestAccEC2Subnet_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
+func TestAccVPCSubnet_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v ec2.Subnet
 	resourceName := "aws_subnet.test"
@@ -1323,7 +1323,7 @@ func TestAccEC2Subnet_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	})
 }
 
-func TestAccEC2Subnet_tags_DefaultTags_emptyResourceTag(t *testing.T) {
+func TestAccVPCSubnet_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v ec2.Subnet
 	resourceName := "aws_subnet.test"
@@ -1388,7 +1388,7 @@ func TestAccEC2Subnet_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	})
 }
 
-func TestAccEC2Subnet_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+func TestAccVPCSubnet_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v ec2.Subnet
 	resourceName := "aws_subnet.test"
@@ -1445,7 +1445,7 @@ func TestAccEC2Subnet_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	})
 }
 
-func TestAccEC2Subnet_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+func TestAccVPCSubnet_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v ec2.Subnet
 	resourceName := "aws_subnet.test"
@@ -1507,7 +1507,7 @@ func TestAccEC2Subnet_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) 
 	})
 }
 
-func TestAccEC2Subnet_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+func TestAccVPCSubnet_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v ec2.Subnet
 	resourceName := "aws_subnet.test"
@@ -1569,7 +1569,7 @@ func TestAccEC2Subnet_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.
 	})
 }
 
-func TestAccEC2Subnet_tags_ComputedTag_OnCreate(t *testing.T) {
+func TestAccVPCSubnet_tags_ComputedTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v ec2.Subnet
 	resourceName := "aws_subnet.test"
@@ -1623,7 +1623,7 @@ func TestAccEC2Subnet_tags_ComputedTag_OnCreate(t *testing.T) {
 	})
 }
 
-func TestAccEC2Subnet_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
+func TestAccVPCSubnet_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v ec2.Subnet
 	resourceName := "aws_subnet.test"
@@ -1713,7 +1713,7 @@ func TestAccEC2Subnet_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	})
 }
 
-func TestAccEC2Subnet_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
+func TestAccVPCSubnet_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v ec2.Subnet
 	resourceName := "aws_subnet.test"
