@@ -32,7 +32,7 @@ jobs:
 
       - name: Check diff for AWS SDK Go V1
         id: diff
-        run: make preferredlib || (echo "found=true" >> "$GITHUB_OUTPUT")
+        run: make preferred-lib || (echo "found=true" >> "$GITHUB_OUTPUT")
 
   comment:
     runs-on: ubuntu-latest
