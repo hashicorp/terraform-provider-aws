@@ -11,13 +11,15 @@ var (
 	ResourceConnector   = resourceConnector
 	ResourceProfile     = resourceProfile
 	ResourceServer      = resourceServer
+	ResourceSSHKey      = resourceSSHKey
 	ResourceTag         = resourceTag
 
-	FindAccessByTwoPartKey    = findAccessByTwoPartKey
-	FindAgreementByTwoPartKey = findAgreementByTwoPartKey
-	FindCertificateByID       = findCertificateByID
-	FindConnectorByID         = findConnectorByID
-	FindProfileByID           = findProfileByID
-	FindServerByID            = findServerByID
-	FindWorkflowByID          = findWorkflowByID
+	FindAccessByTwoPartKey       = findAccessByTwoPartKey
+	FindAgreementByTwoPartKey    = findAgreementByTwoPartKey
+	FindCertificateByID          = findCertificateByID
+	FindConnectorByID            = findConnectorByID
+	FindProfileByID              = findProfileByID
+	FindServerByID               = findServerByID
+	FindUserSSHKeyByThreePartKey = findUserSSHKeyByThreePartKey
+	FindWorkflowByID             = findWorkflowByID
 )

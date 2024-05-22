@@ -8,16 +8,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/transfer"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftransfer "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -25,9 +23,7 @@ func testAccSSHKey_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.SshPublicKey
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
 	resourceName := "aws_transfer_ssh_key.test"
-
 	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
 		t.Fatalf("error generating random SSH key: %s", err)
@@ -41,11 +37,12 @@ func testAccSSHKey_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSSHKeyConfig_basic(rName, publicKey),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSSHKeyExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrPair(resourceName, "server_id", "aws_transfer_server.test", names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrUserName, "aws_transfer_user.test", names.AttrUserName),
 					resource.TestCheckResourceAttr(resourceName, "body", publicKey),
+					resource.TestCheckResourceAttrPair(resourceName, "server_id", "aws_transfer_server.test", names.AttrID),
+					resource.TestCheckResourceAttrSet(resourceName, "ssh_key_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrUserName, "aws_transfer_user.test", names.AttrUserName),
 				),
 			},
 			{
@@ -57,40 +54,24 @@ func testAccSSHKey_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckSSHKeyExists(ctx context.Context, n string, res *awstypes.SshPublicKey) resource.TestCheckFunc {
+func testAccCheckSSHKeyExists(ctx context.Context, n string, v *awstypes.SshPublicKey) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("Transfer SSH Public Key ID not set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferClient(ctx)
-		serverID, userName, sshKeyID, err := tftransfer.DecodeSSHKeyID(rs.Primary.ID)
-		if err != nil {
-			return fmt.Errorf("error parsing Transfer SSH Public Key ID: %s", err)
-		}
 
-		describe, err := conn.DescribeUser(ctx, &transfer.DescribeUserInput{
-			ServerId: aws.String(serverID),
-			UserName: aws.String(userName),
-		})
+		_, output, err := tftransfer.FindUserSSHKeyByThreePartKey(ctx, conn, rs.Primary.Attributes["server_id"], rs.Primary.Attributes[names.AttrUserName], rs.Primary.Attributes["ssh_key_id"])
 
 		if err != nil {
 			return err
 		}
 
-		for _, sshPublicKey := range describe.User.SshPublicKeys {
-			if sshKeyID == *sshPublicKey.SshPublicKeyId {
-				*res = sshPublicKey
-				return nil
-			}
-		}
+		*v = *output
 
-		return fmt.Errorf("Transfer SSH Public Key does not exist")
+		return nil
 	}
 }
 
@@ -102,17 +83,10 @@ func testAccCheckSSHKeyDestroy(ctx context.Context) resource.TestCheckFunc {
 			if rs.Type != "aws_transfer_ssh_key" {
 				continue
 			}
-			serverID, userName, sshKeyID, err := tftransfer.DecodeSSHKeyID(rs.Primary.ID)
-			if err != nil {
-				return fmt.Errorf("error parsing Transfer SSH Public Key ID: %w", err)
-			}
 
-			describe, err := conn.DescribeUser(ctx, &transfer.DescribeUserInput{
-				UserName: aws.String(userName),
-				ServerId: aws.String(serverID),
-			})
+			_, _, err := tftransfer.FindUserSSHKeyByThreePartKey(ctx, conn, rs.Primary.Attributes["server_id"], rs.Primary.Attributes[names.AttrUserName], rs.Primary.Attributes["ssh_key_id"])
 
-			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
@@ -120,11 +94,7 @@ func testAccCheckSSHKeyDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			for _, sshPublicKey := range describe.User.SshPublicKeys {
-				if sshKeyID == *sshPublicKey.SshPublicKeyId {
-					return fmt.Errorf("Transfer SSH Public Key still exists")
-				}
-			}
+			return fmt.Errorf("Transfer SSH Key %s still exists", rs.Primary.ID)
 		}
 
 		return nil

@@ -80,8 +80,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceSSHKey,
+			Factory:  resourceSSHKey,
 			TypeName: "aws_transfer_ssh_key",
+			Name:     "SSH Key",
 		},
 		{
 			Factory:  resourceTag,
