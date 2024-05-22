@@ -306,7 +306,7 @@ go-build: ## Build provider
 
 go-misspell:
 	@echo "make: Provider Checks / misspell..."
-	@misspell -error -source auto internal/
+	@misspell -error -source auto -i "littel,ceasar" internal/
 
 golangci-lint: golangci-lint1 golangci-lint2 ## Run golangci-lint
 
