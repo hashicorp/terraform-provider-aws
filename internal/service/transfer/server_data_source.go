@@ -15,9 +15,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_transfer_server")
-func DataSourceServer() *schema.Resource {
+// @SDKDataSource("aws_transfer_server", name="Server")
+func dataSourceServer() *schema.Resource {
 	return &schema.Resource{
+		ReadWithoutTimeout: dataSourceServerRead,
+
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -78,8 +80,6 @@ func DataSourceServer() *schema.Resource {
 				Computed: true,
 			},
 		},
-
-		ReadWithoutTimeout: dataSourceServerRead,
 	}
 }
 
@@ -88,7 +88,6 @@ func dataSourceServerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
 	serverID := d.Get("server_id").(string)
-
 	output, err := findServerByID(ctx, conn, serverID)
 
 	if err != nil {
