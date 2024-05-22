@@ -626,7 +626,7 @@ type TagData struct {
 }
 
 func (td *TagData) ValueString() string {
-	if td.Value == nil {
+	if td == nil || td.Value == nil {
 		return ""
 	}
 
@@ -735,11 +735,7 @@ func (tags KeyValueTags) ResolveDuplicates(ctx context.Context, defaultConfig *D
 
 	result := make(map[string]string)
 	for k, v := range t {
-		if v != nil {
-			result[k] = v.ValueString()
-		} else {
-			result[k] = ""
-		}
+		result[k] = v.ValueString()
 	}
 
 	configTags := make(map[string]configTag)
