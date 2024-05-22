@@ -75,6 +75,9 @@ func main() {
 		name := faker.Name().Name()
 		entity := entities[rand.Intn(len(entities))]
 
+		name = strings.Replace(name, "Littel", "Little", -1) // caught as misspelling
+		name = strings.Replace(name, "Ceasar", "Caesar", -1) // caught as misspelling
+
 		if _, err := fmt.Fprintf(entitiesFile, "%s,%s\n", name, entity); err != nil {
 			log.Fatalf("error writing to file %q: %s", "entitylist.csv", err)
 		}
