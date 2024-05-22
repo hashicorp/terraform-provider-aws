@@ -17,24 +17,6 @@ Terraform resource for managing an AWS Rekognition Stream Processor.
 ### Label Detection Usage
 
 ```terraform
-Resource "aws_iam_role" "example" {
-  name = "example-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Sid    = ""
-        Principal = {
-          Service = "ec2.amazonaws.com"
-        }
-      },
-    ]
-  })
-}
-
 resource "aws_s3_bucket" "example" {
   bucket = "example-bucket"
 }
@@ -48,6 +30,50 @@ resource "aws_kinesis_video_stream" "example" {
   data_retention_in_hours = 1
   device_name             = "kinesis-video-device-name"
   media_type              = "video/h264"
+}
+
+resource "aws_iam_role" "example" {
+  name = "eample-role"
+
+  inline_policy {
+    name = "Rekognition-Access"
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Action   = ["s3:PutObject"]
+          Effect   = "Allow"
+          Resource = ["${aws_s3_bucket.example.arn}/*"]
+        },
+        {
+          Action   = ["sns:Publish"]
+          Effect   = "Allow"
+          Resource = ["${aws_sns_topic.example.arn}"]
+        },
+        {
+          Action = [
+            "kinesis:Get*",
+            "kinesis:DescribeStreamSummary"
+          ]
+          Effect   = "Allow"
+          Resource = ["${aws_kinesis_video_stream.example.arn}"]
+        },
+      ]
+    })
+  }
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "rekognition.amazonaws.com"
+        }
+      },
+    ]
+  })
 }
 
 resource "aws_rekognition_stream_processor" "example" {
@@ -110,7 +136,7 @@ The following arguments are required:
 
 * `input` - (Required) Input video stream. See [`input`](#input) definition.
 * `name` - (Required) The name of the Stream Processor
-* `role_arn` - (Required) The ARN of the IAM role that allows access to the stream processor.
+* `role_arn` - (Required) The Amazon Resource Number (ARN) of the IAM role that allows access to the stream processor. The IAM role provides Rekognition read permissions for a Kinesis stream. It also provides write permissions to an Amazon S3 bucket and Amazon Simple Notification Service topic for a label detection stream processor. This is required for both face search and label detection stream processors.
 * `output` - (Required) Kinesis data stream stream or Amazon S3 bucket location to which Amazon Rekognition Video puts the analysis results
 * `settings` - (Required) Input parameters used in a streaming video analyzed by a stream processor. See [`settings`](#settings) definition.
 
