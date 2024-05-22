@@ -1,3 +1,5 @@
+SHELL := /bin/bash
+
 SWEEP                        ?= us-west-2,us-east-1,us-east-2,us-west-1
 TEST                         ?= ./...
 SWEEP_DIR                    ?= ./internal/sweep
@@ -89,7 +91,10 @@ default: build
 
 # Please keep targets in alphabetical order
 
-acctestlint: testacc-lint testacc-tflint
+acctest-lint: testacc-lint testacc-tflint
+
+awssdkpatch: prereq-go ## Install awssdkpatch
+	cd tools/awssdkpatch && $(GO_VER) install github.com/hashicorp/terraform-provider-aws/tools/awssdkpatch
 
 awssdkpatch-apply: awssdkpatch-gen ## Apply a patch generated with awssdkpatch
 	@echo "Applying patch for $(PKG)..."
@@ -103,14 +108,14 @@ awssdkpatch-gen: awssdkpatch ## Generate a patch file using awssdkpatch
 	fi
 	@awssdkpatch $(AWSSDKPATCH_OPTS) -service $(PKG)
 
-awssdkpatch: prereq-go ## Install awssdkpatch
-	cd tools/awssdkpatch && $(GO_VER) install github.com/hashicorp/terraform-provider-aws/tools/awssdkpatch
-
-build: prereq-go fmtcheck ## Build provider
+build: prereq-go fmt-check ## Build provider
 	@echo "make: building provider..."
 	@$(GO_VER) install
 
-cleango: prereq-go ## Clean up Go cache
+clean: clean-make-tests clean-go clean-tidy build tools ## Clean up Go cache, tidy and re-install tools
+	@echo "make: clean complete"
+
+clean-go: prereq-go ## Clean up Go cache
 	@echo "make: cleaning Go..."
 	@echo "make: WARNING: This will kill gopls and clean Go caches"
 	@vscode=`ps -ef | grep Visual\ Studio\ Code | wc -l | xargs` ; \
@@ -127,15 +132,24 @@ cleango: prereq-go ## Clean up Go cache
 	go clean -modcache -testcache -cache -i -r
 	@echo "make: Go caches cleaned"
 
-cleantidy: prereq-go ## Clean up tidy
+clean-make-tests: ## Clean up provider plugin
+	@echo "make: cleaning up remnants from make tests..."
+	@rm -rf sweeper-bin
+	@rm -rf terraform-plugin-dir
+	@rm -rf .terraform/providers
+	@rm -rf terraform-providers-schema
+	@rm -rf example.tf
+	@rm -rf skaff/skaff
+
+clean-tidy: prereq-go ## Clean up tidy
 	@echo "make: tidying Go mods..."
 	@gover="$(GO_VER)" ; \
 	if [ "$$gover" = "go" ] ; then \
 		gover=go`cat .go-version | xargs` ; \
 		echo "make: WARNING: no version provided so tidying with $$gover" ; \
 		echo "make: tidying with newer versions can make go.mod incompatible" ; \
-		echo "make: to use a different version, use 'GO_VER=go1.16 make cleantidy'" ; \
-		echo "make: to use the version in .go-version, use 'make cleantidy'" ; \
+		echo "make: to use a different version, use 'GO_VER=go1.16 make clean-tidy'" ; \
+		echo "make: to use the version in .go-version, use 'make clean-tidy'" ; \
 		echo "make: if you get an error, see https://go.dev/doc/manage-install to locally install various Go versions" ; \
 	fi ; \
 	cd .ci/providerlint && $$gover mod tidy && cd ../.. ; \
@@ -147,24 +161,35 @@ cleantidy: prereq-go ## Clean up tidy
 	$$gover mod tidy
 	@echo "make: Go mods tidied"
 
-cleanmaketests: ## Clean up provider plugin
-	@echo "make: cleaning up remnants from make tests..."
-	@rm -rf sweeper-bin
-	@rm -rf terraform-plugin-dir
-	@rm -rf .terraform/providers
-	@rm -rf terraform-providers-schema
-	@rm -rf example.tf
-
-clean: cleanplugin cleango cleantidy build tools ## Clean up Go cache, tidy and re-install tools
-	@echo "make: clean complete"
-
 copyright: ## Run copywrite (generate source code headers)
 	@copywrite headers
 
-depscheck: cleantidy ## Verify dependencies are tidy
+deps-check: clean-tidy ## Verify dependencies are tidy
 	@echo "make: checking source code with go mod tidy..."
 	@git diff --exit-code -- go.mod go.sum || \
 		(echo; echo "Unexpected difference in go.mod/go.sum files. Run 'go mod tidy' command or revert any go.mod/go.sum changes and commit."; exit 1)
+
+docs-check: ## Check provider documentation
+	@tfproviderdocs check \
+		-allowed-resource-subcategories-file website/allowed-subcategories.txt \
+		-enable-contents-check \
+		-ignore-file-missing-data-sources aws_alb,aws_alb_listener,aws_alb_target_group,aws_albs \
+		-ignore-file-missing-resources aws_alb,aws_alb_listener,aws_alb_listener_certificate,aws_alb_listener_rule,aws_alb_target_group,aws_alb_target_group_attachment \
+		-provider-name=aws \
+		-require-resource-subcategory
+
+docs-link-check:
+	@echo "make: Documentation Checks / markdown-link-check..."
+	@docker run --rm \
+		-v "$(PWD):/markdown" \
+		ghcr.io/yakdriver/md-check-links:2.1.0 \
+		--config /markdown/.ci/.markdownlinkcheck.json \
+		--verbose yes \
+		--quiet yes \
+		--directory /markdown/docs \
+		--extension '.md' \
+		--branch main \
+		--modified no
 
 docs-lint: ## Lint documentation
 	@echo "make: checking docs against linters..."
@@ -182,18 +207,40 @@ docs-lint-fix: ## Fix documentation linter findings
 	@misspell -w -source=text docs/
 	@docker run --rm -v $(PWD):/markdown 06kellyjac/markdownlint-cli --fix docs/
 
-docscheck: ## Check provider documentation
-	@tfproviderdocs check \
-		-allowed-resource-subcategories-file website/allowed-subcategories.txt \
-		-enable-contents-check \
-		-ignore-file-missing-data-sources aws_alb,aws_alb_listener,aws_alb_target_group,aws_albs \
-		-ignore-file-missing-resources aws_alb,aws_alb_listener,aws_alb_listener_certificate,aws_alb_listener_rule,aws_alb_target_group,aws_alb_target_group_attachment \
-		-provider-name=aws \
-		-require-resource-subcategory
+docs-markdown-lint: ## Check provider markdown files (via markdownlint)
+	@echo "make: Documentation Checks / markdown-lint..."
+	@docker run --rm \
+		-v "$(PWD):/markdown" \
+		avtodev/markdown-lint:v1.5.0 \
+		--config markdown/.markdownlint.yml \
+		/markdown/docs/**/*.md
 
-fixconstants: fiximports fmt semconstants fiximports fmt
+docs-misspell:
+	@echo "make: Documentation Checks / misspell..."
+	@misspell -error -source text docs/
 
-fiximports:
+examples-tflint: ## Lint examples (via tflint)
+	@echo "make: Examples Checks / tflint..."
+	@tflint --config .ci/.tflint.hcl --init
+	@exit_code=0 ; \
+	TFLINT_CONFIG="`pwd -P`/.ci/.tflint.hcl" ; \
+	for DIR in `find ./examples -type f -name '*.tf' -exec dirname {} \; | sort -u`; do \
+		pushd "$$DIR" ; \
+		tflint --config="$$TFLINT_CONFIG" \
+			--enable-rule=terraform_comment_syntax \
+			--enable-rule=terraform_deprecated_index \
+			--enable-rule=terraform_deprecated_interpolation \
+			--enable-rule=terraform_required_version \
+			--disable-rule=terraform_required_providers \
+			--disable-rule=terraform_typed_variables \
+			|| exit_code=1 ; \
+		popd ; \
+	done ; \
+	exit $$exit_code
+
+fix-constants: fix-imports fmt semgrep-constants fix-imports fmt
+
+fix-imports:
 	@echo "make: fixing source code imports with goimports..."
 	@find internal -name "*.go" -type f -exec goimports -w {} \;
 
@@ -202,7 +249,7 @@ fmt: ## Fix Go source formatting
 	gofmt -s -w ./$(PKG_NAME) ./names $(filter-out ./.ci/providerlint/go% ./.ci/providerlint/README.md ./.ci/providerlint/vendor, $(wildcard ./.ci/providerlint/*))
 
 # Currently required by tf-deploy compile
-fmtcheck: ## Verify Go source is formatted
+fmt-check: ## Verify Go source is formatted
 	@sh -c "'$(CURDIR)/.ci/scripts/gofmtcheck.sh'"
 
 fumpt: ## Run gofumpt
@@ -231,7 +278,7 @@ gen: prereq-go ## Run all Go generators
 	$(GO_VER) generate ./internal/provider
 	$(GO_VER) generate ./internal/sweep
 
-gencheck: gen
+gen-check: gen
 	@echo "make: Provider Checks / go_generate..."
 	@echo "make: NOTE: commit any changes before running this check"
 	@git diff --compact-summary --exit-code || \
@@ -245,10 +292,16 @@ gh-workflows-lint: ## Lint github workflows (via actionlint)
 	@echo "make: checking github workflows with actionlint..."
 	@actionlint
 
-go_build: ## Build provider
+go-build: ## Build provider
 	@os_arch=`go env GOOS`_`go env GOARCH` ; \
-	echo "make: Provider Checks / go_build ($$os_arch)..." ; \
+	echo "make: Provider Checks / go-build ($$os_arch)..." ; \
 	go build -o terraform-plugin-dir/registry.terraform.io/hashicorp/aws/99.99.99/$$os_arch/terraform-provider-aws .
+
+go-misspell:
+	@echo "make: Provider Checks / misspell..."
+	@misspell -error -source auto internal/
+
+golangci-lint: golangci-lint1 golangci-lint2 ## Run golangci-lint
 
 golangci-lint1: ## Lint Go source (via golangci-lint)
 	@echo "make: golangci-lint Checks / 1 of 2..."
@@ -262,40 +315,26 @@ golangci-lint2: ## Lint Go source (via golangci-lint)
 		--config .ci/.golangci2.yml \
 		$(TEST)
 
-golangci-lint: golangci-lint1 golangci-lint2 ## Run golangci-lint
-
 help:
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-23s\033[0m %s\n", $$1, $$2}'
 
-install: build
-
-importlint: ## Lint imports (via impi)
-	@echo "make: Provider Checks / importlint..."
+import-lint: ## Lint imports (via impi)
+	@echo "make: Provider Checks / import-lint..."
 	@impi --local . --scheme stdThirdPartyLocal ./internal/...
 
-lint: golangci-lint providerlint importlint ## Run all linters
+install: build
+
+lint: golangci-lint provider-lint import-lint ## Run all linters
 
 lint-fix: testacc-lint-fix website-lint-fix docs-lint-fix ## Fix all linter findings
+
+misspell: misspell-changelog docs-misspell website-misspell go-misspell ## Run misspell
 
 misspell-changelog:
 	@echo "make: CHANGELOG Misspell / misspell..."
 	@misspell -error -source text CHANGELOG.md .changelog
 
-misspell-docs:
-	@echo "make: Documentation Checks / misspell..."
-	@misspell -error -source text docs/
-
-misspell-website:
-	@echo "make: Website Checks / misspell..."
-	@misspell -error -source text website/docs/d website/docs/functions website/docs/guides website/docs/r website/docs/index.html.markdown
-
-misspell-go:
-	@echo "make: Provider Checks / misspell..."
-	@misspell -error -source auto internal/
-
-misspell: misspell-changelog misspell-docs misspell-website misspell-go ## Run misspell
-
-preferredlib:
+preferred-lib:
 	@found=`git diff origin/$(BASE_REF) internal/ | grep '^\+\s*"github.com/aws/aws-sdk-go/'` ; \
 	if [ "$$found" != "" ] ; then \
 		echo "Found a new reference to github.com/aws/aws-sdk-go in the codebase. Please use the preferred library github.com/aws/aws-sdk-go-v2 instead." ; \
@@ -309,22 +348,10 @@ prereq-go: ## if $(GO_VER) is not installed, install it
 		echo "make: if you get an error, see https://go.dev/doc/manage-install to locally install various Go versions" ; \
 		go install golang.org/dl/$(GO_VER)@latest ; \
 		$(GO_VER) download ; \
-		echo "make: $(GO_VER) ready" ;\
+		echo "make: $(GO_VER) ready" ; \
 	fi
 
-provcheckmarkdownlint: ## Check provider markdown files (via markdownlint)
-	@echo "make: Provider Check / markdown-lint..."
-	@docker run --rm \
-		-v "$(PWD):/markdown" \
-		avtodev/markdown-lint:v1.5.0 \
-		--config markdown/.markdownlint.yml \
-		--ignore markdown/docs \
-		--ignore markdown/website/docs \
-		--ignore markdown/CHANGELOG.md \
-		--ignore markdown/internal/service/cloudformation/test-fixtures/examplecompany-exampleservice-exampleresource/docs \
-		/markdown/**/*.md
-
-providerlint: ## Lint provider (via providerlint)
+provider-lint: ## Lint provider (via providerlint)
 	@echo "make: checking source code with providerlint..."
 	@cd .ci/providerlint && go install -buildvcs=false .
 	@providerlint \
@@ -351,6 +378,18 @@ providerlint: ## Lint provider (via providerlint)
 		-XS001=false \
 		-XS002=false \
 		./internal/service/... ./internal/provider/...
+
+provider-markdown-lint: ## Check provider markdown files (via markdownlint)
+	@echo "make: Provider Check / markdown-lint..."
+	@docker run --rm \
+		-v "$(PWD):/markdown" \
+		avtodev/markdown-lint:v1.5.0 \
+		--config markdown/.markdownlint.yml \
+		--ignore markdown/docs \
+		--ignore markdown/website/docs \
+		--ignore markdown/CHANGELOG.md \
+		--ignore markdown/internal/service/cloudformation/test-fixtures/examplecompany-exampleservice-exampleresource/docs \
+		/markdown/**/*.md
 
 sane: prereq-go ## Run sanity checks
 	@echo "make: sane Check (48 tests of Top 30 resources)"
@@ -413,7 +452,11 @@ sanity: prereq-go ## Run sanity checks with failures allowed
 		exit 1; \
 	fi
 
-semall: semgrep-validate ## Run semgrep on all files
+semgrep: semgrep-validate ## Run semgrep
+	@echo "make: running Semgrep static analysis..."
+	@docker run --rm --volume "${PWD}:/src" returntocorp/semgrep semgrep --config .ci/.semgrep.yml --config .ci/.semgrep-constants.yml --config .ci/.semgrep-test-constants.yml
+
+semgrep-all: semgrep-validate ## Run semgrep on all files
 	@echo "make: running Semgrep checks locally (must have semgrep installed)..."
 	@semgrep $(SEMGREP_ARGS) \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
@@ -434,7 +477,7 @@ semall: semgrep-validate ## Run semgrep on all files
 		--config 'r/dgryski.semgrep-go.oddifsequence' \
 		--config 'r/dgryski.semgrep-go.oserrors'
 
-semcodequality: semgrep-validate
+semgrep-code-quality: semgrep-validate
 	@echo "make: Semgrep Checks / Code Quality Scan..."
 	@echo "make: running Semgrep checks locally (must have semgrep installed)"
 	semgrep $(SEMGREP_ARGS) \
@@ -450,7 +493,13 @@ semcodequality: semgrep-validate
 		--config 'r/dgryski.semgrep-go.oddifsequence' \
 		--config 'r/dgryski.semgrep-go.oserrors'
 
-semfix: semgrep-validate ## Run semgrep on all files
+semgrep-constants: semgrep-validate
+	@echo "make: applying constants fixes locally with Semgrep --autofix"
+	@semgrep $(SEMGREP_ARGS) --autofix \
+		--config .ci/.semgrep-constants.yml \
+		--config .ci/.semgrep-test-constants.yml
+
+semgrep-fix: semgrep-validate ## Run semgrep on all files
 	@echo "make: running Semgrep checks locally (must have semgrep installed)..."
 	@echo "make: applying fixes with --autofix"
 	@echo "make: WARNING: This will not fix rules that don't have autofixes"
@@ -473,11 +522,26 @@ semfix: semgrep-validate ## Run semgrep on all files
 		--config 'r/dgryski.semgrep-go.oddifsequence' \
 		--config 'r/dgryski.semgrep-go.oserrors'
 
-semconstants: semgrep-validate
-	@echo "make: applying constants fixes locally with Semgrep --autofix"
-	@semgrep $(SEMGREP_ARGS) --autofix \
-		--config .ci/.semgrep-constants.yml \
-		--config .ci/.semgrep-test-constants.yml
+semgrep-naming: semgrep-validate
+	@echo "make: Semgrep Checks / Test Configs Scan..."
+	@semgrep $(SEMGREP_ARGS) \
+		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
+		--config .ci/.semgrep-configs.yml
+
+semgrep-naming-cae: semgrep-validate ## Run semgrep on all files
+	@echo "make: Semgrep Checks / Naming Scan Caps/AWS/EC2..."
+	@semgrep $(SEMGREP_ARGS) \
+		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
+		--config .ci/.semgrep-caps-aws-ec2.yml
+
+semgrep-service-naming: semgrep-validate
+	@echo "make: Semgrep Checks / Service Name Scan A-Z..."
+	@semgrep $(SEMGREP_ARGS) \
+		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
+		--config .ci/.semgrep-service-name0.yml \
+		--config .ci/.semgrep-service-name1.yml \
+		--config .ci/.semgrep-service-name2.yml \
+		--config .ci/.semgrep-service-name3.yml
 
 semgrep-validate: ## Validate semgrep configuration files
 	@echo "make: validating Semgrep configuration files..."
@@ -493,33 +557,13 @@ semgrep-validate: ## Validate semgrep configuration files
 		--config .ci/.semgrep-service-name3.yml \
 		--config .ci/semgrep/
 
-semgrep: semgrep-validate ## Run semgrep
-	@echo "make: running Semgrep static analysis..."
-	@docker run --rm --volume "${PWD}:/src" returntocorp/semgrep semgrep --config .ci/.semgrep.yml --config .ci/.semgrep-constants.yml --config .ci/.semgrep-test-constants.yml
-
-semnaming-cae: semgrep-validate ## Run semgrep on all files
-	@echo "make: Semgrep Checks / Naming Scan Caps/AWS/EC2..."
-	@semgrep $(SEMGREP_ARGS) \
-		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
-		--config .ci/.semgrep-caps-aws-ec2.yml
-
-semnaming: semgrep-validate
-	@echo "make: Semgrep Checks / Test Configs Scan..."
-	@semgrep $(SEMGREP_ARGS) \
-		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
-		--config .ci/.semgrep-configs.yml
-
-semservicenaming: semgrep-validate
-	@echo "make: Semgrep Checks / Service Name Scan A-Z..."
-	@semgrep $(SEMGREP_ARGS) \
-		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
-		--config .ci/.semgrep-service-name0.yml \
-		--config .ci/.semgrep-service-name1.yml \
-		--config .ci/.semgrep-service-name2.yml \
-		--config .ci/.semgrep-service-name3.yml
-
 skaff: prereq-go ## Install skaff
 	cd skaff && $(GO_VER) install github.com/hashicorp/terraform-provider-aws/skaff
+
+skaff-check-compile: ## Check skaff compilation
+	@echo "make: Skaff Checks / Compile skaff..."
+	@cd skaff ; \
+	go build
 
 sweep: prereq-go ## Run sweepers
 	# make sweep SWEEPARGS=-sweep-run=aws_example_thing
@@ -531,6 +575,8 @@ sweeper: prereq-go ## Run sweepers with failures allowed
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
 	$(GO_VER) test $(SWEEP_DIR) -v -sweep=$(SWEEP) -sweep-allow-failures -timeout $(SWEEP_TIMEOUT)
 
+sweeper-check: sweeper-linked sweeper-unlinked
+
 sweeper-linked:
 	@echo "make: Provider Checks / sweeper-linked..." ; \
 	go test -c -o ./sweeper-bin ./internal/sweep/ ; \
@@ -540,7 +586,7 @@ sweeper-linked:
 	[ $$count -gt 0 ] || \
 		(echo; echo "Expected `strings` to detect sweeper function names in sweeper binary."; exit 1)
 
-sweeper-unlinked: go_build
+sweeper-unlinked: go-build
 	@os_arch=`go env GOOS`_`go env GOARCH` ; \
 	echo "make: Provider Checks / sweeper-unlinked ($$os_arch)..." ; \
 	count=`strings "terraform-plugin-dir/registry.terraform.io/hashicorp/aws/99.99.99/$$os_arch/terraform-provider-aws" | \
@@ -549,12 +595,10 @@ sweeper-unlinked: go_build
 	[ $$count -eq 0 ] || \
         (echo "Expected `strings` to detect no sweeper function names in provider binary."; exit 1)
 
-sweeper-check: sweeper-linked sweeper-unlinked
-
-t: prereq-go fmtcheck
+t: prereq-go fmt-check
 	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
 
-test: prereq-go fmtcheck ## Run unit tests
+test: prereq-go fmt-check ## Run unit tests
 	$(GO_VER) test $(TEST) $(TESTARGS) -timeout=5m
 
 test-compile: prereq-go ## Test package compilation
@@ -565,7 +609,7 @@ test-compile: prereq-go ## Test package compilation
 	fi
 	$(GO_VER) test -c $(TEST) $(TESTARGS)
 
-testacc: prereq-go fmtcheck ## Run acceptance tests
+testacc: prereq-go fmt-check ## Run acceptance tests
 	@if [ "$(TESTARGS)" = "-run=TestAccXXX" ]; then \
 		echo ""; \
 		echo "Error: Skipping example acceptance testing pattern. Update PKG and TESTS for the relevant *_test.go file."; \
@@ -590,7 +634,7 @@ testacc-lint-fix: ## Fix acceptance test linter findings
 		| sort -u \
 		| xargs -I {} terrafmt fmt  --fmtcompat {}
 
-testacc-short: prereq-go fmtcheck ## Run acceptace tests with the -short flag
+testacc-short: prereq-go fmt-check ## Run acceptace tests with the -short flag
 	@echo "Running acceptance tests with -short flag"
 	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -short -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
 
@@ -600,7 +644,7 @@ testacc-tflint: ## Lint acceptance tests (via tflint)
 	@find $(SVC_DIR) -type f -name '*_test.go' \
 		| .ci/scripts/validate-terraform.sh
 
-tfproviderdocs: go_build
+tfproviderdocs: go-build
 	@echo "make: Provider Checks / tfproviderdocs..."
 	@trap 'rm -rf terraform-providers-schema example.tf .terraform.lock.hcl' EXIT ; \
 	rm -rf terraform-providers-schema example.tf .terraform.lock.hcl ; \
@@ -640,13 +684,39 @@ tools: prereq-go ## Install tools
 ts: testacc-short ## Alias to testacc-short
 
 website-link-check: ## Check website links
+	@echo "make: legacy target, use caution..."
 	@.ci/scripts/markdown-link-check.sh
 
 website-link-check-ghrc: ## Check website links with ghrc
+	@echo "make: legacy target, use caution..."
 	@LINK_CHECK_CONTAINER="ghcr.io/tcort/markdown-link-check:stable" .ci/scripts/markdown-link-check.sh
 
+website-link-check-markdown:
+	@echo "make: Website Checks / markdown-link-check-a-z-markdown..."
+	@docker run --rm \
+		-v "$(PWD):/markdown" \
+		ghcr.io/yakdriver/md-check-links:2.1.0 \
+		--config /markdown/.ci/.markdownlinkcheck.json \
+		--verbose yes \
+		--quiet yes \
+		--directory "/markdown/website/docs/r, /markdown/website/docs/d" \
+		--extension ".markdown" \
+		--modified no
+
+website-link-check-md:
+	@echo "make: Website Checks / markdown-link-check-md..."
+	@docker run --rm \
+		-v "$(PWD):/markdown" \
+		ghcr.io/yakdriver/md-check-links:2.1.0 \
+		--config /markdown/.ci/.markdownlinkcheck.json \
+		--verbose yes \
+		--quiet yes \
+		--directory /markdown/website/docs \
+		--extension '.md' \
+		--depth 2
+
 website-lint: ## Lint website files
-	@echo "make: checking website against linters..."
+	@echo "make: legacy target, use caution..."
 	@misspell -error -source=text website/ || (echo; \
 		echo "Unexpected mispelling found in website files."; \
 		echo "To automatically fix the misspelling, run 'make website-lint-fix' and commit the changes."; \
@@ -662,65 +732,147 @@ website-lint: ## Lint website files
 		exit 1)
 
 website-lint-fix: ## Fix website linter findings
-	@echo "make: applying automatic website linter fixes..."
+	@echo "make: legacy target, use caution..."
 	@misspell -w -source=text website/
 	@docker run --rm -v $(PWD):/markdown 06kellyjac/markdownlint-cli --fix website/docs/
 	@terrafmt fmt ./website --pattern '*.markdown'
 
+website-markdown-lint: ## Check website markdown files (via markdownlint)
+	@echo "make: Website Checks / markdown-lint..."
+	@docker run --rm \
+		-v "$(PWD):/markdown" \
+		avtodev/markdown-lint:v1.5.0 \
+		--config /markdown/.markdownlint.yml \
+		--ignore /markdown/website/docs/cdktf/python/guides \
+		--ignore /markdown/website/docs/cdktf/typescript/guides \
+		/markdown/website/docs
+
+website-misspell:
+	@echo "make: Website Checks / misspell..."
+	@misspell -error -source text website/docs/d website/docs/functions website/docs/guides website/docs/r website/docs/index.html.markdown
+
+website-terrafmt: ## Run terrafmt on website
+	@echo "make: Website Checks / terrafmt..."
+	@terrafmt diff ./website --check --pattern '*.markdown'
+
+website-tflint: ## Lint website files (via tflint)
+	@echo "make: Website Checks / tflint..."
+	@tflint --config .ci/.tflint.hcl --init
+	@exit_code=0 ; \
+	shared_rules=( \
+		"--enable-rule=terraform_comment_syntax" \
+		"--disable-rule=aws_cloudwatch_event_target_invalid_arn" \
+		"--disable-rule=aws_db_instance_default_parameter_group" \
+		"--disable-rule=aws_elasticache_cluster_default_parameter_group" \
+		"--disable-rule=aws_elasticache_replication_group_default_parameter_group" \
+		"--disable-rule=aws_iam_policy_sid_invalid_characters" \
+		"--disable-rule=aws_iam_saml_provider_invalid_saml_metadata_document" \
+		"--disable-rule=aws_iam_server_certificate_invalid_certificate_body" \
+		"--disable-rule=aws_iam_server_certificate_invalid_private_key" \
+		"--disable-rule=aws_iot_certificate_invalid_csr" \
+		"--disable-rule=aws_lb_invalid_load_balancer_type" \
+		"--disable-rule=aws_lb_target_group_invalid_protocol" \
+		"--disable-rule=aws_networkfirewall_rule_group_invalid_rules" \
+		"--disable-rule=aws_s3_object_copy_invalid_source" \
+		"--disable-rule=aws_servicecatalog_portfolio_share_invalid_type" \
+		"--disable-rule=aws_transfer_ssh_key_invalid_body" \
+		"--disable-rule=aws_worklink_website_certificate_authority_association_invalid_certificate" \
+		"--disable-rule=terraform_required_providers" \
+		"--disable-rule=terraform_unused_declarations" \
+		"--disable-rule=terraform_typed_variables" \
+	) ; \
+	while read -r filename; do \
+		rules=("$${shared_rules[@]}") ; \
+		if [[ "$$filename" == "./website/docs/guides/version-2-upgrade.html.md" ]] ; then \
+			rules+=( \
+			"--disable-rule=terraform_deprecated_index" \
+			"--disable-rule=terraform_deprecated_interpolation" \
+			) ; \
+		elif [[ "$$filename" == "./website/docs/guides/version-3-upgrade.html.md" ]]; then \
+			rules+=( \
+			"--enable-rule=terraform_deprecated_index" \
+			"--disable-rule=terraform_deprecated_interpolation" \
+			) ; \
+		else \
+			rules+=( \
+			"--enable-rule=terraform_deprecated_index" \
+			"--enable-rule=terraform_deprecated_interpolation" \
+			) ; \
+		fi ; \
+		set +e ; \
+		./.ci/scripts/validate-terraform-file.sh "$$filename" "$${rules[@]}" || exit_code=1 ; \
+		set -e ; \
+	done < <(find ./website/docs -type f \( -name '*.md' -o -name '*.markdown' \) | sort -u) ; \
+	exit $$exit_code
+
 yamllint: ## Lint YAML files (via yamllint)
+	@echo "make: YAML Linting / yamllint..."
 	@yamllint .
 
 # Please keep targets in alphabetical order
 .PHONY: \
-	acctestlint \
+	acctest-lint \
 	awssdkpatch \
 	awssdkpatch-apply \
 	awssdkpatch-gen \
 	build \
 	clean \
-	cleango \
-	cleanplugin \
-	cleantidy \
+	clean-go \
+	clean-make-tests \
+	clean-tidy \
 	copyright \
 	default \
-	depscheck \
+	deps-check \
+	docs-check \
+	docs-link-check \
 	docs-lint \
 	docs-lint-fix \
-	docscheck \
-	fixconstants \
-	fiximports \
+	docs-markdown-lint \
+	docs-misspell \
+	examples-tflint \
+	fix-constants \
+	fix-imports \
 	fmt \
-	fmtcheck \
+	fmt-check \
 	fumpt \
 	gen \
-	gencheck \
+	gen-check \
 	generate-changelog \
 	gh-workflows-lint \
-	go_build \
+	go-build \
+	go-misspell \
 	golangci-lint \
 	golangci-lint1 \
 	golangci-lint2 \
 	help \
-	importlint \
+	import-lint \
 	install \
 	lint \
 	lint-fix \
 	misspell \
-	preferredlib \
+	misspell-changelog \
+	preferred-lib \
 	prereq-go \
-	provcheckmarkdownlint \
-	providerlint \
+	provider-lint \
+	provider-markdown-lint \
 	sane \
 	sanity \
-	semall \
-	semcodequality \
-	semconstants \
-	semfix \
 	semgrep \
+	semgrep-all \
+	semgrep-code-quality \
+	semgrep-constants \
+	semgrep-fix \
+	semgrep-naming \
+	semgrep-naming-cae \
+	semgrep-service-naming \
 	semgrep-validate \
 	skaff \
+	skaff-check-compile \
 	sweep \
 	sweeper \
+	sweeper-check \
+	sweeper-linked \
+	sweeper-unlinked \
 	t \
 	test \
 	test-compile \
@@ -735,6 +887,12 @@ yamllint: ## Lint YAML files (via yamllint)
 	ts \
 	website-link-check \
 	website-link-check-ghrc \
+	website-link-check-markdown \
+	website-link-check-md \
 	website-lint \
 	website-lint-fix \
-	yamllint \
+	website-markdown-lint \
+	website-misspell \
+	website-terrafmt \
+	website-tflint \
+	yamllint
