@@ -29,7 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource
+// @FrameworkResource("aws_rds_export_task")
 func newResourceExportTask(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceExportTask{}
 	r.SetDefaultCreateTimeout(60 * time.Minute)
