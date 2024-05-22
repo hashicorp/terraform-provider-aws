@@ -22,7 +22,17 @@ Continuous integration plays a pivotal role in maintaining the health and qualit
 
 Additionally, these tests provide rapid feedback to contributors, enabling them to identify and rectify issues early in the development cycle. In essence, continuous integration tests serve as a safeguard, bolstering the reliability and maintainability of this project while fostering a collaborative and iterative development environment.
 
-## Running Tests Locally
+## Using `make` To Run Specific Tests Locally
+
+**NOTE:** We've gone to great effort to make sure that tests running on GitHub have a close-as-possible equivalent in the Makefile. If you notice a difference, please [open an issue](https://github.com/hashicorp/terraform-provider-aws/issues/new/choose) to let us know.
+
+The makefile included with the Terraform AWS Provider allows you to run many of the CI tests locally before submitting your PR. The file is located in the provider's root directory and is called `GNUmakefile`. You should be able to use `make` with a variety of Linux-type shells that support `bash`, such as a MacOS terminal.
+
+There are many different tests and they change often. This guide doesn't cover everything CI does because, as noted above, many of the CI processes enrich the pull request, such as adding labels. If you notice something important that isn't reflected in this documentation, let us know!
+
+**NOTE:** Many tests simply exit without error if passing. "No news is good news."
+
+### Before Running Tests
 
 CI tests run on GitHub when you run a pull request. However, these can take a while to run. If you prefer, you can run most tests locally. Before running tests locally, you will need to clone the repository, which you've likely done anyway if you're working on a PR, and install tools.
 
@@ -32,13 +42,27 @@ Use the `tools` target to install a variety of tools used by different CI tests:
 % make tools
 ```
 
-## Using `make` To Run Specific Tests
+### Running All Available CI Tests
 
-There are many different tests and they change often. This guide doesn't cover everything CI does because, as noted above, many of the CI processes enrich the pull request, such as adding labels. If you notice something important that isn't reflected in this documentation, we welcome your contribution to fix it!
+Use the `ci` target to run all the tests below:
 
-The makefile included with the Terraform AWS Provider allows you to run many of the CI tests locally before submitting your PR. The file is located in the provider's root directory and is called `GNUmakefile`. You should be able to use `make` with a variety of Linux-type shells that support `sh` and `bash`, such as a MacOS terminal.
+```console
+% make ci
+```
 
-**Note:** Some tests will simply exit without error if a test passed. "No news is good news."
+**NOTE:** Depending on your machine, running all the tests can take a long time!
+
+To run most of the tests but not the longer-running tests, use the `ci-quick` target. "Quick" may not be _quick_ precisely but, relative to the full `ci` target, is _quicker_:
+
+```console
+% make ci-quick
+```
+
+Use the `clean-make-tests` target to clean up artifacts that `make` tests leave behind, although they should be ignored by Git:
+
+```console
+% make clean-make-tests
+```
 
 ### Acceptance Test Linting
 
@@ -96,7 +120,7 @@ Use the `copyright` target to add the appropriate copyright headers to all files
 % make copyright
 ```
 
-**NOTE:** Install [tools](#running-tests-locally) before running this check.
+**NOTE:** Install [tools](#before-running-tests) before running this check.
 
 ### Dependency Checks
 
@@ -142,7 +166,7 @@ Use the target `docs-misspell` to spellcheck the contributor documentation:
 % make docs-misspell
 ```
 
-**NOTE:** Install [tools](#running-tests-locally) before running this check.
+**NOTE:** Install [tools](#before-running-tests) before running this check.
 
 ### Examples Checks
 
@@ -156,7 +180,7 @@ Use the target `examples-tflint` to lint the examples:
 % make examples-tflint
 ```
 
-**NOTE:** Install [tools](#running-tests-locally) before running this check.
+**NOTE:** Install [tools](#before-running-tests) before running this check.
 
 #### validate-terraform (0.12.31)
 
@@ -313,6 +337,16 @@ Use the `provider-markdown-lint` target to run this test:
 ```
 
 **NOTE:** Install [Docker](https://docs.docker.com/desktop/install/mac-install/) to run this check.
+
+#### misspell
+
+Use `go-misspell` to check the provider code for misspellings:
+
+```console
+% make go-misspell
+```
+
+**NOTE:** Install [tools](#before-running-tests) before running this check.
 
 #### terraform providers schema
 
@@ -496,7 +530,7 @@ Use the target `website-misspell` to spellcheck the documentation:
 % make website-misspell
 ```
 
-**NOTE:** Install [tools](#running-tests-locally) before running this check.
+**NOTE:** Install [tools](#before-running-tests) before running this check.
 
 #### terrafmt
 
@@ -506,7 +540,7 @@ Use the target `website-terrafmt` to check formatting of Terraform configuration
 % make website-terrafmt
 ```
 
-**NOTE:** Install [tools](#running-tests-locally) before running this check.
+**NOTE:** Install [tools](#before-running-tests) before running this check.
 
 #### tflint
 
@@ -516,7 +550,7 @@ Use the target `website-tflint` to check formatting of Terraform configuration i
 % make website-tflint
 ```
 
-**NOTE:** Install [tools](#running-tests-locally) before running this check.
+**NOTE:** Install [tools](#before-running-tests) before running this check.
 
 ### YAML Linting / yamllint
 
