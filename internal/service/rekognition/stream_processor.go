@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/float64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/float64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -120,14 +119,14 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 			"data_sharing_preference": schema.SingleNestedBlock{
 				CustomType:  fwtypes.NewObjectTypeOf[dataSharingPreferenceModel](ctx),
 				Description: "Shows whether you are sharing data with Rekognition to improve model performance.",
+				Validators: []validator.Object{
+					objectvalidator.IsRequired(),
+					objectvalidator.AlsoRequires(path.MatchRelative().AtName("opt_in")),
+				},
 				Attributes: map[string]schema.Attribute{
 					"opt_in": schema.BoolAttribute{
 						Description: "Do you want to share data with Rekognition to improve model performance.",
 						Optional:    true,
-						Computed:    true,
-						PlanModifiers: []planmodifier.Bool{
-							boolplanmodifier.UseStateForUnknown(),
-						},
 					},
 				},
 			},
@@ -448,6 +447,13 @@ func (r *resourceStreamProcessor) Create(ctx context.Context, req resource.Creat
 	plan.ARN = fwflex.StringToFramework(ctx, out.StreamProcessorArn)
 	plan.ID = plan.Name
 
+	if plan.DataSharingPreference.IsNull() {
+		dataSharing, diag := fwtypes.NewObjectValueOf(ctx, &dataSharingPreferenceModel{OptIn: basetypes.NewBoolValue(false)})
+		resp.Diagnostics.Append(diag...)
+		plan.DataSharingPreference = dataSharing
+		resp.Diagnostics.Append(req.Plan.Set(ctx, &plan)...)
+	}
+
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	created, err := waitStreamProcessorCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
 	if err != nil {
@@ -492,12 +498,6 @@ func (r *resourceStreamProcessor) Read(ctx context.Context, req resource.ReadReq
 	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
-	}
-
-	if state.DataSharingPreference.IsNull() {
-		dataSharing, diag := fwtypes.NewObjectValueOf(ctx, &dataSharingPreferenceModel{OptIn: basetypes.NewBoolValue(false)})
-		resp.Diagnostics.Append(diag...)
-		state.DataSharingPreference = dataSharing
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)

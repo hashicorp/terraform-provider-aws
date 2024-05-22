@@ -10,7 +10,7 @@ description: |-
 
 Terraform resource for managing an AWS Rekognition Stream Processor.
 
-~> **Note:** This resource must be configured specifically for your use case, and not all options are compatible with one another. See [Stream Processor API documentation](https://docs.aws.amazon.com/rekognition/latest/APIReference/API_CreateStreamProcessor.html#rekognition-CreateStreamProcessor-request-Input) for configuration information.
+~> **Note:** This resource must be configured specifically for your use case, and not all options are compatible with one another. See [Stream Processor API documentation](https://docs.aws.amazon.com/rekognition/latest/APIReference/API_CreateStreamProcessor.html#rekognition-CreateStreamProcessor-request-Input) for configuration information. Additionally, Stream Processors configued for Face Recognition cannot have _any_ properties updated after the fact.
 
 ## Example Usage
 
@@ -81,7 +81,7 @@ resource "aws_rekognition_stream_processor" "example" {
   name     = "example-processor"
 
   data_sharing_preference {
-    opt_in = true
+    opt_in = false
   }
 
   output {
@@ -111,8 +111,45 @@ resource "aws_rekognition_stream_processor" "example" {
 ### Face Detection Usage
 
 ```terraform
-Resource "aws_iam_role" "example" {
+
+resource "aws_kinesis_video_stream" "example" {
+  name                    = "example-kinesis-input"
+  data_retention_in_hours = 1
+  device_name             = "kinesis-video-device-name"
+  media_type              = "video/h264"
+}
+
+resource "aws_kinesis_stream" "example_output" {
+  name        = "terraform-kinesis-example"
+  shard_count = 1
+}
+
+resource "aws_iam_role" "example" {
   name = "example-role"
+
+  inline_policy {
+    name = "Rekognition-Access"
+    policy = jsonencode({
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Action = [
+            "kinesis:Get*",
+            "kinesis:DescribeStreamSummary"
+          ]
+          Effect   = "Allow"
+          Resource = ["${aws_kinesis_video_stream.example.arn}"]
+        },
+        {
+          Action = [
+            "kinesis:PutRecord"
+          ]
+          Effect   = "Allow"
+          Resource = ["${aws_kinesis_stream.example_output.arn}"]
+        },
+      ]
+    })
+  }
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -120,13 +157,58 @@ Resource "aws_iam_role" "example" {
       {
         Action = "sts:AssumeRole"
         Effect = "Allow"
-        Sid    = "TBD"
         Principal = {
-          Service = "ec2.amazonaws.com"
+          Service = "rekognition.amazonaws.com"
         }
       },
     ]
   })
+}
+
+resource "aws_rekognition_collection" "example" {
+  collection_id = "example-collection"
+}
+
+resource "aws_rekognition_stream_processor" "example" {
+  role_arn = aws_iam_role.example.arn
+  name     = "example-processor"
+
+  data_sharing_preference {
+    opt_in = false
+  }
+
+  regions_of_interest {
+    polygon {
+      x = 0.5
+      y = 0.5
+    }
+    polygon {
+      x = 0.5
+      y = 0.5
+    }
+    polygon {
+      x = 0.5
+      y = 0.5
+    }
+  }
+
+  input {
+    kinesis_video_stream {
+      arn = aws_kinesis_video_stream.example.arn
+    }
+  }
+
+  output {
+    kinesis_data_stream {
+      arn = aws_kinesis_stream.example_output.arn
+    }
+  }
+
+  settings {
+    face_search {
+      collection_id = aws_rekognition_collection.example.id
+    }
+  }
 }
 ```
 
@@ -134,16 +216,16 @@ Resource "aws_iam_role" "example" {
 
 The following arguments are required:
 
+* `data_sharing_preference` - (Optional) See [`data_sharing_preference`](#data_sharing_preference) definition.
 * `input` - (Required) Input video stream. See [`input`](#input) definition.
 * `name` - (Required) The name of the Stream Processor
-* `role_arn` - (Required) The Amazon Resource Number (ARN) of the IAM role that allows access to the stream processor. The IAM role provides Rekognition read permissions for a Kinesis stream. It also provides write permissions to an Amazon S3 bucket and Amazon Simple Notification Service topic for a label detection stream processor. This is required for both face search and label detection stream processors.
 * `output` - (Required) Kinesis data stream stream or Amazon S3 bucket location to which Amazon Rekognition Video puts the analysis results
+* `role_arn` - (Required) The Amazon Resource Number (ARN) of the IAM role that allows access to the stream processor. The IAM role provides Rekognition read permissions for a Kinesis stream. It also provides write permissions to an Amazon S3 bucket and Amazon Simple Notification Service topic for a label detection stream processor. This is required for both face search and label detection stream processors.
 * `settings` - (Required) Input parameters used in a streaming video analyzed by a stream processor. See [`settings`](#settings) definition.
 
 The following arguments are optional:
 
 * `kms_key_id` - (Optional) Optional parameter for label detection stream processors
-* `data_sharing_preference` - (Optional) See [`data_sharing_preference`](#data_sharing_preference) definition.
 * `notification_channel` - (Optional) The Amazon Simple Notification Service topic to which Amazon Rekognition publishes the completion status. See [`notification_channel`](#notification_channel) definition.
 * `regions_of_interest` - (Optional) Specifies locations in the frames where Amazon Rekognition checks for objects or people. See [`regions_of_interest`] definition.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
