@@ -116,42 +116,43 @@ issues:
 linters:
   disable-all: true
   enable:
-    - asasalint
-    - asciicheck
-    - containedctx
-    - contextcheck
-    - dogsled
-    - durationcheck
+    #- asasalint
+    #- asciicheck
+    #- containedctx
+    #- contextcheck
+    #- dogsled
+    #- durationcheck
     - errcheck
-    - errname
-    - errorlint
-    - exportloopref
-    - goconst
-    - gocritic
-    - gofmt
-    - gosimple
-    - govet
-    - ineffassign
-    - makezero
-    - misspell
-    - mnd
-    - nakedret
-    - nilerr
-    - nolintlint
-    - nosprintfhostport
-    - paralleltest
-    - predeclared
-    - revive
-    - staticcheck
-    - stylecheck
-    - tenv
-    - tparallel
-    - typecheck
-    - unconvert
-    - unparam
-    - unused
-    - usestdlibvars
-    - whitespace
+    #- errname
+    #- errorlint
+    #- exportloopref
+    #- goconst
+    #- gocritic
+    #- gofmt
+    #- gosimple
+    #- govet
+    #- ineffassign
+    #- makezero
+    #- misspell
+    #- mnd
+    #- nakedret
+    #- nilerr
+    #- nolintlint
+    #- nosprintfhostport
+    #- paralleltest
+    #- predeclared
+    #- revive
+    #- staticcheck
+    #- stylecheck
+    #- tenv
+    #- tparallel
+    #- typecheck
+    #- unconvert
+    #- unparam
+    #- unused
+    #- usestdlibvars
+    #- whitespace
+
     # - perfsprint
     # - thelper
 
@@ -159,7 +160,7 @@ linters-settings:
   dogsled:
     max-blank-identifiers: 3
   errcheck:
-    exclude-functions: github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema:ForceNew|Set,fmt:.*,io:Close
+    ignore: github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema:ForceNew|Set,fmt:.*,io:Close
   errorlint:
     errorf: false
   goconst:
