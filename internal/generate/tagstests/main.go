@@ -154,6 +154,7 @@ type ResourceDatum struct {
 	ExistsTypeName    string
 	FileName          string
 	Generator         string
+	NoImport          bool
 	ImportStateID     string
 	ImportStateIDFunc string
 	ImportIgnore      []string
@@ -340,6 +341,15 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 				if attr, ok := args.Keyword["name"]; ok {
 					d.Name = strings.ReplaceAll(attr, " ", "")
+				}
+				if attr, ok := args.Keyword["noImport"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid noImport value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						d.NoImport = b
+					}
+
 				}
 				if attr, ok := args.Keyword["preCheck"]; ok {
 					if b, err := strconv.ParseBool(attr); err != nil {
