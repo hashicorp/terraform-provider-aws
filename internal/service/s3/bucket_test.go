@@ -489,195 +489,7 @@ func TestAccS3Bucket_Duplicate_UsEast1AltAccount(t *testing.T) {
 	})
 }
 
-func TestAccS3Bucket_Tags_basic(t *testing.T) {
-	ctx := acctest.Context(t)
-	rInt := sdkacctest.RandInt()
-	resourceName := "aws_s3_bucket.bucket1"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccBucketConfig_multiTags(rInt),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
-			},
-		},
-	})
-}
-
-func TestAccS3Bucket_Tags_withNoSystemTags(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_s3_bucket.test"
-	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccBucketConfig_tags(bucketName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "AAA"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
-			},
-			{
-				Config: testAccBucketConfig_updatedTags(bucketName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct4),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "XXX"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key4", "DDD"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key5", "EEE"),
-				),
-			},
-			{
-				Config: testAccBucketConfig_noTags(bucketName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-				),
-			},
-			// Verify update from 0 tags.
-			{
-				Config: testAccBucketConfig_tags(bucketName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "AAA"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccS3Bucket_Tags_EmptyTag_OnCreate(t *testing.T) {
-	ctx := acctest.Context(t)
-	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
-	resourceName := "aws_s3_bucket.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccBucketConfig_tags1(bucketName, acctest.CtKey1, ""),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, ""),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
-			},
-		},
-	})
-}
-
-func TestAccS3Bucket_Tags_EmptyTag_OnUpdate_Add(t *testing.T) {
-	ctx := acctest.Context(t)
-	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
-	resourceName := "aws_s3_bucket.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccBucketConfig_tags1(bucketName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				Config: testAccBucketConfig_tags2(bucketName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, ""),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, ""),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
-			},
-		},
-	})
-}
-
-func TestAccS3Bucket_Tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
-	ctx := acctest.Context(t)
-	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
-	resourceName := "aws_s3_bucket.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccBucketConfig_tags1(bucketName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				Config: testAccBucketConfig_tags1(bucketName, acctest.CtKey1, ""),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, ""),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
-			},
-		},
-	})
-}
-
-func TestAccS3Bucket_Tags_withSystemTags(t *testing.T) {
+func TestAccS3Bucket_tags_withSystemTags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_s3_bucket.test"
 	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
@@ -763,7 +575,7 @@ func TestAccS3Bucket_Tags_withSystemTags(t *testing.T) {
 	})
 }
 
-func TestAccS3Bucket_Tags_ignoreTags(t *testing.T) {
+func TestAccS3Bucket_tags_ignoreTags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_s3_bucket.test"
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -777,7 +589,8 @@ func TestAccS3Bucket_Tags_ignoreTags(t *testing.T) {
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigIgnoreTagsKeyPrefixes1("ignorekey"),
-					testAccBucketConfig_noTags(bucketName)),
+					testAccBucketConfig_noTags(bucketName),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
 					testAccCheckBucketUpdateTags(ctx, resourceName, nil, map[string]string{"ignorekey1": "ignorevalue1"}),
@@ -790,7 +603,8 @@ func TestAccS3Bucket_Tags_ignoreTags(t *testing.T) {
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigIgnoreTagsKeyPrefixes1("ignorekey"),
-					testAccBucketConfig_tags(bucketName)),
+					testAccBucketConfig_tags(bucketName),
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct3),
@@ -4357,31 +4171,6 @@ resource "aws_s3_bucket" "bucket6" {
   }
 }
 `, randInt)
-}
-
-func testAccBucketConfig_tags1(bucketName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, bucketName, tagKey1, tagValue1)
-}
-
-func testAccBucketConfig_tags2(bucketName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, bucketName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccBucketConfig_objectLockEnabledNoDefaultRetention(bucketName string) string {
