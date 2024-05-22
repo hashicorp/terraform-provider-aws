@@ -152,7 +152,6 @@ linters:
     - unused
     - usestdlibvars
     - whitespace
-
     # - perfsprint
     # - thelper
 
