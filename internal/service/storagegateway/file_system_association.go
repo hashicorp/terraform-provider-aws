@@ -25,16 +25,19 @@ import (
 
 // @SDKResource("aws_storagegateway_file_system_association", name="File System Association")
 // @Tags(identifierAttribute="arn")
-func ResourceFileSystemAssociation() *schema.Resource {
+func resourceFileSystemAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFileSystemAssociationCreate,
 		ReadWithoutTimeout:   resourceFileSystemAssociationRead,
 		UpdateWithoutTimeout: resourceFileSystemAssociationUpdate,
 		DeleteWithoutTimeout: resourceFileSystemAssociationDelete,
-		CustomizeDiff:        customdiff.Sequence(verify.SetTagsDiff),
+
+		CustomizeDiff: customdiff.Sequence(verify.SetTagsDiff),
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,

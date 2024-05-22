@@ -27,7 +27,7 @@ import (
 
 // @SDKResource("aws_storagegateway_nfs_file_share", name="NFS File Share")
 // @Tags(identifierAttribute="arn")
-func ResourceNFSFileShare() *schema.Resource {
+func resourceNFSFileShare() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNFSFileShareCreate,
 		ReadWithoutTimeout:   resourceNFSFileShareRead,

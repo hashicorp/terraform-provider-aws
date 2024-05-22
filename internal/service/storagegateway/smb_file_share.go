@@ -26,7 +26,7 @@ import (
 
 // @SDKResource("aws_storagegateway_smb_file_share", name="SMB File Share")
 // @Tags(identifierAttribute="arn")
-func ResourceSMBFileShare() *schema.Resource {
+func resourceSMBFileShare() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSMBFileShareCreate,
 		ReadWithoutTimeout:   resourceSMBFileShareRead,

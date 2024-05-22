@@ -5,7 +5,15 @@ package storagegateway
 
 // Exports for use in tests only.
 var (
-	ResourceCache = resourceCache
+	ResourceCache                 = resourceCache
+	ResourceCachediSCSIVolume     = resourceCachediSCSIVolume
+	ResourceFileSystemAssociation = resourceFileSystemAssociation
+	ResourceGateway               = resourceGateway
+	ResourceNFSFileShare          = resourceNFSFileShare
+	ResourceSMBFileShare          = resourceSMBFileShare
+	ResourceStorediSCSIVolume     = resourceStorediSCSIVolume
+	ResourceTapePool              = resourceTapePool
+	ResourceUploadBuffer          = resourceUploadBuffer
 
 	CacheParseResourceID = cacheParseResourceID
 )

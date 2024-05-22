@@ -19,12 +19,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_storagegateway_upload_buffer")
-func ResourceUploadBuffer() *schema.Resource {
+// @SDKResource("aws_storagegateway_upload_buffer", name="Upload Buffer")
+func resourceUploadBuffer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUploadBufferCreate,
 		ReadWithoutTimeout:   resourceUploadBufferRead,
 		DeleteWithoutTimeout: schema.NoopContext,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
