@@ -26,7 +26,7 @@ Additionally, these tests provide rapid feedback to contributors, enabling them 
 
 **NOTE:** We've gone to great effort to make sure that tests running on GitHub have a close-as-possible equivalent in the Makefile. If you notice a difference, please [open an issue](https://github.com/hashicorp/terraform-provider-aws/issues/new/choose) to let us know.
 
-The makefile included with the Terraform AWS Provider allows you to run many of the CI tests locally before submitting your PR. The file is located in the provider's root directory and is called `GNUmakefile`. You should be able to use `make` with a variety of Linux-type shells that support `bash`, such as a MacOS terminal.
+The Makefile included with the Terraform AWS Provider allows you to run many of the CI tests locally before submitting your PR. The file is located in the provider's root directory and is called `GNUmakefile`. You should be able to use `make` with a variety of Linux-type shells that support `bash`, such as a MacOS terminal.
 
 There are many different tests and they change often. This guide doesn't cover everything CI does because, as noted above, many of the CI processes enrich the pull request, such as adding labels. If you notice something important that isn't reflected in this documentation, let us know!
 
@@ -39,7 +39,7 @@ CI tests run on GitHub when you run a pull request. However, these can take a wh
 Use the `tools` target to install a variety of tools used by different CI tests:
 
 ```console
-% make tools
+make tools
 ```
 
 ### Running All Available CI Tests
@@ -47,7 +47,7 @@ Use the `tools` target to install a variety of tools used by different CI tests:
 Use the `ci` target to run all the tests below:
 
 ```console
-% make ci
+make ci
 ```
 
 **NOTE:** Depending on your machine, running all the tests can take a long time!
@@ -55,13 +55,13 @@ Use the `ci` target to run all the tests below:
 To run most of the tests but not the longer-running tests, use the `ci-quick` target. "Quick" may not be _quick_ precisely but, relative to the full `ci` target, is _quicker_:
 
 ```console
-% make ci-quick
+make ci-quick
 ```
 
 Use the `clean-make-tests` target to clean up artifacts that `make` tests leave behind, although they should be ignored by Git:
 
 ```console
-% make clean-make-tests
+make clean-make-tests
 ```
 
 ### Acceptance Test Linting
@@ -73,7 +73,7 @@ Acceptance Test Linting has two components: `terrafmt` and `tflint`. `make` has 
 Use the `acctest-lint` target to run all the Acceptance Test Linting checks using both `terrafmt` and `tflint`:
 
 ```console
-% make acctest-lint
+make acctest-lint
 ```
 
 You can limit the test to a service package by using the `PKG` environment variable:
@@ -93,13 +93,13 @@ The command above is equivalent to using `SVC_DIR` and the whole relative path:
 Use the `testacc-lint` target to run only the `terrafmt` test (`tflint` takes a long time to run):
 
 ```console
-% make testacc-lint
+make testacc-lint
 ```
 
 Use the `testacc-lint-fix` target to automatically fix issues found with `terrafmt`:
 
 ```console
-% make testacc-lint-fix
+make testacc-lint-fix
 ```
 
 #### Validate Acceptance Tests (`tflint`)
@@ -107,31 +107,29 @@ Use the `testacc-lint-fix` target to automatically fix issues found with `terraf
 Use the `testacc-tflint` target to run only the `tflint` test (`tflint` takes a long time to run):
 
 ```console
-% make testacc-tflint
+make testacc-tflint
 ```
 
-### Copyright Checks
+### Copyright Checks / copywrite
 
 This CI check simply checks to make sure after running the tool, no files have been modified. No modifications signifies that everything already has the proper header.
 
 Use the `copyright` target to add the appropriate copyright headers to all files:
 
 ```console
-% make copyright
+make copyright
 ```
 
 **NOTE:** Install [tools](#before-running-tests) before running this check.
 
-### Dependency Checks
+### Dependency Checks / go_mod
 
 Dependency checks include a variety of tests including who should edit certain types of files. The test that generally trips people up is `go_mod`.
-
-#### `go_mod`
 
 Use the `deps-check` target to make sure that the Go mods files are tidy. This will also install the version of Go defined in the `.go-version` file in the root of the repository.
 
 ```console
-% make deps-check
+make deps-check
 ```
 
 ### Documentation Checks
@@ -143,7 +141,7 @@ Use the `deps-check` target to make sure that the Go mods files are tidy. This w
 Use the target `docs-link-check` to check links found in the contributor documentation:
 
 ```console
-% make docs-link-check
+make docs-link-check
 ```
 
 **NOTE:** Install [Docker](https://docs.docker.com/desktop/install/mac-install/) to run this check.
@@ -153,7 +151,7 @@ Use the target `docs-link-check` to check links found in the contributor documen
 Use the target `docs-markdown-lint` to lint the contributor documentation:
 
 ```console
-% make docs-markdown-lint
+make docs-markdown-lint
 ```
 
 **NOTE:** Install [Docker](https://docs.docker.com/desktop/install/mac-install/) to run this check.
@@ -163,7 +161,7 @@ Use the target `docs-markdown-lint` to lint the contributor documentation:
 Use the target `docs-misspell` to spellcheck the contributor documentation:
 
 ```console
-% make docs-misspell
+make docs-misspell
 ```
 
 **NOTE:** Install [tools](#before-running-tests) before running this check.
@@ -177,7 +175,7 @@ These checks help ensure that examples included with the provider are correct.
 Use the target `examples-tflint` to lint the examples:
 
 ```console
-% make examples-tflint
+make examples-tflint
 ```
 
 **NOTE:** Install [tools](#before-running-tests) before running this check.
@@ -203,7 +201,7 @@ Before running these checks locally, you need to install golangci-lint locally. 
 Use the target `golangci-lint` to run both checks sequentially:
 
 ```console
-% make golangci-lint
+make golangci-lint
 ```
 
 You can limit the checks to a specific service package. For example:
@@ -217,7 +215,7 @@ You can limit the checks to a specific service package. For example:
 Use the `golangci-lint1` target to run only the first step of these checks:
 
 ```console
-% make golangci-lint1
+make golangci-lint1
 ```
 
 #### 2 of 2
@@ -225,7 +223,7 @@ Use the `golangci-lint1` target to run only the first step of these checks:
 Use the `golangci-lint2` target to run only the second step of these checks:
 
 ```console
-% make golangci-lint2
+make golangci-lint2
 ```
 
 **Tip:** Running the second step against the entire codebase often takes the longest of all CI tests. If you're only working in one service package, you can save a lot of time limiting the scan to that service:
@@ -247,7 +245,7 @@ This check verifies that preferred library versions are used in development of n
 Use the `preferred-lib` target to check your changes against the `origin/main` of your Git repository (configurable using `BASE_REF`):
 
 ```console
-% make preferred-lib
+make preferred-lib
 ```
 
 ### Provider Checks
@@ -263,13 +261,13 @@ There are two ways to run this check that are basically equivalent.
 Use the `go-build` target to build the provider using `go build`, installing the provider in the `terraform-plugin-dir` directory:
 
 ```console
-% make go-build
+make go-build
 ```
 
 Similarly, use the `build` target to install the provider binary locally using `go install`:
 
 ```console
-% make build
+make build
 ```
 
 #### go_generate
@@ -279,13 +277,13 @@ Similarly, use the `build` target to install the provider binary locally using `
 Use the `gen-check` target to run the check:
 
 ```console
-% make gen-check
+make gen-check
 ```
 
 Use the `gen` target to run all the generators associated with the provider. Unless you're working on the generators or have inadvertently edited generated code, there should be no changes to the codebase after the generators finish:
 
 ```console
-% make gen
+make gen
 ```
 
 **NOTE:** While running the generators, you may see hundreds or thousands of code changes as `make` and the generators delete and recreate files.
@@ -297,7 +295,7 @@ Use the `gen` target to run all the generators associated with the provider. Unl
 Use the `test` target to run this test:
 
 ```console
-% make test
+make test
 ```
 
 You can limit `test` to a single service package with the `PKG` environment variable:
@@ -317,7 +315,7 @@ To run this check locally, you will need to install `impi`, which is done as par
 Use the `import-lint` target to run `impi` with the appropriate parameters:
 
 ```console
-% make import-lint
+make import-lint
 ```
 
 #### markdown-lint
@@ -333,7 +331,7 @@ This particular check uses [markdownlint](https://github.com/DavidAnson/markdown
 Use the `provider-markdown-lint` target to run this test:
 
 ```console
-% make provider-markdown-lint
+make provider-markdown-lint
 ```
 
 **NOTE:** Install [Docker](https://docs.docker.com/desktop/install/mac-install/) to run this check.
@@ -343,7 +341,7 @@ Use the `provider-markdown-lint` target to run this test:
 Use `go-misspell` to check the provider code for misspellings:
 
 ```console
-% make go-misspell
+make go-misspell
 ```
 
 **NOTE:** Install [tools](#before-running-tests) before running this check.
@@ -365,7 +363,7 @@ This test builds the provider binary, loads the provider with Terraform, generat
 Use the `tfproviderdocs` target to run this test:
 
 ```console
-% make tfproviderdocs
+make tfproviderdocs
 ```
 
 #### Sweeper Functions Not Linked
@@ -375,7 +373,7 @@ This check builds the Terraform AWS Provider in two different configurations, wi
 Use the `sweeper-check` target to run both tests:
 
 ```console
-% make sweeper-check
+make sweeper-check
 ```
 
 You can also run the checks separately.
@@ -383,13 +381,13 @@ You can also run the checks separately.
 Use the `sweeper-linked` target to ensure sweeper are included in a sweeper build:
 
 ```console
-% make sweeper-linked
+make sweeper-linked
 ```
 
 Use the `sweeper-unlinked` target to ensure sweeper are not included in a normal build:
 
 ```console
-% make sweeper-unlinked
+make sweeper-unlinked
 ```
 
 ### ProviderLint Checks / providerlint
@@ -399,7 +397,7 @@ ProviderLint checks for a variety of best practices. For more details on specifi
 Use the `provider-lint` target to run the check just as it runs in CI:
 
 ```console
-% make provider-lint
+make provider-lint
 ```
 
 ### Semgrep Checks
@@ -419,7 +417,7 @@ This scan looks for a hodgepodge of issues, best practices, and problems we've f
 Use the `semgrep-code-quality` target to run the same check CI runs:
 
 ```console
-% make semgrep-code-quality
+make semgrep-code-quality
 ```
 
 You can limit the scan to a service package by using the `PKG` environment variable:
@@ -435,7 +433,7 @@ Idiomatic Go uses [_mixed caps_](naming.md#mixed_caps) for multiword names, not 
 Use the `semgrep-naming-cae` target to run the same check CI runs:
 
 ```console
-% make semgrep-naming-cae
+make semgrep-naming-cae
 ```
 
 You can limit the scan to a service package by using the `PKG` environment variable:
@@ -451,7 +449,7 @@ This scan ensures that AWS service names are used fairly consistently from one s
 Use the `semgrep-service-naming` target to run the same check CI runs:
 
 ```console
-% make semgrep-service-naming
+make semgrep-service-naming
 ```
 
 You can limit the scan to a service package by using the `PKG` environment variable:
@@ -467,7 +465,7 @@ This scan checks for consistency in naming of test-related functions.
 Use the `semgrep-naming` target to run the same check CI runs:
 
 ```console
-% make semgrep-naming
+make semgrep-naming
 ```
 
 You can limit the scan to a service package by using the `PKG` environment variable:
@@ -481,7 +479,7 @@ You can limit the scan to a service package by using the `PKG` environment varia
 Use the `skaff-check-compile` target to test building Skaff:
 
 ```console
-% make skaff-check-compile
+make skaff-check-compile
 ```
 
 ### Website Checks
@@ -493,7 +491,7 @@ These checks help ensure that user-facing documentation on the website is correc
 Use the target `website-link-check-markdown` to check links found in the website:
 
 ```console
-% make website-link-check-markdown
+make website-link-check-markdown
 ```
 
 **NOTE:** Install [Docker](https://docs.docker.com/desktop/install/mac-install/) to run this check.
@@ -507,7 +505,7 @@ This range is also checked as part of the "a-h" check above.
 Use the target `website-link-check-md` to check links found in the website:
 
 ```console
-% make website-link-check-md
+make website-link-check-md
 ```
 
 **NOTE:** Install [Docker](https://docs.docker.com/desktop/install/mac-install/) to run this check.
@@ -517,7 +515,7 @@ Use the target `website-link-check-md` to check links found in the website:
 Use the target `website-markdown-lint` to lint the website documentation:
 
 ```console
-% make website-markdown-lint
+make website-markdown-lint
 ```
 
 **NOTE:** Install [Docker](https://docs.docker.com/desktop/install/mac-install/) to run this check.
@@ -527,7 +525,7 @@ Use the target `website-markdown-lint` to lint the website documentation:
 Use the target `website-misspell` to spellcheck the documentation:
 
 ```console
-% make website-misspell
+make website-misspell
 ```
 
 **NOTE:** Install [tools](#before-running-tests) before running this check.
@@ -537,7 +535,7 @@ Use the target `website-misspell` to spellcheck the documentation:
 Use the target `website-terrafmt` to check formatting of Terraform configuration in documentation:
 
 ```console
-% make website-terrafmt
+make website-terrafmt
 ```
 
 **NOTE:** Install [tools](#before-running-tests) before running this check.
@@ -547,7 +545,17 @@ Use the target `website-terrafmt` to check formatting of Terraform configuration
 Use the target `website-tflint` to check formatting of Terraform configuration in documentation:
 
 ```console
-% make website-tflint
+make website-tflint
+```
+
+**NOTE:** Install [tools](#before-running-tests) before running this check.
+
+### Workflow Linting / actionlint
+
+Use the `gh-workflow-lint` target to perform the check:
+
+```console
+make gh-workflow-lint
 ```
 
 **NOTE:** Install [tools](#before-running-tests) before running this check.
@@ -565,5 +573,5 @@ To run YAMLlist locally using `make`, you'll need to install it locally. On MacO
 Use the `yamllint` target to perform the check:
 
 ```console
-% make yamllint
+make yamllint
 ```
