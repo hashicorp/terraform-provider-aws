@@ -42,6 +42,9 @@ import (
 
 // @SDKResource("aws_s3_object", name="Object")
 // @Tags(identifierAttribute="arn", resourceType="Object")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3;s3.GetObjectOutput")
+// @Testing(importStateIdFunc=testAccObjectImportStateIdFunc)
+// @Testing(importIgnore="force_destroy")
 func resourceObject() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceObjectCreate,
