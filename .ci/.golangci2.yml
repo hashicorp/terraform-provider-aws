@@ -159,7 +159,7 @@ linters-settings:
   dogsled:
     max-blank-identifiers: 3
   errcheck:
-    ignore: github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema:ForceNew|Set,fmt:.*,io:Close
+    exclude-functions: github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema:ForceNew|Set,fmt:.*,io:Close
   errorlint:
     errorf: false
   goconst:
