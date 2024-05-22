@@ -41,7 +41,8 @@ import (
 
 // @SDKResource("aws_instance", name="Instance")
 // @Tags(identifierAttribute="id")
-// @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.Instance")
+// @Testing(importIgnore="user_data_replace_on_change")
 func ResourceInstance() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
