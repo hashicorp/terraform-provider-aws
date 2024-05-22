@@ -6,7 +6,7 @@ require (
 	github.com/ProtonMail/go-crypto v1.1.0-alpha.2
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.53.5
+	github.com/aws/aws-sdk-go v1.53.7
 	github.com/aws/aws-sdk-go-v2 v1.27.0
 	github.com/aws/aws-sdk-go-v2/config v1.27.15
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.15
@@ -34,7 +34,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/batch v1.37.3
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.3.7
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.8.4
-	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.10.3
+	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.11.0
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.23.3
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.1.8
 	github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.15.8
@@ -65,7 +65,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.34.4
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.46.8
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.17.3
-	github.com/aws/aws-sdk-go-v2/service/controltower v1.13.9
+	github.com/aws/aws-sdk-go-v2/service/controltower v1.14.0
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.23.7
 	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.38.3
 	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.4.7
@@ -75,6 +75,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dax v1.19.7
 	github.com/aws/aws-sdk-go-v2/service/devopsguru v1.30.7
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.24.7
+	github.com/aws/aws-sdk-go-v2/service/dlm v1.24.7
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.9.6
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.32.3
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.161.3
@@ -111,7 +112,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.54.3
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.3.7
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.43.7
-	github.com/aws/aws-sdk-go-v2/service/lightsail v1.37.3
+	github.com/aws/aws-sdk-go-v2/service/lightsail v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.27.7
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.13.3
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.28.7
@@ -126,7 +127,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/oam v1.11.3
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.11.10
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.27.6
-	github.com/aws/aws-sdk-go-v2/service/osis v1.8.7
+	github.com/aws/aws-sdk-go-v2/service/osis v1.9.0
 	github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.10.3
 	github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.5.7
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.11.7
@@ -136,7 +137,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.21.7
 	github.com/aws/aws-sdk-go-v2/service/ram v1.25.7
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.16.7
-	github.com/aws/aws-sdk-go-v2/service/rds v1.78.3
+	github.com/aws/aws-sdk-go-v2/service/rds v1.79.1
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.44.3
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.25.7
 	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.18.3
@@ -151,7 +152,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.54.2
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.44.9
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.8.7
-	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.28.9
+	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.29.0
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.48.3
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.13.6
 	github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.26.7
@@ -188,7 +189,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1
 	github.com/gertd/go-pluralize v0.2.1
 	github.com/google/go-cmp v0.6.0
-	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.22.0
+	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.23.0
 	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.53
 	github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2 v2.0.0-beta.54
 	github.com/hashicorp/awspolicyequivalence v1.6.0

@@ -10,8 +10,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -160,7 +160,7 @@ func TestAccSiteVPNConnection_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
-	var vpn ec2.VpnConnection
+	var vpn awstypes.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -257,7 +257,7 @@ func TestAccSiteVPNConnection_withoutTGWorVGW(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
-	var vpn ec2.VpnConnection
+	var vpn awstypes.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -352,7 +352,7 @@ func TestAccSiteVPNConnection_cloudWatchLogOptions(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
-	var vpn ec2.VpnConnection
+	var vpn awstypes.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -399,7 +399,7 @@ func TestAccSiteVPNConnection_cloudWatchLogOptions(t *testing.T) {
 
 func TestAccSiteVPNConnection_transitGatewayID(t *testing.T) {
 	ctx := acctest.Context(t)
-	var vpn ec2.VpnConnection
+	var vpn awstypes.VpnConnection
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
@@ -434,7 +434,7 @@ func TestAccSiteVPNConnection_tunnel1InsideCIDR(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
-	var vpn ec2.VpnConnection
+	var vpn awstypes.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -464,7 +464,7 @@ func TestAccSiteVPNConnection_tunnel1InsideIPv6CIDR(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
-	var vpn ec2.VpnConnection
+	var vpn awstypes.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -502,7 +502,7 @@ func TestAccSiteVPNConnection_tunnel1PreSharedKey(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
-	var vpn ec2.VpnConnection
+	var vpn awstypes.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -533,7 +533,7 @@ func TestAccSiteVPNConnection_tunnelOptions(t *testing.T) {
 	badCidrRangeErr := regexache.MustCompile(`expected \w+ to not be any of \[[\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/30\s?]+\]`)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
-	var vpn ec2.VpnConnection
+	var vpn awstypes.VpnConnection
 
 	tunnel1 := TunnelOptions{
 		psk:                          "12345678",
@@ -667,7 +667,7 @@ func TestAccSiteVPNConnection_tunnelOptionsLesser(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
-	var vpn1, vpn2, vpn3, vpn4, vpn5 ec2.VpnConnection
+	var vpn1, vpn2, vpn3, vpn4, vpn5 awstypes.VpnConnection
 
 	tunnel1 := TunnelOptions{
 		psk:                          "12345678",
@@ -1226,7 +1226,7 @@ func TestAccSiteVPNConnection_staticRoutes(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
-	var vpn ec2.VpnConnection
+	var vpn awstypes.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -1256,7 +1256,7 @@ func TestAccSiteVPNConnection_outsideAddressTypePrivate(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
-	var vpn ec2.VpnConnection
+	var vpn awstypes.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -1286,7 +1286,7 @@ func TestAccSiteVPNConnection_outsideAddressTypePublic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
-	var vpn ec2.VpnConnection
+	var vpn awstypes.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -1316,7 +1316,7 @@ func TestAccSiteVPNConnection_enableAcceleration(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
-	var vpn ec2.VpnConnection
+	var vpn awstypes.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -1346,7 +1346,7 @@ func TestAccSiteVPNConnection_ipv6(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
-	var vpn ec2.VpnConnection
+	var vpn awstypes.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -1375,7 +1375,7 @@ func TestAccSiteVPNConnection_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
-	var vpn ec2.VpnConnection
+	var vpn awstypes.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -1423,7 +1423,7 @@ func TestAccSiteVPNConnection_specifyIPv4(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
-	var vpn ec2.VpnConnection
+	var vpn awstypes.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -1462,7 +1462,7 @@ func TestAccSiteVPNConnection_specifyIPv6(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
-	var vpn ec2.VpnConnection
+	var vpn awstypes.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -1487,7 +1487,7 @@ func TestAccSiteVPNConnection_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
-	var vpn ec2.VpnConnection
+	var vpn awstypes.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -1513,7 +1513,7 @@ func TestAccSiteVPNConnection_updateCustomerGatewayID(t *testing.T) {
 	rBgpAsn1 := sdkacctest.RandIntRange(64512, 65534)
 	rBgpAsn2 := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
-	var vpn1, vpn2 ec2.VpnConnection
+	var vpn1, vpn2 awstypes.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -1551,7 +1551,7 @@ func TestAccSiteVPNConnection_updateVPNGatewayID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
-	var vpn1, vpn2 ec2.VpnConnection
+	var vpn1, vpn2 awstypes.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -1589,7 +1589,7 @@ func TestAccSiteVPNConnection_updateTransitGatewayID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
-	var vpn1, vpn2 ec2.VpnConnection
+	var vpn1, vpn2 awstypes.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTransitGateway(ctx, t) },
@@ -1629,7 +1629,7 @@ func TestAccSiteVPNConnection_vpnGatewayIDToTransitGatewayID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
-	var vpn1, vpn2 ec2.VpnConnection
+	var vpn1, vpn2 awstypes.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -1669,7 +1669,7 @@ func TestAccSiteVPNConnection_transitGatewayIDToVPNGatewayID(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_vpn_connection.test"
-	var vpn1, vpn2 ec2.VpnConnection
+	var vpn1, vpn2 awstypes.VpnConnection
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -1706,7 +1706,7 @@ func TestAccSiteVPNConnection_transitGatewayIDToVPNGatewayID(t *testing.T) {
 
 func testAccCheckVPNConnectionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpn_connection" {
@@ -1730,7 +1730,7 @@ func testAccCheckVPNConnectionDestroy(ctx context.Context) resource.TestCheckFun
 	}
 }
 
-func testAccVPNConnectionExists(ctx context.Context, n string, v *ec2.VpnConnection) resource.TestCheckFunc {
+func testAccVPNConnectionExists(ctx context.Context, n string, v *awstypes.VpnConnection) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1741,7 +1741,7 @@ func testAccVPNConnectionExists(ctx context.Context, n string, v *ec2.VpnConnect
 			return fmt.Errorf("No EC2 VPN Connection ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindVPNConnectionByID(ctx, conn, rs.Primary.ID)
 
@@ -1755,9 +1755,9 @@ func testAccVPNConnectionExists(ctx context.Context, n string, v *ec2.VpnConnect
 	}
 }
 
-func testAccCheckVPNConnectionNotRecreated(before, after *ec2.VpnConnection) resource.TestCheckFunc {
+func testAccCheckVPNConnectionNotRecreated(before, after *awstypes.VpnConnection) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if before, after := aws.StringValue(before.VpnConnectionId), aws.StringValue(after.VpnConnectionId); before != after {
+		if before, after := aws.ToString(before.VpnConnectionId), aws.ToString(after.VpnConnectionId); before != after {
 			return fmt.Errorf("Expected EC2 VPN Connection IDs not to change, but got before: %s, after: %s", before, after)
 		}
 

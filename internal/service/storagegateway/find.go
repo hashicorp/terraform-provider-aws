@@ -10,38 +10,21 @@ import (
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindLocalDiskByDiskID(ctx context.Context, conn *storagegateway.StorageGateway, gatewayARN string, diskID string) (*storagegateway.Disk, error) {
-	input := &storagegateway.ListLocalDisksInput{
-		GatewayARN: aws.String(gatewayARN),
-	}
-
-	output, err := conn.ListLocalDisksWithContext(ctx, input)
+func findLocalDisk(ctx context.Context, conn *storagegateway.StorageGateway, input *storagegateway.ListLocalDisksInput, filter tfslices.Predicate[*storagegateway.Disk]) (*storagegateway.Disk, error) {
+	output, err := findLocalDisks(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil {
-		return nil, nil
-	}
-
-	for _, disk := range output.Disks {
-		if aws.StringValue(disk.DiskId) == diskID {
-			return disk, nil
-		}
-	}
-
-	return nil, nil
+	return tfresource.AssertSinglePtrResult(output)
 }
 
-func FindLocalDiskByDiskPath(ctx context.Context, conn *storagegateway.StorageGateway, gatewayARN string, diskPath string) (*storagegateway.Disk, error) {
-	input := &storagegateway.ListLocalDisksInput{
-		GatewayARN: aws.String(gatewayARN),
-	}
-
+func findLocalDisks(ctx context.Context, conn *storagegateway.StorageGateway, input *storagegateway.ListLocalDisksInput, filter tfslices.Predicate[*storagegateway.Disk]) ([]*storagegateway.Disk, error) {
 	output, err := conn.ListLocalDisksWithContext(ctx, input)
 
 	if err != nil {
@@ -49,16 +32,30 @@ func FindLocalDiskByDiskPath(ctx context.Context, conn *storagegateway.StorageGa
 	}
 
 	if output == nil {
-		return nil, nil
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	for _, disk := range output.Disks {
-		if aws.StringValue(disk.DiskPath) == diskPath {
-			return disk, nil
-		}
+	return tfslices.Filter(output.Disks, filter), nil
+}
+
+func findLocalDiskByGatewayARNAndDiskID(ctx context.Context, conn *storagegateway.StorageGateway, gatewayARN, diskID string) (*storagegateway.Disk, error) {
+	input := &storagegateway.ListLocalDisksInput{
+		GatewayARN: aws.String(gatewayARN),
 	}
 
-	return nil, nil
+	return findLocalDisk(ctx, conn, input, func(v *storagegateway.Disk) bool {
+		return aws.StringValue(v.DiskId) == diskID
+	})
+}
+
+func findLocalDiskByGatewayARNAndDiskPath(ctx context.Context, conn *storagegateway.StorageGateway, gatewayARN, diskPath string) (*storagegateway.Disk, error) {
+	input := &storagegateway.ListLocalDisksInput{
+		GatewayARN: aws.String(gatewayARN),
+	}
+
+	return findLocalDisk(ctx, conn, input, func(v *storagegateway.Disk) bool {
+		return aws.StringValue(v.DiskPath) == diskPath
+	})
 }
 
 func FindUploadBufferDisk(ctx context.Context, conn *storagegateway.StorageGateway, gatewayARN string, diskID string) (*string, error) {

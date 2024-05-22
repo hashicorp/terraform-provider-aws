@@ -213,6 +213,7 @@ const (
 )
 
 func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
@@ -230,19 +231,20 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	out, err := conn.CreateTargetGroup(ctx, in)
 
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameService, name, err)
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionCreating, ResNameService, name, err)
 	}
 
 	d.SetId(aws.ToString(out.Id))
 
 	if _, err := waitTargetGroupCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionWaitingForCreation, ResNameTargetGroup, d.Id(), err)
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionWaitingForCreation, ResNameTargetGroup, d.Id(), err)
 	}
 
-	return resourceTargetGroupRead(ctx, d, meta)
+	return append(diags, resourceTargetGroupRead(ctx, d, meta)...)
 }
 
 func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	out, err := FindTargetGroupByID(ctx, conn, d.Id())
@@ -250,17 +252,17 @@ func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] VpcLattice Target Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionReading, ResNameTargetGroup, d.Id(), err)
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionReading, ResNameTargetGroup, d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, out.Arn)
 	if out.Config != nil {
 		if err := d.Set("config", []interface{}{flattenTargetGroupConfig(out.Config)}); err != nil {
-			return create.DiagError(names.VPCLattice, create.ErrActionSetting, ResNameTargetGroup, d.Id(), err)
+			return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionSetting, ResNameTargetGroup, d.Id(), err)
 		}
 	} else {
 		d.Set("config", nil)
@@ -269,10 +271,11 @@ func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set(names.AttrStatus, out.Status)
 	d.Set(names.AttrType, out.Type)
 
-	return nil
+	return diags
 }
 
 func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
@@ -291,24 +294,25 @@ func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		if in.HealthCheck == nil {
-			return nil
+			return diags
 		}
 
 		out, err := conn.UpdateTargetGroup(ctx, in)
 
 		if err != nil {
-			return create.DiagError(names.VPCLattice, create.ErrActionUpdating, ResNameTargetGroup, d.Id(), err)
+			return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionUpdating, ResNameTargetGroup, d.Id(), err)
 		}
 
 		if _, err := waitTargetGroupUpdated(ctx, conn, aws.ToString(out.Id), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return create.DiagError(names.VPCLattice, create.ErrActionWaitingForUpdate, ResNameTargetGroup, d.Id(), err)
+			return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionWaitingForUpdate, ResNameTargetGroup, d.Id(), err)
 		}
 	}
 
-	return resourceTargetGroupRead(ctx, d, meta)
+	return append(diags, resourceTargetGroupRead(ctx, d, meta)...)
 }
 
 func resourceTargetGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	log.Printf("[INFO] Deleting VpcLattice TargetGroup: %s", d.Id())
@@ -319,17 +323,17 @@ func resourceTargetGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return nil
+			return diags
 		}
 
-		return create.DiagError(names.VPCLattice, create.ErrActionDeleting, ResNameTargetGroup, d.Id(), err)
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionDeleting, ResNameTargetGroup, d.Id(), err)
 	}
 
 	if _, err := waitTargetGroupDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionWaitingForDeletion, ResNameTargetGroup, d.Id(), err)
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionWaitingForDeletion, ResNameTargetGroup, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func waitTargetGroupCreated(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.CreateTargetGroupOutput, error) {

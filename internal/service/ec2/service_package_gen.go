@@ -5,11 +5,6 @@ package ec2
 import (
 	"context"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	ec2_sdkv1 "github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -94,6 +89,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  dataSourceCustomerGateway,
 			TypeName: "aws_customer_gateway",
 			Name:     "Customer Gateway",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  DataSourceEBSDefaultKMSKey,
@@ -385,20 +381,25 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_vpc_endpoint_service",
 		},
 		{
-			Factory:  DataSourceIPAMPool,
+			Factory:  dataSourceIPAMPool,
 			TypeName: "aws_vpc_ipam_pool",
+			Name:     "IPAM Pool",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceIPAMPoolCIDRs,
+			Factory:  dataSourceIPAMPoolCIDRs,
 			TypeName: "aws_vpc_ipam_pool_cidrs",
+			Name:     "IPAM Pool CIDRs",
 		},
 		{
-			Factory:  DataSourceIPAMPools,
+			Factory:  dataSourceIPAMPools,
 			TypeName: "aws_vpc_ipam_pools",
+			Name:     "IPAM Pools",
 		},
 		{
-			Factory:  DataSourceIPAMPreviewNextCIDR,
+			Factory:  dataSourceIPAMPreviewNextCIDR,
 			TypeName: "aws_vpc_ipam_preview_next_cidr",
+			Name:     "IPAM Preview Next CIDR",
 		},
 		{
 			Factory:  DataSourceVPCPeeringConnection,
@@ -416,6 +417,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  dataSourceVPNGateway,
 			TypeName: "aws_vpn_gateway",
 			Name:     "VPN Gateway",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 	}
 }
@@ -874,8 +876,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceMainRouteTableAssociation,
+			Factory:  resourceMainRouteTableAssociation,
 			TypeName: "aws_main_route_table_association",
+			Name:     "Main Route Table Association",
 		},
 		{
 			Factory:  ResourceNATGateway,
@@ -1099,7 +1102,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_vpc_endpoint_subnet_association",
 		},
 		{
-			Factory:  ResourceIPAM,
+			Factory:  resourceIPAM,
 			TypeName: "aws_vpc_ipam",
 			Name:     "IPAM",
 			Tags: &types.ServicePackageResourceTags{
@@ -1112,7 +1115,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "IPAM Organization Admin Account",
 		},
 		{
-			Factory:  ResourceIPAMPool,
+			Factory:  resourceIPAMPool,
 			TypeName: "aws_vpc_ipam_pool",
 			Name:     "IPAM Pool",
 			Tags: &types.ServicePackageResourceTags{
@@ -1120,19 +1123,22 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceIPAMPoolCIDR,
+			Factory:  resourceIPAMPoolCIDR,
 			TypeName: "aws_vpc_ipam_pool_cidr",
+			Name:     "IPAM Pool CIDR",
 		},
 		{
-			Factory:  ResourceIPAMPoolCIDRAllocation,
+			Factory:  resourceIPAMPoolCIDRAllocation,
 			TypeName: "aws_vpc_ipam_pool_cidr_allocation",
+			Name:     "IPAM Pool CIDR Allocation",
 		},
 		{
-			Factory:  ResourceIPAMPreviewNextCIDR,
+			Factory:  resourceIPAMPreviewNextCIDR,
 			TypeName: "aws_vpc_ipam_preview_next_cidr",
+			Name:     "IPAM Preview Next CIDR",
 		},
 		{
-			Factory:  ResourceIPAMResourceDiscovery,
+			Factory:  resourceIPAMResourceDiscovery,
 			TypeName: "aws_vpc_ipam_resource_discovery",
 			Name:     "IPAM Resource Discovery",
 			Tags: &types.ServicePackageResourceTags{
@@ -1140,7 +1146,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceIPAMResourceDiscoveryAssociation,
+			Factory:  resourceIPAMResourceDiscoveryAssociation,
 			TypeName: "aws_vpc_ipam_resource_discovery_association",
 			Name:     "IPAM Resource Discovery Association",
 			Tags: &types.ServicePackageResourceTags{
@@ -1148,7 +1154,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceIPAMScope,
+			Factory:  resourceIPAMScope,
 			TypeName: "aws_vpc_ipam_scope",
 			Name:     "IPAM Scope",
 			Tags: &types.ServicePackageResourceTags{
@@ -1223,24 +1229,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 
 func (p *servicePackage) ServicePackageName() string {
 	return names.EC2
-}
-
-// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*ec2_sdkv1.EC2, error) {
-	sess := config[names.AttrSession].(*session_sdkv1.Session)
-
-	return ec2_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config[names.AttrEndpoint].(string))})), nil
-}
-
-// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*ec2_sdkv2.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
-
-	return ec2_sdkv2.NewFromConfig(cfg, func(o *ec2_sdkv2.Options) {
-		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
-			o.BaseEndpoint = aws_sdkv2.String(endpoint)
-		}
-	}), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

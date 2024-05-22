@@ -109,6 +109,7 @@ const (
 )
 
 func resourceLanguageModelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
 	in := &transcribe.CreateLanguageModelInput{
@@ -136,19 +137,20 @@ func resourceLanguageModelCreate(ctx context.Context, d *schema.ResourceData, me
 	)
 
 	if err != nil {
-		return create.DiagError(names.Transcribe, create.ErrActionCreating, ResNameLanguageModel, d.Get("model_name").(string), err)
+		return create.AppendDiagError(diags, names.Transcribe, create.ErrActionCreating, ResNameLanguageModel, d.Get("model_name").(string), err)
 	}
 
 	d.SetId(aws.ToString(outputRaw.(*transcribe.CreateLanguageModelOutput).ModelName))
 
 	if _, err := waitLanguageModelCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.Transcribe, create.ErrActionWaitingForCreation, ResNameLanguageModel, d.Get("model_name").(string), err)
+		return create.AppendDiagError(diags, names.Transcribe, create.ErrActionWaitingForCreation, ResNameLanguageModel, d.Get("model_name").(string), err)
 	}
 
-	return resourceLanguageModelRead(ctx, d, meta)
+	return append(diags, resourceLanguageModelRead(ctx, d, meta)...)
 }
 
 func resourceLanguageModelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
 	out, err := FindLanguageModelByName(ctx, conn, d.Id())
@@ -156,11 +158,11 @@ func resourceLanguageModelRead(ctx context.Context, d *schema.ResourceData, meta
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Transcribe LanguageModel (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Transcribe, create.ErrActionReading, ResNameLanguageModel, d.Id(), err)
+		return create.AppendDiagError(diags, names.Transcribe, create.ErrActionReading, ResNameLanguageModel, d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -177,10 +179,10 @@ func resourceLanguageModelRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("model_name", out.ModelName)
 
 	if err := d.Set("input_data_config", flattenInputDataConfig(out.InputDataConfig)); err != nil {
-		return create.DiagError(names.Transcribe, create.ErrActionSetting, ResNameLanguageModel, d.Id(), err)
+		return create.AppendDiagError(diags, names.Transcribe, create.ErrActionSetting, ResNameLanguageModel, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceLanguageModelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -189,6 +191,7 @@ func resourceLanguageModelUpdate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceLanguageModelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
 	log.Printf("[INFO] Deleting Transcribe LanguageModel %s", d.Id())
@@ -199,14 +202,14 @@ func resourceLanguageModelDelete(ctx context.Context, d *schema.ResourceData, me
 
 	var resourceNotFoundException *types.NotFoundException
 	if errors.As(err, &resourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Transcribe, create.ErrActionDeleting, ResNameLanguageModel, d.Id(), err)
+		return create.AppendDiagError(diags, names.Transcribe, create.ErrActionDeleting, ResNameLanguageModel, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func waitLanguageModelCreated(ctx context.Context, conn *transcribe.Client, id string, timeout time.Duration) (*types.LanguageModel, error) {

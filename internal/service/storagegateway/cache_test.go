@@ -61,7 +61,7 @@ func TestDecodeCacheID(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		gatewayARN, diskID, err := tfstoragegateway.DecodeCacheID(tc.Input)
+		gatewayARN, diskID, err := tfstoragegateway.CacheParseResourceID(tc.Input)
 		if tc.ErrCount == 0 && err != nil {
 			t.Fatalf("expected %q not to trigger an error, received: %s", tc.Input, err)
 		}
@@ -148,7 +148,7 @@ func testAccCheckCacheExists(ctx context.Context, resourceName string) resource.
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn(ctx)
 
-		gatewayARN, diskID, err := tfstoragegateway.DecodeCacheID(rs.Primary.ID)
+		gatewayARN, diskID, err := tfstoragegateway.CacheParseResourceID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
