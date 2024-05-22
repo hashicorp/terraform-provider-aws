@@ -4,4 +4,8 @@
 package storagegateway
 
 // Exports for use in tests only.
-var ()
+var (
+	ResourceCache = resourceCache
+
+	CacheParseResourceID = cacheParseResourceID
+)

@@ -35,8 +35,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceCache,
+			Factory:  resourceCache,
 			TypeName: "aws_storagegateway_cache",
+			Name:     "Cache",
 		},
 		{
 			Factory:  ResourceCachediSCSIVolume,
