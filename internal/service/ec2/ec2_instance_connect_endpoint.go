@@ -31,7 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Instance Connect Endpoint")
+// @FrameworkResource("aws_ec2_instance_connect_endpoint", name="Instance Connect Endpoint")
 // @Tags(identifierAttribute="id")
 func newInstanceConnectEndpointResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &instanceConnectEndpointResource{}

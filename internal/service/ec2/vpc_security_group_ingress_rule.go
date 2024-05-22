@@ -40,7 +40,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Security Group Ingress Rule")
+// @FrameworkResource("aws_vpc_security_group_ingress_rule", name="Security Group Ingress Rule")
 // @Tags(identifierAttribute="id")
 func newSecurityGroupIngressRuleResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &securityGroupIngressRuleResource{}

@@ -26,7 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ebs_snapshot_import", name="EBS Snapshot")
+// @SDKResource("aws_ebs_snapshot_import", name="EBS Snapshot Import")
 // @Tags(identifierAttribute="id")
 func ResourceEBSSnapshotImport() *schema.Resource {
 	return &schema.Resource{

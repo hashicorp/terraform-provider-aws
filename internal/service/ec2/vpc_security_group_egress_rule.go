@@ -12,7 +12,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 )
 
-// @FrameworkResource(name="Security Group Egress Rule")
+// @FrameworkResource("aws_vpc_security_group_egress_rule", name="Security Group Egress Rule")
 // @Tags(identifierAttribute="id")
 func newSecurityGroupEgressRuleResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &securityGroupEgressRuleResource{}
