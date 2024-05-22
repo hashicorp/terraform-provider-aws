@@ -110,7 +110,7 @@ Use the `testacc-tflint` target to run only the `tflint` test (`tflint` takes a 
 make testacc-tflint
 ```
 
-### Copyright Checks / copywrite
+### Copyright Checks / add headers check
 
 This CI check simply checks to make sure after running the tool, no files have been modified. No modifications signifies that everything already has the proper header.
 

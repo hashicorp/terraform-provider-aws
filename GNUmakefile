@@ -165,8 +165,8 @@ clean-tidy: prereq-go ## Clean up tidy
 	$$gover mod tidy
 	@echo "make: Go mods tidied"
 
-copyright: ## [CI] Copyright Checks / copywrite
-	@echo "make: Copyright Checks / copywrite..."
+copyright: ## [CI] Copyright Checks / add headers check
+	@echo "make: Copyright Checks / add headers check..."
 	@copywrite headers
 
 deps-check: clean-tidy ## [CI] Dependency Checks / go_mod
@@ -225,7 +225,7 @@ docs-markdown-lint: ## [CI] Documentation Checks / markdown-lint
 
 docs-misspell: ## [CI] Documentation Checks / misspell
 	@echo "make: Documentation Checks / misspell..."
-	@misspell -error -source text -i copywrite docs/
+	@misspell -error -source text docs/
 
 examples-tflint: ## [CI] Examples Checks / tflint
 	@echo "make: Examples Checks / tflint..."
