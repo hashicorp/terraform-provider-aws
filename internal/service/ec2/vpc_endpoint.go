@@ -34,7 +34,7 @@ import (
 
 const (
 	// Maximum amount of time to wait for VPC Endpoint creation
-	VPCEndpointCreationTimeout = 10 * time.Minute
+	vpcEndpointCreationTimeout = 10 * time.Minute
 )
 
 // @SDKResource("aws_vpc_endpoint", name="VPC Endpoint")
@@ -185,7 +185,7 @@ func ResourceVPCEndpoint() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(VPCEndpointCreationTimeout),
+			Create: schema.DefaultTimeout(vpcEndpointCreationTimeout),
 			Update: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
@@ -266,7 +266,7 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	if _, err = WaitVPCEndpointAvailableV2(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitVPCEndpointAvailableV2(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPC Endpoint (%s) create: %s", serviceName, err)
 	}
 
@@ -291,7 +291,7 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	vpce, err := FindVPCEndpointByIDV2(ctx, conn, d.Id())
+	vpce, err := findVPCEndpointByIDV2(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] VPC Endpoint (%s) not found, removing from state", d.Id())
@@ -435,7 +435,7 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 			return sdkdiag.AppendErrorf(diags, "updating EC2 VPC Endpoint (%s): %s", d.Id(), err)
 		}
 
-		if _, err := WaitVPCEndpointAvailableV2(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waitVPCEndpointAvailableV2(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPC Endpoint (%s) update: %s", d.Id(), err)
 		}
 	}

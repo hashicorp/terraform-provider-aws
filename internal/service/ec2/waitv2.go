@@ -197,7 +197,7 @@ func waitVPCEndpointAcceptedV2(ctx context.Context, conn *ec2.Client, vpcEndpoin
 	return nil, err
 }
 
-func WaitVPCEndpointAvailableV2(ctx context.Context, conn *ec2.Client, vpcEndpointID string, timeout time.Duration) (*types.VpcEndpoint, error) {
+func waitVPCEndpointAvailableV2(ctx context.Context, conn *ec2.Client, vpcEndpointID string, timeout time.Duration) (*types.VpcEndpoint, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(vpcEndpointStatePending),
 		Target:     enum.Slice(vpcEndpointStateAvailable, vpcEndpointStatePendingAcceptance),
