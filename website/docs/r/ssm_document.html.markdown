@@ -100,16 +100,20 @@ resource "aws_ssm_document" "session_manager_prefs" {
   })
 }
 ```
+
 This document can be automatically created by editing the preferences through the UI and then cannot be deleted. If this happens, you must import the existing document where affected:
+
 ```
 import {
   to = aws_ssm_document.session_manager_prefs
   id = "SSM-SessionManagerRunShell"
 }
 ```
+
 #### SSM Preference Configurations
 
 **Cloudwatch logging:** You should attach the following policy to your EC2 instance role to allow the SSM agent to log SSM commands to cloudwatch:
+
 ```
 locals {
   ssm_log_arn=aws_cloudwatch_log_group.ssm_logs.arn
@@ -135,7 +139,6 @@ data "aws_iam_policy_document" "log_ssm" {
     ]
   }
 }
-
 ```
 
 ## Argument Reference
