@@ -77,4 +77,4 @@ jobs:
       - name: go mod
         run: |
           echo "Using make to check dependencies"
-          make depscheck
+          make deps-check
