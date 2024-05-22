@@ -22,8 +22,8 @@ github.com/apparentlymart/go-textseg/v15 v15.0.0 h1:uYvfpb3DyLSCGWnctWKGj857c6ew
 github.com/apparentlymart/go-textseg/v15 v15.0.0/go.mod h1:K8XmNZdhEBkdlyDdvbmmsvpAG721bKi0joRfFdHIWJ4=
 github.com/armon/go-radix v1.0.0 h1:F4z6KzEeeQIMeLFa97iZU6vupzoecKdU5TX24SNppXI=
 github.com/armon/go-radix v1.0.0/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
-github.com/aws/aws-sdk-go v1.53.6 h1:1/MYh/VmxdJu7v2bwvDA2JS30UI7bg62QYgQ7KxMa/Q=
-github.com/aws/aws-sdk-go v1.53.6/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
+github.com/aws/aws-sdk-go v1.53.7 h1:ZSsRYHLRxsbO2rJR2oPMz0SUkJLnBkN+1meT95B6Ixs=
+github.com/aws/aws-sdk-go v1.53.7/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
 github.com/aws/aws-sdk-go-v2 v1.27.0 h1:7bZWKoXhzI+mMR/HjdMx8ZCC5+6fY0lS5tr0bbgiLlo=
 github.com/aws/aws-sdk-go-v2 v1.27.0/go.mod h1:ffIFB97e2yNsv4aTSGkqtHnppsIJzw7G7BReUZ3jCXM=
 github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.2 h1:x6xsQXGSmW6frevwDA+vi/wqhp1ct18mVXYN08/93to=
@@ -170,8 +170,8 @@ github.com/aws/aws-sdk-go-v2/service/devopsguru v1.30.7 h1:BgCZN/sPtLXWAuzfQiZJp
 github.com/aws/aws-sdk-go-v2/service/devopsguru v1.30.7/go.mod h1:ERmOhkumDRsXsIGP9fnN1b07b2xuddDMrrvY0TBJS0k=
 github.com/aws/aws-sdk-go-v2/service/directoryservice v1.24.7 h1:fbem5k+YbLehrsaPiAtJ906y0uRCeSdQEEo+MCKuZps=
 github.com/aws/aws-sdk-go-v2/service/directoryservice v1.24.7/go.mod h1:M3AA3poDb81lQg+6foFui2wu9WcBqyBQ1hYrdZibCTc=
-github.com/aws/aws-sdk-go-v2/service/dlm v1.24.4 h1:udq27IzakAHiOQ2l4dH2ilAC3G05ZwOxgL/P/2kCYxI=
-github.com/aws/aws-sdk-go-v2/service/dlm v1.24.4/go.mod h1:EJBt+CfrSZQg3FaffIwMORNEdmUxpftD+hSrc1u9ML8=
+github.com/aws/aws-sdk-go-v2/service/dlm v1.24.7 h1:MyAJimTCETkpp1Chg3AmUdBgk2qaPssZ4ImN9outhYc=
+github.com/aws/aws-sdk-go-v2/service/dlm v1.24.7/go.mod h1:t/1+qS+wgYOcZRz81aWfNZ39tXIG1eIX1nZSMaruUps=
 github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.9.6 h1:YmJCnbaf+9jXhNH7CkofGJ0mzqKs4doDfS2/ceFCXd8=
 github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.9.6/go.mod h1:1WISQrak5Prrhvd7+NmkHWBVi+Jkn7DBZHFTtCTV4q0=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.32.3 h1:idREjl1I4PVmHSeRgwtvA7/xfQj/aN4rRHgHBq6pr5I=
@@ -254,8 +254,8 @@ github.com/aws/aws-sdk-go-v2/service/launchwizard v1.3.7 h1:HGhbHxCQjCzwMbdUhnEZ
 github.com/aws/aws-sdk-go-v2/service/launchwizard v1.3.7/go.mod h1:AcLbajLS+u9FBaUMtmpmsApQE6qLyAgvONATn1uaVZk=
 github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.43.7 h1:waSZhYKLgH2/TQuNdGKv4ggoURUwIiQ5lygrExYIT1E=
 github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.43.7/go.mod h1:Cl5/yYHDUHAT33F58Cz7y9SXxiX9lsyiKfuRUndG9Do=
-github.com/aws/aws-sdk-go-v2/service/lightsail v1.37.3 h1:ClOI0GZ62/I3MfSK9GO7dnqCLxz0QiMQOPRX+f+zvEs=
-github.com/aws/aws-sdk-go-v2/service/lightsail v1.37.3/go.mod h1:KHTaLdvivCfFDAE8jed5OogP1l+GYhrsaLTOV3honIQ=
+github.com/aws/aws-sdk-go-v2/service/lightsail v1.38.0 h1:XOJiL6SFhIl7x7iKWGvTzq+AZgDnc0gE4QQCtxmzqAg=
+github.com/aws/aws-sdk-go-v2/service/lightsail v1.38.0/go.mod h1:KHTaLdvivCfFDAE8jed5OogP1l+GYhrsaLTOV3honIQ=
 github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.27.7 h1:kgdco1V7dM7QOhN+6M012MWaja+p5+xZxvrEYo4lTKA=
 github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.27.7/go.mod h1:ADPndVbQrRq2wqPNE55lahcaWFxmSV/PvLhNLo5/cQw=
 github.com/aws/aws-sdk-go-v2/service/m2 v1.13.3 h1:WhgWxTSU1OXwS3/r9WEN9QH2mux/LSmvP2Un32BUkFc=
@@ -304,8 +304,8 @@ github.com/aws/aws-sdk-go-v2/service/ram v1.25.7 h1:FzWQcKbGbwxHswOmK3x7Pu9NBETs
 github.com/aws/aws-sdk-go-v2/service/ram v1.25.7/go.mod h1:FEskiEv7B5r4btFKOgRQOd5A/EOO8AKT+Ho13/bfxEM=
 github.com/aws/aws-sdk-go-v2/service/rbin v1.16.7 h1:bDjEmhExJrWXb8i9A0/loy8jMFB1XxJ+bUOOPOKsxC0=
 github.com/aws/aws-sdk-go-v2/service/rbin v1.16.7/go.mod h1:yKTVI0IIFBOUDPjVLEHY0YbhXUhClbE0jJpCjXPj5ng=
-github.com/aws/aws-sdk-go-v2/service/rds v1.79.0 h1:jsCQPzcOFYfQzTH5WRUNYoLkd37PliDeycnErc9ArAc=
-github.com/aws/aws-sdk-go-v2/service/rds v1.79.0/go.mod h1:/SU1vNf8MsUyfRkEkv3Hcz9y5uSTyBS+ohATQOj6ioQ=
+github.com/aws/aws-sdk-go-v2/service/rds v1.79.1 h1:OzwXMImfUSYfmAxtZB1LC0ZM5PayF7llq3I7SSPDxcY=
+github.com/aws/aws-sdk-go-v2/service/rds v1.79.1/go.mod h1:/SU1vNf8MsUyfRkEkv3Hcz9y5uSTyBS+ohATQOj6ioQ=
 github.com/aws/aws-sdk-go-v2/service/redshift v1.44.3 h1:oYbbT+jJPRr2VGJM/hQtvdIfccNKcxhnuRMMGtvyIp4=
 github.com/aws/aws-sdk-go-v2/service/redshift v1.44.3/go.mod h1:RBdqRNcEwsnGm/wzAllf6XwHX5xUB4Cl6H7UiSNqHqs=
 github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.25.7 h1:N8RS+VtQvQK08/8HGtfoVoLZjx4KidIoZPO6S5Rvmpk=

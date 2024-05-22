@@ -6,7 +6,7 @@ require (
 	github.com/ProtonMail/go-crypto v1.1.0-alpha.2
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.53.6
+	github.com/aws/aws-sdk-go v1.53.7
 	github.com/aws/aws-sdk-go-v2 v1.27.0
 	github.com/aws/aws-sdk-go-v2/config v1.27.15
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.15
@@ -75,7 +75,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dax v1.19.7
 	github.com/aws/aws-sdk-go-v2/service/devopsguru v1.30.7
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.24.7
-	github.com/aws/aws-sdk-go-v2/service/dlm v1.24.4
+	github.com/aws/aws-sdk-go-v2/service/dlm v1.24.7
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.9.6
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.32.3
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.161.3
@@ -112,7 +112,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.54.3
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.3.7
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.43.7
-	github.com/aws/aws-sdk-go-v2/service/lightsail v1.37.3
+	github.com/aws/aws-sdk-go-v2/service/lightsail v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.27.7
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.13.3
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.28.7
@@ -137,7 +137,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.21.7
 	github.com/aws/aws-sdk-go-v2/service/ram v1.25.7
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.16.7
-	github.com/aws/aws-sdk-go-v2/service/rds v1.79.0
+	github.com/aws/aws-sdk-go-v2/service/rds v1.79.1
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.44.3
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.25.7
 	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.18.3
