@@ -114,6 +114,8 @@ build: prereq-go fmt-check ## Build provider
 
 ci:  tools go-build gen-check acctest-lint copyright deps-check docs examples-tflint golangci-lint import-lint preferred-lib provider-lint provider-markdown-lint semgrep skaff-check-compile sweeper-check test tfproviderdocs website yamllint ## Run all CI checks
 
+ci-quick:  tools go-build testacc-lint copyright deps-check docs examples-tflint golangci-lint1 import-lint preferred-lib provider-lint provider-markdown-lint semgrep-code-quality semgrep-naming semgrep-naming-cae website-markdown-lint website-misspell website-terrafmt yamllint ## Run all CI checks
+
 clean: clean-make-tests clean-go clean-tidy build tools ## Clean up Go cache, tidy and re-install tools
 	@echo "make: clean complete"
 
@@ -340,6 +342,7 @@ misspell-changelog:
 	@misspell -error -source text CHANGELOG.md .changelog
 
 preferred-lib:
+	@echo "make: Preferred Library Version Check / diffgrep..."
 	@found=`git diff origin/$(BASE_REF) internal/ | grep '^\+\s*"github.com/aws/aws-sdk-go/'` ; \
 	if [ "$$found" != "" ] ; then \
 		echo "Found a new reference to github.com/aws/aws-sdk-go in the codebase. Please use the preferred library github.com/aws/aws-sdk-go-v2 instead." ; \
@@ -357,7 +360,7 @@ prereq-go: ## if $(GO_VER) is not installed, install it
 	fi
 
 provider-lint: ## Lint provider (via providerlint)
-	@echo "make: checking source code with providerlint..."
+	@echo "make: ProviderLint Checks / providerlint..."
 	@cd .ci/providerlint && go install -buildvcs=false .
 	@providerlint \
 		-c 1 \
@@ -531,18 +534,21 @@ semgrep-fix: semgrep-validate ## Run semgrep on all files
 
 semgrep-naming: semgrep-validate
 	@echo "make: Semgrep Checks / Test Configs Scan..."
+	@echo "make: running Semgrep checks locally (must have semgrep installed)"
 	@semgrep $(SEMGREP_ARGS) \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
 		--config .ci/.semgrep-configs.yml
 
-semgrep-naming-cae: semgrep-validate ## Run semgrep on all files
+semgrep-naming-cae: semgrep-validate
 	@echo "make: Semgrep Checks / Naming Scan Caps/AWS/EC2..."
+	@echo "make: running Semgrep checks locally (must have semgrep installed)"
 	@semgrep $(SEMGREP_ARGS) \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
 		--config .ci/.semgrep-caps-aws-ec2.yml
 
 semgrep-service-naming: semgrep-validate
 	@echo "make: Semgrep Checks / Service Name Scan A-Z..."
+	@echo "make: running Semgrep checks locally (must have semgrep installed)"
 	@semgrep $(SEMGREP_ARGS) \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
 		--config .ci/.semgrep-service-name0.yml \
@@ -825,6 +831,8 @@ yamllint: ## Lint YAML files (via yamllint)
 	awssdkpatch-apply \
 	awssdkpatch-gen \
 	build \
+	ci \
+	ci-quick \
 	clean \
 	clean-go \
 	clean-make-tests \
@@ -832,6 +840,7 @@ yamllint: ## Lint YAML files (via yamllint)
 	copyright \
 	default \
 	deps-check \
+	docs \
 	docs-check \
 	docs-link-check \
 	docs-lint \
@@ -870,6 +879,7 @@ yamllint: ## Lint YAML files (via yamllint)
 	semgrep-all \
 	semgrep-code-quality \
 	semgrep-constants \
+	semgrep-docker \
 	semgrep-fix \
 	semgrep-naming \
 	semgrep-naming-cae \
@@ -894,6 +904,7 @@ yamllint: ## Lint YAML files (via yamllint)
 	tfsdk2fw \
 	tools \
 	ts \
+	website \
 	website-link-check \
 	website-link-check-ghrc \
 	website-link-check-markdown \
