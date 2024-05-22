@@ -10,7 +10,9 @@ description: |-
 
 Terraform resource for managing an AWS Rekognition Stream Processor.
 
-~> **Note:** This resource must be configured specifically for your use case, and not all options are compatible with one another. See [Stream Processor API documentation](https://docs.aws.amazon.com/rekognition/latest/APIReference/API_CreateStreamProcessor.html#rekognition-CreateStreamProcessor-request-Input) for configuration information. Additionally, Stream Processors configued for Face Recognition cannot have _any_ properties updated after the fact.
+~> **Note:** This resource must be configured specifically for your use case, and not all options are compatible with one another. See [Stream Processor API documentation](https://docs.aws.amazon.com/rekognition/latest/APIReference/API_CreateStreamProcessor.html#rekognition-CreateStreamProcessor-request-Input) for configuration information.
+
+~> **Note:** Stream Processors configued for Face Recognition cannot have _any_ properties updated after the fact.
 
 ## Example Usage
 
