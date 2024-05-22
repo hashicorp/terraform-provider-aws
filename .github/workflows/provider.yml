@@ -79,7 +79,7 @@ jobs:
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
       - if: steps.cache-terraform-plugin-dir.outputs.cache-hit != 'true' || steps.cache-terraform-plugin-dir.outcome == 'failure'
         name: go build
-        run: make go_build
+        run: make go-build
 
   go_generate:
     name: go generate
@@ -143,7 +143,7 @@ jobs:
       - name: Go Test
         run: go test ./...
 
-  importlint:
+  import-lint:
     needs: [go_build]
     runs-on: ubuntu-latest
     steps:
