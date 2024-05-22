@@ -187,7 +187,7 @@ docs-check: ## Check provider documentation (Legacy, use caution)
 		-require-resource-subcategory
 
 docs-link-check: ## [CI] Documentation Checks / markdown-link-check
-	@echo "make: Documentation Checks / markdown-link-check\.\.\."
+	@echo "make: Documentation Checks / markdown-link-check..."
 	@docker run --rm \
 		-v "$(PWD):/markdown" \
 		ghcr.io/yakdriver/md-check-links:2.1.0 \
@@ -249,7 +249,7 @@ examples-tflint: ## [CI] Examples Checks / tflint
 fix-constants: fix-imports fmt semgrep-constants fix-imports fmt ## Use Semgrep to fix constants
 
 fix-imports: ## Fixing source code imports with goimports
-	@echo "make: Fixing source code imports with goimports\.\.\."
+	@echo "make: Fixing source code imports with goimports..."
 	@find internal -name "*.go" -type f -exec goimports -w {} \;
 
 fmt: ## Fix Go source formatting
@@ -306,7 +306,7 @@ go-build: ## [CI] Provider Checks / go-build
 	go build -o terraform-plugin-dir/registry.terraform.io/hashicorp/aws/99.99.99/$$os_arch/terraform-provider-aws .
 
 go-misspell: ## [CI] Provider Checks / misspell
-	@echo "make: Provider Checks / misspell\.\.\."
+	@echo "make: Provider Checks / misspell..."
 	@misspell -error -source auto -i "littel,ceasar" internal/
 
 golangci-lint: golangci-lint1 golangci-lint2 ## [CI] All golangci-lint Checks
@@ -336,14 +336,14 @@ lint: golangci-lint provider-lint import-lint ## Legacy target, use caution
 
 lint-fix: testacc-lint-fix website-lint-fix docs-lint-fix ## Fix all linter findings
 
-misspell: misspell-changelog docs-misspell website-misspell go-misspell ## [CI] Run all CI misspell checks
+misspell: changelog-misspell docs-misspell website-misspell go-misspell ## [CI] Run all CI misspell checks
 
-misspell-changelog: ## [CI] CHANGELOG Misspell / misspell
-	@echo "make: CHANGELOG Misspell / misspell\.\.\."
+changelog-misspell: ## [CI] CHANGELOG Misspell / misspell
+	@echo "make: CHANGELOG Misspell / misspell..."
 	@misspell -error -source text CHANGELOG.md .changelog
 
 preferred-lib: ## [CI] Preferred Library Version Check / diffgrep
-	@echo "make: Preferred Library Version Check / diffgrep\.\.\."
+	@echo "make: Preferred Library Version Check / diffgrep..."
 	@found=`git diff origin/$(BASE_REF) internal/ | grep '^\+\s*"github.com/aws/aws-sdk-go/'` ; \
 	if [ "$$found" != "" ] ; then \
 		echo "Found a new reference to github.com/aws/aws-sdk-go in the codebase. Please use the preferred library github.com/aws/aws-sdk-go-v2 instead." ; \
@@ -593,7 +593,7 @@ sweeper: prereq-go ## Run sweepers with failures allowed
 sweeper-check: sweeper-linked sweeper-unlinked ## [CI] Provider Checks / Sweeper Linked, Unlinked
 
 sweeper-linked: ## [CI] Provider Checks / Sweeper Functions Linked
-	@echo "make: Provider Checks / Sweeper Functions Linked\.\.\." ; \
+	@echo "make: Provider Checks / Sweeper Functions Linked..." ; \
 	go test -c -o ./sweeper-bin ./internal/sweep/ ; \
 	count=`strings ./sweeper-bin | \
 		grep --count --extended-regexp 'internal/service/[a-zA-Z0-9]+\.sweep[a-zA-Z0-9]+$$'` ; \
@@ -710,7 +710,7 @@ website-link-check-ghrc: ## Check website links with ghrc (Legacy, use caution)
 	@LINK_CHECK_CONTAINER="ghcr.io/tcort/markdown-link-check:stable" .ci/scripts/markdown-link-check.sh
 
 website-link-check-markdown: ## [CI] Website Checks / markdown-link-check-a-z-markdown
-	@echo "make: Website Checks / markdown-link-check-a-z-markdown\.\.\."
+	@echo "make: Website Checks / markdown-link-check-a-z-markdown..."
 	@docker run --rm \
 		-v "$(PWD):/markdown" \
 		ghcr.io/yakdriver/md-check-links:2.1.0 \
@@ -767,7 +767,7 @@ website-markdown-lint: ## [CI] Website Checks / markdown-lint
 
 website-misspell: ## [CI] Website Checks / misspell
 	@echo "make: Website Checks / misspell..."
-	@misspell -error -source text website/docs/d website/docs/functions website/docs/guides website/docs/r website/docs/index.html.markdown
+	@misspell -error -source text website/
 
 website-terrafmt: ## [CI] Website Checks / terrafmt
 	@echo "make: Website Checks / terrafmt..."
@@ -834,6 +834,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	awssdkpatch-gen \
 	awssdkpatch \
 	build \
+	changelog-misspell \
 	ci-quick \
 	ci \
 	clean-go \
@@ -870,7 +871,6 @@ yamllint: ## [CI] YAML Linting / yamllint
 	install \
 	lint-fix \
 	lint \
-	misspell-changelog \
 	misspell \
 	preferred-lib \
 	prereq-go \
