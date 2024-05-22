@@ -4,6 +4,4 @@
 package storagegateway
 
 // Exports for use in tests only.
-var (
-	Valid4ByteASN = valid4ByteASN
-)
+var ()
