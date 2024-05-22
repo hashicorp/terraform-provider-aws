@@ -112,6 +112,8 @@ build: prereq-go fmt-check ## Build provider
 	@echo "make: building provider..."
 	@$(GO_VER) install
 
+ci:  tools build gen-check acctest-lint copyright deps-check docs examples-tflint go-build golangci-lint import-lint preferred-lib provider-lint provider-markdown-lint semgrep skaff-check-compile sweeper-check test tfproviderdocs website yamllint ## Run all CI checks
+
 clean: clean-make-tests clean-go clean-tidy build tools ## Clean up Go cache, tidy and re-install tools
 	@echo "make: clean complete"
 
@@ -169,7 +171,10 @@ deps-check: clean-tidy ## Verify dependencies are tidy
 	@git diff --exit-code -- go.mod go.sum || \
 		(echo; echo "Unexpected difference in go.mod/go.sum files. Run 'go mod tidy' command or revert any go.mod/go.sum changes and commit."; exit 1)
 
+docs: docs-link-check docs-markdown-lint docs-misspell ## Run all documentation checks
+
 docs-check: ## Check provider documentation
+	@echo "make: legacy target, use caution..."
 	@tfproviderdocs check \
 		-allowed-resource-subcategories-file website/allowed-subcategories.txt \
 		-enable-contents-check \
@@ -452,9 +457,7 @@ sanity: prereq-go ## Run sanity checks with failures allowed
 		exit 1; \
 	fi
 
-semgrep: semgrep-validate ## Run semgrep
-	@echo "make: running Semgrep static analysis..."
-	@docker run --rm --volume "${PWD}:/src" returntocorp/semgrep semgrep --config .ci/.semgrep.yml --config .ci/.semgrep-constants.yml --config .ci/.semgrep-test-constants.yml
+semgrep: semgrep-code-quality semgrep-naming semgrep-naming-cae semgrep-service-naming
 
 semgrep-all: semgrep-validate ## Run semgrep on all files
 	@echo "make: running Semgrep checks locally (must have semgrep installed)..."
@@ -498,6 +501,10 @@ semgrep-constants: semgrep-validate
 	@semgrep $(SEMGREP_ARGS) --autofix \
 		--config .ci/.semgrep-constants.yml \
 		--config .ci/.semgrep-test-constants.yml
+
+semgrep-docker: semgrep-validate ## Run semgrep
+	@echo "make: legacy target, use caution..."
+	@docker run --rm --volume "${PWD}:/src" returntocorp/semgrep semgrep --config .ci/.semgrep.yml --config .ci/.semgrep-constants.yml --config .ci/.semgrep-test-constants.yml
 
 semgrep-fix: semgrep-validate ## Run semgrep on all files
 	@echo "make: running Semgrep checks locally (must have semgrep installed)..."
@@ -682,6 +689,8 @@ tools: prereq-go ## Install tools
 	@echo "make: tools installed"
 
 ts: testacc-short ## Alias to testacc-short
+
+website: website-link-check-markdown website-link-check-md website-markdown-lint website-misspell website-terrafmt website-tflint ## Run website checks
 
 website-link-check: ## Check website links
 	@echo "make: legacy target, use caution..."
