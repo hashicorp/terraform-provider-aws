@@ -60,11 +60,11 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Lambda Layer with version.
+* `code_sha256` - Base64-encoded representation of raw SHA-256 sum of the zip file.
 * `created_date` - Date this resource was created.
 * `layer_arn` - ARN of the Lambda Layer without version.
 * `signing_job_arn` - ARN of a signing job.
 * `signing_profile_version_arn` - ARN for a signing profile version.
-* `source_code_size` - Size in bytes of the function .zip file.
 * `version` - Lambda Layer version.
 
 [1]: https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html
