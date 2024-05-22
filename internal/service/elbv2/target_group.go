@@ -37,7 +37,8 @@ import (
 // @SDKResource("aws_alb_target_group", name="Target Group")
 // @SDKResource("aws_lb_target_group", name="Target Group")
 // @Tags(identifierAttribute="id")
-// @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go/service/elbv2;elbv2.TargetGroup")
+// @Testing(importIgnore="lambda_multi_value_headers_enabled;proxy_protocol_v2")
 func ResourceTargetGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTargetGroupCreate,
