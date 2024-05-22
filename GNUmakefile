@@ -112,6 +112,10 @@ build: prereq-go fmt-check ## Build provider
 	@echo "make: building provider..."
 	@$(GO_VER) install
 
+ci:  tools go-build gen-check acctest-lint copyright deps-check docs examples-tflint golangci-lint import-lint preferred-lib provider-lint provider-markdown-lint semgrep skaff-check-compile sweeper-check test tfproviderdocs website yamllint ## Run all CI checks
+
+ci-quick:  tools go-build testacc-lint copyright deps-check docs examples-tflint golangci-lint1 import-lint preferred-lib provider-lint provider-markdown-lint semgrep-code-quality semgrep-naming semgrep-naming-cae website-markdown-lint website-misspell website-terrafmt yamllint ## Run all CI checks
+
 clean: clean-make-tests clean-go clean-tidy build tools ## Clean up Go cache, tidy and re-install tools
 	@echo "make: clean complete"
 
@@ -169,7 +173,10 @@ deps-check: clean-tidy ## Verify dependencies are tidy
 	@git diff --exit-code -- go.mod go.sum || \
 		(echo; echo "Unexpected difference in go.mod/go.sum files. Run 'go mod tidy' command or revert any go.mod/go.sum changes and commit."; exit 1)
 
+docs: docs-link-check docs-markdown-lint docs-misspell ## Run all documentation checks
+
 docs-check: ## Check provider documentation
+	@echo "make: legacy target, use caution..."
 	@tfproviderdocs check \
 		-allowed-resource-subcategories-file website/allowed-subcategories.txt \
 		-enable-contents-check \
@@ -299,7 +306,7 @@ go-build: ## Build provider
 
 go-misspell:
 	@echo "make: Provider Checks / misspell..."
-	@misspell -error -source auto internal/
+	@misspell -error -source auto -i "littel,ceasar" internal/
 
 golangci-lint: golangci-lint1 golangci-lint2 ## Run golangci-lint
 
@@ -335,6 +342,7 @@ misspell-changelog:
 	@misspell -error -source text CHANGELOG.md .changelog
 
 preferred-lib:
+	@echo "make: Preferred Library Version Check / diffgrep..."
 	@found=`git diff origin/$(BASE_REF) internal/ | grep '^\+\s*"github.com/aws/aws-sdk-go/'` ; \
 	if [ "$$found" != "" ] ; then \
 		echo "Found a new reference to github.com/aws/aws-sdk-go in the codebase. Please use the preferred library github.com/aws/aws-sdk-go-v2 instead." ; \
@@ -352,7 +360,7 @@ prereq-go: ## if $(GO_VER) is not installed, install it
 	fi
 
 provider-lint: ## Lint provider (via providerlint)
-	@echo "make: checking source code with providerlint..."
+	@echo "make: ProviderLint Checks / providerlint..."
 	@cd .ci/providerlint && go install -buildvcs=false .
 	@providerlint \
 		-c 1 \
@@ -452,9 +460,7 @@ sanity: prereq-go ## Run sanity checks with failures allowed
 		exit 1; \
 	fi
 
-semgrep: semgrep-validate ## Run semgrep
-	@echo "make: running Semgrep static analysis..."
-	@docker run --rm --volume "${PWD}:/src" returntocorp/semgrep semgrep --config .ci/.semgrep.yml --config .ci/.semgrep-constants.yml --config .ci/.semgrep-test-constants.yml
+semgrep: semgrep-code-quality semgrep-naming semgrep-naming-cae semgrep-service-naming
 
 semgrep-all: semgrep-validate ## Run semgrep on all files
 	@echo "make: running Semgrep checks locally (must have semgrep installed)..."
@@ -499,6 +505,10 @@ semgrep-constants: semgrep-validate
 		--config .ci/.semgrep-constants.yml \
 		--config .ci/.semgrep-test-constants.yml
 
+semgrep-docker: semgrep-validate ## Run semgrep
+	@echo "make: legacy target, use caution..."
+	@docker run --rm --volume "${PWD}:/src" returntocorp/semgrep semgrep --config .ci/.semgrep.yml --config .ci/.semgrep-constants.yml --config .ci/.semgrep-test-constants.yml
+
 semgrep-fix: semgrep-validate ## Run semgrep on all files
 	@echo "make: running Semgrep checks locally (must have semgrep installed)..."
 	@echo "make: applying fixes with --autofix"
@@ -524,18 +534,21 @@ semgrep-fix: semgrep-validate ## Run semgrep on all files
 
 semgrep-naming: semgrep-validate
 	@echo "make: Semgrep Checks / Test Configs Scan..."
+	@echo "make: running Semgrep checks locally (must have semgrep installed)"
 	@semgrep $(SEMGREP_ARGS) \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
 		--config .ci/.semgrep-configs.yml
 
-semgrep-naming-cae: semgrep-validate ## Run semgrep on all files
+semgrep-naming-cae: semgrep-validate
 	@echo "make: Semgrep Checks / Naming Scan Caps/AWS/EC2..."
+	@echo "make: running Semgrep checks locally (must have semgrep installed)"
 	@semgrep $(SEMGREP_ARGS) \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
 		--config .ci/.semgrep-caps-aws-ec2.yml
 
 semgrep-service-naming: semgrep-validate
 	@echo "make: Semgrep Checks / Service Name Scan A-Z..."
+	@echo "make: running Semgrep checks locally (must have semgrep installed)"
 	@semgrep $(SEMGREP_ARGS) \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
 		--config .ci/.semgrep-service-name0.yml \
@@ -683,6 +696,8 @@ tools: prereq-go ## Install tools
 
 ts: testacc-short ## Alias to testacc-short
 
+website: website-link-check-markdown website-link-check-md website-markdown-lint website-misspell website-terrafmt website-tflint ## Run website checks
+
 website-link-check: ## Check website links
 	@echo "make: legacy target, use caution..."
 	@.ci/scripts/markdown-link-check.sh
@@ -816,6 +831,8 @@ yamllint: ## Lint YAML files (via yamllint)
 	awssdkpatch-apply \
 	awssdkpatch-gen \
 	build \
+	ci \
+	ci-quick \
 	clean \
 	clean-go \
 	clean-make-tests \
@@ -823,6 +840,7 @@ yamllint: ## Lint YAML files (via yamllint)
 	copyright \
 	default \
 	deps-check \
+	docs \
 	docs-check \
 	docs-link-check \
 	docs-lint \
@@ -861,6 +879,7 @@ yamllint: ## Lint YAML files (via yamllint)
 	semgrep-all \
 	semgrep-code-quality \
 	semgrep-constants \
+	semgrep-docker \
 	semgrep-fix \
 	semgrep-naming \
 	semgrep-naming-cae \
@@ -885,6 +904,7 @@ yamllint: ## Lint YAML files (via yamllint)
 	tfsdk2fw \
 	tools \
 	ts \
+	website \
 	website-link-check \
 	website-link-check-ghrc \
 	website-link-check-markdown \

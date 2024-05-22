@@ -24,6 +24,7 @@ nav:
           - Bugs and Enhancements: bugs-and-enhancements.md
           - Documentation Changes: documentation-changes.md
       - Acceptance Tests: running-and-writing-acceptance-tests.md
+      - Continuous Integration: continuous-integration.md
       - Changelog Process: changelog-process.md
       - Raising a Pull Request: raising-a-pull-request.md
       - How We Prioritize: prioritization.md
