@@ -42,7 +42,7 @@ import (
 
 // @FrameworkResource("aws_vpc_security_group_ingress_rule", name="Security Group Ingress Rule")
 // @Tags(identifierAttribute="id")
-// @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go/service/ec2;ec2.SecurityGroupRule")
 func newSecurityGroupIngressRuleResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &securityGroupIngressRuleResource{}
 	r.securityGroupRule = r
