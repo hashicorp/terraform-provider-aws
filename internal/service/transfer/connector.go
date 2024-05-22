@@ -28,7 +28,7 @@ import (
 
 // @SDKResource("aws_transfer_connector", name="Connector")
 // @Tags(identifierAttribute="arn")
-func ResourceConnector() *schema.Resource {
+func resourceConnector() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectorCreate,
 		ReadWithoutTimeout:   resourceConnectorRead,
@@ -158,7 +158,7 @@ func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if v, ok := d.GetOk("as2_config"); ok {
-		input.As2Config = expandAs2Config(v.([]interface{}))
+		input.As2Config = expandAs2ConnectorConfig(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("logging_role"); ok {
@@ -170,7 +170,7 @@ func resourceConnectorCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if v, ok := d.GetOk("sftp_config"); ok {
-		input.SftpConfig = expandSftpConfig(v.([]interface{}))
+		input.SftpConfig = expandSftpConnectorConfig(v.([]interface{}))
 	}
 
 	output, err := conn.CreateConnector(ctx, input)
@@ -202,16 +202,17 @@ func resourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.Set("access_role", output.AccessRole)
 	d.Set(names.AttrARN, output.Arn)
-	if err := d.Set("as2_config", flattenAs2Config(output.As2Config)); err != nil {
+	if err := d.Set("as2_config", flattenAs2ConnectorConfig(output.As2Config)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting as2_config: %s", err)
 	}
 	d.Set("connector_id", output.ConnectorId)
 	d.Set("logging_role", output.LoggingRole)
 	d.Set("security_policy_name", output.SecurityPolicyName)
-	if err := d.Set("sftp_config", flattenSftpConfig(output.SftpConfig)); err != nil {
+	if err := d.Set("sftp_config", flattenSftpConnectorConfig(output.SftpConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting sftp_config: %s", err)
 	}
 	d.Set(names.AttrURL, output.Url)
+
 	setTagsOut(ctx, output.Tags)
 
 	return diags
@@ -231,7 +232,7 @@ func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 
 		if d.HasChange("as2_config") {
-			input.As2Config = expandAs2Config(d.Get("as2_config").([]interface{}))
+			input.As2Config = expandAs2ConnectorConfig(d.Get("as2_config").([]interface{}))
 		}
 
 		if d.HasChange("logging_role") {
@@ -243,7 +244,7 @@ func resourceConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 
 		if d.HasChange("sftp_config") {
-			input.SftpConfig = expandSftpConfig(d.Get("sftp_config").([]interface{}))
+			input.SftpConfig = expandSftpConnectorConfig(d.Get("sftp_config").([]interface{}))
 		}
 
 		if d.HasChange(names.AttrURL) {
@@ -305,46 +306,46 @@ func findConnectorByID(ctx context.Context, conn *transfer.Client, id string) (*
 	return output.Connector, nil
 }
 
-func expandAs2Config(pUser []interface{}) *awstypes.As2ConnectorConfig {
-	if len(pUser) < 1 || pUser[0] == nil {
+func expandAs2ConnectorConfig(tfList []interface{}) *awstypes.As2ConnectorConfig {
+	if len(tfList) < 1 || tfList[0] == nil {
 		return nil
 	}
 
-	m := pUser[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]interface{})
 
-	as2Config := &awstypes.As2ConnectorConfig{
-		Compression:         awstypes.CompressionEnum(m["compression"].(string)),
-		EncryptionAlgorithm: awstypes.EncryptionAlg(m["encryption_algorithm"].(string)),
-		LocalProfileId:      aws.String(m["local_profile_id"].(string)),
-		MdnResponse:         awstypes.MdnResponse(m["mdn_response"].(string)),
-		MdnSigningAlgorithm: awstypes.MdnSigningAlg(m["mdn_signing_algorithm"].(string)),
-		MessageSubject:      aws.String(m["message_subject"].(string)),
-		PartnerProfileId:    aws.String(m["partner_profile_id"].(string)),
-		SigningAlgorithm:    awstypes.SigningAlg(m["signing_algorithm"].(string)),
+	apiObject := &awstypes.As2ConnectorConfig{
+		Compression:         awstypes.CompressionEnum(tfMap["compression"].(string)),
+		EncryptionAlgorithm: awstypes.EncryptionAlg(tfMap["encryption_algorithm"].(string)),
+		LocalProfileId:      aws.String(tfMap["local_profile_id"].(string)),
+		MdnResponse:         awstypes.MdnResponse(tfMap["mdn_response"].(string)),
+		MdnSigningAlgorithm: awstypes.MdnSigningAlg(tfMap["mdn_signing_algorithm"].(string)),
+		MessageSubject:      aws.String(tfMap["message_subject"].(string)),
+		PartnerProfileId:    aws.String(tfMap["partner_profile_id"].(string)),
+		SigningAlgorithm:    awstypes.SigningAlg(tfMap["signing_algorithm"].(string)),
 	}
 
-	return as2Config
+	return apiObject
 }
 
-func expandSftpConfig(pUser []interface{}) *awstypes.SftpConnectorConfig {
-	if len(pUser) < 1 || pUser[0] == nil {
+func expandSftpConnectorConfig(tfList []interface{}) *awstypes.SftpConnectorConfig {
+	if len(tfList) < 1 || tfList[0] == nil {
 		return nil
 	}
 
-	m := pUser[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]interface{})
 
-	sftpConfig := &awstypes.SftpConnectorConfig{
-		UserSecretId: aws.String(m["user_secret_id"].(string)),
+	apiObject := &awstypes.SftpConnectorConfig{
+		UserSecretId: aws.String(tfMap["user_secret_id"].(string)),
 	}
 
-	if v, ok := m["trusted_host_keys"].(*schema.Set); ok && len(v.List()) > 0 {
-		sftpConfig.TrustedHostKeys = flex.ExpandStringValueSet(v)
+	if v, ok := tfMap["trusted_host_keys"].(*schema.Set); ok && len(v.List()) > 0 {
+		apiObject.TrustedHostKeys = flex.ExpandStringValueSet(v)
 	}
 
-	return sftpConfig
+	return apiObject
 }
 
-func flattenAs2Config(apiObject *awstypes.As2ConnectorConfig) []interface{} {
+func flattenAs2ConnectorConfig(apiObject *awstypes.As2ConnectorConfig) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -372,15 +373,15 @@ func flattenAs2Config(apiObject *awstypes.As2ConnectorConfig) []interface{} {
 	return []interface{}{tfMap}
 }
 
-func flattenSftpConfig(posixUser *awstypes.SftpConnectorConfig) []interface{} {
-	if posixUser == nil {
+func flattenSftpConnectorConfig(apiObject *awstypes.SftpConnectorConfig) []interface{} {
+	if apiObject == nil {
 		return []interface{}{}
 	}
 
-	m := map[string]interface{}{
-		"trusted_host_keys": posixUser.TrustedHostKeys,
-		"user_secret_id":    aws.ToString(posixUser.UserSecretId),
+	tfMap := map[string]interface{}{
+		"trusted_host_keys": apiObject.TrustedHostKeys,
+		"user_secret_id":    aws.ToString(apiObject.UserSecretId),
 	}
 
-	return []interface{}{m}
+	return []interface{}{tfMap}
 }

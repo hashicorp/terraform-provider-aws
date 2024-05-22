@@ -55,7 +55,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceConnector,
+			Factory:  resourceConnector,
 			TypeName: "aws_transfer_connector",
 			Name:     "Connector",
 			Tags: &types.ServicePackageResourceTags{

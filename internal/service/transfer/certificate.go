@@ -153,6 +153,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set(names.AttrDescription, output.Description)
 	d.Set("inactive_date", aws.ToTime(output.InactiveDate).Format(time.RFC3339))
 	d.Set("usage", output.Usage)
+
 	setTagsOut(ctx, output.Tags)
 
 	return diags
