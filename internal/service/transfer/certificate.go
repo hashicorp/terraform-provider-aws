@@ -27,7 +27,7 @@ import (
 
 // @SDKResource("aws_transfer_certificate", name="Certificate")
 // @Tags(identifierAttribute="arn")
-func ResourceCertificate() *schema.Resource {
+func resourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificateCreate,
 		ReadWithoutTimeout:   resourceCertificateRead,

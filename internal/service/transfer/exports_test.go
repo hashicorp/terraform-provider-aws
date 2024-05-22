@@ -5,10 +5,11 @@ package transfer
 
 // Exports for use in tests only.
 var (
-	ResourceAccess    = resourceAccess
-	ResourceAgreement = resourceAgreement
-	ResourceServer    = resourceServer
-	ResourceTag       = resourceTag
+	ResourceAccess      = resourceAccess
+	ResourceAgreement   = resourceAgreement
+	ResourceCertificate = resourceCertificate
+	ResourceServer      = resourceServer
+	ResourceTag         = resourceTag
 
 	FindAccessByTwoPartKey    = findAccessByTwoPartKey
 	FindAgreementByTwoPartKey = findAgreementByTwoPartKey
