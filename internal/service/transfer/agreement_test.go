@@ -154,19 +154,9 @@ func testAccCheckAgreementExists(ctx context.Context, n string, v *awstypes.Desc
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Transfer Agreement ID is set")
-		}
-
-		serverID, agreementID, err := tftransfer.AgreementParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferClient(ctx)
 
-		output, err := tftransfer.FindAgreementByTwoPartKey(ctx, conn, serverID, agreementID)
+		output, err := tftransfer.FindAgreementByTwoPartKey(ctx, conn, rs.Primary.Attributes["server_id"], rs.Primary.Attributes["agreement_id"])
 
 		if err != nil {
 			return err
@@ -187,13 +177,7 @@ func testAccCheckAgreementDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			serverID, agreementID, err := tftransfer.AgreementParseResourceID(rs.Primary.ID)
-
-			if err != nil {
-				return err
-			}
-
-			_, err = tftransfer.FindAgreementByTwoPartKey(ctx, conn, serverID, agreementID)
+			_, err := tftransfer.FindAgreementByTwoPartKey(ctx, conn, rs.Primary.Attributes["server_id"], rs.Primary.Attributes["agreement_id"])
 
 			if tfresource.NotFound(err) {
 				continue

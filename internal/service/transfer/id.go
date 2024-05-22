@@ -26,22 +26,3 @@ func UserParseResourceID(id string) (string, string, error) {
 
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected SERVERID%[2]sUSERNAME", id, userResourceIDSeparator)
 }
-
-const agreementResourceIDSeparator = "/"
-
-func AgreementCreateResourceID(serverID, agreementID string) string {
-	parts := []string{serverID, agreementID}
-	id := strings.Join(parts, agreementResourceIDSeparator)
-
-	return id
-}
-
-func AgreementParseResourceID(id string) (string, string, error) {
-	parts := strings.Split(id, agreementResourceIDSeparator)
-
-	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
-		return parts[0], parts[1], nil
-	}
-
-	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected SERVERID%[2]sAGREEMENTID", id, agreementResourceIDSeparator)
-}

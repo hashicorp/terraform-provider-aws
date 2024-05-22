@@ -39,7 +39,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Access",
 		},
 		{
-			Factory:  ResourceAgreement,
+			Factory:  resourceAgreement,
 			TypeName: "aws_transfer_agreement",
 			Name:     "Agreement",
 			Tags: &types.ServicePackageResourceTags{

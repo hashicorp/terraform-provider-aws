@@ -5,7 +5,9 @@ package transfer
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/transfer"
@@ -24,7 +26,7 @@ import (
 
 // @SDKResource("aws_transfer_agreement", name="Agreement")
 // @Tags(identifierAttribute="arn")
-func ResourceAgreement() *schema.Resource {
+func resourceAgreement() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAgreementCreate,
 		ReadWithoutTimeout:   resourceAgreementRead,
@@ -76,6 +78,7 @@ func ResourceAgreement() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
+
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
@@ -104,7 +107,7 @@ func resourceAgreementCreate(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "creating Transfer Agreement: %s", err)
 	}
 
-	d.SetId(AgreementCreateResourceID(serverID, aws.ToString(output.AgreementId)))
+	d.SetId(agreementCreateResourceID(serverID, aws.ToString(output.AgreementId)))
 
 	return append(diags, resourceAgreementRead(ctx, d, meta)...)
 }
@@ -113,7 +116,7 @@ func resourceAgreementRead(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
-	serverID, agreementID, err := AgreementParseResourceID(d.Id())
+	serverID, agreementID, err := agreementParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -148,7 +151,7 @@ func resourceAgreementUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
-	serverID, agreementID, err := AgreementParseResourceID(d.Id())
+	serverID, agreementID, err := agreementParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -193,8 +196,7 @@ func resourceAgreementDelete(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
-	serverID, agreementID, err := AgreementParseResourceID(d.Id())
-
+	serverID, agreementID, err := agreementParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -214,6 +216,25 @@ func resourceAgreementDelete(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	return diags
+}
+
+const agreementResourceIDSeparator = "/"
+
+func agreementCreateResourceID(serverID, agreementID string) string {
+	parts := []string{serverID, agreementID}
+	id := strings.Join(parts, agreementResourceIDSeparator)
+
+	return id
+}
+
+func agreementParseResourceID(id string) (string, string, error) {
+	parts := strings.Split(id, agreementResourceIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected SERVERID%[2]sAGREEMENTID", id, agreementResourceIDSeparator)
 }
 
 func findAgreementByTwoPartKey(ctx context.Context, conn *transfer.Client, serverID, agreementID string) (*awstypes.DescribedAgreement, error) {
