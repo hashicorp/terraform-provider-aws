@@ -112,7 +112,7 @@ build: prereq-go fmt-check ## Build provider
 	@echo "make: building provider..."
 	@$(GO_VER) install
 
-ci:  tools build gen-check acctest-lint copyright deps-check docs examples-tflint go-build golangci-lint import-lint preferred-lib provider-lint provider-markdown-lint semgrep skaff-check-compile sweeper-check test tfproviderdocs website yamllint ## Run all CI checks
+ci:  tools go-build gen-check acctest-lint copyright deps-check docs examples-tflint golangci-lint import-lint preferred-lib provider-lint provider-markdown-lint semgrep skaff-check-compile sweeper-check test tfproviderdocs website yamllint ## Run all CI checks
 
 clean: clean-make-tests clean-go clean-tidy build tools ## Clean up Go cache, tidy and re-install tools
 	@echo "make: clean complete"
