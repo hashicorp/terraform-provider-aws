@@ -21,12 +21,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/float64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/float64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -122,6 +124,10 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 					"opt_in": schema.BoolAttribute{
 						Description: "Do you want to share data with Rekognition to improve model performance.",
 						Optional:    true,
+						Computed:    true,
+						PlanModifiers: []planmodifier.Bool{
+							boolplanmodifier.UseStateForUnknown(),
+						},
 					},
 				},
 			},
@@ -443,10 +449,10 @@ func (r *resourceStreamProcessor) Create(ctx context.Context, req resource.Creat
 	plan.ID = plan.Name
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	created, err := waitStreamProcessorCreated(ctx, conn, plan.Name.ValueString(), createTimeout)
+	created, err := waitStreamProcessorCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Rekognition, create.ErrActionWaitingForCreation, ResNameStreamProcessor, plan.Name.String(), err),
+			create.ProblemStandardMessage(names.Rekognition, create.ErrActionWaitingForCreation, ResNameStreamProcessor, plan.ID.String(), err),
 			err.Error(),
 		)
 		return
@@ -457,7 +463,7 @@ func (r *resourceStreamProcessor) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *resourceStreamProcessor) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -486,6 +492,12 @@ func (r *resourceStreamProcessor) Read(ctx context.Context, req resource.ReadReq
 	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	if state.DataSharingPreference.IsNull() {
+		dataSharing, diag := fwtypes.NewObjectValueOf(ctx, &dataSharingPreferenceModel{OptIn: basetypes.NewBoolValue(false)})
+		resp.Diagnostics.Append(diag...)
+		state.DataSharingPreference = dataSharing
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
