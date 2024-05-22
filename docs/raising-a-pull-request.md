@@ -85,7 +85,7 @@ The import statement in a Go file follows these rules (see [#15903](https://gith
 Check your imports:
 
 ```console
-make importlint
+make import-lint
 ```
 
 For greater detail, the following Go language resources provide common coding preferences that may be referenced during review, if not automatically handled by the project's linting tools.
