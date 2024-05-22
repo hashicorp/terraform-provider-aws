@@ -241,10 +241,10 @@ func resourceServer() *schema.Resource {
 				},
 			},
 			"security_policy_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      SecurityPolicyName2018_11,
-				ValidateFunc: validation.StringInSlice(SecurityPolicyName_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          securityPolicyName2018_11,
+				ValidateDiagFunc: enum.Validate[securityPolicyName](),
 			},
 			"sftp_authentication_methods": {
 				Type:             schema.TypeString,
@@ -823,7 +823,6 @@ func resourceServerDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	log.Printf("[DEBUG] Deleting Transfer Server: (%s)", d.Id())
-
 	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.InvalidRequestException](ctx, 1*time.Minute,
 		func() (interface{}, error) {
 			return conn.DeleteServer(ctx, &transfer.DeleteServerInput{
@@ -844,6 +843,57 @@ func resourceServerDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	return diags
+}
+
+func stopServer(ctx context.Context, conn *transfer.Client, serverID string, timeout time.Duration) error {
+	input := &transfer.StopServerInput{
+		ServerId: aws.String(serverID),
+	}
+
+	if _, err := conn.StopServer(ctx, input); err != nil {
+		return fmt.Errorf("stopping Transfer Server (%s): %w", serverID, err)
+	}
+
+	if _, err := waitServerStopped(ctx, conn, serverID, timeout); err != nil {
+		return fmt.Errorf("waiting for Transfer Server (%s) stop: %w", serverID, err)
+	}
+
+	return nil
+}
+
+func startServer(ctx context.Context, conn *transfer.Client, serverID string, timeout time.Duration) error {
+	input := &transfer.StartServerInput{
+		ServerId: aws.String(serverID),
+	}
+
+	if _, err := conn.StartServer(ctx, input); err != nil {
+		return fmt.Errorf("starting Transfer Server (%s): %w", serverID, err)
+	}
+
+	if _, err := waitServerStarted(ctx, conn, serverID, timeout); err != nil {
+		return fmt.Errorf("waiting for Transfer Server (%s) start: %w", serverID, err)
+	}
+
+	return nil
+}
+
+func updateServer(ctx context.Context, conn *transfer.Client, input *transfer.UpdateServerInput) error {
+	// The Transfer API will return a state of ONLINE for a server before the
+	// underlying VPC Endpoint is available and attempting to update the server
+	// will return an error until that EC2 API process is complete:
+	//   ConflictException: VPC Endpoint state is not yet available
+	// To prevent accessing the EC2 API directly to check the VPC Endpoint
+	// state, which can require confusing IAM permissions and have other
+	// eventual consistency consideration, we retry only via the Transfer API.
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ConflictException](ctx, tfec2.VPCEndpointCreationTimeout, func() (interface{}, error) {
+		return conn.UpdateServer(ctx, input)
+	}, "VPC Endpoint state is not yet available")
+
+	if err != nil {
+		return fmt.Errorf("updating Transfer Server (%s): %w", aws.ToString(input.ServerId), err)
+	}
+
+	return nil
 }
 
 func findServerByID(ctx context.Context, conn *transfer.Client, id string) (*awstypes.DescribedServer, error) {
@@ -933,12 +983,12 @@ func flattenEndpointDetails(apiObject *awstypes.EndpointDetails, securityGroupID
 	return tfMap
 }
 
-func expandProtocolDetails(m []interface{}) *awstypes.ProtocolDetails {
-	if len(m) < 1 || m[0] == nil {
+func expandProtocolDetails(tfList []interface{}) *awstypes.ProtocolDetails {
+	if len(tfList) < 1 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := m[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]interface{})
 
 	apiObject := &awstypes.ProtocolDetails{}
 
@@ -982,12 +1032,12 @@ func flattenProtocolDetails(apiObject *awstypes.ProtocolDetails) []interface{} {
 	return []interface{}{tfMap}
 }
 
-func expandS3StorageOptions(m []interface{}) *awstypes.S3StorageOptions {
-	if len(m) < 1 || m[0] == nil {
+func expandS3StorageOptions(tfList []interface{}) *awstypes.S3StorageOptions {
+	if len(tfList) < 1 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap := m[0].(map[string]interface{})
+	tfMap := tfList[0].(map[string]interface{})
 
 	apiObject := &awstypes.S3StorageOptions{}
 
@@ -1100,53 +1150,32 @@ func flattenWorkflowDetail(apiObjects []awstypes.WorkflowDetail) []interface{} {
 	return tfList
 }
 
-func stopServer(ctx context.Context, conn *transfer.Client, serverID string, timeout time.Duration) error {
-	input := &transfer.StopServerInput{
-		ServerId: aws.String(serverID),
+type securityPolicyName string
+
+const (
+	securityPolicyName2018_11             securityPolicyName = "TransferSecurityPolicy-2018-11"
+	securityPolicyName2020_06             securityPolicyName = "TransferSecurityPolicy-2020-06"
+	securityPolicyNameFIPS_2020_06        securityPolicyName = "TransferSecurityPolicy-FIPS-2020-06"
+	securityPolicyNameFIPS_2023_05        securityPolicyName = "TransferSecurityPolicy-FIPS-2023-05"
+	securityPolicyNameFIPS_2024_01        securityPolicyName = "TransferSecurityPolicy-FIPS-2024-01"
+	securityPolicyName2022_03             securityPolicyName = "TransferSecurityPolicy-2022-03"
+	securityPolicyName2023_05             securityPolicyName = "TransferSecurityPolicy-2023-05"
+	securityPolicyName2024_01             securityPolicyName = "TransferSecurityPolicy-2024-01"
+	securityPolicyNamePQ_SSH_2023_04      securityPolicyName = "TransferSecurityPolicy-PQ-SSH-Experimental-2023-04"
+	securityPolicyNamePQ_SSH_FIPS_2023_04 securityPolicyName = "TransferSecurityPolicy-PQ-SSH-FIPS-Experimental-2023-04"
+)
+
+func (securityPolicyName) Values() []securityPolicyName {
+	return []securityPolicyName{
+		securityPolicyName2018_11,
+		securityPolicyName2020_06,
+		securityPolicyNameFIPS_2020_06,
+		securityPolicyNameFIPS_2023_05,
+		securityPolicyNameFIPS_2024_01,
+		securityPolicyName2022_03,
+		securityPolicyName2023_05,
+		securityPolicyName2024_01,
+		securityPolicyNamePQ_SSH_2023_04,
+		securityPolicyNamePQ_SSH_FIPS_2023_04,
 	}
-
-	if _, err := conn.StopServer(ctx, input); err != nil {
-		return fmt.Errorf("stopping Transfer Server (%s): %w", serverID, err)
-	}
-
-	if _, err := waitServerStopped(ctx, conn, serverID, timeout); err != nil {
-		return fmt.Errorf("waiting for Transfer Server (%s) stop: %w", serverID, err)
-	}
-
-	return nil
-}
-
-func startServer(ctx context.Context, conn *transfer.Client, serverID string, timeout time.Duration) error {
-	input := &transfer.StartServerInput{
-		ServerId: aws.String(serverID),
-	}
-
-	if _, err := conn.StartServer(ctx, input); err != nil {
-		return fmt.Errorf("starting Transfer Server (%s): %w", serverID, err)
-	}
-
-	if _, err := waitServerStarted(ctx, conn, serverID, timeout); err != nil {
-		return fmt.Errorf("waiting for Transfer Server (%s) start: %w", serverID, err)
-	}
-
-	return nil
-}
-
-func updateServer(ctx context.Context, conn *transfer.Client, input *transfer.UpdateServerInput) error {
-	// The Transfer API will return a state of ONLINE for a server before the
-	// underlying VPC Endpoint is available and attempting to update the server
-	// will return an error until that EC2 API process is complete:
-	//   ConflictException: VPC Endpoint state is not yet available
-	// To prevent accessing the EC2 API directly to check the VPC Endpoint
-	// state, which can require confusing IAM permissions and have other
-	// eventual consistency consideration, we retry only via the Transfer API.
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ConflictException](ctx, tfec2.VPCEndpointCreationTimeout, func() (interface{}, error) {
-		return conn.UpdateServer(ctx, input)
-	}, "VPC Endpoint state is not yet available")
-
-	if err != nil {
-		return fmt.Errorf("updating Transfer Server (%s): %w", aws.ToString(input.ServerId), err)
-	}
-
-	return nil
 }
