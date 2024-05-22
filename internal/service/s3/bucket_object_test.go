@@ -1698,57 +1698,6 @@ resource "aws_s3_bucket_object" "object" {
 `, rName, key, content)
 }
 
-func testAccBucketObjectConfig_tags1(rName, key, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-}
-
-resource "aws_s3_bucket_versioning" "test" {
-  bucket = aws_s3_bucket.test.id
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
-
-resource "aws_s3_bucket_object" "object" {
-  # Must have bucket versioning enabled first
-  bucket = aws_s3_bucket_versioning.test.bucket
-  key    = %[2]q
-
-  tags = {
-    %[3]q = %[4]q
-  }
-}
-`, rName, key, tagKey1, tagValue1)
-}
-
-func testAccBucketObjectConfig_tags2(rName, key, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-}
-
-resource "aws_s3_bucket_versioning" "test" {
-  bucket = aws_s3_bucket.test.id
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
-
-resource "aws_s3_bucket_object" "object" {
-  # Must have bucket versioning enabled first
-  bucket = aws_s3_bucket_versioning.test.bucket
-  key    = %[2]q
-
-  tags = {
-    %[3]q = %[4]q
-    %[5]q = %[6]q
-  }
-}
-`, rName, key, tagKey1, tagValue1, tagKey2, tagValue2)
-}
-
 func testAccBucketObjectConfig_metadata(rName string, metadataKey1, metadataValue1, metadataKey2, metadataValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
