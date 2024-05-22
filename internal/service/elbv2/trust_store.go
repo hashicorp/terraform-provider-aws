@@ -28,6 +28,7 @@ import (
 
 // @SDKResource("aws_lb_trust_store", name="Trust Store")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceTrustStore() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTrustStoreCreate,

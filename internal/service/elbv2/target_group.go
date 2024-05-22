@@ -37,6 +37,7 @@ import (
 // @SDKResource("aws_alb_target_group", name="Target Group")
 // @SDKResource("aws_lb_target_group", name="Target Group")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceTargetGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTargetGroupCreate,

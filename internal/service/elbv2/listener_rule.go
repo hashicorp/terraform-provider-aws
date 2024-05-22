@@ -47,6 +47,7 @@ const (
 // @SDKResource("aws_alb_listener_rule", name="Listener Rule")
 // @SDKResource("aws_lb_listener_rule", name="Listener Rule")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceListenerRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceListenerRuleCreate,

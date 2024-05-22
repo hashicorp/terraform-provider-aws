@@ -38,6 +38,7 @@ import (
 // @SDKResource("aws_alb_listener", name="Listener")
 // @SDKResource("aws_lb_listener", name="Listener")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceListener() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceListenerCreate,
