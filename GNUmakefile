@@ -224,8 +224,8 @@ docs-markdown-lint: ## [CI] Documentation Checks / markdown-lint
 		/markdown/docs/**/*.md
 
 docs-misspell: ## [CI] Documentation Checks / misspell
-	@echo "make: Documentation Checks / misspell\.\.\."
-	@misspell -error -source text docs/
+	@echo "make: Documentation Checks / misspell..."
+	@misspell -error -source text -i copywrite docs/
 
 examples-tflint: ## [CI] Examples Checks / tflint
 	@echo "make: Examples Checks / tflint..."
