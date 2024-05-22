@@ -21,12 +21,13 @@ import (
 
 // @SDKResource("aws_storagegateway_tape_pool", name="Tape Pool")
 // @Tags(identifierAttribute="arn")
-func ResourceTapePool() *schema.Resource {
+func resourceTapePool() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTapePoolCreate,
 		ReadWithoutTimeout:   resourceTapePoolRead,
 		UpdateWithoutTimeout: resourceTapePoolUpdate,
 		DeleteWithoutTimeout: resourceTapePoolDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

@@ -24,12 +24,13 @@ import (
 
 // @SDKResource("aws_storagegateway_stored_iscsi_volume", name="Stored iSCSI Volume")
 // @Tags(identifierAttribute="arn")
-func ResourceStorediSCSIVolume() *schema.Resource {
+func resourceStorediSCSIVolume() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStorediSCSIVolumeCreate,
 		ReadWithoutTimeout:   resourceStorediSCSIVolumeRead,
 		UpdateWithoutTimeout: resourceStorediSCSIVolumeUpdate,
 		DeleteWithoutTimeout: resourceStorediSCSIVolumeDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

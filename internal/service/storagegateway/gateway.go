@@ -34,7 +34,7 @@ import (
 
 // @SDKResource("aws_storagegateway_gateway", name="Gateway")
 // @Tags(identifierAttribute="arn")
-func ResourceGateway() *schema.Resource {
+func resourceGateway() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGatewayCreate,
 		ReadWithoutTimeout:   resourceGatewayRead,
