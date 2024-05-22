@@ -67,6 +67,7 @@ DOC
 ```
 
 ### Configure SSM Preferences
+
 SSM preferences [are not exposed via an API](https://github.com/hashicorp/terraform-provider-aws/issues/6121) that can support it's own terraform resource. Instead, an SSM document called "SSM-SessionManagerRunShell" will configure these as needed.
 
 ```
@@ -107,6 +108,7 @@ import {
 }
 ```
 #### SSM Preference Configurations
+
 **Cloudwatch logging:** You should attach the following policy to your EC2 instance role to allow the SSM agent to log SSM commands to cloudwatch:
 ```
 locals {
