@@ -69,9 +69,10 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 	nameRegex := regexache.MustCompile(`[a-zA-Z0-9_.\-]+`)
 	collectionIdRegex := regexache.MustCompile(`[a-zA-Z0-9_.\-]+`)
 	s3bucketRegex := regexache.MustCompile(`[0-9A-Za-z\.\-_]*`)
-	kinesisStreamArnRegex := regexache.MustCompile(`(^arn:([a-z\d-]+):kinesisvideo:([a-z\d-]+):\d{12}:.+$)`) // lintignore:AWSAT005
-	snsArnRegex := regexache.MustCompile(`(^arn:aws:sns:.*:\w{12}:.+$)`)                                     // lintignore:AWSAT005
-	roleArnRegex := regexache.MustCompile(`arn:aws:iam::\d{12}:role/?[a-zA-Z_0-9+=,.@\-_/]+`)                // lintignore:AWSAT005
+	kinesisStreamArnRegex := regexache.MustCompile(`(^arn:([a-z\d-]+):kinesis:([a-z\d-]+):\d{12}:.+$)`)           // lintignore:AWSAT005
+	kinesisVideoStreamArnRegex := regexache.MustCompile(`(^arn:([a-z\d-]+):kinesisvideo:([a-z\d-]+):\d{12}:.+$)`) // lintignore:AWSAT005
+	snsArnRegex := regexache.MustCompile(`(^arn:aws:sns:.*:\w{12}:.+$)`)                                          // lintignore:AWSAT005
+	roleArnRegex := regexache.MustCompile(`arn:aws:iam::\d{12}:role/?[a-zA-Z_0-9+=,.@\-_/]+`)                     // lintignore:AWSAT005
 
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -144,7 +145,7 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 								Required:    true,
 								Validators: []validator.String{
 									stringvalidator.All(
-										stringvalidator.RegexMatches(kinesisStreamArnRegex, "must conform to: (^arn:([a-z\\d-]+):kinesisvideo:([a-z\\d-]+):\\d{12}:.+$)"), // lintignore:AWSAT005
+										stringvalidator.RegexMatches(kinesisVideoStreamArnRegex, "must conform to: (^arn:([a-z\\d-]+):kinesisvideo:([a-z\\d-]+):\\d{12}:.+$)"), // lintignore:AWSAT005
 									),
 								},
 								PlanModifiers: []planmodifier.String{
@@ -156,16 +157,13 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 				},
 			},
 			"notification_channel": schema.SingleNestedBlock{
-				CustomType: fwtypes.NewObjectTypeOf[notificationChannelModel](ctx),
-				Validators: []validator.Object{
-					objectvalidator.IsRequired(),
-				},
+				CustomType:  fwtypes.NewObjectTypeOf[notificationChannelModel](ctx),
 				Description: "The Amazon Simple Notification Service topic to which Amazon Rekognition publishes the object detection results and completion status of a video analysis operation.",
 				Attributes: map[string]schema.Attribute{
 					names.AttrSNSTopicARN: schema.StringAttribute{
 						Description: "The Amazon Resource Number (ARN) of the Amazon Amazon Simple Notification Service topic to which Amazon Rekognition posts the completion status.",
 						CustomType:  fwtypes.ARNType,
-						Required:    true,
+						Optional:    true,
 						Validators: []validator.String{
 							stringvalidator.RegexMatches(snsArnRegex, "must conform to: (^arn:aws:sns:.*:\\w{12}:.+$)"), // lintignore:AWSAT005
 						},
@@ -345,7 +343,7 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 							"labels": schema.ListAttribute{
 								Description: "Specifies what you want to detect in the video, such as people, packages, or pets.",
 								CustomType:  fwtypes.ListOfStringType,
-								Required:    true,
+								Optional:    true,
 								Validators: []validator.List{
 									listvalidator.SizeAtLeast(1),
 									listvalidator.ValueStringsAre(stringvalidator.OneOf(connectedHomeLabels()...)),
@@ -367,6 +365,9 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 						Description: "Face search settings to use on a streaming video.",
 						Validators: []validator.Object{
 							objectvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("connected_home")),
+							objectvalidator.AlsoRequires(
+								path.MatchRelative().AtName("collection_id"),
+							),
 						},
 						Attributes: map[string]schema.Attribute{
 							"collection_id": schema.StringAttribute{
@@ -385,10 +386,12 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 								Validators: []validator.Float64{
 									float64validator.Between(0.0, 100.0), //nolint:mnd
 								},
-								Optional: true,
 								PlanModifiers: []planmodifier.Float64{
 									float64planmodifier.RequiresReplace(),
 								},
+								Default:  float64default.StaticFloat64(80), //nolint:mnd
+								Computed: true,
+								Optional: true,
 							},
 						},
 					},
