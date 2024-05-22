@@ -26,7 +26,7 @@ import (
 
 // @SDKResource("aws_transfer_profile", name="Profile")
 // @Tags(identifierAttribute="arn")
-func ResourceProfile() *schema.Resource {
+func resourceProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProfileCreate,
 		ReadWithoutTimeout:   resourceProfileRead,
@@ -116,6 +116,7 @@ func resourceProfileRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("certificate_ids", output.CertificateIds)
 	d.Set("profile_id", output.ProfileId)
 	d.Set("profile_type", output.ProfileType)
+
 	setTagsOut(ctx, output.Tags)
 
 	return diags

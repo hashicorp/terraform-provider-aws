@@ -63,7 +63,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceProfile,
+			Factory:  resourceProfile,
 			TypeName: "aws_transfer_profile",
 			Name:     "Profile",
 			Tags: &types.ServicePackageResourceTags{

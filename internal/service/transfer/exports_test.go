@@ -9,6 +9,7 @@ var (
 	ResourceAgreement   = resourceAgreement
 	ResourceCertificate = resourceCertificate
 	ResourceConnector   = resourceConnector
+	ResourceProfile     = resourceProfile
 	ResourceServer      = resourceServer
 	ResourceTag         = resourceTag
 
