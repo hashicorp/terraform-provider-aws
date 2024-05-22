@@ -21,51 +21,51 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
-      - uses: YakDriver/md-check-links@7450f426b758f0bf97f99ceb1aadcf57640a9ede # v2.0.6
+      - uses: YakDriver/md-check-links@a7b69aec87bb65faa4b35e41e51b1acedb5129c0 # v2.1.0
         name: markdown-link-check website/docs/**/[a-h].markdown
         with:
-          use-quiet-mode: "yes"
-          use-verbose-mode: "yes"
-          config-file: ".ci/.markdownlinkcheck.json"
-          folder-path: "website/docs/r, website/docs/d"
-          file-prefix: "[a-h]"
-          file-extension: ".markdown"
-          base-branch: "main"
-          check-modified-files-only: "no"
+          quiet: "yes"
+          verbose: "yes"
+          config: ".ci/.markdownlinkcheck.json"
+          directory: "website/docs/r, website/docs/d"
+          prefix: "[a-h]"
+          extension: ".markdown"
+          branch: "main"
+          modified: "no"
 
   markdown-link-check-i-z-markdown:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
-      - uses: YakDriver/md-check-links@7450f426b758f0bf97f99ceb1aadcf57640a9ede # v2.0.6
+      - uses: YakDriver/md-check-links@a7b69aec87bb65faa4b35e41e51b1acedb5129c0 # v2.1.0
         name: markdown-link-check website/docs/**/[i-z].markdown
         with:
-          use-quiet-mode: "yes"
-          use-verbose-mode: "yes"
-          config-file: ".ci/.markdownlinkcheck.json"
-          folder-path: "website/docs/r, website/docs/d"
-          file-prefix: "[i-z]"
-          file-extension: ".markdown"
-          base-branch: "main"
-          check-modified-files-only: "no"
+          quiet: "yes"
+          verbose: "yes"
+          config: ".ci/.markdownlinkcheck.json"
+          directory: "website/docs/r, website/docs/d"
+          prefix: "[i-z]"
+          extension: ".markdown"
+          branch: "main"
+          modified: "no"
 
   markdown-link-check-md:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
-      - uses: YakDriver/md-check-links@7450f426b758f0bf97f99ceb1aadcf57640a9ede # v2.0.6
+      - uses: YakDriver/md-check-links@a7b69aec87bb65faa4b35e41e51b1acedb5129c0 # v2.1.0
         name: markdown-link-check website/docs/**/*.md
         with:
-          use-quiet-mode: "yes"
-          use-verbose-mode: "yes"
-          config-file: ".ci/.markdownlinkcheck.json"
-          folder-path: "website/docs"
+          quiet: "yes"
+          verbose: "yes"
+          config: ".ci/.markdownlinkcheck.json"
+          directory: "website/docs"
           # Don't check CDKTF translated guides, e.g. website/docs/cdktf/typescript/guides/version-4-upgrade.html.md.
-          max-depth: 2
-          file-extension: ".md"
+          depth: 2
+          extension: ".md"
           # Checking only modified files in the PR does not respect 'mex-depth'.
-          # base-branch: "main"
-          # check-modified-files-only: "yes"
+          # branch: "main"
+          # modified: "yes"
 
   markdown-lint:
     runs-on: ubuntu-latest
