@@ -5,7 +5,9 @@ package transfer
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/transfer"
@@ -24,8 +26,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_transfer_access")
-func ResourceAccess() *schema.Resource {
+// @SDKResource("aws_transfer_access", name="Access")
+func resourceAccess() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccessCreate,
 		ReadWithoutTimeout:   resourceAccessRead,
@@ -42,13 +44,11 @@ func ResourceAccess() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 256),
 			},
-
 			"home_directory": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
-
 			"home_directory_mappings": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -68,14 +68,12 @@ func ResourceAccess() *schema.Resource {
 					},
 				},
 			},
-
 			"home_directory_type": {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Default:          awstypes.HomeDirectoryTypePath,
 				ValidateDiagFunc: enum.Validate[awstypes.HomeDirectoryType](),
 			},
-
 			names.AttrPolicy: {
 				Type:                  schema.TypeString,
 				Optional:              true,
@@ -87,7 +85,6 @@ func ResourceAccess() *schema.Resource {
 					return json
 				},
 			},
-
 			"posix_profile": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -98,19 +95,18 @@ func ResourceAccess() *schema.Resource {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
-						"uid": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
 						"secondary_gids": {
 							Type:     schema.TypeSet,
 							Elem:     &schema.Schema{Type: schema.TypeInt},
 							Optional: true,
 						},
+						"uid": {
+							Type:     schema.TypeInt,
+							Required: true,
+						},
 					},
 				},
 			},
-
 			names.AttrRole: {
 				Type: schema.TypeString,
 				// Although Role is required in the API it is not currently returned on Read.
@@ -118,7 +114,6 @@ func ResourceAccess() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-
 			"server_id": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -135,7 +130,7 @@ func resourceAccessCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	externalID := d.Get(names.AttrExternalID).(string)
 	serverID := d.Get("server_id").(string)
-	id := AccessCreateResourceID(serverID, externalID)
+	id := accessCreateResourceID(serverID, externalID)
 	input := &transfer.CreateAccessInput{
 		ExternalId: aws.String(externalID),
 		ServerId:   aws.String(serverID),
@@ -156,7 +151,7 @@ func resourceAccessCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	if v, ok := d.GetOk(names.AttrPolicy); ok {
 		policy, err := structure.NormalizeJsonString(v.(string))
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", v.(string), err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		input.Policy = aws.String(policy)
@@ -170,7 +165,6 @@ func resourceAccessCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.Role = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating Transfer Access: %s", d.Id())
 	_, err := conn.CreateAccess(ctx, input)
 
 	if err != nil {
@@ -186,10 +180,9 @@ func resourceAccessRead(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
-	serverID, externalID, err := AccessParseResourceID(d.Id())
-
+	serverID, externalID, err := accessParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing Transfer Access ID: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	access, err := findAccessByTwoPartKey(ctx, conn, serverID, externalID)
@@ -210,20 +203,16 @@ func resourceAccessRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "setting home_directory_mappings: %s", err)
 	}
 	d.Set("home_directory_type", access.HomeDirectoryType)
-
+	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), aws.ToString(access.Policy))
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+	d.Set(names.AttrPolicy, policyToSet)
 	if err := d.Set("posix_profile", flattenUserPOSIXUser(access.PosixProfile)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting posix_profile: %s", err)
 	}
 	// Role is currently not returned via the API.
 	// d.Set("role", access.Role)
-
-	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), aws.ToString(access.Policy))
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Transfer Access (%s): %s", d.Id(), err)
-	}
-
-	d.Set(names.AttrPolicy, policyToSet)
-
 	d.Set("server_id", serverID)
 
 	return diags
@@ -233,10 +222,9 @@ func resourceAccessUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
-	serverID, externalID, err := AccessParseResourceID(d.Id())
-
+	serverID, externalID, err := accessParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing Transfer Access ID: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &transfer.UpdateAccessInput{
@@ -259,7 +247,7 @@ func resourceAccessUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	if d.HasChange(names.AttrPolicy) {
 		policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", d.Get(names.AttrPolicy).(string), err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		input.Policy = aws.String(policy)
@@ -273,7 +261,6 @@ func resourceAccessUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.Role = aws.String(d.Get(names.AttrRole).(string))
 	}
 
-	log.Printf("[DEBUG] Updating Transfer Access: %s", d.Id())
 	_, err = conn.UpdateAccess(ctx, input)
 
 	if err != nil {
@@ -287,10 +274,9 @@ func resourceAccessDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferClient(ctx)
 
-	serverID, externalID, err := AccessParseResourceID(d.Id())
-
+	serverID, externalID, err := accessParseResourceID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing Transfer Access ID: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[DEBUG] Deleting Transfer Access: %s", d.Id())
@@ -308,6 +294,25 @@ func resourceAccessDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	return diags
+}
+
+const accessResourceIDSeparator = "/"
+
+func accessCreateResourceID(serverID, externalID string) string {
+	parts := []string{serverID, externalID}
+	id := strings.Join(parts, accessResourceIDSeparator)
+
+	return id
+}
+
+func accessParseResourceID(id string) (string, string, error) {
+	parts := strings.Split(id, accessResourceIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected SERVERID%[2]sEXTERNALID", id, accessResourceIDSeparator)
 }
 
 func findAccessByTwoPartKey(ctx context.Context, conn *transfer.Client, serverID, externalID string) (*awstypes.DescribedAccess, error) {

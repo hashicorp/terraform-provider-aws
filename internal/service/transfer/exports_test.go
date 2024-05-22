@@ -5,6 +5,7 @@ package transfer
 
 // Exports for use in tests only.
 var (
+	ResourceAccess = resourceAccess
 	ResourceServer = resourceServer
 	ResourceTag    = resourceTag
 

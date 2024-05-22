@@ -176,19 +176,9 @@ func testAccCheckAccessExists(ctx context.Context, n string, v *awstypes.Describ
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Transfer Access ID is set")
-		}
-
-		serverID, externalID, err := tftransfer.AccessParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return fmt.Errorf("error parsing Transfer Access ID: %w", err)
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferClient(ctx)
 
-		output, err := tftransfer.FindAccessByTwoPartKey(ctx, conn, serverID, externalID)
+		output, err := tftransfer.FindAccessByTwoPartKey(ctx, conn, rs.Primary.Attributes["server_id"], rs.Primary.Attributes[names.AttrExternalID])
 
 		if err != nil {
 			return err
@@ -209,12 +199,7 @@ func testAccCheckAccessDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			serverID, externalID, err := tftransfer.AccessParseResourceID(rs.Primary.ID)
-
-			if err != nil {
-				return fmt.Errorf("error parsing Transfer Access ID: %w", err)
-			}
-			_, err = tftransfer.FindAccessByTwoPartKey(ctx, conn, serverID, externalID)
+			_, err := tftransfer.FindAccessByTwoPartKey(ctx, conn, rs.Primary.Attributes["server_id"], rs.Primary.Attributes[names.AttrExternalID])
 
 			if tfresource.NotFound(err) {
 				continue
