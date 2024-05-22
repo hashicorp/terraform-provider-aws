@@ -225,7 +225,7 @@ func resourceWebACLLoggingConfigurationRead(ctx context.Context, d *schema.Resou
 	}
 
 	if err != nil {
-		return diag.Errorf("reading WAFv2 WebACL Logging Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading WAFv2 WebACL Logging Configuration (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("log_destination_configs", flex.FlattenStringValueList(loggingConfig.LogDestinationConfigs)); err != nil {

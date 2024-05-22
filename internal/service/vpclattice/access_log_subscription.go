@@ -72,6 +72,7 @@ const (
 )
 
 func resourceAccessLogSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	in := &vpclattice.CreateAccessLogSubscriptionInput{
@@ -84,15 +85,16 @@ func resourceAccessLogSubscriptionCreate(ctx context.Context, d *schema.Resource
 	out, err := conn.CreateAccessLogSubscription(ctx, in)
 
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameAccessLogSubscription, d.Get(names.AttrDestinationARN).(string), err)
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionCreating, ResNameAccessLogSubscription, d.Get(names.AttrDestinationARN).(string), err)
 	}
 
 	d.SetId(aws.ToString(out.Id))
 
-	return resourceAccessLogSubscriptionRead(ctx, d, meta)
+	return append(diags, resourceAccessLogSubscriptionRead(ctx, d, meta)...)
 }
 
 func resourceAccessLogSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	out, err := findAccessLogSubscriptionByID(ctx, conn, d.Id())
@@ -100,11 +102,11 @@ func resourceAccessLogSubscriptionRead(ctx context.Context, d *schema.ResourceDa
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] VPCLattice AccessLogSubscription (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionReading, ResNameAccessLogSubscription, d.Id(), err)
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionReading, ResNameAccessLogSubscription, d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, out.Arn)
@@ -112,7 +114,7 @@ func resourceAccessLogSubscriptionRead(ctx context.Context, d *schema.ResourceDa
 	d.Set(names.AttrResourceARN, out.ResourceArn)
 	d.Set("resource_identifier", out.ResourceId)
 
-	return nil
+	return diags
 }
 
 func resourceAccessLogSubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -121,6 +123,7 @@ func resourceAccessLogSubscriptionUpdate(ctx context.Context, d *schema.Resource
 }
 
 func resourceAccessLogSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	log.Printf("[INFO] Deleting VPCLattice AccessLogSubscription %s", d.Id())
@@ -129,14 +132,14 @@ func resourceAccessLogSubscriptionDelete(ctx context.Context, d *schema.Resource
 	})
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionDeleting, ResNameAccessLogSubscription, d.Id(), err)
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionDeleting, ResNameAccessLogSubscription, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findAccessLogSubscriptionByID(ctx context.Context, conn *vpclattice.Client, id string) (*vpclattice.GetAccessLogSubscriptionOutput, error) {

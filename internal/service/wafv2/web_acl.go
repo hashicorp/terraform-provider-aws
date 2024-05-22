@@ -21,17 +21,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
-)
-
-const (
-	webACLCreateTimeout = 5 * time.Minute
-	webACLUpdateTimeout = 5 * time.Minute
-	webACLDeleteTimeout = 5 * time.Minute
 )
 
 // @SDKResource("aws_wafv2_web_acl", name="Web ACL")
@@ -180,6 +175,7 @@ func resourceWebACL() *schema.Resource {
 }
 
 func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
 	name := d.Get(names.AttrName).(string)
@@ -207,22 +203,26 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.TokenDomains = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.WAFUnavailableEntityException](ctx, webACLCreateTimeout, func() (interface{}, error) {
+	const (
+		timeout = 5 * time.Minute
+	)
+	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.WAFUnavailableEntityException](ctx, timeout, func() (interface{}, error) {
 		return conn.CreateWebACL(ctx, input)
 	})
 
 	if err != nil {
-		return diag.Errorf("creating WAFv2 WebACL (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating WAFv2 WebACL (%s): %s", name, err)
 	}
 
 	output := outputRaw.(*wafv2.CreateWebACLOutput)
 
 	d.SetId(aws.ToString(output.Summary.Id))
 
-	return resourceWebACLRead(ctx, d, meta)
+	return append(diags, resourceWebACLRead(ctx, d, meta)...)
 }
 
 func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
 	output, err := findWebACLByThreePartKey(ctx, conn, d.Id(), d.Get(names.AttrName).(string), d.Get(names.AttrScope).(string))
@@ -230,11 +230,11 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] WAFv2 WebACL (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading WAFv2 WebACL (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading WAFv2 WebACL (%s): %s", d.Id(), err)
 	}
 
 	webACL := output.WebACL
@@ -242,40 +242,40 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set(names.AttrARN, webACL.ARN)
 	d.Set("capacity", webACL.Capacity)
 	if err := d.Set("association_config", flattenAssociationConfig(webACL.AssociationConfig)); err != nil {
-		return diag.Errorf("setting association_config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting association_config: %s", err)
 	}
 	if err := d.Set("captcha_config", flattenCaptchaConfig(webACL.CaptchaConfig)); err != nil {
-		return diag.Errorf("setting captcha_config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting captcha_config: %s", err)
 	}
 	if err := d.Set("challenge_config", flattenChallengeConfig(webACL.ChallengeConfig)); err != nil {
-		return diag.Errorf("setting challenge_config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting challenge_config: %s", err)
 	}
 	if err := d.Set("custom_response_body", flattenCustomResponseBodies(webACL.CustomResponseBodies)); err != nil {
-		return diag.Errorf("setting custom_response_body: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting custom_response_body: %s", err)
 	}
 	if err := d.Set(names.AttrDefaultAction, flattenDefaultAction(webACL.DefaultAction)); err != nil {
-		return diag.Errorf("setting default_action: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting default_action: %s", err)
 	}
 	d.Set(names.AttrDescription, webACL.Description)
 	d.Set("lock_token", output.LockToken)
 	d.Set(names.AttrName, webACL.Name)
 	rules := filterWebACLRules(webACL.Rules, expandWebACLRules(d.Get(names.AttrRule).(*schema.Set).List()))
 	if err := d.Set(names.AttrRule, flattenWebACLRules(rules)); err != nil {
-		return diag.Errorf("setting rule: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 	}
 	d.Set("token_domains", aws.StringSlice(webACL.TokenDomains))
 	if err := d.Set("visibility_config", flattenVisibilityConfig(webACL.VisibilityConfig)); err != nil {
-		return diag.Errorf("setting visibility_config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting visibility_config: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		aclID := d.Id()
 		aclName := d.Get(names.AttrName).(string)
 		aclScope := d.Get(names.AttrScope).(string)
 		aclLockToken := d.Get("lock_token").(string)
@@ -283,10 +283,12 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		// so that the provider will not remove the Shield rule when changes are applied to the WebACL.
 		rules := expandWebACLRules(d.Get(names.AttrRule).(*schema.Set).List())
 		if sr := findShieldRule(rules); len(sr) == 0 {
-			output, err := findWebACLByThreePartKey(ctx, conn, aclID, aclName, aclScope)
+			output, err := findWebACLByThreePartKey(ctx, conn, d.Id(), aclName, aclScope)
+
 			if err != nil {
-				return diag.Errorf("reading WAFv2 WebACL (%s): %s", aclID, err)
+				return sdkdiag.AppendErrorf(diags, "reading WAFv2 WebACL (%s): %s", d.Id(), err)
 			}
+
 			rules = append(rules, findShieldRule(output.WebACL.Rules)...)
 		}
 
@@ -295,7 +297,7 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			CaptchaConfig:     expandCaptchaConfig(d.Get("captcha_config").([]interface{})),
 			ChallengeConfig:   expandChallengeConfig(d.Get("challenge_config").([]interface{})),
 			DefaultAction:     expandDefaultAction(d.Get(names.AttrDefaultAction).([]interface{})),
-			Id:                aws.String(aclID),
+			Id:                aws.String(d.Id()),
 			LockToken:         aws.String(aclLockToken),
 			Name:              aws.String(aclName),
 			Rules:             rules,
@@ -315,96 +317,94 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			input.TokenDomains = flex.ExpandStringValueSet(v.(*schema.Set))
 		}
 
-		_, err := tfresource.RetryWhenIsA[*awstypes.WAFUnavailableEntityException](ctx, webACLUpdateTimeout, func() (interface{}, error) {
+		const (
+			timeout = 5 * time.Minute
+		)
+		_, err := tfresource.RetryWhenIsA[*awstypes.WAFUnavailableEntityException](ctx, timeout, func() (interface{}, error) {
 			return conn.UpdateWebACL(ctx, input)
 		})
 
 		if errs.IsA[*awstypes.WAFOptimisticLockException](err) {
-			return retryResourceWebACLUpdateOptmisticLockFailure(ctx, conn, aclID, aclName, aclScope, aclLockToken, input)
+			var output *wafv2.GetWebACLOutput
+			output, err = findWebACLByThreePartKey(ctx, conn, d.Id(), aclName, aclScope)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "reading WAFv2 WebACL (%s): %s", d.Id(), err)
+			}
+
+			if newLockToken := aws.ToString(output.LockToken); newLockToken != aclLockToken {
+				// Retrieved a new lock token, retry due to other processes modifying the web acl out of band (See: https://docs.aws.amazon.com/sdk-for-go/api/service/shield/#Shield.EnableApplicationLayerAutomaticResponse)
+				input.LockToken = aws.String(newLockToken)
+				_, err = tfresource.RetryWhenIsOneOf2[*awstypes.WAFAssociatedItemException, *awstypes.WAFUnavailableEntityException](ctx, timeout, func() (interface{}, error) {
+					return conn.UpdateWebACL(ctx, input)
+				})
+
+				if errs.IsA[*awstypes.WAFOptimisticLockException](err) {
+					return sdkdiag.AppendErrorf(diags, "updating WAFv2 WebACL (%s), resource has changed since last refresh please run a new plan before applying again: %s", d.Id(), err)
+				}
+			}
 		}
 
 		if err != nil {
-			return diag.Errorf("updating WAFv2 WebACL (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating WAFv2 WebACL (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceWebACLRead(ctx, d, meta)
-}
-
-func retryResourceWebACLUpdateOptmisticLockFailure(ctx context.Context, conn *wafv2.Client, id, name, scope, lockToken string, input *wafv2.UpdateWebACLInput) diag.Diagnostics {
-	webAcl, err := findWebACLByThreePartKey(ctx, conn, id, name, scope)
-	if err != nil {
-		return diag.Errorf("refreshing WAFv2 WebACL (%s), attempting to refresh WAFv2 WebACL to retrieve new LockToken: %s", id, err)
-	} else if aws.ToString(webAcl.LockToken) != lockToken {
-		// Retrieved a new lock token, retry due to other processes modifying the web acl out of band (See: https://docs.aws.amazon.com/sdk-for-go/api/service/shield/#Shield.EnableApplicationLayerAutomaticResponse)
-		input.LockToken = webAcl.LockToken
-		_, err := tfresource.RetryWhenIsOneOf2[*awstypes.WAFAssociatedItemException, *awstypes.WAFUnavailableEntityException](ctx, webACLDeleteTimeout, func() (interface{}, error) {
-			return conn.UpdateWebACL(ctx, input)
-		})
-
-		if errs.IsA[*awstypes.WAFOptimisticLockException](err) {
-			return diag.Errorf("updating WAFv2 WebACL (%s), resource has changed since last refresh please run a new plan before applying again: %s", id, err)
-		}
-		return nil
-	}
-	return nil
+	return append(diags, resourceWebACLRead(ctx, d, meta)...)
 }
 
 func resourceWebACLDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
-	aclId := d.Id()
 	aclName := d.Get(names.AttrName).(string)
 	aclScope := d.Get(names.AttrScope).(string)
 	aclLockToken := d.Get("lock_token").(string)
-
 	input := &wafv2.DeleteWebACLInput{
-		Id:        aws.String(aclId),
+		Id:        aws.String(d.Id()),
 		LockToken: aws.String(aclLockToken),
 		Name:      aws.String(aclName),
 		Scope:     awstypes.Scope(aclScope),
 	}
 
 	log.Printf("[INFO] Deleting WAFv2 WebACL: %s", d.Id())
-	_, err := tfresource.RetryWhenIsOneOf2[*awstypes.WAFAssociatedItemException, *awstypes.WAFUnavailableEntityException](ctx, webACLDeleteTimeout, func() (interface{}, error) {
+	const (
+		timeout = 5 * time.Minute
+	)
+	_, err := tfresource.RetryWhenIsOneOf2[*awstypes.WAFAssociatedItemException, *awstypes.WAFUnavailableEntityException](ctx, timeout, func() (interface{}, error) {
 		return conn.DeleteWebACL(ctx, input)
 	})
 
 	if errs.IsA[*awstypes.WAFOptimisticLockException](err) {
-		return retryResourceWebACLDeleteOptmisticLockFailure(ctx, conn, aclId, aclName, aclScope, aclLockToken)
-	} else if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
-		return nil
+		var output *wafv2.GetWebACLOutput
+		output, err = findWebACLByThreePartKey(ctx, conn, d.Id(), aclName, aclScope)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading WAFv2 WebACL (%s): %s", d.Id(), err)
+		}
+
+		if newLockToken := aws.ToString(output.LockToken); newLockToken != aclLockToken {
+			// Retrieved a new lock token, retry due to other processes modifying the web acl out of band (See: https://docs.aws.amazon.com/sdk-for-go/api/service/shield/#Shield.EnableApplicationLayerAutomaticResponse)
+			input.LockToken = aws.String(newLockToken)
+			_, err = tfresource.RetryWhenIsOneOf2[*awstypes.WAFAssociatedItemException, *awstypes.WAFUnavailableEntityException](ctx, timeout, func() (interface{}, error) {
+				return conn.DeleteWebACL(ctx, input)
+			})
+
+			if errs.IsA[*awstypes.WAFOptimisticLockException](err) {
+				return sdkdiag.AppendErrorf(diags, "deleting WAFv2 WebACL (%s), resource has changed since last refresh please run a new plan before applying again: %s", d.Id(), err)
+			}
+		}
+	}
+
+	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting WAFv2 WebACL (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting WAFv2 WebACL (%s): %s", d.Id(), err)
 	}
 
-	return nil
-}
-
-func retryResourceWebACLDeleteOptmisticLockFailure(ctx context.Context, conn *wafv2.Client, id, name, scope, lockToken string) diag.Diagnostics {
-	webAcl, err := findWebACLByThreePartKey(ctx, conn, id, name, scope)
-	if err != nil {
-		return diag.Errorf("refreshing WAFv2 WebACL (%s), attempting to refresh WAFv2 WebACL to retrieve new LockToken: %s", id, err)
-	} else if aws.ToString(webAcl.LockToken) != lockToken {
-		// got a new lock token, retry due to other processes modifying the web acl out of band (See: https://docs.aws.amazon.com/sdk-for-go/api/service/shield/#Shield.EnableApplicationLayerAutomaticResponse)
-		retryInput := &wafv2.DeleteWebACLInput{
-			Id:        aws.String(id),
-			LockToken: webAcl.LockToken,
-			Name:      aws.String(name),
-			Scope:     awstypes.Scope(scope),
-		}
-		_, err := tfresource.RetryWhenIsOneOf2[*awstypes.WAFAssociatedItemException, *awstypes.WAFUnavailableEntityException](ctx, webACLDeleteTimeout, func() (interface{}, error) {
-			return conn.DeleteWebACL(ctx, retryInput)
-		})
-
-		if errs.IsA[*awstypes.WAFOptimisticLockException](err) {
-			return diag.Errorf("deleting WAFv2 WebACL (%s), resource has changed since last refresh please run a new plan before applying again: %s", id, err)
-		}
-		return nil
-	}
-	return nil
+	return diags
 }
 
 func findWebACLByThreePartKey(ctx context.Context, conn *wafv2.Client, id, name, scope string) (*wafv2.GetWebACLOutput, error) {

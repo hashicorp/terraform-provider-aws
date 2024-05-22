@@ -72,7 +72,7 @@ func resourceWebACLAssociationCreate(ctx context.Context, d *schema.ResourceData
 	})
 
 	if err != nil {
-		return diag.Errorf("creating WAF Regional WebACL Association (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating WAF Regional WebACL Association (%s): %s", id, err)
 	}
 
 	d.SetId(id)
@@ -86,7 +86,7 @@ func resourceWebACLAssociationRead(ctx context.Context, d *schema.ResourceData, 
 
 	_, resourceARN, err := webACLAssociationParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	webACL, err := findWebACLByResourceARN(ctx, conn, resourceARN)
@@ -94,11 +94,11 @@ func resourceWebACLAssociationRead(ctx context.Context, d *schema.ResourceData, 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] WAF Regional WebACL Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading WAF Regional WebACL Association (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading WAF Regional WebACL Association (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrResourceARN, resourceARN)
@@ -113,7 +113,7 @@ func resourceWebACLAssociationDelete(ctx context.Context, d *schema.ResourceData
 
 	_, resourceARN, err := webACLAssociationParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	_, err = conn.DisassociateWebACL(ctx, &wafregional.DisassociateWebACLInput{

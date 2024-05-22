@@ -128,11 +128,11 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] WAF Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading WAF Rule (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading WAF Rule (%s): %s", d.Id(), err)
 	}
 
 	var predicates []map[string]interface{}
