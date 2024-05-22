@@ -9,9 +9,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,6 +22,7 @@ import (
 )
 
 // @SDKDataSource("aws_customer_gateway", name="Customer Gateway")
+// @Tags
 func dataSourceCustomerGateway() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCustomerGatewayRead,
@@ -68,37 +69,35 @@ func dataSourceCustomerGateway() *schema.Resource {
 
 func dataSourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeCustomerGatewaysInput{}
 
 	if v, ok := d.GetOk(names.AttrFilter); ok {
-		input.Filters = newCustomFilterList(v.(*schema.Set))
+		input.Filters = newCustomFilterListV2(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk(names.AttrID); ok {
-		input.CustomerGatewayIds = aws.StringSlice([]string{v.(string)})
+		input.CustomerGatewayIds = []string{v.(string)}
 	}
 
-	cgw, err := FindCustomerGateway(ctx, conn, input)
+	cgw, err := findCustomerGateway(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Customer Gateway", err))
 	}
 
-	d.SetId(aws.StringValue(cgw.CustomerGatewayId))
+	d.SetId(aws.ToString(cgw.CustomerGatewayId))
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   ec2.ServiceName,
+		Service:   names.EC2,
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("customer-gateway/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)
-	if v := aws.StringValue(cgw.BgpAsn); v != "" {
+	if v := aws.ToString(cgw.BgpAsn); v != "" {
 		v, err := strconv.ParseInt(v, 0, 0)
 
 		if err != nil {
@@ -114,9 +113,7 @@ func dataSourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set(names.AttrIPAddress, cgw.IpAddress)
 	d.Set(names.AttrType, cgw.Type)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, cgw.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOutV2(ctx, cgw.Tags)
 
 	return diags
 }

@@ -50,7 +50,7 @@ The following arguments are optional:
 * `definition` - (Optional) The application definition for this application. You can specify either inline JSON or an S3 bucket location.
 * `kms_key_id` - (Optional) KMS Key to use for the Application.
 * `role_arn` - (Optional) ARN of role for application to use to access AWS resources.
-* `tags` - (Optional) A map of tags assigned to the WorkSpaces Connection Alias. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## definition
 
@@ -103,4 +103,4 @@ Using `terraform import`, import Mainframe Modernization Application using the `
 % terraform import aws_m2_application.example 01234567890abcdef012345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ddb16327f2eaaa47be10c43e85650dde04a49e529a9252df384a9aec58e628d0 -->
+<!-- cache-key: cdktf-0.20.1 input-1706b0a183cd55604590fb832f062a4c5da676f562687f5867e9bce6b20ed624 -->

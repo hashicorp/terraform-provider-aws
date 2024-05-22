@@ -223,7 +223,7 @@ func (val Value) Equal(o Value) bool {
 	}
 	deepEqual, err := val.deepEqual(o)
 	if err != nil {
-		panic(err)
+		return false
 	}
 	return deepEqual
 }

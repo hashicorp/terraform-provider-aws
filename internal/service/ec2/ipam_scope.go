@@ -9,9 +9,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -25,7 +26,7 @@ import (
 
 // @SDKResource("aws_vpc_ipam_scope", name="IPAM Scope")
 // @Tags(identifierAttribute="id")
-func ResourceIPAMScope() *schema.Resource {
+func resourceIPAMScope() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIPAMScopeCreate,
 		ReadWithoutTimeout:   resourceIPAMScopeRead,
@@ -81,27 +82,27 @@ func ResourceIPAMScope() *schema.Resource {
 
 func resourceIPAMScopeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.CreateIpamScopeInput{
 		ClientToken:       aws.String(id.UniqueId()),
 		IpamId:            aws.String(d.Get("ipam_id").(string)),
-		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeIpamScope),
+		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeIpamScope),
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateIpamScopeWithContext(ctx, input)
+	output, err := conn.CreateIpamScope(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating IPAM Scope: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.IpamScope.IpamScopeId))
+	d.SetId(aws.ToString(output.IpamScope.IpamScopeId))
 
-	if _, err := WaitIPAMScopeCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitIPAMScopeCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for IPAM Scope (%s) create: %s", d.Id(), err)
 	}
 
@@ -110,9 +111,9 @@ func resourceIPAMScopeCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceIPAMScopeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	scope, err := FindIPAMScopeByID(ctx, conn, d.Id())
+	scope, err := findIPAMScopeByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IPAM Scope (%s) not found, removing from state", d.Id())
@@ -124,7 +125,7 @@ func resourceIPAMScopeRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "reading IPAM Scope (%s): %s", d.Id(), err)
 	}
 
-	ipamID := strings.Split(aws.StringValue(scope.IpamArn), "/")[1]
+	ipamID := strings.Split(aws.ToString(scope.IpamArn), "/")[1]
 	d.Set(names.AttrARN, scope.IpamScopeArn)
 	d.Set(names.AttrDescription, scope.Description)
 	d.Set("ipam_arn", scope.IpamArn)
@@ -133,14 +134,14 @@ func resourceIPAMScopeRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("is_default", scope.IsDefault)
 	d.Set("pool_count", scope.PoolCount)
 
-	setTagsOut(ctx, scope.Tags)
+	setTagsOutV2(ctx, scope.Tags)
 
 	return diags
 }
 
 func resourceIPAMScopeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	if d.HasChange(names.AttrDescription) {
 		input := &ec2.ModifyIpamScopeInput{
@@ -151,13 +152,13 @@ func resourceIPAMScopeUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			input.Description = aws.String(v.(string))
 		}
 
-		_, err := conn.ModifyIpamScopeWithContext(ctx, input)
+		_, err := conn.ModifyIpamScope(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating IPAM Scope (%s): %s", d.Id(), err)
 		}
 
-		if _, err := WaitIPAMScopeUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waitIPAMScopeUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for IPAM Scope (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -167,10 +168,10 @@ func resourceIPAMScopeUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceIPAMScopeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting IPAM Scope: %s", d.Id())
-	_, err := conn.DeleteIpamScopeWithContext(ctx, &ec2.DeleteIpamScopeInput{
+	_, err := conn.DeleteIpamScope(ctx, &ec2.DeleteIpamScopeInput{
 		IpamScopeId: aws.String(d.Id()),
 	})
 
@@ -182,7 +183,7 @@ func resourceIPAMScopeDelete(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "deleting IPAM Scope: (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitIPAMScopeDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitIPAMScopeDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for IPAM Scope (%s) delete: %s", d.Id(), err)
 	}
 

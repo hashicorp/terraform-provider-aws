@@ -35,5 +35,4 @@ jobs:
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-      - run: cd .ci/providerlint && go install -buildvcs=false .
-      - run: make providerlint
+      - run: make provider-lint

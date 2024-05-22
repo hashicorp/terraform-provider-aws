@@ -127,13 +127,6 @@ type VerifiableSignature struct {
 	Packet *Signature
 }
 
-// SaltedHashSpecifier specifies that the given salt and hash are
-// used by a v6 signature.
-type SaltedHashSpecifier struct {
-	Hash crypto.Hash
-	Salt []byte
-}
-
 // NewVerifiableSig returns a struct of type VerifiableSignature referencing the input signature.
 func NewVerifiableSig(signature *Signature) *VerifiableSignature {
 	return &VerifiableSignature{

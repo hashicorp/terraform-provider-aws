@@ -47,7 +47,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `compute_platform` - (Optional) Compute platform of the profiling group.
-* `tags` - (Optional) A map of tags assigned to the WorkSpaces Connection Alias. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -86,4 +86,4 @@ Using `terraform import`, import CodeGuru Profiler Profiling Group using the `id
 % terraform import aws_codeguruprofiler_profiling_group.example profiling_group-name-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d11b4acd8eb0560bccf874680aa2fb6b7d9e858edd5824435659aed3a579b03e -->
+<!-- cache-key: cdktf-0.20.1 input-a9742fcae6d4a515ab1704a2739cd7edbbd740224abfd489a9d7f359c7f498d6 -->
