@@ -24,10 +24,10 @@ data "aws_chatbot_slack_workspace" "example" {
 
 The following arguments are required:
 
-* `slack_team_name` - (Required) The Slack workspace name configured with AWS Chabot
+* `slack_team_name` - (Required) Slack workspace name configured with AWS Chabot.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `slack_team_id` - The ID of the Slack Workspace assigned by AWS Chatbot.
+* `slack_team_id` - ID of the Slack Workspace assigned by AWS Chatbot.
