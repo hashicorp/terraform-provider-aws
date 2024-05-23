@@ -45,7 +45,7 @@ This data source exports the following attributes in addition to the arguments a
 * `created_date` - Date this resource was created.
 * `signing_job_arn` - ARN of a signing job.
 * `signing_profile_version_arn` - The ARN for a signing profile version.
-* `source_code_hash` - Base64-encoded representation of raw SHA-256 sum of the zip file.
+* `source_code_hash` - (**Deprecated** use `code_sha256` instead) Base64-encoded representation of raw SHA-256 sum of the zip file.
 * `source_code_size` - Size in bytes of the function .zip file.
 * `version` - This Lambda Layer version.
 
