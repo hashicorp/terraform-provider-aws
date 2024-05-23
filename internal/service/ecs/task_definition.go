@@ -435,6 +435,12 @@ func ResourceTaskDefinition() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
+						"configured_at_launch": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							ForceNew: false,
+							Default:  false,
+						},
 					},
 				},
 				Set: resourceTaskDefinitionVolumeHash,
@@ -700,6 +706,7 @@ func resourceTaskDefinitionVolumeHash(v interface{}) int {
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrName].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["host_path"].(string)))
+	buf.WriteString(fmt.Sprintf("%t-", m["configured_at_launch"].(bool)))
 
 	if v, ok := m["efs_volume_configuration"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		m := v.([]interface{})[0].(map[string]interface{})
@@ -924,6 +931,9 @@ func expandVolumes(configured []interface{}) []*ecs.Volume {
 			}
 		}
 
+		configuredAtLaunch := data["configured_at_launch"].(bool)
+		l.ConfiguredAtLaunch = aws.Bool(configuredAtLaunch)
+
 		if v, ok := data["docker_volume_configuration"].([]interface{}); ok && len(v) > 0 {
 			l.DockerVolumeConfiguration = expandVolumesDockerVolume(v)
 		}
@@ -1054,6 +1064,10 @@ func flattenVolumes(list []*ecs.Volume) []map[string]interface{} {
 
 		if volume.Host != nil && volume.Host.SourcePath != nil {
 			l["host_path"] = aws.StringValue(volume.Host.SourcePath)
+		}
+
+		if volume.ConfiguredAtLaunch != nil {
+			l["configured_at_launch"] = aws.BoolValue(volume.ConfiguredAtLaunch)
 		}
 
 		if volume.DockerVolumeConfiguration != nil {
