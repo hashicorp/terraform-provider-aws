@@ -6,6 +6,7 @@ package fsx_test
 import (
 	"context"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -78,7 +79,7 @@ func TestAccFSxOpenZFSFileSystem_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "root_volume_id"),
 					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "skip_final_backup", "false"),
+					resource.TestCheckResourceAttr(resourceName, "skip_final_backup", "true"),
 					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "64"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, fsx.StorageTypeSsd),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct1),
@@ -94,6 +95,8 @@ func TestAccFSxOpenZFSFileSystem_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"delete_options",
+					"final_backup_tags",
 					"skip_final_backup",
 				},
 			},
@@ -128,6 +131,8 @@ func TestAccFSxOpenZFSFileSystem_diskIops(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrSecurityGroupIDs,
+					"delete_options",
+					"final_backup_tags",
 					"skip_final_backup",
 				},
 			},
@@ -218,6 +223,8 @@ func TestAccFSxOpenZFSFileSystem_rootVolume(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrSecurityGroupIDs,
+					"delete_options",
+					"final_backup_tags",
 					"skip_final_backup",
 				},
 			},
@@ -379,6 +386,8 @@ func TestAccFSxOpenZFSFileSystem_securityGroupIDs(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrSecurityGroupIDs,
+					"delete_options",
+					"final_backup_tags",
 					"skip_final_backup",
 				},
 			},
@@ -420,6 +429,8 @@ func TestAccFSxOpenZFSFileSystem_tags(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrSecurityGroupIDs,
+					"delete_options",
+					"final_backup_tags",
 					"skip_final_backup",
 				},
 			},
@@ -474,6 +485,8 @@ func TestAccFSxOpenZFSFileSystem_copyTags(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrSecurityGroupIDs,
+					"delete_options",
+					"final_backup_tags",
 					"skip_final_backup",
 				},
 			},
@@ -516,6 +529,8 @@ func TestAccFSxOpenZFSFileSystem_throughput(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrSecurityGroupIDs,
+					"delete_options",
+					"final_backup_tags",
 					"skip_final_backup",
 				},
 			},
@@ -556,6 +571,8 @@ func TestAccFSxOpenZFSFileSystem_storageType(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrSecurityGroupIDs,
+					"delete_options",
+					"final_backup_tags",
 					"skip_final_backup",
 				},
 			},
@@ -588,6 +605,8 @@ func TestAccFSxOpenZFSFileSystem_weeklyMaintenanceStartTime(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrSecurityGroupIDs,
+					"delete_options",
+					"final_backup_tags",
 					"skip_final_backup",
 				},
 			},
@@ -628,6 +647,8 @@ func TestAccFSxOpenZFSFileSystem_automaticBackupRetentionDays(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrSecurityGroupIDs,
+					"delete_options",
+					"final_backup_tags",
 					"skip_final_backup",
 				},
 			},
@@ -675,6 +696,8 @@ func TestAccFSxOpenZFSFileSystem_kmsKeyID(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrSecurityGroupIDs,
+					"delete_options",
+					"final_backup_tags",
 					"skip_final_backup",
 				},
 			},
@@ -707,6 +730,8 @@ func TestAccFSxOpenZFSFileSystem_dailyAutomaticBackupStartTime(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrSecurityGroupIDs,
+					"delete_options",
+					"final_backup_tags",
 					"skip_final_backup",
 				},
 			},
@@ -747,6 +772,8 @@ func TestAccFSxOpenZFSFileSystem_throughputCapacity(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrSecurityGroupIDs,
+					"delete_options",
+					"final_backup_tags",
 					"skip_final_backup",
 				},
 			},
@@ -787,6 +814,8 @@ func TestAccFSxOpenZFSFileSystem_storageCapacity(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrSecurityGroupIDs,
+					"delete_options",
+					"final_backup_tags",
 					"skip_final_backup",
 				},
 			},
@@ -828,6 +857,8 @@ func TestAccFSxOpenZFSFileSystem_deploymentType(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrSecurityGroupIDs,
+					"delete_options",
+					"final_backup_tags",
 					"skip_final_backup",
 				},
 			},
@@ -909,6 +940,8 @@ func TestAccFSxOpenZFSFileSystem_multiAZ(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
+					"delete_options",
+					"final_backup_tags",
 					"skip_final_backup",
 				},
 			},
@@ -942,6 +975,8 @@ func TestAccFSxOpenZFSFileSystem_routeTableIDs(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrSecurityGroupIDs,
+					"delete_options",
+					"final_backup_tags",
 					"skip_final_backup",
 				},
 			},
@@ -961,6 +996,52 @@ func TestAccFSxOpenZFSFileSystem_routeTableIDs(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_route_table.test.0", names.AttrID),
 				),
+			},
+		},
+	})
+}
+
+func TestAccFSxOpenZFSFileSystem_deleteOptions(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	if os.Getenv("FSX_CREATE_FINAL_BACKUP") != "true" {
+		t.Skip("Environment variable FSX_CREATE_FINAL_BACKUP is not set to true")
+	}
+
+	var filesystem fsx.FileSystem
+	resourceName := "aws_fsx_openzfs_file_system.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOpenZFSFileSystemConfig_deleteOptions(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem),
+					resource.TestCheckResourceAttr(resourceName, "delete_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "delete_options.0", "DELETE_CHILD_VOLUMES_AND_SNAPSHOTS"),
+					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.0.key", "TFTestKVTagKey"),
+					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.0.value", "TFTestKVTagValue"),
+					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.1.key", "TFTestKeyOnlyTagKey"),
+					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.1.value", ""),
+					resource.TestCheckResourceAttr(resourceName, "skip_final_backup", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrSecurityGroupIDs,
+					"delete_options",
+					"final_backup_tags",
+					"skip_final_backup",
+				},
 			},
 		},
 	})
@@ -1044,6 +1125,7 @@ func testAccOpenZFSFileSystemConfig_baseMultiAZ(rName string) string {
 func testAccOpenZFSFileSystemConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccOpenZFSFileSystemConfig_baseSingleAZ(rName), `
 resource "aws_fsx_openzfs_file_system" "test" {
+  skip_final_backup   = true
   storage_capacity    = 64
   subnet_ids          = aws_subnet.test[*].id
   deployment_type     = "SINGLE_AZ_1"
@@ -1658,4 +1740,25 @@ resource "aws_fsx_openzfs_file_system" "test" {
   }
 }
 `, rName, n))
+}
+
+func testAccOpenZFSFileSystemConfig_deleteOptions(rName string) string {
+	return acctest.ConfigCompose(testAccOpenZFSFileSystemConfig_baseSingleAZ(rName), `
+resource "aws_fsx_openzfs_file_system" "test" {
+  skip_final_backup   = false
+  storage_capacity    = 64
+  subnet_ids          = aws_subnet.test[*].id
+  deployment_type     = "SINGLE_AZ_1"
+  throughput_capacity = 64
+  delete_options      = ["DELETE_CHILD_VOLUMES_AND_SNAPSHOTS"]
+  final_backup_tags {
+    key   = "TFTestKeyOnlyTagKey"
+    value = ""
+  }
+  final_backup_tags {
+    key   = "TFTestKVTagKey"
+    value = "TFTestKVTagValue"
+  }
+}
+`)
 }
