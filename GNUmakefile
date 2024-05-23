@@ -328,7 +328,7 @@ help: ## Display this help
 
 import-lint: ## [CI] Provider Checks / import-lint
 	@echo "make: Provider Checks / import-lint..."
-	impi --local . --scheme stdThirdPartyLocal $(TEST)
+	@impi --local . --scheme stdThirdPartyLocal $(TEST)
 
 install: build ## build
 
