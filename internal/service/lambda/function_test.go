@@ -66,6 +66,7 @@ func TestAccLambdaFunction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "architectures.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "architectures.0", string(awstypes.ArchitectureX8664)),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "lambda", fmt.Sprintf("function:%s", funcName)),
+					resource.TestCheckResourceAttrSet(resourceName, "code_sha256"),
 					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage.0.size", "512"),
 					resource.TestCheckResourceAttr(resourceName, "logging_config.#", acctest.Ct1),
