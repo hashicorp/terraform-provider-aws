@@ -28,7 +28,8 @@ import (
 
 // @SDKResource("aws_lb_trust_store", name="Trust Store")
 // @Tags(identifierAttribute="id")
-// @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go/service/elbv2;elbv2.TrustStore")
+// @Testing(importIgnore="ca_certificates_bundle_s3_bucket;ca_certificates_bundle_s3_key")
 func ResourceTrustStore() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTrustStoreCreate,
