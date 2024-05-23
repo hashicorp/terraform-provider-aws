@@ -1,5 +1,9 @@
 ## 5.51.0 (Unreleased)
 
+NOTES:
+
+* data-source/aws_lambda_layer_version: `source_code_hash` attribute has been deprecated in favor of `code_sha256`. Will be removed a future major version ([#37646](https://github.com/hashicorp/terraform-provider-aws/issues/37646))
+
 FEATURES:
 
 * **New Resource:** `aws_lambda_runtime_management_config` ([#37643](https://github.com/hashicorp/terraform-provider-aws/issues/37643))
@@ -8,10 +12,12 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_lambda_layer_version: Add `code_sha256` attribute ([#37646](https://github.com/hashicorp/terraform-provider-aws/issues/37646))
 * data-source/aws_route53_traffic_policy_document: Add support for `application-load-balancer`, `elastic-beanstalk` and `network-load-balancer` `endpoint.type` values ([#37618](https://github.com/hashicorp/terraform-provider-aws/issues/37618))
 * resource/aws_api_gateway_deployment: Add `canary_settings` attribute ([#37573](https://github.com/hashicorp/terraform-provider-aws/issues/37573))
 * resource/aws_iam_openid_connect_provider: Allow `client_id_list` to be updated in-place ([#37612](https://github.com/hashicorp/terraform-provider-aws/issues/37612))
 * resource/aws_lambda_function: Remove `replace_security_group_on_destroy` and `replacement_security_group_ids` deprecations, re-implement with alternate workflow ([#37624](https://github.com/hashicorp/terraform-provider-aws/issues/37624))
+* resource/aws_lambda_layer_version: Add `code_sha256` attribute ([#37646](https://github.com/hashicorp/terraform-provider-aws/issues/37646))
 * resource/aws_route53_health_check: Add plan-time validation of `cloudwatch_alarm_region` ([#37510](https://github.com/hashicorp/terraform-provider-aws/issues/37510))
 * resource/aws_route53_record: Add plan-time validation of `latency_routing_policy.region` ([#37510](https://github.com/hashicorp/terraform-provider-aws/issues/37510))
 * resource/aws_route53_vpc_association_authorization: Add plan-time validation of `vpc_region` ([#37510](https://github.com/hashicorp/terraform-provider-aws/issues/37510))
@@ -22,6 +28,7 @@ BUG FIXES:
 
 * resource/aws_dynamodb_table_replica: Correctly set `kms_key_arn` on Read ([#37570](https://github.com/hashicorp/terraform-provider-aws/issues/37570))
 * resource/aws_kms_grant: Change `grant_token` to [`Sensitive`](https://developer.hashicorp.com/terraform/plugin/best-practices/sensitive-state#using-sensitive-flag-functionality) ([#37593](https://github.com/hashicorp/terraform-provider-aws/issues/37593))
+* resource/aws_lambda_layer_version: Fix issue when `source_code_hash` forces a replacement even if source code has not changed ([#37646](https://github.com/hashicorp/terraform-provider-aws/issues/37646))
 * resource/aws_m2_deployment: Fix `state` error on `deployment_id` during start/stop update ([#37581](https://github.com/hashicorp/terraform-provider-aws/issues/37581))
 * resource/aws_storagegateway_smb_file_share: Fix crash when `cache_attributes` is removed on update ([#37611](https://github.com/hashicorp/terraform-provider-aws/issues/37611))
 
