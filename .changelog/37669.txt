@@ -1,5 +1,5 @@
 ```release-note:bug
-resource/aws_lambda_function: Fix issue when `source_code_hash` forces causes drift even if source code has not changed
+resource/aws_lambda_function: Fix issue when `source_code_hash` causes drift even if source code has not changed
 ```
 
 ```release-note:enhancement
