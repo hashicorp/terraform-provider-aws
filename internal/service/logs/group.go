@@ -26,8 +26,10 @@ import (
 )
 
 // @SDKResource("aws_cloudwatch_log_group", name="Log Group")
-// @Tags
-// @Testing(tagsTest=false)
+// @Tags(identifierAttribute="arn")
+// @Testing(destroyTakesT=true)
+// @Testing(existsTakesT=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types;awstypes;awstypes.LogGroup")
 func resourceGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGroupCreate,
@@ -158,14 +160,6 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	// Support in-place update of non-refreshable attribute.
 	d.Set(names.AttrSkipDestroy, d.Get(names.AttrSkipDestroy))
 
-	tags, err := listLogGroupTags(ctx, conn, d.Id())
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for CloudWatch Logs Log Group (%s): %s", d.Id(), err)
-	}
-
-	setTagsOut(ctx, Tags(tags))
-
 	return diags
 }
 
@@ -217,14 +211,6 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "disassociating CloudWatch Logs Log Group (%s) KMS key: %s", d.Id(), err)
 			}
-		}
-	}
-
-	if d.HasChange(names.AttrTagsAll) {
-		o, n := d.GetChange(names.AttrTagsAll)
-
-		if err := updateLogGroupTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating CloudWatch Logs Log Group (%s) tags: %s", d.Id(), err)
 		}
 	}
 
