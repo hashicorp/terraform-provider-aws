@@ -41,7 +41,7 @@ func (d *dataSourceServerCertificates) Metadata(_ context.Context, req datasourc
 func (d *dataSourceServerCertificates) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Optional: true,
 			},
 			names.AttrID: framework.IDAttribute(),
@@ -60,16 +60,16 @@ func (d *dataSourceServerCertificates) Schema(ctx context.Context, req datasourc
 				CustomType: fwtypes.NewListNestedObjectTypeOf[certificate](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"id": schema.StringAttribute{
+						names.AttrID: schema.StringAttribute{
 							Computed: true,
 						},
-						"arn": schema.StringAttribute{
+						names.AttrARN: schema.StringAttribute{
 							Computed: true,
 						},
-						"path": schema.StringAttribute{
+						names.AttrPath: schema.StringAttribute{
 							Computed: true,
 						},
-						"name": schema.StringAttribute{
+						names.AttrName: schema.StringAttribute{
 							Computed: true,
 						},
 						"expiration_date": schema.StringAttribute{
