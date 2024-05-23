@@ -328,7 +328,7 @@ help: ## Display this help
 
 import-lint: ## [CI] Provider Checks / import-lint
 	@echo "make: Provider Checks / import-lint..."
-	@impi --local . --scheme stdThirdPartyLocal ./internal/...
+	impi --local . --scheme stdThirdPartyLocal $(TEST)
 
 install: build ## build
 
@@ -386,7 +386,7 @@ provider-lint: ## [CI] ProviderLint Checks / providerlint
 		-XR005=false \
 		-XS001=false \
 		-XS002=false \
-		./internal/service/... ./internal/provider/...
+		$(SVC_DIR)/... ./internal/provider/...
 
 provider-markdown-lint: ## [CI] Provider Check / markdown-lint
 	@echo "make: Provider Check / markdown-lint..."
