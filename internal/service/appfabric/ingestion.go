@@ -175,49 +175,8 @@ func (r *resourceIngestion) Read(ctx context.Context, req resource.ReadRequest, 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
+// There is no update API, so this method is a no-op
 func (r *resourceIngestion) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().AppFabricClient(ctx)
-
-	var plan resourceIngestionData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	in := &appfabric.CreateIngestionInput{
-		App:                 aws.String(plan.App.ValueString()),
-		AppBundleIdentifier: aws.String(plan.AppBundleIdentifier.ValueString()),
-		IngestionType:       awstypes.IngestionType(plan.IngestionType.ValueString()),
-		TenantId:            aws.String(plan.TenantId.ValueString()),
-		Tags:                getTagsIn(ctx),
-	}
-
-	out, err := conn.CreateIngestion(ctx, in)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppFabric, create.ErrActionCreating, ResNameIngestion, plan.App.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil || out.Ingestion == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppFabric, create.ErrActionCreating, ResNameIngestion, plan.App.String(), nil),
-			errors.New("empty output").Error(),
-		)
-		return
-	}
-
-	plan.App = flex.StringToFramework(ctx, out.Ingestion.App)
-	plan.AppBundleArn = flex.StringToFramework(ctx, out.Ingestion.AppBundleArn)
-	plan.AppBundleIdentifier = flex.StringToFramework(ctx, out.Ingestion.AppBundleArn)
-	plan.ARN = flex.StringToFramework(ctx, out.Ingestion.Arn)
-	plan.ID = types.StringValue(createIngestionID(string(*out.Ingestion.AppBundleArn), string(*out.Ingestion.Arn)))
-	plan.IngestionType = flex.StringToFramework(ctx, aws.String(string(out.Ingestion.IngestionType)))
-	plan.State = flex.StringToFramework(ctx, aws.String(string(out.Ingestion.State)))
-	plan.TenantId = flex.StringToFramework(ctx, out.Ingestion.TenantId)
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *resourceIngestion) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
