@@ -139,6 +139,7 @@ This resource supports the following arguments:
 * `canary_settings` - (Optional) Input configuration for the canary deployment when the deployment is a canary release deployment. See [`canary_settings](#canary_settings-argument-reference) below.
 
 ### `canary_settings` Argument Reference
+
 * `percent_traffic` - Percentage (0.0-100.0) of traffic routed to the canary deployment.
 * `stage_variable_overrides` - Stage variable overrides used for the canary release deployment. They can override existing stage variables or add new stage variables for the canary release deployment. These stage variables are represented as a string-to-string map between stage variable names and their values.
 * `use_stage_cache` - Boolean flag to indicate whether the canary release deployment uses the stage cache or not.
