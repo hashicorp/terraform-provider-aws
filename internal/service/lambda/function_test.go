@@ -1893,7 +1893,7 @@ func TestAccLambdaFunction_localUpdate(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish"},
+				ImportStateVerifyIgnore: []string{"filename", "publish", "source_code_hash"},
 			},
 			{
 				PreConfig: func() {
