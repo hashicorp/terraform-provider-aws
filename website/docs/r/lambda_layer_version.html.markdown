@@ -65,6 +65,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `layer_arn` - ARN of the Lambda Layer without version.
 * `signing_job_arn` - ARN of a signing job.
 * `signing_profile_version_arn` - ARN for a signing profile version.
+* `source_code_size` - Size in bytes of the function .zip file.
 * `version` - Lambda Layer version.
 
 [1]: https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html
