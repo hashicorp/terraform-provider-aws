@@ -153,7 +153,7 @@ func TestAccECSTaskDefinition_configuredAtLaunch(t *testing.T) {
 				Config: testAccTaskDefinitionConfig_configuredAtLaunch(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
-					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "volume.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "volume.0.configure_at_launch", "true"),
 				),
 			},
@@ -162,7 +162,7 @@ func TestAccECSTaskDefinition_configuredAtLaunch(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
 		},
 	})
