@@ -3,12 +3,12 @@ subcategory: "IAM (Identity & Access Management)"
 layout: "aws"
 page_title: "AWS: aws_iam_server_certificates"
 description: |-
-  List all server certificates
+  Terraform data source for managing an AWS IAM (Identity & Access Management) IAM Server Certificates.
 ---
 
 # Data Source: aws_iam_server_certificates
 
-Use this data source to list IAM Server Certificates.
+Terraform data source for managing an AWS IAM (Identity & Access Management) IAM Server Certificates.
 
 ## Example Usage
 

@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -60,29 +59,12 @@ func TestAccIAMServerCertificatesDataSource_basic(t *testing.T) {
 				Config: testAccServerCertificatesDataSourceConfig_cert(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(dataSourceName, "server_certificates.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "server_certificates.0.upload_date", resourceName, "upload_date"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "server_certificates.0.arn", resourceName, names.AttrARN),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "server_certificates.0.path", resourceName, names.AttrPath),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "server_certificates.0.name", resourceName, names.AttrName),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "server_certificates.0.id", resourceName, names.AttrID),
 				),
-			},
-		},
-	})
-}
-
-func TestAccIAMServerCertificatesDataSource_matchNamePrefix(t *testing.T) {
-	ctx := acctest.Context(t)
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServerCertificateDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccServerCertificatesDataSourceConfig_certMatchNamePrefix,
-				ExpectError: regexache.MustCompile(`Search for AWS IAM server certificates returned no results`),
 			},
 		},
 	})

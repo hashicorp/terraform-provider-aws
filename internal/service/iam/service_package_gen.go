@@ -15,7 +15,12 @@ import (
 type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{}
+	return []*types.ServicePackageFrameworkDataSource{
+		{
+			Factory: newDataSourceServerCertificates,
+			Name:    "Server Certificates",
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
@@ -88,11 +93,6 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  dataSourceServerCertificate,
 			TypeName: "aws_iam_server_certificate",
 			Name:     "Server Certificate",
-		},
-		{
-			Factory:  dataSourceServerCertificates,
-			TypeName: "aws_iam_server_certificates",
-			Name:     "Server Certificates",
 		},
 		{
 			Factory:  dataSourceSessionContext,

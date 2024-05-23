@@ -5,81 +5,78 @@ package iam
 
 import (
 	"context"
-	"log"
 	"sort"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
+
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 )
 
-// @SDKDataSource("aws_iam_server_certificates", name="Server Certificates")
-func dataSourceServerCertificates() *schema.Resource {
-	return &schema.Resource{
-		ReadWithoutTimeout: dataSourceServerCertificatesRead,
+// @FrameworkDataSource(name="Server Certificates")
+func newDataSourceServerCertificates(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &dataSourceServerCertificates{}, nil
+}
 
-		Schema: map[string]*schema.Schema{
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
-				ValidateFunc:  validation.StringLenBetween(0, 128),
-			},
+const (
+	DSNameServerCertificates = "Server Certificates Data Source"
+)
 
-			names.AttrNamePrefix: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{names.AttrName},
-				ValidateFunc:  validation.StringLenBetween(0, 128-id.UniqueIDSuffixLength),
-			},
+type dataSourceServerCertificates struct {
+	framework.DataSourceWithConfigure
+}
 
-			"path_prefix": {
-				Type:     schema.TypeString,
+func (d *dataSourceServerCertificates) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = "aws_iam_server_certificates"
+}
+
+func (d *dataSourceServerCertificates) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"name": schema.StringAttribute{
 				Optional: true,
 			},
-
-			"latest": {
-				Type:     schema.TypeBool,
+			names.AttrID: framework.IDAttribute(),
+			"name_prefix": schema.StringAttribute{
 				Optional: true,
-				Default:  false,
 			},
-			"server_certificates": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrID: {
-							Type:     schema.TypeString,
+			"path_prefix": schema.StringAttribute{
+				Optional: true,
+			},
+			"latest": schema.BoolAttribute{
+				Optional: true,
+			},
+		},
+		Blocks: map[string]schema.Block{
+			"server_certificates": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[certificate](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"id": schema.StringAttribute{
 							Computed: true,
 						},
-						names.AttrARN: {
-							Type:     schema.TypeString,
+						"arn": schema.StringAttribute{
 							Computed: true,
 						},
-						names.AttrPath: {
-							Type:     schema.TypeString,
+						"path": schema.StringAttribute{
 							Computed: true,
 						},
-						names.AttrName: {
-							Type:     schema.TypeString,
+						"name": schema.StringAttribute{
 							Computed: true,
 						},
-						"expiration_date": {
-							Type:     schema.TypeString,
+						"expiration_date": schema.StringAttribute{
 							Computed: true,
 						},
-
-						"upload_date": {
-							Type:     schema.TypeString,
+						"upload_date": schema.StringAttribute{
 							Computed: true,
 						},
 					},
@@ -89,92 +86,78 @@ func dataSourceServerCertificates() *schema.Resource {
 	}
 }
 
-func dataSourceServerCertificatesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMClient(ctx)
+func (d *dataSourceServerCertificates) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 
-	var matcher = func(cert awstypes.ServerCertificateMetadata) bool {
-		return strings.HasPrefix(aws.ToString(cert.ServerCertificateName), d.Get(names.AttrNamePrefix).(string))
+	conn := d.Meta().IAMClient(ctx)
+
+	var data serverCertificatesDataSourceModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
-	if v, ok := d.GetOk(names.AttrName); ok {
+	data.ID = types.StringValue(d.Meta().AccountID)
+	var matcher func(cert awstypes.ServerCertificateMetadata) bool
+	if !data.Name.IsNull() {
 		matcher = func(cert awstypes.ServerCertificateMetadata) bool {
-			return aws.ToString(cert.ServerCertificateName) == v.(string)
+			return aws.ToString(cert.ServerCertificateName) == data.Name.ValueString()
+		}
+	} else if !data.NamePrefix.IsNull() {
+		matcher = func(cert awstypes.ServerCertificateMetadata) bool {
+			return strings.HasPrefix(aws.ToString(cert.ServerCertificateName), data.NamePrefix.ValueString())
+		}
+	} else {
+		matcher = func(_ awstypes.ServerCertificateMetadata) bool {
+			return true
 		}
 	}
-
-	var metadatas []awstypes.ServerCertificateMetadata
 	input := &iam.ListServerCertificatesInput{}
-	if v, ok := d.GetOk("path_prefix"); ok {
-		input.PathPrefix = aws.String(v.(string))
+	if !data.PathPrefix.IsNull() {
+		input.PathPrefix = aws.String(data.PathPrefix.ValueString())
 	}
-	log.Printf("[DEBUG] Reading IAM Server Certificates")
-	pages := iam.NewListServerCertificatesPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
+	paginator := iam.NewListServerCertificatesPaginator(conn, input)
+
+	var out iam.ListServerCertificatesOutput
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading IAM Server Certificates: listing certificates: %s", err)
+			resp.Diagnostics.AddError(
+				"reading IAM Server Certificate: listing certificates",
+				err.Error(),
+			)
+			return
 		}
 		for _, cert := range page.ServerCertificateMetadataList {
 			if matcher(cert) {
-				metadatas = append(metadatas, cert)
+				out.ServerCertificateMetadataList = append(out.ServerCertificateMetadataList, cert)
 			}
 		}
 	}
 
-	if len(metadatas) == 0 {
-		return sdkdiag.AppendErrorf(diags, "Search for AWS IAM server certificates returned no results")
+	sort.Sort(CertificateByExpiration(out.ServerCertificateMetadataList))
+
+	res := flex.Flatten(ctx, out, &data)
+	resp.Diagnostics.Append(res...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	sort.Sort(CertificateByExpiration(metadatas))
-
-	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("server_certificates", flattenServerCerts(metadatas))
-
-	return diags
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func flattenServerCerts(apiObjects []awstypes.ServerCertificateMetadata) []interface{} {
-	if len(apiObjects) == 0 {
-		return nil
-	}
-
-	var tfList []interface{}
-
-	for _, apiObject := range apiObjects {
-		if apiObject == (awstypes.ServerCertificateMetadata{}) {
-			continue
-		}
-		tfList = append(tfList, flattenServerCert(apiObject))
-	}
-
-	return tfList
+type serverCertificatesDataSourceModel struct {
+	ID                            types.String                                 `tfsdk:"id"`
+	Name                          types.String                                 `tfsdk:"name"`
+	NamePrefix                    types.String                                 `tfsdk:"name_prefix"`
+	PathPrefix                    types.String                                 `tfsdk:"path_prefix"`
+	Latest                        types.Bool                                   `tfsdk:"latest"`
+	ServerCertificateMetadataList fwtypes.ListNestedObjectValueOf[certificate] `tfsdk:"server_certificates"`
 }
 
-func flattenServerCert(apiObject awstypes.ServerCertificateMetadata) map[string]interface{} {
-	if apiObject == (awstypes.ServerCertificateMetadata{}) {
-		return nil
-	}
-
-	m := map[string]interface{}{}
-
-	if v := apiObject.Arn; v != nil {
-		m[names.AttrARN] = aws.ToString(v)
-	}
-	if v := apiObject.Expiration; v != nil {
-		m["expiration_date"] = aws.ToTime(v).Format(time.RFC3339)
-	}
-	if v := apiObject.UploadDate; v != nil {
-		m["upload_date"] = aws.ToTime(v).Format(time.RFC3339)
-	}
-	if v := apiObject.Path; v != nil {
-		m[names.AttrPath] = aws.ToString(v)
-	}
-	if v := apiObject.ServerCertificateName; v != nil {
-		m[names.AttrName] = aws.ToString(v)
-	}
-	if v := apiObject.ServerCertificateId; v != nil {
-		m[names.AttrID] = aws.ToString(v)
-	}
-
-	return m
+type certificate struct {
+	ServerCertificateID   types.String      `tfsdk:"id"`
+	ARN                   types.String      `tfsdk:"arn"`
+	Path                  types.String      `tfsdk:"path"`
+	ServerCertificateName types.String      `tfsdk:"name"`
+	Expiration            timetypes.RFC3339 `tfsdk:"expiration_date"`
+	UploadDate            timetypes.RFC3339 `tfsdk:"upload_date"`
 }
