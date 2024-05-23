@@ -47,6 +47,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:    "Instance Metadata Defaults",
 		},
 		{
+			Factory: newResourceEndpointPrivateDNS,
+			Name:    "Endpoint Private DNS",
+		},
+		{
 			Factory: newResourceEndpointServicePrivateDNSVerification,
 			Name:    "Endpoint Service Private DNS Verification",
 		},
