@@ -29,7 +29,7 @@ import (
 
 // @SDKResource("aws_cloudwatch_metric_alarm", name="Metric Alarm")
 // @Tags(identifierAttribute="arn")
-// @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatch/types;awstypes;awstypes.MetricAlarm")
 func resourceMetricAlarm() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
