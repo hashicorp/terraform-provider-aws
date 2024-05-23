@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Resource:** `aws_lambda_runtime_management_config` ([#37643](https://github.com/hashicorp/terraform-provider-aws/issues/37643))
 * **New Resource:** `aws_vpc_endpoint_private_dns` ([#37628](https://github.com/hashicorp/terraform-provider-aws/issues/37628))
 * **New Resource:** `aws_vpc_endpoint_service_private_dns_verification` ([#37176](https://github.com/hashicorp/terraform-provider-aws/issues/37176))
 
