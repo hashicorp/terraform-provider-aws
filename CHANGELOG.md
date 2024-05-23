@@ -2,7 +2,7 @@
 
 NOTES:
 
-* data-source/aws_lambda_layer_version: `source_code_hash` attribute has been deprecated in favor of `code_sha256`. Will be removed a future major version ([#37646](https://github.com/hashicorp/terraform-provider-aws/issues/37646))
+* data-source/aws_lambda_layer_version: `source_code_hash` attribute has been deprecated in favor of `code_sha256`. Will be removed in a future major version ([#37646](https://github.com/hashicorp/terraform-provider-aws/issues/37646))
 
 FEATURES:
 
