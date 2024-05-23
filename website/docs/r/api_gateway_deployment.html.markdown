@@ -138,7 +138,6 @@ This resource supports the following arguments:
 * `triggers` - (Optional) Map of arbitrary keys and values that, when changed, will trigger a redeployment. To force a redeployment without changing these keys/values, use the [`-replace` option](https://developer.hashicorp.com/terraform/cli/commands/plan#replace-address) with `terraform plan` or `terraform apply`.
 * `variables` - (Optional) Map to set on the stage managed by the `stage_name` argument.
 
-
 ### `canary_settings` Argument Reference
 
 * `percent_traffic` - Percentage (0.0-100.0) of traffic routed to the canary deployment.
