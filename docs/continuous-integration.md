@@ -79,13 +79,13 @@ make acctest-lint
 You can limit the test to a service package by using the `PKG` environment variable:
 
 ```console
-% PKG=rds make acctest-lint
+PKG=rds make acctest-lint
 ```
 
 The command above is equivalent to using `SVC_DIR` and the whole relative path:
 
 ```console
-% SVC_DIR=./internal/service/rds make acctest-lint
+SVC_DIR=./internal/service/rds make acctest-lint
 ```
 
 #### `terrafmt`
@@ -195,7 +195,7 @@ golangci-lint checks runs a variety of linters on the provider's code. This is d
 Before running these checks locally, you need to install golangci-lint locally. This can be done in [several ways](https://golangci-lint.run/welcome/install/#local-installation) including using Homebrew on MacOS:
 
 ```console
-% brew install golangci-lint
+brew install golangci-lint
 ```
 
 Use the target `golangci-lint` to run both checks sequentially:
@@ -207,7 +207,7 @@ make golangci-lint
 You can limit the checks to a specific service package. For example:
 
 ```console
-% PKG=rds make golangci-lint
+PKG=rds make golangci-lint
 ```
 
 #### 1 of 2
@@ -229,7 +229,7 @@ make golangci-lint2
 **Tip:** Running the second step against the entire codebase often takes the longest of all CI tests. If you're only working in one service package, you can save a lot of time limiting the scan to that service:
 
 ```console
-% PKG=rds make golangci-lint2
+PKG=rds make golangci-lint2
 ```
 
 ### GoReleaser CI / build-32-bit
@@ -301,7 +301,7 @@ make test
 You can limit `test` to a single service package with the `PKG` environment variable:
 
 ```console
-% PKG=rds make test
+PKG=rds make test
 ```
 
 **NOTE:** `test` and `golangci-lint2` are generally the longest running checks and, depending on your computer, may take considerable time to finish.
@@ -355,7 +355,7 @@ This process generates the Terraform AWS Provider schema for use by the `tfprovi
 **NOTE:** To run this test, you need Terraform installed locally. On MacOS, you can use Homebrew to install Terraform:
 
 ```console
-% brew install terraform
+brew install terraform
 ```
 
 This test builds the provider binary, loads the provider with Terraform, generates the provider schema, and then uses the tfproviderdocs tool to ensure the provider (via the schema) and documentation are consistent with each other.
@@ -407,7 +407,7 @@ We use [Semgrep](https://github.com/semgrep/semgrep) for many types of checks an
 To locally run Semgrep checks using `make`, you'll need to install Semgrep locally. On MacOS, you can do this easily using Homebrew:
 
 ```console
-% brew install semgrep
+brew install semgrep
 ```
 
 #### Code Quality Scan
@@ -423,7 +423,7 @@ make semgrep-code-quality
 You can limit the scan to a service package by using the `PKG` environment variable:
 
 ```console
-% PKG=rds make semgrep-code-quality
+PKG=rds make semgrep-code-quality
 ```
 
 #### Naming Scan Caps/AWS/EC2
@@ -439,7 +439,7 @@ make semgrep-naming-cae
 You can limit the scan to a service package by using the `PKG` environment variable:
 
 ```console
-% PKG=rds make semgrep-naming-cae
+PKG=rds make semgrep-naming-cae
 ```
 
 #### Service Name Scan A-Z
@@ -455,7 +455,7 @@ make semgrep-service-naming
 You can limit the scan to a service package by using the `PKG` environment variable:
 
 ```console
-% PKG=rds make semgrep-service-naming
+PKG=rds make semgrep-service-naming
 ```
 
 #### Test Configs Scan
@@ -471,7 +471,7 @@ make semgrep-naming
 You can limit the scan to a service package by using the `PKG` environment variable:
 
 ```console
-% PKG=rds make semgrep-naming
+PKG=rds make semgrep-naming
 ```
 
 ### Skaff Checks / Compile skaff
@@ -567,7 +567,7 @@ YAMLlint checks the validity of YAML files.
 To run YAMLlist locally using `make`, you'll need to install it locally. On MacOS, you can install it using Homebrew:
 
 ```console
-% brew install yamllint
+brew install yamllint
 ```
 
 Use the `yamllint` target to perform the check:
