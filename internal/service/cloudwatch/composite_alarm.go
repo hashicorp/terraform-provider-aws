@@ -25,7 +25,6 @@ import (
 
 // @SDKResource("aws_cloudwatch_composite_alarm", name="Composite Alarm")
 // @Tags(identifierAttribute="arn")
-// @Testing(tagsTest=false)
 func resourceCompositeAlarm() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCompositeAlarmCreate,
