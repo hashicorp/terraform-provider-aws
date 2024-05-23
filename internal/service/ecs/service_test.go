@@ -307,7 +307,7 @@ func TestAccECSService_CapacityProviderStrategy_update(t *testing.T) {
 	})
 }
 
-func TestAccECSService_VolumeConfigurations_basic(t *testing.T) {
+func TestAccECSService_VolumeConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var service ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -320,7 +320,7 @@ func TestAccECSService_VolumeConfigurations_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckServiceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceConfig_volumeConfigurations_basic(rName),
+				Config: testAccServiceConfig_volumeConfiguration_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 				),
@@ -329,7 +329,7 @@ func TestAccECSService_VolumeConfigurations_basic(t *testing.T) {
 	})
 }
 
-func TestAccECSService_VolumeConfigurations_update(t *testing.T) {
+func TestAccECSService_VolumeConfiguration_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var service ecs.Service
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -342,19 +342,19 @@ func TestAccECSService_VolumeConfigurations_update(t *testing.T) {
 		CheckDestroy:             testAccCheckServiceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceConfig_volumeConfigurations_update(rName, "gp2", 8),
+				Config: testAccServiceConfig_volumeConfiguration_update(rName, "gp2", 8),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 				),
 			},
 			{
-				Config: testAccServiceConfig_volumeConfigurations_update(rName, "gp3", 8),
+				Config: testAccServiceConfig_volumeConfiguration_update(rName, "gp3", 8),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 				),
 			},
 			{
-				Config: testAccServiceConfig_volumeConfigurations_update(rName, "gp3", 16),
+				Config: testAccServiceConfig_volumeConfiguration_update(rName, "gp3", 16),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 				),
@@ -2144,7 +2144,7 @@ resource "aws_ecs_service" "test" {
 `, rName))
 }
 
-func testAccServiceConfig_volumeConfigurations_basic(rName string) string {
+func testAccServiceConfig_volumeConfiguration_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
@@ -2177,23 +2177,68 @@ TASK_DEFINITION
   }
 }
 
+resource "aws_iam_role" "ecs_service" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": "sts:AssumeRole",
+            "Principal": {"AWS": "*"},
+            "Effect": "Allow",
+            "Sid": ""
+        }
+    ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "ecs_service" {
+  name = %[1]q
+  role = aws_iam_role.ecs_service.name
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "elasticloadbalancing:*",
+        "ec2:*",
+        "ecs:*"
+      ],
+      "Resource": [
+        "*"
+      ]
+    }
+  ]
+}
+EOF
+}
+
 resource "aws_ecs_service" "test" {
   name            = %[1]q
   cluster         = aws_ecs_cluster.test.id
   task_definition = aws_ecs_task_definition.test.arn
   desired_count   = 1
+
   volume_configuration {
     name = "vol1"
     managed_ebs_volume {
-      role_arn   = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/ecs.amazonaws.com/AWSServiceRoleForECS"
+      role_arn   = aws_iam_role.ecs_service.arn
       size_in_gb = "8"
     }
   }
+
+  depends_on = [aws_iam_role_policy.ecs_service]
 }
 `, rName)
 }
 
-func testAccServiceConfig_volumeConfigurations_update(rName, volumeType string, size int) string {
+func testAccServiceConfig_volumeConfiguration_update(rName, volumeType string, size int) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
@@ -2226,19 +2271,64 @@ TASK_DEFINITION
   }
 }
 
+resource "aws_iam_role" "ecs_service" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": "sts:AssumeRole",
+            "Principal": {"AWS": "*"},
+            "Effect": "Allow",
+            "Sid": ""
+        }
+    ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "ecs_service" {
+  name = %[1]q
+  role = aws_iam_role.ecs_service.name
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "elasticloadbalancing:*",
+        "ec2:*",
+        "ecs:*"
+      ],
+      "Resource": [
+        "*"
+      ]
+    }
+  ]
+}
+EOF
+}
+
 resource "aws_ecs_service" "test" {
   name            = %[1]q
   cluster         = aws_ecs_cluster.test.id
   task_definition = aws_ecs_task_definition.test.arn
   desired_count   = 1
+
   volume_configuration {
     name = "vol1"
     managed_ebs_volume {
-      role_arn    = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/ecs.amazonaws.com/AWSServiceRoleForECS"
+      role_arn    = aws_iam_role.ecs_service.arn
       size_in_gb  = %[3]d
       volume_type = %[2]q
     }
   }
+
+  depends_on = [aws_iam_role_policy.ecs_service]
 }
 `, rName, volumeType, size)
 }
