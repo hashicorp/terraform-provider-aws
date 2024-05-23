@@ -29,6 +29,7 @@ import (
 
 // @SDKResource("aws_cloudwatch_metric_alarm", name="Metric Alarm")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceMetricAlarm() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{

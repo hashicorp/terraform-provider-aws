@@ -30,6 +30,7 @@ import (
 
 // @SDKResource("aws_cloudwatch_metric_stream", name="Metric Stream")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func resourceMetricStream() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMetricStreamCreate,
