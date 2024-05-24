@@ -115,7 +115,6 @@ func TestAccIVSChannel_update(t *testing.T) {
 
 	resourceName := "aws_ivs_channel.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	authorized := acctest.CtTrue
 	latencyMode := "NORMAL"
 	channelType := "BASIC"
 
