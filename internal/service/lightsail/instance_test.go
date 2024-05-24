@@ -472,7 +472,7 @@ func testAccInstanceConfig_basic(rName string) string {
 		testAccInstanceConfigBase(),
 		fmt.Sprintf(`	
 resource "aws_lightsail_instance" "test" {
-  name              = "%s"
+  name              = %[1]q
   availability_zone = data.aws_availability_zones.available.names[0]
   blueprint_id      = "amazon_linux_2"
   bundle_id         = "nano_3_0"
@@ -498,7 +498,7 @@ func testAccInstanceConfig_tags1(rName string) string {
 		testAccInstanceConfigBase(),
 		fmt.Sprintf(`
 resource "aws_lightsail_instance" "test" {
-  name              = "%s"
+  name              = %[1]q
   availability_zone = data.aws_availability_zones.available.names[0]
   blueprint_id      = "amazon_linux_2"
   bundle_id         = "nano_3_0"
@@ -515,7 +515,7 @@ func testAccInstanceConfig_tags2(rName string) string {
 		testAccInstanceConfigBase(),
 		fmt.Sprintf(`
 resource "aws_lightsail_instance" "test" {
-  name              = "%s"
+  name              = %[1]q
   availability_zone = data.aws_availability_zones.available.names[0]
   blueprint_id      = "amazon_linux_2"
   bundle_id         = "nano_3_0"
@@ -533,7 +533,7 @@ func testAccInstanceConfig_keyOnlyTags1(rName string) string {
 		testAccInstanceConfigBase(),
 		fmt.Sprintf(`
 resource "aws_lightsail_instance" "test" {
-  name              = "%s"
+  name              = %[1]q
   availability_zone = data.aws_availability_zones.available.names[0]
   blueprint_id      = "amazon_linux_2"
   bundle_id         = "nano_3_0"
@@ -551,7 +551,7 @@ func testAccInstanceConfig_keyOnlyTags2(rName string) string {
 		testAccInstanceConfigBase(),
 		fmt.Sprintf(`
 resource "aws_lightsail_instance" "test" {
-  name              = "%s"
+  name              = %[1]q
   availability_zone = data.aws_availability_zones.available.names[0]
   blueprint_id      = "amazon_linux_2"
   bundle_id         = "nano_3_0"
