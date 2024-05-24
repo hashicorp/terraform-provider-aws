@@ -294,7 +294,7 @@ func TestAccBackupReportPlan_disappears(t *testing.T) {
 	var reportPlan backup.ReportPlan
 	rName := sdkacctest.RandomWithPrefix("tf-test-bucket")
 	rName2 := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
-	description := "disappears"
+	description := acctest.CtDisappears
 	resourceName := "aws_backup_report_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -304,7 +304,7 @@ func TestAccBackupReportPlan_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckReportPlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReportPlanConfig_basic(rName, rName2, description),
+				Config: testAccReportPlanConfig_basic(rName, rName2, acctest.CtDisappears),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReportPlanExists(ctx, resourceName, &reportPlan),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbackup.ResourceReportPlan(), resourceName),
