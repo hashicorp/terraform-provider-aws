@@ -21,13 +21,13 @@ func TestAccCodeArtifact_serial(t *testing.T) {
 		"Domain": {
 			acctest.CtBasic:                 testAccDomain_basic,
 			"defaultEncryptionKey":          testAccDomain_defaultEncryptionKey,
-			"disappears":                    testAccDomain_disappears,
+			acctest.CtDisappears:                    testAccDomain_disappears,
 			"migrateAssetSizeBytesToString": testAccDomain_MigrateAssetSizeBytesToString,
 			"tags":                          testAccDomain_tags,
 		},
 		"DomainPermissionsPolicy": {
 			acctest.CtBasic:    testAccDomainPermissionsPolicy_basic,
-			"disappears":       testAccDomainPermissionsPolicy_disappears,
+			acctest.CtDisappears:       testAccDomainPermissionsPolicy_disappears,
 			"owner":            testAccDomainPermissionsPolicy_owner,
 			"disappearsDomain": testAccDomainPermissionsPolicy_Disappears_domain,
 			"ignoreEquivalent": testAccDomainPermissionsPolicy_ignoreEquivalent,
@@ -35,7 +35,7 @@ func TestAccCodeArtifact_serial(t *testing.T) {
 		"Repository": {
 			acctest.CtBasic:      testAccRepository_basic,
 			"description":        testAccRepository_description,
-			"disappears":         testAccRepository_disappears,
+			acctest.CtDisappears:         testAccRepository_disappears,
 			"externalConnection": testAccRepository_externalConnection,
 			"owner":              testAccRepository_owner,
 			"tags":               testAccRepository_tags,
@@ -47,7 +47,7 @@ func TestAccCodeArtifact_serial(t *testing.T) {
 		},
 		"RepositoryPermissionsPolicy": {
 			acctest.CtBasic:    testAccRepositoryPermissionsPolicy_basic,
-			"disappears":       testAccRepositoryPermissionsPolicy_disappears,
+			acctest.CtDisappears:       testAccRepositoryPermissionsPolicy_disappears,
 			"owner":            testAccRepositoryPermissionsPolicy_owner,
 			"disappearsDomain": testAccRepositoryPermissionsPolicy_Disappears_domain,
 			"ignoreEquivalent": testAccRepositoryPermissionsPolicy_ignoreEquivalent,
