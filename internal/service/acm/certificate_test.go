@@ -1654,8 +1654,8 @@ func TestAccACMCertificate_PrivateKey_ReimportWithTags(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"certificate_pem": config.StringVariable(certificatePEM1),
-					"private_key_pem": config.StringVariable(privateKeyPEM1),
+					acctest.CtCertificatePEM: config.StringVariable(certificatePEM1),
+					acctest.CtPrivateKeyPEM: config.StringVariable(privateKeyPEM1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &v),
@@ -1672,8 +1672,8 @@ func TestAccACMCertificate_PrivateKey_ReimportWithTags(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"certificate_pem": config.StringVariable(certificatePEM1),
-					"private_key_pem": config.StringVariable(privateKeyPEM1),
+					acctest.CtCertificatePEM: config.StringVariable(certificatePEM1),
+					acctest.CtPrivateKeyPEM: config.StringVariable(privateKeyPEM1),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -1688,8 +1688,8 @@ func TestAccACMCertificate_PrivateKey_ReimportWithTags(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 					}),
-					"certificate_pem": config.StringVariable(certificatePEM2),
-					"private_key_pem": config.StringVariable(privateKeyPEM2),
+					acctest.CtCertificatePEM: config.StringVariable(certificatePEM2),
+					acctest.CtPrivateKeyPEM: config.StringVariable(privateKeyPEM2),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &v),
@@ -1706,8 +1706,8 @@ func TestAccACMCertificate_PrivateKey_ReimportWithTags(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 					}),
-					"certificate_pem": config.StringVariable(certificatePEM2),
-					"private_key_pem": config.StringVariable(privateKeyPEM2),
+					acctest.CtCertificatePEM: config.StringVariable(certificatePEM2),
+					acctest.CtPrivateKeyPEM: config.StringVariable(privateKeyPEM2),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
