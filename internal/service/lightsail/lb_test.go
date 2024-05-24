@@ -33,18 +33,18 @@ func TestAccLightsailLoadBalancer_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"lb": {
 			acctest.CtBasic:     testAccLoadBalancer_basic,
-			"disappears":        testAccLoadBalancer_disappears,
+			acctest.CtDisappears:        testAccLoadBalancer_disappears,
 			acctest.CtName:      testAccLoadBalancer_name,
 			"health_check_path": testAccLoadBalancer_healthCheckPath,
 			"tags":              testAccLoadBalancer_tags,
 		},
 		"lb_attachment": {
 			acctest.CtBasic: testAccLoadBalancerAttachment_basic,
-			"disappears":    testAccLoadBalancerAttachment_disappears,
+			acctest.CtDisappears:    testAccLoadBalancerAttachment_disappears,
 		},
 		"lb_certificate": {
 			acctest.CtBasic:             testAccLoadBalancerCertificate_basic,
-			"disappears":                testAccLoadBalancerCertificate_disappears,
+			acctest.CtDisappears:                testAccLoadBalancerCertificate_disappears,
 			"domain_validation_records": testAccLoadBalancerCertificate_domainValidationRecords,
 			"subject_alternative_names": testAccLoadBalancerCertificate_subjectAlternativeNames,
 		},
@@ -58,7 +58,7 @@ func TestAccLightsailLoadBalancer_serial(t *testing.T) {
 			acctest.CtBasic:   testAccLoadBalancerStickinessPolicy_basic,
 			"cookie_duration": testAccLoadBalancerStickinessPolicy_cookieDuration,
 			"enabled":         testAccLoadBalancerStickinessPolicy_enabled,
-			"disappears":      testAccLoadBalancerStickinessPolicy_disappears,
+			acctest.CtDisappears:      testAccLoadBalancerStickinessPolicy_disappears,
 		},
 	}
 
