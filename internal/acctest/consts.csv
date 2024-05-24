@@ -10,9 +10,14 @@ basic,Basic
 false,False
 key1,Key1
 key2,Key2
+name,Name
+overlapkey1,OverlapKey1
 provider_tags,ProviderTags
+providerkey1,ProviderKey1
 providervalue1,ProviderValue1
 rName,RName
+resource_tags,ResourceTags
+resourcekey1,ResourceKey1
 resourcevalue1,ResourceValue1
 resourcevalue2,ResourceValue2
 rule.#,RulePound

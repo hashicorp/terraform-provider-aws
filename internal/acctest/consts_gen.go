@@ -20,9 +20,14 @@ const (
 	CtFalseCaps      = "FALSE"
 	CtKey1           = "key1"
 	CtKey2           = "key2"
+	CtName           = "name"
+	CtOverlapKey1    = "overlapkey1"
+	CtProviderKey1   = "providerkey1"
 	CtProviderTags   = "provider_tags"
 	CtProviderValue1 = "providervalue1"
 	CtRName          = "rName"
+	CtResourceKey1   = "resourcekey1"
+	CtResourceTags   = "resource_tags"
 	CtResourceValue1 = "resourcevalue1"
 	CtResourceValue2 = "resourcevalue2"
 	CtRulePound      = "rule.#"
@@ -53,9 +58,14 @@ func ConstOrQuote(constant string) string {
 		"FALSE":          "CtFalseCaps",
 		"key1":           "CtKey1",
 		"key2":           "CtKey2",
+		"name":           "CtName",
+		"overlapkey1":    "CtOverlapKey1",
+		"providerkey1":   "CtProviderKey1",
 		"provider_tags":  "CtProviderTags",
 		"providervalue1": "CtProviderValue1",
 		"rName":          "CtRName",
+		"resourcekey1":   "CtResourceKey1",
+		"resource_tags":  "CtResourceTags",
 		"resourcevalue1": "CtResourceValue1",
 		"resourcevalue2": "CtResourceValue2",
 		"rule.#":         "CtRulePound",

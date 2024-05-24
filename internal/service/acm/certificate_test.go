@@ -1651,7 +1651,7 @@ func TestAccACMCertificate_PrivateKey_ReimportWithTags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Certificate/tags/"),
 				ConfigVariables: config.Variables{
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					"certificate_pem": config.StringVariable(certificatePEM1),
@@ -1669,7 +1669,7 @@ func TestAccACMCertificate_PrivateKey_ReimportWithTags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Certificate/tags/"),
 				ConfigVariables: config.Variables{
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					"certificate_pem": config.StringVariable(certificatePEM1),
@@ -1685,7 +1685,7 @@ func TestAccACMCertificate_PrivateKey_ReimportWithTags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Certificate/tags/"),
 				ConfigVariables: config.Variables{
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 					}),
 					"certificate_pem": config.StringVariable(certificatePEM2),
@@ -1703,7 +1703,7 @@ func TestAccACMCertificate_PrivateKey_ReimportWithTags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Certificate/tags/"),
 				ConfigVariables: config.Variables{
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 					}),
 					"certificate_pem": config.StringVariable(certificatePEM2),
