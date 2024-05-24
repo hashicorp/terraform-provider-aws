@@ -22,6 +22,7 @@ import (
 	"text/template"
 
 	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -166,7 +167,7 @@ type ResourceDatum struct {
 	GoImports         []goImport
 	GenerateConfig    bool
 	InitCodeBlocks    []codeBlock
-	AdditionalTfVars  map[string]string
+	AdditionalTfVars  map[string][]string
 }
 
 type goImport struct {
@@ -254,7 +255,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 	// Look first for tagging annotations.
 	d := ResourceDatum{
 		FileName:         v.fileName,
-		AdditionalTfVars: make(map[string]string),
+		AdditionalTfVars: make(map[string][]string),
 	}
 	dataSource := false
 	tagged := false
@@ -420,8 +421,8 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			Code: fmt.Sprintf(`privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 			certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, %s)`, tlsKeyCN),
 		})
-		d.AdditionalTfVars["certificate_pem"] = "certificatePEM"
-		d.AdditionalTfVars["private_key_pem"] = "privateKeyPEM"
+		d.AdditionalTfVars["certificate_pem"] = []string{acctest.ConstOrQuote("certificate_pem"), "certificatePEM"}
+		d.AdditionalTfVars["private_key_pem"] = []string{acctest.ConstOrQuote("private_key_pem"), "privateKeyPEM"}
 
 	}
 
