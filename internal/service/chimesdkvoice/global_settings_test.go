@@ -26,9 +26,9 @@ func TestAccChimeSDKVoiceGlobalSettings_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic: testAccGlobalSettings_basic,
-		acctest.CtDisappears:    testAccGlobalSettings_disappears,
-		"update":        testAccGlobalSettings_update,
+		acctest.CtBasic:      testAccGlobalSettings_basic,
+		acctest.CtDisappears: testAccGlobalSettings_disappears,
+		"update":             testAccGlobalSettings_update,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
