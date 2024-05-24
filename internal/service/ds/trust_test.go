@@ -49,7 +49,7 @@ func TestAccDSTrust_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "trust_direction", string(awstypes.TrustDirectionTwoWay)),
 					resource.TestCheckResourceAttr(resourceName, "trust_password", "Some0therPassword"),
 					resource.TestCheckResourceAttr(resourceName, "trust_type", string(awstypes.TrustTypeForest)),
-					resource.TestCheckResourceAttr(resourceName, "delete_associated_conditional_forwarder", "false"),
+					resource.TestCheckResourceAttr(resourceName, "delete_associated_conditional_forwarder", acctest.CtFalse),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_date_time"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_updated_date_time"),
 					resource.TestCheckResourceAttr(resourceName, "trust_state", string(awstypes.TrustStateVerifyFailed)),
@@ -460,7 +460,7 @@ func TestAccDSTrust_deleteAssociatedConditionalForwarder(t *testing.T) {
 					testAccCheckTrustExists(ctx, resourceName, &v),
 					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`^t-\w{10}`)),
 					resource.TestCheckResourceAttr(resourceName, "conditional_forwarder_ip_addrs.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "delete_associated_conditional_forwarder", "true"),
+					resource.TestCheckResourceAttr(resourceName, "delete_associated_conditional_forwarder", acctest.CtTrue),
 				),
 			},
 			{
