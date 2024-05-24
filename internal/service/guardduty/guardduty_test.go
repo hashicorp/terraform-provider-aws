@@ -37,7 +37,7 @@ func TestAccGuardDuty_serial(t *testing.T) {
 			acctest.CtBasic: testAccFilter_basic,
 			"update":        testAccFilter_update,
 			"tags":          testAccFilter_tags,
-			"disappears":    testAccFilter_disappears,
+			acctest.CtDisappears:    testAccFilter_disappears,
 		},
 		"FindingIDs": {
 			"datasource_basic": testAccFindingIDsDataSource_basic,
@@ -76,7 +76,7 @@ func TestAccGuardDuty_serial(t *testing.T) {
 		},
 		"PublishingDestination": {
 			acctest.CtBasic: testAccPublishingDestination_basic,
-			"disappears":    testAccPublishingDestination_disappears,
+			acctest.CtDisappears:    testAccPublishingDestination_disappears,
 		},
 	}
 
