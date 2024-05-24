@@ -19,14 +19,14 @@ func TestAccVerifiedAccess_serial(t *testing.T) {
 			acctest.CtBasic:    testAccVerifiedAccessEndpoint_basic,
 			"networkInterface": testAccVerifiedAccessEndpoint_networkInterface,
 			"tags":             testAccVerifiedAccessEndpoint_tags,
-			"disappears":       testAccVerifiedAccessEndpoint_disappears,
+			acctest.CtDisappears:       testAccVerifiedAccessEndpoint_disappears,
 			"policyDocument":   testAccVerifiedAccessEndpoint_policyDocument,
 		},
 		"Group": {
 			acctest.CtBasic: testAccVerifiedAccessGroup_basic,
 			"kms":           testAccVerifiedAccessGroup_kms,
 			"updateKMS":     testAccVerifiedAccessGroup_updateKMS,
-			"disappears":    testAccVerifiedAccessGroup_disappears,
+			acctest.CtDisappears:    testAccVerifiedAccessGroup_disappears,
 			"tags":          testAccVerifiedAccessGroup_tags,
 			"policy":        testAccVerifiedAccessGroup_policy,
 			"updatePolicy":  testAccVerifiedAccessGroup_updatePolicy,
@@ -36,7 +36,7 @@ func TestAccVerifiedAccess_serial(t *testing.T) {
 			acctest.CtBasic: testAccVerifiedAccessInstance_basic,
 			"description":   testAccVerifiedAccessInstance_description,
 			"fipsEnabled":   testAccVerifiedAccessInstance_fipsEnabled,
-			"disappears":    testAccVerifiedAccessInstance_disappears,
+			acctest.CtDisappears:    testAccVerifiedAccessInstance_disappears,
 			"tags":          testAccVerifiedAccessInstance_tags,
 		},
 		"InstanceLoggingConfiguration": {
@@ -46,11 +46,11 @@ func TestAccVerifiedAccess_serial(t *testing.T) {
 			"accessLogsKinesisDataFirehose":                 testAccVerifiedAccessInstanceLoggingConfiguration_accessLogsKinesisDataFirehose,
 			"accessLogsS3":                                  testAccVerifiedAccessInstanceLoggingConfiguration_accessLogsS3,
 			"accessLogsCloudWatchLogsKinesisDataFirehoseS3": testAccVerifiedAccessInstanceLoggingConfiguration_accessLogsCloudWatchLogsKinesisDataFirehoseS3,
-			"disappears":                                    testAccVerifiedAccessInstanceLoggingConfiguration_disappears,
+			acctest.CtDisappears:                                    testAccVerifiedAccessInstanceLoggingConfiguration_disappears,
 		},
 		"InstanceTrustProviderAttachment": {
 			acctest.CtBasic: testAccVerifiedAccessInstanceTrustProviderAttachment_basic,
-			"disappears":    testAccVerifiedAccessInstanceTrustProviderAttachment_disappears,
+			acctest.CtDisappears:    testAccVerifiedAccessInstanceTrustProviderAttachment_disappears,
 		},
 	}
 

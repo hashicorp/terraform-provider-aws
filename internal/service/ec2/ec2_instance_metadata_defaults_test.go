@@ -24,7 +24,7 @@ func TestAccEC2InstanceMetadataDefaults_serial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic: testAccInstanceMetadataDefaults_basic,
-		"disappears":    testAccInstanceMetadataDefaults_disappears,
+		acctest.CtDisappears:    testAccInstanceMetadataDefaults_disappears,
 		"empty":         testAccInstanceMetadataDefaults_empty,
 	}
 

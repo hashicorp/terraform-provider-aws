@@ -22,7 +22,7 @@ func TestAccVPCNetworkPerformanceMetricSubscription_serial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic: testAccNetworkPerformanceMetricSubscription_basic,
-		"disappears":    testAccNetworkPerformanceMetricSubscription_disappears,
+		acctest.CtDisappears:    testAccNetworkPerformanceMetricSubscription_disappears,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)

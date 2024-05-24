@@ -26,7 +26,7 @@ func TestAccIPAMOrganizationAdminAccount_serial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic: testAccIPAMOrganizationAdminAccount_basic,
-		"disappears":    testAccIPAMOrganizationAdminAccount_disappears,
+		acctest.CtDisappears:    testAccIPAMOrganizationAdminAccount_disappears,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
