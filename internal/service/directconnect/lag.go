@@ -72,7 +72,7 @@ func ResourceLag() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"owner_account_id": {
+			names.AttrOwnerAccountID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -163,7 +163,7 @@ func resourceLagRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("jumbo_frame_capable", lag.JumboFrameCapable)
 	d.Set("location", lag.Location)
 	d.Set(names.AttrName, lag.LagName)
-	d.Set("owner_account_id", lag.OwnerAccount)
+	d.Set(names.AttrOwnerAccountID, lag.OwnerAccount)
 	d.Set(names.AttrProviderName, lag.ProviderName)
 
 	return diags

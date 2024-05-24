@@ -81,7 +81,7 @@ func ResourceConnection() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"owner_account_id": {
+			names.AttrOwnerAccountID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -201,7 +201,7 @@ func ResourceConnection() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"owner_account_id": {
+			names.AttrOwnerAccountID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -296,7 +296,7 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("location", connection.Location)
 	d.Set("macsec_capable", connection.MacSecCapable)
 	d.Set(names.AttrName, connection.ConnectionName)
-	d.Set("owner_account_id", connection.OwnerAccount)
+	d.Set(names.AttrOwnerAccountID, connection.OwnerAccount)
 	d.Set("partner_name", connection.PartnerName)
 	d.Set("port_encryption_status", connection.PortEncryptionStatus)
 	d.Set(names.AttrProviderName, connection.ProviderName)

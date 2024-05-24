@@ -98,7 +98,7 @@ func ResourceHostedPrivateVirtualInterface() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"owner_account_id": {
+			names.AttrOwnerAccountID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -132,7 +132,7 @@ func resourceHostedPrivateVirtualInterfaceCreate(ctx context.Context, d *schema.
 			VirtualInterfaceName: aws.String(d.Get(names.AttrName).(string)),
 			Vlan:                 aws.Int64(int64(d.Get("vlan").(int))),
 		},
-		OwnerAccount: aws.String(d.Get("owner_account_id").(string)),
+		OwnerAccount: aws.String(d.Get(names.AttrOwnerAccountID).(string)),
 	}
 	if v, ok := d.GetOk("amazon_address"); ok {
 		req.NewPrivateVirtualInterfaceAllocation.AmazonAddress = aws.String(v.(string))
@@ -195,7 +195,7 @@ func resourceHostedPrivateVirtualInterfaceRead(ctx context.Context, d *schema.Re
 	d.Set("jumbo_frame_capable", vif.JumboFrameCapable)
 	d.Set("mtu", vif.Mtu)
 	d.Set(names.AttrName, vif.VirtualInterfaceName)
-	d.Set("owner_account_id", vif.OwnerAccount)
+	d.Set(names.AttrOwnerAccountID, vif.OwnerAccount)
 	d.Set("vlan", vif.Vlan)
 
 	return diags

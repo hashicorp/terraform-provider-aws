@@ -88,7 +88,7 @@ func ResourceHostedPublicVirtualInterface() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"owner_account_id": {
+			names.AttrOwnerAccountID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -128,7 +128,7 @@ func resourceHostedPublicVirtualInterfaceCreate(ctx context.Context, d *schema.R
 			VirtualInterfaceName: aws.String(d.Get(names.AttrName).(string)),
 			Vlan:                 aws.Int64(int64(d.Get("vlan").(int))),
 		},
-		OwnerAccount: aws.String(d.Get("owner_account_id").(string)),
+		OwnerAccount: aws.String(d.Get(names.AttrOwnerAccountID).(string)),
 	}
 	if v, ok := d.GetOk("amazon_address"); ok {
 		req.NewPublicVirtualInterfaceAllocation.AmazonAddress = aws.String(v.(string))
@@ -189,7 +189,7 @@ func resourceHostedPublicVirtualInterfaceRead(ctx context.Context, d *schema.Res
 	d.Set("connection_id", vif.ConnectionId)
 	d.Set("customer_address", vif.CustomerAddress)
 	d.Set(names.AttrName, vif.VirtualInterfaceName)
-	d.Set("owner_account_id", vif.OwnerAccount)
+	d.Set(names.AttrOwnerAccountID, vif.OwnerAccount)
 	if err := d.Set("route_filter_prefixes", flattenRouteFilterPrefixes(vif.RouteFilterPrefixes)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting route_filter_prefixes: %s", err)
 	}
