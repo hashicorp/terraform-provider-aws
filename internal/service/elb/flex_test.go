@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package elb
+package elb_test
 
 import (
 	"reflect"
@@ -10,6 +10,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elb"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -31,7 +33,7 @@ func TestExpandListeners(t *testing.T) {
 			"ssl_certificate_id": "something",
 		},
 	}
-	listeners, err := ExpandListeners(expanded)
+	listeners, err := tfelb.ExpandListeners(expanded)
 	if err != nil {
 		t.Fatalf("bad: %#v", err)
 	}
@@ -65,7 +67,7 @@ func TestExpandListeners_invalid(t *testing.T) {
 			"ssl_certificate_id": "something",
 		},
 	}
-	_, err := ExpandListeners(expanded)
+	_, err := tfelb.ExpandListeners(expanded)
 	if err != nil {
 		// Check the error we got
 		if !strings.Contains(err.Error(), `"ssl_certificate_id" may be set only when "protocol"`) {
@@ -106,7 +108,7 @@ func TestFlattenHealthCheck(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output := FlattenHealthCheck(tc.Input)
+		output := tfelb.FlattenHealthCheck(tc.Input)
 		if !reflect.DeepEqual(output, tc.Output) {
 			t.Fatalf("Got:\n\n%#v\n\nExpected:\n\n%#v", output, tc.Output)
 		}
@@ -126,7 +128,7 @@ func TestExpandInstanceString(t *testing.T) {
 		"test-two",
 	}
 
-	expanded := ExpandInstanceString(ids)
+	expanded := tfelb.ExpandInstanceString(ids)
 
 	if !reflect.DeepEqual(expanded, expected) {
 		t.Fatalf("Expand Instance String output did not match.\nGot:\n%#v\n\nexpected:\n%#v", expanded, expected)
@@ -150,7 +152,7 @@ func TestExpandPolicyAttributes(t *testing.T) {
 			names.AttrValue: acctest.CtTrue,
 		},
 	}
-	attributes := ExpandPolicyAttributes(expanded)
+	attributes := tfelb.ExpandPolicyAttributes(expanded)
 
 	if len(attributes) != 3 {
 		t.Fatalf("expected number of attributes to be 3, but got %d", len(attributes))
@@ -174,7 +176,7 @@ func TestExpandPolicyAttributes_empty(t *testing.T) {
 
 	var expanded []interface{}
 
-	attributes := ExpandPolicyAttributes(expanded)
+	attributes := tfelb.ExpandPolicyAttributes(expanded)
 
 	if len(attributes) != 0 {
 		t.Fatalf("expected number of attributes to be 0, but got %d", len(attributes))
@@ -190,7 +192,7 @@ func TestExpandPolicyAttributes_invalid(t *testing.T) {
 			names.AttrValue: acctest.CtTrue,
 		},
 	}
-	attributes := ExpandPolicyAttributes(expanded)
+	attributes := tfelb.ExpandPolicyAttributes(expanded)
 
 	expected := &elb.PolicyAttribute{
 		AttributeName:  aws.String("Protocol-TLSv1.2"),
@@ -229,7 +231,7 @@ func TestFlattenPolicyAttributes(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		output := FlattenPolicyAttributes(tc.Input)
+		output := tfelb.FlattenPolicyAttributes(tc.Input)
 		if !reflect.DeepEqual(output, tc.Output) {
 			t.Fatalf("Got:\n\n%#v\n\nExpected:\n\n%#v", output, tc.Output)
 		}
