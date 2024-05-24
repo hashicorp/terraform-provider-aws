@@ -27,7 +27,7 @@ func TestAccChimeSDKVoiceGlobalSettings_serial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic: testAccGlobalSettings_basic,
-		"disappears":    testAccGlobalSettings_disappears,
+		acctest.CtDisappears:    testAccGlobalSettings_disappears,
 		"update":        testAccGlobalSettings_update,
 	}
 
