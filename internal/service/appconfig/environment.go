@@ -55,7 +55,7 @@ func (r *resourceEnvironment) Metadata(_ context.Context, request resource.Metad
 func (r *resourceEnvironment) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"application_id": schema.StringAttribute{
+			names.AttrApplicationID: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -282,8 +282,8 @@ func (r *resourceEnvironment) Delete(ctx context.Context, request resource.Delet
 	}
 
 	tflog.Debug(ctx, "Deleting AppConfig Environment", map[string]any{
-		"application_id": state.ApplicationID.ValueString(),
-		"environment_id": state.EnvironmentID.ValueString(),
+		names.AttrApplicationID: state.ApplicationID.ValueString(),
+		"environment_id":        state.EnvironmentID.ValueString(),
 	})
 
 	_, err := conn.DeleteEnvironment(ctx, state.deleteEnvironmentInput())
@@ -306,7 +306,7 @@ func (r *resourceEnvironment) ImportState(ctx context.Context, request resource.
 	}
 
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("environment_id"), parts[0])...)
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("application_id"), parts[1])...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrApplicationID), parts[1])...)
 }
 
 func (r *resourceEnvironment) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
