@@ -26,8 +26,8 @@ func TestAccSESActiveReceiptRuleSet_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Resource": {
-			acctest.CtBasic: testAccActiveReceiptRuleSet_basic,
-			acctest.CtDisappears:    testAccActiveReceiptRuleSet_disappears,
+			acctest.CtBasic:      testAccActiveReceiptRuleSet_basic,
+			acctest.CtDisappears: testAccActiveReceiptRuleSet_disappears,
 		},
 		"DataSource": {
 			acctest.CtBasic:   testAccActiveReceiptRuleSetDataSource_basic,
