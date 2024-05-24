@@ -16,7 +16,7 @@ func TestAccKMS_serial(t *testing.T) {
 		"CustomKeyStore": {
 			acctest.CtBasic:    testAccCustomKeyStore_basic,
 			"update":           testAccCustomKeyStore_update,
-			"disappears":       testAccCustomKeyStore_disappears,
+			acctest.CtDisappears:       testAccCustomKeyStore_disappears,
 			"DataSource_basic": testAccCustomKeyStoreDataSource_basic,
 		},
 	}
