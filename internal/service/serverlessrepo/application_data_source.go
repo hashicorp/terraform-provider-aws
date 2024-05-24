@@ -22,7 +22,7 @@ func DataSourceApplication() *schema.Resource {
 		ReadWithoutTimeout: dataSourceApplicationRead,
 
 		Schema: map[string]*schema.Schema{
-			"application_id": {
+			names.AttrApplicationID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -58,7 +58,7 @@ func dataSourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServerlessRepoConn(ctx)
 
-	applicationID := d.Get("application_id").(string)
+	applicationID := d.Get(names.AttrApplicationID).(string)
 	semanticVersion := d.Get("semantic_version").(string)
 
 	output, err := findApplication(ctx, conn, applicationID, semanticVersion)

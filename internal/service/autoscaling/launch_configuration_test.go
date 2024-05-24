@@ -377,7 +377,7 @@ func TestAccAutoScalingLaunchConfiguration_withGP3(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrDeviceName: "/dev/sdb",
 						names.AttrEncrypted:  acctest.CtTrue,
-						"throughput":         "150",
+						names.AttrThroughput: "150",
 						names.AttrVolumeSize: "9",
 						names.AttrVolumeType: "gp3",
 					}),

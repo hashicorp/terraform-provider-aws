@@ -30,7 +30,7 @@ func ResourceEmailChannel() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"application_id": {
+			names.AttrApplicationID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -70,7 +70,7 @@ func resourceEmailChannelUpsert(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
 
-	applicationId := d.Get("application_id").(string)
+	applicationId := d.Get(names.AttrApplicationID).(string)
 
 	params := &pinpoint.EmailChannelRequest{}
 
@@ -121,7 +121,7 @@ func resourceEmailChannelRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	res := output.EmailChannelResponse
-	d.Set("application_id", res.ApplicationId)
+	d.Set(names.AttrApplicationID, res.ApplicationId)
 	d.Set(names.AttrEnabled, res.Enabled)
 	d.Set("from_address", res.FromAddress)
 	d.Set("identity", res.Identity)

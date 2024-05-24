@@ -364,7 +364,7 @@ func flattenAMIBlockDeviceMappings(m []*ec2.BlockDeviceMapping) *schema.Set {
 				names.AttrDeleteOnTermination: fmt.Sprintf("%t", aws.BoolValue(v.Ebs.DeleteOnTermination)),
 				names.AttrEncrypted:           fmt.Sprintf("%t", aws.BoolValue(v.Ebs.Encrypted)),
 				names.AttrIOPS:                fmt.Sprintf("%d", aws.Int64Value(v.Ebs.Iops)),
-				"throughput":                  fmt.Sprintf("%d", aws.Int64Value(v.Ebs.Throughput)),
+				names.AttrThroughput:          fmt.Sprintf("%d", aws.Int64Value(v.Ebs.Throughput)),
 				names.AttrVolumeSize:          fmt.Sprintf("%d", aws.Int64Value(v.Ebs.VolumeSize)),
 				names.AttrSnapshotID:          aws.StringValue(v.Ebs.SnapshotId),
 				names.AttrVolumeType:          aws.StringValue(v.Ebs.VolumeType),

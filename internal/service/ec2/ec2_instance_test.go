@@ -806,13 +806,13 @@ func TestAccEC2Instance_blockDevices(t *testing.T) {
 						names.AttrDeviceName: "/dev/sdf",
 						names.AttrVolumeSize: acctest.Ct10,
 						names.AttrVolumeType: "gp3",
-						"throughput":         "300",
+						names.AttrThroughput: "300",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrDeviceName: "/dev/sdg",
 						names.AttrVolumeSize: acctest.Ct10,
 						names.AttrVolumeType: "gp3",
-						"throughput":         "300",
+						names.AttrThroughput: "300",
 						names.AttrIOPS:       "4000",
 					}),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]*regexp.Regexp{

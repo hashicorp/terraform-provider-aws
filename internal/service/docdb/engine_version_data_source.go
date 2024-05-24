@@ -23,7 +23,7 @@ func DataSourceEngineVersion() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEngineVersionRead,
 		Schema: map[string]*schema.Schema{
-			"engine": {
+			names.AttrEngine: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  engineDocDB,
@@ -77,7 +77,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 
 	input := &docdb.DescribeDBEngineVersionsInput{}
 
-	if v, ok := d.GetOk("engine"); ok {
+	if v, ok := d.GetOk(names.AttrEngine); ok {
 		input.Engine = aws.String(v.(string))
 	}
 
@@ -125,7 +125,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	d.SetId(aws.StringValue(engineVersion.EngineVersion))
-	d.Set("engine", engineVersion.Engine)
+	d.Set(names.AttrEngine, engineVersion.Engine)
 	d.Set("engine_description", engineVersion.DBEngineDescription)
 	d.Set("exportable_log_types", engineVersion.ExportableLogTypes)
 	d.Set("parameter_group_family", engineVersion.DBParameterGroupFamily)

@@ -110,7 +110,7 @@ func ResourceEBSVolume() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"throughput": {
+			names.AttrThroughput: {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Computed:     true,
@@ -163,7 +163,7 @@ func resourceEBSVolumeCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.SnapshotId = aws.String(value.(string))
 	}
 
-	if value, ok := d.GetOk("throughput"); ok {
+	if value, ok := d.GetOk(names.AttrThroughput); ok {
 		input.Throughput = aws.Int32(int32(value.(int)))
 	}
 
@@ -218,7 +218,7 @@ func resourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("outpost_arn", volume.OutpostArn)
 	d.Set(names.AttrSize, volume.Size)
 	d.Set(names.AttrSnapshotID, volume.SnapshotId)
-	d.Set("throughput", volume.Throughput)
+	d.Set(names.AttrThroughput, volume.Throughput)
 	d.Set(names.AttrType, volume.VolumeType)
 
 	setTagsOutV2(ctx, volume.Tags)
@@ -246,7 +246,7 @@ func resourceEBSVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		// "If no throughput value is specified, the existing value is retained."
 		// Not currently correct, so always specify any non-zero throughput value.
 		// Throughput is valid only for gp3 volumes.
-		if v := d.Get("throughput").(int); v > 0 && d.Get(names.AttrType).(string) == string(awstypes.VolumeTypeGp3) {
+		if v := d.Get(names.AttrThroughput).(int); v > 0 && d.Get(names.AttrType).(string) == string(awstypes.VolumeTypeGp3) {
 			input.Throughput = aws.Int32(int32(v))
 		}
 
@@ -339,7 +339,7 @@ func resourceEBSVolumeDelete(ctx context.Context, d *schema.ResourceData, meta i
 func resourceEBSVolumeCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 	iops := diff.Get(names.AttrIOPS).(int)
 	multiAttachEnabled := diff.Get("multi_attach_enabled").(bool)
-	throughput := diff.Get("throughput").(int)
+	throughput := diff.Get(names.AttrThroughput).(int)
 	volumeType := awstypes.VolumeType(diff.Get(names.AttrType).(string))
 
 	if diff.Id() == "" {

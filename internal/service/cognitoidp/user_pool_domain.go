@@ -37,7 +37,7 @@ func resourceUserPoolDomain() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"aws_account_id": {
+			names.AttrAWSAccountID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -135,7 +135,7 @@ func resourceUserPoolDomainRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading Cognito User Pool Domain (%s): %s", d.Id(), err)
 	}
 
-	d.Set("aws_account_id", desc.AWSAccountId)
+	d.Set(names.AttrAWSAccountID, desc.AWSAccountId)
 	d.Set(names.AttrCertificateARN, "")
 	if desc.CustomDomainConfig != nil {
 		d.Set(names.AttrCertificateARN, desc.CustomDomainConfig.CertificateArn)

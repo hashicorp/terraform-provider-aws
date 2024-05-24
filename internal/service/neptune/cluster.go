@@ -138,7 +138,7 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"engine": {
+			names.AttrEngine: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -282,7 +282,7 @@ func ResourceCluster() *schema.Resource {
 					return new == ""
 				},
 			},
-			"storage_encrypted": {
+			names.AttrStorageEncrypted: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				ForceNew: true,
@@ -339,17 +339,17 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		CopyTagsToSnapshot:               aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 		DBClusterIdentifier:              aws.String(clusterID),
 		DeletionProtection:               aws.Bool(d.Get("deletion_protection").(bool)),
-		Engine:                           aws.String(d.Get("engine").(string)),
+		Engine:                           aws.String(d.Get(names.AttrEngine).(string)),
 		Port:                             aws.Int64(int64(d.Get(names.AttrPort).(int))),
 		ServerlessV2ScalingConfiguration: serverlessConfiguration,
-		StorageEncrypted:                 aws.Bool(d.Get("storage_encrypted").(bool)),
+		StorageEncrypted:                 aws.Bool(d.Get(names.AttrStorageEncrypted).(bool)),
 		Tags:                             getTagsIn(ctx),
 	}
 	inputR := &neptune.RestoreDBClusterFromSnapshotInput{
 		CopyTagsToSnapshot:               aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 		DBClusterIdentifier:              aws.String(clusterID),
 		DeletionProtection:               aws.Bool(d.Get("deletion_protection").(bool)),
-		Engine:                           aws.String(d.Get("engine").(string)),
+		Engine:                           aws.String(d.Get(names.AttrEngine).(string)),
 		Port:                             aws.Int64(int64(d.Get(names.AttrPort).(int))),
 		ServerlessV2ScalingConfiguration: serverlessConfiguration,
 		SnapshotIdentifier:               aws.String(d.Get("snapshot_identifier").(string)),
@@ -550,7 +550,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("enable_cloudwatch_logs_exports", aws.StringValueSlice(dbc.EnabledCloudwatchLogsExports))
 	d.Set(names.AttrEndpoint, dbc.Endpoint)
 	d.Set(names.AttrEngineVersion, dbc.EngineVersion)
-	d.Set("engine", dbc.Engine)
+	d.Set(names.AttrEngine, dbc.Engine)
 	d.Set(names.AttrHostedZoneID, dbc.HostedZoneId)
 	d.Set("iam_database_authentication_enabled", dbc.IAMDatabaseAuthenticationEnabled)
 	var iamRoles []string
@@ -569,7 +569,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if err := d.Set("serverless_v2_scaling_configuration", flattenServerlessV2ScalingConfigurationInfo(dbc.ServerlessV2ScalingConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting serverless_v2_scaling_configuration: %s", err)
 	}
-	d.Set("storage_encrypted", dbc.StorageEncrypted)
+	d.Set(names.AttrStorageEncrypted, dbc.StorageEncrypted)
 	d.Set(names.AttrStorageType, dbc.StorageType)
 	var securityGroupIDs []string
 	for _, v := range dbc.VpcSecurityGroups {

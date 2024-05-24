@@ -136,7 +136,7 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"engine": {
+			names.AttrEngine: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -236,7 +236,7 @@ func ResourceCluster() *schema.Resource {
 					return new == ""
 				},
 			},
-			"storage_encrypted": {
+			names.AttrStorageEncrypted: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				ForceNew: true,
@@ -293,7 +293,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input := &docdb.RestoreDBClusterFromSnapshotInput{
 			DBClusterIdentifier: aws.String(identifier),
 			DeletionProtection:  aws.Bool(d.Get("deletion_protection").(bool)),
-			Engine:              aws.String(d.Get("engine").(string)),
+			Engine:              aws.String(d.Get(names.AttrEngine).(string)),
 			SnapshotIdentifier:  aws.String(d.Get("snapshot_identifier").(string)),
 			Tags:                getTagsIn(ctx),
 		}
@@ -375,7 +375,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input := &docdb.CreateDBClusterInput{
 			DBClusterIdentifier: aws.String(identifier),
 			DeletionProtection:  aws.Bool(d.Get("deletion_protection").(bool)),
-			Engine:              aws.String(d.Get("engine").(string)),
+			Engine:              aws.String(d.Get(names.AttrEngine).(string)),
 			MasterUsername:      aws.String(d.Get("master_username").(string)),
 			MasterUserPassword:  aws.String(d.Get("master_password").(string)),
 			Tags:                getTagsIn(ctx),
@@ -425,7 +425,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.PreferredMaintenanceWindow = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("storage_encrypted"); ok {
+		if v, ok := d.GetOk(names.AttrStorageEncrypted); ok {
 			input.StorageEncrypted = aws.Bool(v.(bool))
 		}
 
@@ -512,7 +512,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("enabled_cloudwatch_logs_exports", aws.StringValueSlice(dbc.EnabledCloudwatchLogsExports))
 	d.Set(names.AttrEndpoint, dbc.Endpoint)
 	d.Set(names.AttrEngineVersion, dbc.EngineVersion)
-	d.Set("engine", dbc.Engine)
+	d.Set(names.AttrEngine, dbc.Engine)
 	d.Set(names.AttrHostedZoneID, dbc.HostedZoneId)
 	d.Set(names.AttrKMSKeyID, dbc.KmsKeyId)
 	d.Set("master_username", dbc.MasterUsername)
@@ -520,7 +520,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("preferred_backup_window", dbc.PreferredBackupWindow)
 	d.Set(names.AttrPreferredMaintenanceWindow, dbc.PreferredMaintenanceWindow)
 	d.Set("reader_endpoint", dbc.ReaderEndpoint)
-	d.Set("storage_encrypted", dbc.StorageEncrypted)
+	d.Set(names.AttrStorageEncrypted, dbc.StorageEncrypted)
 	d.Set(names.AttrStorageType, dbc.StorageType)
 	var securityGroupIDs []string
 	for _, v := range dbc.VpcSecurityGroups {

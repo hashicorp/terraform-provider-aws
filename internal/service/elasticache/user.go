@@ -86,7 +86,7 @@ func resourceUser() *schema.Resource {
 					},
 				},
 			},
-			"engine": {
+			names.AttrEngine: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -133,7 +133,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	userID := d.Get("user_id").(string)
 	input := &elasticache.CreateUserInput{
 		AccessString:       aws.String(d.Get("access_string").(string)),
-		Engine:             aws.String(d.Get("engine").(string)),
+		Engine:             aws.String(d.Get(names.AttrEngine).(string)),
 		NoPasswordRequired: aws.Bool(d.Get("no_password_required").(bool)),
 		Tags:               getTagsIn(ctx),
 		UserId:             aws.String(userID),
@@ -217,7 +217,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	} else {
 		d.Set("authentication_mode", nil)
 	}
-	d.Set("engine", user.Engine)
+	d.Set(names.AttrEngine, user.Engine)
 	d.Set("user_id", user.UserId)
 	d.Set(names.AttrUserName, user.UserName)
 

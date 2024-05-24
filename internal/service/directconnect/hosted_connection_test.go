@@ -48,7 +48,7 @@ func TestAccDirectConnectHostedConnection_basic(t *testing.T) {
 					testAccCheckHostedConnectionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, connectionName),
 					resource.TestCheckResourceAttr(resourceName, "connection_id", env.ConnectionId),
-					resource.TestCheckResourceAttr(resourceName, "owner_account_id", env.OwnerAccountId),
+					resource.TestCheckResourceAttr(resourceName, names.AttrOwnerAccountID, env.OwnerAccountId),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth", "100Mbps"),
 					resource.TestCheckResourceAttr(resourceName, "vlan", "4094"),
 				),

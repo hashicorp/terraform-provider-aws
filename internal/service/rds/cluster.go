@@ -210,7 +210,7 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"engine": {
+			names.AttrEngine: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -525,7 +525,7 @@ func ResourceCluster() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"storage_encrypted": {
+			names.AttrStorageEncrypted: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
@@ -550,7 +550,7 @@ func ResourceCluster() *schema.Resource {
 			verify.SetTagsDiff,
 			customdiff.ForceNewIf(names.AttrStorageType, func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
 				// Aurora supports mutation of the storage_type parameter, other engines do not
-				return !strings.HasPrefix(d.Get("engine").(string), "aurora")
+				return !strings.HasPrefix(d.Get(names.AttrEngine).(string), "aurora")
 			}),
 			func(_ context.Context, diff *schema.ResourceDiff, _ any) error {
 				if diff.Id() == "" {
@@ -596,7 +596,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			CopyTagsToSnapshot:  aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 			DBClusterIdentifier: aws.String(identifier),
 			DeletionProtection:  aws.Bool(d.Get("deletion_protection").(bool)),
-			Engine:              aws.String(d.Get("engine").(string)),
+			Engine:              aws.String(d.Get(names.AttrEngine).(string)),
 			EngineMode:          aws.String(d.Get("engine_mode").(string)),
 			SnapshotIdentifier:  aws.String(v.(string)),
 			Tags:                getTagsIn(ctx),
@@ -719,7 +719,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			CopyTagsToSnapshot:  aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 			DBClusterIdentifier: aws.String(identifier),
 			DeletionProtection:  aws.Bool(d.Get("deletion_protection").(bool)),
-			Engine:              aws.String(d.Get("engine").(string)),
+			Engine:              aws.String(d.Get(names.AttrEngine).(string)),
 			MasterUsername:      aws.String(d.Get("master_username").(string)),
 			S3BucketName:        aws.String(tfMap[names.AttrBucketName].(string)),
 			S3IngestionRoleArn:  aws.String(tfMap["ingestion_role"].(string)),
@@ -805,7 +805,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.PreferredMaintenanceWindow = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOkExists("storage_encrypted"); ok {
+		if v, ok := d.GetOkExists(names.AttrStorageEncrypted); ok {
 			input.StorageEncrypted = aws.Bool(v.(bool))
 		}
 
@@ -962,7 +962,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			CopyTagsToSnapshot:  aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 			DBClusterIdentifier: aws.String(identifier),
 			DeletionProtection:  aws.Bool(d.Get("deletion_protection").(bool)),
-			Engine:              aws.String(d.Get("engine").(string)),
+			Engine:              aws.String(d.Get(names.AttrEngine).(string)),
 			EngineMode:          aws.String(d.Get("engine_mode").(string)),
 			Tags:                getTagsIn(ctx),
 		}
@@ -1099,7 +1099,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.SourceRegion = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOkExists("storage_encrypted"); ok {
+		if v, ok := d.GetOkExists(names.AttrStorageEncrypted); ok {
 			input.StorageEncrypted = aws.Bool(v.(bool))
 		}
 
@@ -1204,7 +1204,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("enabled_cloudwatch_logs_exports", aws.StringValueSlice(dbc.EnabledCloudwatchLogsExports))
 	d.Set("enable_http_endpoint", dbc.HttpEndpointEnabled)
 	d.Set(names.AttrEndpoint, dbc.Endpoint)
-	d.Set("engine", dbc.Engine)
+	d.Set(names.AttrEngine, dbc.Engine)
 	d.Set("engine_mode", dbc.EngineMode)
 	clusterSetResourceDataEngineVersionFromCluster(d, dbc)
 	d.Set(names.AttrHostedZoneID, dbc.HostedZoneId)
@@ -1256,7 +1256,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	} else {
 		d.Set("serverlessv2_scaling_configuration", nil)
 	}
-	d.Set("storage_encrypted", dbc.StorageEncrypted)
+	d.Set(names.AttrStorageEncrypted, dbc.StorageEncrypted)
 	d.Set(names.AttrStorageType, dbc.StorageType)
 	var securityGroupIDs []string
 	for _, v := range dbc.VpcSecurityGroups {

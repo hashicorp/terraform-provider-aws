@@ -3,6 +3,7 @@ account_id,AccountID
 action,Action
 address,Address
 alias,Alias
+application_id,ApplicationID
 apply_immediately,ApplyImmediately
 arn,ARN
 arns,ARNs
@@ -10,6 +11,7 @@ attributes,Attributes
 auto_minor_version_upgrade,AutoMinorVersionUpgrade
 availability_zone,AvailabilityZone
 availability_zones,AvailabilityZones
+aws_account_id,AWSAccountID
 bucket,Bucket
 bucket_name,BucketName
 bucket_prefix,BucketPrefix
@@ -53,9 +55,11 @@ encryption_configuration,EncryptionConfiguration
 endpoint,Endpoint
 endpoint_type,EndpointType
 endpoints,Endpoints
+engine,Engine
 engine_version,EngineVersion
 environment,Environment
 execution_role_arn,ExecutionRoleARN
+expected_bucket_owner,ExpectedBucketOwner
 expression,Expression
 external_id,ExternalID
 family,Family
@@ -81,6 +85,7 @@ interval,Interval
 iops,IOPS
 ip_address,IPAddress
 ip_address_type,IPAddressType
+ip_addresses,IPAddresses
 issuer,Issuer
 json,JSON
 key,Key
@@ -107,8 +112,10 @@ namespace,Namespace
 network_configuration,NetworkConfiguration
 network_interface_id,NetworkInterfaceID
 owner,Owner
+owner_account_id,OwnerAccountID
 owner_id,OwnerID
 parameter,Parameter
+parameter_group_name,ParameterGroupName
 parameters,Parameters
 password,Password
 path,Path
@@ -131,6 +138,7 @@ region,Region
 repository_name,RepositoryName
 resource_arn,ResourceARN
 resource_id,ResourceID
+resource_owner,ResourceOwner
 resource_tags,ResourceTags
 resource_type,ResourceType
 resources,Resources
@@ -168,6 +176,7 @@ status,Status
 status_code,StatusCode
 status_message,StatusMessage
 status_reason,StatusReason
+storage_encrypted,StorageEncrypted
 storage_type,StorageType
 stream_arn,StreamARN
 subnet_id,SubnetID
@@ -178,6 +187,7 @@ tags,Tags
 tags_all,TagsAll
 target,Target
 target_arn,TargetARN
+throughput,Throughput
 timeout,Timeout
 timeouts,Timeouts
 topic_arn,TopicARN

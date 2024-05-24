@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // customizeDiffValidateClusterAZMode validates that `num_cache_nodes` is greater than 1 when `az_mode` is "cross-az"
@@ -25,7 +26,7 @@ func customizeDiffValidateClusterAZMode(_ context.Context, diff *schema.Resource
 
 // customizeDiffValidateClusterNumCacheNodes validates that `num_cache_nodes` is 1 when `engine` is "redis"
 func customizeDiffValidateClusterNumCacheNodes(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-	if v, ok := diff.GetOk("engine"); !ok || v.(string) == engineMemcached {
+	if v, ok := diff.GetOk(names.AttrEngine); !ok || v.(string) == engineMemcached {
 		return nil
 	}
 
@@ -42,7 +43,7 @@ func customizeDiffClusterMemcachedNodeType(_ context.Context, diff *schema.Resou
 	if diff.Id() == "" || !diff.HasChange("node_type") {
 		return nil
 	}
-	if v, ok := diff.GetOk("engine"); !ok || v.(string) == engineRedis {
+	if v, ok := diff.GetOk(names.AttrEngine); !ok || v.(string) == engineRedis {
 		return nil
 	}
 	return diff.ForceNew("node_type")
@@ -50,7 +51,7 @@ func customizeDiffClusterMemcachedNodeType(_ context.Context, diff *schema.Resou
 
 // customizeDiffValidateClusterMemcachedSnapshotIdentifier validates that `final_snapshot_identifier` is not set when `engine` is "memcached"
 func customizeDiffValidateClusterMemcachedSnapshotIdentifier(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-	if v, ok := diff.GetOk("engine"); !ok || v.(string) == engineRedis {
+	if v, ok := diff.GetOk(names.AttrEngine); !ok || v.(string) == engineRedis {
 		return nil
 	}
 	if _, ok := diff.GetOk("final_snapshot_identifier"); !ok {

@@ -86,7 +86,7 @@ func ResourceDatabase() *schema.Resource {
 				Type:     schema.TypeFloat,
 				Computed: true,
 			},
-			"engine": {
+			names.AttrEngine: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -302,7 +302,7 @@ func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("cpu_count", rd.Hardware.CpuCount)
 	d.Set(names.AttrCreatedAt, rd.CreatedAt.Format(time.RFC3339))
 	d.Set("disk_size", rd.Hardware.DiskSizeInGb)
-	d.Set("engine", rd.Engine)
+	d.Set(names.AttrEngine, rd.Engine)
 	d.Set(names.AttrEngineVersion, rd.EngineVersion)
 	d.Set("master_database_name", rd.MasterDatabaseName)
 	d.Set("master_endpoint_address", rd.MasterEndpoint.Address)

@@ -30,7 +30,7 @@ func TestInstanceStateUpgradeV0(t *testing.T) {
 			Description: "adds delete_automated_backups",
 			InputState: map[string]interface{}{
 				"allocated_storage":  10,
-				"engine":             "mariadb",
+				names.AttrEngine:     "mariadb",
 				names.AttrIdentifier: "my-test-instance",
 				"instance_class":     "db.t2.micro",
 				names.AttrPassword:   "avoid-plaintext-passwords",
@@ -40,7 +40,7 @@ func TestInstanceStateUpgradeV0(t *testing.T) {
 			ExpectedState: map[string]interface{}{
 				"allocated_storage":        10,
 				"delete_automated_backups": true,
-				"engine":                   "mariadb",
+				names.AttrEngine:           "mariadb",
 				names.AttrIdentifier:       "my-test-instance",
 				"instance_class":           "db.t2.micro",
 				names.AttrPassword:         "avoid-plaintext-passwords",
@@ -85,7 +85,7 @@ func TestInstanceStateUpgradeV1(t *testing.T) {
 			Description: "change id to resource id",
 			InputState: map[string]interface{}{
 				"allocated_storage":  10,
-				"engine":             "mariadb",
+				names.AttrEngine:     "mariadb",
 				names.AttrID:         "my-test-instance",
 				names.AttrIdentifier: "my-test-instance",
 				"instance_class":     "db.t2.micro",
@@ -96,7 +96,7 @@ func TestInstanceStateUpgradeV1(t *testing.T) {
 			},
 			ExpectedState: map[string]interface{}{
 				"allocated_storage":  10,
-				"engine":             "mariadb",
+				names.AttrEngine:     "mariadb",
 				names.AttrID:         "db-cnuap2ilnbmok4eunzklfvwjca",
 				names.AttrIdentifier: "my-test-instance",
 				"instance_class":     "db.t2.micro",

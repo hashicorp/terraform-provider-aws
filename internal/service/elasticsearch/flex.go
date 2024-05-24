@@ -91,7 +91,7 @@ func expandEBSOptions(m map[string]interface{}) *elasticsearch.EBSOptions {
 			if v, ok := m[names.AttrIOPS]; ok && v.(int) > 0 && EBSVolumeTypePermitsIopsInput(volumeType) {
 				options.Iops = aws.Int64(int64(v.(int)))
 			}
-			if v, ok := m["throughput"]; ok && v.(int) > 0 && EBSVolumeTypePermitsThroughputInput(volumeType) {
+			if v, ok := m[names.AttrThroughput]; ok && v.(int) > 0 && EBSVolumeTypePermitsThroughputInput(volumeType) {
 				options.Throughput = aws.Int64(int64(v.(int)))
 			}
 		}
@@ -178,7 +178,7 @@ func flattenEBSOptions(o *elasticsearch.EBSOptions) []map[string]interface{} {
 			m[names.AttrIOPS] = aws.Int64Value(o.Iops)
 		}
 		if o.Throughput != nil {
-			m["throughput"] = aws.Int64Value(o.Throughput)
+			m[names.AttrThroughput] = aws.Int64Value(o.Throughput)
 		}
 		if o.VolumeSize != nil {
 			m[names.AttrVolumeSize] = aws.Int64Value(o.VolumeSize)

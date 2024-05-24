@@ -92,7 +92,7 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"engine": {
+			names.AttrEngine: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -189,7 +189,7 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"storage_encrypted": {
+			names.AttrStorageEncrypted: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -273,7 +273,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 		d.Set("db_subnet_group", "")
 	}
 	d.Set("enabled_cloudwatch_logs_exports", aws.StringValueSlice(instance.EnabledCloudwatchLogsExports))
-	d.Set("engine", instance.Engine)
+	d.Set(names.AttrEngine, instance.Engine)
 	d.Set(names.AttrEngineVersion, instance.EngineVersion)
 	d.Set(names.AttrIOPS, instance.Iops)
 	d.Set(names.AttrKMSKeyID, instance.KmsKeyId)
@@ -298,7 +298,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set(names.AttrPubliclyAccessible, instance.PubliclyAccessible)
 	d.Set("replicate_source_db", instance.ReadReplicaSourceDBInstanceIdentifier)
 	d.Set(names.AttrResourceID, instance.DbiResourceId)
-	d.Set("storage_encrypted", instance.StorageEncrypted)
+	d.Set(names.AttrStorageEncrypted, instance.StorageEncrypted)
 	d.Set("storage_throughput", instance.StorageThroughput)
 	d.Set(names.AttrStorageType, instance.StorageType)
 	d.Set("timezone", instance.Timezone)

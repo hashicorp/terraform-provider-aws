@@ -49,7 +49,7 @@ func dataSourceUserPoolClient() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"application_id": {
+						names.AttrApplicationID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -245,7 +245,7 @@ func flattenUserPoolClientAnalyticsConfig(analyticsConfig *cognitoidentityprovid
 	}
 
 	if analyticsConfig.ApplicationId != nil {
-		m["application_id"] = aws.StringValue(analyticsConfig.ApplicationId)
+		m[names.AttrApplicationID] = aws.StringValue(analyticsConfig.ApplicationId)
 	}
 
 	if analyticsConfig.ApplicationArn != nil {
