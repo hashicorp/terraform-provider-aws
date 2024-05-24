@@ -340,7 +340,7 @@ func TestAccEvidentlyProject_disappears(t *testing.T) {
 	var project awstypes.Project
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	description := "disappears"
+	description := acctest.CtDisappears
 	resourceName := "aws_evidently_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -350,7 +350,7 @@ func TestAccEvidentlyProject_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_basic(rName, description),
+				Config: testAccProjectConfig_basic(rName, acctest.CtDisappears),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudwatchevidently.ResourceProject(), resourceName),
