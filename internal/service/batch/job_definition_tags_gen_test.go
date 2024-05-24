@@ -33,7 +33,7 @@ func TestAccBatchJobDefinition_tags(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/JobDefinition/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -61,7 +61,7 @@ func TestAccBatchJobDefinition_tags(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/JobDefinition/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -76,7 +76,7 @@ func TestAccBatchJobDefinition_tags(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/JobDefinition/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
@@ -108,7 +108,7 @@ func TestAccBatchJobDefinition_tags(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/JobDefinition/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
@@ -124,7 +124,7 @@ func TestAccBatchJobDefinition_tags(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/JobDefinition/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 				},
@@ -152,7 +152,7 @@ func TestAccBatchJobDefinition_tags(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/JobDefinition/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 				},
@@ -167,7 +167,7 @@ func TestAccBatchJobDefinition_tags(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/JobDefinition/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": nil,
+					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &v),
@@ -188,7 +188,7 @@ func TestAccBatchJobDefinition_tags(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/JobDefinition/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": nil,
+					acctest.CtResourceTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -217,7 +217,7 @@ func TestAccBatchJobDefinition_tags_null(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/JobDefinition/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
 				},
@@ -240,7 +240,7 @@ func TestAccBatchJobDefinition_tags_null(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/JobDefinition/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
 				},
@@ -255,7 +255,7 @@ func TestAccBatchJobDefinition_tags_null(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/JobDefinition/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": nil,
+					acctest.CtResourceTags: nil,
 				},
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: false,
@@ -280,7 +280,7 @@ func TestAccBatchJobDefinition_tags_AddOnUpdate(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/JobDefinition/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": nil,
+					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &v),
@@ -301,7 +301,7 @@ func TestAccBatchJobDefinition_tags_AddOnUpdate(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/JobDefinition/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -329,7 +329,7 @@ func TestAccBatchJobDefinition_tags_AddOnUpdate(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/JobDefinition/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -360,7 +360,7 @@ func TestAccBatchJobDefinition_tags_EmptyTag_OnCreate(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/JobDefinition/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
@@ -387,7 +387,7 @@ func TestAccBatchJobDefinition_tags_EmptyTag_OnCreate(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/JobDefinition/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
@@ -402,7 +402,7 @@ func TestAccBatchJobDefinition_tags_EmptyTag_OnCreate(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/JobDefinition/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": nil,
+					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &v),
@@ -423,7 +423,7 @@ func TestAccBatchJobDefinition_tags_EmptyTag_OnCreate(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/JobDefinition/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": nil,
+					acctest.CtResourceTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -452,7 +452,7 @@ func TestAccBatchJobDefinition_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/JobDefinition/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -480,7 +480,7 @@ func TestAccBatchJobDefinition_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/JobDefinition/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 						acctest.CtKey2: config.StringVariable(""),
 					}),
@@ -510,7 +510,7 @@ func TestAccBatchJobDefinition_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/JobDefinition/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 						acctest.CtKey2: config.StringVariable(""),
 					}),
@@ -526,7 +526,7 @@ func TestAccBatchJobDefinition_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/JobDefinition/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -554,7 +554,7 @@ func TestAccBatchJobDefinition_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/JobDefinition/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -585,7 +585,7 @@ func TestAccBatchJobDefinition_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/JobDefinition/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -613,7 +613,7 @@ func TestAccBatchJobDefinition_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/JobDefinition/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
@@ -640,7 +640,7 @@ func TestAccBatchJobDefinition_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/JobDefinition/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
@@ -674,7 +674,7 @@ func TestAccBatchJobDefinition_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"resource_tags": nil,
+					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &v),
@@ -703,7 +703,7 @@ func TestAccBatchJobDefinition_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"resource_tags": nil,
+					acctest.CtResourceTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -721,7 +721,7 @@ func TestAccBatchJobDefinition_tags_DefaultTags_providerOnly(t *testing.T) {
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					"resource_tags": nil,
+					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &v),
@@ -754,7 +754,7 @@ func TestAccBatchJobDefinition_tags_DefaultTags_providerOnly(t *testing.T) {
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					"resource_tags": nil,
+					acctest.CtResourceTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -771,7 +771,7 @@ func TestAccBatchJobDefinition_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					"resource_tags": nil,
+					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &v),
@@ -801,7 +801,7 @@ func TestAccBatchJobDefinition_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					"resource_tags": nil,
+					acctest.CtResourceTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -815,7 +815,7 @@ func TestAccBatchJobDefinition_tags_DefaultTags_providerOnly(t *testing.T) {
 				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": nil,
+					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &v),
@@ -838,7 +838,7 @@ func TestAccBatchJobDefinition_tags_DefaultTags_providerOnly(t *testing.T) {
 				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": nil,
+					acctest.CtResourceTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -868,10 +868,10 @@ func TestAccBatchJobDefinition_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						"providerkey1": config.StringVariable(acctest.CtProviderValue1),
+						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"resourcekey1": config.StringVariable(acctest.CtResourceValue1),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -879,22 +879,22 @@ func TestAccBatchJobDefinition_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						"resourcekey1": knownvalue.StringExact(acctest.CtResourceValue1),
+						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
-						"providerkey1": knownvalue.StringExact(acctest.CtProviderValue1),
-						"resourcekey1": knownvalue.StringExact(acctest.CtResourceValue1),
+						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
+						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-							"resourcekey1": knownvalue.StringExact(acctest.CtResourceValue1),
+							acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 						})),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
-							"providerkey1": knownvalue.StringExact(acctest.CtProviderValue1),
-							"resourcekey1": knownvalue.StringExact(acctest.CtResourceValue1),
+							acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
+							acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 						})),
 					},
 				},
@@ -905,10 +905,10 @@ func TestAccBatchJobDefinition_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						"providerkey1": config.StringVariable(acctest.CtProviderValue1),
+						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"resourcekey1": config.StringVariable(acctest.CtResourceValue1),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1),
 					}),
 				},
 				ResourceName:      resourceName,
@@ -924,10 +924,10 @@ func TestAccBatchJobDefinition_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						"providerkey1": config.StringVariable("providervalue1updated"),
+						acctest.CtProviderKey1: config.StringVariable("providervalue1updated"),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"resourcekey1": config.StringVariable("resourcevalue1updated"),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtResourceKey1: config.StringVariable("resourcevalue1updated"),
 						"resourcekey2": config.StringVariable(acctest.CtResourceValue2),
 					}),
 				},
@@ -936,12 +936,12 @@ func TestAccBatchJobDefinition_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						"resourcekey1": knownvalue.StringExact("resourcevalue1updated"),
+						acctest.CtResourceKey1: knownvalue.StringExact("resourcevalue1updated"),
 						"resourcekey2": knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
-						"providerkey1": knownvalue.StringExact("providervalue1updated"),
-						"resourcekey1": knownvalue.StringExact("resourcevalue1updated"),
+						acctest.CtProviderKey1: knownvalue.StringExact("providervalue1updated"),
+						acctest.CtResourceKey1: knownvalue.StringExact("resourcevalue1updated"),
 						"resourcekey2": knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
 				},
@@ -949,12 +949,12 @@ func TestAccBatchJobDefinition_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-							"resourcekey1": knownvalue.StringExact("resourcevalue1updated"),
+							acctest.CtResourceKey1: knownvalue.StringExact("resourcevalue1updated"),
 							"resourcekey2": knownvalue.StringExact(acctest.CtResourceValue2),
 						})),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
-							"providerkey1": knownvalue.StringExact("providervalue1updated"),
-							"resourcekey1": knownvalue.StringExact("resourcevalue1updated"),
+							acctest.CtProviderKey1: knownvalue.StringExact("providervalue1updated"),
+							acctest.CtResourceKey1: knownvalue.StringExact("resourcevalue1updated"),
 							"resourcekey2": knownvalue.StringExact(acctest.CtResourceValue2),
 						})),
 					},
@@ -966,10 +966,10 @@ func TestAccBatchJobDefinition_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						"providerkey1": config.StringVariable("providervalue1updated"),
+						acctest.CtProviderKey1: config.StringVariable("providervalue1updated"),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"resourcekey1": config.StringVariable("resourcevalue1updated"),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtResourceKey1: config.StringVariable("resourcevalue1updated"),
 						"resourcekey2": config.StringVariable(acctest.CtResourceValue2),
 					}),
 				},
@@ -985,7 +985,7 @@ func TestAccBatchJobDefinition_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": nil,
+					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &v),
@@ -1008,7 +1008,7 @@ func TestAccBatchJobDefinition_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": nil,
+					acctest.CtResourceTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -1038,10 +1038,10 @@ func TestAccBatchJobDefinition_tags_DefaultTags_overlapping(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable(acctest.CtProviderValue1),
+						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable(acctest.CtResourceValue1),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1049,20 +1049,20 @@ func TestAccBatchJobDefinition_tags_DefaultTags_overlapping(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						"overlapkey1": knownvalue.StringExact(acctest.CtResourceValue1),
+						acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
-						"overlapkey1": knownvalue.StringExact(acctest.CtResourceValue1),
+						acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-							"overlapkey1": knownvalue.StringExact(acctest.CtResourceValue1),
+							acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 						})),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
-							"overlapkey1": knownvalue.StringExact(acctest.CtResourceValue1),
+							acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 						})),
 					},
 				},
@@ -1073,10 +1073,10 @@ func TestAccBatchJobDefinition_tags_DefaultTags_overlapping(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable(acctest.CtProviderValue1),
+						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable(acctest.CtResourceValue1),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue1),
 					}),
 				},
 				ResourceName:      resourceName,
@@ -1092,11 +1092,11 @@ func TestAccBatchJobDefinition_tags_DefaultTags_overlapping(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable(acctest.CtProviderValue1),
+						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 						"overlapkey2": config.StringVariable("providervalue2"),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable(acctest.CtResourceValue1),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue1),
 						"overlapkey2": config.StringVariable(acctest.CtResourceValue2),
 					}),
 				},
@@ -1105,11 +1105,11 @@ func TestAccBatchJobDefinition_tags_DefaultTags_overlapping(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						"overlapkey1": knownvalue.StringExact(acctest.CtResourceValue1),
+						acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 						"overlapkey2": knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
-						"overlapkey1": knownvalue.StringExact(acctest.CtResourceValue1),
+						acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 						"overlapkey2": knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
 				},
@@ -1117,11 +1117,11 @@ func TestAccBatchJobDefinition_tags_DefaultTags_overlapping(t *testing.T) {
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-							"overlapkey1": knownvalue.StringExact(acctest.CtResourceValue1),
+							acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 							"overlapkey2": knownvalue.StringExact(acctest.CtResourceValue2),
 						})),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
-							"overlapkey1": knownvalue.StringExact(acctest.CtResourceValue1),
+							acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 							"overlapkey2": knownvalue.StringExact(acctest.CtResourceValue2),
 						})),
 					},
@@ -1133,11 +1133,11 @@ func TestAccBatchJobDefinition_tags_DefaultTags_overlapping(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable(acctest.CtProviderValue1),
+						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 						"overlapkey2": config.StringVariable("providervalue2"),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable(acctest.CtResourceValue1),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue1),
 						"overlapkey2": config.StringVariable(acctest.CtResourceValue2),
 					}),
 				},
@@ -1154,10 +1154,10 @@ func TestAccBatchJobDefinition_tags_DefaultTags_overlapping(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable(acctest.CtProviderValue1),
+						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable(acctest.CtResourceValue2),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue2),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1165,20 +1165,20 @@ func TestAccBatchJobDefinition_tags_DefaultTags_overlapping(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						"overlapkey1": knownvalue.StringExact(acctest.CtResourceValue2),
+						acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
-						"overlapkey1": knownvalue.StringExact(acctest.CtResourceValue2),
+						acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-							"overlapkey1": knownvalue.StringExact(acctest.CtResourceValue2),
+							acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue2),
 						})),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
-							"overlapkey1": knownvalue.StringExact(acctest.CtResourceValue2),
+							acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue2),
 						})),
 					},
 				},
@@ -1189,10 +1189,10 @@ func TestAccBatchJobDefinition_tags_DefaultTags_overlapping(t *testing.T) {
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable(acctest.CtProviderValue1),
+						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"overlapkey1": config.StringVariable(acctest.CtResourceValue2),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue2),
 					}),
 				},
 				ResourceName:      resourceName,
@@ -1222,7 +1222,7 @@ func TestAccBatchJobDefinition_tags_DefaultTags_updateToProviderOnly(t *testing.
 				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -1257,7 +1257,7 @@ func TestAccBatchJobDefinition_tags_DefaultTags_updateToProviderOnly(t *testing.
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"resource_tags": nil,
+					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &v),
@@ -1287,7 +1287,7 @@ func TestAccBatchJobDefinition_tags_DefaultTags_updateToProviderOnly(t *testing.
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"resource_tags": nil,
+					acctest.CtResourceTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -1319,7 +1319,7 @@ func TestAccBatchJobDefinition_tags_DefaultTags_updateToResourceOnly(t *testing.
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"resource_tags": nil,
+					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &v),
@@ -1345,7 +1345,7 @@ func TestAccBatchJobDefinition_tags_DefaultTags_updateToResourceOnly(t *testing.
 				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -1377,7 +1377,7 @@ func TestAccBatchJobDefinition_tags_DefaultTags_updateToResourceOnly(t *testing.
 				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -1411,7 +1411,7 @@ func TestAccBatchJobDefinition_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
@@ -1445,7 +1445,7 @@ func TestAccBatchJobDefinition_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
@@ -1479,7 +1479,7 @@ func TestAccBatchJobDefinition_tags_DefaultTags_emptyProviderOnlyTag(t *testing.
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
-					"resource_tags": nil,
+					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &v),
@@ -1507,7 +1507,7 @@ func TestAccBatchJobDefinition_tags_DefaultTags_emptyProviderOnlyTag(t *testing.
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
-					"resource_tags": nil,
+					acctest.CtResourceTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -1539,7 +1539,7 @@ func TestAccBatchJobDefinition_tags_DefaultTags_nullOverlappingResourceTag(t *te
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
 				},
@@ -1570,7 +1570,7 @@ func TestAccBatchJobDefinition_tags_DefaultTags_nullOverlappingResourceTag(t *te
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
 				},
@@ -1602,10 +1602,10 @@ func TestAccBatchJobDefinition_tags_DefaultTags_nullNonOverlappingResourceTag(t 
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						"providerkey1": config.StringVariable(acctest.CtProviderValue1),
+						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"resourcekey1": nil,
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtResourceKey1: nil,
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1614,7 +1614,7 @@ func TestAccBatchJobDefinition_tags_DefaultTags_nullNonOverlappingResourceTag(t 
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
-						"providerkey1": knownvalue.StringExact(acctest.CtProviderValue1),
+						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
 					})),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -1622,7 +1622,7 @@ func TestAccBatchJobDefinition_tags_DefaultTags_nullNonOverlappingResourceTag(t 
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
-							"providerkey1": knownvalue.StringExact(acctest.CtProviderValue1),
+							acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
 						})),
 					},
 				},
@@ -1633,10 +1633,10 @@ func TestAccBatchJobDefinition_tags_DefaultTags_nullNonOverlappingResourceTag(t 
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						"providerkey1": config.StringVariable(acctest.CtProviderValue1),
+						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"resourcekey1": nil,
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtResourceKey1: nil,
 					}),
 				},
 				ResourceName:      resourceName,
@@ -1723,7 +1723,7 @@ func TestAccBatchJobDefinition_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -1816,7 +1816,7 @@ func TestAccBatchJobDefinition_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
