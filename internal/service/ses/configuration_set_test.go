@@ -42,8 +42,8 @@ func TestAccSESConfigurationSet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "tracking_options.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "sending_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "reputation_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "sending_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "reputation_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, "last_fresh_start"),
 				),
 			},
@@ -74,7 +74,7 @@ func TestAccSESConfigurationSet_sendingEnabled(t *testing.T) {
 				Config: testAccConfigurationSetConfig_sending(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "sending_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "sending_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, "last_fresh_start"),
 				),
 			},
@@ -87,7 +87,7 @@ func TestAccSESConfigurationSet_sendingEnabled(t *testing.T) {
 				Config: testAccConfigurationSetConfig_sending(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "sending_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "sending_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "last_fresh_start"),
 				),
 			},
@@ -95,7 +95,7 @@ func TestAccSESConfigurationSet_sendingEnabled(t *testing.T) {
 				Config: testAccConfigurationSetConfig_sending(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "sending_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "sending_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, "last_fresh_start"),
 				),
 			},
@@ -121,7 +121,7 @@ func TestAccSESConfigurationSet_reputationMetricsEnabled(t *testing.T) {
 				Config: testAccConfigurationSetConfig_reputationMetrics(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "reputation_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "reputation_metrics_enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -133,14 +133,14 @@ func TestAccSESConfigurationSet_reputationMetricsEnabled(t *testing.T) {
 				Config: testAccConfigurationSetConfig_reputationMetrics(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "reputation_metrics_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "reputation_metrics_enabled", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccConfigurationSetConfig_reputationMetrics(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "reputation_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "reputation_metrics_enabled", acctest.CtFalse),
 				),
 			},
 		},
