@@ -8,6 +8,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * data-source/aws_route53_zone: Fix incorrect `name_servers` values ([#37685](https://github.com/hashicorp/terraform-provider-aws/issues/37685))
+* data-source/aws_route53_zone: Permit both `name` and `zone_id` arguments when one is an empty string ([#37686](https://github.com/hashicorp/terraform-provider-aws/issues/37686))
 * resource/aws_route53_zone: Fix incorrect `name_servers` values ([#37685](https://github.com/hashicorp/terraform-provider-aws/issues/37685))
 
 ## 5.51.0 (May 23, 2024)
