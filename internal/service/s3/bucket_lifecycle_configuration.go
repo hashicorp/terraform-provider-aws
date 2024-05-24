@@ -53,7 +53,7 @@ func resourceBucketLifecycleConfiguration() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 63),
 			},
-			"expected_bucket_owner": {
+			names.AttrExpectedBucketOwner: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -259,7 +259,7 @@ func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.R
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket := d.Get(names.AttrBucket).(string)
-	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
+	expectedBucketOwner := d.Get(names.AttrExpectedBucketOwner).(string)
 	rules := expandLifecycleRules(ctx, d.Get(names.AttrRule).([]interface{}))
 	input := &s3.PutBucketLifecycleConfigurationInput{
 		Bucket: aws.String(bucket),
@@ -346,7 +346,7 @@ func resourceBucketLifecycleConfigurationRead(ctx context.Context, d *schema.Res
 	}
 
 	d.Set(names.AttrBucket, bucket)
-	d.Set("expected_bucket_owner", expectedBucketOwner)
+	d.Set(names.AttrExpectedBucketOwner, expectedBucketOwner)
 	if err := d.Set(names.AttrRule, flattenLifecycleRules(ctx, output)); err != nil {
 		return diag.Errorf("setting rule: %s", err)
 	}

@@ -41,7 +41,7 @@ func resourceBucketCorsConfiguration() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 63),
 			},
-			"expected_bucket_owner": {
+			names.AttrExpectedBucketOwner: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -93,7 +93,7 @@ func resourceBucketCorsConfigurationCreate(ctx context.Context, d *schema.Resour
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket := d.Get(names.AttrBucket).(string)
-	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
+	expectedBucketOwner := d.Get(names.AttrExpectedBucketOwner).(string)
 	input := &s3.PutBucketCorsInput{
 		Bucket: aws.String(bucket),
 		CORSConfiguration: &types.CORSConfiguration{
@@ -153,7 +153,7 @@ func resourceBucketCorsConfigurationRead(ctx context.Context, d *schema.Resource
 	if err := d.Set("cors_rule", flattenCORSRules(corsRules)); err != nil {
 		return diag.Errorf("setting cors_rule: %s", err)
 	}
-	d.Set("expected_bucket_owner", expectedBucketOwner)
+	d.Set(names.AttrExpectedBucketOwner, expectedBucketOwner)
 
 	return nil
 }

@@ -145,7 +145,7 @@ func resourceObjectCopy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"expected_bucket_owner": {
+			names.AttrExpectedBucketOwner: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -431,7 +431,7 @@ func resourceObjectCopyUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		"customer_algorithm",
 		"customer_key",
 		"customer_key_md5",
-		"expected_bucket_owner",
+		names.AttrExpectedBucketOwner,
 		"expected_source_bucket_owner",
 		"expires",
 		"grant",
@@ -568,7 +568,7 @@ func resourceObjectCopyDoCopy(ctx context.Context, d *schema.ResourceData, meta 
 		input.SSECustomerKeyMD5 = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("expected_bucket_owner"); ok {
+	if v, ok := d.GetOk(names.AttrExpectedBucketOwner); ok {
 		input.ExpectedBucketOwner = aws.String(v.(string))
 	}
 
