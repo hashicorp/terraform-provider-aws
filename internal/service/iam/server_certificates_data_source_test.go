@@ -128,10 +128,3 @@ data "aws_iam_server_certificates" "test" {
 }
 `, rName, path, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key), pathPrefix)
 }
-
-var testAccServerCertificatesDataSourceConfig_certMatchNamePrefix = `
-data "aws_iam_server_certificates" "test" {
-  name_prefix = "MyCert"
-  latest      = true
-}
-`
