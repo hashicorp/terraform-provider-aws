@@ -24,7 +24,7 @@ func TestAccControlTowerControl_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Control": {
 			acctest.CtBasic: testAccControl_basic,
-			"disappears":    testAccControl_disappears,
+			acctest.CtDisappears:    testAccControl_disappears,
 		},
 	}
 
