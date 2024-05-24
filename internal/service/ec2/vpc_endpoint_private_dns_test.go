@@ -47,7 +47,7 @@ func TestAccVPCEndpointPrivateDNS_basic(t *testing.T) {
 					testAccCheckVPCEndpointExists(ctx, endpointResourceName, &endpoint),
 					testAccCheckVPCEndpointPrivateDNSEnabled(ctx, endpointResourceName),
 					resource.TestCheckResourceAttrPair(endpointResourceName, names.AttrID, resourceName, names.AttrVPCEndpointID),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -119,7 +119,7 @@ func TestAccVPCEndpointPrivateDNS_update(t *testing.T) {
 					testAccCheckVPCEndpointExists(ctx, endpointResourceName, &endpoint),
 					testAccCheckVPCEndpointPrivateDNSEnabled(ctx, endpointResourceName),
 					resource.TestCheckResourceAttrPair(endpointResourceName, names.AttrID, resourceName, names.AttrVPCEndpointID),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -128,7 +128,7 @@ func TestAccVPCEndpointPrivateDNS_update(t *testing.T) {
 					testAccCheckVPCEndpointExists(ctx, endpointResourceName, &endpoint),
 					testAccCheckVPCEndpointPrivateDNSDisabled(ctx, endpointResourceName),
 					resource.TestCheckResourceAttrPair(endpointResourceName, names.AttrID, resourceName, names.AttrVPCEndpointID),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -137,7 +137,7 @@ func TestAccVPCEndpointPrivateDNS_update(t *testing.T) {
 					testAccCheckVPCEndpointExists(ctx, endpointResourceName, &endpoint),
 					testAccCheckVPCEndpointPrivateDNSEnabled(ctx, endpointResourceName),
 					resource.TestCheckResourceAttrPair(endpointResourceName, names.AttrID, resourceName, names.AttrVPCEndpointID),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtTrue),
 				),
 			},
 		},

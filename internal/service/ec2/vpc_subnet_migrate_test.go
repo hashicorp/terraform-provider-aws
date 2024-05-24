@@ -24,7 +24,7 @@ func TestSubnetMigrateState(t *testing.T) {
 			StateVersion: 0,
 			ID:           "some_id",
 			Attributes:   map[string]string{},
-			Expected:     "false",
+			Expected:     acctest.CtFalse,
 		},
 	}
 

@@ -49,7 +49,7 @@ func testAccVerifiedAccessEndpoint_basic(t *testing.T, semaphore tfsync.Semaphor
 					resource.TestCheckResourceAttr(resourceName, "endpoint_domain_prefix", "example"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "load-balancer"),
 					resource.TestCheckResourceAttr(resourceName, "policy_document", ""),
-					resource.TestCheckResourceAttr(resourceName, "sse_specification.0.customer_managed_key_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "sse_specification.0.customer_managed_key_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, "load_balancer_options.0.load_balancer_arn"),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.port", "443"),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_options.0.protocol", "https"),

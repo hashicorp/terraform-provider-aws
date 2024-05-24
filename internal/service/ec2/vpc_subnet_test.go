@@ -42,13 +42,13 @@ func TestAccVPCSubnet_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone_id"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", "10.1.1.0/24"),
 					resource.TestCheckResourceAttr(resourceName, "customer_owned_ipv4_pool", ""),
-					resource.TestCheckResourceAttr(resourceName, "enable_dns64", "false"),
-					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_aaaa_record_on_launch", "false"),
-					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_a_record_on_launch", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_dns64", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_aaaa_record_on_launch", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_a_record_on_launch", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", ""),
-					resource.TestCheckResourceAttr(resourceName, "ipv6_native", "false"),
-					resource.TestCheckResourceAttr(resourceName, "map_customer_owned_ip_on_launch", "false"),
-					resource.TestCheckResourceAttr(resourceName, "map_public_ip_on_launch", "false"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_native", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "map_customer_owned_ip_on_launch", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "map_public_ip_on_launch", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_hostname_type_on_launch", "ip-name"),
@@ -549,7 +549,7 @@ func TestAccVPCSubnet_enableIPv6(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &subnet),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", ""),
-					resource.TestCheckResourceAttr(resourceName, "assign_ipv6_address_on_creation", "false"),
+					resource.TestCheckResourceAttr(resourceName, "assign_ipv6_address_on_creation", acctest.CtFalse),
 				),
 			},
 			{
@@ -562,7 +562,7 @@ func TestAccVPCSubnet_enableIPv6(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &subnet),
 					resource.TestCheckResourceAttrSet(resourceName, "ipv6_cidr_block"),
-					resource.TestCheckResourceAttr(resourceName, "assign_ipv6_address_on_creation", "true"),
+					resource.TestCheckResourceAttr(resourceName, "assign_ipv6_address_on_creation", acctest.CtTrue),
 				),
 			},
 			{
@@ -570,7 +570,7 @@ func TestAccVPCSubnet_enableIPv6(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &subnet),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", ""),
-					resource.TestCheckResourceAttr(resourceName, "assign_ipv6_address_on_creation", "false"),
+					resource.TestCheckResourceAttr(resourceName, "assign_ipv6_address_on_creation", acctest.CtFalse),
 				),
 			},
 		},
@@ -675,7 +675,7 @@ func TestAccVPCSubnet_mapCustomerOwnedIPOnLaunch(t *testing.T) {
 				Config: testAccVPCSubnetConfig_mapCustomerOwnedOnLaunch(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &subnet),
-					resource.TestCheckResourceAttr(resourceName, "map_customer_owned_ip_on_launch", "true"),
+					resource.TestCheckResourceAttr(resourceName, "map_customer_owned_ip_on_launch", acctest.CtTrue),
 				),
 			},
 			{
@@ -703,7 +703,7 @@ func TestAccVPCSubnet_mapPublicIPOnLaunch(t *testing.T) {
 				Config: testAccVPCSubnetConfig_mapPublicOnLaunch(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &subnet),
-					resource.TestCheckResourceAttr(resourceName, "map_public_ip_on_launch", "true"),
+					resource.TestCheckResourceAttr(resourceName, "map_public_ip_on_launch", acctest.CtTrue),
 				),
 			},
 			{
@@ -715,14 +715,14 @@ func TestAccVPCSubnet_mapPublicIPOnLaunch(t *testing.T) {
 				Config: testAccVPCSubnetConfig_mapPublicOnLaunch(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &subnet),
-					resource.TestCheckResourceAttr(resourceName, "map_public_ip_on_launch", "false"),
+					resource.TestCheckResourceAttr(resourceName, "map_public_ip_on_launch", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccVPCSubnetConfig_mapPublicOnLaunch(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &subnet),
-					resource.TestCheckResourceAttr(resourceName, "map_public_ip_on_launch", "true"),
+					resource.TestCheckResourceAttr(resourceName, "map_public_ip_on_launch", acctest.CtTrue),
 				),
 			},
 		},
@@ -774,7 +774,7 @@ func TestAccVPCSubnet_enableDNS64(t *testing.T) {
 				Config: testAccVPCSubnetConfig_enableDNS64(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &subnet),
-					resource.TestCheckResourceAttr(resourceName, "enable_dns64", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_dns64", acctest.CtTrue),
 				),
 			},
 			{
@@ -786,14 +786,14 @@ func TestAccVPCSubnet_enableDNS64(t *testing.T) {
 				Config: testAccVPCSubnetConfig_enableDNS64(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &subnet),
-					resource.TestCheckResourceAttr(resourceName, "enable_dns64", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_dns64", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccVPCSubnetConfig_enableDNS64(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &subnet),
-					resource.TestCheckResourceAttr(resourceName, "enable_dns64", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_dns64", acctest.CtTrue),
 				),
 			},
 		},
@@ -816,9 +816,9 @@ func TestAccVPCSubnet_ipv4ToIPv6(t *testing.T) {
 				Config: testAccVPCSubnetConfig_ipv4ToIPv6Before(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &subnet),
-					resource.TestCheckResourceAttr(resourceName, "assign_ipv6_address_on_creation", "false"),
-					resource.TestCheckResourceAttr(resourceName, "enable_dns64", "false"),
-					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_aaaa_record_on_launch", "false"),
+					resource.TestCheckResourceAttr(resourceName, "assign_ipv6_address_on_creation", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "enable_dns64", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_aaaa_record_on_launch", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", ""),
 				),
 			},
@@ -826,9 +826,9 @@ func TestAccVPCSubnet_ipv4ToIPv6(t *testing.T) {
 				Config: testAccVPCSubnetConfig_ipv4ToIPv6After(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &subnet),
-					resource.TestCheckResourceAttr(resourceName, "assign_ipv6_address_on_creation", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_dns64", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_aaaa_record_on_launch", "true"),
+					resource.TestCheckResourceAttr(resourceName, "assign_ipv6_address_on_creation", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "enable_dns64", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_aaaa_record_on_launch", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "ipv6_cidr_block"),
 				),
 			},
@@ -894,8 +894,8 @@ func TestAccVPCSubnet_privateDNSNameOptionsOnLaunch(t *testing.T) {
 				Config: testAccVPCSubnetConfig_privateDNSNameOptionsOnLaunch(rName, true, true, "resource-name"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &subnet),
-					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_aaaa_record_on_launch", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_a_record_on_launch", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_aaaa_record_on_launch", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_a_record_on_launch", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_hostname_type_on_launch", "resource-name"),
 				),
 			},
@@ -908,8 +908,8 @@ func TestAccVPCSubnet_privateDNSNameOptionsOnLaunch(t *testing.T) {
 				Config: testAccVPCSubnetConfig_privateDNSNameOptionsOnLaunch(rName, false, true, "ip-name"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &subnet),
-					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_aaaa_record_on_launch", "false"),
-					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_a_record_on_launch", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_aaaa_record_on_launch", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_a_record_on_launch", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_hostname_type_on_launch", "ip-name"),
 				),
 			},
@@ -917,8 +917,8 @@ func TestAccVPCSubnet_privateDNSNameOptionsOnLaunch(t *testing.T) {
 				Config: testAccVPCSubnetConfig_privateDNSNameOptionsOnLaunch(rName, true, false, "resource-name"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &subnet),
-					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_aaaa_record_on_launch", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_a_record_on_launch", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_aaaa_record_on_launch", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_a_record_on_launch", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_hostname_type_on_launch", "resource-name"),
 				),
 			},
@@ -943,8 +943,8 @@ func TestAccVPCSubnet_ipv6Native(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", ""),
-					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_aaaa_record_on_launch", "true"),
-					resource.TestCheckResourceAttr(resourceName, "ipv6_native", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_aaaa_record_on_launch", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_native", acctest.CtTrue),
 				),
 			},
 			{

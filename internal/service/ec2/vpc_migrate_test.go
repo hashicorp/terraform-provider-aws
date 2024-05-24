@@ -24,15 +24,15 @@ func TestVPCMigrateState(t *testing.T) {
 			StateVersion: 0,
 			ID:           "some_id",
 			Attributes: map[string]string{
-				"assign_generated_ipv6_cidr_block": "true",
+				"assign_generated_ipv6_cidr_block": acctest.CtTrue,
 			},
-			Expected: "false",
+			Expected: acctest.CtFalse,
 		},
 		"v0_1_without_value": {
 			StateVersion: 0,
 			ID:           "some_id",
 			Attributes:   map[string]string{},
-			Expected:     "false",
+			Expected:     acctest.CtFalse,
 		},
 	}
 

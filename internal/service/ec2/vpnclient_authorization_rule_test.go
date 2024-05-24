@@ -42,7 +42,7 @@ func testAccClientVPNAuthorizationRule_basic(t *testing.T, semaphore tfsync.Sema
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNAuthorizationRuleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "target_network_cidr", subnetResourceName, "cidr_block"),
-					resource.TestCheckResourceAttr(resourceName, "authorize_all_groups", "true"),
+					resource.TestCheckResourceAttr(resourceName, "authorize_all_groups", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "access_group_id", ""),
 				),
 			},
@@ -143,7 +143,7 @@ func testAccClientVPNAuthorizationRule_groups(t *testing.T, semaphore tfsync.Sem
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNAuthorizationRuleExists(ctx, resource1Name, &v),
 					resource.TestCheckResourceAttrPair(resource1Name, "target_network_cidr", subnetResourceName, "cidr_block"),
-					resource.TestCheckResourceAttr(resource1Name, "authorize_all_groups", "false"),
+					resource.TestCheckResourceAttr(resource1Name, "authorize_all_groups", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resource1Name, "access_group_id", group1Name),
 				),
 			},
@@ -157,12 +157,12 @@ func testAccClientVPNAuthorizationRule_groups(t *testing.T, semaphore tfsync.Sem
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNAuthorizationRuleExists(ctx, resource1Name, &v),
 					resource.TestCheckResourceAttrPair(resource1Name, "target_network_cidr", subnetResourceName, "cidr_block"),
-					resource.TestCheckResourceAttr(resource1Name, "authorize_all_groups", "false"),
+					resource.TestCheckResourceAttr(resource1Name, "authorize_all_groups", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resource1Name, "access_group_id", group1Name),
 
 					testAccCheckClientVPNAuthorizationRuleExists(ctx, resource2Name, &v),
 					resource.TestCheckResourceAttrPair(resource2Name, "target_network_cidr", subnetResourceName, "cidr_block"),
-					resource.TestCheckResourceAttr(resource2Name, "authorize_all_groups", "false"),
+					resource.TestCheckResourceAttr(resource2Name, "authorize_all_groups", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resource2Name, "access_group_id", group2Name),
 				),
 			},
@@ -176,7 +176,7 @@ func testAccClientVPNAuthorizationRule_groups(t *testing.T, semaphore tfsync.Sem
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNAuthorizationRuleExists(ctx, resource2Name, &v),
 					resource.TestCheckResourceAttrPair(resource2Name, "target_network_cidr", subnetResourceName, "cidr_block"),
-					resource.TestCheckResourceAttr(resource2Name, "authorize_all_groups", "false"),
+					resource.TestCheckResourceAttr(resource2Name, "authorize_all_groups", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resource2Name, "access_group_id", group2Name),
 				),
 			},
@@ -215,12 +215,12 @@ func testAccClientVPNAuthorizationRule_subnets(t *testing.T, semaphore tfsync.Se
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNAuthorizationRuleExists(ctx, resource1Name, &v),
 					resource.TestCheckResourceAttrPair(resource1Name, "target_network_cidr", fmt.Sprintf("aws_subnet.test.%d", subnetIndex1), "cidr_block"),
-					resource.TestCheckResourceAttr(resource1Name, "authorize_all_groups", "true"),
+					resource.TestCheckResourceAttr(resource1Name, "authorize_all_groups", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resource1Name, "access_group_id", ""),
 
 					testAccCheckClientVPNAuthorizationRuleExists(ctx, resource2Name, &v),
 					resource.TestCheckResourceAttrPair(resource2Name, "target_network_cidr", fmt.Sprintf("aws_subnet.test.%d", subnetIndex2), "cidr_block"),
-					resource.TestCheckResourceAttr(resource2Name, "authorize_all_groups", "true"),
+					resource.TestCheckResourceAttr(resource2Name, "authorize_all_groups", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resource2Name, "access_group_id", ""),
 				),
 			},
@@ -234,7 +234,7 @@ func testAccClientVPNAuthorizationRule_subnets(t *testing.T, semaphore tfsync.Se
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNAuthorizationRuleExists(ctx, resource2Name, &v),
 					resource.TestCheckResourceAttrPair(resource2Name, "target_network_cidr", fmt.Sprintf("aws_subnet.test.%d", subnetIndex2), "cidr_block"),
-					resource.TestCheckResourceAttr(resource2Name, "authorize_all_groups", "true"),
+					resource.TestCheckResourceAttr(resource2Name, "authorize_all_groups", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resource2Name, "access_group_id", ""),
 				),
 			},

@@ -58,7 +58,7 @@ func testAccIPAMResourceDiscovery_basic(t *testing.T) {
 					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`ipam-resource-discovery/ipam-res-disco-[0-9a-f]+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
 					resource.TestCheckResourceAttrPair(resourceName, "ipam_resource_discovery_region", dataSourceRegion, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "is_default", "false"),
+					resource.TestCheckResourceAttr(resourceName, "is_default", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "operating_regions.#", acctest.Ct1),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),

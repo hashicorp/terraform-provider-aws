@@ -27,7 +27,7 @@ func TestSecurityGroupMigrateState(t *testing.T) {
 			},
 			Expected: map[string]string{
 				names.AttrName:           "test",
-				"revoke_rules_on_delete": "false",
+				"revoke_rules_on_delete": acctest.CtFalse,
 			},
 		},
 	}

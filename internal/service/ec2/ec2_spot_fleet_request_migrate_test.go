@@ -24,9 +24,9 @@ func TestSpotFleetRequestMigrateState(t *testing.T) {
 			StateVersion: 0,
 			ID:           "some_id",
 			Attributes: map[string]string{
-				"associate_public_ip_address": "true",
+				"associate_public_ip_address": acctest.CtTrue,
 			},
-			Expected: "false",
+			Expected: acctest.CtFalse,
 		},
 	}
 
