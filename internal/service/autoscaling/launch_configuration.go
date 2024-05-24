@@ -94,7 +94,7 @@ func resourceLaunchConfiguration() *schema.Resource {
 							Computed: true,
 							ForceNew: true,
 						},
-						"throughput": {
+						names.AttrThroughput: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
@@ -253,7 +253,7 @@ func resourceLaunchConfiguration() *schema.Resource {
 							Computed: true,
 							ForceNew: true,
 						},
-						"throughput": {
+						names.AttrThroughput: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
@@ -562,7 +562,7 @@ func expandBlockDeviceMappingForEBSBlockDevice(tfMap map[string]interface{}) aws
 		apiObject.Ebs.SnapshotId = aws.String(v)
 	}
 
-	if v, ok := tfMap["throughput"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrThroughput].(int); ok && v != 0 {
 		apiObject.Ebs.Throughput = aws.Int32(int32(v))
 	}
 
@@ -612,7 +612,7 @@ func expandBlockDeviceMappingForRootBlockDevice(tfMap map[string]interface{}) aw
 		apiObject.Ebs.Iops = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["throughput"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrThroughput].(int); ok && v != 0 {
 		apiObject.Ebs.Throughput = aws.Int32(int32(v))
 	}
 
@@ -681,7 +681,7 @@ func flattenBlockDeviceMappings(apiObjects []awstypes.BlockDeviceMapping, rootDe
 			}
 
 			if v := v.Throughput; v != nil {
-				tfMap["throughput"] = aws.ToInt32(v)
+				tfMap[names.AttrThroughput] = aws.ToInt32(v)
 			}
 
 			if v := v.VolumeSize; v != nil {
