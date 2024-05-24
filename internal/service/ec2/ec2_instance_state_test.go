@@ -21,7 +21,6 @@ func TestAccEC2InstanceState_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_instance_state.test"
 	state := "stopped"
-	force := acctest.CtFalse
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -46,7 +45,6 @@ func TestAccEC2InstanceState_state(t *testing.T) {
 	resourceName := "aws_ec2_instance_state.test"
 	stateStopped := "stopped"
 	stateRunning := "running"
-	force := acctest.CtFalse
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -84,7 +82,6 @@ func TestAccEC2InstanceState_disappears_Instance(t *testing.T) {
 	resourceName := "aws_ec2_instance_state.test"
 	parentResourceName := "aws_instance.test"
 	state := "stopped"
-	force := acctest.CtFalse
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },

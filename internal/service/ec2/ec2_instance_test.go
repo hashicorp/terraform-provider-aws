@@ -2434,7 +2434,6 @@ func TestAccEC2Instance_EBSRootDevice_modifySize(t *testing.T) {
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	deleteOnTermination := acctest.CtTrue
 	volumeType := "gp2"
 
 	originalSize := "30"
@@ -2477,7 +2476,6 @@ func TestAccEC2Instance_EBSRootDevice_modifyType(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	volumeSize := "30"
-	deleteOnTermination := acctest.CtTrue
 
 	originalType := "gp2"
 	updatedType := "standard"
@@ -2519,7 +2517,7 @@ func TestAccEC2Instance_EBSRootDeviceModifyIOPS_io1(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	volumeSize := "30"
-	deleteOnTermination := acctest.CtTrue
+
 	volumeType := "io1"
 
 	originalIOPS := "100"
@@ -2564,7 +2562,6 @@ func TestAccEC2Instance_EBSRootDeviceModifyIOPS_io2(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	volumeSize := "30"
-	deleteOnTermination := acctest.CtTrue
 	volumeType := "io2"
 
 	originalIOPS := "100"
@@ -2609,7 +2606,7 @@ func TestAccEC2Instance_EBSRootDeviceModifyThroughput_gp3(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	volumeSize := "30"
-	deleteOnTermination := acctest.CtTrue
+
 	volumeType := "gp3"
 
 	originalThroughput := "250"
@@ -2656,9 +2653,6 @@ func TestAccEC2Instance_EBSRootDevice_modifyDeleteOnTermination(t *testing.T) {
 	volumeSize := "30"
 	volumeType := "gp2"
 
-	originalDeleteOnTermination := acctest.CtFalse
-	updatedDeleteOnTermination := acctest.CtTrue
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
@@ -2703,9 +2697,6 @@ func TestAccEC2Instance_EBSRootDevice_modifyAll(t *testing.T) {
 
 	updatedIOPS := "200"
 
-	originalDeleteOnTermination := acctest.CtFalse
-	updatedDeleteOnTermination := acctest.CtTrue
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
@@ -2742,8 +2733,6 @@ func TestAccEC2Instance_EBSRootDeviceMultipleBlockDevices_modifySize(t *testing.
 	var after ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	deleteOnTermination := acctest.CtTrue
 
 	updatedRootVolumeSize := "14"
 
@@ -2796,9 +2785,6 @@ func TestAccEC2Instance_EBSRootDeviceMultipleBlockDevices_modifyDeleteOnTerminat
 	var after ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	originalDeleteOnTermination := acctest.CtFalse
-	updatedDeleteOnTermination := acctest.CtTrue
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
