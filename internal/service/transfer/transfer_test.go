@@ -14,19 +14,19 @@ func TestAccTransfer_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Access": {
-			"disappears": testAccAccess_disappears,
+			acctest.CtDisappears: testAccAccess_disappears,
 			"EFSBasic":   testAccAccess_efs_basic,
 			"S3Basic":    testAccAccess_s3_basic,
 			"S3Policy":   testAccAccess_s3_policy,
 		},
 		"Agreement": {
 			acctest.CtBasic: testAccAgreement_basic,
-			"disappears":    testAccAgreement_disappears,
+			acctest.CtDisappears:    testAccAgreement_disappears,
 			"tags":          testAccAgreement_tags,
 		},
 		"Server": {
 			acctest.CtBasic:                   testAccServer_basic,
-			"disappears":                      testAccServer_disappears,
+			acctest.CtDisappears:                      testAccServer_disappears,
 			"tags":                            testAccServer_tags,
 			"APIGateway":                      testAccServer_apiGateway,
 			"APIGatewayForceDestroy":          testAccServer_apiGateway_forceDestroy,
@@ -65,13 +65,13 @@ func TestAccTransfer_serial(t *testing.T) {
 		},
 		"Tag": {
 			acctest.CtBasic: testAccTag_basic,
-			"disappears":    testAccTag_disappears,
+			acctest.CtDisappears:    testAccTag_disappears,
 			"Value":         testAccTag_value,
 			"System":        testAccTag_system,
 		},
 		"User": {
 			acctest.CtBasic:         testAccUser_basic,
-			"disappears":            testAccUser_disappears,
+			acctest.CtDisappears:            testAccUser_disappears,
 			"tags":                  testAccUser_tags,
 			"HomeDirectoryMappings": testAccUser_homeDirectoryMappings,
 			"ModifyWithOptions":     testAccUser_modifyWithOptions,
