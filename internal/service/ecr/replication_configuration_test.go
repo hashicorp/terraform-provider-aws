@@ -21,9 +21,9 @@ func TestAccECRReplicationConfiguration_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:    testAccReplicationConfiguration_basic,
-		acctest.CtDisappears:       testAccReplicationConfiguration_disappears,
-		"repositoryFilter": testAccReplicationConfiguration_repositoryFilter,
+		acctest.CtBasic:      testAccReplicationConfiguration_basic,
+		acctest.CtDisappears: testAccReplicationConfiguration_disappears,
+		"repositoryFilter":   testAccReplicationConfiguration_repositoryFilter,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
