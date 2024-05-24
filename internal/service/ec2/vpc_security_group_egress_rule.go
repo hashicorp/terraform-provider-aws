@@ -14,6 +14,7 @@ import (
 
 // @FrameworkResource("aws_vpc_security_group_egress_rule", name="Security Group Egress Rule")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func newSecurityGroupEgressRuleResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &securityGroupEgressRuleResource{}
 	r.securityGroupRule = r

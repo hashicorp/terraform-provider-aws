@@ -41,6 +41,7 @@ import (
 
 // @SDKResource("aws_instance", name="Instance")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceInstance() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{

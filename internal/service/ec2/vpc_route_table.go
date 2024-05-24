@@ -50,6 +50,7 @@ var routeTableValidTargets = []string{
 
 // @SDKResource("aws_route_table", name="Route Table")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func resourceRouteTable() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRouteTableCreate,

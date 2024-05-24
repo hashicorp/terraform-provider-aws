@@ -28,6 +28,7 @@ import (
 
 // @SDKResource("aws_ebs_snapshot_import", name="EBS Snapshot Import")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceEBSSnapshotImport() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEBSSnapshotImportCreate,

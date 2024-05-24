@@ -24,6 +24,7 @@ import (
 
 // @SDKResource("aws_ebs_snapshot_copy", name="EBS Snapshot Copy")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceEBSSnapshotCopy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEBSSnapshotCopyCreate,

@@ -27,6 +27,7 @@ import (
 
 // @SDKResource("aws_subnet", name="Subnet")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func ResourceSubnet() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{

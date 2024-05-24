@@ -33,6 +33,7 @@ import (
 
 // @FrameworkResource("aws_ec2_instance_connect_endpoint", name="Instance Connect Endpoint")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func newInstanceConnectEndpointResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &instanceConnectEndpointResource{}
 
