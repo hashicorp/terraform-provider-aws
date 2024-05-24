@@ -33,7 +33,7 @@ func TestAccOpsWorksMySQLLayer_basic(t *testing.T) {
 					testAccCheckLayerExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "MySQL"),
 					resource.TestCheckNoResourceAttr(resourceName, "root_password"),
-					resource.TestCheckResourceAttr(resourceName, "root_password_on_all_instances", "true"),
+					resource.TestCheckResourceAttr(resourceName, "root_password_on_all_instances", acctest.CtTrue),
 				),
 			},
 		},
