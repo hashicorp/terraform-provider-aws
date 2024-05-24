@@ -1,4 +1,9 @@
 ## 5.52.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_lightsail_instance: Fix crash when reading a resource that has a key-only tag ([#37587](https://github.com/hashicorp/terraform-provider-aws/issues/37587))
+
 ## 5.51.1 (May 24, 2024)
 
 ENHANCEMENTS:
