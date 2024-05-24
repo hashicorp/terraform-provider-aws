@@ -23,7 +23,7 @@ func TestAccIAMAccountPasswordPolicy_serial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic: testAccAccountPasswordPolicy_basic,
-		"disappears":    testAccAccountPasswordPolicy_disappears,
+		acctest.CtDisappears:    testAccAccountPasswordPolicy_disappears,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
