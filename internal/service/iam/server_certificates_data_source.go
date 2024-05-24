@@ -48,7 +48,7 @@ func (d *dataSourceServerCertificates) Schema(ctx context.Context, req datasourc
 			names.AttrNamePrefix: schema.StringAttribute{
 				Optional: true,
 			},
-			names.AttrPathPrefix: schema.StringAttribute{
+			"path_prefix": schema.StringAttribute{
 				Optional: true,
 			},
 			"latest": schema.BoolAttribute{
