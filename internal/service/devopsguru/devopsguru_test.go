@@ -17,25 +17,25 @@ func TestAccDevOpsGuru_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"EventSourcesConfig": {
-			acctest.CtBasic: testAccEventSourcesConfig_basic,
-			acctest.CtDisappears:    testAccEventSourcesConfig_disappears,
+			acctest.CtBasic:      testAccEventSourcesConfig_basic,
+			acctest.CtDisappears: testAccEventSourcesConfig_disappears,
 		},
 		// A maxiumum of 2 notification channels can be configured at once, so
 		// serialize tests for safety.
 		"NotificationChannel": {
-			acctest.CtBasic: testAccNotificationChannel_basic,
-			acctest.CtDisappears:    testAccNotificationChannel_disappears,
-			"filters":       testAccNotificationChannel_filters,
+			acctest.CtBasic:      testAccNotificationChannel_basic,
+			acctest.CtDisappears: testAccNotificationChannel_disappears,
+			"filters":            testAccNotificationChannel_filters,
 		},
 		"NotificationChannelDataSource": {
 			acctest.CtBasic: testAccNotificationChannelDataSource_basic,
 		},
 		"ResourceCollection": {
-			acctest.CtBasic:    testAccResourceCollection_basic,
-			"cloudformation":   testAccResourceCollection_cloudformation,
-			acctest.CtDisappears:       testAccResourceCollection_disappears,
-			"tags":             testAccResourceCollection_tags,
-			"tagsAllResources": testAccResourceCollection_tagsAllResources,
+			acctest.CtBasic:      testAccResourceCollection_basic,
+			"cloudformation":     testAccResourceCollection_cloudformation,
+			acctest.CtDisappears: testAccResourceCollection_disappears,
+			"tags":               testAccResourceCollection_tags,
+			"tagsAllResources":   testAccResourceCollection_tagsAllResources,
 		},
 		"ResourceCollectionDataSource": {
 			acctest.CtBasic: testAccResourceCollectionDataSource_basic,
