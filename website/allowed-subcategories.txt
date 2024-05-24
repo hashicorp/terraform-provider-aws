@@ -18,7 +18,7 @@ AppIntegrations
 AppStream 2.0
 AppSync
 Application Auto Scaling
-Application Migration (Mgn)
+Application Migration Service (MGN)
 Athena
 Audit Manager
 Auto Scaling

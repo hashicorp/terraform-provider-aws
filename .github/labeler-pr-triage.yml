@@ -1465,7 +1465,7 @@ service/mgn:
       - changed-files:
           - any-glob-to-any-file:
               - 'internal/service/mgn/**/*'
-              - 'website/**/mgn_*'
+              - 'website/**/mgn*'
 service/migrationhubconfig:
   - any:
       - changed-files:

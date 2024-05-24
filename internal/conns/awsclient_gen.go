@@ -110,6 +110,7 @@ import (
 	mediapackage_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediapackage"
 	mediapackagev2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediapackagev2"
 	mediastore_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediastore"
+	mgn_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mgn"
 	mq_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mq"
 	mwaa_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mwaa"
 	neptunegraph_sdkv2 "github.com/aws/aws-sdk-go-v2/service/neptunegraph"
@@ -218,6 +219,7 @@ import (
 	macie2_sdkv1 "github.com/aws/aws-sdk-go/service/macie2"
 	managedgrafana_sdkv1 "github.com/aws/aws-sdk-go/service/managedgrafana"
 	memorydb_sdkv1 "github.com/aws/aws-sdk-go/service/memorydb"
+	mgn_sdkv1 "github.com/aws/aws-sdk-go/service/mgn"
 	neptune_sdkv1 "github.com/aws/aws-sdk-go/service/neptune"
 	networkfirewall_sdkv1 "github.com/aws/aws-sdk-go/service/networkfirewall"
 	networkmanager_sdkv1 "github.com/aws/aws-sdk-go/service/networkmanager"
@@ -849,6 +851,14 @@ func (c *AWSClient) LookoutMetricsClient(ctx context.Context) *lookoutmetrics_sd
 
 func (c *AWSClient) M2Client(ctx context.Context) *m2_sdkv2.Client {
 	return errs.Must(client[*m2_sdkv2.Client](ctx, c, names.M2, make(map[string]any)))
+}
+
+func (c *AWSClient) MGNConn(ctx context.Context) *mgn_sdkv1.ApplicationMigrationService {
+	return errs.Must(conn[*mgn_sdkv1.ApplicationMigrationService](ctx, c, names.MGN, make(map[string]any)))
+}
+
+func (c *AWSClient) MGNClient(ctx context.Context) *mgn_sdkv2.Client {
+	return errs.Must(client[*mgn_sdkv2.Client](ctx, c, names.MGN, make(map[string]any)))
 }
 
 func (c *AWSClient) MQClient(ctx context.Context) *mq_sdkv2.Client {
