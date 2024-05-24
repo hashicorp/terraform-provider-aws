@@ -165,7 +165,6 @@ func TestAccAppIntegrationsEventIntegration_disappears(t *testing.T) {
 	var eventIntegration appintegrations.GetEventIntegrationOutput
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	description := acctest.CtDisappears
 	resourceName := "aws_appintegrations_event_integration.test"
 
 	key := "EVENT_BRIDGE_PARTNER_EVENT_SOURCE_NAME"
