@@ -27,7 +27,7 @@ func TestAccFSxFileCache_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"FSxFileCache": {
 			acctest.CtBasic: testAccFileCache_basic,
-			"disappears":    testAccFileCache_disappears,
+			acctest.CtDisappears:    testAccFileCache_disappears,
 			"kms_key_id":    testAccFileCache_kmsKeyID,
 			"copy_tags_to_data_repository_associations": testAccFileCache_copyTagsToDataRepositoryAssociations,
 			"data_repository_association_multiple":      testAccFileCache_dataRepositoryAssociation_multiple,
