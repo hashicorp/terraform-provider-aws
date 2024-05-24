@@ -179,7 +179,7 @@ func testAccAccessAnalyzerAnalyzer_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Analyzer/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -200,7 +200,7 @@ func testAccAccessAnalyzerAnalyzer_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Analyzer/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				ResourceName:      resourceName,
@@ -261,7 +261,7 @@ func testAccAccessAnalyzerAnalyzer_tags_null(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Analyzer/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				PlanOnly:           true,
@@ -286,7 +286,7 @@ func testAccAccessAnalyzerAnalyzer_tags_AddOnUpdate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Analyzer/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -402,7 +402,7 @@ func testAccAccessAnalyzerAnalyzer_tags_EmptyTag_OnCreate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Analyzer/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -423,7 +423,7 @@ func testAccAccessAnalyzerAnalyzer_tags_EmptyTag_OnCreate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Analyzer/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				ResourceName:      resourceName,
@@ -794,7 +794,7 @@ func testAccAccessAnalyzerAnalyzer_tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Analyzer/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -817,7 +817,7 @@ func testAccAccessAnalyzerAnalyzer_tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Analyzer/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				ResourceName:      resourceName,
@@ -902,7 +902,7 @@ func testAccAccessAnalyzerAnalyzer_tags_DefaultTags_nonOverlapping(t *testing.T)
 					}),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtResourceKey1: config.StringVariable("resourcevalue1updated"),
-						"resourcekey2": config.StringVariable(acctest.CtResourceValue2),
+						"resourcekey2":         config.StringVariable(acctest.CtResourceValue2),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -911,12 +911,12 @@ func testAccAccessAnalyzerAnalyzer_tags_DefaultTags_nonOverlapping(t *testing.T)
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact("resourcevalue1updated"),
-						"resourcekey2": knownvalue.StringExact(acctest.CtResourceValue2),
+						"resourcekey2":         knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact("providervalue1updated"),
 						acctest.CtResourceKey1: knownvalue.StringExact("resourcevalue1updated"),
-						"resourcekey2": knownvalue.StringExact(acctest.CtResourceValue2),
+						"resourcekey2":         knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -924,12 +924,12 @@ func testAccAccessAnalyzerAnalyzer_tags_DefaultTags_nonOverlapping(t *testing.T)
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtResourceKey1: knownvalue.StringExact("resourcevalue1updated"),
-							"resourcekey2": knownvalue.StringExact(acctest.CtResourceValue2),
+							"resourcekey2":         knownvalue.StringExact(acctest.CtResourceValue2),
 						})),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtProviderKey1: knownvalue.StringExact("providervalue1updated"),
 							acctest.CtResourceKey1: knownvalue.StringExact("resourcevalue1updated"),
-							"resourcekey2": knownvalue.StringExact(acctest.CtResourceValue2),
+							"resourcekey2":         knownvalue.StringExact(acctest.CtResourceValue2),
 						})),
 					},
 				},
@@ -944,7 +944,7 @@ func testAccAccessAnalyzerAnalyzer_tags_DefaultTags_nonOverlapping(t *testing.T)
 					}),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtResourceKey1: config.StringVariable("resourcevalue1updated"),
-						"resourcekey2": config.StringVariable(acctest.CtResourceValue2),
+						"resourcekey2":         config.StringVariable(acctest.CtResourceValue2),
 					}),
 				},
 				ResourceName:      resourceName,
@@ -955,7 +955,7 @@ func testAccAccessAnalyzerAnalyzer_tags_DefaultTags_nonOverlapping(t *testing.T)
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Analyzer/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -978,7 +978,7 @@ func testAccAccessAnalyzerAnalyzer_tags_DefaultTags_nonOverlapping(t *testing.T)
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Analyzer/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				ResourceName:      resourceName,
@@ -1058,11 +1058,11 @@ func testAccAccessAnalyzerAnalyzer_tags_DefaultTags_overlapping(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
-						"overlapkey2": config.StringVariable("providervalue2"),
+						"overlapkey2":         config.StringVariable("providervalue2"),
 					}),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue1),
-						"overlapkey2": config.StringVariable(acctest.CtResourceValue2),
+						"overlapkey2":         config.StringVariable(acctest.CtResourceValue2),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1071,11 +1071,11 @@ func testAccAccessAnalyzerAnalyzer_tags_DefaultTags_overlapping(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue1),
-						"overlapkey2": knownvalue.StringExact(acctest.CtResourceValue2),
+						"overlapkey2":         knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue1),
-						"overlapkey2": knownvalue.StringExact(acctest.CtResourceValue2),
+						"overlapkey2":         knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -1083,11 +1083,11 @@ func testAccAccessAnalyzerAnalyzer_tags_DefaultTags_overlapping(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue1),
-							"overlapkey2": knownvalue.StringExact(acctest.CtResourceValue2),
+							"overlapkey2":         knownvalue.StringExact(acctest.CtResourceValue2),
 						})),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue1),
-							"overlapkey2": knownvalue.StringExact(acctest.CtResourceValue2),
+							"overlapkey2":         knownvalue.StringExact(acctest.CtResourceValue2),
 						})),
 					},
 				},
@@ -1099,11 +1099,11 @@ func testAccAccessAnalyzerAnalyzer_tags_DefaultTags_overlapping(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
-						"overlapkey2": config.StringVariable("providervalue2"),
+						"overlapkey2":         config.StringVariable("providervalue2"),
 					}),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue1),
-						"overlapkey2": config.StringVariable(acctest.CtResourceValue2),
+						"overlapkey2":         config.StringVariable(acctest.CtResourceValue2),
 					}),
 				},
 				ResourceName:      resourceName,
