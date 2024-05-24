@@ -15,7 +15,7 @@ func TestAccSecurityHub_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Account": {
 			acctest.CtBasic:               testAccAccount_basic,
-			"disappears":                  testAccAccount_disappears,
+			acctest.CtDisappears:                  testAccAccount_disappears,
 			"EnableDefaultStandardsFalse": testAccAccount_enableDefaultStandardsFalse,
 			"MigrateV0":                   testAccAccount_migrateV0,
 			"Full":                        testAccAccount_full,
@@ -24,7 +24,7 @@ func TestAccSecurityHub_serial(t *testing.T) {
 		"AutomationRule": {
 			acctest.CtBasic: testAccAutomationRule_basic,
 			"full":          testAccAutomationRule_full,
-			"disappears":    testAccAutomationRule_disappears,
+			acctest.CtDisappears:    testAccAutomationRule_disappears,
 			"stringFilters": testAccAutomationRule_stringFilters,
 			"numberFilters": testAccAutomationRule_numberFilters,
 			"dateFilters":   testAccAutomationRule_dateFilters,
@@ -33,27 +33,27 @@ func TestAccSecurityHub_serial(t *testing.T) {
 		},
 		"ActionTarget": {
 			acctest.CtBasic: testAccActionTarget_basic,
-			"disappears":    testAccActionTarget_disappears,
+			acctest.CtDisappears:    testAccActionTarget_disappears,
 			"Description":   testAccActionTarget_Description,
 			"Name":          testAccActionTarget_Name,
 		},
 		"ConfigurationPolicy": {
 			acctest.CtBasic:      testAccConfigurationPolicy_basic,
-			"disappears":         testAccConfigurationPolicy_disappears,
+			acctest.CtDisappears:         testAccConfigurationPolicy_disappears,
 			"CustomParameters":   testAccConfigurationPolicy_controlCustomParameters,
 			"ControlIdentifiers": testAccConfigurationPolicy_specificControlIdentifiers,
 		},
 		"ConfigurationPolicyAssociation": {
 			acctest.CtBasic: testAccConfigurationPolicyAssociation_basic,
-			"disappears":    testAccConfigurationPolicyAssociation_disappears,
+			acctest.CtDisappears:    testAccConfigurationPolicyAssociation_disappears,
 		},
 		"FindingAggregator": {
 			acctest.CtBasic: testAccFindingAggregator_basic,
-			"disappears":    testAccFindingAggregator_disappears,
+			acctest.CtDisappears:    testAccFindingAggregator_disappears,
 		},
 		"Insight": {
 			acctest.CtBasic:    testAccInsight_basic,
-			"disappears":       testAccInsight_disappears,
+			acctest.CtDisappears:       testAccInsight_disappears,
 			"DateFilters":      testAccInsight_DateFilters,
 			"GroupByAttribute": testAccInsight_GroupByAttribute,
 			"IpFilters":        testAccInsight_IPFilters,
@@ -73,7 +73,7 @@ func TestAccSecurityHub_serial(t *testing.T) {
 		},
 		"OrganizationAdminAccount": {
 			acctest.CtBasic: testAccOrganizationAdminAccount_basic,
-			"disappears":    testAccOrganizationAdminAccount_disappears,
+			acctest.CtDisappears:    testAccOrganizationAdminAccount_disappears,
 			"MultiRegion":   testAccOrganizationAdminAccount_MultiRegion,
 		},
 		"OrganizationConfiguration": {
@@ -91,7 +91,7 @@ func TestAccSecurityHub_serial(t *testing.T) {
 		},
 		"StandardsSubscription": {
 			acctest.CtBasic: testAccStandardsSubscription_basic,
-			"disappears":    testAccStandardsSubscription_disappears,
+			acctest.CtDisappears:    testAccStandardsSubscription_disappears,
 		},
 	}
 
