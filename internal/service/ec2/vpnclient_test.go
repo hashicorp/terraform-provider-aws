@@ -22,7 +22,7 @@ func TestAccClientVPNEndpoint_serial(t *testing.T) {
 	testCases := map[string]map[string]func(*testing.T, tfsync.Semaphore){
 		"Endpoint": {
 			acctest.CtBasic:                testAccClientVPNEndpoint_basic,
-			acctest.CtDisappears:                   testAccClientVPNEndpoint_disappears,
+			acctest.CtDisappears:           testAccClientVPNEndpoint_disappears,
 			"msADAuth":                     testAccClientVPNEndpoint_msADAuth,
 			"msADAuthAndMutualAuth":        testAccClientVPNEndpoint_msADAuthAndMutualAuth,
 			"federatedAuth":                testAccClientVPNEndpoint_federatedAuth,
@@ -42,18 +42,18 @@ func TestAccClientVPNEndpoint_serial(t *testing.T) {
 			acctest.CtBasic:      testAccClientVPNAuthorizationRule_basic,
 			"groups":             testAccClientVPNAuthorizationRule_groups,
 			"subnets":            testAccClientVPNAuthorizationRule_subnets,
-			acctest.CtDisappears:         testAccClientVPNAuthorizationRule_disappears,
+			acctest.CtDisappears: testAccClientVPNAuthorizationRule_disappears,
 			"disappearsEndpoint": testAccClientVPNAuthorizationRule_Disappears_endpoint,
 		},
 		"NetworkAssociation": {
-			acctest.CtBasic:   testAccClientVPNNetworkAssociation_basic,
-			"multipleSubnets": testAccClientVPNNetworkAssociation_multipleSubnets,
-			acctest.CtDisappears:      testAccClientVPNNetworkAssociation_disappears,
+			acctest.CtBasic:      testAccClientVPNNetworkAssociation_basic,
+			"multipleSubnets":    testAccClientVPNNetworkAssociation_multipleSubnets,
+			acctest.CtDisappears: testAccClientVPNNetworkAssociation_disappears,
 		},
 		"Route": {
-			acctest.CtBasic: testAccClientVPNRoute_basic,
-			"description":   testAccClientVPNRoute_description,
-			acctest.CtDisappears:    testAccClientVPNRoute_disappears,
+			acctest.CtBasic:      testAccClientVPNRoute_basic,
+			"description":        testAccClientVPNRoute_description,
+			acctest.CtDisappears: testAccClientVPNRoute_disappears,
 		},
 	}
 
