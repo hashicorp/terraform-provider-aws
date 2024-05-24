@@ -56,11 +56,9 @@ func TestAccAppConfigExtensionAssociation_Parameters(t *testing.T) {
 	resourceName := "aws_appconfig_extension_association.test"
 	pName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	pDescription1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	pRequiredTrue := acctest.CtTrue
 	pValue1 := "ParameterValue1"
 	pName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	pDescription2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	pRequiredFalse := acctest.CtFalse
 	pValue2 := "ParameterValue2"
 
 	resource.ParallelTest(t, resource.TestCase{
