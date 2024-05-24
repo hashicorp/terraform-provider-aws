@@ -566,7 +566,7 @@ func ResourceService() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"throughput": {
+									names.AttrThroughput: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.IntBetween(0, 1000),
@@ -1588,7 +1588,7 @@ func expandManagedEBSVolume(ebs []interface{}) *ecs.ServiceManagedEBSVolumeConfi
 	if v, ok := raw[names.AttrSnapshotID].(string); ok && v != "" {
 		config.SnapshotId = aws.String(v)
 	}
-	if v, ok := raw["throughput"].(int); ok && v != 0 {
+	if v, ok := raw[names.AttrThroughput].(int); ok && v != 0 {
 		config.Throughput = aws.Int64(int64(v))
 	}
 	if v, ok := raw[names.AttrVolumeType].(string); ok && v != "" {
