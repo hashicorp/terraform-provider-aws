@@ -24,22 +24,22 @@ func TestAccConfigService_serial(t *testing.T) {
 			"scopeTagKeyEmpty": testAccConfigRule_Scope_TagKey_Empty,
 			"scopeTagValue":    testAccConfigRule_Scope_TagValue,
 			"tags":             testAccConfigRule_tags,
-			"disappears":       testAccConfigRule_disappears,
+			acctest.CtDisappears:       testAccConfigRule_disappears,
 		},
 		"ConfigurationRecorderStatus": {
 			acctest.CtBasic: testAccConfigurationRecorderStatus_basic,
 			"startEnabled":  testAccConfigurationRecorderStatus_startEnabled,
-			"disappears":    testAccConfigurationRecorderStatus_disappears,
+			acctest.CtDisappears:    testAccConfigurationRecorderStatus_disappears,
 		},
 		"ConfigurationRecorder": {
 			acctest.CtBasic:  testAccConfigurationRecorder_basic,
 			"allParams":      testAccConfigurationRecorder_allParams,
 			"recordStrategy": testAccConfigurationRecorder_recordStrategy,
-			"disappears":     testAccConfigurationRecorder_disappears,
+			acctest.CtDisappears:     testAccConfigurationRecorder_disappears,
 		},
 		"ConformancePack": {
 			acctest.CtBasic:             testAccConformancePack_basic,
-			"disappears":                testAccConformancePack_disappears,
+			acctest.CtDisappears:                testAccConformancePack_disappears,
 			"updateName":                testAccConformancePack_updateName,
 			"inputParameters":           testAccConformancePack_inputParameters,
 			"S3Delivery":                testAccConformancePack_S3Delivery,
@@ -53,11 +53,11 @@ func TestAccConfigService_serial(t *testing.T) {
 		"DeliveryChannel": {
 			acctest.CtBasic: testAccDeliveryChannel_basic,
 			"allParams":     testAccDeliveryChannel_allParams,
-			"disappears":    testAccDeliveryChannel_disappears,
+			acctest.CtDisappears:    testAccDeliveryChannel_disappears,
 		},
 		"OrganizationConformancePack": {
 			acctest.CtBasic:         testAccOrganizationConformancePack_basic,
-			"disappears":            testAccOrganizationConformancePack_disappears,
+			acctest.CtDisappears:            testAccOrganizationConformancePack_disappears,
 			"excludedAccounts":      testAccOrganizationConformancePack_excludedAccounts,
 			"updateName":            testAccOrganizationConformancePack_updateName,
 			"inputParameters":       testAccOrganizationConformancePack_inputParameters,
@@ -70,12 +70,12 @@ func TestAccConfigService_serial(t *testing.T) {
 		},
 		"OrganizationCustomPolicyRule": {
 			acctest.CtBasic: testAccOrganizationCustomPolicyRule_basic,
-			"disappears":    testAccOrganizationCustomPolicyRule_disappears,
+			acctest.CtDisappears:    testAccOrganizationCustomPolicyRule_disappears,
 			"policyText":    testAccOrganizationCustomPolicyRule_PolicyText,
 		},
 		"OrganizationCustomRule": {
 			acctest.CtBasic:             testAccOrganizationCustomRule_basic,
-			"disappears":                testAccOrganizationCustomRule_disappears,
+			acctest.CtDisappears:                testAccOrganizationCustomRule_disappears,
 			"errorHandling":             testAccOrganizationCustomRule_errorHandling,
 			"Description":               testAccOrganizationCustomRule_Description,
 			"ExcludedAccounts":          testAccOrganizationCustomRule_ExcludedAccounts,
@@ -90,7 +90,7 @@ func TestAccConfigService_serial(t *testing.T) {
 		},
 		"OrganizationManagedRule": {
 			acctest.CtBasic:             testAccOrganizationManagedRule_basic,
-			"disappears":                testAccOrganizationManagedRule_disappears,
+			acctest.CtDisappears:                testAccOrganizationManagedRule_disappears,
 			"errorHandling":             testAccOrganizationManagedRule_errorHandling,
 			"Description":               testAccOrganizationManagedRule_Description,
 			"ExcludedAccounts":          testAccOrganizationManagedRule_ExcludedAccounts,
@@ -105,13 +105,13 @@ func TestAccConfigService_serial(t *testing.T) {
 		"RemediationConfiguration": {
 			acctest.CtBasic: testAccRemediationConfiguration_basic,
 			"basicBackward": testAccRemediationConfiguration_basicBackwardCompatible,
-			"disappears":    testAccRemediationConfiguration_disappears,
+			acctest.CtDisappears:    testAccRemediationConfiguration_disappears,
 			"updates":       testAccRemediationConfiguration_updates,
 			"values":        testAccRemediationConfiguration_values,
 		},
 		"RetentionConfiguration": {
 			acctest.CtBasic: testAccRetentionConfiguration_basic,
-			"disappears":    testAccRetentionConfiguration_disappears,
+			acctest.CtDisappears:    testAccRetentionConfiguration_disappears,
 		},
 	}
 
