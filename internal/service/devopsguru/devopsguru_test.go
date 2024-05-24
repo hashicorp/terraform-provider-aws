@@ -18,13 +18,13 @@ func TestAccDevOpsGuru_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"EventSourcesConfig": {
 			acctest.CtBasic: testAccEventSourcesConfig_basic,
-			"disappears":    testAccEventSourcesConfig_disappears,
+			acctest.CtDisappears:    testAccEventSourcesConfig_disappears,
 		},
 		// A maxiumum of 2 notification channels can be configured at once, so
 		// serialize tests for safety.
 		"NotificationChannel": {
 			acctest.CtBasic: testAccNotificationChannel_basic,
-			"disappears":    testAccNotificationChannel_disappears,
+			acctest.CtDisappears:    testAccNotificationChannel_disappears,
 			"filters":       testAccNotificationChannel_filters,
 		},
 		"NotificationChannelDataSource": {
@@ -33,7 +33,7 @@ func TestAccDevOpsGuru_serial(t *testing.T) {
 		"ResourceCollection": {
 			acctest.CtBasic:    testAccResourceCollection_basic,
 			"cloudformation":   testAccResourceCollection_cloudformation,
-			"disappears":       testAccResourceCollection_disappears,
+			acctest.CtDisappears:       testAccResourceCollection_disappears,
 			"tags":             testAccResourceCollection_tags,
 			"tagsAllResources": testAccResourceCollection_tagsAllResources,
 		},
