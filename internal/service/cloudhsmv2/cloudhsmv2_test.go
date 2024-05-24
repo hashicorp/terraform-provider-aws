@@ -15,13 +15,13 @@ func TestAccCloudHSMV2_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Cluster": {
 			acctest.CtBasic: testAccCluster_basic,
-			"disappears":    testAccCluster_disappears,
+			acctest.CtDisappears:    testAccCluster_disappears,
 			"tags":          testAccCluster_tags,
 		},
 		"Hsm": {
 			"availabilityZone": testAccHSM_AvailabilityZone,
 			acctest.CtBasic:    testAccHSM_basic,
-			"disappears":       testAccHSM_disappears,
+			acctest.CtDisappears:       testAccHSM_disappears,
 			"ipAddress":        testAccHSM_IPAddress,
 		},
 		"DataSource": {
