@@ -24,7 +24,7 @@ func TestAccSESV2AccountVDMAttributes_serial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:           testAccAccountVDMAttributes_basic,
-		"disappears":              testAccAccountVDMAttributes_disappears,
+		acctest.CtDisappears:              testAccAccountVDMAttributes_disappears,
 		"engagementMetrics":       testAccAccountVDMAttributes_engagementMetrics,
 		"optimizedSharedDelivery": testAccAccountVDMAttributes_optimizedSharedDelivery,
 	}

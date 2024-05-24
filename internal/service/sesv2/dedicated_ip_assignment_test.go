@@ -26,7 +26,7 @@ func TestAccSESV2DedicatedIPAssignment_serial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic: testAccSESV2DedicatedIPAssignment_basic,
-		"disappears":    testAccSESV2DedicatedIPAssignment_disappears,
+		acctest.CtDisappears:    testAccSESV2DedicatedIPAssignment_disappears,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
