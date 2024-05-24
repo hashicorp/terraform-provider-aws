@@ -35,7 +35,7 @@ func TestAccSSMAssociation_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssociationExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ssm", regexache.MustCompile(`association/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "apply_only_at_cron_interval", "false"),
+					resource.TestCheckResourceAttr(resourceName, "apply_only_at_cron_interval", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, "aws_instance.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "output_location.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "targets.#", acctest.Ct1),
@@ -117,7 +117,7 @@ func TestAccSSMAssociation_applyOnlyAtCronInterval(t *testing.T) {
 				Config: testAccAssociationConfig_basicApplyOnlyAtCronInterval(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "apply_only_at_cron_interval", "true"),
+					resource.TestCheckResourceAttr(resourceName, "apply_only_at_cron_interval", acctest.CtTrue),
 				),
 			},
 			{
@@ -129,7 +129,7 @@ func TestAccSSMAssociation_applyOnlyAtCronInterval(t *testing.T) {
 				Config: testAccAssociationConfig_basicApplyOnlyAtCronInterval(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "apply_only_at_cron_interval", "false"),
+					resource.TestCheckResourceAttr(resourceName, "apply_only_at_cron_interval", acctest.CtFalse),
 				),
 			},
 		},
