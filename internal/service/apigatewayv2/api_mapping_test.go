@@ -40,9 +40,9 @@ func TestAccAPIGatewayV2APIMapping_serial(t *testing.T) {
 	})
 
 	testCases := map[string]func(t *testing.T, rName string, certificateArn *string){
-		acctest.CtBasic: testAccAPIMapping_basic,
-		acctest.CtDisappears:    testAccAPIMapping_disappears,
-		"ApiMappingKey": testAccAPIMapping_key,
+		acctest.CtBasic:      testAccAPIMapping_basic,
+		acctest.CtDisappears: testAccAPIMapping_disappears,
+		"ApiMappingKey":      testAccAPIMapping_key,
 	}
 	for name, tc := range testCases { //nolint:paralleltest
 		tc := tc
