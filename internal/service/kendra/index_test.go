@@ -1362,7 +1362,6 @@ func TestAccKendraIndex_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	description := acctest.CtDisappears
 	resourceName := "aws_kendra_index.test"
 
 	resource.ParallelTest(t, resource.TestCase{
