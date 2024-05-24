@@ -62,7 +62,7 @@ func DataSourceImageRecipe() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"throughput": {
+									names.AttrThroughput: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},

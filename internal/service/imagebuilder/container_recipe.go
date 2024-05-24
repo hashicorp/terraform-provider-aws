@@ -166,7 +166,7 @@ func ResourceContainerRecipe() *schema.Resource {
 													ForceNew:     true,
 													ValidateFunc: validation.StringLenBetween(1, 1024),
 												},
-												"throughput": {
+												names.AttrThroughput: {
 													Type:         schema.TypeInt,
 													Optional:     true,
 													ForceNew:     true,
