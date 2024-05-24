@@ -492,6 +492,8 @@ To enable generated acceptance tests for a service, add the following line to th
 //go:generate go run ../../generate/tagstests/main.go
 ```
 
+#### Controlling Test Generation
+
 Individual resource types can be excluded from generated acceptance tests by adding the annotation `@Testing(tagsTest=false)` to the resource type declaration.
 All data source types are excluded.
 
@@ -553,6 +555,18 @@ Use the annotation `@Testing(checkDestroyNoop=true)`.
 At least one resource type, the Service Catalog Provisioned Product, does not support removing tags.
 This is likely an error on the AWS side.
 Add the annotation `@Testing(noRemoveTags=true)` as a workaround.
+
+#### Test Terraform Configurations
+
+The generated acceptance tests use `ConfigDirectory` to specify the test configurations in a directory of Terraform `.tf` files.
+The configuration files are generated from a [Go template](https://pkg.go.dev/text/template) file located in `testdata/tmpl/<name>_tags.gtpl`,
+where `name` is the name of the resource type's implementation file wihtout the `.go` extension.
+For example, the ELB v2 Load Balancer's implementation file is `load_balancer.go`, so the template is `testdata/tmpl/load_balancer_tags.gtpl`.
+
+Replace the `tags` attribute with the Go template directive `{{- template "tags" . }}`.
+When the configurations are generated, this will be replaced with the appropriate assignment to the `tags` attribute.
+
+Tags should only be applied to the resource that is being tested.
 
 ### Manually Created Acceptance Tests
 
