@@ -28,7 +28,7 @@ func TestAccGrafana_serial(t *testing.T) {
 		"Workspace": {
 			"saml":                     testAccWorkspace_saml,
 			"sso":                      testAccWorkspace_sso,
-			acctest.CtDisappears:               testAccWorkspace_disappears,
+			acctest.CtDisappears:       testAccWorkspace_disappears,
 			"organization":             testAccWorkspace_organization,
 			"dataSources":              testAccWorkspace_dataSources,
 			"permissionType":           testAccWorkspace_permissionType,
