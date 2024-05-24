@@ -530,6 +530,9 @@ For example, the S3 Object uses
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3;s3.GetObjectOutput")
 ```
 
+Some services or resource types are using a new variant of the standard `Exists` and `DestroyCheck` functions that use `acctest.ProviderMeta` internally, and thus take a `testing.T` as a parameter.
+In that case, add the annotations `@Testing(existsTakesT=true)` and `@Testing(destroyTakesT=true)`, respectively.
+
 The generated acceptance tests use `ImportState` steps.
 In most cases, these will work as-is.
 To ignore the values of certain parameters when importing, set the annotation `@Testing(importIgnore="...")` to a list of the parameter names separated by semi-colons (`;`).
