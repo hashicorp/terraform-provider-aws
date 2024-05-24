@@ -31,7 +31,7 @@ func TestAccIoTCertificate_csr(t *testing.T) {
 				Config: testAccCertificateConfig_csr,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "active", "true"),
+					resource.TestCheckResourceAttr(resourceName, "active", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_pem"),
 					resource.TestCheckResourceAttrSet(resourceName, "csr"),
@@ -57,7 +57,7 @@ func TestAccIoTCertificate_Keys_certificate(t *testing.T) {
 				Config: testAccCertificateConfig_keys,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "active", "true"),
+					resource.TestCheckResourceAttr(resourceName, "active", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_pem"),
 					resource.TestCheckNoResourceAttr(resourceName, "csr"),
@@ -85,7 +85,7 @@ func TestAccIoTCertificate_Keys_existingCertificate(t *testing.T) {
 				Config: testAccCertificateConfig_existingCertificate(certificate, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "active", "false"),
+					resource.TestCheckResourceAttr(resourceName, "active", acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_pem"),
 					resource.TestCheckNoResourceAttr(resourceName, "csr"),
@@ -97,7 +97,7 @@ func TestAccIoTCertificate_Keys_existingCertificate(t *testing.T) {
 				Config: testAccCertificateConfig_existingCertificate(certificate, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "active", "true"),
+					resource.TestCheckResourceAttr(resourceName, "active", acctest.CtTrue),
 				),
 			},
 		},

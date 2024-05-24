@@ -7,6 +7,7 @@
 FALSE,FalseCaps
 TRUE,TrueCaps
 basic,Basic
+false,False
 key1,Key1
 key2,Key2
 provider_tags,ProviderTags
@@ -19,6 +20,7 @@ tags.%,TagsPercent
 tags.key1,TagsKey1
 tags.key2,TagsKey2
 tags_all.%,TagsAllPercent
+true,True
 value1,Value1
 value1updated,Value1Updated
 value2,Value2

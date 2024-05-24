@@ -54,7 +54,7 @@ func testAccWorkspace_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "bundle_id", bundleDataSourceName, names.AttrID),
 					resource.TestMatchResourceAttr(resourceName, names.AttrIPAddress, regexache.MustCompile(`\d+\.\d+\.\d+\.\d+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(types.WorkspaceStateAvailable)),
-					resource.TestCheckResourceAttr(resourceName, "root_volume_encryption_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_encryption_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, "Administrator"),
 					resource.TestCheckResourceAttr(resourceName, "volume_encryption_key", ""),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.#", acctest.Ct1),

@@ -184,7 +184,7 @@ func resourceRouteTableCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	d.SetId(aws.ToString(output.RouteTable.RouteTableId))
 
-	if _, err := waitRouteTableReadyV2(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitRouteTableReady(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Route Table (%s) create: %s", d.Id(), err)
 	}
 
@@ -216,7 +216,7 @@ func resourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
-		return findRouteTableByIDV2(ctx, conn, d.Id())
+		return findRouteTableByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -353,7 +353,7 @@ func resourceRouteTableDelete(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	routeTable, err := findRouteTableByIDV2(ctx, conn, d.Id())
+	routeTable, err := findRouteTableByID(ctx, conn, d.Id())
 
 	if tfresource.NotFound(err) {
 		return diags
@@ -385,7 +385,7 @@ func resourceRouteTableDelete(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "deleting Route Table (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitRouteTableDeletedV2(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitRouteTableDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Route Table (%s) delete: %s", d.Id(), err)
 	}
 
@@ -467,15 +467,15 @@ func routeTableAddRoute(ctx context.Context, conn *ec2.Client, routeTableID stri
 
 	destinationAttributeKey, destination := routeTableRouteDestinationAttribute(tfMap)
 
-	var routeFinder routeFinderV2
+	var routeFinder routeFinder
 
 	switch destinationAttributeKey {
 	case "cidr_block":
-		routeFinder = findRouteByIPv4DestinationV2
+		routeFinder = findRouteByIPv4Destination
 	case "ipv6_cidr_block":
-		routeFinder = findRouteByIPv6DestinationV2
+		routeFinder = findRouteByIPv6Destination
 	case "destination_prefix_list_id":
-		routeFinder = findRouteByPrefixListIDDestinationV2
+		routeFinder = findRouteByPrefixListIDDestination
 	default:
 		return fmt.Errorf("creating Route: unexpected route destination attribute: %q", destinationAttributeKey)
 	}
@@ -519,7 +519,7 @@ func routeTableAddRoute(ctx context.Context, conn *ec2.Client, routeTableID stri
 		return fmt.Errorf("creating Route in Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
 	}
 
-	if _, err := waitRouteReadyV2(ctx, conn, routeFinder, routeTableID, destination, timeout); err != nil {
+	if _, err := waitRouteReady(ctx, conn, routeFinder, routeTableID, destination, timeout); err != nil {
 		return fmt.Errorf("waiting for Route in Route Table (%s) with destination (%s) create: %w", routeTableID, destination, err)
 	}
 
@@ -534,18 +534,18 @@ func routeTableDeleteRoute(ctx context.Context, conn *ec2.Client, routeTableID s
 		RouteTableId: aws.String(routeTableID),
 	}
 
-	var routeFinder routeFinderV2
+	var routeFinder routeFinder
 
 	switch destination := aws.String(destination); destinationAttributeKey {
 	case "cidr_block":
 		input.DestinationCidrBlock = destination
-		routeFinder = findRouteByIPv4DestinationV2
+		routeFinder = findRouteByIPv4Destination
 	case "ipv6_cidr_block":
 		input.DestinationIpv6CidrBlock = destination
-		routeFinder = findRouteByIPv6DestinationV2
+		routeFinder = findRouteByIPv6Destination
 	case "destination_prefix_list_id":
 		input.DestinationPrefixListId = destination
-		routeFinder = findRouteByPrefixListIDDestinationV2
+		routeFinder = findRouteByPrefixListIDDestination
 	default:
 		return fmt.Errorf("deleting Route: unexpected route destination attribute: %q", destinationAttributeKey)
 	}
@@ -560,7 +560,7 @@ func routeTableDeleteRoute(ctx context.Context, conn *ec2.Client, routeTableID s
 		return fmt.Errorf("deleting Route in Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
 	}
 
-	if _, err := waitRouteDeletedV2(ctx, conn, routeFinder, routeTableID, destination, timeout); err != nil {
+	if _, err := waitRouteDeleted(ctx, conn, routeFinder, routeTableID, destination, timeout); err != nil {
 		return fmt.Errorf("waiting for Route in Route Table (%s) with destination (%s) delete: %w", routeTableID, destination, err)
 	}
 
@@ -578,15 +578,15 @@ func routeTableUpdateRoute(ctx context.Context, conn *ec2.Client, routeTableID s
 
 	destinationAttributeKey, destination := routeTableRouteDestinationAttribute(tfMap)
 
-	var routeFinder routeFinderV2
+	var routeFinder routeFinder
 
 	switch destinationAttributeKey {
 	case "cidr_block":
-		routeFinder = findRouteByIPv4DestinationV2
+		routeFinder = findRouteByIPv4Destination
 	case "ipv6_cidr_block":
-		routeFinder = findRouteByIPv6DestinationV2
+		routeFinder = findRouteByIPv6Destination
 	case "destination_prefix_list_id":
-		routeFinder = findRouteByPrefixListIDDestinationV2
+		routeFinder = findRouteByPrefixListIDDestination
 	default:
 		return fmt.Errorf("creating Route: unexpected route destination attribute: %q", destinationAttributeKey)
 	}
@@ -605,7 +605,7 @@ func routeTableUpdateRoute(ctx context.Context, conn *ec2.Client, routeTableID s
 		return fmt.Errorf("updating Route in Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
 	}
 
-	if _, err := waitRouteReadyV2(ctx, conn, routeFinder, routeTableID, destination, timeout); err != nil {
+	if _, err := waitRouteReady(ctx, conn, routeFinder, routeTableID, destination, timeout); err != nil {
 		return fmt.Errorf("waiting for Route in Route Table (%s) with destination (%s) update: %w", routeTableID, destination, err)
 	}
 

@@ -839,7 +839,7 @@ func testAccGatewayRoute_http2Route(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.header.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "spec.0.http2_route.0.match.0.header.*", map[string]string{
-						"invert":       "false",
+						"invert":       acctest.CtFalse,
 						"match.#":      acctest.Ct0,
 						names.AttrName: "X-Testing1",
 					}),
@@ -874,12 +874,12 @@ func testAccGatewayRoute_http2Route(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.header.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "spec.0.http2_route.0.match.0.header.*", map[string]string{
-						"invert":       "true",
+						"invert":       acctest.CtTrue,
 						"match.#":      acctest.Ct0,
 						names.AttrName: "X-Testing1",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "spec.0.http2_route.0.match.0.header.*", map[string]string{
-						"invert":                "false",
+						"invert":                acctest.CtFalse,
 						"match.#":               acctest.Ct1,
 						"match.0.range.#":       acctest.Ct1,
 						"match.0.range.0.end":   "7",

@@ -34,7 +34,7 @@ func TestAccCloudWatchCompositeAlarm_basic(t *testing.T) {
 				Config: testAccCompositeAlarmConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCompositeAlarmExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "actions_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "actions_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "actions_suppressor.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "alarm_actions.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "alarm_description", ""),
@@ -138,7 +138,7 @@ func TestAccCloudWatchCompositeAlarm_actionsEnabled(t *testing.T) {
 				Config: testAccCompositeAlarmConfig_actionsEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCompositeAlarmExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "actions_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "actions_enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -150,7 +150,7 @@ func TestAccCloudWatchCompositeAlarm_actionsEnabled(t *testing.T) {
 				Config: testAccCompositeAlarmConfig_actionsEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCompositeAlarmExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "actions_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "actions_enabled", acctest.CtTrue),
 				),
 			},
 		},

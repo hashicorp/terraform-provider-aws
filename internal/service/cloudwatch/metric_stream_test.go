@@ -49,7 +49,7 @@ func TestAccCloudWatchMetricStream_basic(t *testing.T) {
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttr(resourceName, "exclude_filter.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "include_filter.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "include_linked_accounts_metrics", "false"),
+					resource.TestCheckResourceAttr(resourceName, "include_linked_accounts_metrics", acctest.CtFalse),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_update_date"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
@@ -471,14 +471,14 @@ func TestAccCloudWatchMetricStream_includeLinkedAccountsMetrics(t *testing.T) {
 				Config: testAccMetricStreamConfig_includeLinkedAccountsMetrics(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricStreamExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "include_linked_accounts_metrics", "false"),
+					resource.TestCheckResourceAttr(resourceName, "include_linked_accounts_metrics", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccMetricStreamConfig_includeLinkedAccountsMetrics(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricStreamExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "include_linked_accounts_metrics", "true"),
+					resource.TestCheckResourceAttr(resourceName, "include_linked_accounts_metrics", acctest.CtTrue),
 				),
 			},
 		},

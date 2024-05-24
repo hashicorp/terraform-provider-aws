@@ -136,11 +136,11 @@ func TestAccELBPolicy_SSLNegotiationPolicyType_customPolicy(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "policy_attribute.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "policy_attribute.*", map[string]string{
 						names.AttrName:  "Protocol-TLSv1.1",
-						names.AttrValue: "true",
+						names.AttrValue: acctest.CtTrue,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "policy_attribute.*", map[string]string{
 						names.AttrName:  "DHE-RSA-AES256-SHA256",
-						names.AttrValue: "true",
+						names.AttrValue: acctest.CtTrue,
 					}),
 				),
 			},
@@ -153,11 +153,11 @@ func TestAccELBPolicy_SSLNegotiationPolicyType_customPolicy(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "policy_attribute.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "policy_attribute.*", map[string]string{
 						names.AttrName:  "Protocol-TLSv1.2",
-						names.AttrValue: "true",
+						names.AttrValue: acctest.CtTrue,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "policy_attribute.*", map[string]string{
 						names.AttrName:  "ECDHE-ECDSA-AES128-GCM-SHA256",
-						names.AttrValue: "true",
+						names.AttrValue: acctest.CtTrue,
 					}),
 				),
 			},

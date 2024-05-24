@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -72,6 +73,7 @@ func resourceTargetGroupAttachment() *schema.Resource {
 }
 
 func resourceTargetGroupAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	targetGroupID := d.Get("target_group_identifier").(string)
@@ -87,19 +89,20 @@ func resourceTargetGroupAttachmentCreate(ctx context.Context, d *schema.Resource
 	_, err := conn.RegisterTargets(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating VPC Lattice Target Group Attachment (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating VPC Lattice Target Group Attachment (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 
 	if _, err := waitTargetGroupAttachmentCreated(ctx, conn, targetGroupID, targetID, targetPort, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for VPC Lattice Target Group Attachment (%s) create: %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "waiting for VPC Lattice Target Group Attachment (%s) create: %s", id, err)
 	}
 
-	return resourceTargetGroupAttachmentRead(ctx, d, meta)
+	return append(diags, resourceTargetGroupAttachmentRead(ctx, d, meta)...)
 }
 
 func resourceTargetGroupAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	targetGroupID := d.Get("target_group_identifier").(string)
@@ -112,22 +115,23 @@ func resourceTargetGroupAttachmentRead(ctx context.Context, d *schema.ResourceDa
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] VPC Lattice Target Group Attachment (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading VPC Lattice Target Group Attachment (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading VPC Lattice Target Group Attachment (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set(names.AttrTarget, []interface{}{flattenTargetSummary(output)}); err != nil {
-		return diag.Errorf("setting target: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting target: %s", err)
 	}
 	d.Set("target_group_identifier", targetGroupID)
 
-	return nil
+	return diags
 }
 
 func resourceTargetGroupAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	targetGroupID := d.Get("target_group_identifier").(string)
@@ -142,18 +146,18 @@ func resourceTargetGroupAttachmentDelete(ctx context.Context, d *schema.Resource
 	})
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting VPC Lattice Target Group Attachment (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting VPC Lattice Target Group Attachment (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitTargetGroupAttachmentDeleted(ctx, conn, targetGroupID, targetID, targetPort, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for VPC Lattice Target Group Attachment (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for VPC Lattice Target Group Attachment (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findTargetByThreePartKey(ctx context.Context, conn *vpclattice.Client, targetGroupID, targetID string, targetPort int) (*types.TargetSummary, error) {

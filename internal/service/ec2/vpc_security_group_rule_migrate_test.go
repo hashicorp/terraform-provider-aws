@@ -26,7 +26,7 @@ func TestSecurityGroupRuleMigrateState(t *testing.T) {
 			StateVersion: 0,
 			ID:           "sg-4235098228",
 			Attributes: map[string]string{
-				"self":                     "false",
+				"self":                     acctest.CtFalse,
 				"to_port":                  acctest.Ct0,
 				"security_group_id":        "sg-13877277",
 				"cidr_blocks.#":            acctest.Ct0,
@@ -45,7 +45,7 @@ func TestSecurityGroupRuleMigrateState(t *testing.T) {
 				"from_port":         acctest.Ct0,
 				"to_port":           acctest.Ct0,
 				names.AttrType:      "ingress",
-				"self":              "false",
+				"self":              acctest.CtFalse,
 				names.AttrProtocol:  "-1",
 				"cidr_blocks.0":     "172.16.1.0/24",
 				"cidr_blocks.1":     "172.16.2.0/24",

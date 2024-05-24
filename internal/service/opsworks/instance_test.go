@@ -41,7 +41,7 @@ func TestAccOpsWorksInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "t2.micro"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "stopped"),
 					resource.TestCheckResourceAttr(resourceName, "layer_ids.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "install_updates_on_boot", "true"),
+					resource.TestCheckResourceAttr(resourceName, "install_updates_on_boot", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "architecture", "x86_64"),
 					resource.TestCheckResourceAttr(resourceName, "tenancy", "default"),
 					resource.TestCheckResourceAttr(resourceName, "os", "Amazon Linux 2016.09"),                              // inherited from opsworks_stack_test

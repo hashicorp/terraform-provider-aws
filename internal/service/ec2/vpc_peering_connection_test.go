@@ -168,7 +168,7 @@ func TestAccVPCPeeringConnection_options(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"requester.0.allow_remote_vpc_dns_resolution",
-						"false",
+						acctest.CtFalse,
 					),
 					// Accepter's view:
 					resource.TestCheckResourceAttr(
@@ -179,7 +179,7 @@ func TestAccVPCPeeringConnection_options(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"accepter.0.allow_remote_vpc_dns_resolution",
-						"true",
+						acctest.CtTrue,
 					),
 					testAccepterChange,
 				),
@@ -208,7 +208,7 @@ func TestAccVPCPeeringConnection_options(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"requester.0.allow_remote_vpc_dns_resolution",
-						"false",
+						acctest.CtFalse,
 					),
 					// Accepter's view:
 					resource.TestCheckResourceAttr(
@@ -219,7 +219,7 @@ func TestAccVPCPeeringConnection_options(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"accepter.0.allow_remote_vpc_dns_resolution",
-						"true",
+						acctest.CtTrue,
 					),
 				),
 			},

@@ -63,7 +63,7 @@ func testAccMethodSettings_Settings_cacheDataEncrypted(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMethodSettingsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "settings.0.cache_data_encrypted", "true"),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.cache_data_encrypted", acctest.CtTrue),
 				),
 			},
 			{
@@ -71,7 +71,7 @@ func testAccMethodSettings_Settings_cacheDataEncrypted(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMethodSettingsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "settings.0.cache_data_encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.cache_data_encrypted", acctest.CtFalse),
 				),
 			},
 			{
@@ -145,7 +145,7 @@ func testAccMethodSettings_Settings_cachingEnabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMethodSettingsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "settings.0.caching_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.caching_enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -153,7 +153,7 @@ func testAccMethodSettings_Settings_cachingEnabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMethodSettingsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "settings.0.caching_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.caching_enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -182,7 +182,7 @@ func testAccMethodSettings_Settings_dataTraceEnabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMethodSettingsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "settings.0.data_trace_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.data_trace_enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -190,7 +190,7 @@ func testAccMethodSettings_Settings_dataTraceEnabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMethodSettingsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "settings.0.data_trace_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.data_trace_enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -256,7 +256,7 @@ func testAccMethodSettings_Settings_metricsEnabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMethodSettingsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "settings.0.metrics_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.metrics_enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -264,7 +264,7 @@ func testAccMethodSettings_Settings_metricsEnabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMethodSettingsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "settings.0.metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.metrics_enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -293,7 +293,7 @@ func testAccMethodSettings_Settings_multiple(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMethodSettingsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "settings.0.metrics_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.metrics_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.logging_level", "INFO"),
 				),
 			},
@@ -301,7 +301,7 @@ func testAccMethodSettings_Settings_multiple(t *testing.T) {
 				Config: testAccMethodSettingsConfig_multiple(rName, "OFF", false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "settings.0.metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.logging_level", "OFF"),
 				),
 			},
@@ -331,7 +331,7 @@ func testAccMethodSettings_Settings_requireAuthorizationForCacheControl(t *testi
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMethodSettingsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "settings.0.require_authorization_for_cache_control", "true"),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.require_authorization_for_cache_control", acctest.CtTrue),
 				),
 			},
 			{
@@ -339,7 +339,7 @@ func testAccMethodSettings_Settings_requireAuthorizationForCacheControl(t *testi
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMethodSettingsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "settings.0.require_authorization_for_cache_control", "false"),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.require_authorization_for_cache_control", acctest.CtFalse),
 				),
 			},
 			{
