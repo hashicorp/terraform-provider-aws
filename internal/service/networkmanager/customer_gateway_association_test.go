@@ -23,7 +23,7 @@ func TestAccNetworkManagerCustomerGatewayAssociation_serial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic: testAccCustomerGatewayAssociation_basic,
-		"disappears":    testAccCustomerGatewayAssociation_disappears,
+		acctest.CtDisappears:    testAccCustomerGatewayAssociation_disappears,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
