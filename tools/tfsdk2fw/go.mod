@@ -90,6 +90,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/datasync v1.38.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/datazone v1.8.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dax v1.19.7 // indirect
+	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.22.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/devopsguru v1.30.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.24.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dlm v1.24.7 // indirect
