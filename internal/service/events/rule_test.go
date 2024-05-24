@@ -221,7 +221,7 @@ func TestAccEventsRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRoleARN, ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ENABLED"),
 					testAccCheckRuleEnabled(ctx, resourceName, "ENABLED"),
 				),
@@ -250,7 +250,7 @@ func TestAccEventsRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrScheduleExpression, "rate(1 hour)"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRoleARN, ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ENABLED"),
 					testAccCheckRuleEnabled(ctx, resourceName, "ENABLED"),
 				),
@@ -608,7 +608,7 @@ func TestAccEventsRule_isEnabled(t *testing.T) {
 				Config: testAccRuleConfig_isEnabled(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "DISABLED"),
 					testAccCheckRuleEnabled(ctx, resourceName, "DISABLED"),
 				),
@@ -623,7 +623,7 @@ func TestAccEventsRule_isEnabled(t *testing.T) {
 				Config: testAccRuleConfig_isEnabled(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v2),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ENABLED"),
 					testAccCheckRuleEnabled(ctx, resourceName, "ENABLED"),
 				),
@@ -638,7 +638,7 @@ func TestAccEventsRule_isEnabled(t *testing.T) {
 				Config: testAccRuleConfig_isEnabled(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v3),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "DISABLED"),
 					testAccCheckRuleEnabled(ctx, resourceName, "DISABLED"),
 				),
@@ -663,7 +663,7 @@ func TestAccEventsRule_state(t *testing.T) {
 				Config: testAccRuleConfig_state(rName, string(types.RuleStateDisabled)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(types.RuleStateDisabled)),
 					testAccCheckRuleEnabled(ctx, resourceName, types.RuleStateDisabled),
 				),
@@ -678,7 +678,7 @@ func TestAccEventsRule_state(t *testing.T) {
 				Config: testAccRuleConfig_state(rName, string(types.RuleStateEnabled)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v2),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(types.RuleStateEnabled)),
 					testAccCheckRuleEnabled(ctx, resourceName, types.RuleStateEnabled),
 				),
@@ -719,7 +719,7 @@ func TestAccEventsRule_partnerEventBus(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", busName),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "event_pattern", "{\"source\":[\"aws.ec2\"]}"),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRoleARN, ""),
@@ -758,7 +758,7 @@ func TestAccEventsRule_eventBusARN(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrPair(resourceName, "event_bus_name", "aws_cloudwatch_event_bus.test", names.AttrARN),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "event_pattern", "{\"source\":[\"aws.ec2\"]}"),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRoleARN, ""),
@@ -788,19 +788,19 @@ func TestAccEventsRule_migrateV0(t *testing.T) {
 	}{
 		acctest.CtBasic: {
 			config:            testAccRuleConfig_basic(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)),
-			expectedIsEnabled: "true",
+			expectedIsEnabled: acctest.CtTrue,
 			expectedState:     "ENABLED",
 		},
 
 		names.AttrEnabled: {
 			config:            testAccRuleConfig_isEnabled(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), true),
-			expectedIsEnabled: "true",
+			expectedIsEnabled: acctest.CtTrue,
 			expectedState:     "ENABLED",
 		},
 
 		"disabled": {
 			config:            testAccRuleConfig_isEnabled(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), false),
-			expectedIsEnabled: "false",
+			expectedIsEnabled: acctest.CtFalse,
 			expectedState:     "DISABLED",
 		},
 	}
@@ -865,14 +865,14 @@ func TestAccEventsRule_migrateV0_Equivalent(t *testing.T) {
 		names.AttrEnabled: {
 			enabled:           true,
 			state:             string(types.RuleStateEnabled),
-			expectedIsEnabled: "true",
+			expectedIsEnabled: acctest.CtTrue,
 			expectedState:     types.RuleStateEnabled,
 		},
 
 		"disabled": {
 			enabled:           false,
 			state:             string(types.RuleStateDisabled),
-			expectedIsEnabled: "false",
+			expectedIsEnabled: acctest.CtFalse,
 			expectedState:     types.RuleStateDisabled,
 		},
 	}
