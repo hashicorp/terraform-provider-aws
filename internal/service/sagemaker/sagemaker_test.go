@@ -31,7 +31,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"App": {
 			acctest.CtBasic:         testAccApp_basic,
-			"disappears":            testAccApp_disappears,
+			acctest.CtDisappears:            testAccApp_disappears,
 			"tags":                  testAccApp_tags,
 			"resourceSpec":          testAccApp_resourceSpec,
 			"resourceSpecLifecycle": testAccApp_resourceSpecLifecycle,
@@ -39,7 +39,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 		},
 		"Domain": {
 			acctest.CtBasic:                            testAccDomain_basic,
-			"disappears":                               testAccDomain_tags,
+			acctest.CtDisappears:                               testAccDomain_tags,
 			"tags":                                     testAccDomain_disappears,
 			"tensorboardAppSettings":                   testAccDomain_tensorboardAppSettings,
 			"tensorboardAppSettingsWithImage":          testAccDomain_tensorboardAppSettingsWithImage,
@@ -71,14 +71,14 @@ func TestAccSageMaker_serial(t *testing.T) {
 		},
 		"FlowDefinition": {
 			acctest.CtBasic:                  testAccFlowDefinition_basic,
-			"disappears":                     testAccFlowDefinition_disappears,
+			acctest.CtDisappears:                     testAccFlowDefinition_disappears,
 			"tags":                           testAccFlowDefinition_tags,
 			"HumanLoopConfigPublicWorkforce": testAccFlowDefinition_humanLoopConfig_publicWorkforce,
 			"HumanLoopRequestSource":         testAccFlowDefinition_humanLoopRequestSource,
 		},
 		"Space": {
 			acctest.CtBasic:            testAccSpace_basic,
-			"disappears":               testAccSpace_tags,
+			acctest.CtDisappears:               testAccSpace_tags,
 			"tags":                     testAccSpace_disappears,
 			"kernelGatewayAppSettings": testAccSpace_kernelGatewayAppSettings,
 			"kernelGatewayAppSettings_lifecycleConfig": testAccSpace_kernelGatewayAppSettings_lifecycleconfig,
@@ -91,7 +91,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 		},
 		"UserProfile": {
 			acctest.CtBasic:                   testAccUserProfile_basic,
-			"disappears":                      testAccUserProfile_tags,
+			acctest.CtDisappears:                      testAccUserProfile_tags,
 			"tags":                            testAccUserProfile_disappears,
 			"tensorboardAppSettings":          testAccUserProfile_tensorboardAppSettings,
 			"tensorboardAppSettingsWithImage": testAccUserProfile_tensorboardAppSettingsWithImage,
@@ -101,14 +101,14 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"jupyterServerAppSettings":                 testAccUserProfile_jupyterServerAppSettings,
 		},
 		"Workforce": {
-			"disappears":     testAccWorkforce_disappears,
+			acctest.CtDisappears:     testAccWorkforce_disappears,
 			"CognitoConfig":  testAccWorkforce_cognitoConfig,
 			"OidcConfig":     testAccWorkforce_oidcConfig,
 			"SourceIpConfig": testAccWorkforce_sourceIPConfig,
 			"VPC":            testAccWorkforce_vpc,
 		},
 		"Workteam": {
-			"disappears":         testAccWorkteam_disappears,
+			acctest.CtDisappears:         testAccWorkteam_disappears,
 			"tags":               testAccWorkteam_tags,
 			"CognitoConfig":      testAccWorkteam_cognitoConfig,
 			"NotificationConfig": testAccWorkteam_notificationConfig,
