@@ -11,11 +11,13 @@ import (
 const (
 	AttrARN                        = "arn"
 	AttrARNs                       = "arns"
+	AttrAWSAccountID               = "aws_account_id"
 	AttrAccessKey                  = "access_key"
 	AttrAccountID                  = "account_id"
 	AttrAction                     = "action"
 	AttrAddress                    = "address"
 	AttrAlias                      = "alias"
+	AttrApplicationID              = "application_id"
 	AttrApplyImmediately           = "apply_immediately"
 	AttrAttributes                 = "attributes"
 	AttrAutoMinorVersionUpgrade    = "auto_minor_version_upgrade"
@@ -64,9 +66,11 @@ const (
 	AttrEndpoint                   = "endpoint"
 	AttrEndpointType               = "endpoint_type"
 	AttrEndpoints                  = "endpoints"
+	AttrEngine                     = "engine"
 	AttrEngineVersion              = "engine_version"
 	AttrEnvironment                = "environment"
 	AttrExecutionRoleARN           = "execution_role_arn"
+	AttrExpectedBucketOwner        = "expected_bucket_owner"
 	AttrExpression                 = "expression"
 	AttrExternalID                 = "external_id"
 	AttrFamily                     = "family"
@@ -87,6 +91,7 @@ const (
 	AttrIOPS                       = "iops"
 	AttrIPAddress                  = "ip_address"
 	AttrIPAddressType              = "ip_address_type"
+	AttrIPAddresses                = "ip_addresses"
 	AttrIdentifier                 = "identifier"
 	AttrInstanceCount              = "instance_count"
 	AttrInstanceID                 = "instance_id"
@@ -118,8 +123,10 @@ const (
 	AttrNetworkConfiguration       = "network_configuration"
 	AttrNetworkInterfaceID         = "network_interface_id"
 	AttrOwner                      = "owner"
+	AttrOwnerAccountID             = "owner_account_id"
 	AttrOwnerID                    = "owner_id"
 	AttrParameter                  = "parameter"
+	AttrParameterGroupName         = "parameter_group_name"
 	AttrParameters                 = "parameters"
 	AttrPassword                   = "password"
 	AttrPath                       = "path"
@@ -142,6 +149,7 @@ const (
 	AttrRepositoryName             = "repository_name"
 	AttrResourceARN                = "resource_arn"
 	AttrResourceID                 = "resource_id"
+	AttrResourceOwner              = "resource_owner"
 	AttrResourceTags               = "resource_tags"
 	AttrResourceType               = "resource_type"
 	AttrResources                  = "resources"
@@ -179,6 +187,7 @@ const (
 	AttrStatusCode                 = "status_code"
 	AttrStatusMessage              = "status_message"
 	AttrStatusReason               = "status_reason"
+	AttrStorageEncrypted           = "storage_encrypted"
 	AttrStorageType                = "storage_type"
 	AttrStreamARN                  = "stream_arn"
 	AttrSubnetID                   = "subnet_id"
@@ -189,6 +198,7 @@ const (
 	AttrTagsAll                    = "tags_all"
 	AttrTarget                     = "target"
 	AttrTargetARN                  = "target_arn"
+	AttrThroughput                 = "throughput"
 	AttrTimeout                    = "timeout"
 	AttrTimeouts                   = "timeouts"
 	AttrTopicARN                   = "topic_arn"
@@ -221,11 +231,13 @@ func ConstOrQuote(constant string) string {
 	allConstants := map[string]string{
 		"arn":                           "AttrARN",
 		"arns":                          "AttrARNs",
+		"aws_account_id":                "AttrAWSAccountID",
 		"access_key":                    "AttrAccessKey",
 		"account_id":                    "AttrAccountID",
 		"action":                        "AttrAction",
 		"address":                       "AttrAddress",
 		"alias":                         "AttrAlias",
+		"application_id":                "AttrApplicationID",
 		"apply_immediately":             "AttrApplyImmediately",
 		"attributes":                    "AttrAttributes",
 		"auto_minor_version_upgrade":    "AttrAutoMinorVersionUpgrade",
@@ -274,9 +286,11 @@ func ConstOrQuote(constant string) string {
 		"endpoint":                      "AttrEndpoint",
 		"endpoint_type":                 "AttrEndpointType",
 		"endpoints":                     "AttrEndpoints",
+		"engine":                        "AttrEngine",
 		"engine_version":                "AttrEngineVersion",
 		"environment":                   "AttrEnvironment",
 		"execution_role_arn":            "AttrExecutionRoleARN",
+		"expected_bucket_owner":         "AttrExpectedBucketOwner",
 		"expression":                    "AttrExpression",
 		"external_id":                   "AttrExternalID",
 		"family":                        "AttrFamily",
@@ -297,6 +311,7 @@ func ConstOrQuote(constant string) string {
 		"iops":                          "AttrIOPS",
 		"ip_address":                    "AttrIPAddress",
 		"ip_address_type":               "AttrIPAddressType",
+		"ip_addresses":                  "AttrIPAddresses",
 		"identifier":                    "AttrIdentifier",
 		"instance_count":                "AttrInstanceCount",
 		"instance_id":                   "AttrInstanceID",
@@ -328,8 +343,10 @@ func ConstOrQuote(constant string) string {
 		"network_configuration":         "AttrNetworkConfiguration",
 		"network_interface_id":          "AttrNetworkInterfaceID",
 		"owner":                         "AttrOwner",
+		"owner_account_id":              "AttrOwnerAccountID",
 		"owner_id":                      "AttrOwnerID",
 		"parameter":                     "AttrParameter",
+		"parameter_group_name":          "AttrParameterGroupName",
 		"parameters":                    "AttrParameters",
 		"password":                      "AttrPassword",
 		"path":                          "AttrPath",
@@ -352,6 +369,7 @@ func ConstOrQuote(constant string) string {
 		"repository_name":               "AttrRepositoryName",
 		"resource_arn":                  "AttrResourceARN",
 		"resource_id":                   "AttrResourceID",
+		"resource_owner":                "AttrResourceOwner",
 		"resource_tags":                 "AttrResourceTags",
 		"resource_type":                 "AttrResourceType",
 		"resources":                     "AttrResources",
@@ -389,6 +407,7 @@ func ConstOrQuote(constant string) string {
 		"status_code":                   "AttrStatusCode",
 		"status_message":                "AttrStatusMessage",
 		"status_reason":                 "AttrStatusReason",
+		"storage_encrypted":             "AttrStorageEncrypted",
 		"storage_type":                  "AttrStorageType",
 		"stream_arn":                    "AttrStreamARN",
 		"subnet_id":                     "AttrSubnetID",
@@ -399,6 +418,7 @@ func ConstOrQuote(constant string) string {
 		"tags_all":                      "AttrTagsAll",
 		"target":                        "AttrTarget",
 		"target_arn":                    "AttrTargetARN",
+		"throughput":                    "AttrThroughput",
 		"timeout":                       "AttrTimeout",
 		"timeouts":                      "AttrTimeouts",
 		"topic_arn":                     "AttrTopicARN",
