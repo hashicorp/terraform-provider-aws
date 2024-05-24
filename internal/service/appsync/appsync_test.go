@@ -37,7 +37,7 @@ func TestAccAppSync_serial(t *testing.T) {
 		},
 		"GraphQLAPI": {
 			acctest.CtBasic:             testAccGraphQLAPI_basic,
-			"disappears":                testAccGraphQLAPI_disappears,
+			acctest.CtDisappears:                testAccGraphQLAPI_disappears,
 			"tags":                      testAccGraphQLAPI_tags,
 			"schema":                    testAccGraphQLAPI_schema,
 			"authenticationType":        testAccGraphQLAPI_authenticationType,
@@ -74,7 +74,7 @@ func TestAccAppSync_serial(t *testing.T) {
 		"Function": {
 			acctest.CtBasic:           testAccFunction_basic,
 			"code":                    testAccFunction_code,
-			"disappears":              testAccFunction_disappears,
+			acctest.CtDisappears:              testAccFunction_disappears,
 			"description":             testAccFunction_description,
 			"responseMappingTemplate": testAccFunction_responseMappingTemplate,
 			"sync":                    testAccFunction_syncConfig,
@@ -82,7 +82,7 @@ func TestAccAppSync_serial(t *testing.T) {
 		"Resolver": {
 			acctest.CtBasic:     testAccResolver_basic,
 			"code":              testAccResolver_code,
-			"disappears":        testAccResolver_disappears,
+			acctest.CtDisappears:        testAccResolver_disappears,
 			"dataSource":        testAccResolver_dataSource,
 			"DataSource_lambda": testAccResolver_DataSource_lambda,
 			"requestTemplate":   testAccResolver_requestTemplate,
@@ -94,20 +94,20 @@ func TestAccAppSync_serial(t *testing.T) {
 		},
 		"ApiCache": {
 			acctest.CtBasic: testAccAPICache_basic,
-			"disappears":    testAccAPICache_disappears,
+			acctest.CtDisappears:    testAccAPICache_disappears,
 		},
 		"Type": {
 			acctest.CtBasic: testAccType_basic,
-			"disappears":    testAccType_disappears,
+			acctest.CtDisappears:    testAccType_disappears,
 		},
 		"DomainName": {
 			acctest.CtBasic: testAccDomainName_basic,
-			"disappears":    testAccDomainName_disappears,
+			acctest.CtDisappears:    testAccDomainName_disappears,
 			"description":   testAccDomainName_description,
 		},
 		"DomainNameAssociation": {
 			acctest.CtBasic: testAccDomainNameAPIAssociation_basic,
-			"disappears":    testAccDomainNameAPIAssociation_disappears,
+			acctest.CtDisappears:    testAccDomainNameAPIAssociation_disappears,
 		},
 	}
 
