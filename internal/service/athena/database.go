@@ -86,7 +86,7 @@ func resourceDatabase() *schema.Resource {
 					},
 				},
 			},
-			"expected_bucket_owner": {
+			names.AttrExpectedBucketOwner: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -242,7 +242,7 @@ func expandResultConfiguration(d *schema.ResourceData) *types.ResultConfiguratio
 		EncryptionConfiguration: expandResultConfigurationEncryptionConfig(d.Get(names.AttrEncryptionConfiguration).([]interface{})),
 	}
 
-	if v, ok := d.GetOk("expected_bucket_owner"); ok {
+	if v, ok := d.GetOk(names.AttrExpectedBucketOwner); ok {
 		resultConfig.ExpectedBucketOwner = aws.String(v.(string))
 	}
 
