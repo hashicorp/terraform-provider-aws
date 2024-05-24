@@ -268,7 +268,7 @@ func ResourceInstance() *schema.Resource {
 						},
 						names.AttrTags:    tagsSchemaConflictsWith([]string{"volume_tags"}),
 						names.AttrTagsAll: tftags.TagsSchemaComputed(),
-						"throughput": {
+						names.AttrThroughput: {
 							Type:             schema.TypeInt,
 							Optional:         true,
 							Computed:         true,
@@ -722,7 +722,7 @@ func ResourceInstance() *schema.Resource {
 						},
 						names.AttrTags:    tagsSchemaConflictsWith([]string{"volume_tags"}),
 						names.AttrTagsAll: tftags.TagsSchemaComputed(),
-						"throughput": {
+						names.AttrThroughput: {
 							Type:             schema.TypeInt,
 							Optional:         true,
 							Computed:         true,
@@ -2348,7 +2348,7 @@ func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, m
 			bd[names.AttrKMSKeyID] = aws.StringValue(vol.KmsKeyId)
 		}
 		if vol.Throughput != nil {
-			bd["throughput"] = aws.Int64Value(vol.Throughput)
+			bd[names.AttrThroughput] = aws.Int64Value(vol.Throughput)
 		}
 		if instanceBd.DeviceName != nil {
 			bd[names.AttrDeviceName] = aws.StringValue(instanceBd.DeviceName)
@@ -2586,7 +2586,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 						return nil, fmt.Errorf("creating resource: iops attribute not supported for ebs_block_device with volume_type %s", v)
 					}
 				}
-				if throughput, ok := bd["throughput"].(int); ok && throughput > 0 {
+				if throughput, ok := bd[names.AttrThroughput].(int); ok && throughput > 0 {
 					// `throughput` is only valid for gp3
 					if ec2.VolumeTypeGp3 == strings.ToLower(v) {
 						ebs.Throughput = aws.Int64(int64(throughput))
@@ -2661,7 +2661,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 						return nil, fmt.Errorf("creating resource: iops attribute not supported for root_block_device with volume_type %s", v)
 					}
 				}
-				if throughput, ok := bd["throughput"].(int); ok && throughput > 0 {
+				if throughput, ok := bd[names.AttrThroughput].(int); ok && throughput > 0 {
 					// throughput is only valid for gp3
 					if ec2.VolumeTypeGp3 == strings.ToLower(v) {
 						ebs.Throughput = aws.Int64(int64(throughput))
