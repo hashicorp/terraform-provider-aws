@@ -42,7 +42,7 @@ func TestAccCognitoIDPUser_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "sub"),
 					resource.TestCheckResourceAttr(resourceName, "preferred_mfa_setting", ""),
 					resource.TestCheckResourceAttr(resourceName, "mfa_setting_list.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, cognitoidentityprovider.UserStatusTypeForceChangePassword),
 				),
 			},
@@ -266,7 +266,7 @@ func TestAccCognitoIDPUser_enabled(t *testing.T) {
 				Config: testAccUserConfig_enable(rUserPoolName, rUserName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
 			{
@@ -286,7 +286,7 @@ func TestAccCognitoIDPUser_enabled(t *testing.T) {
 				Config: testAccUserConfig_enable(rUserPoolName, rUserName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 				),
 			},
 		},

@@ -149,7 +149,7 @@ func TestAccIoTDomainConfiguration_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "authorizer_config.0.allow_authorizer_override", "true"),
+					resource.TestCheckResourceAttr(resourceName, "authorizer_config.0.allow_authorizer_override", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "tls_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tls_config.0.security_policy", "IoTSecurityPolicy_TLS13_1_3_2022_10"),
 				),
@@ -164,7 +164,7 @@ func TestAccIoTDomainConfiguration_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "authorizer_config.0.allow_authorizer_override", "false"),
+					resource.TestCheckResourceAttr(resourceName, "authorizer_config.0.allow_authorizer_override", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "tls_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tls_config.0.security_policy", "IoTSecurityPolicy_TLS13_1_2_2022_10"),
 				),

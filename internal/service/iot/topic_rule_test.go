@@ -51,7 +51,7 @@ func TestAccIoTTopicRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "dynamodb.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "dynamodbv2.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "error_action.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "firehose.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "http.#", acctest.Ct0),
@@ -260,7 +260,7 @@ func TestAccIoTTopicRule_cloudWatchLogs(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "dynamodb.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "dynamodbv2.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "error_action.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "firehose.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "http.#", acctest.Ct0),
@@ -298,7 +298,7 @@ func TestAccIoTTopicRule_cloudWatchLogs(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "dynamodb.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "dynamodbv2.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "error_action.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "firehose.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "http.#", acctest.Ct0),
@@ -845,7 +845,7 @@ func TestAccIoTTopicRule_Firehose_batch_mode(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "firehose.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "firehose.*", map[string]string{
 						"delivery_stream_name": "mystream",
-						"batch_mode":           "false",
+						"batch_mode":           acctest.CtFalse,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "http.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", acctest.Ct0),
@@ -880,7 +880,7 @@ func TestAccIoTTopicRule_Firehose_batch_mode(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "firehose.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "firehose.*", map[string]string{
 						"delivery_stream_name": "mystream",
-						"batch_mode":           "true",
+						"batch_mode":           acctest.CtTrue,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "http.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", acctest.Ct0),
@@ -1168,7 +1168,7 @@ func TestAccIoTTopicRule_IoT_analytics_batch_mode(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "iot_analytics.*", map[string]string{
 						"channel_name": "fakedata",
-						"batch_mode":   "false",
+						"batch_mode":   acctest.CtFalse,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "iot_events.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "kafka.#", acctest.Ct0),
@@ -1198,7 +1198,7 @@ func TestAccIoTTopicRule_IoT_analytics_batch_mode(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "iot_analytics.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "iot_analytics.*", map[string]string{
 						"channel_name": "fakedata",
-						"batch_mode":   "true",
+						"batch_mode":   acctest.CtTrue,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "iot_events.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "kafka.#", acctest.Ct0),
@@ -1290,7 +1290,7 @@ func TestAccIoTTopicRule_IoT_events_batch_mode(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "iot_events.*", map[string]string{
 						"input_name": "fake_input_name",
 						"message_id": "fake_message_id",
-						"batch_mode": "false",
+						"batch_mode": acctest.CtFalse,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "kafka.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "kinesis.#", acctest.Ct0),
@@ -1321,7 +1321,7 @@ func TestAccIoTTopicRule_IoT_events_batch_mode(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "iot_events.*", map[string]string{
 						"input_name": "fake_input_name",
 						"message_id": "fake_message_id",
-						"batch_mode": "true",
+						"batch_mode": acctest.CtTrue,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "kafka.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "kinesis.#", acctest.Ct0),
@@ -1939,7 +1939,7 @@ func TestAccIoTTopicRule_sqs(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "sqs.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sqs.*", map[string]string{
 						"queue_url":  "fakedata",
-						"use_base64": "false",
+						"use_base64": acctest.CtFalse,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "step_functions.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "timestream.#", acctest.Ct0),
@@ -1969,7 +1969,7 @@ func TestAccIoTTopicRule_sqs(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "sqs.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sqs.*", map[string]string{
 						"queue_url":  "yourdata",
-						"use_base64": "false",
+						"use_base64": acctest.CtFalse,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "step_functions.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "timestream.#", acctest.Ct0),

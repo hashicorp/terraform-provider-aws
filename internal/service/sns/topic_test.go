@@ -53,10 +53,10 @@ func TestAccSNSTopic_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "archive_policy", ""),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sns", regexache.MustCompile(`terraform-.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "beginning_archive_time", ""),
-					resource.TestCheckResourceAttr(resourceName, "content_based_deduplication", "false"),
+					resource.TestCheckResourceAttr(resourceName, "content_based_deduplication", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "delivery_policy", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, ""),
-					resource.TestCheckResourceAttr(resourceName, "fifo_topic", "false"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_topic", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "firehose_failure_feedback_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "firehose_success_feedback_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "firehose_success_feedback_sample_rate", acctest.Ct0),
@@ -127,7 +127,7 @@ func TestAccSNSTopic_name(t *testing.T) {
 				Config: testAccTopicConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(ctx, resourceName, &attributes),
-					resource.TestCheckResourceAttr(resourceName, "fifo_topic", "false"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_topic", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
@@ -158,7 +158,7 @@ func TestAccSNSTopic_namePrefix(t *testing.T) {
 					testAccCheckTopicExists(ctx, resourceName, &attributes),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, rName),
-					resource.TestCheckResourceAttr(resourceName, "fifo_topic", "false"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_topic", acctest.CtFalse),
 				),
 			},
 			{
@@ -381,7 +381,7 @@ func TestAccSNSTopic_NameGenerated_fifoTopic(t *testing.T) {
 					testAccCheckTopicExists(ctx, resourceName, &attributes),
 					acctest.CheckResourceAttrNameWithSuffixGenerated(resourceName, names.AttrName, tfsns.FIFOTopicNameSuffix),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform-"),
-					resource.TestCheckResourceAttr(resourceName, "fifo_topic", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_topic", acctest.CtTrue),
 				),
 			},
 			{
@@ -411,7 +411,7 @@ func TestAccSNSTopic_Name_fifoTopic(t *testing.T) {
 					testAccCheckTopicExists(ctx, resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "archive_policy", ""),
 					resource.TestCheckResourceAttr(resourceName, "beginning_archive_time", ""),
-					resource.TestCheckResourceAttr(resourceName, "fifo_topic", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_topic", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
@@ -442,7 +442,7 @@ func TestAccSNSTopic_NamePrefix_fifoTopic(t *testing.T) {
 					testAccCheckTopicExists(ctx, resourceName, &attributes),
 					acctest.CheckResourceAttrNameWithSuffixFromPrefix(resourceName, names.AttrName, rName, tfsns.FIFOTopicNameSuffix),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, rName),
-					resource.TestCheckResourceAttr(resourceName, "fifo_topic", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_topic", acctest.CtTrue),
 				),
 			},
 			{
@@ -470,8 +470,8 @@ func TestAccSNSTopic_fifoWithContentBasedDeduplication(t *testing.T) {
 				Config: testAccTopicConfig_fifoContentBasedDeduplication(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(ctx, resourceName, &attributes),
-					resource.TestCheckResourceAttr(resourceName, "fifo_topic", "true"),
-					resource.TestCheckResourceAttr(resourceName, "content_based_deduplication", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_topic", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "content_based_deduplication", acctest.CtTrue),
 				),
 			},
 			{
@@ -484,7 +484,7 @@ func TestAccSNSTopic_fifoWithContentBasedDeduplication(t *testing.T) {
 				Config: testAccTopicConfig_fifoContentBasedDeduplication(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(ctx, resourceName, &attributes),
-					resource.TestCheckResourceAttr(resourceName, "content_based_deduplication", "false"),
+					resource.TestCheckResourceAttr(resourceName, "content_based_deduplication", acctest.CtFalse),
 				),
 			},
 		},
@@ -535,7 +535,7 @@ func TestAccSNSTopic_fifoWithArchivePolicy(t *testing.T) {
 				Config: testAccTopicConfig_fifoArchivePolicy(rName, policy1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(ctx, resourceName, &attributes),
-					resource.TestCheckResourceAttr(resourceName, "fifo_topic", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fifo_topic", acctest.CtTrue),
 					resource.TestMatchResourceAttr(resourceName, "archive_policy", regexache.MustCompile(`"MessageRetentionPeriod":\s*"30"`)),
 					resource.TestCheckResourceAttrSet(resourceName, "beginning_archive_time"),
 				),

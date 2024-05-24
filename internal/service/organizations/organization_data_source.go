@@ -6,19 +6,20 @@ package organizations
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/organizations"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/organizations"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_organizations_organization")
-func DataSourceOrganization() *schema.Resource {
+// @SDKDataSource("aws_organizations_organization", name="Organization")
+func dataSourceOrganization() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOrganizationRead,
 
@@ -157,36 +158,36 @@ func DataSourceOrganization() *schema.Resource {
 
 func dataSourceOrganizationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
+	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
-	org, err := FindOrganization(ctx, conn)
+	org, err := findOrganization(ctx, conn)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Organizations Organization: %s", err)
 	}
 
-	d.SetId(aws.StringValue(org.Id))
+	d.SetId(aws.ToString(org.Id))
 	d.Set(names.AttrARN, org.Arn)
 	d.Set("feature_set", org.FeatureSet)
 	d.Set("master_account_arn", org.MasterAccountArn)
 	d.Set("master_account_email", org.MasterAccountEmail)
-	managementAccountID := aws.StringValue(org.MasterAccountId)
+	managementAccountID := aws.ToString(org.MasterAccountId)
 	d.Set("master_account_id", managementAccountID)
 
 	isManagementAccount := managementAccountID == meta.(*conns.AWSClient).AccountID
 	isDelegatedAdministrator := true
-	accounts, err := findAccounts(ctx, conn)
+	accounts, err := findAccounts(ctx, conn, &organizations.ListAccountsInput{})
 
-	managementAccountName := ""
+	var managementAccountName *string
 	for _, v := range accounts {
-		if aws.StringValue(v.Id) == managementAccountID {
-			managementAccountName = aws.StringValue(v.Name)
+		if aws.ToString(v.Id) == managementAccountID {
+			managementAccountName = v.Name
 		}
 	}
 	d.Set("master_account_name", managementAccountName)
 
 	if err != nil {
-		if isManagementAccount || !tfawserr.ErrCodeEquals(err, organizations.ErrCodeAccessDeniedException) {
+		if isManagementAccount || !errs.IsA[*awstypes.AccessDeniedException](err) {
 			return sdkdiag.AppendErrorf(diags, "reading Organization (%s) accounts: %s", d.Id(), err)
 		}
 
@@ -194,11 +195,11 @@ func dataSourceOrganizationRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if isManagementAccount || isDelegatedAdministrator {
-		nonManagementAccounts := tfslices.Filter(accounts, func(v *organizations.Account) bool {
-			return aws.StringValue(v.Id) != managementAccountID
+		nonManagementAccounts := tfslices.Filter(accounts, func(v awstypes.Account) bool {
+			return aws.ToString(v.Id) != managementAccountID
 		})
 
-		roots, err := findRoots(ctx, conn)
+		roots, err := findRoots(ctx, conn, &organizations.ListRootsInput{})
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading Organization (%s) roots: %s", d.Id(), err)
@@ -207,19 +208,19 @@ func dataSourceOrganizationRead(ctx context.Context, d *schema.ResourceData, met
 		var awsServiceAccessPrincipals []string
 
 		// ConstraintViolationException: The request failed because the organization does not have all features enabled. Please enable all features in your organization and then retry.
-		if aws.StringValue(org.FeatureSet) == organizations.OrganizationFeatureSetAll {
-			awsServiceAccessPrincipals, err = FindEnabledServicePrincipalNames(ctx, conn)
+		if org.FeatureSet == awstypes.OrganizationFeatureSetAll {
+			awsServiceAccessPrincipals, err = findEnabledServicePrincipalNames(ctx, conn)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "reading Organization (%s) service principals: %s", d.Id(), err)
 			}
 		}
 
-		var enabledPolicyTypes []string
+		var enabledPolicyTypes []awstypes.PolicyType
 
-		for _, policyType := range roots[0].PolicyTypes {
-			if aws.StringValue(policyType.Status) == organizations.PolicyTypeStatusEnabled {
-				enabledPolicyTypes = append(enabledPolicyTypes, aws.StringValue(policyType.Type))
+		for _, v := range roots[0].PolicyTypes {
+			if v.Status == awstypes.PolicyTypeStatusEnabled {
+				enabledPolicyTypes = append(enabledPolicyTypes, v.Type)
 			}
 		}
 

@@ -7,13 +7,15 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/devicefarm"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/devicefarm"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/devicefarm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -61,10 +63,10 @@ func ResourceUpload() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 			},
 			names.AttrType: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(devicefarm.UploadType_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.UploadType](),
 			},
 			names.AttrURL: {
 				Type:     schema.TypeString,
@@ -76,24 +78,24 @@ func ResourceUpload() *schema.Resource {
 
 func resourceUploadCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeviceFarmConn(ctx)
+	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
 	input := &devicefarm.CreateUploadInput{
 		Name:       aws.String(d.Get(names.AttrName).(string)),
 		ProjectArn: aws.String(d.Get("project_arn").(string)),
-		Type:       aws.String(d.Get(names.AttrType).(string)),
+		Type:       awstypes.UploadType(d.Get(names.AttrType).(string)),
 	}
 
 	if v, ok := d.GetOk(names.AttrContentType); ok {
 		input.ContentType = aws.String(v.(string))
 	}
 
-	out, err := conn.CreateUploadWithContext(ctx, input)
+	out, err := conn.CreateUpload(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating DeviceFarm Upload: %s", err)
 	}
 
-	arn := aws.StringValue(out.Upload.Arn)
+	arn := aws.ToString(out.Upload.Arn)
 	log.Printf("[DEBUG] Successsfully Created DeviceFarm Upload: %s", arn)
 	d.SetId(arn)
 
@@ -102,7 +104,7 @@ func resourceUploadCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceUploadRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeviceFarmConn(ctx)
+	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
 	upload, err := FindUploadByARN(ctx, conn, d.Id())
 
@@ -116,7 +118,7 @@ func resourceUploadRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading DeviceFarm Upload (%s): %s", d.Id(), err)
 	}
 
-	arn := aws.StringValue(upload.Arn)
+	arn := aws.ToString(upload.Arn)
 	d.Set(names.AttrName, upload.Name)
 	d.Set(names.AttrType, upload.Type)
 	d.Set(names.AttrContentType, upload.ContentType)
@@ -137,7 +139,7 @@ func resourceUploadRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceUploadUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeviceFarmConn(ctx)
+	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
 	input := &devicefarm.UpdateUploadInput{
 		Arn: aws.String(d.Id()),
@@ -152,7 +154,7 @@ func resourceUploadUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	log.Printf("[DEBUG] Updating DeviceFarm Upload: %s", d.Id())
-	_, err := conn.UpdateUploadWithContext(ctx, input)
+	_, err := conn.UpdateUpload(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating DeviceFarm Upload (%s): %s", d.Id(), err)
 	}
@@ -162,16 +164,16 @@ func resourceUploadUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceUploadDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DeviceFarmConn(ctx)
+	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
 	input := &devicefarm.DeleteUploadInput{
 		Arn: aws.String(d.Id()),
 	}
 
 	log.Printf("[DEBUG] Deleting DeviceFarm Upload: %s", d.Id())
-	_, err := conn.DeleteUploadWithContext(ctx, input)
+	_, err := conn.DeleteUpload(ctx, input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, devicefarm.ErrCodeNotFoundException) {
+		if errs.IsA[*awstypes.NotFoundException](err) {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "deleting DeviceFarm Upload: %s", err)

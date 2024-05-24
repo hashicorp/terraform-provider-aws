@@ -9,7 +9,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/organizations"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -41,7 +41,7 @@ func testAccAccount_basic(t *testing.T) {
 		t.Skipf("Environment variable %s is not set", key)
 	}
 
-	var v organizations.Account
+	var v awstypes.Account
 	resourceName := "aws_organizations_account.test"
 	rInt := sdkacctest.RandInt()
 	name := fmt.Sprintf("tf_acctest_%d", rInt)
@@ -80,7 +80,7 @@ func testAccAccount_CloseOnDeletion(t *testing.T) {
 		t.Skipf("Environment variable %s is not set", key)
 	}
 
-	var v organizations.Account
+	var v awstypes.Account
 	resourceName := "aws_organizations_account.test"
 	rInt := sdkacctest.RandInt()
 	name := fmt.Sprintf("tf_acctest_%d", rInt)
@@ -120,7 +120,7 @@ func testAccAccount_ParentID(t *testing.T) {
 		t.Skipf("Environment variable %s is not set", key)
 	}
 
-	var v organizations.Account
+	var v awstypes.Account
 	rInt := sdkacctest.RandInt()
 	name := fmt.Sprintf("tf_acctest_%d", rInt)
 	email := fmt.Sprintf("tf-acctest+%d@%s", rInt, orgsEmailDomain)
@@ -161,7 +161,7 @@ func testAccAccount_Tags(t *testing.T) {
 		t.Skipf("Environment variable %s is not set", key)
 	}
 
-	var v organizations.Account
+	var v awstypes.Account
 	rInt := sdkacctest.RandInt()
 	name := fmt.Sprintf("tf_acctest_%d", rInt)
 	email := fmt.Sprintf("tf-acctest+%d@%s", rInt, orgsEmailDomain)
@@ -211,7 +211,7 @@ func testAccAccount_govCloud(t *testing.T) {
 		t.Skipf("Environment variable %s is not set", key)
 	}
 
-	var v organizations.Account
+	var v awstypes.Account
 	resourceName := "aws_organizations_account.test"
 	rInt := sdkacctest.RandInt()
 	name := fmt.Sprintf("tf_acctest_%d", rInt)
@@ -237,7 +237,7 @@ func testAccAccount_govCloud(t *testing.T) {
 
 func testAccCheckAccountDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_organizations_account" {
@@ -261,18 +261,14 @@ func testAccCheckAccountDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAccountExists(ctx context.Context, n string, v *organizations.Account) resource.TestCheckFunc {
+func testAccCheckAccountExists(ctx context.Context, n string, v *awstypes.Account) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No AWS Organizations Account ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsClient(ctx)
 
 		output, err := tforganizations.FindAccountByID(ctx, conn, rs.Primary.ID)
 

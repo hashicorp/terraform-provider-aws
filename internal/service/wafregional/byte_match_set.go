@@ -113,11 +113,11 @@ func resourceByteMatchSetRead(ctx context.Context, d *schema.ResourceData, meta 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] WAF Regional Byte Set Match (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading WAF Regional Byte Set Match (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading WAF Regional Byte Set Match (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("byte_match_tuples", flattenByteMatchTuples(byteMatchSet.ByteMatchTuples)); err != nil {

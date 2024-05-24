@@ -216,7 +216,7 @@ func TestAccWAFRegionalRule_changePredicates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "predicate.#", acctest.Ct1),
 					computeRulePredicate(&ipset.IPSetId, false, "IPMatch", &idx),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicate.*", map[string]string{
-						"negated":      "false",
+						"negated":      acctest.CtFalse,
 						names.AttrType: "IPMatch",
 					}),
 				),
@@ -230,12 +230,12 @@ func TestAccWAFRegionalRule_changePredicates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "predicate.#", acctest.Ct2),
 					computeRulePredicate(&xssMatchSet.XssMatchSetId, true, "XssMatch", &idx),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicate.*", map[string]string{
-						"negated":      "true",
+						"negated":      acctest.CtTrue,
 						names.AttrType: "XssMatch",
 					}),
 					computeRulePredicate(&ipset.IPSetId, true, "IPMatch", &idx),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicate.*", map[string]string{
-						"negated":      "true",
+						"negated":      acctest.CtTrue,
 						names.AttrType: "IPMatch",
 					}),
 				),

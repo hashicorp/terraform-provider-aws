@@ -41,7 +41,7 @@ func testAccMesh_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
+					acctest.CheckResourceAttrAccountID(resourceName, acctest.CtResourceOwner),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", acctest.Ct1),
 				),
 			},

@@ -168,7 +168,7 @@ func TestAccNetworkManagerCoreNetwork_createBasePolicyDocumentWithoutRegion(t *t
 				Config: testAccCoreNetworkConfig_basePolicyDocumentWithoutRegion(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCoreNetworkExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "create_base_policy", "true"),
+					resource.TestCheckResourceAttr(resourceName, "create_base_policy", acctest.CtTrue),
 					resource.TestCheckNoResourceAttr(resourceName, "base_policy_region"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "edges.*", map[string]string{
 						"asn":                  "64512",
@@ -207,7 +207,7 @@ func TestAccNetworkManagerCoreNetwork_createBasePolicyDocumentWithRegion(t *test
 				Config: testAccCoreNetworkConfig_basePolicyDocumentWithRegion(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCoreNetworkExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "create_base_policy", "true"),
+					resource.TestCheckResourceAttr(resourceName, "create_base_policy", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "base_policy_region", acctest.AlternateRegion()),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "edges.*", map[string]string{
 						"asn":                  "64512",
@@ -246,7 +246,7 @@ func TestAccNetworkManagerCoreNetwork_createBasePolicyDocumentWithMultiRegion(t 
 				Config: testAccCoreNetworkConfig_basePolicyDocumentWithMultiRegion(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCoreNetworkExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "create_base_policy", "true"),
+					resource.TestCheckResourceAttr(resourceName, "create_base_policy", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "base_policy_regions.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemAttr(resourceName, "base_policy_regions.*", acctest.AlternateRegion()),
 					resource.TestCheckTypeSetElemAttr(resourceName, "base_policy_regions.*", acctest.Region()),
@@ -293,7 +293,7 @@ func TestAccNetworkManagerCoreNetwork_createBasePolicyDocumentWithPolicyDocument
 				Config: testAccCoreNetworkConfig_basePolicyDocumentWithPolicyDocument(edgeAsn1, edgeAsn2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCoreNetworkExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "create_base_policy", "true"),
+					resource.TestCheckResourceAttr(resourceName, "create_base_policy", acctest.CtTrue),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "edges.*", map[string]string{
 						"asn":                  edgeAsn1,
 						"edge_location":        acctest.AlternateRegion(),
@@ -347,7 +347,7 @@ func TestAccNetworkManagerCoreNetwork_withoutPolicyDocumentUpdateToCreateBasePol
 				Config: testAccCoreNetworkConfig_basePolicyDocumentWithoutRegion(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCoreNetworkExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "create_base_policy", "true"),
+					resource.TestCheckResourceAttr(resourceName, "create_base_policy", acctest.CtTrue),
 					resource.TestCheckNoResourceAttr(resourceName, "base_policy_region"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "edges.*", map[string]string{
 						"asn":                  "64512",

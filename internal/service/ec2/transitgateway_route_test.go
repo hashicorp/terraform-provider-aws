@@ -43,7 +43,7 @@ func testAccTransitGatewayRoute_basic(t *testing.T, semaphore tfsync.Semaphore) 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRouteExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", "0.0.0.0/0"),
-					resource.TestCheckResourceAttr(resourceName, "blackhole", "false"),
+					resource.TestCheckResourceAttr(resourceName, "blackhole", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayAttachmentID, transitGatewayVpcAttachmentResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_route_table_id", transitGatewayResourceName, "association_default_route_table_id"),
 				),
@@ -80,7 +80,7 @@ func testAccTransitGatewayRoute_basic_ipv6(t *testing.T, semaphore tfsync.Semaph
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRouteExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", "2001:db8::/56"),
-					resource.TestCheckResourceAttr(resourceName, "blackhole", "false"),
+					resource.TestCheckResourceAttr(resourceName, "blackhole", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayAttachmentID, transitGatewayVpcAttachmentResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_route_table_id", transitGatewayResourceName, "association_default_route_table_id"),
 				),
@@ -116,7 +116,7 @@ func testAccTransitGatewayRoute_blackhole(t *testing.T, semaphore tfsync.Semapho
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRouteExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", "10.1.0.0/16"),
-					resource.TestCheckResourceAttr(resourceName, "blackhole", "true"),
+					resource.TestCheckResourceAttr(resourceName, "blackhole", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayAttachmentID, ""),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_route_table_id", transitGatewayResourceName, "association_default_route_table_id"),
 				),

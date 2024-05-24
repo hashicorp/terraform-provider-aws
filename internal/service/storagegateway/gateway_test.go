@@ -600,7 +600,7 @@ func TestAccStorageGatewayGateway_smbSecurityStrategy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &gateway),
 					resource.TestCheckResourceAttr(resourceName, "smb_security_strategy", "ClientSpecified"),
-					resource.TestCheckResourceAttr(resourceName, "smb_file_share_visibility", "false"),
+					resource.TestCheckResourceAttr(resourceName, "smb_file_share_visibility", acctest.CtFalse),
 				),
 			},
 			{
@@ -636,7 +636,7 @@ func TestAccStorageGatewayGateway_smbVisibility(t *testing.T) {
 				Config: testAccGatewayConfig_smbVisibility(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &gateway),
-					resource.TestCheckResourceAttr(resourceName, "smb_file_share_visibility", "true"),
+					resource.TestCheckResourceAttr(resourceName, "smb_file_share_visibility", acctest.CtTrue),
 				),
 			},
 			{
@@ -649,14 +649,14 @@ func TestAccStorageGatewayGateway_smbVisibility(t *testing.T) {
 				Config: testAccGatewayConfig_smbVisibility(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &gateway),
-					resource.TestCheckResourceAttr(resourceName, "smb_file_share_visibility", "false"),
+					resource.TestCheckResourceAttr(resourceName, "smb_file_share_visibility", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccGatewayConfig_smbVisibility(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &gateway),
-					resource.TestCheckResourceAttr(resourceName, "smb_file_share_visibility", "true"),
+					resource.TestCheckResourceAttr(resourceName, "smb_file_share_visibility", acctest.CtTrue),
 				),
 			},
 		},

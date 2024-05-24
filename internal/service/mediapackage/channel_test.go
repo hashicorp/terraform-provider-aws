@@ -135,11 +135,11 @@ func TestAccMediaPackageChannel_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccChannelConfig_tags(rName, "Update", "true"),
+				Config: testAccChannelConfig_tags(rName, "Update", acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckChannelExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "tags.Update", "true"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Update", acctest.CtTrue),
 				),
 			},
 		},

@@ -5,19 +5,20 @@ package dlm_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/dlm"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/service/dlm"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfdlm "github.com/hashicorp/terraform-provider-aws/internal/service/dlm"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -91,7 +92,7 @@ func TestAccDLMLifecyclePolicy_event(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.action.0.cross_region_copy.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.action.0.cross_region_copy.0.target", acctest.AlternateRegion()),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.action.0.cross_region_copy.0.encryption_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.action.0.cross_region_copy.0.encryption_configuration.0.encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.action.0.cross_region_copy.0.encryption_configuration.0.encrypted", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.action.0.cross_region_copy.0.retain_rule.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.action.0.cross_region_copy.0.retain_rule.0.interval", "15"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.action.0.cross_region_copy.0.retain_rule.0.interval_unit", "MONTHS"),
@@ -270,8 +271,8 @@ func TestAccDLMLifecyclePolicy_parameters_instance(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					checkLifecyclePolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.0.exclude_boot_volume", "false"),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.0.no_reboot", "false"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.0.exclude_boot_volume", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.0.no_reboot", acctest.CtFalse),
 				),
 			},
 			{
@@ -299,8 +300,8 @@ func TestAccDLMLifecyclePolicy_parameters_volume(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					checkLifecyclePolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.0.exclude_boot_volume", "true"),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.0.no_reboot", "false"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.0.exclude_boot_volume", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.parameters.0.no_reboot", acctest.CtFalse),
 				),
 			},
 			{
@@ -364,7 +365,7 @@ func TestAccDLMLifecyclePolicy_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.create_rule.0.times.0", "21:42"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.retain_rule.0.count", acctest.Ct10),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.tags_to_add.tf-acc-test-added", "full"),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.copy_tags", "false"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.copy_tags", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.target_tags.tf-acc-test", "full"),
 				),
 			},
@@ -387,7 +388,7 @@ func TestAccDLMLifecyclePolicy_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.create_rule.0.times.0", "09:42"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.retain_rule.0.count", "100"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.tags_to_add.tf-acc-test-added", "full-updated"),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.copy_tags", "true"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.copy_tags", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.target_tags.tf-acc-test", "full-updated"),
 				),
 			},
@@ -415,7 +416,7 @@ func TestAccDLMLifecyclePolicy_crossRegionCopyRule(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					checkLifecyclePolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.0.encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.0.encrypted", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.0.retain_rule.0.interval", "15"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.0.retain_rule.0.interval_unit", "MONTHS"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.0.target", acctest.AlternateRegion()),
@@ -432,8 +433,8 @@ func TestAccDLMLifecyclePolicy_crossRegionCopyRule(t *testing.T) {
 					checkLifecyclePolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.0.cmk_arn", "aws_kms_key.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.0.copy_tags", "true"),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.0.encrypted", "true"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.0.copy_tags", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.0.encrypted", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.0.retain_rule.0.interval", "30"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.0.retain_rule.0.interval_unit", "DAYS"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.0.target", acctest.AlternateRegion()),
@@ -526,30 +527,24 @@ func TestAccDLMLifecyclePolicy_disappears(t *testing.T) {
 
 func testAccCheckLifecyclePolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DLMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DLMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dlm_lifecycle_policy" {
 				continue
 			}
 
-			input := dlm.GetLifecyclePolicyInput{
-				PolicyId: aws.String(rs.Primary.ID),
-			}
+			_, err := tfdlm.FindLifecyclePolicyByID(ctx, conn, rs.Primary.ID)
 
-			out, err := conn.GetLifecyclePolicyWithContext(ctx, &input)
-
-			if tfawserr.ErrCodeEquals(err, dlm.ErrCodeResourceNotFoundException) {
-				return nil
+			if tfresource.NotFound(err) {
+				continue
 			}
 
 			if err != nil {
-				return fmt.Errorf("error getting DLM Lifecycle Policy (%s): %s", rs.Primary.ID, err)
+				return err
 			}
 
-			if out.Policy != nil {
-				return fmt.Errorf("DLM lifecycle policy still exists: %#v", out)
-			}
+			return create.Error(names.DLM, create.ErrActionCheckingDestroyed, tfdlm.ResNameLifecyclePolicy, rs.Primary.ID, errors.New("not destroyed"))
 		}
 
 		return nil
@@ -560,19 +555,15 @@ func checkLifecyclePolicyExists(ctx context.Context, name string) resource.TestC
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return create.Error(names.DLM, create.ErrActionCheckingExistence, tfdlm.ResNameLifecyclePolicy, name, errors.New("not found"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DLMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DLMClient(ctx)
 
-		input := dlm.GetLifecyclePolicyInput{
-			PolicyId: aws.String(rs.Primary.ID),
-		}
-
-		_, err := conn.GetLifecyclePolicyWithContext(ctx, &input)
+		_, err := tfdlm.FindLifecyclePolicyByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("error getting DLM Lifecycle Policy (%s): %s", rs.Primary.ID, err)
+			return create.Error(names.DLM, create.ErrActionCheckingExistence, tfdlm.ResNameLifecyclePolicy, rs.Primary.ID, err)
 		}
 
 		return nil
@@ -580,11 +571,11 @@ func checkLifecyclePolicyExists(ctx context.Context, name string) resource.TestC
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DLMConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DLMClient(ctx)
 
 	input := &dlm.GetLifecyclePoliciesInput{}
 
-	_, err := conn.GetLifecyclePoliciesWithContext(ctx, input)
+	_, err := conn.GetLifecyclePolicies(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

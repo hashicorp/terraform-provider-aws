@@ -38,7 +38,7 @@ func TestAccEFSFileSystem_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "elasticfilesystem", regexache.MustCompile(`file-system/fs-.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_token"),
 					acctest.MatchResourceAttrRegionalHostname(resourceName, names.AttrDNSName, "efs", regexache.MustCompile(`fs-[^.]+`)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ""),
 					resource.TestCheckResourceAttr(resourceName, "number_of_mount_targets", acctest.Ct0),
@@ -257,7 +257,7 @@ func TestAccEFSFileSystem_kmsKey(t *testing.T) {
 				Config: testAccFileSystemConfig_kmsKey(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystem(ctx, resourceName, &desc),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, kmsKeyResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),

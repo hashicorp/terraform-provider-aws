@@ -48,7 +48,7 @@ func TestAccCloudFormationStackSet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "execution_role_name", "AWSCloudFormationStackSetExecutionRole"),
 					resource.TestCheckResourceAttr(resourceName, "managed_execution.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "managed_execution.0.active", "false"),
+					resource.TestCheckResourceAttr(resourceName, "managed_execution.0.active", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct0),
@@ -245,7 +245,7 @@ func TestAccCloudFormationStackSet_managedExecution(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetExists(ctx, resourceName, &stackSet1),
 					resource.TestCheckResourceAttr(resourceName, "managed_execution.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "managed_execution.0.active", "true"),
+					resource.TestCheckResourceAttr(resourceName, "managed_execution.0.active", acctest.CtTrue),
 				),
 			},
 			{
@@ -599,8 +599,8 @@ func TestAccCloudFormationStackSet_PermissionModel_serviceManaged(t *testing.T) 
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "cloudformation", regexache.MustCompile(`stackset/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "permission_model", "SERVICE_MANAGED"),
 					resource.TestCheckResourceAttr(resourceName, "auto_deployment.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.retain_stacks_on_account_removal", "false"),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.retain_stacks_on_account_removal", acctest.CtFalse),
 					resource.TestMatchResourceAttr(resourceName, "stack_set_id", regexache.MustCompile(fmt.Sprintf("%s:.+", rName))),
 				),
 			},
@@ -772,8 +772,8 @@ func TestAccCloudFormationStackSet_autoDeploymentEnabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetExists(ctx, resourceName, &stackSet),
 					resource.TestCheckResourceAttr(resourceName, "auto_deployment.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.retain_stacks_on_account_removal", "false"),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.retain_stacks_on_account_removal", acctest.CtFalse),
 				),
 			},
 			{
@@ -811,8 +811,8 @@ func TestAccCloudFormationStackSet_autoDeploymentDisabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetExists(ctx, resourceName, &stackSet),
 					resource.TestCheckResourceAttr(resourceName, "auto_deployment.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.retain_stacks_on_account_removal", "false"),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.retain_stacks_on_account_removal", acctest.CtFalse),
 				),
 			},
 			{
@@ -830,10 +830,10 @@ func TestAccCloudFormationStackSet_autoDeploymentDisabled(t *testing.T) {
 
 // https://github.com/hashicorp/terraform-provider-aws/issues/32536.
 // Prerequisites:
-// * Organizations root account
+// * Organizations management account
 // * Organization member account
 // * Delegated administrator not configured
-// Authenticate with member account as target account and root account as alternate.
+// Authenticate with member account as target account and management account as alternate.
 func TestAccCloudFormationStackSet_delegatedAdministrator(t *testing.T) {
 	ctx := acctest.Context(t)
 	providers := make(map[string]*schema.Provider)
@@ -853,7 +853,7 @@ func TestAccCloudFormationStackSet_delegatedAdministrator(t *testing.T) {
 		CheckDestroy:             testAccCheckStackSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				// Run a simple configuration to initialize the alternate providers
+				// Run a simple configuration to initialize the alternate providers.
 				Config: testAccStackSetConfig_delegatedAdministratorInit,
 			},
 			{
@@ -865,8 +865,8 @@ func TestAccCloudFormationStackSet_delegatedAdministrator(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetExists(ctx, resourceName, &stackSet),
 					resource.TestCheckResourceAttr(resourceName, "auto_deployment.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.retain_stacks_on_account_removal", "false"),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.retain_stacks_on_account_removal", acctest.CtFalse),
 				),
 			},
 			{
@@ -1484,7 +1484,7 @@ TEMPLATE
 `, rName, testAccStackSetTemplateBodyVPC(rName), enabled, retainStacksOnAccountRemoval)
 }
 
-// Initialize all the providers used by dlegated administrator acceptance tests.
+// Initialize all the providers used by delegated administrator acceptance tests.
 var testAccStackSetConfig_delegatedAdministratorInit = acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), `
 data "aws_caller_identity" "member" {}
 

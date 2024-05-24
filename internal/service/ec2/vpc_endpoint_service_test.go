@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func TestAccVPCEndpointService_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var svcCfg ec2.ServiceConfiguration
+	var svcCfg awstypes.ServiceConfiguration
 	resourceName := "aws_vpc_endpoint_service.test"
 	rName := sdkacctest.RandomWithPrefix("tfacctest") // 32 character limit
 
@@ -36,13 +36,13 @@ func TestAccVPCEndpointService_basic(t *testing.T) {
 				Config: testAccVPCEndpointServiceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointServiceExists(ctx, resourceName, &svcCfg),
-					resource.TestCheckResourceAttr(resourceName, "acceptance_required", "false"),
+					resource.TestCheckResourceAttr(resourceName, "acceptance_required", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "allowed_principals.#", acctest.Ct0),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint-service/vpce-svc-.+`)),
 					acctest.CheckResourceAttrGreaterThanValue(resourceName, "availability_zones.#", 0),
 					acctest.CheckResourceAttrGreaterThanValue(resourceName, "base_endpoint_dns_names.#", 0),
 					resource.TestCheckResourceAttr(resourceName, "gateway_load_balancer_arns.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "manages_vpc_endpoints", "false"),
+					resource.TestCheckResourceAttr(resourceName, "manages_vpc_endpoints", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "network_load_balancer_arns.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name_configuration.#", acctest.Ct0),
@@ -64,7 +64,7 @@ func TestAccVPCEndpointService_basic(t *testing.T) {
 
 func TestAccVPCEndpointService_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var svcCfg ec2.ServiceConfiguration
+	var svcCfg awstypes.ServiceConfiguration
 	resourceName := "aws_vpc_endpoint_service.test"
 	rName := sdkacctest.RandomWithPrefix("tfacctest") // 32 character limit
 
@@ -88,7 +88,7 @@ func TestAccVPCEndpointService_disappears(t *testing.T) {
 
 func TestAccVPCEndpointService_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var svcCfg ec2.ServiceConfiguration
+	var svcCfg awstypes.ServiceConfiguration
 	resourceName := "aws_vpc_endpoint_service.test"
 	rName := sdkacctest.RandomWithPrefix("tfacctest") // 32 character limit
 
@@ -134,7 +134,7 @@ func TestAccVPCEndpointService_tags(t *testing.T) {
 
 func TestAccVPCEndpointService_networkLoadBalancerARNs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var svcCfg ec2.ServiceConfiguration
+	var svcCfg awstypes.ServiceConfiguration
 	resourceName := "aws_vpc_endpoint_service.test"
 	rName := sdkacctest.RandomWithPrefix("tfacctest") // 32 character limit
 
@@ -169,7 +169,7 @@ func TestAccVPCEndpointService_networkLoadBalancerARNs(t *testing.T) {
 
 func TestAccVPCEndpointService_supportedIPAddressTypes(t *testing.T) {
 	ctx := acctest.Context(t)
-	var svcCfg ec2.ServiceConfiguration
+	var svcCfg awstypes.ServiceConfiguration
 	resourceName := "aws_vpc_endpoint_service.test"
 	rName := sdkacctest.RandomWithPrefix("tfacctest") // 32 character limit
 
@@ -207,7 +207,7 @@ func TestAccVPCEndpointService_supportedIPAddressTypes(t *testing.T) {
 
 func TestAccVPCEndpointService_allowedPrincipals(t *testing.T) {
 	ctx := acctest.Context(t)
-	var svcCfg ec2.ServiceConfiguration
+	var svcCfg awstypes.ServiceConfiguration
 	resourceName := "aws_vpc_endpoint_service.test"
 	rName := sdkacctest.RandomWithPrefix("tfacctest") // 32 character limit
 
@@ -249,7 +249,7 @@ func TestAccVPCEndpointService_allowedPrincipals(t *testing.T) {
 
 func TestAccVPCEndpointService_gatewayLoadBalancerARNs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var svcCfg ec2.ServiceConfiguration
+	var svcCfg awstypes.ServiceConfiguration
 	resourceName := "aws_vpc_endpoint_service.test"
 	rName := sdkacctest.RandomWithPrefix("tfacctest") // 32 character limit
 
@@ -284,7 +284,7 @@ func TestAccVPCEndpointService_gatewayLoadBalancerARNs(t *testing.T) {
 
 func TestAccVPCEndpointService_privateDNSName(t *testing.T) {
 	ctx := acctest.Context(t)
-	var svcCfg ec2.ServiceConfiguration
+	var svcCfg awstypes.ServiceConfiguration
 	resourceName := "aws_vpc_endpoint_service.test"
 	rName := sdkacctest.RandomWithPrefix("tfacctest") // 32 character limit
 	domainName1 := acctest.RandomSubdomain()
@@ -325,14 +325,14 @@ func TestAccVPCEndpointService_privateDNSName(t *testing.T) {
 
 func testAccCheckVPCEndpointServiceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpc_endpoint_service" {
 				continue
 			}
 
-			_, err := tfec2.FindVPCEndpointServiceConfigurationByID(ctx, conn, rs.Primary.ID)
+			_, err := tfec2.FindVPCEndpointServiceConfigurationByIDV2(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -349,7 +349,7 @@ func testAccCheckVPCEndpointServiceDestroy(ctx context.Context) resource.TestChe
 	}
 }
 
-func testAccCheckVPCEndpointServiceExists(ctx context.Context, n string, v *ec2.ServiceConfiguration) resource.TestCheckFunc {
+func testAccCheckVPCEndpointServiceExists(ctx context.Context, n string, v *awstypes.ServiceConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -360,9 +360,9 @@ func testAccCheckVPCEndpointServiceExists(ctx context.Context, n string, v *ec2.
 			return fmt.Errorf("No EC2 VPC Endpoint Service ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		output, err := tfec2.FindVPCEndpointServiceConfigurationByID(ctx, conn, rs.Primary.ID)
+		output, err := tfec2.FindVPCEndpointServiceConfigurationByIDV2(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

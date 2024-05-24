@@ -85,7 +85,7 @@ func TestAccM2Deployment_disappears(t *testing.T) {
 	})
 }
 
-func TestAccM2Deployment_nostart(t *testing.T) {
+func TestAccM2Deployment_start(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -115,6 +115,13 @@ func TestAccM2Deployment_nostart(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDeploymentConfig_basic(rName, "bluage", 1, 1, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
+					resource.TestCheckResourceAttr(resourceName, "application_version", acctest.Ct1),
+				),
 			},
 		},
 	})

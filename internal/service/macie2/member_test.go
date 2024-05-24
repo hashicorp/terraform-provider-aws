@@ -109,19 +109,19 @@ func testAccMember_invitationDisableEmailNotification(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, names.Macie2ServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMemberConfig_inviteInvitationDisableEmailNotification(email, "true", true),
+				Config: testAccMemberConfig_inviteInvitationDisableEmailNotification(email, acctest.CtTrue, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName, &macie2Output),
 				),
 			},
 			{
-				Config: testAccMemberConfig_inviteInvitationDisableEmailNotification(email, "false", false),
+				Config: testAccMemberConfig_inviteInvitationDisableEmailNotification(email, acctest.CtFalse, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName, &macie2Output),
 				),
 			},
 			{
-				Config:            testAccMemberConfig_inviteInvitationDisableEmailNotification(email, "false", false),
+				Config:            testAccMemberConfig_inviteInvitationDisableEmailNotification(email, acctest.CtFalse, false),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -155,7 +155,7 @@ func testAccMember_invite(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", macie2.RelationshipStatusCreated),
-					resource.TestCheckResourceAttr(resourceName, "invite", "false"),
+					resource.TestCheckResourceAttr(resourceName, "invite", acctest.CtFalse),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_account_id"),
 					acctest.CheckResourceAttrAccountID(resourceName, "master_account_id"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, dataSourceAlternate, names.AttrAccountID),
@@ -169,7 +169,7 @@ func testAccMember_invite(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", macie2.RelationshipStatusInvited),
-					resource.TestCheckResourceAttr(resourceName, "invite", "true"),
+					resource.TestCheckResourceAttr(resourceName, "invite", acctest.CtTrue),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_account_id"),
 					acctest.CheckResourceAttrAccountID(resourceName, "master_account_id"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, dataSourceAlternate, names.AttrAccountID),
@@ -210,7 +210,7 @@ func testAccMember_inviteRemoved(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", macie2.RelationshipStatusInvited),
-					resource.TestCheckResourceAttr(resourceName, "invite", "true"),
+					resource.TestCheckResourceAttr(resourceName, "invite", acctest.CtTrue),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_account_id"),
 					acctest.CheckResourceAttrAccountID(resourceName, "master_account_id"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, dataSourceAlternate, names.AttrAccountID),
@@ -224,7 +224,7 @@ func testAccMember_inviteRemoved(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", macie2.RelationshipStatusRemoved),
-					resource.TestCheckResourceAttr(resourceName, "invite", "false"),
+					resource.TestCheckResourceAttr(resourceName, "invite", acctest.CtFalse),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_account_id"),
 					acctest.CheckResourceAttrAccountID(resourceName, "master_account_id"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, dataSourceAlternate, names.AttrAccountID),
@@ -265,7 +265,7 @@ func testAccMember_status(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", macie2.RelationshipStatusInvited),
-					resource.TestCheckResourceAttr(resourceName, "invite", "true"),
+					resource.TestCheckResourceAttr(resourceName, "invite", acctest.CtTrue),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_account_id"),
 					acctest.CheckResourceAttrAccountID(resourceName, "master_account_id"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, dataSourceAlternate, names.AttrAccountID),
@@ -279,7 +279,7 @@ func testAccMember_status(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", macie2.RelationshipStatusPaused),
-					resource.TestCheckResourceAttr(resourceName, "invite", "true"),
+					resource.TestCheckResourceAttr(resourceName, "invite", acctest.CtTrue),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_account_id"),
 					acctest.CheckResourceAttrAccountID(resourceName, "master_account_id"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, dataSourceAlternate, names.AttrAccountID),

@@ -384,7 +384,7 @@ func TestAccAPIGatewayIntegration_TLS_insecureSkipVerification(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tls_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tls_config.0.insecure_skip_verification", "true"),
+					resource.TestCheckResourceAttr(resourceName, "tls_config.0.insecure_skip_verification", acctest.CtTrue),
 				),
 			},
 			{
@@ -398,7 +398,7 @@ func TestAccAPIGatewayIntegration_TLS_insecureSkipVerification(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tls_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tls_config.0.insecure_skip_verification", "false"),
+					resource.TestCheckResourceAttr(resourceName, "tls_config.0.insecure_skip_verification", acctest.CtFalse),
 				),
 			},
 		},

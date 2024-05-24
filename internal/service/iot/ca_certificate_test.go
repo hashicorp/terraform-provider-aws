@@ -33,8 +33,8 @@ func TestAccIoTCACertificate_basic(t *testing.T) {
 				Config: testAccCACertificateConfig_basic(caCertificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "active", "true"),
-					resource.TestCheckResourceAttr(resourceName, "allow_auto_registration", "true"),
+					resource.TestCheckResourceAttr(resourceName, "active", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "allow_auto_registration", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "ca_certificate_pem"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_mode", "SNI_ONLY"),
@@ -137,8 +137,8 @@ func TestAccIoTCACertificate_defaultMode(t *testing.T) {
 				Config: testAccCACertificateConfig_defaultMode(false, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "active", "false"),
-					resource.TestCheckResourceAttr(resourceName, "allow_auto_registration", "false"),
+					resource.TestCheckResourceAttr(resourceName, "active", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "allow_auto_registration", acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "ca_certificate_pem"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_mode", "DEFAULT"),
@@ -155,8 +155,8 @@ func TestAccIoTCACertificate_defaultMode(t *testing.T) {
 				Config: testAccCACertificateConfig_defaultMode(true, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "active", "true"),
-					resource.TestCheckResourceAttr(resourceName, "allow_auto_registration", "true"),
+					resource.TestCheckResourceAttr(resourceName, "active", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "allow_auto_registration", acctest.CtTrue),
 				),
 			},
 		},

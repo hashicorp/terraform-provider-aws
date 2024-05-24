@@ -138,7 +138,7 @@ func TestAccIoTThingGroupMembership_overrideDynamicGroup(t *testing.T) {
 				Config: testAccThingGroupMembershipConfig_overrideDynamic(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingGroupMembershipExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "override_dynamic_group", "true"),
+					resource.TestCheckResourceAttr(resourceName, "override_dynamic_group", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "thing_group_name", rName1),
 					resource.TestCheckResourceAttr(resourceName, "thing_name", rName2),
 				),

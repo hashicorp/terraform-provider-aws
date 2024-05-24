@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/organizations"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +21,7 @@ import (
 
 func testAccOrganizationalUnit_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var unit organizations.OrganizationalUnit
+	var unit awstypes.OrganizationalUnit
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_organizations_organizational_unit.test"
 
@@ -55,7 +55,7 @@ func testAccOrganizationalUnit_basic(t *testing.T) {
 
 func testAccOrganizationalUnit_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var unit organizations.OrganizationalUnit
+	var unit awstypes.OrganizationalUnit
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_organizations_organizational_unit.test"
 
@@ -82,7 +82,7 @@ func testAccOrganizationalUnit_disappears(t *testing.T) {
 
 func testAccOrganizationalUnit_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var unit organizations.OrganizationalUnit
+	var unit awstypes.OrganizationalUnit
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_organizations_organizational_unit.test"
@@ -121,7 +121,7 @@ func testAccOrganizationalUnit_update(t *testing.T) {
 
 func testAccOrganizationalUnit_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var unit organizations.OrganizationalUnit
+	var unit awstypes.OrganizationalUnit
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_organizations_organizational_unit.test"
 
@@ -170,7 +170,7 @@ func testAccOrganizationalUnit_tags(t *testing.T) {
 
 func testAccCheckOrganizationalUnitDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_organizations_organizational_unit" {
@@ -194,14 +194,14 @@ func testAccCheckOrganizationalUnitDestroy(ctx context.Context) resource.TestChe
 	}
 }
 
-func testAccCheckOrganizationalUnitExists(ctx context.Context, n string, v *organizations.OrganizationalUnit) resource.TestCheckFunc {
+func testAccCheckOrganizationalUnitExists(ctx context.Context, n string, v *awstypes.OrganizationalUnit) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsClient(ctx)
 
 		output, err := tforganizations.FindOrganizationalUnitByID(ctx, conn, rs.Primary.ID)
 

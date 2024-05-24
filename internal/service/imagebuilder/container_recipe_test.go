@@ -44,7 +44,7 @@ func TestAccImageBuilderContainerRecipe_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_created"),
 					resource.TestCheckResourceAttrSet(resourceName, "dockerfile_template_data"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -254,7 +254,7 @@ func TestAccImageBuilderContainerRecipe_InstanceConfiguration_BlockDeviceMapping
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.0.ebs.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.0.ebs.0.delete_on_termination", "true"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.0.ebs.0.delete_on_termination", acctest.CtTrue),
 				),
 			},
 			{
@@ -284,7 +284,7 @@ func TestAccImageBuilderContainerRecipe_InstanceConfiguration_BlockDeviceMapping
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.0.ebs.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.0.ebs.0.encrypted", "true"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.0.ebs.0.encrypted", acctest.CtTrue),
 				),
 			},
 			{
@@ -495,7 +495,7 @@ func TestAccImageBuilderContainerRecipe_InstanceConfiguration_BlockDeviceMapping
 					testAccCheckContainerRecipeExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.0.no_device", "true"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.0.no_device", acctest.CtTrue),
 				),
 			},
 			{

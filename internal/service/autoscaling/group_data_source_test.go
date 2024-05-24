@@ -46,7 +46,7 @@ func TestAccAutoScalingGroupDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "min_size", resourceName, "min_size"),
 					resource.TestCheckResourceAttrPair(datasourceName, "mixed_instances_policy.#", resourceName, "mixed_instances_policy.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
-					resource.TestCheckResourceAttr(datasourceName, "new_instances_protected_from_scale_in", "false"),
+					resource.TestCheckResourceAttr(datasourceName, "new_instances_protected_from_scale_in", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(datasourceName, "placement_group", resourceName, "placement_group"),
 					resource.TestCheckResourceAttrPair(datasourceName, "predicted_capacity", resourceName, "predicted_capacity"),
 					resource.TestCheckResourceAttrPair(datasourceName, "service_linked_role_arn", resourceName, "service_linked_role_arn"),
@@ -172,12 +172,12 @@ func TestAccAutoScalingGroupDataSource_tags(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "tag.*", map[string]string{
 						names.AttrKey:         acctest.CtKey1,
 						names.AttrValue:       acctest.CtValue1,
-						"propagate_at_launch": "true",
+						"propagate_at_launch": acctest.CtTrue,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "tag.*", map[string]string{
 						names.AttrKey:         acctest.CtKey2,
 						names.AttrValue:       acctest.CtValue2,
-						"propagate_at_launch": "false",
+						"propagate_at_launch": acctest.CtFalse,
 					}),
 				),
 			},

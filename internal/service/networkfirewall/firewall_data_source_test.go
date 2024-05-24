@@ -34,7 +34,7 @@ func TestAccNetworkFirewallFirewallDataSource_arn(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "network-firewall", fmt.Sprintf("firewall/%s", rName)),
-					resource.TestCheckResourceAttr(dataSourceName, "delete_protection", "false"),
+					resource.TestCheckResourceAttr(dataSourceName, "delete_protection", acctest.CtFalse),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(dataSourceName, "encryption_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(dataSourceName, "encryption_configuration.0.key_id", "AWS_OWNED_KMS_KEY"),
@@ -82,7 +82,7 @@ func TestAccNetworkFirewallFirewallDataSource_name(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "network-firewall", fmt.Sprintf("firewall/%s", rName)),
-					resource.TestCheckResourceAttr(dataSourceName, "delete_protection", "false"),
+					resource.TestCheckResourceAttr(dataSourceName, "delete_protection", acctest.CtFalse),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(dataSourceName, "encryption_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(dataSourceName, "encryption_configuration.0.key_id", "AWS_OWNED_KMS_KEY"),
@@ -130,7 +130,7 @@ func TestAccNetworkFirewallFirewallDataSource_arnandname(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "network-firewall", fmt.Sprintf("firewall/%s", rName)),
-					resource.TestCheckResourceAttr(dataSourceName, "delete_protection", "false"),
+					resource.TestCheckResourceAttr(dataSourceName, "delete_protection", acctest.CtFalse),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(dataSourceName, "encryption_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(dataSourceName, "encryption_configuration.0.key_id", "AWS_OWNED_KMS_KEY"),

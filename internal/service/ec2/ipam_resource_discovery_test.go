@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -24,15 +24,15 @@ func TestAccIPAMResourceDiscovery_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"ResourceDiscovery": {
-			acctest.CtBasic: testAccIPAMResourceDiscovery_basic,
-			"modify":        testAccIPAMResourceDiscovery_modify,
-			"disappears":    testAccIPAMResourceDiscovery_disappears,
-			"tags":          testAccIPAMResourceDiscovery_tags,
+			acctest.CtBasic:      testAccIPAMResourceDiscovery_basic,
+			"modify":             testAccIPAMResourceDiscovery_modify,
+			acctest.CtDisappears: testAccIPAMResourceDiscovery_disappears,
+			"tags":               testAccIPAMResourceDiscovery_tags,
 		},
 		"ResourceDiscoveryAssociation": {
-			acctest.CtBasic: testAccIPAMResourceDiscoveryAssociation_basic,
-			"disappears":    testAccIPAMResourceDiscoveryAssociation_disappears,
-			"tags":          testAccIPAMResourceDiscoveryAssociation_tags,
+			acctest.CtBasic:      testAccIPAMResourceDiscoveryAssociation_basic,
+			acctest.CtDisappears: testAccIPAMResourceDiscoveryAssociation_disappears,
+			"tags":               testAccIPAMResourceDiscoveryAssociation_tags,
 		},
 	}
 
@@ -41,7 +41,7 @@ func TestAccIPAMResourceDiscovery_serial(t *testing.T) {
 
 func testAccIPAMResourceDiscovery_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rd ec2.IpamResourceDiscovery
+	var rd awstypes.IpamResourceDiscovery
 	resourceName := "aws_vpc_ipam_resource_discovery.test"
 	dataSourceRegion := "data.aws_region.current"
 
@@ -58,7 +58,7 @@ func testAccIPAMResourceDiscovery_basic(t *testing.T) {
 					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`ipam-resource-discovery/ipam-res-disco-[0-9a-f]+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
 					resource.TestCheckResourceAttrPair(resourceName, "ipam_resource_discovery_region", dataSourceRegion, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "is_default", "false"),
+					resource.TestCheckResourceAttr(resourceName, "is_default", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "operating_regions.#", acctest.Ct1),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
@@ -75,7 +75,7 @@ func testAccIPAMResourceDiscovery_basic(t *testing.T) {
 
 func testAccIPAMResourceDiscovery_modify(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rd ec2.IpamResourceDiscovery
+	var rd awstypes.IpamResourceDiscovery
 	resourceName := "aws_vpc_ipam_resource_discovery.test"
 
 	resource.Test(t, resource.TestCase{
@@ -123,7 +123,7 @@ func testAccIPAMResourceDiscovery_modify(t *testing.T) {
 
 func testAccIPAMResourceDiscovery_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rd ec2.IpamResourceDiscovery
+	var rd awstypes.IpamResourceDiscovery
 	resourceName := "aws_vpc_ipam_resource_discovery.test"
 
 	resource.Test(t, resource.TestCase{
@@ -146,7 +146,7 @@ func testAccIPAMResourceDiscovery_disappears(t *testing.T) {
 
 func testAccIPAMResourceDiscovery_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rd ec2.IpamResourceDiscovery
+	var rd awstypes.IpamResourceDiscovery
 	resourceName := "aws_vpc_ipam_resource_discovery.test"
 
 	resource.Test(t, resource.TestCase{
@@ -187,7 +187,7 @@ func testAccIPAMResourceDiscovery_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckIPAMResourceDiscoveryExists(ctx context.Context, n string, v *ec2.IpamResourceDiscovery) resource.TestCheckFunc {
+func testAccCheckIPAMResourceDiscoveryExists(ctx context.Context, n string, v *awstypes.IpamResourceDiscovery) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -198,7 +198,7 @@ func testAccCheckIPAMResourceDiscoveryExists(ctx context.Context, n string, v *e
 			return fmt.Errorf("No IPAM Resource Discovery ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindIPAMResourceDiscoveryByID(ctx, conn, rs.Primary.ID)
 
@@ -214,7 +214,7 @@ func testAccCheckIPAMResourceDiscoveryExists(ctx context.Context, n string, v *e
 
 func testAccCheckIPAMResourceDiscoveryDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpc_ipam_resource_discovery" {
