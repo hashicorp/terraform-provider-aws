@@ -137,6 +137,37 @@ func TestAccECSTaskDefinition_scratchVolume(t *testing.T) {
 	})
 }
 
+func TestAccECSTaskDefinition_configuredAtLaunch(t *testing.T) {
+	ctx := acctest.Context(t)
+	var def ecs.TaskDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_task_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTaskDefinitionConfig_configuredAtLaunch(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
+					resource.TestCheckResourceAttr(resourceName, "volume.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "volume.0.configure_at_launch", "true"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
+			},
+		},
+	})
+}
+
 func TestAccECSTaskDefinition_DockerVolume_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var def ecs.TaskDefinition
@@ -1788,6 +1819,35 @@ TASK_DEFINITION
 
   volume {
     name = %[1]q
+  }
+}
+`, rName)
+}
+
+func testAccTaskDefinitionConfig_configuredAtLaunch(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_task_definition" "test" {
+  family = %[1]q
+
+  container_definitions = <<TASK_DEFINITION
+[
+  {
+    "name": "sleep",
+    "image": "busybox",
+    "cpu": 10,
+    "command": ["sleep","360"],
+    "memory": 10,
+    "essential": true,
+    "mountPoints": [
+      {"sourceVolume": %[1]q, "containerPath": "/"}
+    ]
+  }
+]
+TASK_DEFINITION
+
+  volume {
+    name                = %[1]q
+    configure_at_launch = true
   }
 }
 `, rName)

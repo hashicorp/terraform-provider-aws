@@ -503,6 +503,7 @@ semgrep-code-quality: semgrep-validate ## [CI] Semgrep Checks / Code Quality Sca
 semgrep-constants: semgrep-validate ## Fix constants with Semgrep --autofix
 	@echo "make: Fix constants with Semgrep --autofix"
 	@semgrep $(SEMGREP_ARGS) --autofix \
+		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
 		--config .ci/.semgrep-constants.yml \
 		--config .ci/.semgrep-test-constants.yml
 
