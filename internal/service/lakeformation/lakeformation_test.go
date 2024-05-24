@@ -15,14 +15,14 @@ func TestAccLakeFormation_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"DataLakeSettings": {
 			acctest.CtBasic:    testAccDataLakeSettings_basic,
-			"disappears":       testAccDataLakeSettings_disappears,
+			acctest.CtDisappears:       testAccDataLakeSettings_disappears,
 			"withoutCatalogId": testAccDataLakeSettings_withoutCatalogID,
 			"readOnlyAdmins":   testAccDataLakeSettings_readOnlyAdmins,
 		},
 		"DataCellsFilter": {
 			acctest.CtBasic:  testAccDataCellsFilter_basic,
 			"columnWildcard": testAccDataCellsFilter_columnWildcard,
-			"disappears":     testAccDataCellsFilter_disappears,
+			acctest.CtDisappears:     testAccDataCellsFilter_disappears,
 			"rowFilter":      testAccDataCellsFilter_rowFilter,
 		},
 		"DataLakeSettingsDataSource": {
@@ -36,7 +36,7 @@ func TestAccLakeFormation_serial(t *testing.T) {
 			"databaseMultiple":    testAccPermissions_databaseMultiple,
 			"dataCellsFilter":     testAccPermissions_dataCellsFilter,
 			"dataLocation":        testAccPermissions_dataLocation,
-			"disappears":          testAccPermissions_disappears,
+			acctest.CtDisappears:          testAccPermissions_disappears,
 			"lfTag":               testAccPermissions_lfTag,
 			"lfTagPolicy":         testAccPermissions_lfTagPolicy,
 			"lfTagPolicyMultiple": testAccPermissions_lfTagPolicyMultiple,
@@ -71,14 +71,14 @@ func TestAccLakeFormation_serial(t *testing.T) {
 		},
 		"LFTags": {
 			acctest.CtBasic:   testAccLFTag_basic,
-			"disappears":      testAccLFTag_disappears,
+			acctest.CtDisappears:      testAccLFTag_disappears,
 			"tagKeyComplex":   testAccLFTag_TagKey_complex,
 			"values":          testAccLFTag_Values,
 			"valuesOverFifty": testAccLFTag_Values_overFifty,
 		},
 		"ResourceLFTag": {
 			acctest.CtBasic:    testAccResourceLFTag_basic,
-			"disappears":       testAccResourceLFTag_disappears,
+			acctest.CtDisappears:       testAccResourceLFTag_disappears,
 			"table":            testAccResourceLFTag_table,
 			"tableWithColumns": testAccResourceLFTag_tableWithColumns,
 		},
@@ -86,7 +86,7 @@ func TestAccLakeFormation_serial(t *testing.T) {
 			acctest.CtBasic:        testAccResourceLFTags_basic,
 			"database":             testAccResourceLFTags_database,
 			"databaseMultipleTags": testAccResourceLFTags_databaseMultipleTags,
-			"disappears":           testAccResourceLFTags_disappears,
+			acctest.CtDisappears:           testAccResourceLFTags_disappears,
 			"hierarchy":            testAccResourceLFTags_hierarchy,
 			"table":                testAccResourceLFTags_table,
 			"tableWithColumns":     testAccResourceLFTags_tableWithColumns,
