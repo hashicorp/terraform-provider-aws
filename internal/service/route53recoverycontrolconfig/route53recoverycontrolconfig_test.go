@@ -17,21 +17,21 @@ func TestAccRoute53RecoveryControlConfig_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Cluster": {
 			acctest.CtBasic: testAccCluster_basic,
-			"disappears":    testAccCluster_disappears,
+			acctest.CtDisappears:    testAccCluster_disappears,
 		},
 		"ControlPanel": {
 			acctest.CtBasic: testAccControlPanel_basic,
-			"disappears":    testAccControlPanel_disappears,
+			acctest.CtDisappears:    testAccControlPanel_disappears,
 		},
 		"RoutingControl": {
 			acctest.CtBasic:         testAccRoutingControl_basic,
-			"disappears":            testAccRoutingControl_disappears,
+			acctest.CtDisappears:            testAccRoutingControl_disappears,
 			"nonDefaultControlPane": testAccRoutingControl_nonDefaultControlPanel,
 		},
 		"SafetyRule": {
 			"assertionRule": testAccSafetyRule_assertionRule,
 			"gatingRule":    testAccSafetyRule_gatingRule,
-			"disappears":    testAccSafetyRule_disappears,
+			acctest.CtDisappears:    testAccSafetyRule_disappears,
 		},
 	}
 
