@@ -67,7 +67,7 @@ func ResourceSnapshotCopy() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"engine": {
+			names.AttrEngine: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -212,7 +212,7 @@ func resourceSnapshotCopyRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrAvailabilityZone, snapshot.AvailabilityZone)
 	d.Set("db_snapshot_arn", arn)
 	d.Set(names.AttrEncrypted, snapshot.Encrypted)
-	d.Set("engine", snapshot.Engine)
+	d.Set(names.AttrEngine, snapshot.Engine)
 	d.Set(names.AttrEngineVersion, snapshot.EngineVersion)
 	d.Set(names.AttrIOPS, snapshot.Iops)
 	d.Set(names.AttrKMSKeyID, snapshot.KmsKeyId)

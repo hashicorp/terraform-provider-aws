@@ -35,7 +35,7 @@ func DataSourceEngineVersion() *schema.Resource {
 				Optional: true,
 			},
 
-			"engine": {
+			names.AttrEngine: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -200,7 +200,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 		ListSupportedTimezones:     aws.Bool(true),
 	}
 
-	if v, ok := d.GetOk("engine"); ok {
+	if v, ok := d.GetOk(names.AttrEngine); ok {
 		input.Engine = aws.String(v.(string))
 	}
 
@@ -415,7 +415,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 		d.Set("default_character_set", found.DefaultCharacterSet.CharacterSetName)
 	}
 
-	d.Set("engine", found.Engine)
+	d.Set(names.AttrEngine, found.Engine)
 	d.Set("engine_description", found.DBEngineDescription)
 	d.Set("exportable_log_types", found.ExportableLogTypes)
 	d.Set("parameter_group_family", found.DBParameterGroupFamily)
