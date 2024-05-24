@@ -1,4 +1,10 @@
 ## 5.52.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_ecs_service: Add `volume_configuration` argument ([#37019](https://github.com/hashicorp/terraform-provider-aws/issues/37019))
+* resource/aws_ecs_task_definition: Add `configure_at_launch` parameter in `volume` argument ([#37019](https://github.com/hashicorp/terraform-provider-aws/issues/37019))
+
 ## 5.51.0 (May 23, 2024)
 
 NOTES:
