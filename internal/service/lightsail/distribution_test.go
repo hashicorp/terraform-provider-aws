@@ -120,8 +120,6 @@ func testAccDistribution_isEnabled(t *testing.T) {
 	resourceName := "aws_lightsail_distribution.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	isEnabled := acctest.CtTrue
-	isDisabled := acctest.CtFalse
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {

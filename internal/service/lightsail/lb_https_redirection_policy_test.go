@@ -18,7 +18,6 @@ import (
 func testAccLoadBalancerHTTPSRedirectionPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	enabled := acctest.CtTrue
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
