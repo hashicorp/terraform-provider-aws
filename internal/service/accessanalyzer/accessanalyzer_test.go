@@ -20,13 +20,13 @@ func TestAccAccessAnalyzer_serial(t *testing.T) {
 		"Analyzer": {
 			acctest.CtBasic:     testAccAnalyzer_basic,
 			"configuration":     testAccAnalyzer_configuration,
-			"disappears":        testAccAnalyzer_disappears,
+			acctest.CtDisappears:        testAccAnalyzer_disappears,
 			"tags":              testAccAccessAnalyzerAnalyzer_tagsSerial,
 			"Type_Organization": testAccAnalyzer_Type_Organization,
 		},
 		"ArchiveRule": {
 			acctest.CtBasic:  testAccAnalyzerArchiveRule_basic,
-			"disappears":     testAccAnalyzerArchiveRule_disappears,
+			acctest.CtDisappears:     testAccAnalyzerArchiveRule_disappears,
 			"update_filters": testAccAnalyzerArchiveRule_updateFilters,
 		},
 	}
