@@ -31,7 +31,7 @@ func TestAccSSMContacts_serial(t *testing.T) {
 			"contactId":       testAccContactChannel_contactID,
 			"deliveryAddress": testAccContactChannel_deliveryAddress,
 			"disappears":      testAccContactChannel_disappears,
-			"name":            testAccContactChannel_name,
+			acctest.CtName:            testAccContactChannel_name,
 			"type":            testAccContactChannel_type,
 		},
 		"Contact Channel Data Source Tests": {
