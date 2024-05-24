@@ -15,7 +15,7 @@ func TestAccMediaLive_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Multiplex": {
 			acctest.CtBasic: testAccMultiplex_basic,
-			"disappears":    testAccMultiplex_disappears,
+			acctest.CtDisappears:    testAccMultiplex_disappears,
 			"update":        testAccMultiplex_update,
 			"updateTags":    testAccMultiplex_updateTags,
 			"start":         testAccMultiplex_start,
@@ -23,7 +23,7 @@ func TestAccMediaLive_serial(t *testing.T) {
 		"MultiplexProgram": {
 			acctest.CtBasic: testAccMultiplexProgram_basic,
 			"update":        testAccMultiplexProgram_update,
-			"disappears":    testAccMultiplexProgram_disappears,
+			acctest.CtDisappears:    testAccMultiplexProgram_disappears,
 		},
 	}
 
