@@ -352,12 +352,12 @@ func TestAccDynamoDBTable_basic(t *testing.T) {
 						names.AttrType: "S",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", "PROVISIONED"),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "hash_key", rName),
 					resource.TestCheckResourceAttr(resourceName, "local_secondary_index.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.enabled", acctest.CtFalse),
 					resource.TestCheckNoResourceAttr(resourceName, "range_key"),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.Ct0),
@@ -366,14 +366,14 @@ func TestAccDynamoDBTable_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "restore_to_latest_time"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStreamARN, ""),
-					resource.TestCheckResourceAttr(resourceName, "stream_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "stream_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "stream_label", ""),
 					resource.TestCheckResourceAttr(resourceName, "stream_view_type", ""),
 					resource.TestCheckResourceAttr(resourceName, "table_class", "STANDARD"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "ttl.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ttl.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "ttl.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", acctest.Ct1),
 				),
 			},
@@ -408,7 +408,7 @@ func TestAccDynamoDBTable_deletion_protection(t *testing.T) {
 						names.AttrName: rName,
 						names.AttrType: "S",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection_enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -419,7 +419,7 @@ func TestAccDynamoDBTable_deletion_protection(t *testing.T) {
 			// disable deletion protection for the sweeper to work
 			{
 				Config: testAccTableConfig_disable_deletion_protection(rName),
-				Check:  resource.TestCheckResourceAttr(resourceName, "deletion_protection_enabled", "false"),
+				Check:  resource.TestCheckResourceAttr(resourceName, "deletion_protection_enabled", acctest.CtFalse),
 			},
 		},
 	})
@@ -593,7 +593,7 @@ func TestAccDynamoDBTable_enablePITR(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.enabled", acctest.CtTrue),
 				),
 			},
 		},
@@ -853,7 +853,7 @@ func TestAccDynamoDBTable_streamSpecification(t *testing.T) {
 				Config: testAccTableConfig_streamSpecification(rName, true, "KEYS_ONLY"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "stream_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "stream_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "stream_view_type", "KEYS_ONLY"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrStreamARN, "dynamodb", regexache.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
 					resource.TestCheckResourceAttrSet(resourceName, "stream_label"),
@@ -868,7 +868,7 @@ func TestAccDynamoDBTable_streamSpecification(t *testing.T) {
 				Config: testAccTableConfig_streamSpecification(rName, false, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "stream_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "stream_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "stream_view_type", "KEYS_ONLY"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrStreamARN, "dynamodb", regexache.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
 					resource.TestCheckResourceAttrSet(resourceName, "stream_label"),
@@ -894,7 +894,7 @@ func TestAccDynamoDBTable_streamSpecificationDiffs(t *testing.T) {
 				Config: testAccTableConfig_streamSpecification(rName, true, "KEYS_ONLY"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "stream_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "stream_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "stream_view_type", "KEYS_ONLY"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrStreamARN, "dynamodb", regexache.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
 					resource.TestCheckResourceAttrSet(resourceName, "stream_label"),
@@ -904,7 +904,7 @@ func TestAccDynamoDBTable_streamSpecificationDiffs(t *testing.T) {
 				Config: testAccTableConfig_streamSpecification(rName, true, "NEW_IMAGE"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "stream_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "stream_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "stream_view_type", "NEW_IMAGE"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrStreamARN, "dynamodb", regexache.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
 					resource.TestCheckResourceAttrSet(resourceName, "stream_label"),
@@ -914,7 +914,7 @@ func TestAccDynamoDBTable_streamSpecificationDiffs(t *testing.T) {
 				Config: testAccTableConfig_streamSpecification(rName, false, "NEW_IMAGE"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "stream_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "stream_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "stream_view_type", "NEW_IMAGE"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrStreamARN, "dynamodb", regexache.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
 					resource.TestCheckResourceAttrSet(resourceName, "stream_label"),
@@ -924,7 +924,7 @@ func TestAccDynamoDBTable_streamSpecificationDiffs(t *testing.T) {
 				Config: testAccTableConfig_streamSpecification(rName, false, "KEYS_ONLY"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "stream_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "stream_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "stream_view_type", "KEYS_ONLY"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrStreamARN, "dynamodb", regexache.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
 					resource.TestCheckResourceAttrSet(resourceName, "stream_label"),
@@ -934,7 +934,7 @@ func TestAccDynamoDBTable_streamSpecificationDiffs(t *testing.T) {
 				Config: testAccTableConfig_streamSpecification(rName, false, "null"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "stream_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "stream_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "stream_view_type", "KEYS_ONLY"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrStreamARN, "dynamodb", regexache.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
 					resource.TestCheckResourceAttrSet(resourceName, "stream_label"),
@@ -944,7 +944,7 @@ func TestAccDynamoDBTable_streamSpecificationDiffs(t *testing.T) {
 				Config: testAccTableConfig_streamSpecification(rName, true, "KEYS_ONLY"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "stream_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "stream_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "stream_view_type", "KEYS_ONLY"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrStreamARN, "dynamodb", regexache.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
 					resource.TestCheckResourceAttrSet(resourceName, "stream_label"),
@@ -954,7 +954,7 @@ func TestAccDynamoDBTable_streamSpecificationDiffs(t *testing.T) {
 				Config: testAccTableConfig_streamSpecification(rName, true, "KEYS_ONLY"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "stream_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "stream_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "stream_view_type", "KEYS_ONLY"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrStreamARN, "dynamodb", regexache.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
 					resource.TestCheckResourceAttrSet(resourceName, "stream_label"),
@@ -1366,7 +1366,7 @@ func TestAccDynamoDBTable_TTL_enabled(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &table),
 					resource.TestCheckResourceAttr(resourceName, "ttl.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ttl.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ttl.0.enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -1397,7 +1397,7 @@ func TestAccDynamoDBTable_TTL_disabled(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &table),
 					resource.TestCheckResourceAttr(resourceName, "ttl.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ttl.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "ttl.0.enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -1410,7 +1410,7 @@ func TestAccDynamoDBTable_TTL_disabled(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &table),
 					resource.TestCheckResourceAttr(resourceName, "ttl.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "ttl.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ttl.0.enabled", acctest.CtTrue),
 				),
 			},
 		},
@@ -1547,7 +1547,7 @@ func TestAccDynamoDBTable_encryption(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &confBYOK),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, names.AttrARN),
 				),
 			},
@@ -1570,7 +1570,7 @@ func TestAccDynamoDBTable_encryption(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &confEncEnabled),
 					testAccCheckTableNotRecreated(&confEncEnabled, &confEncDisabled),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.kms_key_arn", ""),
 				),
 			},
@@ -1746,7 +1746,7 @@ func TestAccDynamoDBTable_Replica_singleDefaultKeyEncrypted(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -1754,7 +1754,7 @@ func TestAccDynamoDBTable_Replica_singleDefaultKeyEncrypted(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -1792,7 +1792,7 @@ func TestAccDynamoDBTable_Replica_singleCMK(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "replica.0.kms_key_arn", kmsKeyReplicaResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, names.AttrARN),
 				),
 			},
@@ -1831,7 +1831,7 @@ func TestAccDynamoDBTable_Replica_doubleAddCMK(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "replica.0.kms_key_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "replica.1.kms_key_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.kms_key_arn", ""),
 				),
 			},
@@ -1842,7 +1842,7 @@ func TestAccDynamoDBTable_Replica_doubleAddCMK(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.Ct2),
 					resource.TestCheckResourceAttrPair(resourceName, "replica.0.kms_key_arn", kmsKey1Replica1ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "replica.1.kms_key_arn", kmsKey1Replica2ResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, names.AttrARN),
 				),
 			},
@@ -1853,7 +1853,7 @@ func TestAccDynamoDBTable_Replica_doubleAddCMK(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.Ct2),
 					resource.TestCheckResourceAttrPair(resourceName, "replica.0.kms_key_arn", kmsKey2Replica1ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "replica.1.kms_key_arn", kmsKey2Replica2ResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, names.AttrARN),
 				),
 			},
@@ -1888,15 +1888,15 @@ func TestAccDynamoDBTable_Replica_pitr(t *testing.T) {
 					testAccCheckReplicaExists(ctx, resourceName, acctest.ThirdRegion(), &replica2),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
-						"point_in_time_recovery": "true",
+						"point_in_time_recovery": acctest.CtTrue,
 						"region_name":            acctest.AlternateRegion(),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
-						"point_in_time_recovery": "false",
+						"point_in_time_recovery": acctest.CtFalse,
 						"region_name":            acctest.ThirdRegion(),
 					}),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -1909,15 +1909,15 @@ func TestAccDynamoDBTable_Replica_pitr(t *testing.T) {
 					testAccCheckTableNotRecreated(&replica2, &replica4),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
-						"point_in_time_recovery": "false",
+						"point_in_time_recovery": acctest.CtFalse,
 						"region_name":            acctest.AlternateRegion(),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
-						"point_in_time_recovery": "true",
+						"point_in_time_recovery": acctest.CtTrue,
 						"region_name":            acctest.ThirdRegion(),
 					}),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.enabled", acctest.CtTrue),
 				),
 			},
 		},
@@ -1951,15 +1951,15 @@ func TestAccDynamoDBTable_Replica_pitrKMS(t *testing.T) {
 					testAccCheckReplicaExists(ctx, resourceName, acctest.ThirdRegion(), &replica2),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
-						"point_in_time_recovery": "false",
+						"point_in_time_recovery": acctest.CtFalse,
 						"region_name":            acctest.AlternateRegion(),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
-						"point_in_time_recovery": "false",
+						"point_in_time_recovery": acctest.CtFalse,
 						"region_name":            acctest.ThirdRegion(),
 					}),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -1972,15 +1972,15 @@ func TestAccDynamoDBTable_Replica_pitrKMS(t *testing.T) {
 					testAccCheckTableNotRecreated(&replica2, &replica4),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
-						"point_in_time_recovery": "true",
+						"point_in_time_recovery": acctest.CtTrue,
 						"region_name":            acctest.AlternateRegion(),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
-						"point_in_time_recovery": "false",
+						"point_in_time_recovery": acctest.CtFalse,
 						"region_name":            acctest.ThirdRegion(),
 					}),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -1993,15 +1993,15 @@ func TestAccDynamoDBTable_Replica_pitrKMS(t *testing.T) {
 					testAccCheckTableNotRecreated(&replica2, &replica4),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
-						"point_in_time_recovery": "true",
+						"point_in_time_recovery": acctest.CtTrue,
 						"region_name":            acctest.AlternateRegion(),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
-						"point_in_time_recovery": "true",
+						"point_in_time_recovery": acctest.CtTrue,
 						"region_name":            acctest.ThirdRegion(),
 					}),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -2014,15 +2014,15 @@ func TestAccDynamoDBTable_Replica_pitrKMS(t *testing.T) {
 					testAccCheckTableNotRecreated(&replica2, &replica4),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
-						"point_in_time_recovery": "false",
+						"point_in_time_recovery": acctest.CtFalse,
 						"region_name":            acctest.AlternateRegion(),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
-						"point_in_time_recovery": "true",
+						"point_in_time_recovery": acctest.CtTrue,
 						"region_name":            acctest.ThirdRegion(),
 					}),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -2035,15 +2035,15 @@ func TestAccDynamoDBTable_Replica_pitrKMS(t *testing.T) {
 					testAccCheckTableNotRecreated(&replica2, &replica4),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
-						"point_in_time_recovery": "false",
+						"point_in_time_recovery": acctest.CtFalse,
 						"region_name":            acctest.AlternateRegion(),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
-						"point_in_time_recovery": "false",
+						"point_in_time_recovery": acctest.CtFalse,
 						"region_name":            acctest.ThirdRegion(),
 					}),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.enabled", acctest.CtFalse),
 				),
 			},
 		},
@@ -2078,11 +2078,11 @@ func TestAccDynamoDBTable_Replica_tagsOneOfTwo(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":           acctest.AlternateRegion(),
-						names.AttrPropagateTags: "true",
+						names.AttrPropagateTags: acctest.CtTrue,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":           acctest.ThirdRegion(),
-						names.AttrPropagateTags: "false",
+						names.AttrPropagateTags: acctest.CtFalse,
 					}),
 				),
 			},
@@ -2118,11 +2118,11 @@ func TestAccDynamoDBTable_Replica_tagsTwoOfTwo(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":           acctest.AlternateRegion(),
-						names.AttrPropagateTags: "true",
+						names.AttrPropagateTags: acctest.CtTrue,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":           acctest.ThirdRegion(),
-						names.AttrPropagateTags: "true",
+						names.AttrPropagateTags: acctest.CtTrue,
 					}),
 				),
 			},
@@ -2157,7 +2157,7 @@ func TestAccDynamoDBTable_Replica_tagsNext(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":           acctest.AlternateRegion(),
-						names.AttrPropagateTags: "true",
+						names.AttrPropagateTags: acctest.CtTrue,
 					}),
 				),
 			},
@@ -2170,11 +2170,11 @@ func TestAccDynamoDBTable_Replica_tagsNext(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":           acctest.AlternateRegion(),
-						names.AttrPropagateTags: "true",
+						names.AttrPropagateTags: acctest.CtTrue,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":           acctest.ThirdRegion(),
-						names.AttrPropagateTags: "true",
+						names.AttrPropagateTags: acctest.CtTrue,
 					}),
 				),
 			},
@@ -2186,7 +2186,7 @@ func TestAccDynamoDBTable_Replica_tagsNext(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":           acctest.AlternateRegion(),
-						names.AttrPropagateTags: "true",
+						names.AttrPropagateTags: acctest.CtTrue,
 					}),
 				),
 			},
@@ -2199,11 +2199,11 @@ func TestAccDynamoDBTable_Replica_tagsNext(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":           acctest.AlternateRegion(),
-						names.AttrPropagateTags: "true",
+						names.AttrPropagateTags: acctest.CtTrue,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":           acctest.ThirdRegion(),
-						names.AttrPropagateTags: "false",
+						names.AttrPropagateTags: acctest.CtFalse,
 					}),
 				),
 			},
@@ -2216,11 +2216,11 @@ func TestAccDynamoDBTable_Replica_tagsNext(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":           acctest.AlternateRegion(),
-						names.AttrPropagateTags: "false",
+						names.AttrPropagateTags: acctest.CtFalse,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":           acctest.ThirdRegion(),
-						names.AttrPropagateTags: "false",
+						names.AttrPropagateTags: acctest.CtFalse,
 					}),
 				),
 			},
@@ -2255,7 +2255,7 @@ func TestAccDynamoDBTable_Replica_tagsUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":           acctest.AlternateRegion(),
-						names.AttrPropagateTags: "true",
+						names.AttrPropagateTags: acctest.CtTrue,
 					}),
 				),
 			},
@@ -2267,7 +2267,7 @@ func TestAccDynamoDBTable_Replica_tagsUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":           acctest.AlternateRegion(),
-						names.AttrPropagateTags: "true",
+						names.AttrPropagateTags: acctest.CtTrue,
 					}),
 				),
 			},
@@ -2280,11 +2280,11 @@ func TestAccDynamoDBTable_Replica_tagsUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":           acctest.AlternateRegion(),
-						names.AttrPropagateTags: "true",
+						names.AttrPropagateTags: acctest.CtTrue,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":           acctest.ThirdRegion(),
-						names.AttrPropagateTags: "true",
+						names.AttrPropagateTags: acctest.CtTrue,
 					}),
 				),
 			},
@@ -2297,11 +2297,11 @@ func TestAccDynamoDBTable_Replica_tagsUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":           acctest.AlternateRegion(),
-						names.AttrPropagateTags: "true",
+						names.AttrPropagateTags: acctest.CtTrue,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":           acctest.ThirdRegion(),
-						names.AttrPropagateTags: "true",
+						names.AttrPropagateTags: acctest.CtTrue,
 					}),
 				),
 			},
@@ -2314,11 +2314,11 @@ func TestAccDynamoDBTable_Replica_tagsUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":           acctest.AlternateRegion(),
-						names.AttrPropagateTags: "true",
+						names.AttrPropagateTags: acctest.CtTrue,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":           acctest.ThirdRegion(),
-						names.AttrPropagateTags: "true",
+						names.AttrPropagateTags: acctest.CtTrue,
 					}),
 				),
 			},
@@ -2497,7 +2497,7 @@ func TestAccDynamoDBTable_backupEncryption(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &confBYOK),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, names.AttrARN),
 				),
 			},
@@ -2537,7 +2537,7 @@ func TestAccDynamoDBTable_backup_overrideEncryption(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &confBYOK),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, names.AttrARN),
 				),
 			},

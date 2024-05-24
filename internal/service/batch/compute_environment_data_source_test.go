@@ -58,7 +58,7 @@ func TestAccBatchComputeEnvironmentDataSource_basicUpdatePolicy(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(datasourceName, "update_policy.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(datasourceName, "update_policy.0.%", acctest.Ct2),
-					resource.TestCheckResourceAttr(datasourceName, "update_policy.0.terminate_jobs_on_update", "false"),
+					resource.TestCheckResourceAttr(datasourceName, "update_policy.0.terminate_jobs_on_update", acctest.CtFalse),
 					resource.TestCheckResourceAttr(datasourceName, "update_policy.0.job_execution_timeout_minutes", "30"),
 				),
 			},

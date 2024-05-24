@@ -595,7 +595,7 @@ func TestAccECSService_alarmsAdd(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "alarms.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "alarms.0.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "alarms.0.enable", acctest.CtTrue),
 				),
 			},
 		},
@@ -619,7 +619,7 @@ func TestAccECSService_alarmsUpdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "alarms.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "alarms.0.enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "alarms.0.enable", acctest.CtTrue),
 				),
 			},
 			{
@@ -627,7 +627,7 @@ func TestAccECSService_alarmsUpdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "alarms.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "alarms.0.enable", "false"),
+					resource.TestCheckResourceAttr(resourceName, "alarms.0.enable", acctest.CtFalse),
 				),
 			},
 		},
@@ -700,8 +700,8 @@ func TestAccECSService_deploymentCircuitBreaker(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "deployment_circuit_breaker.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "deployment_circuit_breaker.0.enable", "true"),
-					resource.TestCheckResourceAttr(resourceName, "deployment_circuit_breaker.0.rollback", "true"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_circuit_breaker.0.enable", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "deployment_circuit_breaker.0.rollback", acctest.CtTrue),
 				),
 			},
 		},
@@ -867,7 +867,7 @@ func TestAccECSService_forceNewDeploymentTriggers(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service2),
 					testAccCheckServiceNotRecreated(&service1, &service2),
-					resource.TestCheckResourceAttr(resourceName, "force_new_deployment", "true"),
+					resource.TestCheckResourceAttr(resourceName, "force_new_deployment", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "triggers.update"),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "ordered_placement_strategy.0.type", "binpack"),
@@ -1023,7 +1023,7 @@ func TestAccECSService_LaunchTypeFargate_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "launch_type", "FARGATE"),
-					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.assign_public_ip", "false"),
+					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.assign_public_ip", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.security_groups.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.subnets.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "platform_version", "LATEST"),
@@ -1033,14 +1033,14 @@ func TestAccECSService_LaunchTypeFargate_basic(t *testing.T) {
 				Config: testAccServiceConfig_launchTypeFargate(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
-					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.assign_public_ip", "true"),
+					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.assign_public_ip", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccServiceConfig_launchTypeFargate(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
-					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.assign_public_ip", "false"),
+					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.assign_public_ip", acctest.CtFalse),
 				),
 			},
 		},
@@ -1102,7 +1102,7 @@ func TestAccECSService_LaunchTypeFargate_waitForSteadyState(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "desired_count", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "wait_for_steady_state", "true"),
+					resource.TestCheckResourceAttr(resourceName, "wait_for_steady_state", acctest.CtTrue),
 				),
 			},
 			{
@@ -1135,7 +1135,7 @@ func TestAccECSService_LaunchTypeFargate_updateWaitForSteadyState(t *testing.T) 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "desired_count", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "wait_for_steady_state", "false"),
+					resource.TestCheckResourceAttr(resourceName, "wait_for_steady_state", acctest.CtFalse),
 				),
 			},
 			{
@@ -1144,7 +1144,7 @@ func TestAccECSService_LaunchTypeFargate_updateWaitForSteadyState(t *testing.T) 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "desired_count", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "wait_for_steady_state", "true"),
+					resource.TestCheckResourceAttr(resourceName, "wait_for_steady_state", acctest.CtTrue),
 				),
 			},
 			{
@@ -1153,7 +1153,7 @@ func TestAccECSService_LaunchTypeFargate_updateWaitForSteadyState(t *testing.T) 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "desired_count", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "wait_for_steady_state", "false"),
+					resource.TestCheckResourceAttr(resourceName, "wait_for_steady_state", acctest.CtFalse),
 				),
 			},
 		},
@@ -1176,7 +1176,7 @@ func TestAccECSService_LaunchTypeEC2_network(t *testing.T) {
 				Config: testAccServiceConfig_networkConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
-					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.assign_public_ip", "false"),
+					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.assign_public_ip", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.security_groups.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.subnets.#", acctest.Ct2),
 				),
@@ -1185,7 +1185,7 @@ func TestAccECSService_LaunchTypeEC2_network(t *testing.T) {
 				Config: testAccServiceConfig_networkConfigurationModified(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
-					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.assign_public_ip", "false"),
+					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.assign_public_ip", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.security_groups.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.subnets.#", acctest.Ct2),
 				),
@@ -1466,7 +1466,7 @@ func TestAccECSService_ServiceConnect_ingressPortOverride(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.log_configuration.#", acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, "service_connect_configuration.0.namespace"),
 					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.service.#", acctest.Ct1),
@@ -1499,7 +1499,7 @@ func TestAccECSService_ServiceConnect_remove(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -1580,7 +1580,7 @@ func TestAccECSService_Tags_managed(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "enable_ecs_managed_tags", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_ecs_managed_tags", acctest.CtTrue),
 				),
 			},
 		},
@@ -1641,14 +1641,14 @@ func TestAccECSService_executeCommand(t *testing.T) {
 				Config: testAccServiceConfig_executeCommand(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
-					resource.TestCheckResourceAttr(resourceName, "enable_execute_command", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_execute_command", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccServiceConfig_executeCommand(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
-					resource.TestCheckResourceAttr(resourceName, "enable_execute_command", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_execute_command", acctest.CtFalse),
 				),
 			},
 		},

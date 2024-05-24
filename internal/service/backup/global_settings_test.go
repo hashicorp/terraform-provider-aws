@@ -32,11 +32,11 @@ func TestAccBackupGlobalSettings_basic(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalSettingsConfig_basic("true"),
+				Config: testAccGlobalSettingsConfig_basic(acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalSettingsExists(ctx, &settings),
 					resource.TestCheckResourceAttr(resourceName, "global_settings.%", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "global_settings.isCrossAccountBackupEnabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "global_settings.isCrossAccountBackupEnabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -45,19 +45,19 @@ func TestAccBackupGlobalSettings_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGlobalSettingsConfig_basic("false"),
+				Config: testAccGlobalSettingsConfig_basic(acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalSettingsExists(ctx, &settings),
 					resource.TestCheckResourceAttr(resourceName, "global_settings.%", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "global_settings.isCrossAccountBackupEnabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "global_settings.isCrossAccountBackupEnabled", acctest.CtFalse),
 				),
 			},
 			{
-				Config: testAccGlobalSettingsConfig_basic("true"),
+				Config: testAccGlobalSettingsConfig_basic(acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalSettingsExists(ctx, &settings),
 					resource.TestCheckResourceAttr(resourceName, "global_settings.%", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "global_settings.isCrossAccountBackupEnabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "global_settings.isCrossAccountBackupEnabled", acctest.CtTrue),
 				),
 			},
 		},

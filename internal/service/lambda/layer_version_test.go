@@ -333,7 +333,7 @@ func TestAccLambdaLayerVersion_skipDestroy(t *testing.T) {
 					testAccCheckLayerVersionExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "lambda", fmt.Sprintf("layer:%s:1", rName)),
 					resource.TestCheckResourceAttr(resourceName, "compatible_runtimes.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, acctest.CtTrue),
 				),
 			},
 			{
@@ -342,7 +342,7 @@ func TestAccLambdaLayerVersion_skipDestroy(t *testing.T) {
 					testAccCheckLayerVersionExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "lambda", fmt.Sprintf("layer:%s:2", rName)),
 					resource.TestCheckResourceAttr(resourceName, "compatible_runtimes.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, acctest.CtTrue),
 				),
 			},
 		},

@@ -51,7 +51,7 @@ func TestAccImageBuilderInfrastructureConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrSNSTopicARN, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSubnetID, ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "terminate_instance_on_failure", "false"),
+					resource.TestCheckResourceAttr(resourceName, "terminate_instance_on_failure", acctest.CtFalse),
 				),
 			},
 			{
@@ -558,7 +558,7 @@ func TestAccImageBuilderInfrastructureConfiguration_terminateInstanceOnFailure(t
 				Config: testAccInfrastructureConfigurationConfig_terminateInstanceOnFailure(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "terminate_instance_on_failure", "true"),
+					resource.TestCheckResourceAttr(resourceName, "terminate_instance_on_failure", acctest.CtTrue),
 				),
 			},
 			{
@@ -571,7 +571,7 @@ func TestAccImageBuilderInfrastructureConfiguration_terminateInstanceOnFailure(t
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
-					resource.TestCheckResourceAttr(resourceName, "terminate_instance_on_failure", "false"),
+					resource.TestCheckResourceAttr(resourceName, "terminate_instance_on_failure", acctest.CtFalse),
 				),
 			},
 		},

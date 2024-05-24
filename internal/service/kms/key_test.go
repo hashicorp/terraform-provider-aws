@@ -40,7 +40,7 @@ func TestAccKMSKey_basic(t *testing.T) {
 					testAccCheckKeyExists(ctx, resourceName, &key),
 					resource.TestCheckResourceAttr(resourceName, "customer_master_key_spec", "SYMMETRIC_DEFAULT"),
 					resource.TestCheckResourceAttr(resourceName, "key_usage", "ENCRYPT_DECRYPT"),
-					resource.TestCheckResourceAttr(resourceName, "multi_region", "false"),
+					resource.TestCheckResourceAttr(resourceName, "multi_region", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
@@ -101,7 +101,7 @@ func TestAccKMSKey_multiRegion(t *testing.T) {
 				Config: testAccKeyConfig_multiRegion(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key),
-					resource.TestCheckResourceAttr(resourceName, "multi_region", "true"),
+					resource.TestCheckResourceAttr(resourceName, "multi_region", acctest.CtTrue),
 				),
 			},
 			{
@@ -218,7 +218,7 @@ func TestAccKMSKey_Policy_bypass(t *testing.T) {
 				Config: testAccKeyConfig_policyBypass(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key),
-					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", "true"),
+					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", acctest.CtTrue),
 				),
 			},
 			{
@@ -247,14 +247,14 @@ func TestAccKMSKey_Policy_bypassUpdate(t *testing.T) {
 				Config: testAccKeyConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &before),
-					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", "false"),
+					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccKeyConfig_policyBypass(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &after),
-					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", "true"),
+					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", acctest.CtTrue),
 				),
 			},
 		},
@@ -428,8 +428,8 @@ func TestAccKMSKey_isEnabled(t *testing.T) {
 				Config: testAccKeyConfig_enabledRotation(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key1),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", "true"),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", acctest.CtTrue),
 				),
 			},
 			{
@@ -442,16 +442,16 @@ func TestAccKMSKey_isEnabled(t *testing.T) {
 				Config: testAccKeyConfig_disabled(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key2),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", "false"),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccKeyConfig_enabled(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key3),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", "true"),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", acctest.CtTrue),
 				),
 			},
 		},
@@ -474,8 +474,8 @@ func TestAccKMSKey_rotation(t *testing.T) {
 				Config: testAccKeyConfig_enabledRotation(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key1),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", "true"),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", acctest.CtTrue),
 				),
 			},
 			{
@@ -488,8 +488,8 @@ func TestAccKMSKey_rotation(t *testing.T) {
 				Config: testAccKeyConfig_enabledRotationPeriod(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key2),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", "true"),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "rotation_period_in_days", "91"),
 				),
 			},
@@ -497,8 +497,8 @@ func TestAccKMSKey_rotation(t *testing.T) {
 				Config: testAccKeyConfig_enabled(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key3),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", "true"),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "enable_key_rotation", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "rotation_period_in_days", "91"),
 				),
 			},

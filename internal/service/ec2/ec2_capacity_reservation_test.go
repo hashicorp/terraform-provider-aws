@@ -40,10 +40,10 @@ func TestAccEC2CapacityReservation_basic(t *testing.T) {
 					testAccCheckCapacityReservationExists(ctx, resourceName, &cr),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`capacity-reservation/cr-.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrAvailabilityZone, availabilityZonesDataSourceName, "names.0"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "false"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "end_date", ""),
 					resource.TestCheckResourceAttr(resourceName, "end_date_type", "unlimited"),
-					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage", "false"),
+					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceCount, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "instance_match_criteria", "open"),
 					resource.TestCheckResourceAttr(resourceName, "instance_platform", "Linux/UNIX"),
@@ -103,7 +103,7 @@ func TestAccEC2CapacityReservation_ebsOptimized(t *testing.T) {
 				Config: testAccCapacityReservationConfig_ebsOptimized(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCapacityReservationExists(ctx, resourceName, &cr),
-					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", acctest.CtTrue),
 				),
 			},
 			{
@@ -214,7 +214,7 @@ func TestAccEC2CapacityReservation_ephemeralStorage(t *testing.T) {
 				Config: testAccCapacityReservationConfig_ephemeralStorage(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCapacityReservationExists(ctx, resourceName, &cr),
-					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage", acctest.CtTrue),
 				),
 			},
 			{

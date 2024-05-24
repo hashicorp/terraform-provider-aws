@@ -43,7 +43,7 @@ func TestAccVPCNetworkACLRule_basic(t *testing.T) {
 					testAccCheckNetworkACLRuleExists(ctx, resource3Name),
 
 					resource.TestCheckResourceAttr(resource1Name, "cidr_block", "0.0.0.0/0"),
-					resource.TestCheckResourceAttr(resource1Name, "egress", "false"),
+					resource.TestCheckResourceAttr(resource1Name, "egress", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resource1Name, "from_port", "22"),
 					resource.TestCheckResourceAttr(resource1Name, "ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resource1Name, names.AttrProtocol, "6"),
@@ -52,7 +52,7 @@ func TestAccVPCNetworkACLRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resource1Name, "to_port", "22"),
 
 					resource.TestCheckResourceAttr(resource2Name, "cidr_block", "0.0.0.0/0"),
-					resource.TestCheckResourceAttr(resource2Name, "egress", "false"),
+					resource.TestCheckResourceAttr(resource2Name, "egress", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resource2Name, "icmp_code", "-1"),
 					resource.TestCheckResourceAttr(resource2Name, "icmp_type", acctest.Ct0),
 					resource.TestCheckResourceAttr(resource2Name, "ipv6_cidr_block", ""),
@@ -61,7 +61,7 @@ func TestAccVPCNetworkACLRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resource2Name, "rule_number", "300"),
 
 					resource.TestCheckResourceAttr(resource3Name, "cidr_block", "0.0.0.0/0"),
-					resource.TestCheckResourceAttr(resource3Name, "egress", "false"),
+					resource.TestCheckResourceAttr(resource3Name, "egress", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resource3Name, "icmp_code", "-1"),
 					resource.TestCheckResourceAttr(resource3Name, "icmp_type", "-1"),
 					resource.TestCheckResourceAttr(resource3Name, "ipv6_cidr_block", ""),
@@ -177,7 +177,7 @@ func TestAccVPCNetworkACLRule_ipv6(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLRuleExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", ""),
-					resource.TestCheckResourceAttr(resourceName, "egress", "false"),
+					resource.TestCheckResourceAttr(resourceName, "egress", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "22"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", "::/0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "6"),
@@ -212,7 +212,7 @@ func TestAccVPCNetworkACLRule_ipv6ICMP(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLRuleExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", ""),
-					resource.TestCheckResourceAttr(resourceName, "egress", "false"),
+					resource.TestCheckResourceAttr(resourceName, "egress", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "icmp_code", "-1"),
 					resource.TestCheckResourceAttr(resourceName, "icmp_type", "-1"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", "::/0"),
@@ -249,7 +249,7 @@ func TestAccVPCNetworkACLRule_ipv6VPCAssignGeneratedIPv6CIDRBlockUpdate(t *testi
 				Config: testAccVPCNetworkACLRuleConfig_ipv6NotAssignGeneratedIPv6CIDRBlockUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(ctx, vpcResourceName, &v),
-					resource.TestCheckResourceAttr(vpcResourceName, "assign_generated_ipv6_cidr_block", "false"),
+					resource.TestCheckResourceAttr(vpcResourceName, "assign_generated_ipv6_cidr_block", acctest.CtFalse),
 					resource.TestCheckResourceAttr(vpcResourceName, "ipv6_cidr_block", ""),
 				),
 			},
@@ -258,7 +258,7 @@ func TestAccVPCNetworkACLRule_ipv6VPCAssignGeneratedIPv6CIDRBlockUpdate(t *testi
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExists(ctx, vpcResourceName, &v),
 					testAccCheckNetworkACLRuleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(vpcResourceName, "assign_generated_ipv6_cidr_block", "true"),
+					resource.TestCheckResourceAttr(vpcResourceName, "assign_generated_ipv6_cidr_block", acctest.CtTrue),
 					resource.TestMatchResourceAttr(vpcResourceName, "ipv6_cidr_block", regexache.MustCompile(`/56$`)),
 				),
 			},
@@ -288,7 +288,7 @@ func TestAccVPCNetworkACLRule_allProtocol(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLRuleExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", "0.0.0.0/0"),
-					resource.TestCheckResourceAttr(resourceName, "egress", "false"),
+					resource.TestCheckResourceAttr(resourceName, "egress", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "22"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "-1"),
@@ -321,7 +321,7 @@ func TestAccVPCNetworkACLRule_tcpProtocol(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLRuleExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", "0.0.0.0/0"),
-					resource.TestCheckResourceAttr(resourceName, "egress", "true"),
+					resource.TestCheckResourceAttr(resourceName, "egress", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "22"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "6"),

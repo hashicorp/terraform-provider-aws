@@ -200,7 +200,7 @@ func testAccPolicy_skipDestroy(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrContent, content),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.PolicyTypeServiceControlPolicy)),
 				),
 			},

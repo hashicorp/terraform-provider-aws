@@ -37,7 +37,7 @@ func TestAccPinpointBaiduChannel_basic(t *testing.T) {
 				Config: testAccBaiduChannelConfig_basic(apiKey, secretKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBaiduChannelExists(ctx, resourceName, &channel),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "api_key", apiKey),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSecretKey, secretKey),
 				),
@@ -52,7 +52,7 @@ func TestAccPinpointBaiduChannel_basic(t *testing.T) {
 				Config: testAccBaiduChannelConfig_basic(apikeyUpdated, secretKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBaiduChannelExists(ctx, resourceName, &channel),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "api_key", apikeyUpdated),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSecretKey, secretKey),
 				),

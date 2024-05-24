@@ -53,7 +53,7 @@ func TestAccEC2Fleet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "on_demand_options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "on_demand_options.0.allocation_strategy", "lowestPrice"),
-					resource.TestCheckResourceAttr(resourceName, "replace_unhealthy_instances", "false"),
+					resource.TestCheckResourceAttr(resourceName, "replace_unhealthy_instances", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "spot_options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "spot_options.0.allocation_strategy", "lowestPrice"),
 					resource.TestCheckResourceAttr(resourceName, "spot_options.0.instance_interruption_behavior", "terminate"),
@@ -62,8 +62,8 @@ func TestAccEC2Fleet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target_capacity_specification.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "target_capacity_specification.0.default_target_capacity_type", "spot"),
 					resource.TestCheckResourceAttr(resourceName, "target_capacity_specification.0.total_target_capacity", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "terminate_instances", "false"),
-					resource.TestCheckResourceAttr(resourceName, "terminate_instances_with_expiration", "false"),
+					resource.TestCheckResourceAttr(resourceName, "terminate_instances", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "terminate_instances_with_expiration", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "maintain"),
 				),
 			},
@@ -1919,7 +1919,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_requireHibernat
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.Ct1),
 
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.require_hibernate_support", "false"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.require_hibernate_support", acctest.CtFalse),
 				),
 			},
 			{
@@ -1943,7 +1943,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_requireHibernat
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.Ct1),
 
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.require_hibernate_support", "true"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.require_hibernate_support", acctest.CtTrue),
 				),
 			},
 			{
@@ -2543,7 +2543,7 @@ func TestAccEC2Fleet_OnDemandOptions_SingleAvailabilityZone(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
 					resource.TestCheckResourceAttr(resourceName, "on_demand_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "on_demand_options.0.single_availability_zone", "true"),
+					resource.TestCheckResourceAttr(resourceName, "on_demand_options.0.single_availability_zone", acctest.CtTrue),
 				),
 			},
 		},
@@ -2567,7 +2567,7 @@ func TestAccEC2Fleet_OnDemandOptions_SingleInstanceType(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
 					resource.TestCheckResourceAttr(resourceName, "on_demand_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "on_demand_options.0.single_instance_type", "true"),
+					resource.TestCheckResourceAttr(resourceName, "on_demand_options.0.single_instance_type", acctest.CtTrue),
 				),
 			},
 		},
@@ -2590,7 +2590,7 @@ func TestAccEC2Fleet_replaceUnhealthyInstances(t *testing.T) {
 				Config: testAccFleetConfig_replaceUnhealthyInstances(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "replace_unhealthy_instances", "true"),
+					resource.TestCheckResourceAttr(resourceName, "replace_unhealthy_instances", acctest.CtTrue),
 				),
 			},
 			{
@@ -2604,7 +2604,7 @@ func TestAccEC2Fleet_replaceUnhealthyInstances(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet2),
 					testAccCheckFleetRecreated(&fleet1, &fleet2),
-					resource.TestCheckResourceAttr(resourceName, "replace_unhealthy_instances", "false"),
+					resource.TestCheckResourceAttr(resourceName, "replace_unhealthy_instances", acctest.CtFalse),
 				),
 			},
 		},
@@ -2961,7 +2961,7 @@ func TestAccEC2Fleet_terminateInstancesWithExpiration(t *testing.T) {
 				Config: testAccFleetConfig_terminateInstancesExpiration(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "terminate_instances_with_expiration", "true"),
+					resource.TestCheckResourceAttr(resourceName, "terminate_instances_with_expiration", acctest.CtTrue),
 				),
 			},
 			{
@@ -2975,7 +2975,7 @@ func TestAccEC2Fleet_terminateInstancesWithExpiration(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet2),
 					testAccCheckFleetRecreated(&fleet1, &fleet2),
-					resource.TestCheckResourceAttr(resourceName, "terminate_instances_with_expiration", "false"),
+					resource.TestCheckResourceAttr(resourceName, "terminate_instances_with_expiration", acctest.CtFalse),
 				),
 			},
 		},

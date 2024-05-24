@@ -85,7 +85,7 @@ func testAccDistribution_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.0.option", "default"),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.query_strings_allowed_list.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.option", "false"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.option", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.maximum_ttl", "31536000"),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.minimum_ttl", acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
@@ -95,7 +95,7 @@ func testAccDistribution_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "dualstack"),
 					resource.TestCheckResourceAttr(resourceName, "location.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "location.0.region_name"),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "origin.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "origin.0.name", bucketName),
 					resource.TestCheckResourceAttrSet(resourceName, "origin.0.region_name"),
@@ -120,8 +120,6 @@ func testAccDistribution_isEnabled(t *testing.T) {
 	resourceName := "aws_lightsail_distribution.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	isEnabled := "true"
-	isDisabled := "false"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -135,10 +133,10 @@ func testAccDistribution_isEnabled(t *testing.T) {
 		CheckDestroy:             testAccCheckDistributionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDistributionConfig_isEnabled(rName, bucketName, isDisabled),
+				Config: testAccDistributionConfig_isEnabled(rName, bucketName, acctest.CtFalse),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", isDisabled),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -147,10 +145,10 @@ func testAccDistribution_isEnabled(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDistributionConfig_isEnabled(rName, bucketName, isEnabled),
+				Config: testAccDistributionConfig_isEnabled(rName, bucketName, acctest.CtTrue),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", isEnabled),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtTrue),
 				),
 			},
 		},
@@ -344,7 +342,7 @@ func testAccDistribution_cacheBehaviorSettings(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.0.option", "allow-list"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.0.headers_allow_list.*", header1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.0.headers_allow_list.*", header2),
-					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.option", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.option", acctest.CtTrue),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.query_strings_allowed_list.*", "test"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.query_strings_allowed_list.*", allow2),
 				),
@@ -373,7 +371,7 @@ func testAccDistribution_cacheBehaviorSettings(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.0.option", "default"),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.0.headers_allow_list.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_headers.0.headers_allow_list.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.option", "false"),
+					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.option", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.query_strings_allowed_list.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior_settings.0.forwarded_query_strings.0.query_strings_allowed_list.#", acctest.Ct0),
 				),

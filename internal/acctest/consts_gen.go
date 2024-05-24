@@ -16,6 +16,7 @@ const (
 	Ct3              = "3"
 	Ct4              = "4"
 	CtBasic          = "basic"
+	CtFalse          = "false"
 	CtFalseCaps      = "FALSE"
 	CtKey1           = "key1"
 	CtKey2           = "key2"
@@ -29,6 +30,7 @@ const (
 	CtTagsKey1       = "tags.key1"
 	CtTagsKey2       = "tags.key2"
 	CtTagsPercent    = "tags.%"
+	CtTrue           = "true"
 	CtTrueCaps       = "TRUE"
 	CtValue1         = "value1"
 	CtValue1Updated  = "value1updated"
@@ -47,6 +49,7 @@ func ConstOrQuote(constant string) string {
 		"3":              "Ct3",
 		"4":              "Ct4",
 		"basic":          "CtBasic",
+		"false":          "CtFalse",
 		"FALSE":          "CtFalseCaps",
 		"key1":           "CtKey1",
 		"key2":           "CtKey2",
@@ -60,6 +63,7 @@ func ConstOrQuote(constant string) string {
 		"tags.key1":      "CtTagsKey1",
 		"tags.key2":      "CtTagsKey2",
 		"tags.%":         "CtTagsPercent",
+		"true":           "CtTrue",
 		"TRUE":           "CtTrueCaps",
 		"value1":         "CtValue1",
 		"value1updated":  "CtValue1Updated",

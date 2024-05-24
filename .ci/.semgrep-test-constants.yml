@@ -75,6 +75,15 @@ rules:
     pattern: '"basic"'
     severity: ERROR
     fix: "acctest.CtBasic"
+  - id: literal-False-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.CtFalse` for the string literal "false" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"false"'
+    severity: ERROR
+    fix: "acctest.CtFalse"
   - id: literal-FalseCaps-string-test-constant
     languages: [go]
     message: Use the constant `acctest.CtFalseCaps` for the string literal "FALSE" in test files
@@ -192,6 +201,15 @@ rules:
     pattern: '"tags.%"'
     severity: ERROR
     fix: "acctest.CtTagsPercent"
+  - id: literal-True-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.CtTrue` for the string literal "true" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"true"'
+    severity: ERROR
+    fix: "acctest.CtTrue"
   - id: literal-TrueCaps-string-test-constant
     languages: [go]
     message: Use the constant `acctest.CtTrueCaps` for the string literal "TRUE" in test files

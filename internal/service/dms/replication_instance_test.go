@@ -36,14 +36,14 @@ func TestAccDMSReplicationInstance_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "100"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyARN),
-					resource.TestCheckResourceAttr(resourceName, "multi_az", "false"),
+					resource.TestCheckResourceAttr(resourceName, "multi_az", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "network_type", "IPV4"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPreferredMaintenanceWindow),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, "replication_instance_arn"),
 					resource.TestCheckResourceAttr(resourceName, "replication_instance_class", replicationInstanceClass),
 					resource.TestCheckResourceAttr(resourceName, "replication_instance_id", rName),
@@ -139,7 +139,7 @@ func TestAccDMSReplicationInstance_autoMinorVersionUpgrade(t *testing.T) {
 				Config: testAccReplicationInstanceConfig_autoMinorVersionUpgrade(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtTrue),
 				),
 			},
 			{
@@ -152,14 +152,14 @@ func TestAccDMSReplicationInstance_autoMinorVersionUpgrade(t *testing.T) {
 				Config: testAccReplicationInstanceConfig_autoMinorVersionUpgrade(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccReplicationInstanceConfig_autoMinorVersionUpgrade(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtTrue),
 				),
 			},
 		},
@@ -274,7 +274,7 @@ func TestAccDMSReplicationInstance_multiAz(t *testing.T) {
 				Config: testAccReplicationInstanceConfig_multiAz(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "multi_az", "true"),
+					resource.TestCheckResourceAttr(resourceName, "multi_az", acctest.CtTrue),
 				),
 			},
 			{
@@ -287,14 +287,14 @@ func TestAccDMSReplicationInstance_multiAz(t *testing.T) {
 				Config: testAccReplicationInstanceConfig_multiAz(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "multi_az", "false"),
+					resource.TestCheckResourceAttr(resourceName, "multi_az", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccReplicationInstanceConfig_multiAz(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "multi_az", "true"),
+					resource.TestCheckResourceAttr(resourceName, "multi_az", acctest.CtTrue),
 				),
 			},
 		},
@@ -386,7 +386,7 @@ func TestAccDMSReplicationInstance_publiclyAccessible(t *testing.T) {
 				Config: testAccReplicationInstanceConfig_publiclyAccessible(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "replication_instance_public_ips.#", acctest.Ct1),
 				),
 			},
