@@ -17,7 +17,7 @@ func TestAccRAMSharingWithOrganization_serial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic: testAccSharingWithOrganization_basic,
-		"disappears":    testAccSharingWithOrganization_disappears,
+		acctest.CtDisappears:    testAccSharingWithOrganization_disappears,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
