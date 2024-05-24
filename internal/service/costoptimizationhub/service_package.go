@@ -16,7 +16,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
 	return costoptimizationhub.NewFromConfig(cfg, func(o *costoptimizationhub.Options) {
-		if endpoint := config["endpoint"].(string); endpoint != "" {
+		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
 			o.BaseEndpoint = aws.String(endpoint)
 		} else if config["partition"].(string) == names.StandardPartitionID {
 			// Cost Optimization Hub endpoint is available only in us-east-1 Region.

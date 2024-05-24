@@ -42,7 +42,7 @@ func resourceApp() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			verify.SetTagsDiff,
-			customdiff.ForceNewIfChange("description", func(_ context.Context, old, new, meta interface{}) bool {
+			customdiff.ForceNewIfChange(names.AttrDescription, func(_ context.Context, old, new, meta interface{}) bool {
 				// Any existing value cannot be cleared.
 				return new.(string) == ""
 			}),
@@ -59,7 +59,7 @@ func resourceApp() *schema.Resource {
 				Sensitive:    true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -121,7 +121,7 @@ func resourceApp() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
 						},
-						"stage": {
+						names.AttrStage: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ValidateDiagFunc: enum.Validate[types.Stage](),
@@ -181,17 +181,17 @@ func resourceApp() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"condition": {
+						names.AttrCondition: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(1, 2048),
 						},
-						"source": {
+						names.AttrSource: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 2048),
 						},
-						"status": {
+						names.AttrStatus: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ValidateFunc: validation.StringInSlice([]string{
@@ -202,7 +202,7 @@ func resourceApp() *schema.Resource {
 								"404-200",
 							}, false),
 						},
-						"target": {
+						names.AttrTarget: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 2048),
@@ -214,7 +214,7 @@ func resourceApp() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1000),
@@ -245,7 +245,7 @@ func resourceApp() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
@@ -275,7 +275,7 @@ func resourceApp() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"status": {
+						names.AttrStatus: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -301,7 +301,7 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &amplify.CreateAppInput{
 		Name: aws.String(name),
 		Tags: getTagsIn(ctx),
@@ -335,7 +335,7 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.CustomRules = expandCustomRules(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -402,7 +402,7 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return sdkdiag.AppendErrorf(diags, "reading Amplify App (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", app.AppArn)
+	d.Set(names.AttrARN, app.AppArn)
 	if app.AutoBranchCreationConfig != nil {
 		if err := d.Set("auto_branch_creation_config", []interface{}{flattenAutoBranchCreationConfig(app.AutoBranchCreationConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting auto_branch_creation_config: %s", err)
@@ -418,14 +418,14 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return sdkdiag.AppendErrorf(diags, "setting custom_rule: %s", err)
 	}
 	d.Set("default_domain", app.DefaultDomain)
-	d.Set("description", app.Description)
+	d.Set(names.AttrDescription, app.Description)
 	d.Set("enable_auto_branch_creation", app.EnableAutoBranchCreation)
 	d.Set("enable_basic_auth", app.EnableBasicAuth)
 	d.Set("enable_branch_auto_build", app.EnableBranchAutoBuild)
 	d.Set("enable_branch_auto_deletion", app.EnableBranchAutoDeletion)
 	d.Set("environment_variables", aws.StringMap(app.EnvironmentVariables))
 	d.Set("iam_service_role_arn", app.IamServiceRoleArn)
-	d.Set("name", app.Name)
+	d.Set(names.AttrName, app.Name)
 	d.Set("platform", app.Platform)
 	if app.ProductionBranch != nil {
 		if err := d.Set("production_branch", []interface{}{flattenProductionBranch(app.ProductionBranch)}); err != nil {
@@ -445,7 +445,7 @@ func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &amplify.UpdateAppInput{
 			AppId: aws.String(d.Id()),
 		}
@@ -488,8 +488,8 @@ func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 			}
 		}
 
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
 		if d.HasChange("enable_auto_branch_creation") {
@@ -520,8 +520,8 @@ func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 			input.IamServiceRoleArn = aws.String(d.Get("iam_service_role_arn").(string))
 		}
 
-		if d.HasChange("name") {
-			input.Name = aws.String(d.Get("name").(string))
+		if d.HasChange(names.AttrName) {
+			input.Name = aws.String(d.Get(names.AttrName).(string))
 		}
 
 		if d.HasChange("oauth_token") {
@@ -634,7 +634,7 @@ func expandAutoBranchCreationConfig(tfMap map[string]interface{}) *types.AutoBra
 		apiObject.PullRequestEnvironmentName = aws.String(v)
 	}
 
-	if v, ok := tfMap["stage"].(string); ok && v != "" && v != stageNone {
+	if v, ok := tfMap[names.AttrStage].(string); ok && v != "" && v != stageNone {
 		apiObject.Stage = types.Stage(v)
 	}
 
@@ -684,7 +684,7 @@ func flattenAutoBranchCreationConfig(apiObject *types.AutoBranchCreationConfig) 
 		tfMap["pull_request_environment_name"] = aws.ToString(v)
 	}
 
-	tfMap["stage"] = apiObject.Stage
+	tfMap[names.AttrStage] = apiObject.Stage
 
 	return tfMap
 }
@@ -696,19 +696,19 @@ func expandCustomRule(tfMap map[string]interface{}) *types.CustomRule {
 
 	apiObject := &types.CustomRule{}
 
-	if v, ok := tfMap["condition"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrCondition].(string); ok && v != "" {
 		apiObject.Condition = aws.String(v)
 	}
 
-	if v, ok := tfMap["source"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrSource].(string); ok && v != "" {
 		apiObject.Source = aws.String(v)
 	}
 
-	if v, ok := tfMap["status"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
 		apiObject.Status = aws.String(v)
 	}
 
-	if v, ok := tfMap["target"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrTarget].(string); ok && v != "" {
 		apiObject.Target = aws.String(v)
 	}
 
@@ -745,19 +745,19 @@ func flattenCustomRule(apiObject types.CustomRule) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Condition; v != nil {
-		tfMap["condition"] = aws.ToString(v)
+		tfMap[names.AttrCondition] = aws.ToString(v)
 	}
 
 	if v := apiObject.Source; v != nil {
-		tfMap["source"] = aws.ToString(v)
+		tfMap[names.AttrSource] = aws.ToString(v)
 	}
 
 	if v := apiObject.Status; v != nil {
-		tfMap["status"] = aws.ToString(v)
+		tfMap[names.AttrStatus] = aws.ToString(v)
 	}
 
 	if v := apiObject.Target; v != nil {
-		tfMap["target"] = aws.ToString(v)
+		tfMap[names.AttrTarget] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -793,7 +793,7 @@ func flattenProductionBranch(apiObject *types.ProductionBranch) map[string]inter
 	}
 
 	if v := apiObject.Status; v != nil {
-		tfMap["status"] = aws.ToString(v)
+		tfMap[names.AttrStatus] = aws.ToString(v)
 	}
 
 	if v := apiObject.ThumbnailUrl; v != nil {

@@ -40,16 +40,16 @@ func ResourceDevicePool() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 16384),
@@ -63,7 +63,7 @@ func ResourceDevicePool() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"rule": {
+			names.AttrRule: {
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem: &schema.Resource{
@@ -78,14 +78,14 @@ func ResourceDevicePool() *schema.Resource {
 							Optional:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.RuleOperator](),
 						},
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
 					},
 				},
 			},
-			"type": {
+			names.AttrType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -100,14 +100,14 @@ func resourceDevicePoolCreate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &devicefarm.CreateDevicePoolInput{
 		Name:       aws.String(name),
 		ProjectArn: aws.String(d.Get("project_arn").(string)),
-		Rules:      expandDevicePoolRules(d.Get("rule").(*schema.Set)),
+		Rules:      expandDevicePoolRules(d.Get(names.AttrRule).(*schema.Set)),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -147,9 +147,9 @@ func resourceDevicePoolRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	arn := aws.ToString(devicePool.Arn)
-	d.Set("name", devicePool.Name)
-	d.Set("arn", arn)
-	d.Set("description", devicePool.Description)
+	d.Set(names.AttrName, devicePool.Name)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDescription, devicePool.Description)
 	d.Set("max_devices", devicePool.MaxDevices)
 
 	projectArn, err := decodeProjectARN(arn, "devicepool", meta)
@@ -159,7 +159,7 @@ func resourceDevicePoolRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.Set("project_arn", projectArn)
 
-	if err := d.Set("rule", flattenDevicePoolRules(devicePool.Rules)); err != nil {
+	if err := d.Set(names.AttrRule, flattenDevicePoolRules(devicePool.Rules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 	}
 
@@ -170,21 +170,21 @@ func resourceDevicePoolUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &devicefarm.UpdateDevicePoolInput{
 			Arn: aws.String(d.Id()),
 		}
 
-		if d.HasChange("name") {
-			input.Name = aws.String(d.Get("name").(string))
+		if d.HasChange(names.AttrName) {
+			input.Name = aws.String(d.Get(names.AttrName).(string))
 		}
 
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
-		if d.HasChange("rule") {
-			input.Rules = expandDevicePoolRules(d.Get("rule").(*schema.Set))
+		if d.HasChange(names.AttrRule) {
+			input.Rules = expandDevicePoolRules(d.Get(names.AttrRule).(*schema.Set))
 		}
 
 		if d.HasChange("max_devices") {
@@ -240,7 +240,7 @@ func expandDevicePoolRules(s *schema.Set) []awstypes.Rule {
 			rule.Operator = awstypes.RuleOperator(v)
 		}
 
-		if v, ok := tfMap["value"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
 			rule.Value = aws.String(v)
 		}
 
@@ -262,7 +262,7 @@ func flattenDevicePoolRules(list []awstypes.Rule) []map[string]interface{} {
 		l["operator"] = string(setting.Operator)
 
 		if setting.Value != nil {
-			l["value"] = aws.ToString(setting.Value)
+			l[names.AttrValue] = aws.ToString(setting.Value)
 		}
 
 		result = append(result, l)

@@ -45,7 +45,7 @@ func (r *resourceFrameworkShare) Metadata(_ context.Context, request resource.Me
 func (r *resourceFrameworkShare) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"comment": schema.StringAttribute{
+			names.AttrComment: schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -69,8 +69,8 @@ func (r *resourceFrameworkShare) Schema(ctx context.Context, req resource.Schema
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"id": framework.IDAttribute(),
-			"status": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrStatus: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -188,7 +188,7 @@ func (r *resourceFrameworkShare) Delete(ctx context.Context, req resource.Delete
 }
 
 func (r *resourceFrameworkShare) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func FindFrameworkShareByID(ctx context.Context, conn *auditmanager.Client, id string) (*awstypes.AssessmentFrameworkShareRequest, error) {

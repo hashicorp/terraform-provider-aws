@@ -283,7 +283,7 @@ func resourceSpotInstanceRequestRead(ctx context.Context, d *schema.ResourceData
 	d.Set("spot_type", request.Type)
 	d.Set("spot_price", request.SpotPrice)
 	d.Set("key_name", request.LaunchSpecification.KeyName)
-	d.Set("instance_type", request.LaunchSpecification.InstanceType)
+	d.Set(names.AttrInstanceType, request.LaunchSpecification.InstanceType)
 	d.Set("ami", request.LaunchSpecification.ImageId)
 
 	return diags
@@ -308,13 +308,13 @@ func readInstance(ctx context.Context, d *schema.ResourceData, meta interface{})
 	// set connection information
 	if instance.PublicIpAddress != nil {
 		d.SetConnInfo(map[string]string{
-			"type": "ssh",
-			"host": *instance.PublicIpAddress,
+			names.AttrType: "ssh",
+			"host":         *instance.PublicIpAddress,
 		})
 	} else if instance.PrivateIpAddress != nil {
 		d.SetConnInfo(map[string]string{
-			"type": "ssh",
-			"host": *instance.PrivateIpAddress,
+			names.AttrType: "ssh",
+			"host":         *instance.PrivateIpAddress,
 		})
 	}
 	if err := readBlockDevices(ctx, d, meta, instance, false); err != nil {
@@ -325,7 +325,7 @@ func readInstance(ctx context.Context, d *schema.ResourceData, meta interface{})
 	if len(instance.NetworkInterfaces) > 0 {
 		for _, ni := range instance.NetworkInterfaces {
 			if aws.Int64Value(ni.Attachment.DeviceIndex) == 0 {
-				d.Set("subnet_id", ni.SubnetId)
+				d.Set(names.AttrSubnetID, ni.SubnetId)
 				d.Set("primary_network_interface_id", ni.NetworkInterfaceId)
 				d.Set("associate_public_ip_address", ni.Association != nil)
 				d.Set("ipv6_address_count", len(ni.Ipv6Addresses))
@@ -336,7 +336,7 @@ func readInstance(ctx context.Context, d *schema.ResourceData, meta interface{})
 			}
 		}
 	} else {
-		d.Set("subnet_id", instance.SubnetId)
+		d.Set(names.AttrSubnetID, instance.SubnetId)
 		d.Set("primary_network_interface_id", "")
 	}
 

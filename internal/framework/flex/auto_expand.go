@@ -27,11 +27,7 @@ import (
 // target data type) are copied.
 func Expand(ctx context.Context, tfObject, apiObject any, optFns ...AutoFlexOptionsFunc) diag.Diagnostics {
 	var diags diag.Diagnostics
-	expander := &autoExpander{}
-
-	for _, optFn := range optFns {
-		optFn(expander)
-	}
+	expander := newAutoExpander(optFns)
 
 	diags.Append(autoFlexConvert(ctx, tfObject, apiObject, expander)...)
 	if diags.HasError() {
@@ -42,7 +38,29 @@ func Expand(ctx context.Context, tfObject, apiObject any, optFns ...AutoFlexOpti
 	return diags
 }
 
-type autoExpander struct{}
+type autoExpander struct {
+	Options AutoFlexOptions
+}
+
+// newAutoExpander initializes an auto-expander with defaults that can be overridden
+// via functional options
+func newAutoExpander(optFns []AutoFlexOptionsFunc) *autoExpander {
+	o := AutoFlexOptions{
+		ignoredFieldNames: DefaultIgnoredFieldNames,
+	}
+
+	for _, optFn := range optFns {
+		optFn(&o)
+	}
+
+	return &autoExpander{
+		Options: o,
+	}
+}
+
+func (expander autoExpander) getOptions() AutoFlexOptions {
+	return expander.Options
+}
 
 // convert converts a single Plugin Framework value to its AWS API equivalent.
 func (expander autoExpander) convert(ctx context.Context, valFrom, vTo reflect.Value) diag.Diagnostics {
@@ -446,6 +464,48 @@ func (expander autoExpander) map_(ctx context.Context, vFrom basetypes.MapValuab
 	case basetypes.StringTypable:
 		diags.Append(expander.mapOfString(ctx, v, vTo)...)
 		return diags
+
+	case basetypes.MapTypable:
+		data, d := v.ToMapValue(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+		switch tMapElem := vTo.Type().Elem(); tMapElem.Kind() {
+		case reflect.Map:
+			//
+			// types.Map(OfMap) -> map[string]map[string]string.
+			//
+			switch k := tMapElem.Elem().Kind(); k {
+			case reflect.String:
+				var out map[string]map[string]string
+				diags.Append(data.ElementsAs(ctx, &out, false)...)
+
+				if diags.HasError() {
+					return diags
+				}
+
+				vTo.Set(reflect.ValueOf(out))
+				return diags
+
+			case reflect.Ptr:
+				switch k := tMapElem.Elem().Elem().Kind(); k {
+				case reflect.String:
+					//
+					// types.Map(OfMap) -> map[string]map[string]*string.
+					//
+					var to map[string]map[string]*string
+					diags.Append(data.ElementsAs(ctx, &to, false)...)
+
+					if diags.HasError() {
+						return diags
+					}
+
+					vTo.Set(reflect.ValueOf(to))
+					return diags
+				}
+			}
+		}
 	}
 
 	tflog.Info(ctx, "AutoFlex Expand; incompatible types", map[string]interface{}{

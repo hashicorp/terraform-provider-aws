@@ -41,7 +41,7 @@ func resourceUserPoolDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"certificate_arn": {
+			names.AttrCertificateARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
@@ -58,13 +58,13 @@ func resourceUserPoolDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain": {
+			names.AttrDomain: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 63),
 			},
-			"s3_bucket": {
+			names.AttrS3Bucket: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -73,13 +73,13 @@ func resourceUserPoolDomain() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 		},
 
-		CustomizeDiff: customdiff.ForceNewIfChange("certificate_arn", func(_ context.Context, old, new, meta interface{}) bool {
+		CustomizeDiff: customdiff.ForceNewIfChange(names.AttrCertificateARN, func(_ context.Context, old, new, meta interface{}) bool {
 			// If the cert arn is being changed to a new arn, don't force new.
 			return !(old.(string) != "" && new.(string) != "")
 		}),
@@ -90,14 +90,14 @@ func resourceUserPoolDomainCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
-	domain := d.Get("domain").(string)
+	domain := d.Get(names.AttrDomain).(string)
 	timeout := 1 * time.Minute
 	input := &cognitoidentityprovider.CreateUserPoolDomainInput{
 		Domain:     aws.String(domain),
 		UserPoolId: aws.String(d.Get("user_pool_id").(string)),
 	}
 
-	if v, ok := d.GetOk("certificate_arn"); ok {
+	if v, ok := d.GetOk(names.AttrCertificateARN); ok {
 		input.CustomDomainConfig = &cognitoidentityprovider.CustomDomainConfigType{
 			CertificateArn: aws.String(v.(string)),
 		}
@@ -136,17 +136,17 @@ func resourceUserPoolDomainRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.Set("aws_account_id", desc.AWSAccountId)
-	d.Set("certificate_arn", "")
+	d.Set(names.AttrCertificateARN, "")
 	if desc.CustomDomainConfig != nil {
-		d.Set("certificate_arn", desc.CustomDomainConfig.CertificateArn)
+		d.Set(names.AttrCertificateARN, desc.CustomDomainConfig.CertificateArn)
 	}
 	d.Set("cloudfront_distribution", desc.CloudFrontDistribution)
 	d.Set("cloudfront_distribution_arn", desc.CloudFrontDistribution)
 	d.Set("cloudfront_distribution_zone_id", meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID(ctx))
-	d.Set("domain", d.Id())
-	d.Set("s3_bucket", desc.S3Bucket)
+	d.Set(names.AttrDomain, d.Id())
+	d.Set(names.AttrS3Bucket, desc.S3Bucket)
 	d.Set("user_pool_id", desc.UserPoolId)
-	d.Set("version", desc.Version)
+	d.Set(names.AttrVersion, desc.Version)
 
 	return diags
 }
@@ -157,7 +157,7 @@ func resourceUserPoolDomainUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	input := &cognitoidentityprovider.UpdateUserPoolDomainInput{
 		CustomDomainConfig: &cognitoidentityprovider.CustomDomainConfigType{
-			CertificateArn: aws.String(d.Get("certificate_arn").(string)),
+			CertificateArn: aws.String(d.Get(names.AttrCertificateARN).(string)),
 		},
 		Domain:     aws.String(d.Id()),
 		UserPoolId: aws.String(d.Get("user_pool_id").(string)),

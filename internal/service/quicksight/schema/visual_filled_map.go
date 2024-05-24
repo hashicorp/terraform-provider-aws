@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func filledMapVisualSchema() *schema.Schema {
@@ -42,8 +43,8 @@ func filledMapVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"geospatial": dimensionFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
-													"values":     measureFieldSchema(1),   // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
+													"geospatial":     dimensionFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+													names.AttrValues: measureFieldSchema(1),   // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
 												},
 											},
 										},
@@ -92,7 +93,7 @@ func filledMapVisualSchema() *schema.Schema {
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
 													"field_id": stringSchema(true, validation.StringLenBetween(1, 512)),
-													"format": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ShapeConditionalFormat.html
+													names.AttrFormat: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ShapeConditionalFormat.html
 														Type:     schema.TypeList,
 														Optional: true,
 														MinItems: 1,
@@ -224,7 +225,7 @@ func expandFilledMapAggregatedFieldWells(tfList []interface{}) *quicksight.Fille
 	if v, ok := tfMap["geospatial"].([]interface{}); ok && len(v) > 0 {
 		config.Geospatial = expandDimensionFields(v)
 	}
-	if v, ok := tfMap["values"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
 		config.Values = expandMeasureFields(v)
 	}
 
@@ -321,7 +322,7 @@ func expandFilledMapShapeConditionalFormatting(tfList []interface{}) *quicksight
 	if v, ok := tfMap["field_id"].(string); ok && v != "" {
 		options.FieldId = aws.String(v)
 	}
-	if v, ok := tfMap["format"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrFormat].([]interface{}); ok && len(v) > 0 {
 		options.Format = expandShapeConditionalFormat(v)
 	}
 
@@ -428,7 +429,7 @@ func flattenFilledMapAggregatedFieldWells(apiObject *quicksight.FilledMapAggrega
 		tfMap["geospatial"] = flattenDimensionFields(apiObject.Geospatial)
 	}
 	if apiObject.Values != nil {
-		tfMap["values"] = flattenMeasureFields(apiObject.Values)
+		tfMap[names.AttrValues] = flattenMeasureFields(apiObject.Values)
 	}
 
 	return []interface{}{tfMap}
@@ -492,7 +493,7 @@ func flattenFilledMapShapeConditionalFormatting(apiObject *quicksight.FilledMapS
 		tfMap["field_id"] = aws.StringValue(apiObject.FieldId)
 	}
 	if apiObject.Format != nil {
-		tfMap["format"] = flattenShapeConditionalFormat(apiObject.Format)
+		tfMap[names.AttrFormat] = flattenShapeConditionalFormat(apiObject.Format)
 	}
 
 	return []interface{}{tfMap}

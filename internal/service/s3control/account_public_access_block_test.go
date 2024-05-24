@@ -26,7 +26,7 @@ func TestAccS3ControlAccountPublicAccessBlock_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"PublicAccessBlock": {
-			"basic":                 testAccAccountPublicAccessBlock_basic,
+			acctest.CtBasic:         testAccAccountPublicAccessBlock_basic,
 			"disappears":            testAccAccountPublicAccessBlock_disappears,
 			"AccountId":             testAccAccountPublicAccessBlock_AccountID,
 			"BlockPublicAcls":       testAccAccountPublicAccessBlock_BlockPublicACLs,
@@ -55,11 +55,11 @@ func testAccAccountPublicAccessBlock_basic(t *testing.T) {
 				Config: testAccAccountPublicAccessBlockConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
-					resource.TestCheckResourceAttr(resourceName, "block_public_acls", "false"),
-					resource.TestCheckResourceAttr(resourceName, "block_public_policy", "false"),
-					resource.TestCheckResourceAttr(resourceName, "ignore_public_acls", "false"),
-					resource.TestCheckResourceAttr(resourceName, "restrict_public_buckets", "false"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
+					resource.TestCheckResourceAttr(resourceName, "block_public_acls", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "block_public_policy", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "ignore_public_acls", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "restrict_public_buckets", acctest.CtFalse),
 				),
 			},
 			{
@@ -109,7 +109,7 @@ func testAccAccountPublicAccessBlock_AccountID(t *testing.T) {
 				Config: testAccAccountPublicAccessBlockConfig_id(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
 				),
 			},
 			{
@@ -136,7 +136,7 @@ func testAccAccountPublicAccessBlock_BlockPublicACLs(t *testing.T) {
 				Config: testAccAccountPublicAccessBlockConfig_acls(true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "block_public_acls", "true"),
+					resource.TestCheckResourceAttr(resourceName, "block_public_acls", acctest.CtTrue),
 				),
 			},
 			{
@@ -148,14 +148,14 @@ func testAccAccountPublicAccessBlock_BlockPublicACLs(t *testing.T) {
 				Config: testAccAccountPublicAccessBlockConfig_acls(false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "block_public_acls", "false"),
+					resource.TestCheckResourceAttr(resourceName, "block_public_acls", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccAccountPublicAccessBlockConfig_acls(true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "block_public_acls", "true"),
+					resource.TestCheckResourceAttr(resourceName, "block_public_acls", acctest.CtTrue),
 				),
 			},
 		},
@@ -177,7 +177,7 @@ func testAccAccountPublicAccessBlock_BlockPublicPolicy(t *testing.T) {
 				Config: testAccAccountPublicAccessBlockConfig_policy(true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "block_public_policy", "true"),
+					resource.TestCheckResourceAttr(resourceName, "block_public_policy", acctest.CtTrue),
 				),
 			},
 			{
@@ -189,14 +189,14 @@ func testAccAccountPublicAccessBlock_BlockPublicPolicy(t *testing.T) {
 				Config: testAccAccountPublicAccessBlockConfig_policy(false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "block_public_policy", "false"),
+					resource.TestCheckResourceAttr(resourceName, "block_public_policy", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccAccountPublicAccessBlockConfig_policy(true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "block_public_policy", "true"),
+					resource.TestCheckResourceAttr(resourceName, "block_public_policy", acctest.CtTrue),
 				),
 			},
 		},
@@ -218,7 +218,7 @@ func testAccAccountPublicAccessBlock_IgnorePublicACLs(t *testing.T) {
 				Config: testAccAccountPublicAccessBlockConfig_ignoreACLs(true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "ignore_public_acls", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ignore_public_acls", acctest.CtTrue),
 				),
 			},
 			{
@@ -230,14 +230,14 @@ func testAccAccountPublicAccessBlock_IgnorePublicACLs(t *testing.T) {
 				Config: testAccAccountPublicAccessBlockConfig_ignoreACLs(false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "ignore_public_acls", "false"),
+					resource.TestCheckResourceAttr(resourceName, "ignore_public_acls", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccAccountPublicAccessBlockConfig_ignoreACLs(true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "ignore_public_acls", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ignore_public_acls", acctest.CtTrue),
 				),
 			},
 		},
@@ -259,7 +259,7 @@ func testAccAccountPublicAccessBlock_RestrictPublicBuckets(t *testing.T) {
 				Config: testAccAccountPublicAccessBlockConfig_restrictBuckets(true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "restrict_public_buckets", "true"),
+					resource.TestCheckResourceAttr(resourceName, "restrict_public_buckets", acctest.CtTrue),
 				),
 			},
 			{
@@ -271,14 +271,14 @@ func testAccAccountPublicAccessBlock_RestrictPublicBuckets(t *testing.T) {
 				Config: testAccAccountPublicAccessBlockConfig_restrictBuckets(false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "restrict_public_buckets", "false"),
+					resource.TestCheckResourceAttr(resourceName, "restrict_public_buckets", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccAccountPublicAccessBlockConfig_restrictBuckets(true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "restrict_public_buckets", "true"),
+					resource.TestCheckResourceAttr(resourceName, "restrict_public_buckets", acctest.CtTrue),
 				),
 			},
 		},

@@ -14,17 +14,17 @@ func TestAccMacie2_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Account": {
-			"basic":                        testAccAccount_basic,
+			acctest.CtBasic:                testAccAccount_basic,
 			"finding_publishing_frequency": testAccAccount_FindingPublishingFrequency,
 			"status":                       testAccAccount_WithStatus,
 			"finding_and_status":           testAccAccount_WithFindingAndStatus,
 			"disappears":                   testAccAccount_disappears,
 		},
 		"ClassificationExportConfiguration": {
-			"basic": testAccClassificationExportConfiguration_basic,
+			acctest.CtBasic: testAccClassificationExportConfiguration_basic,
 		},
 		"ClassificationJob": {
-			"basic":           testAccClassificationJob_basic,
+			acctest.CtBasic:   testAccClassificationJob_basic,
 			"name_generated":  testAccClassificationJob_Name_Generated,
 			"name_prefix":     testAccClassificationJob_NamePrefix,
 			"disappears":      testAccClassificationJob_disappears,
@@ -34,15 +34,15 @@ func TestAccMacie2_serial(t *testing.T) {
 			"bucket_criteria": testAccClassificationJob_BucketCriteria,
 		},
 		"CustomDataIdentifier": {
-			"basic":              testAccCustomDataIdentifier_basic,
+			acctest.CtBasic:      testAccCustomDataIdentifier_basic,
 			"name_generated":     testAccCustomDataIdentifier_Name_Generated,
-			"name_prefix":        testAccCustomDataIdentifier_disappears,
-			"disappears":         testAccCustomDataIdentifier_NamePrefix,
+			"disappears":         testAccCustomDataIdentifier_disappears,
+			"name_prefix":        testAccCustomDataIdentifier_NamePrefix,
 			"classification_job": testAccCustomDataIdentifier_WithClassificationJob,
 			"tags":               testAccCustomDataIdentifier_WithTags,
 		},
 		"FindingsFilter": {
-			"basic":          testAccFindingsFilter_basic,
+			acctest.CtBasic:  testAccFindingsFilter_basic,
 			"name_generated": testAccFindingsFilter_Name_Generated,
 			"name_prefix":    testAccFindingsFilter_NamePrefix,
 			"disappears":     testAccFindingsFilter_disappears,
@@ -52,11 +52,11 @@ func TestAccMacie2_serial(t *testing.T) {
 			"tags":           testAccFindingsFilter_withTags,
 		},
 		"OrganizationAdminAccount": {
-			"basic":      testAccOrganizationAdminAccount_basic,
-			"disappears": testAccOrganizationAdminAccount_disappears,
+			acctest.CtBasic: testAccOrganizationAdminAccount_basic,
+			"disappears":    testAccOrganizationAdminAccount_disappears,
 		},
 		"Member": {
-			"basic":                                 testAccMember_basic,
+			acctest.CtBasic:                         testAccMember_basic,
 			"disappears":                            testAccMember_disappears,
 			"tags":                                  testAccMember_withTags,
 			"invitation_disable_email_notification": testAccMember_invitationDisableEmailNotification,
@@ -65,7 +65,7 @@ func TestAccMacie2_serial(t *testing.T) {
 			"status":                                testAccMember_status,
 		},
 		"InvitationAccepter": {
-			"basic": testAccInvitationAccepter_basic,
+			acctest.CtBasic: testAccInvitationAccepter_basic,
 		},
 	}
 

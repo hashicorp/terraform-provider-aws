@@ -50,7 +50,7 @@ func ResourceCluster() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -68,7 +68,7 @@ func ResourceCluster() *schema.Resource {
 					return old == new
 				},
 			},
-			"cluster_name": {
+			names.AttrClusterName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -83,7 +83,7 @@ func ResourceCluster() *schema.Resource {
 					validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end with a hyphen"),
 				),
 			},
-			"iam_role_arn": {
+			names.AttrIAMRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -98,14 +98,14 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
-			"availability_zones": {
+			names.AttrAvailabilityZones: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -127,7 +127,7 @@ func ResourceCluster() *schema.Resource {
 				},
 				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
 			},
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -146,7 +146,7 @@ func ResourceCluster() *schema.Resource {
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  false,
@@ -163,7 +163,7 @@ func ResourceCluster() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"port": {
+			names.AttrPort: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -180,19 +180,19 @@ func ResourceCluster() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"address": {
+						names.AttrAddress: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"port": {
+						names.AttrPort: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"availability_zone": {
+						names.AttrAvailabilityZone: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -209,12 +209,12 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DAXClient(ctx)
 
-	clusterName := d.Get("cluster_name").(string)
-	iamRoleArn := d.Get("iam_role_arn").(string)
+	clusterName := d.Get(names.AttrClusterName).(string)
+	iamRoleArn := d.Get(names.AttrIAMRoleARN).(string)
 	nodeType := d.Get("node_type").(string)
 	numNodes := int32(d.Get("replication_factor").(int))
 	subnetGroupName := d.Get("subnet_group_name").(string)
-	securityIdSet := d.Get("security_group_ids").(*schema.Set)
+	securityIdSet := d.Get(names.AttrSecurityGroupIDs).(*schema.Set)
 	securityIds := flex.ExpandStringSet(securityIdSet)
 	input := &dax.CreateClusterInput{
 		ClusterName:       aws.String(clusterName),
@@ -227,7 +227,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	// optionals can be defaulted by AWS
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -247,7 +247,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.NotificationTopicArn = aws.String(v.(string))
 	}
 
-	preferredAZs := d.Get("availability_zones").(*schema.Set)
+	preferredAZs := d.Get(names.AttrAvailabilityZones).(*schema.Set)
 	if preferredAZs.Len() > 0 {
 		input.AvailabilityZones = flex.ExpandStringValueSet(preferredAZs)
 	}
@@ -331,22 +331,22 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	c := res.Clusters[0]
-	d.Set("arn", c.ClusterArn)
-	d.Set("cluster_name", c.ClusterName)
+	d.Set(names.AttrARN, c.ClusterArn)
+	d.Set(names.AttrClusterName, c.ClusterName)
 	d.Set("cluster_endpoint_encryption_type", c.ClusterEndpointEncryptionType)
-	d.Set("description", c.Description)
-	d.Set("iam_role_arn", c.IamRoleArn)
+	d.Set(names.AttrDescription, c.Description)
+	d.Set(names.AttrIAMRoleARN, c.IamRoleArn)
 	d.Set("node_type", c.NodeType)
 	d.Set("replication_factor", c.TotalNodes)
 
 	if c.ClusterDiscoveryEndpoint != nil {
-		d.Set("port", c.ClusterDiscoveryEndpoint.Port)
+		d.Set(names.AttrPort, c.ClusterDiscoveryEndpoint.Port)
 		d.Set("configuration_endpoint", fmt.Sprintf("%s:%d", aws.ToString(c.ClusterDiscoveryEndpoint.Address), c.ClusterDiscoveryEndpoint.Port))
 		d.Set("cluster_address", c.ClusterDiscoveryEndpoint.Address)
 	}
 
 	d.Set("subnet_group_name", c.SubnetGroup)
-	d.Set("security_group_ids", flattenSecurityGroupIDs(c.SecurityGroups))
+	d.Set(names.AttrSecurityGroupIDs, flattenSecurityGroupIDs(c.SecurityGroups))
 
 	if c.ParameterGroup != nil {
 		d.Set("parameter_group_name", c.ParameterGroup.ParameterGroupName)
@@ -381,13 +381,13 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 	requestUpdate := false
 	awaitUpdate := false
-	if d.HasChange("description") {
-		req.Description = aws.String(d.Get("description").(string))
+	if d.HasChange(names.AttrDescription) {
+		req.Description = aws.String(d.Get(names.AttrDescription).(string))
 		requestUpdate = true
 	}
 
-	if d.HasChange("security_group_ids") {
-		if attr := d.Get("security_group_ids").(*schema.Set); attr.Len() > 0 {
+	if d.HasChange(names.AttrSecurityGroupIDs) {
+		if attr := d.Get(names.AttrSecurityGroupIDs).(*schema.Set); attr.Len() > 0 {
 			req.SecurityGroupIds = flex.ExpandStringValueSet(attr)
 			requestUpdate = true
 		}
@@ -480,10 +480,10 @@ func setClusterNodeData(d *schema.ResourceData, c awstypes.Cluster) error {
 
 	for _, node := range sortedNodes {
 		nodeData = append(nodeData, map[string]interface{}{
-			"id":                aws.ToString(node.NodeId),
-			"address":           aws.ToString(node.Endpoint.Address),
-			"port":              node.Endpoint.Port,
-			"availability_zone": aws.ToString(node.AvailabilityZone),
+			names.AttrID:               aws.ToString(node.NodeId),
+			names.AttrAddress:          aws.ToString(node.Endpoint.Address),
+			names.AttrPort:             node.Endpoint.Port,
+			names.AttrAvailabilityZone: aws.ToString(node.AvailabilityZone),
 		})
 	}
 

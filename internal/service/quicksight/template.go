@@ -47,7 +47,7 @@ func ResourceTemplate() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -58,7 +58,7 @@ func ResourceTemplate() *schema.Resource {
 					ForceNew:     true,
 					ValidateFunc: verify.ValidAccountID,
 				},
-				"created_time": {
+				names.AttrCreatedTime: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -67,12 +67,12 @@ func ResourceTemplate() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"name": {
+				names.AttrName: {
 					Type:         schema.TypeString,
 					Required:     true,
 					ValidateFunc: validation.StringLenBetween(1, 2048),
 				},
-				"permissions": {
+				names.AttrPermissions: {
 					Type:     schema.TypeSet,
 					Optional: true,
 					MinItems: 1,
@@ -86,7 +86,7 @@ func ResourceTemplate() *schema.Resource {
 								MaxItems: 16,
 								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
-							"principal": {
+							names.AttrPrincipal: {
 								Type:         schema.TypeString,
 								Required:     true,
 								ValidateFunc: validation.StringLenBetween(1, 256),
@@ -99,7 +99,7 @@ func ResourceTemplate() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"status": {
+				names.AttrStatus: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -144,7 +144,7 @@ func resourceTemplateCreate(ctx context.Context, d *schema.ResourceData, meta in
 	input := &quicksight.CreateTemplateInput{
 		AwsAccountId: aws.String(awsAccountId),
 		TemplateId:   aws.String(templateId),
-		Name:         aws.String(d.Get("name").(string)),
+		Name:         aws.String(d.Get(names.AttrName).(string)),
 		Tags:         getTagsIn(ctx),
 	}
 
@@ -160,13 +160,13 @@ func resourceTemplateCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.Definition = quicksightschema.ExpandTemplateDefinition(d.Get("definition").([]interface{}))
 	}
 
-	if v, ok := d.Get("permissions").(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := d.Get(names.AttrPermissions).(*schema.Set); ok && v.Len() > 0 {
 		input.Permissions = expandResourcePermissions(v.List())
 	}
 
 	_, err := conn.CreateTemplateWithContext(ctx, input)
 	if err != nil {
-		return create.DiagError(names.QuickSight, create.ErrActionCreating, ResNameTemplate, d.Get("name").(string), err)
+		return create.DiagError(names.QuickSight, create.ErrActionCreating, ResNameTemplate, d.Get(names.AttrName).(string), err)
 	}
 
 	if _, err := waitTemplateCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
@@ -196,12 +196,12 @@ func resourceTemplateRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return create.DiagError(names.QuickSight, create.ErrActionReading, ResNameTemplate, d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
+	d.Set(names.AttrARN, out.Arn)
 	d.Set("aws_account_id", awsAccountId)
-	d.Set("created_time", out.CreatedTime.Format(time.RFC3339))
+	d.Set(names.AttrCreatedTime, out.CreatedTime.Format(time.RFC3339))
 	d.Set("last_updated_time", out.LastUpdatedTime.Format(time.RFC3339))
-	d.Set("name", out.Name)
-	d.Set("status", out.Version.Status)
+	d.Set(names.AttrName, out.Name)
+	d.Set(names.AttrStatus, out.Version.Status)
 	d.Set("source_entity_arn", out.Version.SourceEntityArn)
 	d.Set("template_id", out.TemplateId)
 	d.Set("version_description", out.Version.Description)
@@ -230,7 +230,7 @@ func resourceTemplateRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag.Errorf("describing QuickSight Template (%s) Permissions: %s", d.Id(), err)
 	}
 
-	if err := d.Set("permissions", flattenPermissions(permsResp.Permissions)); err != nil {
+	if err := d.Set(names.AttrPermissions, flattenPermissions(permsResp.Permissions)); err != nil {
 		return diag.Errorf("setting permissions: %s", err)
 	}
 
@@ -245,11 +245,11 @@ func resourceTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		return diag.FromErr(err)
 	}
 
-	if d.HasChangesExcept("permissions", "tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrPermissions, names.AttrTags, names.AttrTagsAll) {
 		in := &quicksight.UpdateTemplateInput{
 			AwsAccountId:       aws.String(awsAccountId),
 			TemplateId:         aws.String(templateId),
-			Name:               aws.String(d.Get("name").(string)),
+			Name:               aws.String(d.Get(names.AttrName).(string)),
 			VersionDescription: aws.String(d.Get("version_description").(string)),
 		}
 
@@ -271,8 +271,8 @@ func resourceTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
-	if d.HasChange("permissions") {
-		oraw, nraw := d.GetChange("permissions")
+	if d.HasChange(names.AttrPermissions) {
+		oraw, nraw := d.GetChange(names.AttrPermissions)
 		o := oraw.(*schema.Set)
 		n := nraw.(*schema.Set)
 

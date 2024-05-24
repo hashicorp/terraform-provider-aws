@@ -42,41 +42,41 @@ func resourceDomainName() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			//According to AWS Documentation, ACM will be the only way to add certificates
 			//to ApiGateway DomainNames. When this happens, we will be deprecating all certificate methods
 			//except certificate_arn. We are not quite sure when this will happen.
-			"certificate_arn": {
+			names.AttrCertificateARN: {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"certificate_body", "certificate_chain", "certificate_name", "certificate_private_key", "regional_certificate_arn", "regional_certificate_name"},
+				ConflictsWith: []string{"certificate_body", names.AttrCertificateChain, "certificate_name", "certificate_private_key", "regional_certificate_arn", "regional_certificate_name"},
 			},
 			"certificate_body": {
 				Type:          schema.TypeString,
 				ForceNew:      true,
 				Optional:      true,
-				ConflictsWith: []string{"certificate_arn", "regional_certificate_arn"},
+				ConflictsWith: []string{names.AttrCertificateARN, "regional_certificate_arn"},
 			},
-			"certificate_chain": {
+			names.AttrCertificateChain: {
 				Type:          schema.TypeString,
 				ForceNew:      true,
 				Optional:      true,
-				ConflictsWith: []string{"certificate_arn", "regional_certificate_arn"},
+				ConflictsWith: []string{names.AttrCertificateARN, "regional_certificate_arn"},
 			},
 			"certificate_name": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"certificate_arn", "regional_certificate_arn", "regional_certificate_name"},
+				ConflictsWith: []string{names.AttrCertificateARN, "regional_certificate_arn", "regional_certificate_name"},
 			},
 			"certificate_private_key": {
 				Type:          schema.TypeString,
 				ForceNew:      true,
 				Optional:      true,
 				Sensitive:     true,
-				ConflictsWith: []string{"certificate_arn", "regional_certificate_arn"},
+				ConflictsWith: []string{names.AttrCertificateARN, "regional_certificate_arn"},
 			},
 			"certificate_upload_date": {
 				Type:     schema.TypeString,
@@ -90,7 +90,7 @@ func resourceDomainName() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -143,12 +143,12 @@ func resourceDomainName() *schema.Resource {
 			"regional_certificate_arn": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"certificate_arn", "certificate_body", "certificate_chain", "certificate_name", "certificate_private_key", "regional_certificate_name"},
+				ConflictsWith: []string{names.AttrCertificateARN, "certificate_body", names.AttrCertificateChain, "certificate_name", "certificate_private_key", "regional_certificate_name"},
 			},
 			"regional_certificate_name": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"certificate_arn", "certificate_name", "regional_certificate_arn"},
+				ConflictsWith: []string{names.AttrCertificateARN, "certificate_name", "regional_certificate_arn"},
 			},
 			"regional_domain_name": {
 				Type:     schema.TypeString,
@@ -176,14 +176,14 @@ func resourceDomainNameCreate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	domainName := d.Get("domain_name").(string)
+	domainName := d.Get(names.AttrDomainName).(string)
 	input := &apigateway.CreateDomainNameInput{
 		DomainName:              aws.String(domainName),
 		MutualTlsAuthentication: expandMutualTLSAuthentication(d.Get("mutual_tls_authentication").([]interface{})),
 		Tags:                    getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("certificate_arn"); ok {
+	if v, ok := d.GetOk(names.AttrCertificateARN); ok {
 		input.CertificateArn = aws.String(v.(string))
 	}
 
@@ -191,7 +191,7 @@ func resourceDomainNameCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.CertificateBody = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("certificate_chain"); ok {
+	if v, ok := d.GetOk(names.AttrCertificateChain); ok {
 		input.CertificateChain = aws.String(v.(string))
 	}
 
@@ -250,8 +250,8 @@ func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway Domain Name (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", domainNameARN(meta.(*conns.AWSClient), d.Id()))
-	d.Set("certificate_arn", domainName.CertificateArn)
+	d.Set(names.AttrARN, domainNameARN(meta.(*conns.AWSClient), d.Id()))
+	d.Set(names.AttrCertificateARN, domainName.CertificateArn)
 	d.Set("certificate_name", domainName.CertificateName)
 	if domainName.CertificateUploadDate != nil {
 		d.Set("certificate_upload_date", domainName.CertificateUploadDate.Format(time.RFC3339))
@@ -260,7 +260,7 @@ func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	d.Set("cloudfront_domain_name", domainName.DistributionDomainName)
 	d.Set("cloudfront_zone_id", meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID(ctx))
-	d.Set("domain_name", domainName.DomainName)
+	d.Set(names.AttrDomainName, domainName.DomainName)
 	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(domainName.EndpointConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoint_configuration: %s", err)
 	}
@@ -283,14 +283,14 @@ func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		var operations []types.PatchOperation
 
-		if d.HasChange("certificate_arn") {
+		if d.HasChange(names.AttrCertificateARN) {
 			operations = append(operations, types.PatchOperation{
 				Op:    types.OpReplace,
 				Path:  aws.String("/certificateArn"),
-				Value: aws.String(d.Get("certificate_arn").(string)),
+				Value: aws.String(d.Get(names.AttrCertificateARN).(string)),
 			})
 		}
 

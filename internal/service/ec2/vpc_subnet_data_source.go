@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_subnet")
@@ -27,7 +28,7 @@ func DataSourceSubnet() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -35,7 +36,7 @@ func DataSourceSubnet() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -79,8 +80,8 @@ func DataSourceSubnet() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"filter": customFiltersSchema(),
-			"id": {
+			names.AttrFilter: customFiltersSchema(),
+			names.AttrID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -110,7 +111,7 @@ func DataSourceSubnet() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -118,13 +119,13 @@ func DataSourceSubnet() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
-			"vpc_id": {
+			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -140,7 +141,7 @@ func dataSourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	input := &ec2.DescribeSubnetsInput{}
 
-	if id, ok := d.GetOk("id"); ok {
+	if id, ok := d.GetOk(names.AttrID); ok {
 		input.SubnetIds = []*string{aws.String(id.(string))}
 	}
 
@@ -155,11 +156,11 @@ func dataSourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	filters := map[string]string{
-		"availabilityZone":   d.Get("availability_zone").(string),
+		"availabilityZone":   d.Get(names.AttrAvailabilityZone).(string),
 		"availabilityZoneId": d.Get("availability_zone_id").(string),
 		"defaultForAz":       defaultForAzStr,
-		"state":              d.Get("state").(string),
-		"vpc-id":             d.Get("vpc_id").(string),
+		names.AttrState:      d.Get(names.AttrState).(string),
+		"vpc-id":             d.Get(names.AttrVPCID).(string),
 	}
 
 	if v, ok := d.GetOk("cidr_block"); ok {
@@ -172,14 +173,14 @@ func dataSourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	input.Filters = newAttributeFilterList(filters)
 
-	if tags, tagsOk := d.GetOk("tags"); tagsOk {
+	if tags, tagsOk := d.GetOk(names.AttrTags); tagsOk {
 		input.Filters = append(input.Filters, newTagFilterList(
 			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
 	}
 
 	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get("filter").(*schema.Set),
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 	if len(input.Filters) == 0 {
 		// Don't send an empty filters list; the EC2 API won't accept it.
@@ -194,10 +195,10 @@ func dataSourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.SetId(aws.StringValue(subnet.SubnetId))
 
-	d.Set("arn", subnet.SubnetArn)
+	d.Set(names.AttrARN, subnet.SubnetArn)
 	d.Set("assign_ipv6_address_on_creation", subnet.AssignIpv6AddressOnCreation)
 	d.Set("availability_zone_id", subnet.AvailabilityZoneId)
-	d.Set("availability_zone", subnet.AvailabilityZone)
+	d.Set(names.AttrAvailabilityZone, subnet.AvailabilityZone)
 	d.Set("available_ip_address_count", subnet.AvailableIpAddressCount)
 	d.Set("cidr_block", subnet.CidrBlock)
 	d.Set("customer_owned_ipv4_pool", subnet.CustomerOwnedIpv4Pool)
@@ -220,8 +221,8 @@ func dataSourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("map_customer_owned_ip_on_launch", subnet.MapCustomerOwnedIpOnLaunch)
 	d.Set("map_public_ip_on_launch", subnet.MapPublicIpOnLaunch)
 	d.Set("outpost_arn", subnet.OutpostArn)
-	d.Set("owner_id", subnet.OwnerId)
-	d.Set("state", subnet.State)
+	d.Set(names.AttrOwnerID, subnet.OwnerId)
+	d.Set(names.AttrState, subnet.State)
 
 	if subnet.PrivateDnsNameOptionsOnLaunch != nil {
 		d.Set("enable_resource_name_dns_aaaa_record_on_launch", subnet.PrivateDnsNameOptionsOnLaunch.EnableResourceNameDnsAAAARecord)
@@ -233,11 +234,11 @@ func dataSourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("private_dns_hostname_type_on_launch", nil)
 	}
 
-	if err := d.Set("tags", KeyValueTags(ctx, subnet.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, KeyValueTags(ctx, subnet.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	d.Set("vpc_id", subnet.VpcId)
+	d.Set(names.AttrVPCID, subnet.VpcId)
 
 	return diags
 }

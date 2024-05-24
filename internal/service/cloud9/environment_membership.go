@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloud9_environment_membership", name="Environment Membership")
@@ -41,7 +42,7 @@ func resourceEnvironmentMembership() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"permissions": {
+			names.AttrPermissions: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateDiagFunc: enum.Validate[types.Permissions](),
@@ -69,7 +70,7 @@ func resourceEnvironmentMembershipCreate(ctx context.Context, d *schema.Resource
 	id := environmentMembershipCreateResourceID(envID, userARN)
 	input := &cloud9.CreateEnvironmentMembershipInput{
 		EnvironmentId: aws.String(envID),
-		Permissions:   types.MemberPermissions(d.Get("permissions").(string)),
+		Permissions:   types.MemberPermissions(d.Get(names.AttrPermissions).(string)),
 		UserArn:       aws.String(userARN),
 	}
 
@@ -106,7 +107,7 @@ func resourceEnvironmentMembershipRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	d.Set("environment_id", env.EnvironmentId)
-	d.Set("permissions", env.Permissions)
+	d.Set(names.AttrPermissions, env.Permissions)
 	d.Set("user_arn", env.UserArn)
 	d.Set("user_id", env.UserId)
 
@@ -124,7 +125,7 @@ func resourceEnvironmentMembershipUpdate(ctx context.Context, d *schema.Resource
 
 	input := cloud9.UpdateEnvironmentMembershipInput{
 		EnvironmentId: aws.String(envID),
-		Permissions:   types.MemberPermissions(d.Get("permissions").(string)),
+		Permissions:   types.MemberPermissions(d.Get(names.AttrPermissions).(string)),
 		UserArn:       aws.String(userARN),
 	}
 

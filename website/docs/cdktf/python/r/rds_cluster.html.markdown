@@ -319,7 +319,7 @@ This argument supports the following arguments:
 * `domain` - (Optional) The ID of the Directory Service Active Directory domain to create the cluster in.
 * `domain_iam_role_name` - (Optional, but required if `domain` is provided) The name of the IAM role to be used when making API calls to the Directory Service.
 * `enable_global_write_forwarding` - (Optional) Whether cluster should forward writes to an associated global cluster. Applied to secondary clusters to enable them to forward writes to an [`aws_rds_global_cluster`](/docs/providers/aws/r/rds_global_cluster.html)'s primary cluster. See the [User Guide for Aurora](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-global-database-write-forwarding.html) for more information.
-* `enable_http_endpoint` - (Optional) Enable HTTP endpoint (data API). Only valid when `engine_mode` is set to `serverless`.
+* `enable_http_endpoint` - (Optional) Enable HTTP endpoint (data API). Only valid for some combinations of `engine_mode`, `engine` and `engine_version` and only available in some regions. See the [Region and version availability](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/data-api.html#data-api.regions) section of the documentation. This option also does not work with any of these options specified: `snapshot_identifier`, `replication_source_identifier`, `s3_import`.
 * `enable_local_write_forwarding` - (Optional) Whether read replicas can forward write operations to the writer DB instance in the DB cluster. By default, write operations aren't allowed on reader DB instances.. See the [User Guide for Aurora](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-mysql-write-forwarding.html) for more information. **NOTE:** Local write forwarding requires Aurora MySQL version 3.04 or higher.
 * `enabled_cloudwatch_logs_exports` - (Optional) Set of log types to export to cloudwatch. If omitted, no logs will be exported. The following log types are supported: `audit`, `error`, `general`, `slowquery`, `postgresql` (PostgreSQL).
 * `engine_mode` - (Optional) Database engine mode. Valid values: `global` (only valid for Aurora MySQL 1.21 and earlier), `parallelquery`, `provisioned`, `serverless`. Defaults to: `provisioned`. See the [RDS User Guide](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless.html) for limitations when using `serverless`.
@@ -565,4 +565,4 @@ Using `terraform import`, import RDS Clusters using the `cluster_identifier`. Fo
 % terraform import aws_rds_cluster.aurora_cluster aurora-prod-cluster
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-0b4bca535089ac4f464ccb7385451ae8994cd85b37a79f79c1ebbbbdb59f4178 -->
+<!-- cache-key: cdktf-0.20.1 input-b76aaa59625a3217368da3a4df184e9d4b6cd7cd65399a0c6ee0de5bab063c0f -->

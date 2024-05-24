@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -72,7 +73,11 @@ func resourceFunction() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[awstypes.Architecture](),
 				},
 			},
-			"arn": {
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"code_sha256": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -88,7 +93,7 @@ func resourceFunction() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"target_arn": {
+						names.AttrTargetARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
@@ -96,11 +101,11 @@ func resourceFunction() *schema.Resource {
 					},
 				},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"environment": {
+			names.AttrEnvironment: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -132,7 +137,7 @@ func resourceFunction() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"size": {
+						names.AttrSize: {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Computed:     true,
@@ -150,7 +155,7 @@ func resourceFunction() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						// EFS access point arn
-						"arn": {
+						names.AttrARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
@@ -167,7 +172,7 @@ func resourceFunction() *schema.Resource {
 			"filename": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ExactlyOneOf: []string{"filename", "image_uri", "s3_bucket"},
+				ExactlyOneOf: []string{"filename", "image_uri", names.AttrS3Bucket},
 			},
 			"function_name": {
 				Type:         schema.TypeString,
@@ -206,13 +211,13 @@ func resourceFunction() *schema.Resource {
 			"image_uri": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ExactlyOneOf: []string{"filename", "image_uri", "s3_bucket"},
+				ExactlyOneOf: []string{"filename", "image_uri", names.AttrS3Bucket},
 			},
 			"invoke_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"kms_key_arn": {
+			names.AttrKMSKeyARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
@@ -292,14 +297,10 @@ func resourceFunction() *schema.Resource {
 				Computed: true,
 			},
 			"replace_security_groups_on_destroy": {
-				Deprecated: "AWS no longer supports this operation. This attribute now has " +
-					"no effect and will be removed in a future major version.",
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
 			"replacement_security_group_ids": {
-				Deprecated: "AWS no longer supports this operation. This attribute now has " +
-					"no effect and will be removed in a future major version.",
 				Type:         schema.TypeSet,
 				Optional:     true,
 				Elem:         &schema.Schema{Type: schema.TypeString},
@@ -311,7 +312,7 @@ func resourceFunction() *schema.Resource {
 				Default:      -1,
 				ValidateFunc: validation.IntAtLeast(-1),
 			},
-			"role": {
+			names.AttrRole: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -321,16 +322,16 @@ func resourceFunction() *schema.Resource {
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.Runtime](),
 			},
-			"s3_bucket": {
+			names.AttrS3Bucket: {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ExactlyOneOf: []string{"filename", "image_uri", "s3_bucket"},
+				ExactlyOneOf: []string{"filename", "image_uri", names.AttrS3Bucket},
 				RequiredWith: []string{"s3_key"},
 			},
 			"s3_key": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				RequiredWith: []string{"s3_bucket"},
+				RequiredWith: []string{names.AttrS3Bucket},
 			},
 			"s3_object_version": {
 				Type:          schema.TypeString,
@@ -345,7 +346,7 @@ func resourceFunction() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"skip_destroy": {
+			names.AttrSkipDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -380,7 +381,7 @@ func resourceFunction() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"timeout": {
+			names.AttrTimeout: {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      3,
@@ -393,7 +394,7 @@ func resourceFunction() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"mode": {
+						names.AttrMode: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.TracingMode](),
@@ -401,11 +402,11 @@ func resourceFunction() *schema.Resource {
 					},
 				},
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"vpc_config": {
+			names.AttrVPCConfig: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -416,17 +417,17 @@ func resourceFunction() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
-						"security_group_ids": {
+						names.AttrSecurityGroupIDs: {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"subnet_ids": {
+						names.AttrSubnetIDs: {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"vpc_id": {
+						names.AttrVPCID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -470,14 +471,14 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 	packageType := awstypes.PackageType(d.Get("package_type").(string))
 	input := &lambda.CreateFunctionInput{
 		Code:         &awstypes.FunctionCode{},
-		Description:  aws.String(d.Get("description").(string)),
+		Description:  aws.String(d.Get(names.AttrDescription).(string)),
 		FunctionName: aws.String(functionName),
 		MemorySize:   aws.Int32(int32(d.Get("memory_size").(int))),
 		PackageType:  packageType,
 		Publish:      d.Get("publish").(bool),
-		Role:         aws.String(d.Get("role").(string)),
+		Role:         aws.String(d.Get(names.AttrRole).(string)),
 		Tags:         getTagsIn(ctx),
-		Timeout:      aws.Int32(int32(d.Get("timeout").(int))),
+		Timeout:      aws.Int32(int32(d.Get(names.AttrTimeout).(int))),
 	}
 
 	if v, ok := d.GetOk("filename"); ok {
@@ -496,7 +497,7 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 	} else if v, ok := d.GetOk("image_uri"); ok {
 		input.Code.ImageUri = aws.String(v.(string))
 	} else {
-		input.Code.S3Bucket = aws.String(d.Get("s3_bucket").(string))
+		input.Code.S3Bucket = aws.String(d.Get(names.AttrS3Bucket).(string))
 		input.Code.S3Key = aws.String(d.Get("s3_key").(string))
 		if v, ok := d.GetOk("s3_object_version"); ok {
 			input.Code.S3ObjectVersion = aws.String(v.(string))
@@ -517,11 +518,11 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		input.DeadLetterConfig = &awstypes.DeadLetterConfig{
-			TargetArn: aws.String(v.([]interface{})[0].(map[string]interface{})["target_arn"].(string)),
+			TargetArn: aws.String(v.([]interface{})[0].(map[string]interface{})[names.AttrTargetARN].(string)),
 		}
 	}
 
-	if v, ok := d.GetOk("environment"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrEnvironment); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		if v, ok := v.([]interface{})[0].(map[string]interface{})["variables"].(map[string]interface{}); ok && len(v) > 0 {
 			input.Environment = &awstypes.Environment{
 				Variables: flex.ExpandStringValueMap(v),
@@ -531,7 +532,7 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	if v, ok := d.GetOk("ephemeral_storage"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.EphemeralStorage = &awstypes.EphemeralStorage{
-			Size: aws.Int32(int32(v.([]interface{})[0].(map[string]interface{})["size"].(int))),
+			Size: aws.Int32(int32(v.([]interface{})[0].(map[string]interface{})[names.AttrSize].(int))),
 		}
 	}
 
@@ -552,7 +553,7 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.LoggingConfig = expandLoggingConfig(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("kms_key_arn"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKeyARN); ok {
 		input.KMSKeyArn = aws.String(v.(string))
 	}
 
@@ -566,16 +567,16 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	if v, ok := d.GetOk("tracing_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.TracingConfig = &awstypes.TracingConfig{
-			Mode: awstypes.TracingMode(v.([]interface{})[0].(map[string]interface{})["mode"].(string)),
+			Mode: awstypes.TracingMode(v.([]interface{})[0].(map[string]interface{})[names.AttrMode].(string)),
 		}
 	}
 
-	if v, ok := d.GetOk("vpc_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrVPCConfig); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		tfMap := v.([]interface{})[0].(map[string]interface{})
 		input.VpcConfig = &awstypes.VpcConfig{
 			Ipv6AllowedForDualStack: aws.Bool(tfMap["ipv6_allowed_for_dual_stack"].(bool)),
-			SecurityGroupIds:        flex.ExpandStringValueSet(tfMap["security_group_ids"].(*schema.Set)),
-			SubnetIds:               flex.ExpandStringValueSet(tfMap["subnet_ids"].(*schema.Set)),
+			SecurityGroupIds:        flex.ExpandStringValueSet(tfMap[names.AttrSecurityGroupIDs].(*schema.Set)),
+			SubnetIds:               flex.ExpandStringValueSet(tfMap[names.AttrSubnetIDs].(*schema.Set)),
 		}
 	}
 
@@ -644,11 +645,12 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 	function := output.Configuration
 	d.Set("architectures", function.Architectures)
 	functionARN := aws.ToString(function.FunctionArn)
-	d.Set("arn", functionARN)
+	d.Set(names.AttrARN, functionARN)
+	d.Set("code_sha256", function.CodeSha256)
 	if function.DeadLetterConfig != nil && function.DeadLetterConfig.TargetArn != nil {
 		if err := d.Set("dead_letter_config", []interface{}{
 			map[string]interface{}{
-				"target_arn": aws.ToString(function.DeadLetterConfig.TargetArn),
+				names.AttrTargetARN: aws.ToString(function.DeadLetterConfig.TargetArn),
 			},
 		}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting dead_letter_config: %s", err)
@@ -656,8 +658,8 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 	} else {
 		d.Set("dead_letter_config", []interface{}{})
 	}
-	d.Set("description", function.Description)
-	if err := d.Set("environment", flattenEnvironment(function.Environment)); err != nil {
+	d.Set(names.AttrDescription, function.Description)
+	if err := d.Set(names.AttrEnvironment, flattenEnvironment(function.Environment)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting environment: %s", err)
 	}
 	if err := d.Set("ephemeral_storage", flattenEphemeralStorage(function.EphemeralStorage)); err != nil {
@@ -674,7 +676,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("image_uri", output.Code.ImageUri)
 	}
 	d.Set("invoke_arn", invokeARN(meta.(*conns.AWSClient), functionARN))
-	d.Set("kms_key_arn", function.KMSKeyArn)
+	d.Set(names.AttrKMSKeyARN, function.KMSKeyArn)
 	d.Set("last_modified", function.LastModified)
 	if err := d.Set("layers", flattenLayers(function.Layers)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting layers: %s", err)
@@ -689,37 +691,37 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 	} else {
 		d.Set("reserved_concurrent_executions", -1)
 	}
-	d.Set("role", function.Role)
+	d.Set(names.AttrRole, function.Role)
 	d.Set("runtime", function.Runtime)
 	d.Set("signing_job_arn", function.SigningJobArn)
 	d.Set("signing_profile_version_arn", function.SigningProfileVersionArn)
 	// Support in-place update of non-refreshable attribute.
-	d.Set("skip_destroy", d.Get("skip_destroy"))
+	d.Set(names.AttrSkipDestroy, d.Get(names.AttrSkipDestroy))
 	if err := d.Set("snap_start", flattenSnapStart(function.SnapStart)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting snap_start: %s", err)
 	}
-	d.Set("source_code_hash", function.CodeSha256)
+	d.Set("source_code_hash", d.Get("source_code_hash"))
 	d.Set("source_code_size", function.CodeSize)
-	d.Set("timeout", function.Timeout)
+	d.Set(names.AttrTimeout, function.Timeout)
 	tracingConfigMode := awstypes.TracingModePassThrough
 	if function.TracingConfig != nil {
 		tracingConfigMode = function.TracingConfig.Mode
 	}
 	if err := d.Set("tracing_config", []interface{}{
 		map[string]interface{}{
-			"mode": string(tracingConfigMode),
+			names.AttrMode: string(tracingConfigMode),
 		},
 	}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tracing_config: %s", err)
 	}
-	if err := d.Set("vpc_config", flattenVPCConfigResponse(function.VpcConfig)); err != nil {
+	if err := d.Set(names.AttrVPCConfig, flattenVPCConfigResponse(function.VpcConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
 	}
 
 	if hasQualifier {
 		d.Set("qualified_arn", functionARN)
 		d.Set("qualified_invoke_arn", invokeARN(meta.(*conns.AWSClient), functionARN))
-		d.Set("version", function.Version)
+		d.Set(names.AttrVersion, function.Version)
 	} else {
 		latest, err := findLatestFunctionVersionByName(ctx, conn, d.Id())
 
@@ -730,7 +732,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 		qualifiedARN := aws.ToString(latest.FunctionArn)
 		d.Set("qualified_arn", qualifiedARN)
 		d.Set("qualified_invoke_arn", invokeARN(meta.(*conns.AWSClient), qualifiedARN))
-		d.Set("version", latest.Version)
+		d.Set(names.AttrVersion, latest.Version)
 
 		setTagsOut(ctx, output.Tags)
 	}
@@ -804,7 +806,7 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				}
 
 				input.DeadLetterConfig = &awstypes.DeadLetterConfig{
-					TargetArn: aws.String(v.([]interface{})[0].(map[string]interface{})["target_arn"].(string)),
+					TargetArn: aws.String(v.([]interface{})[0].(map[string]interface{})[names.AttrTargetARN].(string)),
 				}
 			} else {
 				input.DeadLetterConfig = &awstypes.DeadLetterConfig{
@@ -813,16 +815,16 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 		}
 
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
-		if d.HasChanges("environment", "kms_key_arn") {
+		if d.HasChanges(names.AttrEnvironment, names.AttrKMSKeyARN) {
 			input.Environment = &awstypes.Environment{
 				Variables: map[string]string{},
 			}
 
-			if v, ok := d.GetOk("environment"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			if v, ok := d.GetOk(names.AttrEnvironment); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				if v, ok := v.([]interface{})[0].(map[string]interface{})["variables"].(map[string]interface{}); ok && len(v) > 0 {
 					input.Environment = &awstypes.Environment{
 						Variables: flex.ExpandStringValueMap(v),
@@ -834,7 +836,7 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		if d.HasChange("ephemeral_storage") {
 			if v, ok := d.GetOk("ephemeral_storage"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.EphemeralStorage = &awstypes.EphemeralStorage{
-					Size: aws.Int32(int32(v.([]interface{})[0].(map[string]interface{})["size"].(int))),
+					Size: aws.Int32(int32(v.([]interface{})[0].(map[string]interface{})[names.AttrSize].(int))),
 				}
 			}
 		}
@@ -859,8 +861,8 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 		}
 
-		if d.HasChange("kms_key_arn") {
-			input.KMSKeyArn = aws.String(d.Get("kms_key_arn").(string))
+		if d.HasChange(names.AttrKMSKeyARN) {
+			input.KMSKeyArn = aws.String(d.Get(names.AttrKMSKeyARN).(string))
 		}
 
 		if d.HasChange("layers") {
@@ -875,8 +877,8 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			input.MemorySize = aws.Int32(int32(d.Get("memory_size").(int)))
 		}
 
-		if d.HasChange("role") {
-			input.Role = aws.String(d.Get("role").(string))
+		if d.HasChange(names.AttrRole) {
+			input.Role = aws.String(d.Get(names.AttrRole).(string))
 		}
 
 		if d.HasChange("runtime") {
@@ -887,25 +889,25 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			input.SnapStart = expandSnapStart(d.Get("snap_start").([]interface{}))
 		}
 
-		if d.HasChange("timeout") {
-			input.Timeout = aws.Int32(int32(d.Get("timeout").(int)))
+		if d.HasChange(names.AttrTimeout) {
+			input.Timeout = aws.Int32(int32(d.Get(names.AttrTimeout).(int)))
 		}
 
 		if d.HasChange("tracing_config") {
 			if v, ok := d.GetOk("tracing_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.TracingConfig = &awstypes.TracingConfig{
-					Mode: awstypes.TracingMode(v.([]interface{})[0].(map[string]interface{})["mode"].(string)),
+					Mode: awstypes.TracingMode(v.([]interface{})[0].(map[string]interface{})[names.AttrMode].(string)),
 				}
 			}
 		}
 
 		if d.HasChanges("vpc_config.0.security_group_ids", "vpc_config.0.subnet_ids", "vpc_config.0.ipv6_allowed_for_dual_stack") {
-			if v, ok := d.GetOk("vpc_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			if v, ok := d.GetOk(names.AttrVPCConfig); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				tfMap := v.([]interface{})[0].(map[string]interface{})
 				input.VpcConfig = &awstypes.VpcConfig{
 					Ipv6AllowedForDualStack: aws.Bool(tfMap["ipv6_allowed_for_dual_stack"].(bool)),
-					SecurityGroupIds:        flex.ExpandStringValueSet(tfMap["security_group_ids"].(*schema.Set)),
-					SubnetIds:               flex.ExpandStringValueSet(tfMap["subnet_ids"].(*schema.Set)),
+					SecurityGroupIds:        flex.ExpandStringValueSet(tfMap[names.AttrSecurityGroupIDs].(*schema.Set)),
+					SubnetIds:               flex.ExpandStringValueSet(tfMap[names.AttrSubnetIDs].(*schema.Set)),
 				}
 			} else {
 				input.VpcConfig = &awstypes.VpcConfig{
@@ -961,7 +963,7 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		} else if v, ok := d.GetOk("image_uri"); ok {
 			input.ImageUri = aws.String(v.(string))
 		} else {
-			input.S3Bucket = aws.String(d.Get("s3_bucket").(string))
+			input.S3Bucket = aws.String(d.Get(names.AttrS3Bucket).(string))
 			input.S3Key = aws.String(d.Get("s3_key").(string))
 			if v, ok := d.GetOk("s3_object_version"); ok {
 				input.S3ObjectVersion = aws.String(v.(string))
@@ -973,7 +975,7 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		if err != nil {
 			if errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "Error occurred while GetObject.") {
 				// As s3_bucket, s3_key and s3_object_version aren't set in resourceFunctionRead(), don't ovewrite the last known good values.
-				for _, key := range []string{"s3_bucket", "s3_key", "s3_object_version"} {
+				for _, key := range []string{names.AttrS3Bucket, "s3_key", "s3_object_version"} {
 					old, _ := d.GetChange(key)
 					d.Set(key, old)
 				}
@@ -1040,9 +1042,15 @@ func resourceFunctionDelete(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
-	if v, ok := d.GetOk("skip_destroy"); ok && v.(bool) {
+	if v, ok := d.GetOk(names.AttrSkipDestroy); ok && v.(bool) {
 		log.Printf("[DEBUG] Retaining Lambda Function: %s", d.Id())
 		return diags
+	}
+
+	if _, ok := d.GetOk("replace_security_groups_on_destroy"); ok {
+		if err := replaceSecurityGroupsOnDestroy(ctx, d, meta); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
 	}
 
 	log.Printf("[INFO] Deleting Lambda Function: %s", d.Id())
@@ -1118,6 +1126,67 @@ func findLatestFunctionVersionByName(ctx context.Context, conn *lambda.Client, n
 	}
 
 	return output, nil
+}
+
+// replaceSecurityGroupsOnDestroy sets the VPC configuration security groups
+// prior to resource destruction
+//
+// This function is called when the replace_security_groups_on_destroy
+// argument is set. If the replacement_security_group_ids attribute is set,
+// those values will be used as replacements. Otherwise, the default
+// security group is used.
+//
+// Configuring this option can decrease destroy times for the security
+// groups included in the VPC configuration block during normal operation
+// by freeing them from association with ENI's left behind after destruction
+// of the function.
+func replaceSecurityGroupsOnDestroy(ctx context.Context, d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
+	ec2Conn := meta.(*conns.AWSClient).EC2Client(ctx)
+
+	var sgIDs []string
+	var vpcID string
+	if v, ok := d.GetOk(names.AttrVPCConfig); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		tfMap := v.([]interface{})[0].(map[string]interface{})
+		sgIDs = flex.ExpandStringValueSet(tfMap[names.AttrSecurityGroupIDs].(*schema.Set))
+		vpcID = tfMap[names.AttrVPCID].(string)
+	} else { // empty VPC config, nothing to do
+		return nil
+	}
+
+	if len(sgIDs) == 0 { // no security groups, nothing to do
+		return nil
+	}
+
+	var replacementSGIDs []string
+	if v, ok := d.GetOk("replacement_security_group_ids"); ok {
+		replacementSGIDs = flex.ExpandStringValueSet(v.(*schema.Set))
+	} else {
+		defaultSG, err := tfec2.FindSecurityGroupByNameAndVPCIDV2(ctx, ec2Conn, "default", vpcID)
+		if err != nil || defaultSG == nil {
+			return fmt.Errorf("finding VPC (%s) default security group: %s", vpcID, err)
+		}
+		replacementSGIDs = []string{aws.ToString(defaultSG.GroupId)}
+	}
+
+	input := &lambda.UpdateFunctionConfigurationInput{
+		FunctionName: aws.String(d.Id()),
+		VpcConfig: &awstypes.VpcConfig{
+			SecurityGroupIds: replacementSGIDs,
+		},
+	}
+
+	if _, err := retryFunctionOp(ctx, func() (*lambda.UpdateFunctionConfigurationOutput, error) {
+		return conn.UpdateFunctionConfiguration(ctx, input)
+	}); err != nil {
+		return fmt.Errorf("updating Lambda Function (%s) configuration: %s", d.Id(), err)
+	}
+
+	if _, err := waitFunctionUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return fmt.Errorf("waiting for Lambda Function (%s) configuration update: %s", d.Id(), err)
+	}
+
+	return nil
 }
 
 func statusFunctionLastUpdateStatus(ctx context.Context, conn *lambda.Client, name string) retry.StateRefreshFunc {
@@ -1273,7 +1342,7 @@ func updateComputedAttributesOnPublish(_ context.Context, d *schema.ResourceDiff
 	publish := d.Get("publish").(bool)
 	publishChanged := d.HasChange("publish")
 	if publish && (configChanged || codeChanged || publishChanged) {
-		d.SetNewComputed("version")
+		d.SetNewComputed(names.AttrVersion)
 		d.SetNewComputed("qualified_arn")
 		d.SetNewComputed("qualified_invoke_arn")
 	}
@@ -1283,7 +1352,7 @@ func updateComputedAttributesOnPublish(_ context.Context, d *schema.ResourceDiff
 func needsFunctionCodeUpdate(d sdkv2.ResourceDiffer) bool {
 	return d.HasChange("filename") ||
 		d.HasChange("source_code_hash") ||
-		d.HasChange("s3_bucket") ||
+		d.HasChange(names.AttrS3Bucket) ||
 		d.HasChange("s3_key") ||
 		d.HasChange("s3_object_version") ||
 		d.HasChange("image_uri") ||
@@ -1291,15 +1360,15 @@ func needsFunctionCodeUpdate(d sdkv2.ResourceDiffer) bool {
 }
 
 func needsFunctionConfigUpdate(d sdkv2.ResourceDiffer) bool {
-	return d.HasChange("description") ||
+	return d.HasChange(names.AttrDescription) ||
 		d.HasChange("handler") ||
 		d.HasChange("file_system_config") ||
 		d.HasChange("image_config") ||
 		d.HasChange("logging_config") ||
 		d.HasChange("memory_size") ||
-		d.HasChange("role") ||
-		d.HasChange("timeout") ||
-		d.HasChange("kms_key_arn") ||
+		d.HasChange(names.AttrRole) ||
+		d.HasChange(names.AttrTimeout) ||
+		d.HasChange(names.AttrKMSKeyARN) ||
 		d.HasChange("layers") ||
 		d.HasChange("dead_letter_config") ||
 		d.HasChange("snap_start") ||
@@ -1308,7 +1377,7 @@ func needsFunctionConfigUpdate(d sdkv2.ResourceDiffer) bool {
 		d.HasChange("vpc_config.0.security_group_ids") ||
 		d.HasChange("vpc_config.0.subnet_ids") ||
 		d.HasChange("runtime") ||
-		d.HasChange("environment") ||
+		d.HasChange(names.AttrEnvironment) ||
 		d.HasChange("ephemeral_storage")
 }
 
@@ -1387,7 +1456,7 @@ func flattenFileSystemConfigs(apiObjects []awstypes.FileSystemConfig) []interfac
 
 	for _, apiObject := range apiObjects {
 		tfMap := make(map[string]interface{})
-		tfMap["arn"] = aws.ToString(apiObject.Arn)
+		tfMap[names.AttrARN] = aws.ToString(apiObject.Arn)
 		tfMap["local_mount_path"] = aws.ToString(apiObject.LocalMountPath)
 
 		tfList = append(tfList, tfMap)
@@ -1402,7 +1471,7 @@ func expandFileSystemConfigs(tfList []interface{}) []awstypes.FileSystemConfig {
 	for _, tfMapRaw := range tfList {
 		tfMap := tfMapRaw.(map[string]interface{})
 		apiObjects = append(apiObjects, awstypes.FileSystemConfig{
-			Arn:            aws.String(tfMap["arn"].(string)),
+			Arn:            aws.String(tfMap[names.AttrARN].(string)),
 			LocalMountPath: aws.String(tfMap["local_mount_path"].(string)),
 		})
 	}
@@ -1503,7 +1572,7 @@ func flattenEphemeralStorage(apiObject *awstypes.EphemeralStorage) []interface{}
 	}
 
 	tfMap := make(map[string]interface{})
-	tfMap["size"] = aws.ToInt32(apiObject.Size)
+	tfMap[names.AttrSize] = aws.ToInt32(apiObject.Size)
 
 	return []interface{}{tfMap}
 }

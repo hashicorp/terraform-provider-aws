@@ -326,6 +326,7 @@ class MyConvertedCode(TerraformStack):
   <li><code>wellarchitected</code></li>
   <li><code>worklink</code></li>
   <li><code>workspaces</code></li>
+  <li><code>workspacesweb</code></li>
   <li><code>xray</code></li>
 </ul>
 </div>
@@ -426,4 +427,4 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-fef19d282bd4baa2e4cfb819984b4f91b03ff5f8965b46d3753f80c46c4f1287 -->
+<!-- cache-key: cdktf-0.20.1 input-33219424028f45c9e2ed28967515af232f39e03a40b4aed53df508d425304ab8 -->

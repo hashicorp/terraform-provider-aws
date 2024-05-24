@@ -19,9 +19,7 @@ import (
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	directoryservice_sdkv1 "github.com/aws/aws-sdk-go/service/directoryservice"
-	dynamodb_sdkv1 "github.com/aws/aws-sdk-go/service/dynamodb"
 	efs_sdkv1 "github.com/aws/aws-sdk-go/service/efs"
-	kms_sdkv1 "github.com/aws/aws-sdk-go/service/kms"
 	opsworks_sdkv1 "github.com/aws/aws-sdk-go/service/opsworks"
 	rds_sdkv1 "github.com/aws/aws-sdk-go/service/rds"
 	baselogging "github.com/hashicorp/aws-sdk-go-base/v2/logging"
@@ -65,16 +63,6 @@ func (c *AWSClient) AwsConfig(context.Context) aws_sdkv2.Config { // nosemgrep:c
 	return c.awsConfig.Copy()
 }
 
-// DynamoDBConnForRegion returns an AWS SDK For Go v1 DynamoDB API client for the specified AWS Region.
-// If the specified region is not the default a new "simple" client is created.
-// This new client does not use any configured endpoint override.
-func (c *AWSClient) DynamoDBConnForRegion(ctx context.Context, region string) *dynamodb_sdkv1.DynamoDB {
-	if region == c.Region {
-		return c.DynamoDBConn(ctx)
-	}
-	return dynamodb_sdkv1.New(c.session, aws_sdkv1.NewConfig().WithRegion(region))
-}
-
 // DSConnForRegion returns an AWS SDK For Go v1 DS API client for the specified AWS Region.
 // If the specified region is not the default a new "simple" client is created.
 // This new client does not use any configured endpoint override.
@@ -95,17 +83,7 @@ func (c *AWSClient) EFSConnForRegion(ctx context.Context, region string) *efs_sd
 	return efs_sdkv1.New(c.session, aws_sdkv1.NewConfig().WithRegion(region))
 }
 
-// KMSConnForRegion returns an AWS SDK For Go v1 KMS API client for the specified AWS Region.
-// If the specified region is not the default a new "simple" client is created.
-// This new client does not use any configured endpoint override.
-func (c *AWSClient) KMSConnForRegion(ctx context.Context, region string) *kms_sdkv1.KMS {
-	if region == c.Region {
-		return c.KMSConn(ctx)
-	}
-	return kms_sdkv1.New(c.session, aws_sdkv1.NewConfig().WithRegion(region))
-}
-
-// KMSConnForRegion returns an AWS SDK For Go v1 OpsWorks API client for the specified AWS Region.
+// OpsWorksConnForRegion returns an AWS SDK For Go v1 OpsWorks API client for the specified AWS Region.
 // If the specified region is not the default a new "simple" client is created.
 // This new client does not use any configured endpoint override.
 func (c *AWSClient) OpsWorksConnForRegion(ctx context.Context, region string) *opsworks_sdkv1.OpsWorks {
@@ -319,7 +297,7 @@ func (c *AWSClient) resolveEndpoint(ctx context.Context, servicePackageName stri
 	if names.ClientSDKV1(servicePackageName) {
 		endpoint = aws_sdkv2.ToString(c.awsConfig.BaseEndpoint)
 
-		envvar := names.AwsServiceEnvVar(servicePackageName)
+		envvar := names.AWSServiceEnvVar(servicePackageName)
 		svc := os.Getenv(envvar)
 		if svc != "" {
 			return svc
@@ -329,7 +307,7 @@ func (c *AWSClient) resolveEndpoint(ctx context.Context, servicePackageName stri
 			return base
 		}
 
-		sdkId := names.SdkId(servicePackageName)
+		sdkId := names.SDKID(servicePackageName)
 		endpoint, found, err := resolveServiceBaseEndpoint(ctx, sdkId, c.awsConfig.ConfigSources)
 		if found && err == nil {
 			return endpoint

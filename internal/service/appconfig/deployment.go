@@ -47,7 +47,7 @@ func ResourceDeployment() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9a-z]{4,7}`), ""),
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -73,7 +73,7 @@ func ResourceDeployment() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`(^[0-9a-z]{4,7}$|^AppConfig\.[0-9A-Za-z]{9,40}$)`), ""),
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -85,7 +85,7 @@ func ResourceDeployment() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9a-z]{4,7}`), ""),
 			},
-			"kms_key_arn": {
+			names.AttrKMSKeyARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -97,7 +97,7 @@ func ResourceDeployment() *schema.Resource {
 					verify.ValidARN,
 					validation.StringLenBetween(1, 256)),
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -118,7 +118,7 @@ func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta 
 		ConfigurationProfileId: aws.String(d.Get("configuration_profile_id").(string)),
 		ConfigurationVersion:   aws.String(d.Get("configuration_version").(string)),
 		DeploymentStrategyId:   aws.String(d.Get("deployment_strategy_id").(string)),
-		Description:            aws.String(d.Get("description").(string)),
+		Description:            aws.String(d.Get(names.AttrDescription).(string)),
 		Tags:                   getTagsIn(ctx),
 	}
 
@@ -187,16 +187,16 @@ func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta in
 	}.String()
 
 	d.Set("application_id", output.ApplicationId)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("configuration_profile_id", output.ConfigurationProfileId)
 	d.Set("configuration_version", output.ConfigurationVersion)
 	d.Set("deployment_number", output.DeploymentNumber)
 	d.Set("deployment_strategy_id", output.DeploymentStrategyId)
-	d.Set("description", output.Description)
+	d.Set(names.AttrDescription, output.Description)
 	d.Set("environment_id", output.EnvironmentId)
-	d.Set("kms_key_arn", output.KmsKeyArn)
+	d.Set(names.AttrKMSKeyARN, output.KmsKeyArn)
 	d.Set("kms_key_identifier", output.KmsKeyIdentifier)
-	d.Set("state", output.State)
+	d.Set(names.AttrState, output.State)
 
 	return diags
 }

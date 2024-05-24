@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_elastictranscoder_pipeline")
@@ -33,7 +34,7 @@ func ResourcePipeline() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -53,7 +54,7 @@ func ResourcePipeline() *schema.Resource {
 				Elem: &schema.Resource{
 					// elastictranscoder.PipelineOutputConfig
 					Schema: map[string]*schema.Schema{
-						"bucket": {
+						names.AttrBucket: {
 							Type:     schema.TypeString,
 							Optional: true,
 							// AWS may insert the bucket name here taken from output_bucket
@@ -111,7 +112,7 @@ func ResourcePipeline() *schema.Resource {
 				Required: true,
 			},
 
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -163,7 +164,7 @@ func ResourcePipeline() *schema.Resource {
 				Computed: true,
 			},
 
-			"role": {
+			names.AttrRole: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -177,7 +178,7 @@ func ResourcePipeline() *schema.Resource {
 				Elem: &schema.Resource{
 					// elastictranscoder.PipelineOutputConfig
 					Schema: map[string]*schema.Schema{
-						"bucket": {
+						names.AttrBucket: {
 							Type:     schema.TypeString,
 							Optional: true,
 							// AWS may insert the bucket name here taken from output_bucket
@@ -242,7 +243,7 @@ func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta in
 		ContentConfig:   expandETPiplineOutputConfig(d, "content_config"),
 		InputBucket:     aws.String(d.Get("input_bucket").(string)),
 		Notifications:   expandETNotifications(d),
-		Role:            aws.String(d.Get("role").(string)),
+		Role:            aws.String(d.Get(names.AttrRole).(string)),
 		ThumbnailConfig: expandETPiplineOutputConfig(d, "thumbnail_config"),
 	}
 
@@ -250,11 +251,11 @@ func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta in
 		req.OutputBucket = aws.String(v.(string))
 	}
 
-	if name, ok := d.GetOk("name"); ok {
+	if name, ok := d.GetOk(names.AttrName); ok {
 		req.Name = aws.String(name.(string))
 	} else {
 		name := id.PrefixedUniqueId("tf-et-")
-		d.Set("name", name)
+		d.Set(names.AttrName, name)
 		req.Name = aws.String(name)
 	}
 
@@ -347,7 +348,7 @@ func expandETPiplineOutputConfig(d *schema.ResourceData, key string) *elastictra
 	cc := l[0].(map[string]interface{})
 
 	cfg := &elastictranscoder.PipelineOutputConfig{
-		Bucket:       aws.String(cc["bucket"].(string)),
+		Bucket:       aws.String(cc[names.AttrBucket].(string)),
 		StorageClass: aws.String(cc["storage_class"].(string)),
 	}
 
@@ -367,8 +368,8 @@ func flattenETPipelineOutputConfig(cfg *elastictranscoder.PipelineOutputConfig) 
 	}
 
 	result := map[string]interface{}{
-		"bucket":        aws.StringValue(cfg.Bucket),
-		"storage_class": aws.StringValue(cfg.StorageClass),
+		names.AttrBucket: aws.StringValue(cfg.Bucket),
+		"storage_class":  aws.StringValue(cfg.StorageClass),
 	}
 
 	return []map[string]interface{}{result}
@@ -430,16 +431,16 @@ func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		req.InputBucket = aws.String(d.Get("input_bucket").(string))
 	}
 
-	if d.HasChange("name") {
-		req.Name = aws.String(d.Get("name").(string))
+	if d.HasChange(names.AttrName) {
+		req.Name = aws.String(d.Get(names.AttrName).(string))
 	}
 
 	if d.HasChange("notifications") {
 		req.Notifications = expandETNotifications(d)
 	}
 
-	if d.HasChange("role") {
-		req.Role = aws.String(d.Get("role").(string))
+	if d.HasChange(names.AttrRole) {
+		req.Role = aws.String(d.Get(names.AttrRole).(string))
 	}
 
 	if d.HasChange("thumbnail_config") {
@@ -479,7 +480,7 @@ func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	pipeline := resp.Pipeline
 
-	d.Set("arn", pipeline.Arn)
+	d.Set(names.AttrARN, pipeline.Arn)
 
 	d.Set("aws_kms_key_arn", pipeline.AwsKmsKeyArn)
 
@@ -498,14 +499,14 @@ func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.Set("input_bucket", pipeline.InputBucket)
-	d.Set("name", pipeline.Name)
+	d.Set(names.AttrName, pipeline.Name)
 
 	notifications := flattenETNotifications(pipeline.Notifications)
 	if err := d.Set("notifications", notifications); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting notifications: %s", err)
 	}
 
-	d.Set("role", pipeline.Role)
+	d.Set(names.AttrRole, pipeline.Role)
 
 	if pipeline.ThumbnailConfig != nil {
 		err := d.Set("thumbnail_config", flattenETPipelineOutputConfig(pipeline.ThumbnailConfig))

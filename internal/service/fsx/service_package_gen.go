@@ -26,27 +26,32 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceONTAPFileSystem,
+			Factory:  dataSourceONTAPFileSystem,
 			TypeName: "aws_fsx_ontap_file_system",
-			Name:     "Ontap File System",
+			Name:     "ONTAP File System",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceONTAPStorageVirtualMachine,
+			Factory:  dataSourceONTAPStorageVirtualMachine,
 			TypeName: "aws_fsx_ontap_storage_virtual_machine",
 			Name:     "ONTAP Storage Virtual Machine",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceONTAPStorageVirtualMachines,
+			Factory:  dataSourceONTAPStorageVirtualMachines,
 			TypeName: "aws_fsx_ontap_storage_virtual_machines",
 			Name:     "ONTAP Storage Virtual Machines",
 		},
 		{
-			Factory:  DataSourceOpenzfsSnapshot,
+			Factory:  dataSourceOpenzfsSnapshot,
 			TypeName: "aws_fsx_openzfs_snapshot",
+			Name:     "OpenZFS Snapshot",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceWindowsFileSystem,
+			Factory:  dataSourceWindowsFileSystem,
 			TypeName: "aws_fsx_windows_file_system",
+			Name:     "Windows File System",
 		},
 	}
 }
@@ -54,91 +59,91 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceBackup,
+			Factory:  resourceBackup,
 			TypeName: "aws_fsx_backup",
 			Name:     "Backup",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory:  ResourceDataRepositoryAssociation,
+			Factory:  resourceDataRepositoryAssociation,
 			TypeName: "aws_fsx_data_repository_association",
 			Name:     "Data Repository Association",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory:  ResourceFileCache,
+			Factory:  resourceFileCache,
 			TypeName: "aws_fsx_file_cache",
 			Name:     "File Cache",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory:  ResourceLustreFileSystem,
+			Factory:  resourceLustreFileSystem,
 			TypeName: "aws_fsx_lustre_file_system",
 			Name:     "Lustre File System",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory:  ResourceONTAPFileSystem,
+			Factory:  resourceONTAPFileSystem,
 			TypeName: "aws_fsx_ontap_file_system",
 			Name:     "ONTAP File System",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory:  ResourceONTAPStorageVirtualMachine,
+			Factory:  resourceONTAPStorageVirtualMachine,
 			TypeName: "aws_fsx_ontap_storage_virtual_machine",
 			Name:     "ONTAP Storage Virtual Machine",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory:  ResourceONTAPVolume,
+			Factory:  resourceONTAPVolume,
 			TypeName: "aws_fsx_ontap_volume",
 			Name:     "ONTAP Volume",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory:  ResourceOpenZFSFileSystem,
+			Factory:  resourceOpenZFSFileSystem,
 			TypeName: "aws_fsx_openzfs_file_system",
 			Name:     "OpenZFS File System",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory:  ResourceOpenzfsSnapshot,
+			Factory:  resourceOpenZFSSnapshot,
 			TypeName: "aws_fsx_openzfs_snapshot",
 			Name:     "OpenZFS Snapshot",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory:  ResourceOpenZFSVolume,
+			Factory:  resourceOpenZFSVolume,
 			TypeName: "aws_fsx_openzfs_volume",
 			Name:     "OpenZFS Volume",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory:  ResourceWindowsFileSystem,
+			Factory:  resourceWindowsFileSystem,
 			TypeName: "aws_fsx_windows_file_system",
 			Name:     "Windows File System",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 	}
@@ -150,9 +155,9 @@ func (p *servicePackage) ServicePackageName() string {
 
 // NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
 func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*fsx_sdkv1.FSx, error) {
-	sess := config["session"].(*session_sdkv1.Session)
+	sess := config[names.AttrSession].(*session_sdkv1.Session)
 
-	return fsx_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+	return fsx_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config[names.AttrEndpoint].(string))})), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

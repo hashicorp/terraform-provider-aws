@@ -38,7 +38,7 @@ func ResourceKeyPair() *schema.Resource {
 		DeleteWithoutTimeout: resourceKeyPairDelete,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -54,30 +54,30 @@ func ResourceKeyPair() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 			},
 			"pgp_key": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"private_key": {
+			names.AttrPrivateKey: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"public_key": {
+			names.AttrPublicKey: {
 				Type:     schema.TypeString,
 				Computed: true,
 				Optional: true,
@@ -95,10 +95,10 @@ func resourceKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
-	kName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	kName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	var pubKey string
 	var op *types.Operation
-	if pubKeyInterface, ok := d.GetOk("public_key"); ok {
+	if pubKeyInterface, ok := d.GetOk(names.AttrPublicKey); ok {
 		pubKey = pubKeyInterface.(string)
 	}
 
@@ -122,7 +122,7 @@ func resourceKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta int
 		// private_key and public_key are only available in the response from
 		// CreateKey pair. Here we set the public_key, and encrypt the private_key
 		// if a pgp_key is given, else we store the private_key in state
-		d.Set("public_key", resp.PublicKeyBase64)
+		d.Set(names.AttrPublicKey, resp.PublicKeyBase64)
 
 		// encrypt private key if pgp_key is given
 		pgpKey, err := retrieveGPGKey(d.Get("pgp_key").(string))
@@ -138,7 +138,7 @@ func resourceKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta int
 			d.Set("encrypted_fingerprint", fingerprint)
 			d.Set("encrypted_private_key", encrypted)
 		} else {
-			d.Set("private_key", resp.PrivateKeyBase64)
+			d.Set(names.AttrPrivateKey, resp.PrivateKeyBase64)
 		}
 
 		op = resp.Operation
@@ -187,10 +187,10 @@ func resourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading Lightsail Key Pair (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", resp.KeyPair.Arn)
+	d.Set(names.AttrARN, resp.KeyPair.Arn)
 	d.Set("fingerprint", resp.KeyPair.Fingerprint)
-	d.Set("name", resp.KeyPair.Name)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(resp.KeyPair.Name)))
+	d.Set(names.AttrName, resp.KeyPair.Name)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(resp.KeyPair.Name)))
 
 	setTagsOut(ctx, resp.KeyPair.Tags)
 

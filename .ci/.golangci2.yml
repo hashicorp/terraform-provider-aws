@@ -64,6 +64,10 @@ issues:
       text: "SA1019: \\w+.(\\w+) is deprecated: (\\w+) has been deprecated"
     - linters:
         - staticcheck
+      path: "internal/service/fsx"
+      text: "SA1019: \\w+.(\\w+) is deprecated: This property is deprecated"
+    - linters:
+        - staticcheck
       path: internal/service/globalaccelerator/
       text: "SA1019: apiObject.IpFamily is deprecated: IpFamily has been replaced by IpAddressFamily"
     - linters:
@@ -125,32 +129,31 @@ linters:
     - goconst
     - gocritic
     - gofmt
-    - gomnd
     - gosimple
+    - govet
     - ineffassign
     - makezero
     - misspell
+    - mnd
     - nakedret
     - nilerr
     - nolintlint
     - nosprintfhostport
     - paralleltest
-    # - perfsprint
     - predeclared
     - revive
     - staticcheck
     - stylecheck
     - tenv
-    # - thelper
     - tparallel
     - typecheck
     - unconvert
     - unparam
     - unused
     - usestdlibvars
-    - vet
-    - vetshadow
     - whitespace
+    # - perfsprint
+    # - thelper
 
 linters-settings:
   dogsled:
@@ -170,7 +173,7 @@ linters-settings:
       - performance
       - experimental
       - opinionated
-  gomnd:
+  mnd:
     checks:
       - argument
     ignored-functions:
@@ -209,7 +212,7 @@ linters-settings:
     require-explanation: true
     require-specific: true
     allow-no-explanation:
-      - gomnd
+      - mnd
       - paralleltest
       - tparallel
       - unparam

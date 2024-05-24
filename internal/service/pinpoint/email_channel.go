@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_pinpoint_email_channel")
@@ -38,7 +39,7 @@ func ResourceEmailChannel() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
@@ -52,7 +53,7 @@ func ResourceEmailChannel() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
@@ -73,11 +74,11 @@ func resourceEmailChannelUpsert(ctx context.Context, d *schema.ResourceData, met
 
 	params := &pinpoint.EmailChannelRequest{}
 
-	params.Enabled = aws.Bool(d.Get("enabled").(bool))
+	params.Enabled = aws.Bool(d.Get(names.AttrEnabled).(bool))
 	params.FromAddress = aws.String(d.Get("from_address").(string))
 	params.Identity = aws.String(d.Get("identity").(string))
 
-	if v, ok := d.GetOk("role_arn"); ok {
+	if v, ok := d.GetOk(names.AttrRoleARN); ok {
 		params.RoleArn = aws.String(v.(string))
 	}
 
@@ -121,10 +122,10 @@ func resourceEmailChannelRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	res := output.EmailChannelResponse
 	d.Set("application_id", res.ApplicationId)
-	d.Set("enabled", res.Enabled)
+	d.Set(names.AttrEnabled, res.Enabled)
 	d.Set("from_address", res.FromAddress)
 	d.Set("identity", res.Identity)
-	d.Set("role_arn", res.RoleArn)
+	d.Set(names.AttrRoleARN, res.RoleArn)
 	d.Set("configuration_set", res.ConfigurationSet)
 	d.Set("messages_per_second", res.MessagesPerSecond)
 

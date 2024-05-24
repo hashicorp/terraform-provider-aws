@@ -26,6 +26,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_s3_bucket_lifecycle_configuration", name="Bucket Lifecycle Configuration")
@@ -46,7 +47,7 @@ func resourceBucketLifecycleConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"bucket": {
+			names.AttrBucket: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -58,7 +59,7 @@ func resourceBucketLifecycleConfiguration() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			"rule": {
+			names.AttrRule: {
 				Type:     schema.TypeList,
 				Required: true,
 				Elem: &schema.Resource{
@@ -100,7 +101,7 @@ func resourceBucketLifecycleConfiguration() *schema.Resource {
 								},
 							},
 						},
-						"filter": {
+						names.AttrFilter: {
 							Type:     schema.TypeList,
 							Optional: true,
 							// If neither the filter block nor the prefix parameter in the rule are specified,
@@ -127,11 +128,11 @@ func resourceBucketLifecycleConfiguration() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: validation.IntAtLeast(1),
 												},
-												"prefix": {
+												names.AttrPrefix: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
-												"tags": tftags.TagsSchema(),
+												names.AttrTags: tftags.TagsSchema(),
 											},
 										},
 									},
@@ -143,7 +144,7 @@ func resourceBucketLifecycleConfiguration() *schema.Resource {
 										Type:     nullable.TypeNullableInt,
 										Optional: true,
 									},
-									"prefix": {
+									names.AttrPrefix: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -153,11 +154,11 @@ func resourceBucketLifecycleConfiguration() *schema.Resource {
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"key": {
+												names.AttrKey: {
 													Type:     schema.TypeString,
 													Required: true,
 												},
-												"value": {
+												names.AttrValue: {
 													Type:     schema.TypeString,
 													Required: true,
 												},
@@ -167,7 +168,7 @@ func resourceBucketLifecycleConfiguration() *schema.Resource {
 								},
 							},
 						},
-						"id": {
+						names.AttrID: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
@@ -214,12 +215,12 @@ func resourceBucketLifecycleConfiguration() *schema.Resource {
 								},
 							},
 						},
-						"prefix": {
+						names.AttrPrefix: {
 							Type:       schema.TypeString,
 							Optional:   true,
 							Deprecated: "Use filter instead",
 						},
-						"status": {
+						names.AttrStatus: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(lifecycleRuleStatus_Values(), false),
@@ -257,9 +258,9 @@ func resourceBucketLifecycleConfiguration() *schema.Resource {
 func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket := d.Get("bucket").(string)
+	bucket := d.Get(names.AttrBucket).(string)
 	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
-	rules := expandLifecycleRules(ctx, d.Get("rule").([]interface{}))
+	rules := expandLifecycleRules(ctx, d.Get(names.AttrRule).([]interface{}))
 	input := &s3.PutBucketLifecycleConfigurationInput{
 		Bucket: aws.String(bucket),
 		LifecycleConfiguration: &types.BucketLifecycleConfiguration{
@@ -344,9 +345,9 @@ func resourceBucketLifecycleConfigurationRead(ctx context.Context, d *schema.Res
 		return diag.Errorf("reading S3 Bucket Lifecycle Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set("bucket", bucket)
+	d.Set(names.AttrBucket, bucket)
 	d.Set("expected_bucket_owner", expectedBucketOwner)
-	if err := d.Set("rule", flattenLifecycleRules(ctx, output)); err != nil {
+	if err := d.Set(names.AttrRule, flattenLifecycleRules(ctx, output)); err != nil {
 		return diag.Errorf("setting rule: %s", err)
 	}
 
@@ -361,7 +362,7 @@ func resourceBucketLifecycleConfigurationUpdate(ctx context.Context, d *schema.R
 		return diag.FromErr(err)
 	}
 
-	rules := expandLifecycleRules(ctx, d.Get("rule").([]interface{}))
+	rules := expandLifecycleRules(ctx, d.Get(names.AttrRule).([]interface{}))
 	input := &s3.PutBucketLifecycleConfigurationInput{
 		Bucket: aws.String(bucket),
 		LifecycleConfiguration: &types.BucketLifecycleConfiguration{
@@ -564,11 +565,11 @@ func expandLifecycleRules(ctx context.Context, l []interface{}) []types.Lifecycl
 			result.Expiration = expandLifecycleExpiration(v)
 		}
 
-		if v, ok := tfMap["filter"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap[names.AttrFilter].([]interface{}); ok && len(v) > 0 {
 			result.Filter = expandLifecycleRuleFilter(ctx, v)
 		}
 
-		if v, ok := tfMap["prefix"].(string); ok && result.Filter == nil {
+		if v, ok := tfMap[names.AttrPrefix].(string); ok && result.Filter == nil {
 			// If neither the filter block nor the prefix are specified,
 			// apply the Default behavior from v3.x of the provider;
 			// otherwise, set the prefix as specified in Terraform.
@@ -581,7 +582,7 @@ func expandLifecycleRules(ctx context.Context, l []interface{}) []types.Lifecycl
 			}
 		}
 
-		if v, ok := tfMap["id"].(string); ok {
+		if v, ok := tfMap[names.AttrID].(string); ok {
 			result.ID = aws.String(v)
 		}
 
@@ -593,7 +594,7 @@ func expandLifecycleRules(ctx context.Context, l []interface{}) []types.Lifecycl
 			result.NoncurrentVersionTransitions = expandNoncurrentVersionTransitions(v.List())
 		}
 
-		if v, ok := tfMap["status"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
 			result.Status = types.ExpirationStatus(v)
 		}
 
@@ -687,7 +688,7 @@ func expandLifecycleRuleFilter(ctx context.Context, l []interface{}) types.Lifec
 	// Per AWS S3 API, "A Filter must have exactly one of Prefix, Tag, or And specified";
 	// Specifying more than one of the listed parameters results in a MalformedXML error.
 	// In practice, this also includes ObjectSizeGreaterThan and ObjectSizeLessThan.
-	if v, ok := m["prefix"].(string); ok && result == nil {
+	if v, ok := m[names.AttrPrefix].(string); ok && result == nil {
 		result = &types.LifecycleRuleFilterMemberPrefix{
 			Value: v,
 		}
@@ -713,11 +714,11 @@ func expandLifecycleRuleFilterMemberAnd(ctx context.Context, m map[string]interf
 		result.Value.ObjectSizeLessThan = aws.Int64(int64(v))
 	}
 
-	if v, ok := m["prefix"].(string); ok {
+	if v, ok := m[names.AttrPrefix].(string); ok {
 		result.Value.Prefix = aws.String(v)
 	}
 
-	if v, ok := m["tags"].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := m[names.AttrTags].(map[string]interface{}); ok && len(v) > 0 {
 		tags := Tags(tftags.New(ctx, v).IgnoreAWS())
 		if len(tags) > 0 {
 			result.Value.Tags = tags
@@ -736,11 +737,11 @@ func expandLifecycleRuleFilterMemberTag(m map[string]interface{}) *types.Lifecyc
 		Value: types.Tag{},
 	}
 
-	if key, ok := m["key"].(string); ok {
+	if key, ok := m[names.AttrKey].(string); ok {
 		result.Value.Key = aws.String(key)
 	}
 
-	if value, ok := m["value"].(string); ok {
+	if value, ok := m[names.AttrValue].(string); ok {
 		result.Value.Value = aws.String(value)
 	}
 
@@ -846,7 +847,7 @@ func flattenLifecycleRules(ctx context.Context, rules []types.LifecycleRule) []i
 
 	for _, rule := range rules {
 		m := map[string]interface{}{
-			"status": rule.Status,
+			names.AttrStatus: rule.Status,
 		}
 
 		if rule.AbortIncompleteMultipartUpload != nil {
@@ -858,11 +859,11 @@ func flattenLifecycleRules(ctx context.Context, rules []types.LifecycleRule) []i
 		}
 
 		if rule.Filter != nil {
-			m["filter"] = flattenLifecycleRuleFilter(ctx, rule.Filter)
+			m[names.AttrFilter] = flattenLifecycleRuleFilter(ctx, rule.Filter)
 		}
 
 		if rule.ID != nil {
-			m["id"] = aws.ToString(rule.ID)
+			m[names.AttrID] = aws.ToString(rule.ID)
 		}
 
 		if rule.NoncurrentVersionExpiration != nil {
@@ -874,7 +875,7 @@ func flattenLifecycleRules(ctx context.Context, rules []types.LifecycleRule) []i
 		}
 
 		if rule.Prefix != nil {
-			m["prefix"] = aws.ToString(rule.Prefix)
+			m[names.AttrPrefix] = aws.ToString(rule.Prefix)
 		}
 
 		if rule.Transitions != nil {
@@ -938,7 +939,7 @@ func flattenLifecycleRuleFilter(ctx context.Context, filter types.LifecycleRuleF
 	case *types.LifecycleRuleFilterMemberObjectSizeLessThan:
 		m["object_size_less_than"] = strconv.FormatInt(v.Value, 10)
 	case *types.LifecycleRuleFilterMemberPrefix:
-		m["prefix"] = v.Value
+		m[names.AttrPrefix] = v.Value
 	case *types.LifecycleRuleFilterMemberTag:
 		m["tag"] = flattenLifecycleRuleFilterMemberTag(v)
 	default:
@@ -959,11 +960,11 @@ func flattenLifecycleRuleFilterMemberAnd(ctx context.Context, andOp *types.Lifec
 	}
 
 	if v := andOp.Value.Prefix; v != nil {
-		m["prefix"] = aws.ToString(v)
+		m[names.AttrPrefix] = aws.ToString(v)
 	}
 
 	if v := andOp.Value.Tags; v != nil {
-		m["tags"] = keyValueTags(ctx, v).IgnoreAWS().Map()
+		m[names.AttrTags] = keyValueTags(ctx, v).IgnoreAWS().Map()
 	}
 
 	return []interface{}{m}
@@ -977,11 +978,11 @@ func flattenLifecycleRuleFilterMemberTag(op *types.LifecycleRuleFilterMemberTag)
 	m := make(map[string]interface{})
 
 	if v := op.Value.Key; v != nil {
-		m["key"] = aws.ToString(v)
+		m[names.AttrKey] = aws.ToString(v)
 	}
 
 	if v := op.Value.Value; v != nil {
-		m["value"] = aws.ToString(v)
+		m[names.AttrValue] = aws.ToString(v)
 	}
 
 	return []interface{}{m}

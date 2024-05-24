@@ -45,7 +45,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_transfer_agreement",
 			Name:     "Agreement",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
@@ -53,7 +53,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_transfer_certificate",
 			Name:     "Certificate",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
@@ -61,7 +61,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_transfer_connector",
 			Name:     "Connector",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
@@ -69,7 +69,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_transfer_profile",
 			Name:     "Profile",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
@@ -77,7 +77,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_transfer_server",
 			Name:     "Server",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
@@ -94,7 +94,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_transfer_user",
 			Name:     "User",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
@@ -102,7 +102,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_transfer_workflow",
 			Name:     "Workflow",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 	}
@@ -114,9 +114,9 @@ func (p *servicePackage) ServicePackageName() string {
 
 // NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
 func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*transfer_sdkv1.Transfer, error) {
-	sess := config["session"].(*session_sdkv1.Session)
+	sess := config[names.AttrSession].(*session_sdkv1.Session)
 
-	return transfer_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+	return transfer_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config[names.AttrEndpoint].(string))})), nil
 }
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
@@ -124,7 +124,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
 	return transfer_sdkv2.NewFromConfig(cfg, func(o *transfer_sdkv2.Options) {
-		if endpoint := config["endpoint"].(string); endpoint != "" {
+		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
 			o.BaseEndpoint = aws_sdkv2.String(endpoint)
 		}
 	}), nil

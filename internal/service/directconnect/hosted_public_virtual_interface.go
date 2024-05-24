@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_dx_hosted_public_virtual_interface")
@@ -52,7 +53,7 @@ func ResourceHostedPublicVirtualInterface() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -82,7 +83,7 @@ func ResourceHostedPublicVirtualInterface() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -124,7 +125,7 @@ func resourceHostedPublicVirtualInterfaceCreate(ctx context.Context, d *schema.R
 		NewPublicVirtualInterfaceAllocation: &directconnect.NewPublicVirtualInterfaceAllocation{
 			AddressFamily:        aws.String(d.Get("address_family").(string)),
 			Asn:                  aws.Int64(int64(d.Get("bgp_asn").(int))),
-			VirtualInterfaceName: aws.String(d.Get("name").(string)),
+			VirtualInterfaceName: aws.String(d.Get(names.AttrName).(string)),
 			Vlan:                 aws.Int64(int64(d.Get("vlan").(int))),
 		},
 		OwnerAccount: aws.String(d.Get("owner_account_id").(string)),
@@ -181,13 +182,13 @@ func resourceHostedPublicVirtualInterfaceRead(ctx context.Context, d *schema.Res
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("dxvif/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("aws_device", vif.AwsDeviceV2)
 	d.Set("bgp_asn", vif.Asn)
 	d.Set("bgp_auth_key", vif.AuthKey)
 	d.Set("connection_id", vif.ConnectionId)
 	d.Set("customer_address", vif.CustomerAddress)
-	d.Set("name", vif.VirtualInterfaceName)
+	d.Set(names.AttrName, vif.VirtualInterfaceName)
 	d.Set("owner_account_id", vif.OwnerAccount)
 	if err := d.Set("route_filter_prefixes", flattenRouteFilterPrefixes(vif.RouteFilterPrefixes)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting route_filter_prefixes: %s", err)

@@ -37,11 +37,11 @@ func ResourceNetworkProfile() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 16384),
@@ -67,7 +67,7 @@ func ResourceNetworkProfile() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(0, 100),
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
@@ -98,7 +98,7 @@ func ResourceNetworkProfile() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(0, 100),
 			},
-			"type": {
+			names.AttrType: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Default:          awstypes.NetworkProfileTypePrivate,
@@ -115,17 +115,17 @@ func resourceNetworkProfileCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &devicefarm.CreateNetworkProfileInput{
 		Name:       aws.String(name),
 		ProjectArn: aws.String(d.Get("project_arn").(string)),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("type"); ok {
+	if v, ok := d.GetOk(names.AttrType); ok {
 		input.Type = awstypes.NetworkProfileType(v.(string))
 	}
 
@@ -193,9 +193,9 @@ func resourceNetworkProfileRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	arn := aws.ToString(project.Arn)
-	d.Set("arn", arn)
-	d.Set("name", project.Name)
-	d.Set("description", project.Description)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrName, project.Name)
+	d.Set(names.AttrDescription, project.Description)
 	d.Set("downlink_bandwidth_bits", project.DownlinkBandwidthBits)
 	d.Set("downlink_delay_ms", project.DownlinkDelayMs)
 	d.Set("downlink_jitter_ms", project.DownlinkJitterMs)
@@ -204,7 +204,7 @@ func resourceNetworkProfileRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("uplink_delay_ms", project.UplinkDelayMs)
 	d.Set("uplink_jitter_ms", project.UplinkJitterMs)
 	d.Set("uplink_loss_percent", project.UplinkLossPercent)
-	d.Set("type", project.Type)
+	d.Set(names.AttrType, project.Type)
 
 	projectArn, err := decodeProjectARN(arn, "networkprofile", meta)
 	if err != nil {
@@ -220,21 +220,21 @@ func resourceNetworkProfileUpdate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &devicefarm.UpdateNetworkProfileInput{
 			Arn: aws.String(d.Id()),
 		}
 
-		if d.HasChange("name") {
-			input.Name = aws.String(d.Get("name").(string))
+		if d.HasChange(names.AttrName) {
+			input.Name = aws.String(d.Get(names.AttrName).(string))
 		}
 
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
-		if d.HasChange("type") {
-			input.Type = awstypes.NetworkProfileType(d.Get("type").(string))
+		if d.HasChange(names.AttrType) {
+			input.Type = awstypes.NetworkProfileType(d.Get(names.AttrType).(string))
 		}
 
 		if d.HasChange("downlink_bandwidth_bits") {

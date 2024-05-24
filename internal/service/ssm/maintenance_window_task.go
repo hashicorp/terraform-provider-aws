@@ -7,99 +7,96 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ssm"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ssm_maintenance_window_task")
-func ResourceMaintenanceWindowTask() *schema.Resource {
+// @SDKResource("aws_ssm_maintenance_window_task", name="Maintenance Window Task")
+func resourceMaintenanceWindowTask() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMaintenanceWindowTaskCreate,
 		ReadWithoutTimeout:   resourceMaintenanceWindowTaskRead,
 		UpdateWithoutTimeout: resourceMaintenanceWindowTaskUpdate,
 		DeleteWithoutTimeout: resourceMaintenanceWindowTaskDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceMaintenanceWindowTaskImport,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"window_task_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"window_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-
 			"cutoff_behavior": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.MaintenanceWindowTaskCutoffBehavior](),
+			},
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringInSlice(ssm.MaintenanceWindowTaskCutoffBehavior_Values(), false),
+				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
-
 			"max_concurrency": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^([1-9][0-9]*|[1-9][0-9]%|[1-9]%|100%)$`), "must be a number without leading zeros or a percentage between 1% and 100% without leading zeros and ending with the percentage symbol"),
 			},
-
 			"max_errors": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^([1-9][0-9]*|[0]|[1-9][0-9]%|[0-9]%|100%)$`), "must be zero, a number without leading zeros, or a percentage between 1% and 100% without leading zeros and ending with the percentage symbol"),
 			},
-
-			"task_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(ssm.MaintenanceWindowTaskType_Values(), false),
-			},
-
-			"task_arn": {
+			names.AttrName: {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{3,128}$`),
+					"Only alphanumeric characters, hyphens, dots & underscores allowed."),
 			},
-
-			"service_role_arn": {
+			names.AttrPriority: {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntAtLeast(0),
+			},
+			names.AttrServiceRoleARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-
 			"targets": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 5,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"key": {
+						names.AttrKey: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"values": {
+						names.AttrValues: {
 							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 50,
@@ -108,26 +105,10 @@ func ResourceMaintenanceWindowTask() *schema.Resource {
 					},
 				},
 			},
-
-			"name": {
+			"task_arn": {
 				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{3,128}$`),
-					"Only alphanumeric characters, hyphens, dots & underscores allowed."),
+				Required: true,
 			},
-
-			"description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 128),
-			},
-
-			"priority": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntAtLeast(0),
-			},
-
 			"task_invocation_parameters": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -145,17 +126,16 @@ func ResourceMaintenanceWindowTask() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: validation.StringMatch(regexache.MustCompile("([$]LATEST|[$]DEFAULT|^[1-9][0-9]*$)"), "see https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_MaintenanceWindowAutomationParameters.html"),
 									},
-									"parameter": {
+									names.AttrParameter: {
 										Type:     schema.TypeSet,
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"name": {
+												names.AttrName: {
 													Type:     schema.TypeString,
 													Required: true,
 												},
-
-												"values": {
+												names.AttrValues: {
 													Type:     schema.TypeList,
 													Required: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
@@ -166,7 +146,6 @@ func ResourceMaintenanceWindowTask() *schema.Resource {
 								},
 							},
 						},
-
 						"lambda_parameters": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -178,14 +157,12 @@ func ResourceMaintenanceWindowTask() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(1, 8000),
 									},
-
 									"payload": {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Sensitive:    true,
 										ValidateFunc: validation.StringLenBetween(0, 4096),
 									},
-
 									"qualifier": {
 										Type:         schema.TypeString,
 										Optional:     true,
@@ -194,106 +171,12 @@ func ResourceMaintenanceWindowTask() *schema.Resource {
 								},
 							},
 						},
-
 						"run_command_parameters": {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"comment": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(0, 100),
-									},
-
-									"document_hash": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(0, 256),
-									},
-
-									"document_hash_type": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringInSlice(ssm.DocumentHashType_Values(), false),
-									},
-									"document_version": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringMatch(regexache.MustCompile(`([$]LATEST|[$]DEFAULT|^[1-9][0-9]*$)`), "must be $DEFAULT, $LATEST, or a version number"),
-									},
-
-									"notification_config": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"notification_arn": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: verify.ValidARN,
-												},
-
-												"notification_events": {
-													Type:     schema.TypeList,
-													Optional: true,
-													Elem: &schema.Schema{
-														Type:         schema.TypeString,
-														ValidateFunc: validation.StringInSlice(ssm.NotificationEvent_Values(), false),
-													},
-												},
-
-												"notification_type": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validation.StringInSlice(ssm.NotificationType_Values(), false),
-												},
-											},
-										},
-									},
-
-									"output_s3_bucket": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-
-									"output_s3_key_prefix": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-
-									"parameter": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"name": {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-
-												"values": {
-													Type:     schema.TypeList,
-													Required: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
-												},
-											},
-										},
-									},
-
-									"service_role_arn": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-
-									"timeout_seconds": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntBetween(30, 2592000),
-									},
 									"cloudwatch_config": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -312,10 +195,91 @@ func ResourceMaintenanceWindowTask() *schema.Resource {
 											},
 										},
 									},
+									names.AttrComment: {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringLenBetween(0, 100),
+									},
+									"document_hash": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringLenBetween(0, 256),
+									},
+									"document_hash_type": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.DocumentHashType](),
+									},
+									"document_version": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringMatch(regexache.MustCompile(`([$]LATEST|[$]DEFAULT|^[1-9][0-9]*$)`), "must be $DEFAULT, $LATEST, or a version number"),
+									},
+									"notification_config": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"notification_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+												"notification_events": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem: &schema.Schema{
+														Type:             schema.TypeString,
+														ValidateDiagFunc: enum.Validate[awstypes.NotificationEvent](),
+													},
+												},
+												"notification_type": {
+													Type:             schema.TypeString,
+													Optional:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.NotificationType](),
+												},
+											},
+										},
+									},
+									"output_s3_bucket": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"output_s3_key_prefix": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									names.AttrParameter: {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrName: {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												names.AttrValues: {
+													Type:     schema.TypeList,
+													Required: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									names.AttrServiceRoleARN: {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+									"timeout_seconds": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validation.IntBetween(30, 2592000),
+									},
 								},
 							},
 						},
-
 						"step_functions_parameters": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -328,8 +292,7 @@ func ResourceMaintenanceWindowTask() *schema.Resource {
 										Sensitive:    true,
 										ValidateFunc: validation.StringLenBetween(0, 4096),
 									},
-
-									"name": {
+									names.AttrName: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(1, 80),
@@ -340,503 +303,181 @@ func ResourceMaintenanceWindowTask() *schema.Resource {
 					},
 				},
 			},
+			"task_type": {
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.MaintenanceWindowTaskType](),
+			},
+			"window_id": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"window_task_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
 
-func expandTaskInvocationParameters(config []interface{}) *ssm.MaintenanceWindowTaskInvocationParameters {
-	if len(config) == 0 || config[0] == nil {
-		return nil
-	}
-
-	params := &ssm.MaintenanceWindowTaskInvocationParameters{}
-	for _, v := range config {
-		paramConfig := v.(map[string]interface{})
-		if attr, ok := paramConfig["automation_parameters"]; ok && len(attr.([]interface{})) > 0 && attr.([]interface{})[0] != nil {
-			params.Automation = expandTaskInvocationAutomationParameters(attr.([]interface{}))
-		}
-		if attr, ok := paramConfig["lambda_parameters"]; ok && len(attr.([]interface{})) > 0 && attr.([]interface{})[0] != nil {
-			params.Lambda = expandTaskInvocationLambdaParameters(attr.([]interface{}))
-		}
-		if attr, ok := paramConfig["run_command_parameters"]; ok && len(attr.([]interface{})) > 0 && attr.([]interface{})[0] != nil {
-			params.RunCommand = expandTaskInvocationRunCommandParameters(attr.([]interface{}))
-		}
-		if attr, ok := paramConfig["step_functions_parameters"]; ok && len(attr.([]interface{})) > 0 && attr.([]interface{})[0] != nil {
-			params.StepFunctions = expandTaskInvocationStepFunctionsParameters(attr.([]interface{}))
-		}
-	}
-	return params
-}
-
-func flattenTaskInvocationParameters(parameters *ssm.MaintenanceWindowTaskInvocationParameters) []interface{} {
-	result := make(map[string]interface{})
-	if parameters.Automation != nil {
-		result["automation_parameters"] = flattenTaskInvocationAutomationParameters(parameters.Automation)
-	}
-
-	if parameters.Lambda != nil {
-		result["lambda_parameters"] = flattenTaskInvocationLambdaParameters(parameters.Lambda)
-	}
-
-	if parameters.RunCommand != nil {
-		result["run_command_parameters"] = flattenTaskInvocationRunCommandParameters(parameters.RunCommand)
-	}
-
-	if parameters.StepFunctions != nil {
-		result["step_functions_parameters"] = flattenTaskInvocationStepFunctionsParameters(parameters.StepFunctions)
-	}
-
-	return []interface{}{result}
-}
-
-func expandTaskInvocationAutomationParameters(config []interface{}) *ssm.MaintenanceWindowAutomationParameters {
-	if len(config) == 0 || config[0] == nil {
-		return nil
-	}
-
-	params := &ssm.MaintenanceWindowAutomationParameters{}
-	configParam := config[0].(map[string]interface{})
-	if attr, ok := configParam["document_version"]; ok && len(attr.(string)) != 0 {
-		params.DocumentVersion = aws.String(attr.(string))
-	}
-	if attr, ok := configParam["parameter"]; ok && len(attr.(*schema.Set).List()) > 0 {
-		params.Parameters = expandTaskInvocationCommonParameters(attr.(*schema.Set).List())
-	}
-
-	return params
-}
-
-func flattenTaskInvocationAutomationParameters(parameters *ssm.MaintenanceWindowAutomationParameters) []interface{} {
-	result := make(map[string]interface{})
-
-	if parameters.DocumentVersion != nil {
-		result["document_version"] = aws.StringValue(parameters.DocumentVersion)
-	}
-	if parameters.Parameters != nil {
-		result["parameter"] = flattenTaskInvocationCommonParameters(parameters.Parameters)
-	}
-
-	return []interface{}{result}
-}
-
-func expandTaskInvocationLambdaParameters(config []interface{}) *ssm.MaintenanceWindowLambdaParameters {
-	if len(config) == 0 || config[0] == nil {
-		return nil
-	}
-
-	params := &ssm.MaintenanceWindowLambdaParameters{}
-	configParam := config[0].(map[string]interface{})
-	if attr, ok := configParam["client_context"]; ok && len(attr.(string)) != 0 {
-		params.ClientContext = aws.String(attr.(string))
-	}
-	if attr, ok := configParam["payload"]; ok && len(attr.(string)) != 0 {
-		params.Payload = []byte(attr.(string))
-	}
-	if attr, ok := configParam["qualifier"]; ok && len(attr.(string)) != 0 {
-		params.Qualifier = aws.String(attr.(string))
-	}
-	return params
-}
-
-func flattenTaskInvocationLambdaParameters(parameters *ssm.MaintenanceWindowLambdaParameters) []interface{} {
-	result := make(map[string]interface{})
-
-	if parameters.ClientContext != nil {
-		result["client_context"] = aws.StringValue(parameters.ClientContext)
-	}
-	if parameters.Payload != nil {
-		result["payload"] = string(parameters.Payload)
-	}
-	if parameters.Qualifier != nil {
-		result["qualifier"] = aws.StringValue(parameters.Qualifier)
-	}
-	return []interface{}{result}
-}
-
-func expandTaskInvocationRunCommandParameters(config []interface{}) *ssm.MaintenanceWindowRunCommandParameters {
-	if len(config) == 0 || config[0] == nil {
-		return nil
-	}
-
-	params := &ssm.MaintenanceWindowRunCommandParameters{}
-	configParam := config[0].(map[string]interface{})
-	if attr, ok := configParam["comment"]; ok && len(attr.(string)) != 0 {
-		params.Comment = aws.String(attr.(string))
-	}
-	if attr, ok := configParam["document_hash"]; ok && len(attr.(string)) != 0 {
-		params.DocumentHash = aws.String(attr.(string))
-	}
-	if attr, ok := configParam["document_hash_type"]; ok && len(attr.(string)) != 0 {
-		params.DocumentHashType = aws.String(attr.(string))
-	}
-	if attr, ok := configParam["document_version"]; ok && len(attr.(string)) != 0 {
-		params.DocumentVersion = aws.String(attr.(string))
-	}
-	if attr, ok := configParam["notification_config"]; ok && len(attr.([]interface{})) > 0 {
-		params.NotificationConfig = expandTaskInvocationRunCommandParametersNotificationConfig(attr.([]interface{}))
-	}
-	if attr, ok := configParam["output_s3_bucket"]; ok && len(attr.(string)) != 0 {
-		params.OutputS3BucketName = aws.String(attr.(string))
-	}
-	if attr, ok := configParam["output_s3_key_prefix"]; ok && len(attr.(string)) != 0 {
-		params.OutputS3KeyPrefix = aws.String(attr.(string))
-	}
-	if attr, ok := configParam["parameter"]; ok && len(attr.(*schema.Set).List()) > 0 {
-		params.Parameters = expandTaskInvocationCommonParameters(attr.(*schema.Set).List())
-	}
-	if attr, ok := configParam["service_role_arn"]; ok && len(attr.(string)) != 0 {
-		params.ServiceRoleArn = aws.String(attr.(string))
-	}
-	if attr, ok := configParam["timeout_seconds"]; ok && attr.(int) != 0 {
-		params.TimeoutSeconds = aws.Int64(int64(attr.(int)))
-	}
-
-	if attr, ok := configParam["cloudwatch_config"]; ok && len(attr.([]interface{})) > 0 {
-		params.CloudWatchOutputConfig = expandTaskInvocationRunCommandParametersCloudWatchConfig(attr.([]interface{}))
-	}
-	return params
-}
-
-func flattenTaskInvocationRunCommandParameters(parameters *ssm.MaintenanceWindowRunCommandParameters) []interface{} {
-	result := make(map[string]interface{})
-
-	if parameters.Comment != nil {
-		result["comment"] = aws.StringValue(parameters.Comment)
-	}
-	if parameters.DocumentHash != nil {
-		result["document_hash"] = aws.StringValue(parameters.DocumentHash)
-	}
-	if parameters.DocumentHashType != nil {
-		result["document_hash_type"] = aws.StringValue(parameters.DocumentHashType)
-	}
-	if parameters.DocumentVersion != nil {
-		result["document_version"] = aws.StringValue(parameters.DocumentVersion)
-	}
-	if parameters.NotificationConfig != nil {
-		result["notification_config"] = flattenTaskInvocationRunCommandParametersNotificationConfig(parameters.NotificationConfig)
-	}
-	if parameters.OutputS3BucketName != nil {
-		result["output_s3_bucket"] = aws.StringValue(parameters.OutputS3BucketName)
-	}
-	if parameters.OutputS3KeyPrefix != nil {
-		result["output_s3_key_prefix"] = aws.StringValue(parameters.OutputS3KeyPrefix)
-	}
-	if parameters.Parameters != nil {
-		result["parameter"] = flattenTaskInvocationCommonParameters(parameters.Parameters)
-	}
-	if parameters.ServiceRoleArn != nil {
-		result["service_role_arn"] = aws.StringValue(parameters.ServiceRoleArn)
-	}
-	if parameters.TimeoutSeconds != nil {
-		result["timeout_seconds"] = aws.Int64Value(parameters.TimeoutSeconds)
-	}
-	if parameters.CloudWatchOutputConfig != nil {
-		result["cloudwatch_config"] = flattenTaskInvocationRunCommandParametersCloudWatchConfig(parameters.CloudWatchOutputConfig)
-	}
-
-	return []interface{}{result}
-}
-
-func expandTaskInvocationStepFunctionsParameters(config []interface{}) *ssm.MaintenanceWindowStepFunctionsParameters {
-	if len(config) == 0 || config[0] == nil {
-		return nil
-	}
-
-	params := &ssm.MaintenanceWindowStepFunctionsParameters{}
-	configParam := config[0].(map[string]interface{})
-
-	if attr, ok := configParam["input"]; ok && len(attr.(string)) != 0 {
-		params.Input = aws.String(attr.(string))
-	}
-	if attr, ok := configParam["name"]; ok && len(attr.(string)) != 0 {
-		params.Name = aws.String(attr.(string))
-	}
-
-	return params
-}
-
-func flattenTaskInvocationStepFunctionsParameters(parameters *ssm.MaintenanceWindowStepFunctionsParameters) []interface{} {
-	result := make(map[string]interface{})
-
-	if parameters.Input != nil {
-		result["input"] = aws.StringValue(parameters.Input)
-	}
-	if parameters.Name != nil {
-		result["name"] = aws.StringValue(parameters.Name)
-	}
-	return []interface{}{result}
-}
-
-func expandTaskInvocationRunCommandParametersNotificationConfig(config []interface{}) *ssm.NotificationConfig {
-	if len(config) == 0 || config[0] == nil {
-		return nil
-	}
-
-	params := &ssm.NotificationConfig{}
-	configParam := config[0].(map[string]interface{})
-
-	if attr, ok := configParam["notification_arn"]; ok && len(attr.(string)) != 0 {
-		params.NotificationArn = aws.String(attr.(string))
-	}
-	if attr, ok := configParam["notification_events"]; ok && len(attr.([]interface{})) > 0 {
-		params.NotificationEvents = flex.ExpandStringList(attr.([]interface{}))
-	}
-	if attr, ok := configParam["notification_type"]; ok && len(attr.(string)) != 0 {
-		params.NotificationType = aws.String(attr.(string))
-	}
-
-	return params
-}
-
-func flattenTaskInvocationRunCommandParametersNotificationConfig(config *ssm.NotificationConfig) []interface{} {
-	result := make(map[string]interface{})
-
-	if config.NotificationArn != nil {
-		result["notification_arn"] = aws.StringValue(config.NotificationArn)
-	}
-	if config.NotificationEvents != nil {
-		result["notification_events"] = flex.FlattenStringList(config.NotificationEvents)
-	}
-	if config.NotificationType != nil {
-		result["notification_type"] = aws.StringValue(config.NotificationType)
-	}
-
-	return []interface{}{result}
-}
-
-func expandTaskInvocationRunCommandParametersCloudWatchConfig(config []interface{}) *ssm.CloudWatchOutputConfig {
-	if len(config) == 0 || config[0] == nil {
-		return nil
-	}
-
-	params := &ssm.CloudWatchOutputConfig{}
-	configParam := config[0].(map[string]interface{})
-
-	if attr, ok := configParam["cloudwatch_log_group_name"]; ok && len(attr.(string)) != 0 {
-		params.CloudWatchLogGroupName = aws.String(attr.(string))
-	}
-	if attr, ok := configParam["cloudwatch_output_enabled"]; ok {
-		params.CloudWatchOutputEnabled = aws.Bool(attr.(bool))
-	}
-
-	return params
-}
-
-func flattenTaskInvocationRunCommandParametersCloudWatchConfig(config *ssm.CloudWatchOutputConfig) []interface{} {
-	result := make(map[string]interface{})
-
-	if config.CloudWatchLogGroupName != nil {
-		result["cloudwatch_log_group_name"] = aws.StringValue(config.CloudWatchLogGroupName)
-	}
-	if config.CloudWatchOutputEnabled != nil {
-		result["cloudwatch_output_enabled"] = aws.BoolValue(config.CloudWatchOutputEnabled)
-	}
-
-	return []interface{}{result}
-}
-
-func expandTaskInvocationCommonParameters(config []interface{}) map[string][]*string {
-	if len(config) == 0 || config[0] == nil {
-		return nil
-	}
-
-	params := make(map[string][]*string)
-
-	for _, v := range config {
-		paramConfig := v.(map[string]interface{})
-		params[paramConfig["name"].(string)] = flex.ExpandStringList(paramConfig["values"].([]interface{}))
-	}
-
-	return params
-}
-
-func flattenTaskInvocationCommonParameters(parameters map[string][]*string) []interface{} {
-	attributes := make([]interface{}, 0, len(parameters))
-
-	keys := make([]string, 0, len(parameters))
-	for k := range parameters {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-
-	for _, key := range keys {
-		values := make([]string, 0)
-		for _, value := range parameters[key] {
-			values = append(values, aws.StringValue(value))
-		}
-		params := map[string]interface{}{
-			"name":   key,
-			"values": values,
-		}
-		attributes = append(attributes, params)
-	}
-
-	return attributes
-}
-
 func resourceMaintenanceWindowTaskCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn(ctx)
+	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
-	log.Printf("[INFO] Registering SSM Maintenance Window Task")
-
-	params := &ssm.RegisterTaskWithMaintenanceWindowInput{
-		WindowId: aws.String(d.Get("window_id").(string)),
-		TaskType: aws.String(d.Get("task_type").(string)),
+	input := &ssm.RegisterTaskWithMaintenanceWindowInput{
 		TaskArn:  aws.String(d.Get("task_arn").(string)),
-	}
-
-	if v, ok := d.GetOk("max_errors"); ok {
-		params.MaxErrors = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("max_concurrency"); ok {
-		params.MaxConcurrency = aws.String(v.(string))
+		TaskType: awstypes.MaintenanceWindowTaskType(d.Get("task_type").(string)),
+		WindowId: aws.String(d.Get("window_id").(string)),
 	}
 
 	if v, ok := d.GetOk("cutoff_behavior"); ok {
-		params.CutoffBehavior = aws.String(v.(string))
+		input.CutoffBehavior = awstypes.MaintenanceWindowTaskCutoffBehavior(v.(string))
+	}
+
+	if v, ok := d.GetOk(names.AttrDescription); ok {
+		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("max_concurrency"); ok {
+		input.MaxConcurrency = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("max_errors"); ok {
+		input.MaxErrors = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk(names.AttrName); ok {
+		input.Name = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk(names.AttrPriority); ok {
+		input.Priority = aws.Int32(int32(v.(int)))
+	}
+
+	if v, ok := d.GetOk(names.AttrServiceRoleARN); ok {
+		input.ServiceRoleArn = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("targets"); ok {
-		params.Targets = expandTargets(v.([]interface{}))
-	}
-
-	if v, ok := d.GetOk("service_role_arn"); ok {
-		params.ServiceRoleArn = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("name"); ok {
-		params.Name = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("description"); ok {
-		params.Description = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("priority"); ok {
-		params.Priority = aws.Int64(int64(v.(int)))
+		input.Targets = expandTargets(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("task_invocation_parameters"); ok {
-		params.TaskInvocationParameters = expandTaskInvocationParameters(v.([]interface{}))
+		input.TaskInvocationParameters = expandTaskInvocationParameters(v.([]interface{}))
 	}
 
-	resp, err := conn.RegisterTaskWithMaintenanceWindowWithContext(ctx, params)
+	output, err := conn.RegisterTaskWithMaintenanceWindow(ctx, input)
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating SSM Maintenance Window Task: %s", err)
 	}
 
-	d.SetId(aws.StringValue(resp.WindowTaskId))
+	d.SetId(aws.ToString(output.WindowTaskId))
 
 	return append(diags, resourceMaintenanceWindowTaskRead(ctx, d, meta)...)
 }
 
 func resourceMaintenanceWindowTaskRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn(ctx)
-	windowID := d.Get("window_id").(string)
+	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
-	params := &ssm.GetMaintenanceWindowTaskInput{
-		WindowId:     aws.String(windowID),
-		WindowTaskId: aws.String(d.Id()),
-	}
-	resp, err := conn.GetMaintenanceWindowTaskWithContext(ctx, params)
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ssm.ErrCodeDoesNotExistException) {
-		log.Printf("[WARN] Maintenance Window (%s) Task (%s) not found, removing from state", windowID, d.Id())
+	output, err := findMaintenanceWindowTaskByTwoPartKey(ctx, conn, d.Get("window_id").(string), d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] SSM Maintenance Window Task %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting Maintenance Window (%s) Task (%s): %s", windowID, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SSM Maintenance Window Task (%s): %s", d.Id(), err)
 	}
 
-	windowTaskID := aws.StringValue(resp.WindowTaskId)
-	d.Set("window_id", resp.WindowId)
-	d.Set("window_task_id", windowTaskID)
-	d.Set("max_concurrency", resp.MaxConcurrency)
-	d.Set("max_errors", resp.MaxErrors)
-	d.Set("task_type", resp.TaskType)
-	d.Set("service_role_arn", resp.ServiceRoleArn)
-	d.Set("task_arn", resp.TaskArn)
-	d.Set("priority", resp.Priority)
-	d.Set("name", resp.Name)
-	d.Set("description", resp.Description)
-	d.Set("cutoff_behavior", resp.CutoffBehavior)
-
-	if resp.TaskInvocationParameters != nil {
-		if err := d.Set("task_invocation_parameters", flattenTaskInvocationParameters(resp.TaskInvocationParameters)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting task_invocation_parameters error: %#v", err)
-		}
-	}
-
-	if err := d.Set("targets", flattenTargets(resp.Targets)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting targets error: %#v", err)
-	}
-
+	windowTaskID := aws.ToString(output.WindowTaskId)
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "ssm",
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("windowtask/%s", windowTaskID),
+		Resource:  "windowtask/" + windowTaskID,
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
+	d.Set("cutoff_behavior", output.CutoffBehavior)
+	d.Set(names.AttrDescription, output.Description)
+	d.Set("max_concurrency", output.MaxConcurrency)
+	d.Set("max_errors", output.MaxErrors)
+	d.Set(names.AttrName, output.Name)
+	d.Set(names.AttrPriority, output.Priority)
+	d.Set(names.AttrServiceRoleARN, output.ServiceRoleArn)
+	if err := d.Set("targets", flattenTargets(output.Targets)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting targets: %s", err)
+	}
+	d.Set("task_arn", output.TaskArn)
+	if output.TaskInvocationParameters != nil {
+		if err := d.Set("task_invocation_parameters", flattenTaskInvocationParameters(output.TaskInvocationParameters)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting task_invocation_parameters: %s", err)
+		}
+	}
+	d.Set("task_type", output.TaskType)
+	d.Set("window_id", output.WindowId)
+	d.Set("window_task_id", windowTaskID)
 
 	return diags
 }
 
 func resourceMaintenanceWindowTaskUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn(ctx)
-	windowID := d.Get("window_id").(string)
+	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
-	params := &ssm.UpdateMaintenanceWindowTaskInput{
-		Priority:     aws.Int64(int64(d.Get("priority").(int))),
-		WindowId:     aws.String(windowID),
-		WindowTaskId: aws.String(d.Id()),
-		TaskArn:      aws.String(d.Get("task_arn").(string)),
+	input := &ssm.UpdateMaintenanceWindowTaskInput{
+		Priority:     aws.Int32(int32(d.Get(names.AttrPriority).(int))),
 		Replace:      aws.Bool(true),
-	}
-
-	if v, ok := d.GetOk("service_role_arn"); ok {
-		params.ServiceRoleArn = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("max_errors"); ok {
-		params.MaxErrors = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("max_concurrency"); ok {
-		params.MaxConcurrency = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("targets"); ok {
-		params.Targets = expandTargets(v.([]interface{}))
-	} else {
-		params.MaxConcurrency = nil
-		params.MaxErrors = nil
+		TaskArn:      aws.String(d.Get("task_arn").(string)),
+		WindowId:     aws.String(d.Get("window_id").(string)),
+		WindowTaskId: aws.String(d.Id()),
 	}
 
 	if v, ok := d.GetOk("cutoff_behavior"); ok {
-		params.CutoffBehavior = aws.String(v.(string))
+		input.CutoffBehavior = awstypes.MaintenanceWindowTaskCutoffBehavior(v.(string))
 	}
 
-	if v, ok := d.GetOk("name"); ok {
-		params.Name = aws.String(v.(string))
+	if v, ok := d.GetOk(names.AttrDescription); ok {
+		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
-		params.Description = aws.String(v.(string))
+	if v, ok := d.GetOk("max_concurrency"); ok {
+		input.MaxConcurrency = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("max_errors"); ok {
+		input.MaxErrors = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk(names.AttrName); ok {
+		input.Name = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk(names.AttrServiceRoleARN); ok {
+		input.ServiceRoleArn = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("task_invocation_parameters"); ok {
-		params.TaskInvocationParameters = expandTaskInvocationParameters(v.([]interface{}))
+		input.TaskInvocationParameters = expandTaskInvocationParameters(v.([]interface{}))
 	}
 
-	_, err := conn.UpdateMaintenanceWindowTaskWithContext(ctx, params)
+	if v, ok := d.GetOk("targets"); ok {
+		input.Targets = expandTargets(v.([]interface{}))
+	} else {
+		input.MaxConcurrency = nil
+		input.MaxErrors = nil
+	}
+
+	_, err := conn.UpdateMaintenanceWindowTask(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Maintenance Window (%s) Task (%s): %s", windowID, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Maintenance Window Task (%s): %s", d.Id(), err)
 	}
 
 	return append(diags, resourceMaintenanceWindowTaskRead(ctx, d, meta)...)
@@ -844,21 +485,20 @@ func resourceMaintenanceWindowTaskUpdate(ctx context.Context, d *schema.Resource
 
 func resourceMaintenanceWindowTaskDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn(ctx)
+	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
-	log.Printf("[INFO] Deregistering SSM Maintenance Window Task: %s", d.Id())
-
-	params := &ssm.DeregisterTaskFromMaintenanceWindowInput{
+	log.Printf("[INFO] Deleting SSM Maintenance Window Task: %s", d.Id())
+	_, err := conn.DeregisterTaskFromMaintenanceWindow(ctx, &ssm.DeregisterTaskFromMaintenanceWindowInput{
 		WindowId:     aws.String(d.Get("window_id").(string)),
 		WindowTaskId: aws.String(d.Id()),
-	}
+	})
 
-	_, err := conn.DeregisterTaskFromMaintenanceWindowWithContext(ctx, params)
-	if tfawserr.ErrCodeEquals(err, ssm.ErrCodeDoesNotExistException) {
+	if errs.IsA[*awstypes.DoesNotExistException](err) {
 		return diags
 	}
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deregistering SSM Maintenance Window Task (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SSM Maintenance Window Task (%s): %s", d.Id(), err)
 	}
 
 	return diags
@@ -877,4 +517,355 @@ func resourceMaintenanceWindowTaskImport(ctx context.Context, d *schema.Resource
 	d.SetId(windowTaskID)
 
 	return []*schema.ResourceData{d}, nil
+}
+
+func findMaintenanceWindowTaskByTwoPartKey(ctx context.Context, conn *ssm.Client, windowID, windowTaskID string) (*ssm.GetMaintenanceWindowTaskOutput, error) {
+	input := &ssm.GetMaintenanceWindowTaskInput{
+		WindowId:     aws.String(windowID),
+		WindowTaskId: aws.String(windowTaskID),
+	}
+
+	output, err := conn.GetMaintenanceWindowTask(ctx, input)
+
+	if errs.IsA[*awstypes.DoesNotExistException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func expandTaskInvocationParameters(tfList []interface{}) *awstypes.MaintenanceWindowTaskInvocationParameters {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.MaintenanceWindowTaskInvocationParameters{}
+
+	for _, tfMapRaw := range tfList {
+		tfMap := tfMapRaw.(map[string]interface{})
+		if v, ok := tfMap["automation_parameters"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			apiObject.Automation = expandTaskInvocationAutomationParameters(v.([]interface{}))
+		}
+		if v, ok := tfMap["lambda_parameters"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			apiObject.Lambda = expandTaskInvocationLambdaParameters(v.([]interface{}))
+		}
+		if v, ok := tfMap["run_command_parameters"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			apiObject.RunCommand = expandTaskInvocationRunCommandParameters(v.([]interface{}))
+		}
+		if v, ok := tfMap["step_functions_parameters"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			apiObject.StepFunctions = expandTaskInvocationStepFunctionsParameters(v.([]interface{}))
+		}
+	}
+
+	return apiObject
+}
+
+func flattenTaskInvocationParameters(apiObject *awstypes.MaintenanceWindowTaskInvocationParameters) []interface{} {
+	tfMap := make(map[string]interface{})
+
+	if apiObject.Automation != nil {
+		tfMap["automation_parameters"] = flattenTaskInvocationAutomationParameters(apiObject.Automation)
+	}
+
+	if apiObject.Lambda != nil {
+		tfMap["lambda_parameters"] = flattenTaskInvocationLambdaParameters(apiObject.Lambda)
+	}
+
+	if apiObject.RunCommand != nil {
+		tfMap["run_command_parameters"] = flattenTaskInvocationRunCommandParameters(apiObject.RunCommand)
+	}
+
+	if apiObject.StepFunctions != nil {
+		tfMap["step_functions_parameters"] = flattenTaskInvocationStepFunctionsParameters(apiObject.StepFunctions)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func expandTaskInvocationAutomationParameters(tfList []interface{}) *awstypes.MaintenanceWindowAutomationParameters {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.MaintenanceWindowAutomationParameters{}
+	tfMap := tfList[0].(map[string]interface{})
+
+	if v, ok := tfMap["document_version"]; ok && len(v.(string)) != 0 {
+		apiObject.DocumentVersion = aws.String(v.(string))
+	}
+	if v, ok := tfMap[names.AttrParameter]; ok && len(v.(*schema.Set).List()) > 0 {
+		apiObject.Parameters = expandTaskInvocationCommonParameters(v.(*schema.Set).List())
+	}
+
+	return apiObject
+}
+
+func flattenTaskInvocationAutomationParameters(apiObject *awstypes.MaintenanceWindowAutomationParameters) []interface{} {
+	tfMap := make(map[string]interface{})
+
+	if apiObject.DocumentVersion != nil {
+		tfMap["document_version"] = aws.ToString(apiObject.DocumentVersion)
+	}
+	if apiObject.Parameters != nil {
+		tfMap[names.AttrParameter] = flattenTaskInvocationCommonParameters(apiObject.Parameters)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func expandTaskInvocationLambdaParameters(tfList []interface{}) *awstypes.MaintenanceWindowLambdaParameters {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.MaintenanceWindowLambdaParameters{}
+	tfMap := tfList[0].(map[string]interface{})
+
+	if v, ok := tfMap["client_context"]; ok && len(v.(string)) != 0 {
+		apiObject.ClientContext = aws.String(v.(string))
+	}
+	if v, ok := tfMap["payload"]; ok && len(v.(string)) != 0 {
+		apiObject.Payload = []byte(v.(string))
+	}
+	if v, ok := tfMap["qualifier"]; ok && len(v.(string)) != 0 {
+		apiObject.Qualifier = aws.String(v.(string))
+	}
+
+	return apiObject
+}
+
+func flattenTaskInvocationLambdaParameters(apiObject *awstypes.MaintenanceWindowLambdaParameters) []interface{} {
+	tfMap := make(map[string]interface{})
+
+	if apiObject.ClientContext != nil {
+		tfMap["client_context"] = aws.ToString(apiObject.ClientContext)
+	}
+	if apiObject.Payload != nil {
+		tfMap["payload"] = string(apiObject.Payload)
+	}
+	if apiObject.Qualifier != nil {
+		tfMap["qualifier"] = aws.ToString(apiObject.Qualifier)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func expandTaskInvocationRunCommandParameters(tfList []interface{}) *awstypes.MaintenanceWindowRunCommandParameters {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.MaintenanceWindowRunCommandParameters{}
+	tfMap := tfList[0].(map[string]interface{})
+
+	if v, ok := tfMap["cloudwatch_config"]; ok && len(v.([]interface{})) > 0 {
+		apiObject.CloudWatchOutputConfig = expandTaskInvocationRunCommandParametersCloudWatchConfig(v.([]interface{}))
+	}
+	if v, ok := tfMap[names.AttrComment]; ok && len(v.(string)) != 0 {
+		apiObject.Comment = aws.String(v.(string))
+	}
+	if v, ok := tfMap["document_hash"]; ok && len(v.(string)) != 0 {
+		apiObject.DocumentHash = aws.String(v.(string))
+	}
+	if v, ok := tfMap["document_hash_type"]; ok && len(v.(string)) != 0 {
+		apiObject.DocumentHashType = awstypes.DocumentHashType(v.(string))
+	}
+	if v, ok := tfMap["document_version"]; ok && len(v.(string)) != 0 {
+		apiObject.DocumentVersion = aws.String(v.(string))
+	}
+	if v, ok := tfMap["notification_config"]; ok && len(v.([]interface{})) > 0 {
+		apiObject.NotificationConfig = expandTaskInvocationRunCommandParametersNotificationConfig(v.([]interface{}))
+	}
+	if v, ok := tfMap["output_s3_bucket"]; ok && len(v.(string)) != 0 {
+		apiObject.OutputS3BucketName = aws.String(v.(string))
+	}
+	if v, ok := tfMap["output_s3_key_prefix"]; ok && len(v.(string)) != 0 {
+		apiObject.OutputS3KeyPrefix = aws.String(v.(string))
+	}
+	if v, ok := tfMap[names.AttrParameter]; ok && len(v.(*schema.Set).List()) > 0 {
+		apiObject.Parameters = expandTaskInvocationCommonParameters(v.(*schema.Set).List())
+	}
+	if v, ok := tfMap[names.AttrServiceRoleARN]; ok && len(v.(string)) != 0 {
+		apiObject.ServiceRoleArn = aws.String(v.(string))
+	}
+	if v, ok := tfMap["timeout_seconds"]; ok && v.(int) != 0 {
+		apiObject.TimeoutSeconds = aws.Int32(int32(v.(int)))
+	}
+
+	return apiObject
+}
+
+func flattenTaskInvocationRunCommandParameters(apiObject *awstypes.MaintenanceWindowRunCommandParameters) []interface{} {
+	tfMap := make(map[string]interface{})
+
+	if apiObject.CloudWatchOutputConfig != nil {
+		tfMap["cloudwatch_config"] = flattenTaskInvocationRunCommandParametersCloudWatchConfig(apiObject.CloudWatchOutputConfig)
+	}
+	if apiObject.Comment != nil {
+		tfMap[names.AttrComment] = aws.ToString(apiObject.Comment)
+	}
+	if apiObject.DocumentHash != nil {
+		tfMap["document_hash"] = aws.ToString(apiObject.DocumentHash)
+	}
+	tfMap["document_hash_type"] = apiObject.DocumentHashType
+	if apiObject.DocumentVersion != nil {
+		tfMap["document_version"] = aws.ToString(apiObject.DocumentVersion)
+	}
+	if apiObject.NotificationConfig != nil {
+		tfMap["notification_config"] = flattenTaskInvocationRunCommandParametersNotificationConfig(apiObject.NotificationConfig)
+	}
+	if apiObject.OutputS3BucketName != nil {
+		tfMap["output_s3_bucket"] = aws.ToString(apiObject.OutputS3BucketName)
+	}
+	if apiObject.OutputS3KeyPrefix != nil {
+		tfMap["output_s3_key_prefix"] = aws.ToString(apiObject.OutputS3KeyPrefix)
+	}
+	if apiObject.Parameters != nil {
+		tfMap[names.AttrParameter] = flattenTaskInvocationCommonParameters(apiObject.Parameters)
+	}
+	if apiObject.ServiceRoleArn != nil {
+		tfMap[names.AttrServiceRoleARN] = aws.ToString(apiObject.ServiceRoleArn)
+	}
+	if apiObject.TimeoutSeconds != nil {
+		tfMap["timeout_seconds"] = aws.ToInt32(apiObject.TimeoutSeconds)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func expandTaskInvocationStepFunctionsParameters(tfList []interface{}) *awstypes.MaintenanceWindowStepFunctionsParameters {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.MaintenanceWindowStepFunctionsParameters{}
+	tfMap := tfList[0].(map[string]interface{})
+
+	if v, ok := tfMap["input"]; ok && len(v.(string)) != 0 {
+		apiObject.Input = aws.String(v.(string))
+	}
+	if v, ok := tfMap[names.AttrName]; ok && len(v.(string)) != 0 {
+		apiObject.Name = aws.String(v.(string))
+	}
+
+	return apiObject
+}
+
+func flattenTaskInvocationStepFunctionsParameters(apiObject *awstypes.MaintenanceWindowStepFunctionsParameters) []interface{} {
+	tfMap := make(map[string]interface{})
+
+	if apiObject.Input != nil {
+		tfMap["input"] = aws.ToString(apiObject.Input)
+	}
+	if apiObject.Name != nil {
+		tfMap[names.AttrName] = aws.ToString(apiObject.Name)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func expandTaskInvocationRunCommandParametersNotificationConfig(tfList []interface{}) *awstypes.NotificationConfig {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.NotificationConfig{}
+	tfMap := tfList[0].(map[string]interface{})
+
+	if v, ok := tfMap["notification_arn"]; ok && len(v.(string)) != 0 {
+		apiObject.NotificationArn = aws.String(v.(string))
+	}
+	if v, ok := tfMap["notification_events"]; ok && len(v.([]interface{})) > 0 {
+		apiObject.NotificationEvents = flex.ExpandStringyValueList[awstypes.NotificationEvent](v.([]interface{}))
+	}
+	if v, ok := tfMap["notification_type"]; ok && len(v.(string)) != 0 {
+		apiObject.NotificationType = awstypes.NotificationType(v.(string))
+	}
+
+	return apiObject
+}
+
+func flattenTaskInvocationRunCommandParametersNotificationConfig(apiObject *awstypes.NotificationConfig) []interface{} {
+	tfMap := make(map[string]interface{})
+
+	if apiObject.NotificationArn != nil {
+		tfMap["notification_arn"] = aws.ToString(apiObject.NotificationArn)
+	}
+	if apiObject.NotificationEvents != nil {
+		tfMap["notification_events"] = apiObject.NotificationEvents
+	}
+	tfMap["notification_type"] = apiObject.NotificationType
+
+	return []interface{}{tfMap}
+}
+
+func expandTaskInvocationRunCommandParametersCloudWatchConfig(tfList []interface{}) *awstypes.CloudWatchOutputConfig {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.CloudWatchOutputConfig{}
+	tfMap := tfList[0].(map[string]interface{})
+
+	if v, ok := tfMap["cloudwatch_log_group_name"]; ok && len(v.(string)) != 0 {
+		apiObject.CloudWatchLogGroupName = aws.String(v.(string))
+	}
+	if v, ok := tfMap["cloudwatch_output_enabled"]; ok {
+		apiObject.CloudWatchOutputEnabled = v.(bool)
+	}
+
+	return apiObject
+}
+
+func flattenTaskInvocationRunCommandParametersCloudWatchConfig(apiObject *awstypes.CloudWatchOutputConfig) []interface{} {
+	tfMap := make(map[string]interface{})
+
+	if apiObject.CloudWatchLogGroupName != nil {
+		tfMap["cloudwatch_log_group_name"] = aws.ToString(apiObject.CloudWatchLogGroupName)
+	}
+	tfMap["cloudwatch_output_enabled"] = apiObject.CloudWatchOutputEnabled
+
+	return []interface{}{tfMap}
+}
+
+func expandTaskInvocationCommonParameters(tfList []interface{}) map[string][]string {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	apiObject := make(map[string][]string)
+
+	for _, tfMapRaw := range tfList {
+		tfMap := tfMapRaw.(map[string]interface{})
+		apiObject[tfMap[names.AttrName].(string)] = flex.ExpandStringValueList(tfMap[names.AttrValues].([]interface{}))
+	}
+
+	return apiObject
+}
+
+func flattenTaskInvocationCommonParameters(apiObject map[string][]string) []interface{} {
+	tfList := make([]interface{}, 0, len(apiObject))
+
+	keys := tfmaps.Keys(apiObject)
+	slices.Sort(keys)
+
+	for _, key := range keys {
+		tfList = append(tfList, map[string]interface{}{
+			names.AttrName:   key,
+			names.AttrValues: apiObject[key],
+		})
+	}
+
+	return tfList
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_cloudwatch_event_bus", name="Event Bus")
@@ -18,11 +19,11 @@ func dataSourceBus() *schema.Resource {
 		ReadWithoutTimeout: dataSourceBusRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -34,7 +35,7 @@ func dataSourceBusRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
-	eventBusName := d.Get("name").(string)
+	eventBusName := d.Get(names.AttrName).(string)
 	output, err := findEventBusByName(ctx, conn, eventBusName)
 
 	if err != nil {
@@ -42,8 +43,8 @@ func dataSourceBusRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	d.SetId(eventBusName)
-	d.Set("arn", output.Arn)
-	d.Set("name", output.Name)
+	d.Set(names.AttrARN, output.Arn)
+	d.Set(names.AttrName, output.Name)
 
 	return diags
 }

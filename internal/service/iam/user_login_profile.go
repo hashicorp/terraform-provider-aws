@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_iam_user_login_profile", name="User Login Profile")
@@ -73,7 +74,7 @@ func resourceUserLoginProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"password": {
+			names.AttrPassword: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -173,7 +174,7 @@ func resourceUserLoginProfileCreate(ctx context.Context, d *schema.ResourceData,
 		d.Set("key_fingerprint", fingerprint)
 		d.Set("encrypted_password", encrypted)
 	} else {
-		d.Set("password", initialPassword)
+		d.Set(names.AttrPassword, initialPassword)
 	}
 
 	return append(diags, resourceUserLoginProfileRead(ctx, d, meta)...)

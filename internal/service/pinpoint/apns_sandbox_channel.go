@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_pinpoint_apns_sandbox_channel")
@@ -38,7 +39,7 @@ func ResourceAPNSSandboxChannel() *schema.Resource {
 				Optional:  true,
 				Sensitive: true,
 			},
-			"certificate": {
+			names.AttrCertificate: {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Sensitive: true,
@@ -47,12 +48,12 @@ func ResourceAPNSSandboxChannel() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
-			"private_key": {
+			names.AttrPrivateKey: {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Sensitive: true,
@@ -78,8 +79,8 @@ func ResourceAPNSSandboxChannel() *schema.Resource {
 
 func resourceAPNSSandboxChannelUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	certificate, certificateOk := d.GetOk("certificate")
-	privateKey, privateKeyOk := d.GetOk("private_key")
+	certificate, certificateOk := d.GetOk(names.AttrCertificate)
+	privateKey, privateKeyOk := d.GetOk(names.AttrPrivateKey)
 
 	bundleId, bundleIdOk := d.GetOk("bundle_id")
 	teamId, teamIdOk := d.GetOk("team_id")
@@ -97,7 +98,7 @@ func resourceAPNSSandboxChannelUpsert(ctx context.Context, d *schema.ResourceDat
 	params := &pinpoint.APNSSandboxChannelRequest{}
 
 	params.DefaultAuthenticationMethod = aws.String(d.Get("default_authentication_method").(string))
-	params.Enabled = aws.Bool(d.Get("enabled").(bool))
+	params.Enabled = aws.Bool(d.Get(names.AttrEnabled).(bool))
 
 	params.Certificate = aws.String(certificate.(string))
 	params.PrivateKey = aws.String(privateKey.(string))
@@ -143,7 +144,7 @@ func resourceAPNSSandboxChannelRead(ctx context.Context, d *schema.ResourceData,
 
 	d.Set("application_id", output.APNSSandboxChannelResponse.ApplicationId)
 	d.Set("default_authentication_method", output.APNSSandboxChannelResponse.DefaultAuthenticationMethod)
-	d.Set("enabled", output.APNSSandboxChannelResponse.Enabled)
+	d.Set(names.AttrEnabled, output.APNSSandboxChannelResponse.Enabled)
 	// Sensitive params are not returned
 
 	return diags

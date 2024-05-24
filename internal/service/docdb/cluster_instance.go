@@ -46,20 +46,20 @@ func ResourceClusterInstance() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"apply_immediately": {
+			names.AttrApplyImmediately: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"auto_minor_version_upgrade": {
+			names.AttrAutoMinorVersionUpgrade: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -70,7 +70,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"cluster_identifier": {
+			names.AttrClusterIdentifier: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -91,7 +91,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -102,11 +102,11 @@ func ResourceClusterInstance() *schema.Resource {
 				Default:      engineDocDB,
 				ValidateFunc: validation.StringInSlice(engine_Values(), false),
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"identifier": {
+			names.AttrIdentifier: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -125,7 +125,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -134,7 +134,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"port": {
+			names.AttrPort: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -142,7 +142,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"preferred_maintenance_window": {
+			names.AttrPreferredMaintenanceWindow: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -161,7 +161,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Default:      0,
 				ValidateFunc: validation.IntBetween(0, 15),
 			},
-			"publicly_accessible": {
+			names.AttrPubliclyAccessible: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -186,13 +186,13 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
 	identifier := create.NewNameGenerator(
-		create.WithConfiguredName(d.Get("identifier").(string)),
+		create.WithConfiguredName(d.Get(names.AttrIdentifier).(string)),
 		create.WithConfiguredPrefix(d.Get("identifier_prefix").(string)),
 		create.WithDefaultPrefix("tf-"),
 	).Generate()
 	input := &docdb.CreateDBInstanceInput{
-		AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
-		DBClusterIdentifier:     aws.String(d.Get("cluster_identifier").(string)),
+		AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
+		DBClusterIdentifier:     aws.String(d.Get(names.AttrClusterIdentifier).(string)),
 		DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
 		DBInstanceIdentifier:    aws.String(identifier),
 		Engine:                  aws.String(d.Get("engine").(string)),
@@ -200,7 +200,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		Tags:                    getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("availability_zone"); ok {
+	if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
 		input.AvailabilityZone = aws.String(v.(string))
 	}
 
@@ -216,7 +216,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		input.PerformanceInsightsKMSKeyId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("preferred_maintenance_window"); ok {
+	if v, ok := d.GetOk(names.AttrPreferredMaintenanceWindow); ok {
 		input.PreferredMaintenanceWindow = aws.String(v.(string))
 	}
 
@@ -260,11 +260,11 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "reading DocumentDB Cluster (%s): %s", clusterID, err)
 	}
 
-	d.Set("arn", db.DBInstanceArn)
-	d.Set("auto_minor_version_upgrade", db.AutoMinorVersionUpgrade)
-	d.Set("availability_zone", db.AvailabilityZone)
+	d.Set(names.AttrARN, db.DBInstanceArn)
+	d.Set(names.AttrAutoMinorVersionUpgrade, db.AutoMinorVersionUpgrade)
+	d.Set(names.AttrAvailabilityZone, db.AvailabilityZone)
 	d.Set("ca_cert_identifier", db.CACertificateIdentifier)
-	d.Set("cluster_identifier", db.DBClusterIdentifier)
+	d.Set(names.AttrClusterIdentifier, db.DBClusterIdentifier)
 	d.Set("copy_tags_to_snapshot", db.CopyTagsToSnapshot)
 	if db.DBSubnetGroup != nil {
 		d.Set("db_subnet_group_name", db.DBSubnetGroup.DBSubnetGroupName)
@@ -274,22 +274,22 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	// as soon as it is available in the DescribeDBClusters output.
 	//d.Set("enable_performance_insights", db.EnablePerformanceInsights)
 	if db.Endpoint != nil {
-		d.Set("endpoint", db.Endpoint.Address)
-		d.Set("port", db.Endpoint.Port)
+		d.Set(names.AttrEndpoint, db.Endpoint.Address)
+		d.Set(names.AttrPort, db.Endpoint.Port)
 	}
 	d.Set("engine", db.Engine)
-	d.Set("engine_version", db.EngineVersion)
-	d.Set("identifier", db.DBInstanceIdentifier)
+	d.Set(names.AttrEngineVersion, db.EngineVersion)
+	d.Set(names.AttrIdentifier, db.DBInstanceIdentifier)
 	d.Set("identifier_prefix", create.NamePrefixFromName(aws.StringValue(db.DBInstanceIdentifier)))
 	d.Set("instance_class", db.DBInstanceClass)
-	d.Set("kms_key_id", db.KmsKeyId)
+	d.Set(names.AttrKMSKeyID, db.KmsKeyId)
 	// The AWS API does not expose 'PerformanceInsightsKMSKeyId'  the line below should be uncommented
 	// as soon as it is available in the DescribeDBClusters output.
 	//d.Set("performance_insights_kms_key_id", db.PerformanceInsightsKMSKeyId)
 	d.Set("preferred_backup_window", db.PreferredBackupWindow)
-	d.Set("preferred_maintenance_window", db.PreferredMaintenanceWindow)
+	d.Set(names.AttrPreferredMaintenanceWindow, db.PreferredMaintenanceWindow)
 	d.Set("promotion_tier", db.PromotionTier)
-	d.Set("publicly_accessible", db.PubliclyAccessible)
+	d.Set(names.AttrPubliclyAccessible, db.PubliclyAccessible)
 	d.Set("storage_encrypted", db.StorageEncrypted)
 	if v := tfslices.Filter(dbc.DBClusterMembers, func(v *docdb.DBClusterMember) bool {
 		return aws.StringValue(v.DBInstanceIdentifier) == d.Id()
@@ -304,14 +304,14 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &docdb.ModifyDBInstanceInput{
-			ApplyImmediately:     aws.Bool(d.Get("apply_immediately").(bool)),
+			ApplyImmediately:     aws.Bool(d.Get(names.AttrApplyImmediately).(bool)),
 			DBInstanceIdentifier: aws.String(d.Id()),
 		}
 
-		if d.HasChange("auto_minor_version_upgrade") {
-			input.AutoMinorVersionUpgrade = aws.Bool(d.Get("auto_minor_version_upgrade").(bool))
+		if d.HasChange(names.AttrAutoMinorVersionUpgrade) {
+			input.AutoMinorVersionUpgrade = aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool))
 		}
 
 		if d.HasChange("ca_cert_identifier") {
@@ -334,8 +334,8 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 			input.PerformanceInsightsKMSKeyId = aws.String(d.Get("performance_insights_kms_key_id").(string))
 		}
 
-		if d.HasChange("preferred_maintenance_window") {
-			input.PreferredMaintenanceWindow = aws.String(d.Get("preferred_maintenance_window").(string))
+		if d.HasChange(names.AttrPreferredMaintenanceWindow) {
+			input.PreferredMaintenanceWindow = aws.String(d.Get(names.AttrPreferredMaintenanceWindow).(string))
 		}
 
 		if d.HasChange("promotion_tier") {

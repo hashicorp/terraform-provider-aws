@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_apigatewayv2_authorizer", name="Authorizer")
@@ -90,14 +91,14 @@ func resourceAuthorizer() *schema.Resource {
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"issuer": {
+						names.AttrIssuer: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
@@ -118,7 +119,7 @@ func resourceAuthorizerCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	authorizerType := awstypes.AuthorizerType(d.Get("authorizer_type").(string))
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	protocolType := outputGA.ProtocolType
 	input := &apigatewayv2.CreateAuthorizerInput{
 		ApiId:          aws.String(apiID),
@@ -193,7 +194,7 @@ func resourceAuthorizerRead(ctx context.Context, d *schema.ResourceData, meta in
 	if err := d.Set("jwt_configuration", flattenJWTConfiguration(output.JwtConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting jwt_configuration: %s", err)
 	}
-	d.Set("name", output.Name)
+	d.Set(names.AttrName, output.Name)
 
 	return diags
 }
@@ -235,8 +236,8 @@ func resourceAuthorizerUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		input.IdentitySource = flex.ExpandStringValueSet(d.Get("identity_sources").(*schema.Set))
 	}
 
-	if d.HasChange("name") {
-		input.Name = aws.String(d.Get("name").(string))
+	if d.HasChange(names.AttrName) {
+		input.Name = aws.String(d.Get(names.AttrName).(string))
 	}
 
 	if d.HasChange("jwt_configuration") {
@@ -326,7 +327,7 @@ func expandJWTConfiguration(vConfiguration []interface{}) *awstypes.JWTConfigura
 	if vAudience, ok := mConfiguration["audience"].(*schema.Set); ok && vAudience.Len() > 0 {
 		configuration.Audience = flex.ExpandStringValueSet(vAudience)
 	}
-	if vIssuer, ok := mConfiguration["issuer"].(string); ok && vIssuer != "" {
+	if vIssuer, ok := mConfiguration[names.AttrIssuer].(string); ok && vIssuer != "" {
 		configuration.Issuer = aws.String(vIssuer)
 	}
 
@@ -339,7 +340,7 @@ func flattenJWTConfiguration(configuration *awstypes.JWTConfiguration) []interfa
 	}
 
 	return []interface{}{map[string]interface{}{
-		"audience": flex.FlattenStringValueSet(configuration.Audience),
-		"issuer":   aws.ToString(configuration.Issuer),
+		"audience":       flex.FlattenStringValueSet(configuration.Audience),
+		names.AttrIssuer: aws.ToString(configuration.Issuer),
 	}}
 }

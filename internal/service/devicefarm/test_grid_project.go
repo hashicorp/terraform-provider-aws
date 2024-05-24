@@ -36,41 +36,41 @@ func ResourceTestGridProject() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_config": {
+			names.AttrVPCConfig: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"security_group_ids": {
+						names.AttrSecurityGroupIDs: {
 							Type:     schema.TypeSet,
 							MinItems: 1,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Required: true,
 						},
-						"subnet_ids": {
+						names.AttrSubnetIDs: {
 							Type:     schema.TypeSet,
 							MinItems: 1,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Required: true,
 						},
-						"vpc_id": {
+						names.AttrVPCID: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -86,16 +86,16 @@ func resourceTestGridProjectCreate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &devicefarm.CreateTestGridProjectInput{
 		Name: aws.String(name),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("vpc_config"); ok {
+	if v, ok := d.GetOk(names.AttrVPCConfig); ok {
 		input.VpcConfig = expandTestGridProjectVPCConfig(v.([]interface{}))
 	}
 
@@ -131,10 +131,10 @@ func resourceTestGridProjectRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	arn := aws.ToString(project.Arn)
-	d.Set("name", project.Name)
-	d.Set("arn", arn)
-	d.Set("description", project.Description)
-	if err := d.Set("vpc_config", flattenTestGridProjectVPCConfig(project.VpcConfig)); err != nil {
+	d.Set(names.AttrName, project.Name)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDescription, project.Description)
+	if err := d.Set(names.AttrVPCConfig, flattenTestGridProjectVPCConfig(project.VpcConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
 	}
 
@@ -145,17 +145,17 @@ func resourceTestGridProjectUpdate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &devicefarm.UpdateTestGridProjectInput{
 			ProjectArn: aws.String(d.Id()),
 		}
 
-		if d.HasChange("name") {
-			input.Name = aws.String(d.Get("name").(string))
+		if d.HasChange(names.AttrName) {
+			input.Name = aws.String(d.Get(names.AttrName).(string))
 		}
 
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
 		_, err := conn.UpdateTestGridProject(ctx, input)
@@ -196,9 +196,9 @@ func expandTestGridProjectVPCConfig(l []interface{}) *awstypes.TestGridVpcConfig
 	m := l[0].(map[string]interface{})
 
 	config := &awstypes.TestGridVpcConfig{
-		VpcId:            aws.String(m["vpc_id"].(string)),
-		SubnetIds:        flex.ExpandStringValueSet(m["subnet_ids"].(*schema.Set)),
-		SecurityGroupIds: flex.ExpandStringValueSet(m["security_group_ids"].(*schema.Set)),
+		VpcId:            aws.String(m[names.AttrVPCID].(string)),
+		SubnetIds:        flex.ExpandStringValueSet(m[names.AttrSubnetIDs].(*schema.Set)),
+		SecurityGroupIds: flex.ExpandStringValueSet(m[names.AttrSecurityGroupIDs].(*schema.Set)),
 	}
 
 	return config
@@ -210,9 +210,9 @@ func flattenTestGridProjectVPCConfig(conf *awstypes.TestGridVpcConfig) []interfa
 	}
 
 	m := map[string]interface{}{
-		"vpc_id":             aws.ToString(conf.VpcId),
-		"subnet_ids":         flex.FlattenStringValueSet(conf.SubnetIds),
-		"security_group_ids": flex.FlattenStringValueSet(conf.SecurityGroupIds),
+		names.AttrVPCID:            aws.ToString(conf.VpcId),
+		names.AttrSubnetIDs:        flex.FlattenStringValueSet(conf.SubnetIds),
+		names.AttrSecurityGroupIDs: flex.FlattenStringValueSet(conf.SecurityGroupIds),
 	}
 
 	return []interface{}{m}

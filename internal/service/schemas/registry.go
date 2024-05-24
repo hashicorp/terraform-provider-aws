@@ -35,18 +35,18 @@ func ResourceRegistry() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
 			},
 
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -67,13 +67,13 @@ func resourceRegistryCreate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchemasConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &schemas.CreateRegistryInput{
 		RegistryName: aws.String(name),
 		Tags:         getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -105,9 +105,9 @@ func resourceRegistryRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading EventBridge Schemas Registry (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.RegistryArn)
-	d.Set("description", output.Description)
-	d.Set("name", output.RegistryName)
+	d.Set(names.AttrARN, output.RegistryArn)
+	d.Set(names.AttrDescription, output.Description)
+	d.Set(names.AttrName, output.RegistryName)
 
 	return diags
 }
@@ -116,9 +116,9 @@ func resourceRegistryUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchemasConn(ctx)
 
-	if d.HasChanges("description") {
+	if d.HasChanges(names.AttrDescription) {
 		input := &schemas.UpdateRegistryInput{
-			Description:  aws.String(d.Get("description").(string)),
+			Description:  aws.String(d.Get(names.AttrDescription).(string)),
 			RegistryName: aws.String(d.Id()),
 		}
 

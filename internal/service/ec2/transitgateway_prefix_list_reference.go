@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ec2_transit_gateway_prefix_list_reference")
@@ -46,7 +47,7 @@ func ResourceTransitGatewayPrefixListReference() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"transit_gateway_attachment_id": {
+			names.AttrTransitGatewayAttachmentID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.NoZeroValues,
@@ -75,7 +76,7 @@ func resourceTransitGatewayPrefixListReferenceCreate(ctx context.Context, d *sch
 		input.PrefixListId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("transit_gateway_attachment_id"); ok {
+	if v, ok := d.GetOk(names.AttrTransitGatewayAttachmentID); ok {
 		input.TransitGatewayAttachmentId = aws.String(v.(string))
 	}
 
@@ -125,9 +126,9 @@ func resourceTransitGatewayPrefixListReferenceRead(ctx context.Context, d *schem
 	d.Set("prefix_list_id", transitGatewayPrefixListReference.PrefixListId)
 	d.Set("prefix_list_owner_id", transitGatewayPrefixListReference.PrefixListOwnerId)
 	if transitGatewayPrefixListReference.TransitGatewayAttachment == nil {
-		d.Set("transit_gateway_attachment_id", nil)
+		d.Set(names.AttrTransitGatewayAttachmentID, nil)
 	} else {
-		d.Set("transit_gateway_attachment_id", transitGatewayPrefixListReference.TransitGatewayAttachment.TransitGatewayAttachmentId)
+		d.Set(names.AttrTransitGatewayAttachmentID, transitGatewayPrefixListReference.TransitGatewayAttachment.TransitGatewayAttachmentId)
 	}
 	d.Set("transit_gateway_route_table_id", transitGatewayPrefixListReference.TransitGatewayRouteTableId)
 
@@ -148,7 +149,7 @@ func resourceTransitGatewayPrefixListReferenceUpdate(ctx context.Context, d *sch
 		input.PrefixListId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("transit_gateway_attachment_id"); ok {
+	if v, ok := d.GetOk(names.AttrTransitGatewayAttachmentID); ok {
 		input.TransitGatewayAttachmentId = aws.String(v.(string))
 	}
 

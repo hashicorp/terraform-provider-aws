@@ -59,15 +59,15 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"apply_immediately": {
+			names.AttrApplyImmediately: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"availability_zones": {
+			names.AttrAvailabilityZones: {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
@@ -80,7 +80,7 @@ func ResourceCluster() *schema.Resource {
 				Default:      1,
 				ValidateFunc: validation.IntAtMost(35),
 			},
-			"cluster_identifier": {
+			names.AttrClusterIdentifier: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -93,7 +93,7 @@ func ResourceCluster() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"cluster_identifier"},
+				ConflictsWith: []string{names.AttrClusterIdentifier},
 				ValidateFunc:  validIdentifierPrefix,
 			},
 			"cluster_members": {
@@ -132,7 +132,7 @@ func ResourceCluster() *schema.Resource {
 					}, false),
 				},
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -143,7 +143,7 @@ func ResourceCluster() *schema.Resource {
 				Default:      engineDocDB,
 				ValidateFunc: validation.StringInSlice(engine_Values(), false),
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -171,11 +171,11 @@ func ResourceCluster() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validGlobalCusterIdentifier,
 			},
-			"hosted_zone_id": {
+			names.AttrHostedZoneID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -193,7 +193,7 @@ func ResourceCluster() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"port": {
+			names.AttrPort: {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ForceNew:     true,
@@ -206,7 +206,7 @@ func ResourceCluster() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: verify.ValidOnceADayWindowFormat,
 			},
-			"preferred_maintenance_window": {
+			names.AttrPreferredMaintenanceWindow: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -241,7 +241,7 @@ func ResourceCluster() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"storage_type": {
+			names.AttrStorageType: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(storageType_Values(), false),
@@ -257,7 +257,7 @@ func ResourceCluster() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_security_group_ids": {
+			names.AttrVPCSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -274,7 +274,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
 	identifier := create.NewNameGenerator(
-		create.WithConfiguredName(d.Get("cluster_identifier").(string)),
+		create.WithConfiguredName(d.Get(names.AttrClusterIdentifier).(string)),
 		create.WithConfiguredPrefix(d.Get("cluster_identifier_prefix").(string)),
 		create.WithDefaultPrefix("tf-"),
 	).Generate()
@@ -298,7 +298,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			Tags:                getTagsIn(ctx),
 		}
 
-		if v := d.Get("availability_zones").(*schema.Set); v.Len() > 0 {
+		if v := d.Get(names.AttrAvailabilityZones).(*schema.Set); v.Len() > 0 {
 			input.AvailabilityZones = flex.ExpandStringSet(v)
 		}
 
@@ -320,15 +320,15 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.EnableCloudwatchLogsExports = flex.ExpandStringList(v.([]interface{}))
 		}
 
-		if v, ok := d.GetOk("engine_version"); ok {
+		if v, ok := d.GetOk(names.AttrEngineVersion); ok {
 			input.EngineVersion = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("kms_key_id"); ok {
+		if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 			input.KmsKeyId = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("port"); ok {
+		if v, ok := d.GetOk(names.AttrPort); ok {
 			input.Port = aws.Int64(int64(v.(int)))
 		}
 
@@ -337,16 +337,16 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			requiresModifyDbCluster = true
 		}
 
-		if v, ok := d.GetOk("preferred_maintenance_window"); ok {
+		if v, ok := d.GetOk(names.AttrPreferredMaintenanceWindow); ok {
 			inputM.PreferredMaintenanceWindow = aws.String(v.(string))
 			requiresModifyDbCluster = true
 		}
 
-		if v, ok := d.GetOk("storage_type"); ok {
+		if v, ok := d.GetOk(names.AttrStorageType); ok {
 			input.StorageType = aws.String(v.(string))
 		}
 
-		if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
+		if v := d.Get(names.AttrVPCSecurityGroupIDs).(*schema.Set); v.Len() > 0 {
 			input.VpcSecurityGroupIds = flex.ExpandStringSet(v)
 		}
 
@@ -381,7 +381,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			Tags:                getTagsIn(ctx),
 		}
 
-		if v := d.Get("availability_zones").(*schema.Set); v.Len() > 0 {
+		if v := d.Get(names.AttrAvailabilityZones).(*schema.Set); v.Len() > 0 {
 			input.AvailabilityZones = flex.ExpandStringSet(v)
 		}
 
@@ -401,7 +401,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.EnableCloudwatchLogsExports = flex.ExpandStringList(v.([]interface{}))
 		}
 
-		if v, ok := d.GetOk("engine_version"); ok {
+		if v, ok := d.GetOk(names.AttrEngineVersion); ok {
 			input.EngineVersion = aws.String(v.(string))
 		}
 
@@ -409,11 +409,11 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.GlobalClusterIdentifier = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("kms_key_id"); ok {
+		if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 			input.KmsKeyId = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("port"); ok {
+		if v, ok := d.GetOk(names.AttrPort); ok {
 			input.Port = aws.Int64(int64(v.(int)))
 		}
 
@@ -421,7 +421,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.PreferredBackupWindow = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("preferred_maintenance_window"); ok {
+		if v, ok := d.GetOk(names.AttrPreferredMaintenanceWindow); ok {
 			input.PreferredMaintenanceWindow = aws.String(v.(string))
 		}
 
@@ -429,11 +429,11 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.StorageEncrypted = aws.Bool(v.(bool))
 		}
 
-		if v, ok := d.GetOk("storage_type"); ok {
+		if v, ok := d.GetOk(names.AttrStorageType); ok {
 			input.StorageType = aws.String(v.(string))
 		}
 
-		if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
+		if v := d.Get(names.AttrVPCSecurityGroupIDs).(*schema.Set); v.Len() > 0 {
 			input.VpcSecurityGroupIds = flex.ExpandStringSet(v)
 		}
 
@@ -495,10 +495,10 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		d.Set("global_cluster_identifier", globalCluster.GlobalClusterIdentifier)
 	}
 
-	d.Set("arn", dbc.DBClusterArn)
-	d.Set("availability_zones", aws.StringValueSlice(dbc.AvailabilityZones))
+	d.Set(names.AttrARN, dbc.DBClusterArn)
+	d.Set(names.AttrAvailabilityZones, aws.StringValueSlice(dbc.AvailabilityZones))
 	d.Set("backup_retention_period", dbc.BackupRetentionPeriod)
-	d.Set("cluster_identifier", dbc.DBClusterIdentifier)
+	d.Set(names.AttrClusterIdentifier, dbc.DBClusterIdentifier)
 	d.Set("cluster_identifier_prefix", create.NamePrefixFromName(aws.StringValue(dbc.DBClusterIdentifier)))
 	var clusterMembers []string
 	for _, v := range dbc.DBClusterMembers {
@@ -510,23 +510,23 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("db_subnet_group_name", dbc.DBSubnetGroup)
 	d.Set("deletion_protection", dbc.DeletionProtection)
 	d.Set("enabled_cloudwatch_logs_exports", aws.StringValueSlice(dbc.EnabledCloudwatchLogsExports))
-	d.Set("endpoint", dbc.Endpoint)
-	d.Set("engine_version", dbc.EngineVersion)
+	d.Set(names.AttrEndpoint, dbc.Endpoint)
+	d.Set(names.AttrEngineVersion, dbc.EngineVersion)
 	d.Set("engine", dbc.Engine)
-	d.Set("hosted_zone_id", dbc.HostedZoneId)
-	d.Set("kms_key_id", dbc.KmsKeyId)
+	d.Set(names.AttrHostedZoneID, dbc.HostedZoneId)
+	d.Set(names.AttrKMSKeyID, dbc.KmsKeyId)
 	d.Set("master_username", dbc.MasterUsername)
-	d.Set("port", dbc.Port)
+	d.Set(names.AttrPort, dbc.Port)
 	d.Set("preferred_backup_window", dbc.PreferredBackupWindow)
-	d.Set("preferred_maintenance_window", dbc.PreferredMaintenanceWindow)
+	d.Set(names.AttrPreferredMaintenanceWindow, dbc.PreferredMaintenanceWindow)
 	d.Set("reader_endpoint", dbc.ReaderEndpoint)
 	d.Set("storage_encrypted", dbc.StorageEncrypted)
-	d.Set("storage_type", dbc.StorageType)
+	d.Set(names.AttrStorageType, dbc.StorageType)
 	var securityGroupIDs []string
 	for _, v := range dbc.VpcSecurityGroups {
 		securityGroupIDs = append(securityGroupIDs, aws.StringValue(v.VpcSecurityGroupId))
 	}
-	d.Set("vpc_security_group_ids", securityGroupIDs)
+	d.Set(names.AttrVPCSecurityGroupIDs, securityGroupIDs)
 
 	return diags
 }
@@ -535,9 +535,9 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all", "global_cluster_identifier", "skip_final_snapshot") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, "global_cluster_identifier", "skip_final_snapshot") {
 		input := &docdb.ModifyDBClusterInput{
-			ApplyImmediately:    aws.Bool(d.Get("apply_immediately").(bool)),
+			ApplyImmediately:    aws.Bool(d.Get(names.AttrApplyImmediately).(bool)),
 			DBClusterIdentifier: aws.String(d.Id()),
 		}
 
@@ -561,8 +561,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.CloudwatchLogsExportConfiguration = expandCloudwatchLogsExportConfiguration(d)
 		}
 
-		if d.HasChange("engine_version") {
-			input.EngineVersion = aws.String(d.Get("engine_version").(string))
+		if d.HasChange(names.AttrEngineVersion) {
+			input.EngineVersion = aws.String(d.Get(names.AttrEngineVersion).(string))
 		}
 
 		if d.HasChange("master_password") {
@@ -573,16 +573,16 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.PreferredBackupWindow = aws.String(d.Get("preferred_backup_window").(string))
 		}
 
-		if d.HasChange("storage_type") {
-			input.StorageType = aws.String(d.Get("storage_type").(string))
+		if d.HasChange(names.AttrStorageType) {
+			input.StorageType = aws.String(d.Get(names.AttrStorageType).(string))
 		}
 
-		if d.HasChange("preferred_maintenance_window") {
-			input.PreferredMaintenanceWindow = aws.String(d.Get("preferred_maintenance_window").(string))
+		if d.HasChange(names.AttrPreferredMaintenanceWindow) {
+			input.PreferredMaintenanceWindow = aws.String(d.Get(names.AttrPreferredMaintenanceWindow).(string))
 		}
 
-		if d.HasChange("vpc_security_group_ids") {
-			if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
+		if d.HasChange(names.AttrVPCSecurityGroupIDs) {
+			if v := d.Get(names.AttrVPCSecurityGroupIDs).(*schema.Set); v.Len() > 0 {
 				input.VpcSecurityGroupIds = flex.ExpandStringSet(v)
 			} else {
 				input.VpcSecurityGroupIds = aws.StringSlice([]string{})
@@ -631,7 +631,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			return sdkdiag.AppendErrorf(diags, "existing DocumentDB Clusters cannot be migrated between existing DocumentDB Global Clusters")
 		}
 
-		if err := removeClusterFromGlobalCluster(ctx, conn, d.Get("arn").(string), o, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if err := removeClusterFromGlobalCluster(ctx, conn, d.Get(names.AttrARN).(string), o, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -658,7 +658,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("global_cluster_identifier"); ok {
-		if err := removeClusterFromGlobalCluster(ctx, conn, d.Get("arn").(string), v.(string), d.Timeout(schema.TimeoutDelete)); err != nil {
+		if err := removeClusterFromGlobalCluster(ctx, conn, d.Get(names.AttrARN).(string), v.(string), d.Timeout(schema.TimeoutDelete)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}

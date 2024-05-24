@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -519,7 +520,7 @@ func sweepCarrierGateways(region string) error {
 		}
 
 		for _, v := range page.CarrierGateways {
-			r := ResourceCarrierGateway()
+			r := resourceCarrierGateway()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.CarrierGatewayId))
 
@@ -563,7 +564,7 @@ func sweepClientVPNEndpoints(region string) error {
 		}
 
 		for _, v := range page.ClientVpnEndpoints {
-			r := ResourceClientVPNEndpoint()
+			r := resourceClientVPNEndpoint()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.ClientVpnEndpointId))
 
@@ -618,7 +619,7 @@ func sweepClientVPNNetworkAssociations(region string) error {
 				}
 
 				for _, v := range page.ClientVpnTargetNetworks {
-					r := ResourceClientVPNNetworkAssociation()
+					r := resourceClientVPNNetworkAssociation()
 					d := r.Data(nil)
 					d.SetId(aws.StringValue(v.AssociationId))
 					d.Set("client_vpn_endpoint_id", v.ClientVpnEndpointId)
@@ -916,7 +917,7 @@ func sweepEIPDomainNames(region string) error {
 
 		for _, v := range page.Addresses {
 			sweepResources = append(sweepResources, framework.NewSweepResource(newEIPDomainNameResource, client,
-				framework.NewAttribute("id", aws.StringValue(v.AllocationId)),
+				framework.NewAttribute(names.AttrID, aws.StringValue(v.AllocationId)),
 			))
 		}
 
@@ -1146,7 +1147,7 @@ func sweepInternetGateways(region string) error {
 			d := r.Data(nil)
 			d.SetId(internetGatewayID)
 			if len(internetGateway.Attachments) > 0 {
-				d.Set("vpc_id", internetGateway.Attachments[0].VpcId)
+				d.Set(names.AttrVPCID, internetGateway.Attachments[0].VpcId)
 			}
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
@@ -1327,9 +1328,9 @@ func sweepNetworkACLs(region string) error {
 			for _, v := range v.Associations {
 				subnetIDs = append(subnetIDs, aws.StringValue(v.SubnetId))
 			}
-			d.Set("subnet_ids", subnetIDs)
+			d.Set(names.AttrSubnetIDs, subnetIDs)
 
-			d.Set("vpc_id", v.VpcId)
+			d.Set(names.AttrVPCID, v.VpcId)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -2660,7 +2661,7 @@ func sweepVPNGateways(region string) error {
 
 		for _, v := range v.VpcAttachments {
 			if aws.StringValue(v.State) != ec2.AttachmentStatusDetached {
-				d.Set("vpc_id", v.VpcId)
+				d.Set(names.AttrVPCID, v.VpcId)
 
 				break
 			}
@@ -2736,7 +2737,7 @@ func sweepIPAMs(region string) error {
 		}
 
 		for _, v := range page.Ipams {
-			r := ResourceIPAM()
+			r := resourceIPAM()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.IpamId))
 			d.Set("cascade", true)
@@ -2783,7 +2784,7 @@ func sweepIPAMResourceDiscoveries(region string) error {
 		for _, v := range page.IpamResourceDiscoveries {
 			// do not attempt to delete default resource created by each ipam
 			if !aws.BoolValue(v.IsDefault) {
-				r := ResourceIPAMResourceDiscovery()
+				r := resourceIPAMResourceDiscovery()
 				d := r.Data(nil)
 				d.SetId(aws.StringValue(v.IpamResourceDiscoveryId))
 
@@ -2924,7 +2925,7 @@ func sweepInstanceConnectEndpoints(region string) error {
 			}
 
 			sweepResources = append(sweepResources, framework.NewSweepResource(newInstanceConnectEndpointResource, client,
-				framework.NewAttribute("id", aws.StringValue(v.InstanceConnectEndpointId)),
+				framework.NewAttribute(names.AttrID, aws.StringValue(v.InstanceConnectEndpointId)),
 			))
 		}
 

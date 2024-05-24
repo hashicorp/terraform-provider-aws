@@ -53,13 +53,13 @@ func resourceTransitGatewayPeeringAttachment() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"transit_gateway_id": {
+			names.AttrTransitGatewayID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -81,7 +81,7 @@ func resourceTransitGatewayPeeringAttachmentCreate(ctx context.Context, d *schem
 		PeerRegion:           aws.String(d.Get("peer_region").(string)),
 		PeerTransitGatewayId: aws.String(d.Get("peer_transit_gateway_id").(string)),
 		TagSpecifications:    getTagSpecificationsIn(ctx, ec2.ResourceTypeTransitGatewayAttachment),
-		TransitGatewayId:     aws.String(d.Get("transit_gateway_id").(string)),
+		TransitGatewayId:     aws.String(d.Get(names.AttrTransitGatewayID).(string)),
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Transit Gateway Peering Attachment: %s", input)
@@ -119,8 +119,8 @@ func resourceTransitGatewayPeeringAttachmentRead(ctx context.Context, d *schema.
 	d.Set("peer_account_id", transitGatewayPeeringAttachment.AccepterTgwInfo.OwnerId)
 	d.Set("peer_region", transitGatewayPeeringAttachment.AccepterTgwInfo.Region)
 	d.Set("peer_transit_gateway_id", transitGatewayPeeringAttachment.AccepterTgwInfo.TransitGatewayId)
-	d.Set("state", transitGatewayPeeringAttachment.State)
-	d.Set("transit_gateway_id", transitGatewayPeeringAttachment.RequesterTgwInfo.TransitGatewayId)
+	d.Set(names.AttrState, transitGatewayPeeringAttachment.State)
+	d.Set(names.AttrTransitGatewayID, transitGatewayPeeringAttachment.RequesterTgwInfo.TransitGatewayId)
 
 	setTagsOut(ctx, transitGatewayPeeringAttachment.Tags)
 

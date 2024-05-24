@@ -40,16 +40,16 @@ func TestAccGrafana_serial(t *testing.T) {
 			"version":                  testAccWorkspace_version,
 		},
 		"ApiKey": {
-			"basic": testAccWorkspaceAPIKey_basic,
+			acctest.CtBasic: testAccWorkspaceAPIKey_basic,
 		},
 		"DataSource": {
-			"basic": testAccWorkspaceDataSource_basic,
+			acctest.CtBasic: testAccWorkspaceDataSource_basic,
 		},
 		"LicenseAssociation": {
 			"enterpriseFreeTrial": testAccLicenseAssociation_freeTrial,
 		},
 		"SamlConfiguration": {
-			"basic":         testAccWorkspaceSAMLConfiguration_basic,
+			acctest.CtBasic: testAccWorkspaceSAMLConfiguration_basic,
 			"loginValidity": testAccWorkspaceSAMLConfiguration_loginValidity,
 			"assertions":    testAccWorkspaceSAMLConfiguration_assertions,
 		},

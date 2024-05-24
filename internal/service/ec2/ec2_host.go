@@ -47,7 +47,7 @@ func ResourceHost() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -64,7 +64,7 @@ func ResourceHost() *schema.Resource {
 				Default:      ec2.AutoPlacementOn,
 				ValidateFunc: validation.StringInSlice(ec2.AutoPlacement_Values(), false),
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -78,19 +78,19 @@ func ResourceHost() *schema.Resource {
 			"instance_family": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ExactlyOneOf: []string{"instance_family", "instance_type"},
+				ExactlyOneOf: []string{"instance_family", names.AttrInstanceType},
 			},
-			"instance_type": {
+			names.AttrInstanceType: {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ExactlyOneOf: []string{"instance_family", "instance_type"},
+				ExactlyOneOf: []string{"instance_family", names.AttrInstanceType},
 			},
 			"outpost_arn": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -106,7 +106,7 @@ func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	input := &ec2.AllocateHostsInput{
 		AutoPlacement:     aws.String(d.Get("auto_placement").(string)),
-		AvailabilityZone:  aws.String(d.Get("availability_zone").(string)),
+		AvailabilityZone:  aws.String(d.Get(names.AttrAvailabilityZone).(string)),
 		ClientToken:       aws.String(id.UniqueId()),
 		HostRecovery:      aws.String(d.Get("host_recovery").(string)),
 		Quantity:          aws.Int64(1),
@@ -121,7 +121,7 @@ func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		input.InstanceFamily = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("instance_type"); ok {
+	if v, ok := d.GetOk(names.AttrInstanceType); ok {
 		input.InstanceType = aws.String(v.(string))
 	}
 
@@ -167,15 +167,15 @@ func resourceHostRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		AccountID: aws.StringValue(host.OwnerId),
 		Resource:  fmt.Sprintf("dedicated-host/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("asset_id", host.AssetId)
 	d.Set("auto_placement", host.AutoPlacement)
-	d.Set("availability_zone", host.AvailabilityZone)
+	d.Set(names.AttrAvailabilityZone, host.AvailabilityZone)
 	d.Set("host_recovery", host.HostRecovery)
 	d.Set("instance_family", host.HostProperties.InstanceFamily)
-	d.Set("instance_type", host.HostProperties.InstanceType)
+	d.Set(names.AttrInstanceType, host.HostProperties.InstanceType)
 	d.Set("outpost_arn", host.OutpostArn)
-	d.Set("owner_id", host.OwnerId)
+	d.Set(names.AttrOwnerID, host.OwnerId)
 
 	setTagsOut(ctx, host.Tags)
 
@@ -186,7 +186,7 @@ func resourceHostUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &ec2.ModifyHostsInput{
 			HostIds: aws.StringSlice([]string{d.Id()}),
 		}
@@ -203,7 +203,7 @@ func resourceHostUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			input.InstanceFamily = aws.String(v)
 		}
 
-		if hasChange, v := d.HasChange("instance_type"), d.Get("instance_type").(string); hasChange && v != "" {
+		if hasChange, v := d.HasChange(names.AttrInstanceType), d.Get(names.AttrInstanceType).(string); hasChange && v != "" {
 			input.InstanceType = aws.String(v)
 		}
 

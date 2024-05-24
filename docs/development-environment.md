@@ -39,7 +39,7 @@ make build
 This will build the provider and put the provider binary in the `$GOPATH/bin` directory.
 
 ```console
-ls -la ./$GOPATH/bin/terraform-provider-aws
+ls -la $GOPATH/bin/terraform-provider-aws
 ```
 
 ### Testing the Provider

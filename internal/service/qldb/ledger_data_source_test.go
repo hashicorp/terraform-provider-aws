@@ -27,12 +27,12 @@ func TestAccQLDBLedgerDataSource_basic(t *testing.T) {
 			{
 				Config: testAccLedgerDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "deletion_protection", resourceName, "deletion_protection"),
-					resource.TestCheckResourceAttrPair(datasourceName, "kms_key", resourceName, "kms_key"),
-					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrKMSKey, resourceName, names.AttrKMSKey),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, "permissions_mode", resourceName, "permissions_mode"),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 				),
 			},
 		},

@@ -43,7 +43,7 @@ func (d *acceleratorDataSource) Schema(ctx context.Context, request datasource.S
 				Optional:   true,
 				Computed:   true,
 			},
-			"attributes": schema.ListAttribute{
+			names.AttrAttributes: schema.ListAttribute{
 				Computed: true,
 				ElementType: types.ObjectType{
 					AttrTypes: map[string]attr.Type{
@@ -53,23 +53,23 @@ func (d *acceleratorDataSource) Schema(ctx context.Context, request datasource.S
 					},
 				},
 			},
-			"dns_name": schema.StringAttribute{
+			names.AttrDNSName: schema.StringAttribute{
 				Computed: true,
 			},
 			"dual_stack_dns_name": schema.StringAttribute{
 				Computed: true,
 			},
-			"enabled": schema.BoolAttribute{
+			names.AttrEnabled: schema.BoolAttribute{
 				Computed: true,
 			},
-			"hosted_zone_id": schema.StringAttribute{
+			names.AttrHostedZoneID: schema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrID: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
-			"ip_address_type": schema.StringAttribute{
+			names.AttrIPAddressType: schema.StringAttribute{
 				Computed: true,
 			},
 			"ip_sets": schema.ListAttribute{
@@ -81,11 +81,11 @@ func (d *acceleratorDataSource) Schema(ctx context.Context, request datasource.S
 					},
 				},
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
-			"tags": tftags.TagsAttributeComputedOnly(),
+			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 		},
 	}
 }

@@ -16,7 +16,7 @@ func TestAccAmplify_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"App": {
-			"basic":                    testAccApp_basic,
+			acctest.CtBasic:            testAccApp_basic,
 			"disappears":               testAccApp_disappears,
 			"tags":                     testAccApp_tags,
 			"AutoBranchCreationConfig": testAccApp_AutoBranchCreationConfig,
@@ -30,12 +30,12 @@ func TestAccAmplify_serial(t *testing.T) {
 			"Repository":               testAccApp_Repository,
 		},
 		"BackendEnvironment": {
-			"basic":                         testAccBackendEnvironment_basic,
+			acctest.CtBasic:                 testAccBackendEnvironment_basic,
 			"disappears":                    testAccBackendEnvironment_disappears,
 			"DeploymentArtifacts_StackName": testAccBackendEnvironment_DeploymentArtifacts_StackName,
 		},
 		"Branch": {
-			"basic":                testAccBranch_basic,
+			acctest.CtBasic:        testAccBranch_basic,
 			"disappears":           testAccBranch_disappears,
 			"tags":                 testAccBranch_tags,
 			"BasicAuthCredentials": testAccBranch_BasicAuthCredentials,
@@ -43,14 +43,14 @@ func TestAccAmplify_serial(t *testing.T) {
 			"OptionalArguments":    testAccBranch_OptionalArguments,
 		},
 		"DomainAssociation": {
-			"basic":      testAccDomainAssociation_basic,
-			"disappears": testAccDomainAssociation_disappears,
-			"update":     testAccDomainAssociation_update,
+			acctest.CtBasic: testAccDomainAssociation_basic,
+			"disappears":    testAccDomainAssociation_disappears,
+			"update":        testAccDomainAssociation_update,
 		},
 		"Webhook": {
-			"basic":      testAccWebhook_basic,
-			"disappears": testAccWebhook_disappears,
-			"update":     testAccWebhook_update,
+			acctest.CtBasic: testAccWebhook_basic,
+			"disappears":    testAccWebhook_disappears,
+			"update":        testAccWebhook_update,
 		},
 	}
 

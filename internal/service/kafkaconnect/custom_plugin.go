@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_mskconnect_custom_plugin")
@@ -37,17 +38,17 @@ func ResourceCustomPlugin() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"content_type": {
+			names.AttrContentType: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(kafkaconnect.CustomPluginContentType_Values(), false),
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -92,12 +93,12 @@ func ResourceCustomPlugin() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -110,14 +111,14 @@ func resourceCustomPluginCreate(ctx context.Context, d *schema.ResourceData, met
 
 	conn := meta.(*conns.AWSClient).KafkaConnectConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &kafkaconnect.CreateCustomPluginInput{
-		ContentType: aws.String(d.Get("content_type").(string)),
+		ContentType: aws.String(d.Get(names.AttrContentType).(string)),
 		Location:    expandCustomPluginLocation(d.Get("location").([]interface{})[0].(map[string]interface{})),
 		Name:        aws.String(name),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -156,13 +157,13 @@ func resourceCustomPluginRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading MSK Connect Custom Plugin (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", plugin.CustomPluginArn)
-	d.Set("description", plugin.Description)
-	d.Set("name", plugin.Name)
-	d.Set("state", plugin.CustomPluginState)
+	d.Set(names.AttrARN, plugin.CustomPluginArn)
+	d.Set(names.AttrDescription, plugin.Description)
+	d.Set(names.AttrName, plugin.Name)
+	d.Set(names.AttrState, plugin.CustomPluginState)
 
 	if plugin.LatestRevision != nil {
-		d.Set("content_type", plugin.LatestRevision.ContentType)
+		d.Set(names.AttrContentType, plugin.LatestRevision.ContentType)
 		d.Set("latest_revision", plugin.LatestRevision.Revision)
 		if plugin.LatestRevision.Location != nil {
 			if err := d.Set("location", []interface{}{flattenCustomPluginLocationDescription(plugin.LatestRevision.Location)}); err != nil {
@@ -172,7 +173,7 @@ func resourceCustomPluginRead(ctx context.Context, d *schema.ResourceData, meta 
 			d.Set("location", nil)
 		}
 	} else {
-		d.Set("content_type", nil)
+		d.Set(names.AttrContentType, nil)
 		d.Set("latest_revision", nil)
 		d.Set("location", nil)
 	}

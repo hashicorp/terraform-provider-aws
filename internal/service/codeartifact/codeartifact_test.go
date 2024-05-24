@@ -14,26 +14,26 @@ func TestAccCodeArtifact_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"AuthorizationTokenDataSource": {
-			"basic":    testAccAuthorizationTokenDataSource_basic,
-			"duration": testAccAuthorizationTokenDataSource_duration,
-			"owner":    testAccAuthorizationTokenDataSource_owner,
+			acctest.CtBasic: testAccAuthorizationTokenDataSource_basic,
+			"duration":      testAccAuthorizationTokenDataSource_duration,
+			"owner":         testAccAuthorizationTokenDataSource_owner,
 		},
 		"Domain": {
-			"basic":                         testAccDomain_basic,
+			acctest.CtBasic:                 testAccDomain_basic,
 			"defaultEncryptionKey":          testAccDomain_defaultEncryptionKey,
 			"disappears":                    testAccDomain_disappears,
 			"migrateAssetSizeBytesToString": testAccDomain_MigrateAssetSizeBytesToString,
 			"tags":                          testAccDomain_tags,
 		},
 		"DomainPermissionsPolicy": {
-			"basic":            testAccDomainPermissionsPolicy_basic,
+			acctest.CtBasic:    testAccDomainPermissionsPolicy_basic,
 			"disappears":       testAccDomainPermissionsPolicy_disappears,
 			"owner":            testAccDomainPermissionsPolicy_owner,
 			"disappearsDomain": testAccDomainPermissionsPolicy_Disappears_domain,
 			"ignoreEquivalent": testAccDomainPermissionsPolicy_ignoreEquivalent,
 		},
 		"Repository": {
-			"basic":              testAccRepository_basic,
+			acctest.CtBasic:      testAccRepository_basic,
 			"description":        testAccRepository_description,
 			"disappears":         testAccRepository_disappears,
 			"externalConnection": testAccRepository_externalConnection,
@@ -42,11 +42,11 @@ func TestAccCodeArtifact_serial(t *testing.T) {
 			"upstreams":          testAccRepository_upstreams,
 		},
 		"RepositoryEndpointDataSource": {
-			"basic": testAccRepositoryEndpointDataSource_basic,
-			"owner": testAccRepositoryEndpointDataSource_owner,
+			acctest.CtBasic: testAccRepositoryEndpointDataSource_basic,
+			"owner":         testAccRepositoryEndpointDataSource_owner,
 		},
 		"RepositoryPermissionsPolicy": {
-			"basic":            testAccRepositoryPermissionsPolicy_basic,
+			acctest.CtBasic:    testAccRepositoryPermissionsPolicy_basic,
 			"disappears":       testAccRepositoryPermissionsPolicy_disappears,
 			"owner":            testAccRepositoryPermissionsPolicy_owner,
 			"disappearsDomain": testAccRepositoryPermissionsPolicy_Disappears_domain,

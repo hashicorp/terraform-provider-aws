@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_s3_bucket_cors_configuration", name="Bucket CORS Configuration")
@@ -34,7 +35,7 @@ func resourceBucketCorsConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"bucket": {
+			names.AttrBucket: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -72,7 +73,7 @@ func resourceBucketCorsConfiguration() *schema.Resource {
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"id": {
+						names.AttrID: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(0, 255),
@@ -91,7 +92,7 @@ func resourceBucketCorsConfiguration() *schema.Resource {
 func resourceBucketCorsConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket := d.Get("bucket").(string)
+	bucket := d.Get(names.AttrBucket).(string)
 	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
 	input := &s3.PutBucketCorsInput{
 		Bucket: aws.String(bucket),
@@ -148,7 +149,7 @@ func resourceBucketCorsConfigurationRead(ctx context.Context, d *schema.Resource
 		return diag.Errorf("reading S3 Bucket CORS Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set("bucket", bucket)
+	d.Set(names.AttrBucket, bucket)
 	if err := d.Set("cors_rule", flattenCORSRules(corsRules)); err != nil {
 		return diag.Errorf("setting cors_rule: %s", err)
 	}
@@ -279,7 +280,7 @@ func expandCORSRules(l []interface{}) []types.CORSRule {
 			rule.ExposeHeaders = flex.ExpandStringValueSet(v)
 		}
 
-		if v, ok := tfMap["id"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrID].(string); ok && v != "" {
 			rule.ID = aws.String(v)
 		}
 
@@ -318,7 +319,7 @@ func flattenCORSRules(rules []types.CORSRule) []interface{} {
 		}
 
 		if rule.ID != nil {
-			m["id"] = aws.ToString(rule.ID)
+			m[names.AttrID] = aws.ToString(rule.ID)
 		}
 
 		results = append(results, m)
