@@ -73,7 +73,7 @@ func TestAccS3Bucket_Basic_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrBucketPrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "bucket_regional_domain_name", testAccBucketRegionalDomainName(rName, region)),
 					resource.TestCheckResourceAttr(resourceName, "cors_rule.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "grant.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "grant.*", map[string]string{
 						"permissions.#": acctest.Ct1,
@@ -84,7 +84,7 @@ func TestAccS3Bucket_Basic_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "logging.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPolicy, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRegion, region),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.#", acctest.Ct0),
@@ -94,11 +94,11 @@ func TestAccS3Bucket_Basic_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.0.kms_master_key_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", "AES256"),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.0.bucket_key_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.0.bucket_key_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "versioning.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "versioning.0.enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "versioning.0.mfa_delete", "false"),
+					resource.TestCheckResourceAttr(resourceName, "versioning.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "versioning.0.mfa_delete", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "website.#", acctest.Ct0),
 					resource.TestCheckNoResourceAttr(resourceName, "website_domain"),
 					resource.TestCheckNoResourceAttr(resourceName, "website_endpoint"),
@@ -353,7 +353,7 @@ func TestAccS3Bucket_Basic_keyEnabled(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", "aws:kms"),
 					resource.TestMatchResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.0.kms_master_key_id", regexache.MustCompile("^arn")),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.0.bucket_key_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.0.bucket_key_enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -643,7 +643,7 @@ func TestAccS3Bucket_Manage_lifecycleBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.prefix", "path1/"),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.expiration.0.days", "365"),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.expiration.0.date", ""),
-					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.expiration.0.expired_object_delete_marker", "false"),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.expiration.0.expired_object_delete_marker", acctest.CtFalse),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lifecycle_rule.0.transition.*", map[string]string{
 						"date":          "",
 						"days":          "30",
@@ -673,7 +673,7 @@ func TestAccS3Bucket_Manage_lifecycleBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.1.prefix", "path2/"),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.1.expiration.0.date", "2016-01-12"),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.1.expiration.0.days", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.1.expiration.0.expired_object_delete_marker", "false"),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.1.expiration.0.expired_object_delete_marker", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.2.id", "id3"),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.2.prefix", "path3/"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lifecycle_rule.2.transition.*", map[string]string{
@@ -733,7 +733,7 @@ func TestAccS3Bucket_Manage_lifecycleExpireMarkerOnly(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.prefix", "path1/"),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.expiration.0.days", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.expiration.0.date", ""),
-					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.expiration.0.expired_object_delete_marker", "true"),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.expiration.0.expired_object_delete_marker", acctest.CtTrue),
 				),
 			},
 			{
@@ -848,7 +848,7 @@ func TestAccS3Bucket_Manage_objectLock(t *testing.T) {
 				Config: testAccBucketConfig_objectLockEnabledNoDefaultRetention(bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.0.object_lock_enabled", string(types.ObjectLockEnabledEnabled)),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.0.rule.#", acctest.Ct0),
@@ -890,7 +890,7 @@ func TestAccS3Bucket_Manage_objectLock_deprecatedEnabled(t *testing.T) {
 				Config: testAccBucketConfig_objectLockEnabledNoDefaultRetentionDeprecatedEnabled(bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.0.object_lock_enabled", string(types.ObjectLockEnabledEnabled)),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.0.rule.#", acctest.Ct0),
@@ -921,7 +921,7 @@ func TestAccS3Bucket_Manage_objectLock_migrate(t *testing.T) {
 				Config: testAccBucketConfig_objectLockEnabledNoDefaultRetentionDeprecatedEnabled(bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.0.object_lock_enabled", string(types.ObjectLockEnabledEnabled)),
 				),
@@ -949,7 +949,7 @@ func TestAccS3Bucket_Manage_objectLockWithVersioning(t *testing.T) {
 				Config: testAccBucketConfig_objectLockEnabledVersioning(bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.0.object_lock_enabled", string(types.ObjectLockEnabledEnabled)),
 				),
@@ -979,7 +979,7 @@ func TestAccS3Bucket_Manage_objectLockWithVersioning_deprecatedEnabled(t *testin
 				Config: testAccBucketConfig_objectLockEnabledVersioningDeprecatedEnabled(bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.0.object_lock_enabled", string(types.ObjectLockEnabledEnabled)),
 				),
@@ -1010,8 +1010,8 @@ func TestAccS3Bucket_Manage_versioning(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "versioning.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "versioning.0.enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "versioning.0.mfa_delete", "false"),
+					resource.TestCheckResourceAttr(resourceName, "versioning.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "versioning.0.mfa_delete", acctest.CtFalse),
 				),
 			},
 			{
@@ -1025,8 +1025,8 @@ func TestAccS3Bucket_Manage_versioning(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "versioning.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "versioning.0.enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "versioning.0.mfa_delete", "false"),
+					resource.TestCheckResourceAttr(resourceName, "versioning.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "versioning.0.mfa_delete", acctest.CtFalse),
 				),
 			},
 			{
@@ -1055,8 +1055,8 @@ func TestAccS3Bucket_Manage_versioningDisabled(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "versioning.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "versioning.0.enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "versioning.0.mfa_delete", "false"),
+					resource.TestCheckResourceAttr(resourceName, "versioning.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "versioning.0.mfa_delete", acctest.CtFalse),
 				),
 			},
 			{
@@ -1085,8 +1085,8 @@ func TestAccS3Bucket_Manage_MFADeleteDisabled(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "versioning.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "versioning.0.enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "versioning.0.mfa_delete", "false"),
+					resource.TestCheckResourceAttr(resourceName, "versioning.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "versioning.0.mfa_delete", acctest.CtFalse),
 				),
 			},
 			{
@@ -1115,8 +1115,8 @@ func TestAccS3Bucket_Manage_versioningAndMFADeleteDisabled(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "versioning.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "versioning.0.enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "versioning.0.mfa_delete", "false"),
+					resource.TestCheckResourceAttr(resourceName, "versioning.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "versioning.0.mfa_delete", acctest.CtFalse),
 				),
 			},
 			{
