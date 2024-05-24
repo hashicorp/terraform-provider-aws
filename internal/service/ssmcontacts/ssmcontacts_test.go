@@ -17,7 +17,7 @@ func TestAccSSMContacts_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Contact Resource Tests": {
 			acctest.CtBasic:     testAccContact_basic,
-			"disappears":        testAccContact_disappears,
+			acctest.CtDisappears:        testAccContact_disappears,
 			"updateAlias":       testAccContact_updateAlias,
 			"updateDisplayName": testAccContact_updateDisplayName,
 			"updateTags":        testAccContact_updateTags,
@@ -30,7 +30,7 @@ func TestAccSSMContacts_serial(t *testing.T) {
 			acctest.CtBasic:   testAccContactChannel_basic,
 			"contactId":       testAccContactChannel_contactID,
 			"deliveryAddress": testAccContactChannel_deliveryAddress,
-			"disappears":      testAccContactChannel_disappears,
+			acctest.CtDisappears:      testAccContactChannel_disappears,
 			acctest.CtName:    testAccContactChannel_name,
 			"type":            testAccContactChannel_type,
 		},
@@ -39,7 +39,7 @@ func TestAccSSMContacts_serial(t *testing.T) {
 		},
 		"Plan Resource Tests": {
 			acctest.CtBasic:           testAccPlan_basic,
-			"disappears":              testAccPlan_disappears,
+			acctest.CtDisappears:              testAccPlan_disappears,
 			"updateChannelTargetInfo": testAccPlan_updateChannelTargetInfo,
 			"updateContactId":         testAccPlan_updateContactId,
 			"updateContactTargetInfo": testAccPlan_updateContactTargetInfo,
@@ -53,7 +53,7 @@ func TestAccSSMContacts_serial(t *testing.T) {
 		},
 		"RotationResource": {
 			acctest.CtBasic: testAccRotation_basic,
-			"disappears":    testAccRotation_disappears,
+			acctest.CtDisappears:    testAccRotation_disappears,
 			"update":        testAccRotation_updateRequiredFields,
 			"startTime":     testAccRotation_startTime,
 			"contactIds":    testAccRotation_contactIds,
