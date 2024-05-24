@@ -5056,6 +5056,9 @@ var awsPartition = partition{
 		"braket": service{
 			Endpoints: serviceEndpoints{
 				endpointKey{
+					Region: "eu-north-1",
+				}: endpoint{},
+				endpointKey{
 					Region: "eu-west-2",
 				}: endpoint{},
 				endpointKey{
