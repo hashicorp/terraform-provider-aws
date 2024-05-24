@@ -294,7 +294,6 @@ func TestAccBackupReportPlan_disappears(t *testing.T) {
 	var reportPlan backup.ReportPlan
 	rName := sdkacctest.RandomWithPrefix("tf-test-bucket")
 	rName2 := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
-	description := acctest.CtDisappears
 	resourceName := "aws_backup_report_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{

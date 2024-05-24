@@ -470,7 +470,6 @@ func testAccFramework_disappears(t *testing.T) {
 	var framework backup.DescribeFrameworkOutput
 
 	rName := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
-	description := acctest.CtDisappears
 	resourceName := "aws_backup_framework.test"
 
 	resource.Test(t, resource.TestCase{
