@@ -45,11 +45,11 @@ func TestAccImageBuilderImagePipeline_basic(t *testing.T) {
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "distribution_configuration_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "enhanced_image_metadata_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enhanced_image_metadata_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "image_recipe_arn", imageRecipeResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.0.image_tests_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.0.image_tests_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.0.timeout_minutes", "720"),
 					resource.TestCheckResourceAttrPair(resourceName, "infrastructure_configuration_arn", infrastructureConfigurationResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -175,7 +175,7 @@ func TestAccImageBuilderImagePipeline_enhancedImageMetadataEnabled(t *testing.T)
 				Config: testAccImagePipelineConfig_enhancedMetadataEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enhanced_image_metadata_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enhanced_image_metadata_enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -187,7 +187,7 @@ func TestAccImageBuilderImagePipeline_enhancedImageMetadataEnabled(t *testing.T)
 				Config: testAccImagePipelineConfig_enhancedMetadataEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enhanced_image_metadata_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enhanced_image_metadata_enabled", acctest.CtTrue),
 				),
 			},
 		},
@@ -282,7 +282,7 @@ func TestAccImageBuilderImagePipeline_ImageScanning_imageScanningEnabled(t *test
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.0.image_scanning_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.0.image_scanning_enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -295,7 +295,7 @@ func TestAccImageBuilderImagePipeline_ImageScanning_imageScanningEnabled(t *test
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.0.image_scanning_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.0.image_scanning_enabled", acctest.CtTrue),
 				),
 			},
 		},
@@ -318,7 +318,7 @@ func TestAccImageBuilderImagePipeline_ImageScanning_imageScanningEnabledAdvanced
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.0.image_scanning_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.0.image_scanning_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.0.ecr_configuration.0.repository_name", rName),
 					resource.TestCheckTypeSetElemAttr(resourceName, "image_scanning_configuration.0.ecr_configuration.0.container_tags.*", "b"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "image_scanning_configuration.0.ecr_configuration.0.container_tags.*", "a"),
@@ -334,7 +334,7 @@ func TestAccImageBuilderImagePipeline_ImageScanning_imageScanningEnabledAdvanced
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.0.image_scanning_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.0.image_scanning_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.0.ecr_configuration.0.repository_name", rName),
 					resource.TestCheckTypeSetElemAttr(resourceName, "image_scanning_configuration.0.ecr_configuration.0.container_tags.*", "c"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "image_scanning_configuration.0.ecr_configuration.0.container_tags.*", "a"),
@@ -360,7 +360,7 @@ func TestAccImageBuilderImagePipeline_ImageTests_imageTestsEnabled(t *testing.T)
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.0.image_tests_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.0.image_tests_enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -373,7 +373,7 @@ func TestAccImageBuilderImagePipeline_ImageTests_imageTestsEnabled(t *testing.T)
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImagePipelineExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.0.image_tests_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "image_tests_configuration.0.image_tests_enabled", acctest.CtTrue),
 				),
 			},
 		},
