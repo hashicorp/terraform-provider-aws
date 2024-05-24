@@ -27,7 +27,6 @@ func testAccRemediationConfiguration_basic(t *testing.T) {
 	var rc types.RemediationConfiguration
 	resourceName := "aws_config_remediation_configuration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	automatic := acctest.CtFalse
 	rAttempts := sdkacctest.RandIntRange(1, 25)
 	rSeconds := sdkacctest.RandIntRange(1, 2678000)
 	rExecPct := sdkacctest.RandIntRange(1, 100)
@@ -104,7 +103,6 @@ func testAccRemediationConfiguration_disappears(t *testing.T) {
 	var rc types.RemediationConfiguration
 	resourceName := "aws_config_remediation_configuration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	automatic := acctest.CtFalse
 	rAttempts := sdkacctest.RandIntRange(1, 25)
 	rSeconds := sdkacctest.RandIntRange(1, 2678000)
 	rExecPct := sdkacctest.RandIntRange(1, 100)
@@ -135,12 +133,10 @@ func testAccRemediationConfiguration_updates(t *testing.T) {
 	var updated types.RemediationConfiguration
 	resourceName := "aws_config_remediation_configuration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	automatic := acctest.CtFalse
 	rAttempts := sdkacctest.RandIntRange(1, 25)
 	rSeconds := sdkacctest.RandIntRange(1, 2678000)
 	rExecPct := sdkacctest.RandIntRange(1, 100)
 	rErrorPct := sdkacctest.RandIntRange(1, 100)
-	uAutomatic := acctest.CtTrue
 	uAttempts := sdkacctest.RandIntRange(1, 25)
 	uSeconds := sdkacctest.RandIntRange(1, 2678000)
 	uExecPct := sdkacctest.RandIntRange(1, 100)
@@ -194,7 +190,6 @@ func testAccRemediationConfiguration_values(t *testing.T) {
 	var rc types.RemediationConfiguration
 	resourceName := "aws_config_remediation_configuration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	automatic := acctest.CtFalse
 	rAttempts := sdkacctest.RandIntRange(1, 25)
 	rSeconds := sdkacctest.RandIntRange(1, 2678000)
 	rExecPct := sdkacctest.RandIntRange(1, 100)
