@@ -139,15 +139,15 @@ func TestExpandPolicyAttributes(t *testing.T) {
 	expanded := []interface{}{
 		map[string]interface{}{
 			names.AttrName:  "Protocol-TLSv1",
-			names.AttrValue: "false",
+			names.AttrValue: acctest.CtFalse,
 		},
 		map[string]interface{}{
 			names.AttrName:  "Protocol-TLSv1.1",
-			names.AttrValue: "false",
+			names.AttrValue: acctest.CtFalse,
 		},
 		map[string]interface{}{
 			names.AttrName:  "Protocol-TLSv1.2",
-			names.AttrValue: "true",
+			names.AttrValue: acctest.CtTrue,
 		},
 	}
 	attributes := ExpandPolicyAttributes(expanded)
@@ -158,7 +158,7 @@ func TestExpandPolicyAttributes(t *testing.T) {
 
 	expected := &elb.PolicyAttribute{
 		AttributeName:  aws.String("Protocol-TLSv1.2"),
-		AttributeValue: aws.String("true"),
+		AttributeValue: aws.String(acctest.CtTrue),
 	}
 
 	if !reflect.DeepEqual(attributes[2], expected) {
@@ -187,14 +187,14 @@ func TestExpandPolicyAttributes_invalid(t *testing.T) {
 	expanded := []interface{}{
 		map[string]interface{}{
 			names.AttrName:  "Protocol-TLSv1.2",
-			names.AttrValue: "true",
+			names.AttrValue: acctest.CtTrue,
 		},
 	}
 	attributes := ExpandPolicyAttributes(expanded)
 
 	expected := &elb.PolicyAttribute{
 		AttributeName:  aws.String("Protocol-TLSv1.2"),
-		AttributeValue: aws.String("false"),
+		AttributeValue: aws.String(acctest.CtFalse),
 	}
 
 	if reflect.DeepEqual(attributes[0], expected) {
@@ -216,13 +216,13 @@ func TestFlattenPolicyAttributes(t *testing.T) {
 			Input: []*elb.PolicyAttributeDescription{
 				{
 					AttributeName:  aws.String("Protocol-TLSv1.2"),
-					AttributeValue: aws.String("true"),
+					AttributeValue: aws.String(acctest.CtTrue),
 				},
 			},
 			Output: []interface{}{
 				map[string]string{
 					names.AttrName:  "Protocol-TLSv1.2",
-					names.AttrValue: "true",
+					names.AttrValue: acctest.CtTrue,
 				},
 			},
 		},
