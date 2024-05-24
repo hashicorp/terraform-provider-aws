@@ -340,7 +340,6 @@ func TestAccEvidentlyProject_disappears(t *testing.T) {
 	var project awstypes.Project
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	description := acctest.CtDisappears
 	resourceName := "aws_evidently_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
