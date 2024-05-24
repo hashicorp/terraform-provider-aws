@@ -25,7 +25,7 @@ func TestAccAuditManagerAccountRegistration_serial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic: testAccAccountRegistration_basic,
-		"disappears":    testAccAccountRegistration_disappears,
+		acctest.CtDisappears:    testAccAccountRegistration_disappears,
 		"kms key":       testAccAccountRegistration_optionalKMSKey,
 	}
 
