@@ -32,6 +32,14 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
+		{
+			Factory:  dataSourceJobTemplate,
+			TypeName: "aws_media_convert_job_template",
+			Name:     "Job Template",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
 	}
 }
 
@@ -43,6 +51,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Queue",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  dataSourceJobTemplate,
+			TypeName: "aws_media_convert_job_template",
+			Name:     "Job Template",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
 			},
 		},
 	}
