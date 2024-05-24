@@ -924,8 +924,8 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_nonOverlapping(t *testing.T) 
 						acctest.CtProviderKey1: config.StringVariable("providervalue1updated"),
 					}),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtResourceKey1: config.StringVariable("resourcevalue1updated"),
-						"resourcekey2":         config.StringVariable(acctest.CtResourceValue2),
+						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1Updated),
+						acctest.CtResourceKey2: config.StringVariable(acctest.CtResourceValue2),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -933,26 +933,26 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_nonOverlapping(t *testing.T) 
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-						acctest.CtResourceKey1: knownvalue.StringExact("resourcevalue1updated"),
-						"resourcekey2":         knownvalue.StringExact(acctest.CtResourceValue2),
+						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
+						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact("providervalue1updated"),
-						acctest.CtResourceKey1: knownvalue.StringExact("resourcevalue1updated"),
-						"resourcekey2":         knownvalue.StringExact(acctest.CtResourceValue2),
+						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
+						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
-							acctest.CtResourceKey1: knownvalue.StringExact("resourcevalue1updated"),
-							"resourcekey2":         knownvalue.StringExact(acctest.CtResourceValue2),
+							acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
+							acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 						})),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtProviderKey1: knownvalue.StringExact("providervalue1updated"),
-							acctest.CtResourceKey1: knownvalue.StringExact("resourcevalue1updated"),
-							"resourcekey2":         knownvalue.StringExact(acctest.CtResourceValue2),
+							acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
+							acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 						})),
 					},
 				},
@@ -966,8 +966,8 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_nonOverlapping(t *testing.T) 
 						acctest.CtProviderKey1: config.StringVariable("providervalue1updated"),
 					}),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtResourceKey1: config.StringVariable("resourcevalue1updated"),
-						"resourcekey2":         config.StringVariable(acctest.CtResourceValue2),
+						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1Updated),
+						acctest.CtResourceKey2: config.StringVariable(acctest.CtResourceValue2),
 					}),
 				},
 				ResourceName:      resourceName,
@@ -1089,11 +1089,11 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_overlapping(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
-						"overlapkey2":         config.StringVariable("providervalue2"),
+						acctest.CtOverlapKey2: config.StringVariable("providervalue2"),
 					}),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue1),
-						"overlapkey2":         config.StringVariable(acctest.CtResourceValue2),
+						acctest.CtOverlapKey2: config.StringVariable(acctest.CtResourceValue2),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1102,11 +1102,11 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_overlapping(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue1),
-						"overlapkey2":         knownvalue.StringExact(acctest.CtResourceValue2),
+						acctest.CtOverlapKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue1),
-						"overlapkey2":         knownvalue.StringExact(acctest.CtResourceValue2),
+						acctest.CtOverlapKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -1114,11 +1114,11 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_overlapping(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue1),
-							"overlapkey2":         knownvalue.StringExact(acctest.CtResourceValue2),
+							acctest.CtOverlapKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 						})),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue1),
-							"overlapkey2":         knownvalue.StringExact(acctest.CtResourceValue2),
+							acctest.CtOverlapKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 						})),
 					},
 				},
@@ -1130,11 +1130,11 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_overlapping(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
-						"overlapkey2":         config.StringVariable("providervalue2"),
+						acctest.CtOverlapKey2: config.StringVariable("providervalue2"),
 					}),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue1),
-						"overlapkey2":         config.StringVariable(acctest.CtResourceValue2),
+						acctest.CtOverlapKey2: config.StringVariable(acctest.CtResourceValue2),
 					}),
 				},
 				ResourceName:      resourceName,
