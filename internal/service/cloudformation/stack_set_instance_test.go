@@ -47,7 +47,7 @@ func TestAccCloudFormationStackSetInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "organizational_unit_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "parameter_overrides.%", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRegion, acctest.Region()),
-					resource.TestCheckResourceAttr(resourceName, "retain_stack", "false"),
+					resource.TestCheckResourceAttr(resourceName, "retain_stack", acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, "stack_id"),
 					resource.TestCheckResourceAttr(resourceName, "stack_instance_summaries.#", acctest.Ct0),
 					resource.TestCheckResourceAttrPair(resourceName, "stack_set_name", cloudformationStackSetResourceName, names.AttrName),

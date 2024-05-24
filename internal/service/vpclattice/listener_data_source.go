@@ -125,6 +125,7 @@ const (
 )
 
 func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	serviceId := d.Get("service_identifier").(string)
@@ -132,7 +133,7 @@ func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	out, err := findListenerByListenerIdAndServiceId(ctx, conn, listenerId, serviceId)
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionReading, DSNameListener, d.Id(), err)
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionReading, DSNameListener, d.Id(), err)
 	}
 
 	// Set simple arguments
@@ -149,7 +150,7 @@ func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	// Flatten complex default_action attribute - uses flatteners from listener.go
 	if err := d.Set(names.AttrDefaultAction, flattenListenerRuleActionsDataSource(out.DefaultAction)); err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionSetting, DSNameListener, d.Id(), err)
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionSetting, DSNameListener, d.Id(), err)
 	}
 
 	// Set tags
@@ -157,15 +158,15 @@ func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta in
 	tags, err := listTags(ctx, conn, aws.ToString(out.Arn))
 
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionReading, DSNameListener, d.Id(), err)
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionReading, DSNameListener, d.Id(), err)
 	}
 
 	//lintignore:AWSR002
 	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionSetting, DSNameListener, d.Id(), err)
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionSetting, DSNameListener, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findListenerByListenerIdAndServiceId(ctx context.Context, conn *vpclattice.Client, listener_id string, service_id string) (*vpclattice.GetListenerOutput, error) {

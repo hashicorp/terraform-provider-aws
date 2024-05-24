@@ -415,7 +415,7 @@ func TestAccEC2Instance_EBSBlockDevice_kmsKeyARN(t *testing.T) {
 					testAccCheckInstanceExists(ctx, resourceName, &instance),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
-						names.AttrEncrypted: "true",
+						names.AttrEncrypted: acctest.CtTrue,
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "ebs_block_device.*.kms_key_id", kmsKeyResourceName, names.AttrARN),
 				),
@@ -504,7 +504,7 @@ func TestAccEC2Instance_RootBlockDevice_kmsKeyARN(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &instance),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.encrypted", "true"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.encrypted", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "root_block_device.0.kms_key_id", kmsKeyResourceName, names.AttrARN),
 				),
 			},
@@ -819,7 +819,7 @@ func TestAccEC2Instance_blockDevices(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrDeviceName: "/dev/sdd",
-						names.AttrEncrypted:  "true",
+						names.AttrEncrypted:  acctest.CtTrue,
 						names.AttrVolumeSize: "12",
 					}),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]*regexp.Regexp{
@@ -860,7 +860,7 @@ func TestAccEC2Instance_rootInstanceStore(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "false"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", acctest.Ct0),
 				),
 			},
@@ -916,7 +916,7 @@ func TestAccEC2Instance_noAMIEphemeralDevices(t *testing.T) {
 				Config: testAccInstanceConfig_noAMIEphemeralDevices(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "false"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", "11"),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", "gp2"),
@@ -924,11 +924,11 @@ func TestAccEC2Instance_noAMIEphemeralDevices(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ephemeral_block_device.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ephemeral_block_device.*", map[string]string{
 						names.AttrDeviceName: "/dev/sdb",
-						"no_device":          "true",
+						"no_device":          acctest.CtTrue,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ephemeral_block_device.*", map[string]string{
 						names.AttrDeviceName: "/dev/sdc",
-						"no_device":          "true",
+						"no_device":          acctest.CtTrue,
 					}),
 					testCheck(),
 				),
@@ -1053,7 +1053,7 @@ func TestAccEC2Instance_disableAPIStop(t *testing.T) {
 				Config: testAccInstanceConfig_disableAPIStop(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "disable_api_stop", "true"),
+					resource.TestCheckResourceAttr(resourceName, "disable_api_stop", acctest.CtTrue),
 				),
 			},
 			{
@@ -1066,7 +1066,7 @@ func TestAccEC2Instance_disableAPIStop(t *testing.T) {
 				Config: testAccInstanceConfig_disableAPIStop(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "disable_api_stop", "false"),
+					resource.TestCheckResourceAttr(resourceName, "disable_api_stop", acctest.CtFalse),
 				),
 			},
 		},
@@ -1089,7 +1089,7 @@ func TestAccEC2Instance_disableAPITerminationFinalFalse(t *testing.T) {
 				Config: testAccInstanceConfig_disableAPITermination(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "disable_api_termination", "true"),
+					resource.TestCheckResourceAttr(resourceName, "disable_api_termination", acctest.CtTrue),
 				),
 			},
 			{
@@ -1102,7 +1102,7 @@ func TestAccEC2Instance_disableAPITerminationFinalFalse(t *testing.T) {
 				Config: testAccInstanceConfig_disableAPITermination(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "disable_api_termination", "false"),
+					resource.TestCheckResourceAttr(resourceName, "disable_api_termination", acctest.CtFalse),
 				),
 			},
 		},
@@ -1125,7 +1125,7 @@ func TestAccEC2Instance_disableAPITerminationFinalTrue(t *testing.T) {
 				Config: testAccInstanceConfig_disableAPITermination(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "disable_api_termination", "true"),
+					resource.TestCheckResourceAttr(resourceName, "disable_api_termination", acctest.CtTrue),
 				),
 			},
 			{
@@ -2063,8 +2063,8 @@ func TestAccEC2Instance_PrivateDNSNameOptions_computed(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_aaaa_record", "true"),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_a_record", "true"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_aaaa_record", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_a_record", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.hostname_type", "resource-name"),
 				),
 			},
@@ -2095,8 +2095,8 @@ func TestAccEC2Instance_PrivateDNSNameOptions_configured(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_aaaa_record", "false"),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_a_record", "true"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_aaaa_record", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_a_record", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.hostname_type", "ip-name"),
 				),
 			},
@@ -2112,8 +2112,8 @@ func TestAccEC2Instance_PrivateDNSNameOptions_configured(t *testing.T) {
 					testAccCheckInstanceExists(ctx, resourceName, &v2),
 					testAccCheckInstanceNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_aaaa_record", "true"),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_a_record", "true"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_aaaa_record", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_a_record", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.hostname_type", "ip-name"),
 				),
 			},
@@ -2130,8 +2130,8 @@ func TestAccEC2Instance_PrivateDNSNameOptions_configured(t *testing.T) {
 					testAccCheckInstanceExists(ctx, resourceName, &v3),
 					testAccCheckInstanceNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_aaaa_record", "true"),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_a_record", "true"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_aaaa_record", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.enable_resource_name_dns_a_record", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name_options.0.hostname_type", "resource-name"),
 				),
 			},
@@ -2433,7 +2433,6 @@ func TestAccEC2Instance_EBSRootDevice_modifySize(t *testing.T) {
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	deleteOnTermination := "true"
 	volumeType := "gp2"
 
 	originalSize := "30"
@@ -2446,21 +2445,21 @@ func TestAccEC2Instance_EBSRootDevice_modifySize(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_rootBlockDevice(rName, originalSize, deleteOnTermination, volumeType),
+				Config: testAccInstanceConfig_rootBlockDevice(rName, originalSize, acctest.CtTrue, volumeType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &original),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", originalSize),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", deleteOnTermination),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", volumeType),
 				),
 			},
 			{
-				Config: testAccInstanceConfig_rootBlockDevice(rName, updatedSize, deleteOnTermination, volumeType),
+				Config: testAccInstanceConfig_rootBlockDevice(rName, updatedSize, acctest.CtTrue, volumeType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &updated),
 					testAccCheckInstanceNotRecreated(&original, &updated),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", updatedSize),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", deleteOnTermination),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", volumeType),
 				),
 			},
@@ -2476,7 +2475,6 @@ func TestAccEC2Instance_EBSRootDevice_modifyType(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	volumeSize := "30"
-	deleteOnTermination := "true"
 
 	originalType := "gp2"
 	updatedType := "standard"
@@ -2488,21 +2486,21 @@ func TestAccEC2Instance_EBSRootDevice_modifyType(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_rootBlockDevice(rName, volumeSize, deleteOnTermination, originalType),
+				Config: testAccInstanceConfig_rootBlockDevice(rName, volumeSize, acctest.CtTrue, originalType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &original),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", volumeSize),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", deleteOnTermination),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", originalType),
 				),
 			},
 			{
-				Config: testAccInstanceConfig_rootBlockDevice(rName, volumeSize, deleteOnTermination, updatedType),
+				Config: testAccInstanceConfig_rootBlockDevice(rName, volumeSize, acctest.CtTrue, updatedType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &updated),
 					testAccCheckInstanceNotRecreated(&original, &updated),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", volumeSize),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", deleteOnTermination),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", updatedType),
 				),
 			},
@@ -2518,7 +2516,7 @@ func TestAccEC2Instance_EBSRootDeviceModifyIOPS_io1(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	volumeSize := "30"
-	deleteOnTermination := "true"
+
 	volumeType := "io1"
 
 	originalIOPS := "100"
@@ -2531,22 +2529,22 @@ func TestAccEC2Instance_EBSRootDeviceModifyIOPS_io1(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_rootBlockDeviceIOPS(rName, volumeSize, deleteOnTermination, volumeType, originalIOPS),
+				Config: testAccInstanceConfig_rootBlockDeviceIOPS(rName, volumeSize, acctest.CtTrue, volumeType, originalIOPS),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &original),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", volumeSize),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", deleteOnTermination),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", volumeType),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.iops", originalIOPS),
 				),
 			},
 			{
-				Config: testAccInstanceConfig_rootBlockDeviceIOPS(rName, volumeSize, deleteOnTermination, volumeType, updatedIOPS),
+				Config: testAccInstanceConfig_rootBlockDeviceIOPS(rName, volumeSize, acctest.CtTrue, volumeType, updatedIOPS),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &updated),
 					testAccCheckInstanceNotRecreated(&original, &updated),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", volumeSize),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", deleteOnTermination),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", volumeType),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.iops", updatedIOPS),
 				),
@@ -2563,7 +2561,6 @@ func TestAccEC2Instance_EBSRootDeviceModifyIOPS_io2(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	volumeSize := "30"
-	deleteOnTermination := "true"
 	volumeType := "io2"
 
 	originalIOPS := "100"
@@ -2576,22 +2573,22 @@ func TestAccEC2Instance_EBSRootDeviceModifyIOPS_io2(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_rootBlockDeviceIOPS(rName, volumeSize, deleteOnTermination, volumeType, originalIOPS),
+				Config: testAccInstanceConfig_rootBlockDeviceIOPS(rName, volumeSize, acctest.CtTrue, volumeType, originalIOPS),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &original),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", volumeSize),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", deleteOnTermination),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", volumeType),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.iops", originalIOPS),
 				),
 			},
 			{
-				Config: testAccInstanceConfig_rootBlockDeviceIOPS(rName, volumeSize, deleteOnTermination, volumeType, updatedIOPS),
+				Config: testAccInstanceConfig_rootBlockDeviceIOPS(rName, volumeSize, acctest.CtTrue, volumeType, updatedIOPS),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &updated),
 					testAccCheckInstanceNotRecreated(&original, &updated),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", volumeSize),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", deleteOnTermination),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", volumeType),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.iops", updatedIOPS),
 				),
@@ -2608,7 +2605,7 @@ func TestAccEC2Instance_EBSRootDeviceModifyThroughput_gp3(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	volumeSize := "30"
-	deleteOnTermination := "true"
+
 	volumeType := "gp3"
 
 	originalThroughput := "250"
@@ -2621,22 +2618,22 @@ func TestAccEC2Instance_EBSRootDeviceModifyThroughput_gp3(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_rootBlockDeviceThroughput(rName, volumeSize, deleteOnTermination, volumeType, originalThroughput),
+				Config: testAccInstanceConfig_rootBlockDeviceThroughput(rName, volumeSize, acctest.CtTrue, volumeType, originalThroughput),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &original),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", volumeSize),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", deleteOnTermination),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", volumeType),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.throughput", originalThroughput),
 				),
 			},
 			{
-				Config: testAccInstanceConfig_rootBlockDeviceThroughput(rName, volumeSize, deleteOnTermination, volumeType, updatedThroughput),
+				Config: testAccInstanceConfig_rootBlockDeviceThroughput(rName, volumeSize, acctest.CtTrue, volumeType, updatedThroughput),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &updated),
 					testAccCheckInstanceNotRecreated(&original, &updated),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", volumeSize),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", deleteOnTermination),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", volumeType),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.throughput", updatedThroughput),
 				),
@@ -2655,9 +2652,6 @@ func TestAccEC2Instance_EBSRootDevice_modifyDeleteOnTermination(t *testing.T) {
 	volumeSize := "30"
 	volumeType := "gp2"
 
-	originalDeleteOnTermination := "false"
-	updatedDeleteOnTermination := "true"
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
@@ -2665,21 +2659,21 @@ func TestAccEC2Instance_EBSRootDevice_modifyDeleteOnTermination(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_rootBlockDevice(rName, volumeSize, originalDeleteOnTermination, volumeType),
+				Config: testAccInstanceConfig_rootBlockDevice(rName, volumeSize, acctest.CtFalse, volumeType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &original),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", volumeSize),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", originalDeleteOnTermination),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", volumeType),
 				),
 			},
 			{
-				Config: testAccInstanceConfig_rootBlockDevice(rName, volumeSize, updatedDeleteOnTermination, volumeType),
+				Config: testAccInstanceConfig_rootBlockDevice(rName, volumeSize, acctest.CtTrue, volumeType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &updated),
 					testAccCheckInstanceNotRecreated(&original, &updated),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", volumeSize),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", updatedDeleteOnTermination),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", volumeType),
 				),
 			},
@@ -2702,9 +2696,6 @@ func TestAccEC2Instance_EBSRootDevice_modifyAll(t *testing.T) {
 
 	updatedIOPS := "200"
 
-	originalDeleteOnTermination := "false"
-	updatedDeleteOnTermination := "true"
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
@@ -2712,21 +2703,21 @@ func TestAccEC2Instance_EBSRootDevice_modifyAll(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_rootBlockDevice(rName, originalSize, originalDeleteOnTermination, originalType),
+				Config: testAccInstanceConfig_rootBlockDevice(rName, originalSize, acctest.CtFalse, originalType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &original),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", originalSize),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", originalDeleteOnTermination),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", originalType),
 				),
 			},
 			{
-				Config: testAccInstanceConfig_rootBlockDeviceIOPS(rName, updatedSize, updatedDeleteOnTermination, updatedType, updatedIOPS),
+				Config: testAccInstanceConfig_rootBlockDeviceIOPS(rName, updatedSize, acctest.CtTrue, updatedType, updatedIOPS),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &updated),
 					testAccCheckInstanceNotRecreated(&original, &updated),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", updatedSize),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", updatedDeleteOnTermination),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", updatedType),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.iops", updatedIOPS),
 				),
@@ -2742,8 +2733,6 @@ func TestAccEC2Instance_EBSRootDeviceMultipleBlockDevices_modifySize(t *testing.
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	deleteOnTermination := "true"
-
 	updatedRootVolumeSize := "14"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -2753,7 +2742,7 @@ func TestAccEC2Instance_EBSRootDeviceMultipleBlockDevices_modifySize(t *testing.
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_blockDevicesDeleteOnTerminate(rName, acctest.Ct10, deleteOnTermination),
+				Config: testAccInstanceConfig_blockDevicesDeleteOnTerminate(rName, acctest.Ct10, acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", acctest.Ct10),
@@ -2769,7 +2758,7 @@ func TestAccEC2Instance_EBSRootDeviceMultipleBlockDevices_modifySize(t *testing.
 				),
 			},
 			{
-				Config: testAccInstanceConfig_blockDevicesDeleteOnTerminate(rName, updatedRootVolumeSize, deleteOnTermination),
+				Config: testAccInstanceConfig_blockDevicesDeleteOnTerminate(rName, updatedRootVolumeSize, acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &after),
 					testAccCheckInstanceNotRecreated(&before, &after),
@@ -2796,9 +2785,6 @@ func TestAccEC2Instance_EBSRootDeviceMultipleBlockDevices_modifyDeleteOnTerminat
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	originalDeleteOnTermination := "false"
-	updatedDeleteOnTermination := "true"
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
@@ -2806,11 +2792,11 @@ func TestAccEC2Instance_EBSRootDeviceMultipleBlockDevices_modifyDeleteOnTerminat
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_blockDevicesDeleteOnTerminate(rName, acctest.Ct10, originalDeleteOnTermination),
+				Config: testAccInstanceConfig_blockDevicesDeleteOnTerminate(rName, acctest.Ct10, acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", acctest.Ct10),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", originalDeleteOnTermination),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", acctest.CtFalse),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrVolumeSize: "9",
 					}),
@@ -2823,12 +2809,12 @@ func TestAccEC2Instance_EBSRootDeviceMultipleBlockDevices_modifyDeleteOnTerminat
 				),
 			},
 			{
-				Config: testAccInstanceConfig_blockDevicesDeleteOnTerminate(rName, acctest.Ct10, updatedDeleteOnTermination),
+				Config: testAccInstanceConfig_blockDevicesDeleteOnTerminate(rName, acctest.Ct10, acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &after),
 					testAccCheckInstanceNotRecreated(&before, &after),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", acctest.Ct10),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", updatedDeleteOnTermination),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", acctest.CtTrue),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrVolumeSize: "9",
 					}),
@@ -2863,25 +2849,25 @@ func TestAccEC2Instance_EBSRootDevice_multipleDynamicEBSBlockDevices(t *testing.
 					testAccCheckInstanceExists(ctx, resourceName, &instance),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", acctest.Ct3),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
-						names.AttrDeleteOnTermination: "true",
+						names.AttrDeleteOnTermination: acctest.CtTrue,
 						names.AttrDeviceName:          "/dev/sdd",
-						names.AttrEncrypted:           "false",
+						names.AttrEncrypted:           acctest.CtFalse,
 						names.AttrIOPS:                "100",
 						names.AttrVolumeSize:          acctest.Ct10,
 						names.AttrVolumeType:          "gp2",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
-						names.AttrDeleteOnTermination: "true",
+						names.AttrDeleteOnTermination: acctest.CtTrue,
 						names.AttrDeviceName:          "/dev/sdc",
-						names.AttrEncrypted:           "false",
+						names.AttrEncrypted:           acctest.CtFalse,
 						names.AttrIOPS:                "100",
 						names.AttrVolumeSize:          acctest.Ct10,
 						names.AttrVolumeType:          "gp2",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
-						names.AttrDeleteOnTermination: "true",
+						names.AttrDeleteOnTermination: acctest.CtTrue,
 						names.AttrDeviceName:          "/dev/sdb",
-						names.AttrEncrypted:           "false",
+						names.AttrEncrypted:           acctest.CtFalse,
 						names.AttrIOPS:                "100",
 						names.AttrVolumeSize:          acctest.Ct10,
 						names.AttrVolumeType:          "gp2",
@@ -3040,7 +3026,7 @@ func TestAccEC2Instance_primaryNetworkInterfaceSourceDestCheck(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &instance),
 					testAccCheckENIExists(ctx, eniResourceName, &eni),
-					resource.TestCheckResourceAttr(resourceName, "source_dest_check", "false"),
+					resource.TestCheckResourceAttr(resourceName, "source_dest_check", acctest.CtFalse),
 				),
 			},
 			{
@@ -3151,7 +3137,7 @@ func TestAccEC2Instance_NewNetworkInterface_publicIPAndSecondaryPrivateIPs(t *te
 				Config: testAccInstanceConfig_publicAndPrivateSecondaryIPs(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", "true"),
+					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
 					resource.TestCheckResourceAttr(resourceName, "secondary_private_ips.#", acctest.Ct2),
 				),
@@ -3160,7 +3146,7 @@ func TestAccEC2Instance_NewNetworkInterface_publicIPAndSecondaryPrivateIPs(t *te
 				Config: testAccInstanceConfig_publicAndPrivateSecondaryIPs(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", "false"),
+					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "public_ip", ""),
 					resource.TestCheckResourceAttr(resourceName, "secondary_private_ips.#", acctest.Ct2),
 				),
@@ -3356,7 +3342,7 @@ func TestAccEC2Instance_AssociatePublic_defaultPrivate(t *testing.T) {
 				Config: testAccInstanceConfig_associatePublicDefaultPrivate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", "false"),
+					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "public_ip", ""),
 				),
 			},
@@ -3387,7 +3373,7 @@ func TestAccEC2Instance_AssociatePublic_defaultPublic(t *testing.T) {
 				Config: testAccInstanceConfig_associatePublicDefaultPublic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", "true"),
+					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
 				),
 			},
@@ -3418,7 +3404,7 @@ func TestAccEC2Instance_AssociatePublic_explicitPublic(t *testing.T) {
 				Config: testAccInstanceConfig_associatePublicExplicitPublic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", "true"),
+					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
 				),
 			},
@@ -3449,7 +3435,7 @@ func TestAccEC2Instance_AssociatePublic_explicitPrivate(t *testing.T) {
 				Config: testAccInstanceConfig_associatePublicExplicitPrivate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", "false"),
+					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "public_ip", ""),
 				),
 			},
@@ -3480,7 +3466,7 @@ func TestAccEC2Instance_AssociatePublic_overridePublic(t *testing.T) {
 				Config: testAccInstanceConfig_associatePublicOverridePublic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", "true"),
+					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
 				),
 			},
@@ -3511,7 +3497,7 @@ func TestAccEC2Instance_AssociatePublic_overridePrivate(t *testing.T) {
 				Config: testAccInstanceConfig_associatePublicOverridePrivate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", "false"),
+					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "public_ip", ""),
 				),
 			},
@@ -3813,7 +3799,7 @@ func TestAccEC2Instance_GetPasswordData_falseToTrue(t *testing.T) {
 				Config: testAccInstanceConfig_getPasswordData(rName, publicKey, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &before),
-					resource.TestCheckResourceAttr(resourceName, "get_password_data", "false"),
+					resource.TestCheckResourceAttr(resourceName, "get_password_data", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "password_data", ""),
 				),
 			},
@@ -3828,7 +3814,7 @@ func TestAccEC2Instance_GetPasswordData_falseToTrue(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &after),
 					testAccCheckInstanceNotRecreated(&before, &after),
-					resource.TestCheckResourceAttr(resourceName, "get_password_data", "true"),
+					resource.TestCheckResourceAttr(resourceName, "get_password_data", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "password_data"),
 				),
 			},
@@ -3857,7 +3843,7 @@ func TestAccEC2Instance_GetPasswordData_trueToFalse(t *testing.T) {
 				Config: testAccInstanceConfig_getPasswordData(rName, publicKey, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &before),
-					resource.TestCheckResourceAttr(resourceName, "get_password_data", "true"),
+					resource.TestCheckResourceAttr(resourceName, "get_password_data", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "password_data"),
 				),
 			},
@@ -3876,7 +3862,7 @@ func TestAccEC2Instance_GetPasswordData_trueToFalse(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &after),
 					testAccCheckInstanceNotRecreated(&before, &after),
-					resource.TestCheckResourceAttr(resourceName, "get_password_data", "false"),
+					resource.TestCheckResourceAttr(resourceName, "get_password_data", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "password_data", ""),
 				),
 			},
@@ -5080,7 +5066,7 @@ func TestAccEC2Instance_UserDataReplaceOnChange_On(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_userDataSpecifiedReplaceFlag(rName, "TestData1", "true"),
+				Config: testAccInstanceConfig_userDataSpecifiedReplaceFlag(rName, "TestData1", acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &instance1),
 				),
@@ -5093,7 +5079,7 @@ func TestAccEC2Instance_UserDataReplaceOnChange_On(t *testing.T) {
 			},
 			// Switching should force a recreate
 			{
-				Config: testAccInstanceConfig_userDataSpecifiedReplaceFlag(rName, "TestData2", "true"),
+				Config: testAccInstanceConfig_userDataSpecifiedReplaceFlag(rName, "TestData2", acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &instance2),
 					testAccCheckInstanceRecreated(&instance1, &instance2),
@@ -5116,7 +5102,7 @@ func TestAccEC2Instance_UserDataReplaceOnChange_On_Base64(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_userData64SpecifiedReplaceFlag(rName, "3dc39dda39be1205215e776bad998da361a5955d", "true"),
+				Config: testAccInstanceConfig_userData64SpecifiedReplaceFlag(rName, "3dc39dda39be1205215e776bad998da361a5955d", acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &instance1),
 				),
@@ -5129,7 +5115,7 @@ func TestAccEC2Instance_UserDataReplaceOnChange_On_Base64(t *testing.T) {
 			},
 			// Switching should force a recreate
 			{
-				Config: testAccInstanceConfig_userData64SpecifiedReplaceFlag(rName, "3dc39dda39be1205215e776bad998da361a5955e", "true"),
+				Config: testAccInstanceConfig_userData64SpecifiedReplaceFlag(rName, "3dc39dda39be1205215e776bad998da361a5955e", acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &instance2),
 					testAccCheckInstanceRecreated(&instance1, &instance2),
@@ -5152,7 +5138,7 @@ func TestAccEC2Instance_UserDataReplaceOnChange_Off(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_userDataSpecifiedReplaceFlag(rName, "TestData1", "false"),
+				Config: testAccInstanceConfig_userDataSpecifiedReplaceFlag(rName, "TestData1", acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &instance1),
 				),
@@ -5165,7 +5151,7 @@ func TestAccEC2Instance_UserDataReplaceOnChange_Off(t *testing.T) {
 			},
 			// Switching should not force a recreate
 			{
-				Config: testAccInstanceConfig_userDataSpecifiedReplaceFlag(rName, "TestData2", "false"),
+				Config: testAccInstanceConfig_userDataSpecifiedReplaceFlag(rName, "TestData2", acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &instance2),
 					testAccCheckInstanceNotRecreated(&instance1, &instance2),
@@ -5188,7 +5174,7 @@ func TestAccEC2Instance_UserDataReplaceOnChange_Off_Base64(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_userData64SpecifiedReplaceFlag(rName, "3dc39dda39be1205215e776bad998da361a5955d", "false"),
+				Config: testAccInstanceConfig_userData64SpecifiedReplaceFlag(rName, "3dc39dda39be1205215e776bad998da361a5955d", acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &instance1),
 				),
@@ -5201,7 +5187,7 @@ func TestAccEC2Instance_UserDataReplaceOnChange_Off_Base64(t *testing.T) {
 			},
 			// Switching should not force a recreate
 			{
-				Config: testAccInstanceConfig_userData64SpecifiedReplaceFlag(rName, "3dc39dda39be1205215e776bad998da361a5955e", "false"),
+				Config: testAccInstanceConfig_userData64SpecifiedReplaceFlag(rName, "3dc39dda39be1205215e776bad998da361a5955e", acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &instance2),
 					testAccCheckInstanceNotRecreated(&instance1, &instance2),
@@ -5227,7 +5213,7 @@ func TestAccEC2Instance_hibernation(t *testing.T) {
 				Config: testAccInstanceConfig_hibernation(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "hibernation", "true"),
+					resource.TestCheckResourceAttr(resourceName, "hibernation", acctest.CtTrue),
 				),
 			},
 			{
@@ -5241,7 +5227,7 @@ func TestAccEC2Instance_hibernation(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v2),
 					testAccCheckInstanceRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, "hibernation", "false"),
+					resource.TestCheckResourceAttr(resourceName, "hibernation", acctest.CtFalse),
 				),
 			},
 		},
@@ -5335,7 +5321,7 @@ func TestAccEC2Instance_enclaveOptions(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "enclave_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "enclave_options.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enclave_options.0.enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -5350,7 +5336,7 @@ func TestAccEC2Instance_enclaveOptions(t *testing.T) {
 					testAccCheckInstanceExists(ctx, resourceName, &v2),
 					testAccCheckInstanceRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "enclave_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "enclave_options.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enclave_options.0.enabled", acctest.CtFalse),
 				),
 			},
 		},
@@ -5840,7 +5826,7 @@ func defaultSubnetCount(ctx context.Context, t *testing.T) int {
 	input := &ec2.DescribeSubnetsInput{
 		Filters: tfec2.NewAttributeFilterListV2(
 			map[string]string{
-				"defaultForAz": "true",
+				"defaultForAz": acctest.CtTrue,
 			},
 		),
 	}

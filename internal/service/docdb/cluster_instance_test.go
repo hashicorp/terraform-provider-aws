@@ -38,11 +38,11 @@ func TestAccDocDBClusterInstance_basic(t *testing.T) {
 					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrApplyImmediately),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(fmt.Sprintf("db:%s", rName))),
-					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrSet(resourceName, "ca_cert_identifier"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrClusterIdentifier),
-					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "false"),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, "db_subnet_group_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "dbi_resource_id"),
 					resource.TestCheckNoResourceAttr(resourceName, "enable_performance_insights"),
@@ -61,7 +61,7 @@ func TestAccDocDBClusterInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPubliclyAccessible),
 					resource.TestCheckResourceAttrSet(resourceName, "storage_encrypted"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "writer", "true"),
+					resource.TestCheckResourceAttr(resourceName, "writer", acctest.CtTrue),
 				),
 			},
 			{
@@ -76,8 +76,8 @@ func TestAccDocDBClusterInstance_basic(t *testing.T) {
 				Config: testAccClusterInstanceConfig_modified(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrApplyImmediately, "true"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrApplyImmediately, acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "promotion_tier", acctest.Ct3),
 				),
 			},
@@ -339,14 +339,14 @@ func TestAccDocDBClusterInstance_copyTagsToSnapshot(t *testing.T) {
 				Config: testAccClusterInstanceConfig_copyTagsToSnapshot(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "true"),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccClusterInstanceConfig_copyTagsToSnapshot(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "false"),
+					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", acctest.CtFalse),
 				),
 			},
 

@@ -351,7 +351,7 @@ func TestAccAPIGatewayDeployment_deploymentCanarySettings(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "variables.one", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.percent_traffic", "33.33"),
 					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.stage_variable_overrides.one", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.use_stage_cache", "true"),
+					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.use_stage_cache", acctest.CtTrue),
 				),
 			},
 		},

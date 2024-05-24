@@ -250,6 +250,7 @@ const (
 )
 
 func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
@@ -269,11 +270,11 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 
 	out, err := conn.CreateRule(ctx, in)
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameListenerRule, name, err)
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionCreating, ResNameListenerRule, name, err)
 	}
 
 	if out == nil || out.Arn == nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameListenerRule, d.Get(names.AttrName).(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionCreating, ResNameListenerRule, d.Get(names.AttrName).(string), errors.New("empty output"))
 	}
 
 	d.Set("rule_id", out.Id)
@@ -288,10 +289,11 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 
 	d.SetId(strings.Join(parts, "/"))
 
-	return resourceListenerRuleRead(ctx, d, meta)
+	return append(diags, resourceListenerRuleRead(ctx, d, meta)...)
 }
 
 func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	serviceId := d.Get("service_identifier").(string)
@@ -303,11 +305,11 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] VpcLattice Listener Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionReading, ResNameListenerRule, d.Id(), err)
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionReading, ResNameListenerRule, d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, out.Arn)
@@ -318,17 +320,18 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("rule_id", out.Id)
 
 	if err := d.Set(names.AttrAction, []interface{}{flattenRuleAction(out.Action)}); err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionSetting, ResNameListenerRule, d.Id(), err)
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionSetting, ResNameListenerRule, d.Id(), err)
 	}
 
 	if err := d.Set("match", []interface{}{flattenRuleMatch(out.Match)}); err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionSetting, ResNameListenerRule, d.Id(), err)
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionSetting, ResNameListenerRule, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	serviceId := d.Get("service_identifier").(string)
@@ -355,14 +358,15 @@ func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 		_, err := conn.UpdateRule(ctx, in)
 		if err != nil {
-			return create.DiagError(names.VPCLattice, create.ErrActionUpdating, ResNameListenerRule, d.Id(), err)
+			return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionUpdating, ResNameListenerRule, d.Id(), err)
 		}
 	}
 
-	return resourceListenerRuleRead(ctx, d, meta)
+	return append(diags, resourceListenerRuleRead(ctx, d, meta)...)
 }
 
 func resourceListenerRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	serviceId := d.Get("service_identifier").(string)
@@ -379,13 +383,13 @@ func resourceListenerRuleDelete(ctx context.Context, d *schema.ResourceData, met
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return nil
+			return diags
 		}
 
-		return create.DiagError(names.VPCLattice, create.ErrActionDeleting, ResNameListenerRule, d.Id(), err)
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionDeleting, ResNameListenerRule, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindListenerRuleByID(ctx context.Context, conn *vpclattice.Client, serviceIdentifier string, listenerIdentifier string, ruleId string) (*vpclattice.GetRuleOutput, error) {

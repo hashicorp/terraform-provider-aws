@@ -23,16 +23,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
-)
-
-const (
-	ruleGroupCreateTimeout = 5 * time.Minute
-	ruleGroupUpdateTimeout = 5 * time.Minute
-	ruleGroupDeleteTimeout = 5 * time.Minute
 )
 
 // @SDKResource("aws_wafv2_rule_group", name="Rule Group")
@@ -156,6 +151,7 @@ func resourceRuleGroup() *schema.Resource {
 }
 
 func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
 	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
@@ -176,21 +172,25 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.Description = aws.String(v.(string))
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.WAFUnavailableEntityException](ctx, ruleGroupCreateTimeout, func() (interface{}, error) {
+	const (
+		timeout = 5 * time.Minute
+	)
+	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.WAFUnavailableEntityException](ctx, timeout, func() (interface{}, error) {
 		return conn.CreateRuleGroup(ctx, input)
 	})
 
 	if err != nil {
-		return diag.Errorf("creating WAFv2 RuleGroup (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating WAFv2 RuleGroup (%s): %s", name, err)
 	}
 
 	d.SetId(aws.ToString(outputRaw.(*wafv2.CreateRuleGroupOutput).Summary.Id))
 	d.Set(names.AttrName, name) // Required in Read.
 
-	return resourceRuleGroupRead(ctx, d, meta)
+	return append(diags, resourceRuleGroupRead(ctx, d, meta)...)
 }
 
 func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
 	output, err := findRuleGroupByThreePartKey(ctx, conn, d.Id(), d.Get(names.AttrName).(string), d.Get(names.AttrScope).(string))
@@ -198,34 +198,35 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] WAFv2 RuleGroup (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading WAFv2 RuleGroup (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading WAFv2 RuleGroup (%s): %s", d.Id(), err)
 	}
 
 	ruleGroup := output.RuleGroup
 	d.Set(names.AttrARN, ruleGroup.ARN)
 	d.Set("capacity", ruleGroup.Capacity)
 	if err := d.Set("custom_response_body", flattenCustomResponseBodies(ruleGroup.CustomResponseBodies)); err != nil {
-		return diag.Errorf("setting custom_response_body: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting custom_response_body: %s", err)
 	}
 	d.Set(names.AttrDescription, ruleGroup.Description)
 	d.Set("lock_token", output.LockToken)
 	d.Set(names.AttrName, ruleGroup.Name)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(ruleGroup.Name)))
 	if err := d.Set(names.AttrRule, flattenRules(ruleGroup.Rules)); err != nil {
-		return diag.Errorf("setting rule: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 	}
 	if err := d.Set("visibility_config", flattenVisibilityConfig(ruleGroup.VisibilityConfig)); err != nil {
-		return diag.Errorf("setting visibility_config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting visibility_config: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
@@ -246,19 +247,23 @@ func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			input.Description = aws.String(v.(string))
 		}
 
-		_, err := tfresource.RetryWhenIsA[*awstypes.WAFUnavailableEntityException](ctx, ruleGroupUpdateTimeout, func() (interface{}, error) {
+		const (
+			timeout = 5 * time.Minute
+		)
+		_, err := tfresource.RetryWhenIsA[*awstypes.WAFUnavailableEntityException](ctx, timeout, func() (interface{}, error) {
 			return conn.UpdateRuleGroup(ctx, input)
 		})
 
 		if err != nil {
-			return diag.Errorf("updating WAFv2 RuleGroup (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating WAFv2 RuleGroup (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceRuleGroupRead(ctx, d, meta)
+	return append(diags, resourceRuleGroupRead(ctx, d, meta)...)
 }
 
 func resourceRuleGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
 	input := &wafv2.DeleteRuleGroupInput{
@@ -269,19 +274,22 @@ func resourceRuleGroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	log.Printf("[INFO] Deleting WAFv2 RuleGroup: %s", d.Id())
-	_, err := tfresource.RetryWhenIsOneOf2[*awstypes.WAFAssociatedItemException, *awstypes.WAFUnavailableEntityException](ctx, ruleGroupDeleteTimeout, func() (interface{}, error) {
+	const (
+		timeout = 5 * time.Minute
+	)
+	_, err := tfresource.RetryWhenIsOneOf2[*awstypes.WAFAssociatedItemException, *awstypes.WAFUnavailableEntityException](ctx, timeout, func() (interface{}, error) {
 		return conn.DeleteRuleGroup(ctx, input)
 	})
 
 	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting WAFv2 RuleGroup (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting WAFv2 RuleGroup (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findRuleGroupByThreePartKey(ctx context.Context, conn *wafv2.Client, id, name, scope string) (*wafv2.GetRuleGroupOutput, error) {

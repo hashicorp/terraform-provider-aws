@@ -140,8 +140,8 @@ func TestAccEC2EBSVolumeAttachment_update(t *testing.T) {
 			{
 				Config: testAccEBSVolumeAttachmentConfig_update(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "force_detach", "false"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, "false"),
+					resource.TestCheckResourceAttr(resourceName, "force_detach", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, acctest.CtFalse),
 				),
 			},
 			{
@@ -157,8 +157,8 @@ func TestAccEC2EBSVolumeAttachment_update(t *testing.T) {
 			{
 				Config: testAccEBSVolumeAttachmentConfig_update(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "force_detach", "true"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, "true"),
+					resource.TestCheckResourceAttr(resourceName, "force_detach", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, acctest.CtTrue),
 				),
 			},
 			{

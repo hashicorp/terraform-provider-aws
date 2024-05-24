@@ -46,7 +46,7 @@ func TestAccPinpointGCMChannel_basic(t *testing.T) {
 				Config: testAccGCMChannelConfig_basic(apiKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGCMChannelExists(ctx, resourceName, &channel),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
 			{
@@ -59,7 +59,7 @@ func TestAccPinpointGCMChannel_basic(t *testing.T) {
 				Config: testAccGCMChannelConfig_basic(apiKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGCMChannelExists(ctx, resourceName, &channel),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
 		},

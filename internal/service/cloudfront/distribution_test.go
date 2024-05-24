@@ -588,19 +588,19 @@ func TestAccCloudFrontDistribution_Origin_originShield(t *testing.T) {
 				ExpectError: regexache.MustCompile(`Missing required argument`),
 			},
 			{
-				Config:      testAccDistributionConfig_originItem(rName, originShieldItem(`false`, `""`)),
+				Config:      testAccDistributionConfig_originItem(rName, originShieldItem(acctest.CtFalse, `""`)),
 				ExpectError: regexache.MustCompile(`.*must be a valid AWS Region Code.*`),
 			},
 			{
-				Config:      testAccDistributionConfig_originItem(rName, originShieldItem(`true`, `"US East (Ohio)"`)),
+				Config:      testAccDistributionConfig_originItem(rName, originShieldItem(acctest.CtTrue, `"US East (Ohio)"`)),
 				ExpectError: regexache.MustCompile(`.*must be a valid AWS Region Code.*`),
 			},
 			{
-				Config: testAccDistributionConfig_originItem(rName, originShieldItem(`true`, `"us-east-1"`)), //lintignore:AWSAT003
+				Config: testAccDistributionConfig_originItem(rName, originShieldItem(acctest.CtTrue, `"us-east-1"`)), //lintignore:AWSAT003
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, "origin.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "origin.0.origin_shield.0.enabled", `true`),
+					resource.TestCheckResourceAttr(resourceName, "origin.0.origin_shield.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "origin.0.origin_shield.0.origin_shield_region", "us-east-1"), //lintignore:AWSAT003
 				),
 			},
@@ -680,28 +680,28 @@ func TestAccCloudFrontDistribution_noOptionalItems(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.allowed_methods.#", "7"),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.cached_methods.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.compress", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.compress", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.cookies.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.cookies.0.forward", "all"),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.cookies.0.whitelisted_names.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.headers.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.query_string", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.query_string", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.query_string_cache_keys.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.lambda_function_association.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.function_association.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.min_ttl", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.smooth_streaming", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.smooth_streaming", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.target_origin_id", "myCustomOrigin"),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.trusted_key_groups.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.trusted_signers.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.viewer_protocol_policy", "allow-all"),
 					resource.TestMatchResourceAttr(resourceName, names.AttrDomainName, regexache.MustCompile(`^[0-9a-z]+\.cloudfront\.net$`)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestMatchResourceAttr(resourceName, "etag", regexache.MustCompile(`^[0-9A-Z]+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrHostedZoneID, "Z2FDTNDATAQYW2"),
 					resource.TestCheckResourceAttrSet(resourceName, "http_version"),
-					resource.TestCheckResourceAttr(resourceName, "is_ipv6_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "is_ipv6_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "logging_config.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "origin.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "origin.*", map[string]string{
@@ -722,8 +722,8 @@ func TestAccCloudFrontDistribution_noOptionalItems(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "restrictions.0.geo_restriction.0.restriction_type", "whitelist"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "viewer_certificate.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "viewer_certificate.0.cloudfront_default_certificate", "true"),
-					resource.TestCheckResourceAttr(resourceName, "wait_for_deployment", "true"),
+					resource.TestCheckResourceAttr(resourceName, "viewer_certificate.0.cloudfront_default_certificate", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "wait_for_deployment", acctest.CtTrue),
 				),
 			},
 			{
@@ -797,7 +797,7 @@ func TestAccCloudFrontDistribution_isIPV6Enabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, "aws_cloudfront_distribution.is_ipv6_enabled", &distribution),
 					resource.TestCheckResourceAttr(
-						"aws_cloudfront_distribution.is_ipv6_enabled", "is_ipv6_enabled", "true"),
+						"aws_cloudfront_distribution.is_ipv6_enabled", "is_ipv6_enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -954,7 +954,7 @@ func TestAccCloudFrontDistribution_DefaultCacheBehavior_trustedKeyGroups(t *test
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, "trusted_key_groups.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "trusted_key_groups.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "trusted_key_groups.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "trusted_key_groups.0.items.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "trusted_key_groups.0.items.0.key_group_id"),
 					resource.TestCheckResourceAttr(resourceName, "trusted_key_groups.0.items.0.key_pair_ids.#", acctest.Ct1),
@@ -1100,7 +1100,7 @@ func TestAccCloudFrontDistribution_enabled(t *testing.T) {
 				Config: testAccDistributionConfig_enabled(false, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
 			{
@@ -1116,7 +1116,7 @@ func TestAccCloudFrontDistribution_enabled(t *testing.T) {
 				Config: testAccDistributionConfig_enabled(true, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 				),
 			},
 		},
@@ -1305,7 +1305,7 @@ func TestAccCloudFrontDistribution_waitForDeployment(t *testing.T) {
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
 					testAccCheckDistributionStatusInProgress(&distribution),
 					testAccCheckDistributionWaitForDeployment(ctx, &distribution),
-					resource.TestCheckResourceAttr(resourceName, "wait_for_deployment", "false"),
+					resource.TestCheckResourceAttr(resourceName, "wait_for_deployment", acctest.CtFalse),
 				),
 			},
 			{
@@ -1323,7 +1323,7 @@ func TestAccCloudFrontDistribution_waitForDeployment(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
 					testAccCheckDistributionStatusInProgress(&distribution),
-					resource.TestCheckResourceAttr(resourceName, "wait_for_deployment", "false"),
+					resource.TestCheckResourceAttr(resourceName, "wait_for_deployment", acctest.CtFalse),
 				),
 			},
 			{
@@ -1331,7 +1331,7 @@ func TestAccCloudFrontDistribution_waitForDeployment(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
 					testAccCheckDistributionStatusDeployed(&distribution),
-					resource.TestCheckResourceAttr(resourceName, "wait_for_deployment", "true"),
+					resource.TestCheckResourceAttr(resourceName, "wait_for_deployment", acctest.CtTrue),
 				),
 			},
 		},

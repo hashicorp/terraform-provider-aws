@@ -4,17 +4,17 @@ package devicefarm_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"maps"
-	"net/url"
 	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	devicefarm_sdkv1 "github.com/aws/aws-sdk-go/service/devicefarm"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	devicefarm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/devicefarm"
 	"github.com/aws/smithy-go/middleware"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/google/go-cmp/cmp"
@@ -213,32 +213,42 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 }
 
 func defaultEndpoint(region string) string {
-	r := endpoints.DefaultResolver()
+	r := devicefarm_sdkv2.NewDefaultEndpointResolverV2()
 
-	ep, err := r.EndpointFor(devicefarm_sdkv1.EndpointsID, region)
+	ep, err := r.ResolveEndpoint(context.Background(), devicefarm_sdkv2.EndpointParameters{
+		Region: aws_sdkv2.String(region),
+	})
 	if err != nil {
 		return err.Error()
 	}
 
-	url, _ := url.Parse(ep.URL)
-
-	if url.Path == "" {
-		url.Path = "/"
+	if ep.URI.Path == "" {
+		ep.URI.Path = "/"
 	}
 
-	return url.String()
+	return ep.URI.String()
 }
 
 func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) string {
 	t.Helper()
 
-	client := meta.DeviceFarmConn(ctx)
+	var endpoint string
 
-	req, _ := client.ListDeviceInstancesRequest(&devicefarm_sdkv1.ListDeviceInstancesInput{})
+	client := meta.DeviceFarmClient(ctx)
 
-	req.HTTPRequest.URL.Path = "/"
-
-	endpoint := req.HTTPRequest.URL.String()
+	_, err := client.ListDeviceInstances(ctx, &devicefarm_sdkv2.ListDeviceInstancesInput{},
+		func(opts *devicefarm_sdkv2.Options) {
+			opts.APIOptions = append(opts.APIOptions,
+				addRetrieveEndpointURLMiddleware(t, &endpoint),
+				addCancelRequestMiddleware(),
+			)
+		},
+	)
+	if err == nil {
+		t.Fatal("Expected an error, got none")
+	} else if !errors.Is(err, errCancelOperation) {
+		t.Fatalf("Unexpected error: %s", err)
+	}
 
 	return endpoint
 }
@@ -406,7 +416,7 @@ func retrieveEndpointURLMiddleware(t *testing.T, endpoint *string) middleware.Fi
 		})
 }
 
-var errCancelOperation = fmt.Errorf("Test: Cancelling request")
+var errCancelOperation = fmt.Errorf("Test: Canceling request")
 
 func addCancelRequestMiddleware() func(*middleware.Stack) error {
 	return func(stack *middleware.Stack) error {

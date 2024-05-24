@@ -315,7 +315,7 @@ func testAccPlan_updateTargets(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						planResourceName,
 						"stage.0.target.0.contact_target_info.0.is_essential",
-						"false",
+						acctest.CtFalse,
 					),
 					acctest.CheckResourceAttrRegionalARN(
 						planResourceName,
@@ -339,7 +339,7 @@ func testAccPlan_updateTargets(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						planResourceName,
 						"stage.0.target.0.contact_target_info.0.is_essential",
-						"false",
+						acctest.CtFalse,
 					),
 					acctest.CheckResourceAttrRegionalARN(
 						planResourceName,
@@ -350,7 +350,7 @@ func testAccPlan_updateTargets(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						planResourceName,
 						"stage.0.target.1.contact_target_info.0.is_essential",
-						"true",
+						acctest.CtTrue,
 					),
 					acctest.CheckResourceAttrRegionalARN(
 						planResourceName,
@@ -374,7 +374,7 @@ func testAccPlan_updateTargets(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						planResourceName,
 						"stage.0.target.0.contact_target_info.0.is_essential",
-						"false",
+						acctest.CtFalse,
 					),
 					acctest.CheckResourceAttrRegionalARN(
 						planResourceName,
@@ -423,7 +423,7 @@ func testAccPlan_updateContactTargetInfo(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						planResourceName,
 						"stage.0.target.0.contact_target_info.0.is_essential",
-						"false",
+						acctest.CtFalse,
 					),
 					acctest.CheckResourceAttrRegionalARN(
 						planResourceName,
@@ -447,7 +447,7 @@ func testAccPlan_updateContactTargetInfo(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						planResourceName,
 						"stage.0.target.0.contact_target_info.0.is_essential",
-						"true",
+						acctest.CtTrue,
 					),
 					acctest.CheckResourceAttrRegionalARN(
 						planResourceName,

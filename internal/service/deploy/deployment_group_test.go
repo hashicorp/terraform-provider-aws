@@ -388,7 +388,7 @@ func TestAccDeployDeploymentGroup_AutoRollback_create(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.0.events.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "auto_rollback_configuration.0.events.*", "DEPLOYMENT_FAILURE"),
 				),
@@ -420,7 +420,7 @@ func TestAccDeployDeploymentGroup_AutoRollback_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.0.events.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "auto_rollback_configuration.0.events.*", "DEPLOYMENT_FAILURE"),
 				),
@@ -430,7 +430,7 @@ func TestAccDeployDeploymentGroup_AutoRollback_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.0.events.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemAttr(resourceName, "auto_rollback_configuration.0.events.*", "DEPLOYMENT_STOP_ON_ALARM"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "auto_rollback_configuration.0.events.*", "DEPLOYMENT_FAILURE"),
@@ -463,7 +463,7 @@ func TestAccDeployDeploymentGroup_AutoRollback_delete(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.0.events.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "auto_rollback_configuration.0.events.*", "DEPLOYMENT_FAILURE"),
 				),
@@ -502,7 +502,7 @@ func TestAccDeployDeploymentGroup_AutoRollback_disable(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.0.events.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "auto_rollback_configuration.0.events.*", "DEPLOYMENT_FAILURE"),
 				),
@@ -512,7 +512,7 @@ func TestAccDeployDeploymentGroup_AutoRollback_disable(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.0.events.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "auto_rollback_configuration.0.events.*", "DEPLOYMENT_FAILURE"),
 				),
@@ -544,10 +544,10 @@ func TestAccDeployDeploymentGroup_Alarm_create(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.alarms.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "alarm_configuration.0.alarms.*", "test-alarm"),
-					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.ignore_poll_alarm_failure", "false"),
+					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.ignore_poll_alarm_failure", acctest.CtFalse),
 				),
 			},
 			{
@@ -577,10 +577,10 @@ func TestAccDeployDeploymentGroup_Alarm_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.alarms.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "alarm_configuration.0.alarms.*", "test-alarm"),
-					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.ignore_poll_alarm_failure", "false"),
+					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.ignore_poll_alarm_failure", acctest.CtFalse),
 				),
 			},
 			{
@@ -588,11 +588,11 @@ func TestAccDeployDeploymentGroup_Alarm_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.alarms.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemAttr(resourceName, "alarm_configuration.0.alarms.*", "test-alarm"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "alarm_configuration.0.alarms.*", "test-alarm-2"),
-					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.ignore_poll_alarm_failure", "true"),
+					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.ignore_poll_alarm_failure", acctest.CtTrue),
 				),
 			},
 			{
@@ -622,10 +622,10 @@ func TestAccDeployDeploymentGroup_Alarm_delete(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.alarms.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "alarm_configuration.0.alarms.*", "test-alarm"),
-					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.ignore_poll_alarm_failure", "false"),
+					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.ignore_poll_alarm_failure", acctest.CtFalse),
 				),
 			},
 			{
@@ -662,10 +662,10 @@ func TestAccDeployDeploymentGroup_Alarm_disable(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.alarms.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "alarm_configuration.0.alarms.*", "test-alarm"),
-					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.ignore_poll_alarm_failure", "false"),
+					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.ignore_poll_alarm_failure", acctest.CtFalse),
 				),
 			},
 			{
@@ -673,10 +673,10 @@ func TestAccDeployDeploymentGroup_Alarm_disable(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.alarms.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "alarm_configuration.0.alarms.*", "test-alarm"),
-					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.ignore_poll_alarm_failure", "false"),
+					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.0.ignore_poll_alarm_failure", acctest.CtFalse),
 				),
 			},
 			{

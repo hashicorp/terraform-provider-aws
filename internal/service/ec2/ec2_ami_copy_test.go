@@ -92,7 +92,7 @@ func TestAccEC2AMICopy_enaSupport(t *testing.T) {
 				Config: testAccAMICopyConfig_enaSupport(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMIExists(ctx, resourceName, &image),
-					resource.TestCheckResourceAttr(resourceName, "ena_support", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ena_support", acctest.CtTrue),
 				),
 			},
 		},

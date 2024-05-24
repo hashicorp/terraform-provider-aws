@@ -119,7 +119,7 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("custom_domain_name", out.CustomDomainName)
 	if out.DnsEntry != nil {
 		if err := d.Set("dns_entry", []interface{}{flattenDNSEntry(out.DnsEntry)}); err != nil {
-			return diag.Errorf("setting dns_entry: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting dns_entry: %s", err)
 		}
 	} else {
 		d.Set("dns_entry", nil)
@@ -146,5 +146,5 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 		setTagsOut(ctx, Tags(tags))
 	}
 
-	return nil
+	return diags
 }

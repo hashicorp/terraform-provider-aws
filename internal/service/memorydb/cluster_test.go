@@ -36,10 +36,10 @@ func TestAccMemoryDBCluster_basic(t *testing.T) {
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "acl_name", "aws_memorydb_acl.test", names.AttrID),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "memorydb", "cluster/"+rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtFalse),
 					resource.TestMatchResourceAttr(resourceName, "cluster_endpoint.0.address", regexache.MustCompile(`^clustercfg\..*?\.amazonaws\.com$`)),
 					resource.TestCheckResourceAttr(resourceName, "cluster_endpoint.0.port", "6379"),
-					resource.TestCheckResourceAttr(resourceName, "data_tiering", "false"),
+					resource.TestCheckResourceAttr(resourceName, "data_tiering", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_patch_version"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
@@ -69,7 +69,7 @@ func TestAccMemoryDBCluster_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_group_name", "aws_memorydb_subnet_group.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags.Test", "test"),
-					resource.TestCheckResourceAttr(resourceName, "tls_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "tls_enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -98,10 +98,10 @@ func TestAccMemoryDBCluster_defaults(t *testing.T) {
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "acl_name", "open-access"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "memorydb", "cluster/"+rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_endpoint.0.address"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_endpoint.0.port", "6379"),
-					resource.TestCheckResourceAttr(resourceName, "data_tiering", "false"),
+					resource.TestCheckResourceAttr(resourceName, "data_tiering", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_patch_version"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
@@ -119,7 +119,7 @@ func TestAccMemoryDBCluster_defaults(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrSNSTopicARN, ""),
 					resource.TestCheckResourceAttr(resourceName, "subnet_group_name", "default"), // created automatically & matches the default vpc
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "tls_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "tls_enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -217,7 +217,7 @@ func TestAccMemoryDBCluster_create_noTLS(t *testing.T) {
 				Config: testAccClusterConfig_noTLS(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tls_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "tls_enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -244,7 +244,7 @@ func TestAccMemoryDBCluster_create_withDataTiering(t *testing.T) {
 				Config: testAccClusterConfig_dataTiering(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "data_tiering", "true"),
+					resource.TestCheckResourceAttr(resourceName, "data_tiering", acctest.CtTrue),
 				),
 			},
 			{

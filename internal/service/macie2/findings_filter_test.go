@@ -277,7 +277,7 @@ func testAccFindingsFilter_WithDate(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
 						names.AttrField: "sample",
 						"eq.#":          acctest.Ct1,
-						"eq.0":          "true",
+						"eq.0":          acctest.CtTrue,
 					}),
 				),
 			},
@@ -349,7 +349,7 @@ func testAccFindingsFilter_WithNumber(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
 						names.AttrField: "sample",
 						"eq.#":          acctest.Ct1,
-						"eq.0":          "true",
+						"eq.0":          acctest.CtTrue,
 					}),
 				),
 			},

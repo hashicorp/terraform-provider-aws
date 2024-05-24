@@ -38,15 +38,15 @@ func TestAccVPC_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc/vpc-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", "false"),
+					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", "10.1.0.0/16"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_network_acl_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_route_table_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_security_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "dhcp_options_id"),
-					resource.TestCheckResourceAttr(resourceName, "enable_dns_hostnames", "false"),
-					resource.TestCheckResourceAttr(resourceName, "enable_dns_support", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_network_address_usage_metrics", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_dns_hostnames", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "enable_dns_support", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "enable_network_address_usage_metrics", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "instance_tenancy", "default"),
 					resource.TestCheckNoResourceAttr(resourceName, "ipv4_ipam_pool_id"),
 					resource.TestCheckNoResourceAttr(resourceName, "ipv4_netmask_length"),
@@ -250,7 +250,7 @@ func TestAccVPC_DefaultTags_providerOnlyTestAccVPC_DefaultTags_providerOnly(t *t
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("providerkey1", acctest.CtProviderValue1),
+					acctest.ConfigDefaultTags_Tags1(acctest.CtProviderKey1, acctest.CtProviderValue1),
 					testAccVPCConfig_basic,
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -267,7 +267,7 @@ func TestAccVPC_DefaultTags_providerOnlyTestAccVPC_DefaultTags_providerOnly(t *t
 			},
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags2("providerkey1", acctest.CtProviderValue1, "providerkey2", "providervalue2"),
+					acctest.ConfigDefaultTags_Tags2(acctest.CtProviderKey1, acctest.CtProviderValue1, "providerkey2", "providervalue2"),
 					testAccVPCConfig_basic,
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -280,7 +280,7 @@ func TestAccVPC_DefaultTags_providerOnlyTestAccVPC_DefaultTags_providerOnly(t *t
 			},
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("providerkey1", acctest.CtValue1),
+					acctest.ConfigDefaultTags_Tags1(acctest.CtProviderKey1, acctest.CtValue1),
 					testAccVPCConfig_basic,
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -391,8 +391,8 @@ func TestAccVPC_DefaultTagsProviderAndResource_nonOverlappingTag(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("providerkey1", acctest.CtProviderValue1),
-					testAccVPCConfig_tags1("resourcekey1", acctest.CtResourceValue1),
+					acctest.ConfigDefaultTags_Tags1(acctest.CtProviderKey1, acctest.CtProviderValue1),
+					testAccVPCConfig_tags1(acctest.CtResourceKey1, acctest.CtResourceValue1),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
@@ -410,8 +410,8 @@ func TestAccVPC_DefaultTagsProviderAndResource_nonOverlappingTag(t *testing.T) {
 			},
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("providerkey1", acctest.CtProviderValue1),
-					testAccVPCConfig_tags2("resourcekey1", acctest.CtResourceValue1, "resourcekey2", acctest.CtResourceValue2),
+					acctest.ConfigDefaultTags_Tags1(acctest.CtProviderKey1, acctest.CtProviderValue1),
+					testAccVPCConfig_tags2(acctest.CtResourceKey1, acctest.CtResourceValue1, acctest.CtResourceKey2, acctest.CtResourceValue2),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
@@ -455,8 +455,8 @@ func TestAccVPC_DefaultTagsProviderAndResource_overlappingTag(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("overlapkey1", acctest.CtProviderValue1),
-					testAccVPCConfig_tags1("overlapkey1", acctest.CtResourceValue1),
+					acctest.ConfigDefaultTags_Tags1(acctest.CtOverlapKey1, acctest.CtProviderValue1),
+					testAccVPCConfig_tags1(acctest.CtOverlapKey1, acctest.CtResourceValue1),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
@@ -472,8 +472,8 @@ func TestAccVPC_DefaultTagsProviderAndResource_overlappingTag(t *testing.T) {
 			},
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags2("overlapkey1", acctest.CtProviderValue1, "overlapkey2", "providervalue2"),
-					testAccVPCConfig_tags2("overlapkey1", acctest.CtResourceValue1, "overlapkey2", acctest.CtResourceValue2),
+					acctest.ConfigDefaultTags_Tags2(acctest.CtOverlapKey1, acctest.CtProviderValue1, acctest.CtOverlapKey2, "providervalue2"),
+					testAccVPCConfig_tags2(acctest.CtOverlapKey1, acctest.CtResourceValue1, acctest.CtOverlapKey2, acctest.CtResourceValue2),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
@@ -487,8 +487,8 @@ func TestAccVPC_DefaultTagsProviderAndResource_overlappingTag(t *testing.T) {
 			},
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("overlapkey1", acctest.CtProviderValue1),
-					testAccVPCConfig_tags1("overlapkey1", acctest.CtResourceValue2),
+					acctest.ConfigDefaultTags_Tags1(acctest.CtOverlapKey1, acctest.CtProviderValue1),
+					testAccVPCConfig_tags1(acctest.CtOverlapKey1, acctest.CtResourceValue2),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
@@ -910,14 +910,14 @@ func TestAccVPC_updateDNSHostnames(t *testing.T) {
 				Config: testAccVPCConfig_default(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
-					resource.TestCheckResourceAttr(resourceName, "enable_dns_hostnames", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_dns_hostnames", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccVPCConfig_enableDNSHostnames(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
-					resource.TestCheckResourceAttr(resourceName, "enable_dns_hostnames", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_dns_hostnames", acctest.CtTrue),
 				),
 			},
 		},
@@ -941,8 +941,8 @@ func TestAccVPC_bothDNSOptionsSet(t *testing.T) {
 				Config: testAccVPCConfig_bothDNSOptions(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
-					resource.TestCheckResourceAttr(resourceName, "enable_dns_hostnames", "true"),
-					resource.TestCheckResourceAttr(resourceName, "enable_dns_support", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_dns_hostnames", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "enable_dns_support", acctest.CtTrue),
 				),
 			},
 			{
@@ -971,7 +971,7 @@ func TestAccVPC_disabledDNSSupport(t *testing.T) {
 				Config: testAccVPCConfig_disabledDNSSupport(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
-					resource.TestCheckResourceAttr(resourceName, "enable_dns_support", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enable_dns_support", acctest.CtFalse),
 				),
 			},
 			{
@@ -999,7 +999,7 @@ func TestAccVPC_enableNetworkAddressUsageMetrics(t *testing.T) {
 				Config: testAccVPCConfig_enableNetworkAddressUsageMetrics(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
-					resource.TestCheckResourceAttr(resourceName, "enable_network_address_usage_metrics", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_network_address_usage_metrics", acctest.CtTrue),
 				),
 			},
 			{
@@ -1027,7 +1027,7 @@ func TestAccVPC_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 				Config: testAccVPCConfig_assignGeneratedIPv6CIDRBlock(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
-					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", "true"),
+					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", "10.1.0.0/16"),
 					resource.TestCheckResourceAttrSet(resourceName, "ipv6_association_id"),
 					resource.TestMatchResourceAttr(resourceName, "ipv6_cidr_block", regexache.MustCompile(`/56$`)),
@@ -1042,7 +1042,7 @@ func TestAccVPC_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 				Config: testAccVPCConfig_assignGeneratedIPv6CIDRBlock(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
-					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", "false"),
+					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", "10.1.0.0/16"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_association_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", ""),
@@ -1052,7 +1052,7 @@ func TestAccVPC_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 				Config: testAccVPCConfig_assignGeneratedIPv6CIDRBlock(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
-					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", "true"),
+					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", "10.1.0.0/16"),
 					resource.TestCheckResourceAttrSet(resourceName, "ipv6_association_id"),
 					resource.TestMatchResourceAttr(resourceName, "ipv6_cidr_block", regexache.MustCompile(`/56$`)),
@@ -1086,7 +1086,7 @@ func TestAccVPC_assignGeneratedIPv6CIDRBlockWithNetworkBorderGroup(t *testing.T)
 				Config: testAccVPCConfig_assignGeneratedIPv6CIDRBlockOptionalNetworkBorderGroup(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
-					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", "true"),
+					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "ipv6_association_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "ipv6_cidr_block"),
 					resource.TestCheckResourceAttrPair(resourceName, "ipv6_cidr_block_network_border_group", azDataSourceName, "network_border_group"),
@@ -1103,7 +1103,7 @@ func TestAccVPC_assignGeneratedIPv6CIDRBlockWithNetworkBorderGroup(t *testing.T)
 				Config: testAccVPCConfig_assignGeneratedIPv6CIDRBlockOptionalNetworkBorderGroup(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
-					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", "true"),
+					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "ipv6_association_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "ipv6_cidr_block"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block_network_border_group", acctest.Region()),
@@ -1191,7 +1191,7 @@ func TestAccVPC_IPAMIPv6(t *testing.T) {
 				Config: testAccVPCConfig_ipamIPv6(rName, 28),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
-					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", "false"),
+					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", "10.1.0.0/16"),
 					resource.TestCheckResourceAttrSet(resourceName, "ipv6_association_id"),
 					resource.TestMatchResourceAttr(resourceName, "ipv6_cidr_block", regexache.MustCompile(`/56$`)),

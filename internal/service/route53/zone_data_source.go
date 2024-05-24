@@ -47,10 +47,9 @@ func dataSourceZone() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrName: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ExactlyOneOf: []string{"zone_id", names.AttrName},
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			},
 			"name_servers": {
 				Type:     schema.TypeList,
@@ -77,10 +76,9 @@ func dataSourceZone() *schema.Resource {
 				Computed: true,
 			},
 			"zone_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ExactlyOneOf: []string{"zone_id", names.AttrName},
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			},
 		},
 	}

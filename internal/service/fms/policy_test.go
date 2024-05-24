@@ -39,7 +39,7 @@ func testAccPolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, names.AttrARN, "fms", "policy/.+"),
-					resource.TestCheckResourceAttr(resourceName, "delete_unused_fm_managed_resources", "false"),
+					resource.TestCheckResourceAttr(resourceName, "delete_unused_fm_managed_resources", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.#", acctest.Ct1),
@@ -206,7 +206,7 @@ func testAccPolicy_policyOption(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, names.AttrARN, "fms", "policy/.+"),
-					resource.TestCheckResourceAttr(resourceName, "delete_unused_fm_managed_resources", "false"),
+					resource.TestCheckResourceAttr(resourceName, "delete_unused_fm_managed_resources", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.#", acctest.Ct1),

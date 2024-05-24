@@ -65,8 +65,10 @@ import (
 	datasync_sdkv2 "github.com/aws/aws-sdk-go-v2/service/datasync"
 	datazone_sdkv2 "github.com/aws/aws-sdk-go-v2/service/datazone"
 	dax_sdkv2 "github.com/aws/aws-sdk-go-v2/service/dax"
+	devicefarm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/devicefarm"
 	devopsguru_sdkv2 "github.com/aws/aws-sdk-go-v2/service/devopsguru"
 	directoryservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directoryservice"
+	dlm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/dlm"
 	docdbelastic_sdkv2 "github.com/aws/aws-sdk-go-v2/service/docdbelastic"
 	dynamodb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -187,10 +189,8 @@ import (
 	dataexchange_sdkv1 "github.com/aws/aws-sdk-go/service/dataexchange"
 	datapipeline_sdkv1 "github.com/aws/aws-sdk-go/service/datapipeline"
 	detective_sdkv1 "github.com/aws/aws-sdk-go/service/detective"
-	devicefarm_sdkv1 "github.com/aws/aws-sdk-go/service/devicefarm"
 	directconnect_sdkv1 "github.com/aws/aws-sdk-go/service/directconnect"
 	directoryservice_sdkv1 "github.com/aws/aws-sdk-go/service/directoryservice"
-	dlm_sdkv1 "github.com/aws/aws-sdk-go/service/dlm"
 	docdb_sdkv1 "github.com/aws/aws-sdk-go/service/docdb"
 	ec2_sdkv1 "github.com/aws/aws-sdk-go/service/ec2"
 	ecs_sdkv1 "github.com/aws/aws-sdk-go/service/ecs"
@@ -513,8 +513,8 @@ func (c *AWSClient) DAXClient(ctx context.Context) *dax_sdkv2.Client {
 	return errs.Must(client[*dax_sdkv2.Client](ctx, c, names.DAX, make(map[string]any)))
 }
 
-func (c *AWSClient) DLMConn(ctx context.Context) *dlm_sdkv1.DLM {
-	return errs.Must(conn[*dlm_sdkv1.DLM](ctx, c, names.DLM, make(map[string]any)))
+func (c *AWSClient) DLMClient(ctx context.Context) *dlm_sdkv2.Client {
+	return errs.Must(client[*dlm_sdkv2.Client](ctx, c, names.DLM, make(map[string]any)))
 }
 
 func (c *AWSClient) DMSConn(ctx context.Context) *databasemigrationservice_sdkv1.DatabaseMigrationService {
@@ -557,8 +557,8 @@ func (c *AWSClient) DevOpsGuruClient(ctx context.Context) *devopsguru_sdkv2.Clie
 	return errs.Must(client[*devopsguru_sdkv2.Client](ctx, c, names.DevOpsGuru, make(map[string]any)))
 }
 
-func (c *AWSClient) DeviceFarmConn(ctx context.Context) *devicefarm_sdkv1.DeviceFarm {
-	return errs.Must(conn[*devicefarm_sdkv1.DeviceFarm](ctx, c, names.DeviceFarm, make(map[string]any)))
+func (c *AWSClient) DeviceFarmClient(ctx context.Context) *devicefarm_sdkv2.Client {
+	return errs.Must(client[*devicefarm_sdkv2.Client](ctx, c, names.DeviceFarm, make(map[string]any)))
 }
 
 func (c *AWSClient) DirectConnectConn(ctx context.Context) *directconnect_sdkv1.DirectConnect {

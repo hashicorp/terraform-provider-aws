@@ -42,7 +42,7 @@ func TestAccSageMakerEndpointConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.initial_variant_weight", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.core_dump_config.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "production_variants.0.enable_ssm_access", "false"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.enable_ssm_access", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "async_inference_config.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "shadow_production_variants.#", acctest.Ct0),
@@ -415,7 +415,7 @@ func TestAccSageMakerEndpointConfiguration_dataCapture(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.enable_capture", "true"),
+					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.enable_capture", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.initial_sampling_percentage", "50"),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.destination_s3_uri", fmt.Sprintf("s3://%s/", rName)),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.capture_options.0.capture_mode", "Input"),

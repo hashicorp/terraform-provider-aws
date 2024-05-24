@@ -339,7 +339,7 @@ func TestAccEC2SpotInstanceRequest_subnetAndSGAndPublicIPAddress(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotInstanceRequestExists(ctx, resourceName, &sir),
 					testAccCheckSpotInstanceRequest_InstanceAttributes(ctx, &sir, rName),
-					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", "true"),
+					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", acctest.CtTrue),
 				),
 			},
 			{
@@ -370,7 +370,7 @@ func TestAccEC2SpotInstanceRequest_networkInterfaceAttributes(t *testing.T) {
 					testAccCheckSpotInstanceRequestExists(ctx, resourceName, &sir),
 					testAccCheckSpotInstanceRequest_InstanceAttributes(ctx, &sir, rName),
 					testAccCheckSpotInstanceRequest_NetworkInterfaceAttributes(&sir),
-					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", "true"),
+					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", acctest.CtTrue),
 				),
 			},
 			{

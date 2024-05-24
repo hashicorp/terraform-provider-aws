@@ -43,7 +43,7 @@ func TestAccCognitoIDPIdentityProvider_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "provider_details.client_id", "test-url.apps.googleusercontent.com"),
 					resource.TestCheckResourceAttr(resourceName, "provider_details.client_secret", names.AttrClientSecret),
 					resource.TestCheckResourceAttr(resourceName, "provider_details.attributes_url", "https://people.googleapis.com/v1/people/me?personFields="),
-					resource.TestCheckResourceAttr(resourceName, "provider_details.attributes_url_add_attributes", "true"),
+					resource.TestCheckResourceAttr(resourceName, "provider_details.attributes_url_add_attributes", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "provider_details.token_request_method", "POST"),
 					resource.TestCheckResourceAttr(resourceName, "provider_details.token_url", "https://www.googleapis.com/oauth2/v4/token"),
 					resource.TestCheckResourceAttr(resourceName, "provider_details.oidc_issuer", "https://accounts.google.com"),
@@ -64,7 +64,7 @@ func TestAccCognitoIDPIdentityProvider_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "provider_details.client_id", "new-client-id-url.apps.googleusercontent.com"),
 					resource.TestCheckResourceAttr(resourceName, "provider_details.client_secret", "updated_client_secret"),
 					resource.TestCheckResourceAttr(resourceName, "provider_details.attributes_url", "https://people.googleapis.com/v1/people/me?personFields="),
-					resource.TestCheckResourceAttr(resourceName, "provider_details.attributes_url_add_attributes", "true"),
+					resource.TestCheckResourceAttr(resourceName, "provider_details.attributes_url_add_attributes", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "provider_details.token_request_method", "POST"),
 					resource.TestCheckResourceAttr(resourceName, "provider_details.token_url", "https://www.googleapis.com/oauth2/v4/token"),
 					resource.TestCheckResourceAttr(resourceName, "provider_details.oidc_issuer", "https://accounts.google.com"),
@@ -131,7 +131,7 @@ func TestAccCognitoIDPIdentityProvider_saml(t *testing.T) {
 		CheckDestroy:             testAccCheckIdentityProviderDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIdentityProviderConfig_saml(rName, "false"),
+				Config: testAccIdentityProviderConfig_saml(rName, acctest.CtFalse),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIdentityProviderExists(ctx, resourceName, &identityProvider),
 					resource.TestCheckResourceAttr(resourceName, "attribute_mapping.%", acctest.Ct1),
@@ -139,7 +139,7 @@ func TestAccCognitoIDPIdentityProvider_saml(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "idp_identifiers.#"),
 					resource.TestCheckResourceAttr(resourceName, "provider_details.%", acctest.Ct4),
 					resource.TestCheckResourceAttrSet(resourceName, "provider_details.ActiveEncryptionCertificate"),
-					resource.TestCheckResourceAttr(resourceName, "provider_details.EncryptedResponses", "false"),
+					resource.TestCheckResourceAttr(resourceName, "provider_details.EncryptedResponses", acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, "provider_details.MetadataFile"),
 					resource.TestCheckResourceAttr(resourceName, "provider_details.SSORedirectBindingURI", "https://terraform-dev-ed.my.salesforce.com/idp/endpoint/HttpRedirect"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProviderName, rName),
@@ -152,7 +152,7 @@ func TestAccCognitoIDPIdentityProvider_saml(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccIdentityProviderConfig_saml(rName, "true"),
+				Config: testAccIdentityProviderConfig_saml(rName, acctest.CtTrue),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIdentityProviderExists(ctx, resourceName, &identityProvider),
 					resource.TestCheckResourceAttr(resourceName, "attribute_mapping.%", acctest.Ct1),
@@ -160,7 +160,7 @@ func TestAccCognitoIDPIdentityProvider_saml(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "idp_identifiers.#"),
 					resource.TestCheckResourceAttr(resourceName, "provider_details.%", acctest.Ct4),
 					resource.TestCheckResourceAttrSet(resourceName, "provider_details.ActiveEncryptionCertificate"),
-					resource.TestCheckResourceAttr(resourceName, "provider_details.EncryptedResponses", "true"),
+					resource.TestCheckResourceAttr(resourceName, "provider_details.EncryptedResponses", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "provider_details.MetadataFile"),
 					resource.TestCheckResourceAttr(resourceName, "provider_details.SSORedirectBindingURI", "https://terraform-dev-ed.my.salesforce.com/idp/endpoint/HttpRedirect"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProviderName, rName),
