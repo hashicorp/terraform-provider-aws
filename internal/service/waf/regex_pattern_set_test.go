@@ -29,7 +29,7 @@ func TestAccWAFRegexPatternSet_serial(t *testing.T) {
 		acctest.CtBasic:  testAccRegexPatternSet_basic,
 		"changePatterns": testAccRegexPatternSet_changePatterns,
 		"noPatterns":     testAccRegexPatternSet_noPatterns,
-		"disappears":     testAccRegexPatternSet_disappears,
+		acctest.CtDisappears:     testAccRegexPatternSet_disappears,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)

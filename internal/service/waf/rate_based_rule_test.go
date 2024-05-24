@@ -26,7 +26,7 @@ func TestAccWAFRateBasedRule_serial(t *testing.T) {
 		"resource": {
 			acctest.CtBasic:      testAccWAFRateBasedRule_basic,
 			"changeNameForceNew": testAccWAFRateBasedRule_changeNameForceNew,
-			"disappears":         testAccWAFRateBasedRule_disappears,
+			acctest.CtDisappears:         testAccWAFRateBasedRule_disappears,
 			"changePredicates":   testAccWAFRateBasedRule_changePredicates,
 			"changeRateLimit":    testAccWAFRateBasedRule_changeRateLimit,
 			"noPredicates":       testAccWAFRateBasedRule_noPredicates,
