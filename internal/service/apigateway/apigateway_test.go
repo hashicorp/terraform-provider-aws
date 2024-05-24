@@ -31,7 +31,7 @@ func TestAccAPIGateway_serial(t *testing.T) {
 		// Serialize all this resource's acceptance tests.
 		"MethodSettings": {
 			acctest.CtBasic:                          testAccMethodSettings_basic,
-			acctest.CtDisappears:                             testAccMethodSettings_disappears,
+			acctest.CtDisappears:                     testAccMethodSettings_disappears,
 			"CacheDataEncrypted":                     testAccMethodSettings_Settings_cacheDataEncrypted,
 			"CacheTTLInSeconds":                      testAccMethodSettings_Settings_cacheTTLInSeconds,
 			"CachingEnabled":                         testAccMethodSettings_Settings_cachingEnabled,
@@ -51,7 +51,7 @@ func TestAccAPIGateway_serial(t *testing.T) {
 		"Stage": {
 			acctest.CtBasic:             testAccStage_basic,
 			"tags":                      testAccStage_tags,
-			acctest.CtDisappears:                testAccStage_disappears,
+			acctest.CtDisappears:        testAccStage_disappears,
 			"disappears_restAPI":        testAccStage_Disappears_restAPI,
 			"Cache":                     testAccStage_cache,
 			"CacheSizeCacheDisabled":    testAccStage_cacheSizeCacheDisabled,
