@@ -430,7 +430,7 @@ func TestAccEC2SpotInstanceRequest_interruptStop(t *testing.T) {
 		CheckDestroy:             testAccCheckSpotInstanceRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSpotInstanceRequestConfig_interrupt(rName, "stop", "false"),
+				Config: testAccSpotInstanceRequestConfig_interrupt(rName, "stop", acctest.CtFalse),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotInstanceRequestExists(ctx, resourceName, &sir),
 					resource.TestCheckResourceAttr(resourceName, "spot_bid_status", "fulfilled"),
@@ -461,7 +461,7 @@ func TestAccEC2SpotInstanceRequest_interruptHibernate(t *testing.T) {
 		CheckDestroy:             testAccCheckSpotInstanceRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSpotInstanceRequestConfig_interrupt(rName, "hibernate", "true"),
+				Config: testAccSpotInstanceRequestConfig_interrupt(rName, "hibernate", acctest.CtTrue),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotInstanceRequestExists(ctx, resourceName, &sir),
 					resource.TestCheckResourceAttr(resourceName, "spot_bid_status", "fulfilled"),
@@ -492,14 +492,14 @@ func TestAccEC2SpotInstanceRequest_interruptUpdate(t *testing.T) {
 		CheckDestroy:             testAccCheckSpotInstanceRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSpotInstanceRequestConfig_interrupt(rName, "hibernate", "true"),
+				Config: testAccSpotInstanceRequestConfig_interrupt(rName, "hibernate", acctest.CtTrue),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotInstanceRequestExists(ctx, resourceName, &sir1),
 					resource.TestCheckResourceAttr(resourceName, "instance_interruption_behavior", "hibernate"),
 				),
 			},
 			{
-				Config: testAccSpotInstanceRequestConfig_interrupt(rName, "terminate", "false"),
+				Config: testAccSpotInstanceRequestConfig_interrupt(rName, "terminate", acctest.CtFalse),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotInstanceRequestExists(ctx, resourceName, &sir2),
 					testAccCheckSpotInstanceRequestIDsNotEqual(&sir1, &sir2),
