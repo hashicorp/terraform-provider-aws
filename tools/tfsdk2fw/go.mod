@@ -114,6 +114,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/fms v1.33.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.22.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.23.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/greengrass v1.23.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.27.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.24.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iam v1.32.3 // indirect
@@ -125,6 +126,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.17.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.14.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/iot v1.53.7 // indirect
+	github.com/aws/aws-sdk-go-v2/service/iotanalytics v1.22.8 // indirect
+	github.com/aws/aws-sdk-go-v2/service/iotevents v1.23.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.12.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.32.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.50.4 // indirect
