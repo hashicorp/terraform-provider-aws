@@ -16,16 +16,16 @@ func TestAccShield_serial(t *testing.T) {
 		"DRTAccessLogBucketAssociation": {
 			acctest.CtBasic: testAccDRTAccessLogBucketAssociation_basic,
 			"multibucket":   testAccDRTAccessLogBucketAssociation_multiBucket,
-			"disappears":    testAccDRTAccessLogBucketAssociation_disappears,
+			acctest.CtDisappears:    testAccDRTAccessLogBucketAssociation_disappears,
 		},
 		"DRTAccessRoleARNAssociation": {
 			acctest.CtBasic: testAccDRTAccessRoleARNAssociation_basic,
-			"disappears":    testAccDRTAccessRoleARNAssociation_disappears,
+			acctest.CtDisappears:    testAccDRTAccessRoleARNAssociation_disappears,
 		},
 		"ProactiveEngagement": {
 			acctest.CtBasic: testAccProactiveEngagement_basic,
 			"disabled":      testAccProactiveEngagement_disabled,
-			"disappears":    testAccProactiveEngagement_disappears,
+			acctest.CtDisappears:    testAccProactiveEngagement_disappears,
 		},
 	}
 
