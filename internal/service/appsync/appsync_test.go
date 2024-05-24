@@ -53,7 +53,7 @@ func TestAccAppSync_serial(t *testing.T) {
 			"OpenIDConnect_clientID":                    testAccGraphQLAPI_OpenIDConnect_clientID,
 			"OpenIDConnect_iatTTL":                      testAccGraphQLAPI_OpenIDConnect_iatTTL,
 			"OpenIDConnect_issuer":                      testAccGraphQLAPI_OpenIDConnect_issuer,
-			"name":                                      testAccGraphQLAPI_name,
+			acctest.CtName:                                      testAccGraphQLAPI_name,
 			"UserPool_awsRegion":                        testAccGraphQLAPI_UserPool_region,
 			"UserPool_defaultAction":                    testAccGraphQLAPI_UserPool_defaultAction,
 			"LambdaAuthorizerConfig_authorizerUri":      testAccGraphQLAPI_LambdaAuthorizerConfig_authorizerURI,
