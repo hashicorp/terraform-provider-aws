@@ -48,7 +48,7 @@ func testAccGraphQLAPI_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "uris.GRAPHQL"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrTags),
 					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "xray_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "xray_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "visibility", "GLOBAL"),
 					resource.TestCheckResourceAttr(resourceName, "introspection_config", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "query_depth_limit", acctest.Ct0),
@@ -111,7 +111,7 @@ func testAccGraphQLAPI_schema(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "openid_connect_config.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "user_pool_config.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "lambda_authorizer_config.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "xray_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "xray_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrSchema),
 					resource.TestCheckResourceAttrSet(resourceName, "uris.%"),
 					resource.TestCheckResourceAttrSet(resourceName, "uris.GRAPHQL"),
@@ -346,7 +346,7 @@ func testAccGraphQLAPI_log(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "log_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "log_config.0.cloudwatch_logs_role_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "log_config.0.field_log_level", "ALL"),
-					resource.TestCheckResourceAttr(resourceName, "log_config.0.exclude_verbose_content", "false"),
+					resource.TestCheckResourceAttr(resourceName, "log_config.0.exclude_verbose_content", acctest.CtFalse),
 				),
 			},
 			{
@@ -378,7 +378,7 @@ func testAccGraphQLAPI_Log_fieldLogLevel(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "log_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "log_config.0.cloudwatch_logs_role_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "log_config.0.field_log_level", "ALL"),
-					resource.TestCheckResourceAttr(resourceName, "log_config.0.exclude_verbose_content", "false"),
+					resource.TestCheckResourceAttr(resourceName, "log_config.0.exclude_verbose_content", acctest.CtFalse),
 				),
 			},
 			{
@@ -388,7 +388,7 @@ func testAccGraphQLAPI_Log_fieldLogLevel(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "log_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "log_config.0.cloudwatch_logs_role_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "log_config.0.field_log_level", "ERROR"),
-					resource.TestCheckResourceAttr(resourceName, "log_config.0.exclude_verbose_content", "false"),
+					resource.TestCheckResourceAttr(resourceName, "log_config.0.exclude_verbose_content", acctest.CtFalse),
 				),
 			},
 			{
@@ -398,7 +398,7 @@ func testAccGraphQLAPI_Log_fieldLogLevel(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "log_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "log_config.0.cloudwatch_logs_role_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "log_config.0.field_log_level", "NONE"),
-					resource.TestCheckResourceAttr(resourceName, "log_config.0.exclude_verbose_content", "false"),
+					resource.TestCheckResourceAttr(resourceName, "log_config.0.exclude_verbose_content", acctest.CtFalse),
 				),
 			},
 			{
@@ -430,7 +430,7 @@ func testAccGraphQLAPI_Log_excludeVerboseContent(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "log_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "log_config.0.cloudwatch_logs_role_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "log_config.0.field_log_level", "ALL"),
-					resource.TestCheckResourceAttr(resourceName, "log_config.0.exclude_verbose_content", "false"),
+					resource.TestCheckResourceAttr(resourceName, "log_config.0.exclude_verbose_content", acctest.CtFalse),
 				),
 			},
 			{
@@ -440,7 +440,7 @@ func testAccGraphQLAPI_Log_excludeVerboseContent(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "log_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "log_config.0.cloudwatch_logs_role_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "log_config.0.field_log_level", "ALL"),
-					resource.TestCheckResourceAttr(resourceName, "log_config.0.exclude_verbose_content", "true"),
+					resource.TestCheckResourceAttr(resourceName, "log_config.0.exclude_verbose_content", acctest.CtTrue),
 				),
 			},
 
@@ -1169,14 +1169,14 @@ func testAccGraphQLAPI_xrayEnabled(t *testing.T) {
 				Config: testAccGraphQLAPIConfig_xrayEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
-					resource.TestCheckResourceAttr(resourceName, "xray_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "xray_enabled", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccGraphQLAPIConfig_xrayEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGraphQLAPIExists(ctx, resourceName, &api2),
-					resource.TestCheckResourceAttr(resourceName, "xray_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "xray_enabled", acctest.CtFalse),
 				),
 			},
 		},
