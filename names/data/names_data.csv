@@ -117,7 +117,7 @@ datazone,datazone,datazone,datazone,,datazone,,,DataZone,DataZone,,,2,,aws_dataz
 ,,,,,,,,,,,,,,,,,DeepLens,AWS,x,,,,,,,,,No SDK support
 ,,,,,,,,,,,,,,,,,DeepRacer,AWS,x,,,,,,,,,No SDK support
 detective,detective,detective,detective,,detective,,,Detective,Detective,,1,,,aws_detective_,,detective_,Detective,Amazon,,,,,,,Detective,ListGraphs,,
-devicefarm,devicefarm,devicefarm,devicefarm,,devicefarm,,,DeviceFarm,DeviceFarm,,1,,,aws_devicefarm_,,devicefarm_,Device Farm,AWS,,,,,,,Device Farm,ListDeviceInstances,,
+devicefarm,devicefarm,devicefarm,devicefarm,,devicefarm,,,DeviceFarm,DeviceFarm,,,2,,aws_devicefarm_,,devicefarm_,Device Farm,AWS,,,,,,,Device Farm,ListDeviceInstances,,
 devops-guru,devopsguru,devopsguru,devopsguru,,devopsguru,,,DevOpsGuru,DevOpsGuru,,,2,,aws_devopsguru_,,devopsguru_,DevOps Guru,Amazon,,,,,,,DevOps Guru,DescribeAccountHealth,,
 directconnect,directconnect,directconnect,directconnect,,directconnect,,,DirectConnect,DirectConnect,,1,,aws_dx_,aws_directconnect_,,dx_,Direct Connect,AWS,,,,,,,Direct Connect,DescribeConnections,,
 dlm,dlm,dlm,dlm,,dlm,,,DLM,DLM,,,2,,aws_dlm_,,dlm_,DLM (Data Lifecycle Manager),Amazon,,,,,,,DLM,GetLifecyclePolicies,,
