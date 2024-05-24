@@ -23,7 +23,7 @@ func TestAccSSOAdmin_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"InstanceAccessControlAttributes": {
 			acctest.CtBasic: testAccInstanceAccessControlAttributes_basic,
-			"disappears":    testAccInstanceAccessControlAttributes_disappears,
+			acctest.CtDisappears:    testAccInstanceAccessControlAttributes_disappears,
 			"multiple":      testAccInstanceAccessControlAttributes_multiple,
 			"update":        testAccInstanceAccessControlAttributes_update,
 		},
