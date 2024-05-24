@@ -52,7 +52,7 @@ func TestAccCloudTrail_serial(t *testing.T) {
 			"eventSelectorExclude":  testAccTrail_eventSelectorExclude,
 			"insightSelector":       testAccTrail_insightSelector,
 			"advancedEventSelector": testAccTrail_advancedEventSelector,
-			acctest.CtDisappears:            testAccTrail_disappears,
+			acctest.CtDisappears:    testAccTrail_disappears,
 			"migrateV0":             testAccTrail_migrateV0,
 		},
 	}
