@@ -132,7 +132,7 @@ func TestAccAppRunnerVPCConnector_defaultTags(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("providerkey1", acctest.CtProviderValue1),
+					acctest.ConfigDefaultTags_Tags1(acctest.CtProviderKey1, acctest.CtProviderValue1),
 					testAccVPCConnectorConfig_basic(rName),
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -149,7 +149,7 @@ func TestAccAppRunnerVPCConnector_defaultTags(t *testing.T) {
 			},
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags2("providerkey1", acctest.CtProviderValue1, "providerkey2", "providervalue2"),
+					acctest.ConfigDefaultTags_Tags2(acctest.CtProviderKey1, acctest.CtProviderValue1, "providerkey2", "providervalue2"),
 					testAccVPCConnectorConfig_basic(rName),
 				),
 				Check: resource.ComposeTestCheckFunc(

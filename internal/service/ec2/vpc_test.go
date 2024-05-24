@@ -250,7 +250,7 @@ func TestAccVPC_DefaultTags_providerOnlyTestAccVPC_DefaultTags_providerOnly(t *t
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("providerkey1", acctest.CtProviderValue1),
+					acctest.ConfigDefaultTags_Tags1(acctest.CtProviderKey1, acctest.CtProviderValue1),
 					testAccVPCConfig_basic,
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -267,7 +267,7 @@ func TestAccVPC_DefaultTags_providerOnlyTestAccVPC_DefaultTags_providerOnly(t *t
 			},
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags2("providerkey1", acctest.CtProviderValue1, "providerkey2", "providervalue2"),
+					acctest.ConfigDefaultTags_Tags2(acctest.CtProviderKey1, acctest.CtProviderValue1, "providerkey2", "providervalue2"),
 					testAccVPCConfig_basic,
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -280,7 +280,7 @@ func TestAccVPC_DefaultTags_providerOnlyTestAccVPC_DefaultTags_providerOnly(t *t
 			},
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("providerkey1", acctest.CtValue1),
+					acctest.ConfigDefaultTags_Tags1(acctest.CtProviderKey1, acctest.CtValue1),
 					testAccVPCConfig_basic,
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -391,8 +391,8 @@ func TestAccVPC_DefaultTagsProviderAndResource_nonOverlappingTag(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("providerkey1", acctest.CtProviderValue1),
-					testAccVPCConfig_tags1("resourcekey1", acctest.CtResourceValue1),
+					acctest.ConfigDefaultTags_Tags1(acctest.CtProviderKey1, acctest.CtProviderValue1),
+					testAccVPCConfig_tags1(acctest.CtResourceKey1, acctest.CtResourceValue1),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
@@ -410,8 +410,8 @@ func TestAccVPC_DefaultTagsProviderAndResource_nonOverlappingTag(t *testing.T) {
 			},
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("providerkey1", acctest.CtProviderValue1),
-					testAccVPCConfig_tags2("resourcekey1", acctest.CtResourceValue1, "resourcekey2", acctest.CtResourceValue2),
+					acctest.ConfigDefaultTags_Tags1(acctest.CtProviderKey1, acctest.CtProviderValue1),
+					testAccVPCConfig_tags2(acctest.CtResourceKey1, acctest.CtResourceValue1, "resourcekey2", acctest.CtResourceValue2),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
@@ -455,8 +455,8 @@ func TestAccVPC_DefaultTagsProviderAndResource_overlappingTag(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("overlapkey1", acctest.CtProviderValue1),
-					testAccVPCConfig_tags1("overlapkey1", acctest.CtResourceValue1),
+					acctest.ConfigDefaultTags_Tags1(acctest.CtOverlapKey1, acctest.CtProviderValue1),
+					testAccVPCConfig_tags1(acctest.CtOverlapKey1, acctest.CtResourceValue1),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
@@ -472,8 +472,8 @@ func TestAccVPC_DefaultTagsProviderAndResource_overlappingTag(t *testing.T) {
 			},
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags2("overlapkey1", acctest.CtProviderValue1, "overlapkey2", "providervalue2"),
-					testAccVPCConfig_tags2("overlapkey1", acctest.CtResourceValue1, "overlapkey2", acctest.CtResourceValue2),
+					acctest.ConfigDefaultTags_Tags2(acctest.CtOverlapKey1, acctest.CtProviderValue1, "overlapkey2", "providervalue2"),
+					testAccVPCConfig_tags2(acctest.CtOverlapKey1, acctest.CtResourceValue1, "overlapkey2", acctest.CtResourceValue2),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
@@ -487,8 +487,8 @@ func TestAccVPC_DefaultTagsProviderAndResource_overlappingTag(t *testing.T) {
 			},
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("overlapkey1", acctest.CtProviderValue1),
-					testAccVPCConfig_tags1("overlapkey1", acctest.CtResourceValue2),
+					acctest.ConfigDefaultTags_Tags1(acctest.CtOverlapKey1, acctest.CtProviderValue1),
+					testAccVPCConfig_tags1(acctest.CtOverlapKey1, acctest.CtResourceValue2),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),

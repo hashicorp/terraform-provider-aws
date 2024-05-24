@@ -111,6 +111,33 @@ rules:
     pattern: '"key2"'
     severity: ERROR
     fix: "acctest.CtKey2"
+  - id: literal-Name-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.CtName` for the string literal "name" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"name"'
+    severity: ERROR
+    fix: "acctest.CtName"
+  - id: literal-OverlapKey1-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.CtOverlapKey1` for the string literal "overlapkey1" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"overlapkey1"'
+    severity: ERROR
+    fix: "acctest.CtOverlapKey1"
+  - id: literal-ProviderKey1-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.CtProviderKey1` for the string literal "providerkey1" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"providerkey1"'
+    severity: ERROR
+    fix: "acctest.CtProviderKey1"
   - id: literal-ProviderTags-string-test-constant
     languages: [go]
     message: Use the constant `acctest.CtProviderTags` for the string literal "provider_tags" in test files
@@ -138,6 +165,24 @@ rules:
     pattern: '"rName"'
     severity: ERROR
     fix: "acctest.CtRName"
+  - id: literal-ResourceKey1-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.CtResourceKey1` for the string literal "resourcekey1" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"resourcekey1"'
+    severity: ERROR
+    fix: "acctest.CtResourceKey1"
+  - id: literal-ResourceTags-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.CtResourceTags` for the string literal "resource_tags" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"resource_tags"'
+    severity: ERROR
+    fix: "acctest.CtResourceTags"
   - id: literal-ResourceValue1-string-test-constant
     languages: [go]
     message: Use the constant `acctest.CtResourceValue1` for the string literal "resourcevalue1" in test files

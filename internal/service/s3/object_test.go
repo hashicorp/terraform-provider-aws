@@ -1757,7 +1757,7 @@ func TestAccS3Object_DirectoryBucket_DefaultTags_providerOnly(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("providerkey1", acctest.CtProviderValue1),
+					acctest.ConfigDefaultTags_Tags1(acctest.CtProviderKey1, acctest.CtProviderValue1),
 					testAccObjectConfig_directoryBucket(rName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(

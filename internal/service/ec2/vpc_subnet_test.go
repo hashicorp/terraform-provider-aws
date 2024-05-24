@@ -123,7 +123,7 @@ func TestAccVPCSubnet_DefaultTags_providerOnly(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("providerkey1", acctest.CtProviderValue1),
+					acctest.ConfigDefaultTags_Tags1(acctest.CtProviderKey1, acctest.CtProviderValue1),
 					testAccVPCSubnetConfig_basic(rName),
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -140,7 +140,7 @@ func TestAccVPCSubnet_DefaultTags_providerOnly(t *testing.T) {
 			},
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags2("providerkey1", acctest.CtProviderValue1, "providerkey2", "providervalue2"),
+					acctest.ConfigDefaultTags_Tags2(acctest.CtProviderKey1, acctest.CtProviderValue1, "providerkey2", "providervalue2"),
 					testAccVPCSubnetConfig_basic(rName),
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -153,7 +153,7 @@ func TestAccVPCSubnet_DefaultTags_providerOnly(t *testing.T) {
 			},
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("providerkey1", acctest.CtValue1),
+					acctest.ConfigDefaultTags_Tags1(acctest.CtProviderKey1, acctest.CtValue1),
 					testAccVPCSubnetConfig_basic(rName),
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -267,8 +267,8 @@ func TestAccVPCSubnet_DefaultTagsProviderAndResource_nonOverlappingTag(t *testin
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("providerkey1", acctest.CtProviderValue1),
-					testAccVPCSubnetConfig_tags1(rName, "resourcekey1", acctest.CtResourceValue1),
+					acctest.ConfigDefaultTags_Tags1(acctest.CtProviderKey1, acctest.CtProviderValue1),
+					testAccVPCSubnetConfig_tags1(rName, acctest.CtResourceKey1, acctest.CtResourceValue1),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &subnet),
@@ -286,8 +286,8 @@ func TestAccVPCSubnet_DefaultTagsProviderAndResource_nonOverlappingTag(t *testin
 			},
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("providerkey1", acctest.CtProviderValue1),
-					testAccVPCSubnetConfig_tags2(rName, "resourcekey1", acctest.CtResourceValue1, "resourcekey2", acctest.CtResourceValue2),
+					acctest.ConfigDefaultTags_Tags1(acctest.CtProviderKey1, acctest.CtProviderValue1),
+					testAccVPCSubnetConfig_tags2(rName, acctest.CtResourceKey1, acctest.CtResourceValue1, "resourcekey2", acctest.CtResourceValue2),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &subnet),
@@ -332,8 +332,8 @@ func TestAccVPCSubnet_DefaultTagsProviderAndResource_overlappingTag(t *testing.T
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("overlapkey1", acctest.CtProviderValue1),
-					testAccVPCSubnetConfig_tags1(rName, "overlapkey1", acctest.CtResourceValue1),
+					acctest.ConfigDefaultTags_Tags1(acctest.CtOverlapKey1, acctest.CtProviderValue1),
+					testAccVPCSubnetConfig_tags1(rName, acctest.CtOverlapKey1, acctest.CtResourceValue1),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &subnet),
@@ -349,8 +349,8 @@ func TestAccVPCSubnet_DefaultTagsProviderAndResource_overlappingTag(t *testing.T
 			},
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags2("overlapkey1", acctest.CtProviderValue1, "overlapkey2", "providervalue2"),
-					testAccVPCSubnetConfig_tags2(rName, "overlapkey1", acctest.CtResourceValue1, "overlapkey2", acctest.CtResourceValue2),
+					acctest.ConfigDefaultTags_Tags2(acctest.CtOverlapKey1, acctest.CtProviderValue1, "overlapkey2", "providervalue2"),
+					testAccVPCSubnetConfig_tags2(rName, acctest.CtOverlapKey1, acctest.CtResourceValue1, "overlapkey2", acctest.CtResourceValue2),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &subnet),
@@ -364,8 +364,8 @@ func TestAccVPCSubnet_DefaultTagsProviderAndResource_overlappingTag(t *testing.T
 			},
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("overlapkey1", acctest.CtProviderValue1),
-					testAccVPCSubnetConfig_tags1(rName, "overlapkey1", acctest.CtResourceValue2),
+					acctest.ConfigDefaultTags_Tags1(acctest.CtOverlapKey1, acctest.CtProviderValue1),
+					testAccVPCSubnetConfig_tags1(rName, acctest.CtOverlapKey1, acctest.CtResourceValue2),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &subnet),
