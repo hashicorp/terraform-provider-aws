@@ -131,7 +131,7 @@ func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_updateAllPr
 					resource.TestCheckResourceAttr(resourceName, "elements.1.type", "KinesisDataStreamSink"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "elements.1.kinesis_data_stream_sink_configuration.0.insights_target", "kinesis", regexache.MustCompile(fmt.Sprintf(`stream/%s`, streamName1))),
 					resource.TestCheckResourceAttrSet(resourceName, "real_time_alert_configuration.0.%"),
-					resource.TestCheckResourceAttr(resourceName, "real_time_alert_configuration.0.disabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "real_time_alert_configuration.0.disabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "real_time_alert_configuration.0.rules.#", acctest.Ct3),
 					resource.TestCheckResourceAttr(resourceName, "real_time_alert_configuration.0.rules.0.type", "IssueDetection"),
 					resource.TestCheckResourceAttrSet(resourceName, "real_time_alert_configuration.0.rules.0.issue_detection_configuration.0.%"),
