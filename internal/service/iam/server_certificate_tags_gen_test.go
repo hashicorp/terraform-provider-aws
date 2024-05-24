@@ -183,10 +183,10 @@ func TestAccIAMServerCertificate_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ServerCertificate/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:   config.StringVariable(rName),
-					acctest.CtResourceTags:   nil,
-					"certificate_pem": config.StringVariable(certificatePEM),
-					"private_key_pem": config.StringVariable(privateKeyPEM),
+					acctest.CtRName:        config.StringVariable(rName),
+					acctest.CtResourceTags: nil,
+					"certificate_pem":      config.StringVariable(certificatePEM),
+					"private_key_pem":      config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerCertificateExists(ctx, resourceName, &v),
@@ -206,10 +206,10 @@ func TestAccIAMServerCertificate_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ServerCertificate/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:   config.StringVariable(rName),
-					acctest.CtResourceTags:   nil,
-					"certificate_pem": config.StringVariable(certificatePEM),
-					"private_key_pem": config.StringVariable(privateKeyPEM),
+					acctest.CtRName:        config.StringVariable(rName),
+					acctest.CtResourceTags: nil,
+					"certificate_pem":      config.StringVariable(certificatePEM),
+					"private_key_pem":      config.StringVariable(privateKeyPEM),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -283,10 +283,10 @@ func TestAccIAMServerCertificate_tags_null(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ServerCertificate/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:   config.StringVariable(rName),
-					acctest.CtResourceTags:   nil,
-					"certificate_pem": config.StringVariable(certificatePEM),
-					"private_key_pem": config.StringVariable(privateKeyPEM),
+					acctest.CtRName:        config.StringVariable(rName),
+					acctest.CtResourceTags: nil,
+					"certificate_pem":      config.StringVariable(certificatePEM),
+					"private_key_pem":      config.StringVariable(privateKeyPEM),
 				},
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: false,
@@ -312,10 +312,10 @@ func TestAccIAMServerCertificate_tags_AddOnUpdate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ServerCertificate/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:   config.StringVariable(rName),
-					acctest.CtResourceTags:   nil,
-					"certificate_pem": config.StringVariable(certificatePEM),
-					"private_key_pem": config.StringVariable(privateKeyPEM),
+					acctest.CtRName:        config.StringVariable(rName),
+					acctest.CtResourceTags: nil,
+					"certificate_pem":      config.StringVariable(certificatePEM),
+					"private_key_pem":      config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerCertificateExists(ctx, resourceName, &v),
@@ -448,10 +448,10 @@ func TestAccIAMServerCertificate_tags_EmptyTag_OnCreate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ServerCertificate/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:   config.StringVariable(rName),
-					acctest.CtResourceTags:   nil,
-					"certificate_pem": config.StringVariable(certificatePEM),
-					"private_key_pem": config.StringVariable(privateKeyPEM),
+					acctest.CtRName:        config.StringVariable(rName),
+					acctest.CtResourceTags: nil,
+					"certificate_pem":      config.StringVariable(certificatePEM),
+					"private_key_pem":      config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerCertificateExists(ctx, resourceName, &v),
@@ -471,10 +471,10 @@ func TestAccIAMServerCertificate_tags_EmptyTag_OnCreate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ServerCertificate/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:   config.StringVariable(rName),
-					acctest.CtResourceTags:   nil,
-					"certificate_pem": config.StringVariable(certificatePEM),
-					"private_key_pem": config.StringVariable(privateKeyPEM),
+					acctest.CtRName:        config.StringVariable(rName),
+					acctest.CtResourceTags: nil,
+					"certificate_pem":      config.StringVariable(certificatePEM),
+					"private_key_pem":      config.StringVariable(privateKeyPEM),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -751,9 +751,9 @@ func TestAccIAMServerCertificate_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					acctest.CtResourceTags:   nil,
-					"certificate_pem": config.StringVariable(certificatePEM),
-					"private_key_pem": config.StringVariable(privateKeyPEM),
+					acctest.CtResourceTags: nil,
+					"certificate_pem":      config.StringVariable(certificatePEM),
+					"private_key_pem":      config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerCertificateExists(ctx, resourceName, &v),
@@ -782,9 +782,9 @@ func TestAccIAMServerCertificate_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					acctest.CtResourceTags:   nil,
-					"certificate_pem": config.StringVariable(certificatePEM),
-					"private_key_pem": config.StringVariable(privateKeyPEM),
+					acctest.CtResourceTags: nil,
+					"certificate_pem":      config.StringVariable(certificatePEM),
+					"private_key_pem":      config.StringVariable(privateKeyPEM),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -803,9 +803,9 @@ func TestAccIAMServerCertificate_tags_DefaultTags_providerOnly(t *testing.T) {
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					acctest.CtResourceTags:   nil,
-					"certificate_pem": config.StringVariable(certificatePEM),
-					"private_key_pem": config.StringVariable(privateKeyPEM),
+					acctest.CtResourceTags: nil,
+					"certificate_pem":      config.StringVariable(certificatePEM),
+					"private_key_pem":      config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerCertificateExists(ctx, resourceName, &v),
@@ -838,9 +838,9 @@ func TestAccIAMServerCertificate_tags_DefaultTags_providerOnly(t *testing.T) {
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					acctest.CtResourceTags:   nil,
-					"certificate_pem": config.StringVariable(certificatePEM),
-					"private_key_pem": config.StringVariable(privateKeyPEM),
+					acctest.CtResourceTags: nil,
+					"certificate_pem":      config.StringVariable(certificatePEM),
+					"private_key_pem":      config.StringVariable(privateKeyPEM),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -858,9 +858,9 @@ func TestAccIAMServerCertificate_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					acctest.CtResourceTags:   nil,
-					"certificate_pem": config.StringVariable(certificatePEM),
-					"private_key_pem": config.StringVariable(privateKeyPEM),
+					acctest.CtResourceTags: nil,
+					"certificate_pem":      config.StringVariable(certificatePEM),
+					"private_key_pem":      config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerCertificateExists(ctx, resourceName, &v),
@@ -890,9 +890,9 @@ func TestAccIAMServerCertificate_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					acctest.CtResourceTags:   nil,
-					"certificate_pem": config.StringVariable(certificatePEM),
-					"private_key_pem": config.StringVariable(privateKeyPEM),
+					acctest.CtResourceTags: nil,
+					"certificate_pem":      config.StringVariable(certificatePEM),
+					"private_key_pem":      config.StringVariable(privateKeyPEM),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -906,10 +906,10 @@ func TestAccIAMServerCertificate_tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ServerCertificate/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:   config.StringVariable(rName),
-					acctest.CtResourceTags:   nil,
-					"certificate_pem": config.StringVariable(certificatePEM),
-					"private_key_pem": config.StringVariable(privateKeyPEM),
+					acctest.CtRName:        config.StringVariable(rName),
+					acctest.CtResourceTags: nil,
+					"certificate_pem":      config.StringVariable(certificatePEM),
+					"private_key_pem":      config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerCertificateExists(ctx, resourceName, &v),
@@ -931,10 +931,10 @@ func TestAccIAMServerCertificate_tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ServerCertificate/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:   config.StringVariable(rName),
-					acctest.CtResourceTags:   nil,
-					"certificate_pem": config.StringVariable(certificatePEM),
-					"private_key_pem": config.StringVariable(privateKeyPEM),
+					acctest.CtRName:        config.StringVariable(rName),
+					acctest.CtResourceTags: nil,
+					"certificate_pem":      config.StringVariable(certificatePEM),
+					"private_key_pem":      config.StringVariable(privateKeyPEM),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -1032,7 +1032,7 @@ func TestAccIAMServerCertificate_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					}),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtResourceKey1: config.StringVariable("resourcevalue1updated"),
-						"resourcekey2": config.StringVariable(acctest.CtResourceValue2),
+						"resourcekey2":         config.StringVariable(acctest.CtResourceValue2),
 					}),
 					"certificate_pem": config.StringVariable(certificatePEM),
 					"private_key_pem": config.StringVariable(privateKeyPEM),
@@ -1043,12 +1043,12 @@ func TestAccIAMServerCertificate_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey1: knownvalue.StringExact("resourcevalue1updated"),
-						"resourcekey2": knownvalue.StringExact(acctest.CtResourceValue2),
+						"resourcekey2":         knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtProviderKey1: knownvalue.StringExact("providervalue1updated"),
 						acctest.CtResourceKey1: knownvalue.StringExact("resourcevalue1updated"),
-						"resourcekey2": knownvalue.StringExact(acctest.CtResourceValue2),
+						"resourcekey2":         knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -1056,12 +1056,12 @@ func TestAccIAMServerCertificate_tags_DefaultTags_nonOverlapping(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtResourceKey1: knownvalue.StringExact("resourcevalue1updated"),
-							"resourcekey2": knownvalue.StringExact(acctest.CtResourceValue2),
+							"resourcekey2":         knownvalue.StringExact(acctest.CtResourceValue2),
 						})),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtProviderKey1: knownvalue.StringExact("providervalue1updated"),
 							acctest.CtResourceKey1: knownvalue.StringExact("resourcevalue1updated"),
-							"resourcekey2": knownvalue.StringExact(acctest.CtResourceValue2),
+							"resourcekey2":         knownvalue.StringExact(acctest.CtResourceValue2),
 						})),
 					},
 				},
@@ -1076,7 +1076,7 @@ func TestAccIAMServerCertificate_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					}),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtResourceKey1: config.StringVariable("resourcevalue1updated"),
-						"resourcekey2": config.StringVariable(acctest.CtResourceValue2),
+						"resourcekey2":         config.StringVariable(acctest.CtResourceValue2),
 					}),
 					"certificate_pem": config.StringVariable(certificatePEM),
 					"private_key_pem": config.StringVariable(privateKeyPEM),
@@ -1093,10 +1093,10 @@ func TestAccIAMServerCertificate_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ServerCertificate/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:   config.StringVariable(rName),
-					acctest.CtResourceTags:   nil,
-					"certificate_pem": config.StringVariable(certificatePEM),
-					"private_key_pem": config.StringVariable(privateKeyPEM),
+					acctest.CtRName:        config.StringVariable(rName),
+					acctest.CtResourceTags: nil,
+					"certificate_pem":      config.StringVariable(certificatePEM),
+					"private_key_pem":      config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerCertificateExists(ctx, resourceName, &v),
@@ -1118,10 +1118,10 @@ func TestAccIAMServerCertificate_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ServerCertificate/tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:   config.StringVariable(rName),
-					acctest.CtResourceTags:   nil,
-					"certificate_pem": config.StringVariable(certificatePEM),
-					"private_key_pem": config.StringVariable(privateKeyPEM),
+					acctest.CtRName:        config.StringVariable(rName),
+					acctest.CtResourceTags: nil,
+					"certificate_pem":      config.StringVariable(certificatePEM),
+					"private_key_pem":      config.StringVariable(privateKeyPEM),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -1214,11 +1214,11 @@ func TestAccIAMServerCertificate_tags_DefaultTags_overlapping(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
-						"overlapkey2": config.StringVariable("providervalue2"),
+						"overlapkey2":         config.StringVariable("providervalue2"),
 					}),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue1),
-						"overlapkey2": config.StringVariable(acctest.CtResourceValue2),
+						"overlapkey2":         config.StringVariable(acctest.CtResourceValue2),
 					}),
 					"certificate_pem": config.StringVariable(certificatePEM),
 					"private_key_pem": config.StringVariable(privateKeyPEM),
@@ -1229,11 +1229,11 @@ func TestAccIAMServerCertificate_tags_DefaultTags_overlapping(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue1),
-						"overlapkey2": knownvalue.StringExact(acctest.CtResourceValue2),
+						"overlapkey2":         knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue1),
-						"overlapkey2": knownvalue.StringExact(acctest.CtResourceValue2),
+						"overlapkey2":         knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -1241,11 +1241,11 @@ func TestAccIAMServerCertificate_tags_DefaultTags_overlapping(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue1),
-							"overlapkey2": knownvalue.StringExact(acctest.CtResourceValue2),
+							"overlapkey2":         knownvalue.StringExact(acctest.CtResourceValue2),
 						})),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtOverlapKey1: knownvalue.StringExact(acctest.CtResourceValue1),
-							"overlapkey2": knownvalue.StringExact(acctest.CtResourceValue2),
+							"overlapkey2":         knownvalue.StringExact(acctest.CtResourceValue2),
 						})),
 					},
 				},
@@ -1257,11 +1257,11 @@ func TestAccIAMServerCertificate_tags_DefaultTags_overlapping(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtProviderValue1),
-						"overlapkey2": config.StringVariable("providervalue2"),
+						"overlapkey2":         config.StringVariable("providervalue2"),
 					}),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtOverlapKey1: config.StringVariable(acctest.CtResourceValue1),
-						"overlapkey2": config.StringVariable(acctest.CtResourceValue2),
+						"overlapkey2":         config.StringVariable(acctest.CtResourceValue2),
 					}),
 					"certificate_pem": config.StringVariable(certificatePEM),
 					"private_key_pem": config.StringVariable(privateKeyPEM),
@@ -1392,9 +1392,9 @@ func TestAccIAMServerCertificate_tags_DefaultTags_updateToProviderOnly(t *testin
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					acctest.CtResourceTags:   nil,
-					"certificate_pem": config.StringVariable(certificatePEM),
-					"private_key_pem": config.StringVariable(privateKeyPEM),
+					acctest.CtResourceTags: nil,
+					"certificate_pem":      config.StringVariable(certificatePEM),
+					"private_key_pem":      config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerCertificateExists(ctx, resourceName, &v),
@@ -1424,9 +1424,9 @@ func TestAccIAMServerCertificate_tags_DefaultTags_updateToProviderOnly(t *testin
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					acctest.CtResourceTags:   nil,
-					"certificate_pem": config.StringVariable(certificatePEM),
-					"private_key_pem": config.StringVariable(privateKeyPEM),
+					acctest.CtResourceTags: nil,
+					"certificate_pem":      config.StringVariable(certificatePEM),
+					"private_key_pem":      config.StringVariable(privateKeyPEM),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -1461,9 +1461,9 @@ func TestAccIAMServerCertificate_tags_DefaultTags_updateToResourceOnly(t *testin
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					acctest.CtResourceTags:   nil,
-					"certificate_pem": config.StringVariable(certificatePEM),
-					"private_key_pem": config.StringVariable(privateKeyPEM),
+					acctest.CtResourceTags: nil,
+					"certificate_pem":      config.StringVariable(certificatePEM),
+					"private_key_pem":      config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerCertificateExists(ctx, resourceName, &v),
@@ -1637,9 +1637,9 @@ func TestAccIAMServerCertificate_tags_DefaultTags_emptyProviderOnlyTag(t *testin
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
-					acctest.CtResourceTags:   nil,
-					"certificate_pem": config.StringVariable(certificatePEM),
-					"private_key_pem": config.StringVariable(privateKeyPEM),
+					acctest.CtResourceTags: nil,
+					"certificate_pem":      config.StringVariable(certificatePEM),
+					"private_key_pem":      config.StringVariable(privateKeyPEM),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerCertificateExists(ctx, resourceName, &v),
@@ -1667,9 +1667,9 @@ func TestAccIAMServerCertificate_tags_DefaultTags_emptyProviderOnlyTag(t *testin
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
-					acctest.CtResourceTags:   nil,
-					"certificate_pem": config.StringVariable(certificatePEM),
-					"private_key_pem": config.StringVariable(privateKeyPEM),
+					acctest.CtResourceTags: nil,
+					"certificate_pem":      config.StringVariable(certificatePEM),
+					"private_key_pem":      config.StringVariable(privateKeyPEM),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
