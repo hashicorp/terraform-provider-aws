@@ -27,10 +27,10 @@ func TestAccWAFRegexMatchSet_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:  testAccRegexMatchSet_basic,
-		"changePatterns": testAccRegexMatchSet_changePatterns,
-		"noPatterns":     testAccRegexMatchSet_noPatterns,
-		"disappears":     testAccRegexMatchSet_disappears,
+		acctest.CtBasic:      testAccRegexMatchSet_basic,
+		"changePatterns":     testAccRegexMatchSet_changePatterns,
+		"noPatterns":         testAccRegexMatchSet_noPatterns,
+		acctest.CtDisappears: testAccRegexMatchSet_disappears,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)

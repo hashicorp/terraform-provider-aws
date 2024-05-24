@@ -246,7 +246,7 @@ examples-tflint: ## [CI] Examples Checks / tflint
 	done ; \
 	exit $$exit_code
 
-fix-constants: fix-imports fmt semgrep-constants fix-imports fmt ## Use Semgrep to fix constants
+fix-constants: semgrep-constants fmt ## Use Semgrep to fix constants
 
 fix-imports: ## Fixing source code imports with goimports
 	@echo "make: Fixing source code imports with goimports..."
@@ -266,23 +266,8 @@ fumpt: ## Run gofumpt
 
 gen: prereq-go ## Run all Go generators
 	@echo "make: Running Go generators..."
-	rm -f .github/labeler-issue-triage.yml
-	rm -f .github/labeler-pr-triage.yml
-	rm -f infrastructure/repository/labels-service.tf
-	rm -f internal/conns/*_gen.go
-	rm -f internal/provider/*_gen.go
-	rm -f internal/service/**/*_gen.go
-	rm -f internal/service/**/*_gen_test.go
-	rm -f internal/service/**/*_gen.tf
-	rm -f names/caps.md
-	rm -f names/*_gen.go
-	rm -f website/docs/guides/custom-service-endpoints.html.md
-	rm -f .ci/.semgrep-caps-aws-ec2.yml
-	rm -f .ci/.semgrep-configs.yml
-	rm -f .ci/.semgrep-service-name*.yml
 	$(GO_VER) generate ./...
 	# Generate service package lists last as they may depend on output of earlier generators.
-	rm -f internal/provider/service_packages_gen.go
 	$(GO_VER) generate ./internal/provider
 	$(GO_VER) generate ./internal/sweep
 
