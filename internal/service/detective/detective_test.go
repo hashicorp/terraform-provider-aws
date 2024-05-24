@@ -16,7 +16,7 @@ func TestAccDetective_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Graph": {
 			acctest.CtBasic: testAccGraph_basic,
-			"disappears":    testAccGraph_disappears,
+			acctest.CtDisappears:    testAccGraph_disappears,
 			"tags":          testAccGraph_tags,
 		},
 		"InvitationAccepter": {
@@ -29,7 +29,7 @@ func TestAccDetective_serial(t *testing.T) {
 		},
 		"OrganizationAdminAccount": {
 			acctest.CtBasic: testAccOrganizationAdminAccount_basic,
-			"disappears":    testAccOrganizationAdminAccount_disappears,
+			acctest.CtDisappears:    testAccOrganizationAdminAccount_disappears,
 			"MultiRegion":   testAccOrganizationAdminAccount_MultiRegion,
 		},
 		"OrganizationConfiguration": {
