@@ -38,7 +38,7 @@ func TestAccSecretsManagerSecret_basic(t *testing.T) {
 					testAccCheckSecretExists(ctx, resourceName, &secret),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "secretsmanager", regexache.MustCompile(fmt.Sprintf("secret:%s-[[:alnum:]]+$", rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "force_overwrite_replica_secret", "false"),
+					resource.TestCheckResourceAttr(resourceName, "force_overwrite_replica_secret", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
@@ -161,7 +161,7 @@ func TestAccSecretsManagerSecret_basicReplica(t *testing.T) {
 				Config: testAccSecretConfig_basicReplica(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretExists(ctx, resourceName, &secret),
-					resource.TestCheckResourceAttr(resourceName, "force_overwrite_replica_secret", "false"),
+					resource.TestCheckResourceAttr(resourceName, "force_overwrite_replica_secret", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.Ct1),
 				),
 			},
@@ -185,21 +185,21 @@ func TestAccSecretsManagerSecret_overwriteReplica(t *testing.T) {
 				Config: testAccSecretConfig_overwriteReplica(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretExists(ctx, resourceName, &secret),
-					resource.TestCheckResourceAttr(resourceName, "force_overwrite_replica_secret", "true"),
+					resource.TestCheckResourceAttr(resourceName, "force_overwrite_replica_secret", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccSecretConfig_overwriteReplicaUpdate(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretExists(ctx, resourceName, &secret),
-					resource.TestCheckResourceAttr(resourceName, "force_overwrite_replica_secret", "true"),
+					resource.TestCheckResourceAttr(resourceName, "force_overwrite_replica_secret", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccSecretConfig_overwriteReplica(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretExists(ctx, resourceName, &secret),
-					resource.TestCheckResourceAttr(resourceName, "force_overwrite_replica_secret", "false"),
+					resource.TestCheckResourceAttr(resourceName, "force_overwrite_replica_secret", acctest.CtFalse),
 				),
 			},
 		},
