@@ -53,7 +53,7 @@ func TestAccDAXCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, names.AttrDescription, "test cluster"),
 					resource.TestMatchResourceAttr(
-						resourceName, "parameter_group_name", regexache.MustCompile(`^default.dax`)),
+						resourceName, names.AttrParameterGroupName, regexache.MustCompile(`^default.dax`)),
 					resource.TestMatchResourceAttr(
 						resourceName, "maintenance_window", regexache.MustCompile(`^\w{3}:\d{2}:\d{2}-\w{3}:\d{2}:\d{2}$`)),
 					resource.TestCheckResourceAttr(
