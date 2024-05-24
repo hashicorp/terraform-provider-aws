@@ -309,7 +309,6 @@ func TestAccElastiCacheGlobalReplicationGroup_automaticFailover_createNoChange(t
 
 	var globalReplicationGroup elasticache.GlobalReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	enabled := acctest.CtTrue
 	primaryReplicationGroupId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_global_replication_group.test"
 
@@ -343,8 +342,6 @@ func TestAccElastiCacheGlobalReplicationGroup_automaticFailover_createWithChange
 
 	var globalReplicationGroup elasticache.GlobalReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	enabled := acctest.CtFalse
-	globalEnabled := acctest.CtTrue
 	primaryReplicationGroupId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_global_replication_group.test"
 
@@ -379,7 +376,6 @@ func TestAccElastiCacheGlobalReplicationGroup_automaticFailover_setNoChange(t *t
 	var globalReplicationGroup elasticache.GlobalReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	primaryReplicationGroupId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	enabled := acctest.CtFalse
 	resourceName := "aws_elasticache_global_replication_group.test"
 	primaryReplicationGroupResourceName := "aws_elasticache_replication_group.test"
 
@@ -421,8 +417,6 @@ func TestAccElastiCacheGlobalReplicationGroup_automaticFailover_update(t *testin
 	var globalReplicationGroup elasticache.GlobalReplicationGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	primaryReplicationGroupId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	enabled := acctest.CtTrue
-	updatedEnabled := acctest.CtFalse
 	resourceName := "aws_elasticache_global_replication_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
