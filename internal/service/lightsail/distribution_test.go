@@ -35,7 +35,7 @@ func TestAccLightsailDistribution_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"distribution": {
 			acctest.CtBasic:           testAccDistribution_basic,
-			acctest.CtDisappears:              testAccDistribution_disappears,
+			acctest.CtDisappears:      testAccDistribution_disappears,
 			"is_enabled":              testAccDistribution_isEnabled,
 			"cache_behavior":          testAccDistribution_cacheBehavior,
 			"cache_behavior_settings": testAccDistribution_cacheBehaviorSettings,
