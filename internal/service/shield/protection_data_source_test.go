@@ -8,7 +8,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/cloudfront"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -59,7 +58,7 @@ func TestAccShieldProtectionDataSource_cloudfront(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ShieldEndpointID)
-			acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.CloudFrontServiceID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ShieldServiceID),
