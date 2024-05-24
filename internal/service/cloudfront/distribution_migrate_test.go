@@ -25,7 +25,7 @@ func TestDistributionMigrateState(t *testing.T) {
 				"wait_for_deployment": "",
 			},
 			Expected: map[string]string{
-				"wait_for_deployment": "true",
+				"wait_for_deployment": acctest.CtTrue,
 			},
 		},
 	}
