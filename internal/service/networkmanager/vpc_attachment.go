@@ -121,7 +121,7 @@ func ResourceVPCAttachment() *schema.Resource {
 				},
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 			},
-			"owner_account_id": {
+			names.AttrOwnerAccountID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -228,7 +228,7 @@ func resourceVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta
 	} else {
 		d.Set("options", nil)
 	}
-	d.Set("owner_account_id", a.OwnerAccountId)
+	d.Set(names.AttrOwnerAccountID, a.OwnerAccountId)
 	d.Set(names.AttrResourceARN, a.ResourceArn)
 	d.Set("segment_name", a.SegmentName)
 	d.Set(names.AttrState, a.State)
