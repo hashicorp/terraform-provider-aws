@@ -40,7 +40,7 @@ func ResourceUser() *schema.Resource {
 					Computed: true,
 				},
 
-				"aws_account_id": {
+				names.AttrAWSAccountID: {
 					Type:     schema.TypeString,
 					Optional: true,
 					Computed: true,
@@ -115,7 +115,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	namespace := d.Get(names.AttrNamespace).(string)
 
-	if v, ok := d.GetOk("aws_account_id"); ok {
+	if v, ok := d.GetOk(names.AttrAWSAccountID); ok {
 		awsAccountID = v.(string)
 	}
 
@@ -175,7 +175,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	d.Set(names.AttrARN, resp.User.Arn)
-	d.Set("aws_account_id", awsAccountID)
+	d.Set(names.AttrAWSAccountID, awsAccountID)
 	d.Set(names.AttrEmail, resp.User.Email)
 	d.Set(names.AttrNamespace, namespace)
 	d.Set("user_role", resp.User.Role)

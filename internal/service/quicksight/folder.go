@@ -52,7 +52,7 @@ func ResourceFolder() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"aws_account_id": {
+			names.AttrAWSAccountID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -140,7 +140,7 @@ func resourceFolderCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId := meta.(*conns.AWSClient).AccountID
-	if v, ok := d.GetOk("aws_account_id"); ok {
+	if v, ok := d.GetOk(names.AttrAWSAccountID); ok {
 		awsAccountId = v.(string)
 	}
 
@@ -199,7 +199,7 @@ func resourceFolderRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.Set(names.AttrARN, out.Arn)
-	d.Set("aws_account_id", awsAccountId)
+	d.Set(names.AttrAWSAccountID, awsAccountId)
 	d.Set(names.AttrCreatedTime, out.CreatedTime.Format(time.RFC3339))
 	d.Set("folder_id", out.FolderId)
 	d.Set("folder_type", out.FolderType)
