@@ -21,7 +21,7 @@ func TestAccGlue_serial(t *testing.T) {
 			acctest.CtBasic: testAccResourcePolicy_basic,
 			"update":        testAccResourcePolicy_update,
 			"hybrid":        testAccResourcePolicy_hybrid,
-			"disappears":    testAccResourcePolicy_disappears,
+			acctest.CtDisappears:    testAccResourcePolicy_disappears,
 			"equivalent":    testAccResourcePolicy_ignoreEquivalent,
 		},
 	}
