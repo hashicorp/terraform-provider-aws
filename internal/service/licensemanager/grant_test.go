@@ -38,12 +38,12 @@ func TestAccLicenseManagerGrant_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"grant": {
 			acctest.CtBasic: testAccGrant_basic,
-			"disappears":    testAccGrant_disappears,
+			acctest.CtDisappears:    testAccGrant_disappears,
 			acctest.CtName:  testAccGrant_name,
 		},
 		"grant_accepter": {
 			acctest.CtBasic: testAccGrantAccepter_basic,
-			"disappears":    testAccGrantAccepter_disappears,
+			acctest.CtDisappears:    testAccGrantAccepter_disappears,
 		},
 		"grant_data_source": {
 			acctest.CtBasic: testAccGrantsDataSource_basic,
