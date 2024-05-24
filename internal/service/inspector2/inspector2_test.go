@@ -16,7 +16,7 @@ func TestAccInspector2_serial(t *testing.T) {
 		"Enabler": {
 			acctest.CtBasic:                      testAccEnabler_basic,
 			"accountID":                          testAccEnabler_accountID,
-			"disappears":                         testAccEnabler_disappears,
+			acctest.CtDisappears:                         testAccEnabler_disappears,
 			"lambda":                             testAccEnabler_lambda,
 			"updateResourceTypes":                testAccEnabler_updateResourceTypes,
 			"updateResourceTypes_disjoint":       testAccEnabler_updateResourceTypes_disjoint,
@@ -28,15 +28,15 @@ func TestAccInspector2_serial(t *testing.T) {
 		},
 		"DelegatedAdminAccount": {
 			acctest.CtBasic: testAccDelegatedAdminAccount_basic,
-			"disappears":    testAccDelegatedAdminAccount_disappears,
+			acctest.CtDisappears:    testAccDelegatedAdminAccount_disappears,
 		},
 		"MemberAssociation": {
 			acctest.CtBasic: testAccMemberAssociation_basic,
-			"disappears":    testAccMemberAssociation_disappears,
+			acctest.CtDisappears:    testAccMemberAssociation_disappears,
 		},
 		"OrganizationConfiguration": {
 			acctest.CtBasic: testAccOrganizationConfiguration_basic,
-			"disappears":    testAccOrganizationConfiguration_disappears,
+			acctest.CtDisappears:    testAccOrganizationConfiguration_disappears,
 			"ec2ECR":        testAccOrganizationConfiguration_ec2ECR,
 			"lambda":        testAccOrganizationConfiguration_lambda,
 			"lambdaCode":    testAccOrganizationConfiguration_lambdaCode,
