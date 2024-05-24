@@ -20,7 +20,7 @@ func TestAccSSMIncidents_serial(t *testing.T) {
 			"updateCMK":        testAccReplicationSet_updateRegionsWithCMK,
 			"updateTags":       testAccReplicationSet_updateTags,
 			"updateEmptyTags":  testAccReplicationSet_updateEmptyTags,
-			"disappears":       testAccReplicationSet_disappears,
+			acctest.CtDisappears:       testAccReplicationSet_disappears,
 		},
 		"Replication Set Data Source Tests": {
 			acctest.CtBasic: testAccReplicationSetDataSource_basic,
@@ -30,7 +30,7 @@ func TestAccSSMIncidents_serial(t *testing.T) {
 			"update":                 testAccResponsePlan_updateRequiredFields,
 			"updateTags":             testAccResponsePlan_updateTags,
 			"updateEmptyTags":        testAccResponsePlan_updateEmptyTags,
-			"disappears":             testAccResponsePlan_disappears,
+			acctest.CtDisappears:             testAccResponsePlan_disappears,
 			"incidentTemplateFields": testAccResponsePlan_incidentTemplateOptionalFields,
 			"displayName":            testAccResponsePlan_displayName,
 			"chatChannel":            testAccResponsePlan_chatChannel,
