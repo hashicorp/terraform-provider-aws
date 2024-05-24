@@ -37,7 +37,7 @@ func TestAccElastiCacheUser_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "user_id", rName),
-					resource.TestCheckResourceAttr(resourceName, "no_password_required", "false"),
+					resource.TestCheckResourceAttr(resourceName, "no_password_required", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, "username1"),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
 				),
@@ -247,7 +247,7 @@ func TestAccElastiCacheUser_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "user_id", rName),
-					resource.TestCheckResourceAttr(resourceName, "no_password_required", "false"),
+					resource.TestCheckResourceAttr(resourceName, "no_password_required", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, "username1"),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
@@ -259,7 +259,7 @@ func TestAccElastiCacheUser_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "user_id", rName),
-					resource.TestCheckResourceAttr(resourceName, "no_password_required", "false"),
+					resource.TestCheckResourceAttr(resourceName, "no_password_required", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, "username1"),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
@@ -271,7 +271,7 @@ func TestAccElastiCacheUser_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "user_id", rName),
-					resource.TestCheckResourceAttr(resourceName, "no_password_required", "false"),
+					resource.TestCheckResourceAttr(resourceName, "no_password_required", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, "username1"),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
