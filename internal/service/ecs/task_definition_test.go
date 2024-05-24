@@ -85,7 +85,7 @@ func TestAccECSTaskDefinition_basic(t *testing.T) {
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ecs", regexache.MustCompile(`task-definition/.+`)),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn_without_revision", "ecs", regexache.MustCompile(`task-definition/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "track_latest", "false"),
+					resource.TestCheckResourceAttr(resourceName, "track_latest", acctest.CtFalse),
 				),
 			},
 			{
@@ -154,7 +154,7 @@ func TestAccECSTaskDefinition_configuredAtLaunch(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "volume.0.configure_at_launch", "true"),
+					resource.TestCheckResourceAttr(resourceName, "volume.0.configure_at_launch", acctest.CtTrue),
 				),
 			},
 			{
@@ -190,7 +190,7 @@ func TestAccECSTaskDefinition_DockerVolume_basic(t *testing.T) {
 						"docker_volume_configuration.#":                    acctest.Ct1,
 						"docker_volume_configuration.0.driver":             "local",
 						"docker_volume_configuration.0.scope":              "shared",
-						"docker_volume_configuration.0.autoprovision":      "true",
+						"docker_volume_configuration.0.autoprovision":      acctest.CtTrue,
 						"docker_volume_configuration.0.driver_opts.%":      acctest.Ct2,
 						"docker_volume_configuration.0.driver_opts.device": "tmpfs",
 						"docker_volume_configuration.0.driver_opts.uid":    "1000",
@@ -231,7 +231,7 @@ func TestAccECSTaskDefinition_DockerVolume_minimal(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "volume.*", map[string]string{
 						names.AttrName:                                rName,
 						"docker_volume_configuration.#":               acctest.Ct1,
-						"docker_volume_configuration.0.autoprovision": "true",
+						"docker_volume_configuration.0.autoprovision": acctest.CtTrue,
 					}),
 				),
 			},
@@ -1181,7 +1181,7 @@ func TestAccECSTaskDefinition_trackLatest(t *testing.T) {
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ecs", regexache.MustCompile(`task-definition/.+`)),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn_without_revision", "ecs", regexache.MustCompile(`task-definition/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "track_latest", "true"),
+					resource.TestCheckResourceAttr(resourceName, "track_latest", acctest.CtTrue),
 				),
 			},
 			{
