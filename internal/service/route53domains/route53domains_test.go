@@ -27,7 +27,7 @@ func TestAccRoute53Domains_serial(t *testing.T) {
 		},
 		"DelegationSignerRecord": {
 			acctest.CtBasic: testAccDelegationSignerRecord_basic,
-			"disappears":    testAccDelegationSignerRecord_disappears,
+			acctest.CtDisappears:    testAccDelegationSignerRecord_disappears,
 		},
 	}
 
