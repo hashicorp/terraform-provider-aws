@@ -55,7 +55,7 @@ func TestAccDMSReplicationTask_basic(t *testing.T) {
 							resource.TestCheckResourceAttrPair(resourceName, "replication_instance_arn", "aws_dms_replication_instance.test", "replication_instance_arn"),
 							acctest.CheckResourceAttrEquivalentJSON(resourceName, "replication_task_settings", defaultReplicationTaskSettings[migrationType]),
 							resource.TestCheckResourceAttrPair(resourceName, "source_endpoint_arn", "aws_dms_endpoint.source", "endpoint_arn"),
-							resource.TestCheckResourceAttr(resourceName, "start_replication_task", "false"),
+							resource.TestCheckResourceAttr(resourceName, "start_replication_task", acctest.CtFalse),
 							resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ready"),
 							acctest.CheckResourceAttrJMES(resourceName, "table_mappings", "length(rules)", acctest.Ct1),
 							resource.TestCheckResourceAttrPair(resourceName, "target_endpoint_arn", "aws_dms_endpoint.target", "endpoint_arn"),
@@ -197,8 +197,8 @@ func TestAccDMSReplicationTask_settings_EnableLogging(t *testing.T) {
 				Config: testAccReplicationTaskConfig_settings_EnableLogging(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationTaskExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.EnableLogging", "true"),
-					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.EnableLogContext", "false"),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.EnableLogging", acctest.CtTrue),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.EnableLogContext", acctest.CtFalse),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.LogComponents[?Id=='DATA_STRUCTURE'].Severity | [0]", "LOGGER_SEVERITY_DEFAULT"),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.CloudWatchLogGroup", fmt.Sprintf("dms-tasks-%s", rName)),
 					func(s *terraform.State) error {
@@ -225,8 +225,8 @@ func TestAccDMSReplicationTask_settings_EnableLogging(t *testing.T) {
 				Config: testAccReplicationTaskConfig_settings_EnableLogContext(rName, true, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationTaskExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.EnableLogging", "true"),
-					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.EnableLogContext", "true"),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.EnableLogging", acctest.CtTrue),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.EnableLogContext", acctest.CtTrue),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.LogComponents[?Id=='DATA_STRUCTURE'].Severity | [0]", "LOGGER_SEVERITY_DEFAULT"),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.CloudWatchLogGroup", fmt.Sprintf("dms-tasks-%s", rName)),
 					func(s *terraform.State) error {
@@ -258,8 +258,8 @@ func TestAccDMSReplicationTask_settings_EnableLogging(t *testing.T) {
 				Config: testAccReplicationTaskConfig_settings_EnableLogging(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationTaskExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.EnableLogging", "false"),
-					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.EnableLogContext", "false"),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.EnableLogging", acctest.CtFalse),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.EnableLogContext", acctest.CtFalse),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.LogComponents[?Id=='DATA_STRUCTURE'].Severity | [0]", "LOGGER_SEVERITY_DEFAULT"),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.CloudWatchLogGroup", fmt.Sprintf("dms-tasks-%s", rName)),
 					func(s *terraform.State) error {
@@ -333,8 +333,8 @@ func TestAccDMSReplicationTask_settings_LogComponents(t *testing.T) {
 				Config: testAccReplicationTaskConfig_settings_LogComponents(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationTaskExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.EnableLogging", "true"),
-					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.EnableLogContext", "false"),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.EnableLogging", acctest.CtTrue),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.EnableLogContext", acctest.CtFalse),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.LogComponents[?Id=='DATA_STRUCTURE'].Severity | [0]", "LOGGER_SEVERITY_WARNING"),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "type(Logging.CloudWatchLogGroup)", "string"),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "type(Logging.CloudWatchLogStream)", "string"),
