@@ -15,12 +15,12 @@ func TestAccServiceQuotas_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Template": {
 			acctest.CtBasic: testAccTemplate_basic,
-			"disappears":    testAccTemplate_disappears,
+			acctest.CtDisappears:    testAccTemplate_disappears,
 			"value":         testAccTemplate_value,
 		},
 		"TemplateAssociation": {
 			acctest.CtBasic: testAccTemplateAssociation_basic,
-			"disappears":    testAccTemplateAssociation_disappears,
+			acctest.CtDisappears:    testAccTemplateAssociation_disappears,
 			"skipDestroy":   testAccTemplateAssociation_skipDestroy,
 		},
 		"TemplatesDataSource": {
