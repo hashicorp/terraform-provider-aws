@@ -38,7 +38,7 @@ func testAccGatewayRouteDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "virtual_router_name", dataSourceName, "virtual_router_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "mesh_owner", dataSourceName, "mesh_owner"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_owner", dataSourceName, "resource_owner"),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtResourceOwner, dataSourceName, acctest.CtResourceOwner),
 					resource.TestCheckResourceAttrPair(resourceName, "spec.#", dataSourceName, "spec.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "spec.0.grpc_route.#", dataSourceName, "spec.0.grpc_route.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http_route.#", dataSourceName, "spec.0.http_route.#"),

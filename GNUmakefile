@@ -246,7 +246,7 @@ examples-tflint: ## [CI] Examples Checks / tflint
 	done ; \
 	exit $$exit_code
 
-fix-constants: fix-imports fmt semgrep-constants fix-imports fmt ## Use Semgrep to fix constants
+fix-constants: semgrep-constants fmt ## Use Semgrep to fix constants
 
 fix-imports: ## Fixing source code imports with goimports
 	@echo "make: Fixing source code imports with goimports..."

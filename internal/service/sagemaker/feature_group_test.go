@@ -28,7 +28,7 @@ func TestAccSageMakerFeatureGroup_serial(t *testing.T) {
 		acctest.CtBasic:                 testAccFeatureGroup_basic,
 		"storageType":                   testAccFeatureGroup_storageType,
 		"description":                   testAccFeatureGroup_description,
-		"disappears":                    TestAccSageMakerFeatureGroup_disappears,
+		acctest.CtDisappears:            TestAccSageMakerFeatureGroup_disappears,
 		"multipleFeatures":              testAccFeatureGroup_multipleFeatures,
 		"offlineConfig_basic":           testAccFeatureGroup_offlineConfig_basic,
 		"offlineConfig_format":          testAccFeatureGroup_offlineConfig_format,

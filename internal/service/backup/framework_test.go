@@ -25,7 +25,7 @@ func TestAccBackupFramework_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Resource": {
 			acctest.CtBasic:                testAccFramework_basic,
-			"disappears":                   testAccFramework_disappears,
+			acctest.CtDisappears:           testAccFramework_disappears,
 			"UpdateTags":                   testAccFramework_updateTags,
 			"UpdateControlScope":           testAccFramework_updateControlScope,
 			"UpdateControlInputParameters": testAccFramework_updateControlInputParameters,
@@ -470,7 +470,7 @@ func testAccFramework_disappears(t *testing.T) {
 	var framework backup.DescribeFrameworkOutput
 
 	rName := fmt.Sprintf("tf_acc_test_%s", sdkacctest.RandString(7))
-	description := "disappears"
+	description := acctest.CtDisappears
 	resourceName := "aws_backup_framework.test"
 
 	resource.Test(t, resource.TestCase{
@@ -480,7 +480,7 @@ func testAccFramework_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckFrameworkDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFrameworkConfig_basic(rName, description),
+				Config: testAccFrameworkConfig_basic(rName, acctest.CtDisappears),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkExists(ctx, resourceName, &framework),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbackup.ResourceFramework(), resourceName),

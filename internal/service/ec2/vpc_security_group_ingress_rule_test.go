@@ -373,7 +373,7 @@ func TestAccVPCSecurityGroupIngressRule_DefaultTagsProviderAndResource_nonOverla
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags1(acctest.CtProviderKey1, acctest.CtProviderValue1),
-					testAccVPCSecurityGroupIngressRuleConfig_tags2(rName, acctest.CtResourceKey1, acctest.CtResourceValue1, "resourcekey2", acctest.CtResourceValue2),
+					testAccVPCSecurityGroupIngressRuleConfig_tags2(rName, acctest.CtResourceKey1, acctest.CtResourceValue1, acctest.CtResourceKey2, acctest.CtResourceValue2),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v),
@@ -435,8 +435,8 @@ func TestAccVPCSecurityGroupIngressRule_DefaultTagsProviderAndResource_overlappi
 			},
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags2(acctest.CtOverlapKey1, acctest.CtProviderValue1, "overlapkey2", "providervalue2"),
-					testAccVPCSecurityGroupIngressRuleConfig_tags2(rName, acctest.CtOverlapKey1, acctest.CtResourceValue1, "overlapkey2", acctest.CtResourceValue2),
+					acctest.ConfigDefaultTags_Tags2(acctest.CtOverlapKey1, acctest.CtProviderValue1, acctest.CtOverlapKey2, "providervalue2"),
+					testAccVPCSecurityGroupIngressRuleConfig_tags2(rName, acctest.CtOverlapKey1, acctest.CtResourceValue1, acctest.CtOverlapKey2, acctest.CtResourceValue2),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupIngressRuleExists(ctx, resourceName, &v),
