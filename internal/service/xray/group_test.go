@@ -79,8 +79,8 @@ func TestAccXRayGroup_insights(t *testing.T) {
 					testAccCheckGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "insights_configuration.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "insights_configuration.*", map[string]string{
-						"insights_enabled":      "true",
-						"notifications_enabled": "true",
+						"insights_enabled":      acctest.CtTrue,
+						"notifications_enabled": acctest.CtTrue,
 					}),
 				),
 			},
@@ -95,8 +95,8 @@ func TestAccXRayGroup_insights(t *testing.T) {
 					testAccCheckGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "insights_configuration.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "insights_configuration.*", map[string]string{
-						"insights_enabled":      "false",
-						"notifications_enabled": "false",
+						"insights_enabled":      acctest.CtFalse,
+						"notifications_enabled": acctest.CtFalse,
 					}),
 				),
 			},
