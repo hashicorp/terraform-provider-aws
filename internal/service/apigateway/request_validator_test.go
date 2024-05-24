@@ -36,8 +36,8 @@ func TestAccAPIGatewayRequestValidator_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRequestValidatorExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "validate_request_body", "false"),
-					resource.TestCheckResourceAttr(resourceName, "validate_request_parameters", "false"),
+					resource.TestCheckResourceAttr(resourceName, "validate_request_body", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "validate_request_parameters", acctest.CtFalse),
 				),
 			},
 			{
@@ -51,8 +51,8 @@ func TestAccAPIGatewayRequestValidator_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRequestValidatorExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("%s-modified", rName)),
-					resource.TestCheckResourceAttr(resourceName, "validate_request_body", "true"),
-					resource.TestCheckResourceAttr(resourceName, "validate_request_parameters", "true"),
+					resource.TestCheckResourceAttr(resourceName, "validate_request_body", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "validate_request_parameters", acctest.CtTrue),
 				),
 			},
 		},

@@ -45,7 +45,7 @@ func TestAccAPIGatewayRestAPI_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "body"),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedDate),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", "false"),
+					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", acctest.Ct1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "execution_arn", "execute-api", regexache.MustCompile(`[0-9a-z]+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -671,7 +671,7 @@ func TestAccAPIGatewayRestAPI_disableExecuteAPIEndpoint(t *testing.T) {
 			{
 				Config: testAccRestAPIConfig_disableExecuteEndpoint(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", `false`),
+					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", acctest.CtFalse),
 				),
 			},
 			{
@@ -683,13 +683,13 @@ func TestAccAPIGatewayRestAPI_disableExecuteAPIEndpoint(t *testing.T) {
 			{
 				Config: testAccRestAPIConfig_disableExecuteEndpoint(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", `true`),
+					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccRestAPIConfig_disableExecuteEndpoint(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", `false`),
+					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", acctest.CtFalse),
 				),
 			},
 		},
@@ -712,7 +712,7 @@ func TestAccAPIGatewayRestAPI_DisableExecuteAPIEndpoint_overrideBody(t *testing.
 				Config: testAccRestAPIConfig_disableExecuteEndpointOverrideBody(rName, true, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRestAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", "true"),
+					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", acctest.CtTrue),
 				),
 			},
 			{
@@ -726,7 +726,7 @@ func TestAccAPIGatewayRestAPI_DisableExecuteAPIEndpoint_overrideBody(t *testing.
 				Config: testAccRestAPIConfig_disableExecuteEndpointOverrideBody(rName, false, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRestAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", "false"),
+					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", acctest.CtFalse),
 				),
 			},
 			// Verify override can be reset
@@ -734,7 +734,7 @@ func TestAccAPIGatewayRestAPI_DisableExecuteAPIEndpoint_overrideBody(t *testing.
 				Config: testAccRestAPIConfig_disableExecuteEndpointOverrideBody(rName, true, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRestAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", "true"),
+					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", acctest.CtTrue),
 				),
 			},
 		},
@@ -757,7 +757,7 @@ func TestAccAPIGatewayRestAPI_DisableExecuteAPIEndpoint_setByBody(t *testing.T) 
 				Config: testAccRestAPIConfig_disableExecuteEndpointSetByBody(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRestAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", "true"),
+					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", acctest.CtTrue),
 				),
 			},
 			{
