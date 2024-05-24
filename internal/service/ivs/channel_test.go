@@ -115,7 +115,7 @@ func TestAccIVSChannel_update(t *testing.T) {
 
 	resourceName := "aws_ivs_channel.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	authorized := "true"
+	authorized := acctest.CtTrue
 	latencyMode := "NORMAL"
 	channelType := "BASIC"
 
@@ -141,11 +141,11 @@ func TestAccIVSChannel_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccChannelConfig_update(rName, authorized, latencyMode, channelType),
+				Config: testAccChannelConfig_update(rName, acctest.CtTrue, latencyMode, channelType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckChannelExists(ctx, resourceName, &v2),
 					testAccCheckChannelNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, "authorized", authorized),
+					resource.TestCheckResourceAttr(resourceName, "authorized", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "latency_mode", latencyMode),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, channelType),
