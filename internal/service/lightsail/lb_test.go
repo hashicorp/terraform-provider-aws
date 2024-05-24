@@ -34,7 +34,7 @@ func TestAccLightsailLoadBalancer_serial(t *testing.T) {
 		"lb": {
 			acctest.CtBasic:     testAccLoadBalancer_basic,
 			"disappears":        testAccLoadBalancer_disappears,
-			acctest.CtName:              testAccLoadBalancer_name,
+			acctest.CtName:      testAccLoadBalancer_name,
 			"health_check_path": testAccLoadBalancer_healthCheckPath,
 			"tags":              testAccLoadBalancer_tags,
 		},
