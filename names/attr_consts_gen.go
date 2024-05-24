@@ -123,7 +123,6 @@ const (
 	AttrParameters                 = "parameters"
 	AttrPassword                   = "password"
 	AttrPath                       = "path"
-	AttrPathPrefix                 = "path_prefix"
 	AttrPermissions                = "permissions"
 	AttrPolicy                     = "policy"
 	AttrPort                       = "port"
