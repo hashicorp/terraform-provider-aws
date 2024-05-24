@@ -45,7 +45,7 @@ func ResourceWorkforce() *schema.Resource {
 				ExactlyOneOf: []string{"oidc_config", "cognito_config"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"client_id": {
+						names.AttrClientID: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -71,18 +71,18 @@ func ResourceWorkforce() *schema.Resource {
 								validation.IsURLWithHTTPS,
 							),
 						},
-						"client_id": {
+						names.AttrClientID: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 1024),
 						},
-						"client_secret": {
+						names.AttrClientSecret: {
 							Type:         schema.TypeString,
 							Required:     true,
 							Sensitive:    true,
 							ValidateFunc: validation.StringLenBetween(1, 1024),
 						},
-						"issuer": {
+						names.AttrIssuer: {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.All(
@@ -165,13 +165,13 @@ func ResourceWorkforce() *schema.Resource {
 							MaxItems: 5,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"subnets": {
+						names.AttrSubnets: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							MaxItems: 16,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"vpc_endpoint_id": {
+						names.AttrVPCEndpointID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -358,7 +358,7 @@ func expandWorkforceCognitoConfig(l []interface{}) *sagemaker.CognitoConfig {
 	m := l[0].(map[string]interface{})
 
 	config := &sagemaker.CognitoConfig{
-		ClientId: aws.String(m["client_id"].(string)),
+		ClientId: aws.String(m[names.AttrClientID].(string)),
 		UserPool: aws.String(m["user_pool"].(string)),
 	}
 
@@ -371,8 +371,8 @@ func flattenWorkforceCognitoConfig(config *sagemaker.CognitoConfig) []map[string
 	}
 
 	m := map[string]interface{}{
-		"client_id": aws.StringValue(config.ClientId),
-		"user_pool": aws.StringValue(config.UserPool),
+		names.AttrClientID: aws.StringValue(config.ClientId),
+		"user_pool":        aws.StringValue(config.UserPool),
 	}
 
 	return []map[string]interface{}{m}
@@ -387,9 +387,9 @@ func expandWorkforceOIDCConfig(l []interface{}) *sagemaker.OidcConfig {
 
 	config := &sagemaker.OidcConfig{
 		AuthorizationEndpoint: aws.String(m["authorization_endpoint"].(string)),
-		ClientId:              aws.String(m["client_id"].(string)),
-		ClientSecret:          aws.String(m["client_secret"].(string)),
-		Issuer:                aws.String(m["issuer"].(string)),
+		ClientId:              aws.String(m[names.AttrClientID].(string)),
+		ClientSecret:          aws.String(m[names.AttrClientSecret].(string)),
+		Issuer:                aws.String(m[names.AttrIssuer].(string)),
 		JwksUri:               aws.String(m["jwks_uri"].(string)),
 		LogoutEndpoint:        aws.String(m["logout_endpoint"].(string)),
 		TokenEndpoint:         aws.String(m["token_endpoint"].(string)),
@@ -406,9 +406,9 @@ func flattenWorkforceOIDCConfig(config *sagemaker.OidcConfigForResponse, clientS
 
 	m := map[string]interface{}{
 		"authorization_endpoint": aws.StringValue(config.AuthorizationEndpoint),
-		"client_id":              aws.StringValue(config.ClientId),
-		"client_secret":          clientSecret,
-		"issuer":                 aws.StringValue(config.Issuer),
+		names.AttrClientID:       aws.StringValue(config.ClientId),
+		names.AttrClientSecret:   clientSecret,
+		names.AttrIssuer:         aws.StringValue(config.Issuer),
 		"jwks_uri":               aws.StringValue(config.JwksUri),
 		"logout_endpoint":        aws.StringValue(config.LogoutEndpoint),
 		"token_endpoint":         aws.StringValue(config.TokenEndpoint),
@@ -427,7 +427,7 @@ func expandWorkforceVPCConfig(l []interface{}) *sagemaker.WorkforceVpcConfigRequ
 
 	config := &sagemaker.WorkforceVpcConfigRequest{
 		SecurityGroupIds: flex.ExpandStringSet(m[names.AttrSecurityGroupIDs].(*schema.Set)),
-		Subnets:          flex.ExpandStringSet(m["subnets"].(*schema.Set)),
+		Subnets:          flex.ExpandStringSet(m[names.AttrSubnets].(*schema.Set)),
 		VpcId:            aws.String(m[names.AttrVPCID].(string)),
 	}
 
@@ -441,8 +441,8 @@ func flattenWorkforceVPCConfig(config *sagemaker.WorkforceVpcConfigResponse) []m
 
 	m := map[string]interface{}{
 		names.AttrSecurityGroupIDs: flex.FlattenStringSet(config.SecurityGroupIds),
-		"subnets":                  flex.FlattenStringSet(config.Subnets),
-		"vpc_endpoint_id":          aws.StringValue(config.VpcEndpointId),
+		names.AttrSubnets:          flex.FlattenStringSet(config.Subnets),
+		names.AttrVPCEndpointID:    aws.StringValue(config.VpcEndpointId),
 		names.AttrVPCID:            aws.StringValue(config.VpcId),
 	}
 

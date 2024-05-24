@@ -28,7 +28,7 @@ func DataSourceTransitGatewayConnect() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"filter": customFiltersSchema(),
+			names.AttrFilter: customFiltersSchema(),
 			names.AttrProtocol: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -64,7 +64,7 @@ func dataSourceTransitGatewayConnectRead(ctx context.Context, d *schema.Resource
 	}
 
 	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get("filter").(*schema.Set),
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	transitGatewayConnect, err := FindTransitGatewayConnect(ctx, conn, input)

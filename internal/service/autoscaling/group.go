@@ -110,7 +110,7 @@ func resourceGroup() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"force_delete": {
+			names.AttrForceDelete: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -307,7 +307,7 @@ func resourceGroup() *schema.Resource {
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.RefreshStrategy](),
 						},
-						"triggers": {
+						names.AttrTriggers: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Schema{
@@ -321,9 +321,9 @@ func resourceGroup() *schema.Resource {
 			"launch_configuration": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ExactlyOneOf: []string{"launch_configuration", "launch_template", "mixed_instances_policy"},
+				ExactlyOneOf: []string{"launch_configuration", names.AttrLaunchTemplate, "mixed_instances_policy"},
 			},
-			"launch_template": {
+			names.AttrLaunchTemplate: {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
@@ -352,7 +352,7 @@ func resourceGroup() *schema.Resource {
 						},
 					},
 				},
-				ExactlyOneOf: []string{"launch_configuration", "launch_template", "mixed_instances_policy"},
+				ExactlyOneOf: []string{"launch_configuration", names.AttrLaunchTemplate, "mixed_instances_policy"},
 			},
 			"load_balancers": {
 				Type:          schema.TypeSet,
@@ -438,7 +438,7 @@ func resourceGroup() *schema.Resource {
 								},
 							},
 						},
-						"launch_template": {
+						names.AttrLaunchTemplate: {
 							Type:     schema.TypeList,
 							Required: true,
 							MinItems: 1,
@@ -787,7 +787,7 @@ func resourceGroup() *schema.Resource {
 						},
 					},
 				},
-				ExactlyOneOf: []string{"launch_configuration", "launch_template", "mixed_instances_policy"},
+				ExactlyOneOf: []string{"launch_configuration", names.AttrLaunchTemplate, "mixed_instances_policy"},
 			},
 			names.AttrName: {
 				Type:          schema.TypeString,
@@ -866,7 +866,7 @@ func resourceGroup() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"identifier": {
+						names.AttrIdentifier: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 2048),
@@ -943,7 +943,7 @@ func resourceGroup() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			launchTemplateCustomDiff("launch_template", "launch_template.0.name"),
+			launchTemplateCustomDiff(names.AttrLaunchTemplate, "launch_template.0.name"),
 			launchTemplateCustomDiff("mixed_instances_policy", "mixed_instances_policy.0.launch_template.0.launch_template_specification.0.launch_template_name"),
 			launchTemplateCustomDiff("mixed_instances_policy", "mixed_instances_policy.0.launch_template.0.override"),
 		),
@@ -973,7 +973,7 @@ func launchTemplateCustomDiff(baseAttribute, subAttribute string) schema.Customi
 				return nil
 			}
 
-			if baseAttribute == "launch_template" {
+			if baseAttribute == names.AttrLaunchTemplate {
 				launchTemplate := ba[0].(map[string]interface{})
 				launchTemplate[names.AttrID] = launchTemplateIDUnknown
 
@@ -983,7 +983,7 @@ func launchTemplateCustomDiff(baseAttribute, subAttribute string) schema.Customi
 			}
 
 			if baseAttribute == "mixed_instances_policy" && !strings.Contains(subAttribute, "override") {
-				launchTemplate := ba[0].(map[string]interface{})["launch_template"].([]interface{})[0].(map[string]interface{})["launch_template_specification"].([]interface{})[0]
+				launchTemplate := ba[0].(map[string]interface{})[names.AttrLaunchTemplate].([]interface{})[0].(map[string]interface{})["launch_template_specification"].([]interface{})[0]
 				launchTemplateSpecification := launchTemplate.(map[string]interface{})
 				launchTemplateSpecification["launch_template_id"] = launchTemplateIDUnknown
 
@@ -993,7 +993,7 @@ func launchTemplateCustomDiff(baseAttribute, subAttribute string) schema.Customi
 			}
 
 			if baseAttribute == "mixed_instances_policy" && strings.Contains(subAttribute, "override") {
-				launchTemplate := ba[0].(map[string]interface{})["launch_template"].([]interface{})[0].(map[string]interface{})["override"].([]interface{})
+				launchTemplate := ba[0].(map[string]interface{})[names.AttrLaunchTemplate].([]interface{})[0].(map[string]interface{})["override"].([]interface{})
 
 				for i := range launchTemplate {
 					key := fmt.Sprintf("mixed_instances_policy.0.launch_template.0.override.%d.launch_template_specification.0.launch_template_name", i)
@@ -1099,7 +1099,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		inputCASG.LaunchConfigurationName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("launch_template"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrLaunchTemplate); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		inputCASG.LaunchTemplate = expandLaunchTemplateSpecification(v.([]interface{})[0].(map[string]interface{}), false)
 	}
 
@@ -1287,11 +1287,11 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	d.Set("launch_configuration", g.LaunchConfigurationName)
 	if g.LaunchTemplate != nil {
-		if err := d.Set("launch_template", []interface{}{flattenLaunchTemplateSpecification(g.LaunchTemplate)}); err != nil {
+		if err := d.Set(names.AttrLaunchTemplate, []interface{}{flattenLaunchTemplateSpecification(g.LaunchTemplate)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting launch_template: %s", err)
 		}
 	} else {
-		d.Set("launch_template", nil)
+		d.Set(names.AttrLaunchTemplate, nil)
 	}
 	d.Set("load_balancers", g.LoadBalancerNames)
 	d.Set("max_instance_lifetime", g.MaxInstanceLifetime)
@@ -1425,8 +1425,8 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			shouldRefreshInstances = true
 		}
 
-		if d.HasChange("launch_template") {
-			if v, ok := d.GetOk("launch_template"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if d.HasChange(names.AttrLaunchTemplate) {
+			if v, ok := d.GetOk(names.AttrLaunchTemplate); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.LaunchTemplate = expandLaunchTemplateSpecification(v.([]interface{})[0].(map[string]interface{}), false)
 			}
 			shouldRefreshInstances = true
@@ -1627,7 +1627,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		tfMap := v.([]interface{})[0].(map[string]interface{})
 
 		if !shouldRefreshInstances {
-			if v, ok := tfMap["triggers"].(*schema.Set); ok && v.Len() > 0 {
+			if v, ok := tfMap[names.AttrTriggers].(*schema.Set); ok && v.Len() > 0 {
 				var triggers []string
 
 				for _, v := range v.List() {
@@ -1643,7 +1643,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		if shouldRefreshInstances {
 			var launchTemplate *awstypes.LaunchTemplateSpecification
 
-			if v, ok := d.GetOk("launch_template"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			if v, ok := d.GetOk(names.AttrLaunchTemplate); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				launchTemplate = expandLaunchTemplateSpecification(v.([]interface{})[0].(map[string]interface{}), false)
 			}
 
@@ -1664,7 +1664,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		// No warm pool exists in new config. Delete it.
 		if len(w) == 0 || w[0] == nil {
-			forceDeleteWarmPool := d.Get("force_delete").(bool) || d.Get("force_delete_warm_pool").(bool)
+			forceDeleteWarmPool := d.Get(names.AttrForceDelete).(bool) || d.Get("force_delete_warm_pool").(bool)
 
 			if err := deleteWarmPool(ctx, conn, d.Id(), forceDeleteWarmPool, d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
@@ -1792,7 +1792,7 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
-	forceDeleteGroup := d.Get("force_delete").(bool)
+	forceDeleteGroup := d.Get(names.AttrForceDelete).(bool)
 	forceDeleteWarmPool := forceDeleteGroup || d.Get("force_delete_warm_pool").(bool)
 
 	group, err := findGroupByName(ctx, conn, d.Id())
@@ -3169,7 +3169,7 @@ func expandMixedInstancesPolicy(tfMap map[string]interface{}, hasDefaultVersion 
 		apiObject.InstancesDistribution = expandInstancesDistribution(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["launch_template"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrLaunchTemplate].([]interface{}); ok && len(v) > 0 {
 		apiObject.LaunchTemplate = expandLaunchTemplate(v[0].(map[string]interface{}), hasDefaultVersion)
 	}
 
@@ -3393,7 +3393,7 @@ func expandVPCZoneIdentifiers(tfList []interface{}) *string {
 func expandTrafficSourceIdentifier(tfMap map[string]interface{}) awstypes.TrafficSourceIdentifier {
 	apiObject := awstypes.TrafficSourceIdentifier{}
 
-	if v, ok := tfMap["identifier"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrIdentifier].(string); ok && v != "" {
 		apiObject.Identifier = aws.String(v)
 	}
 
@@ -3471,7 +3471,7 @@ func flattenMixedInstancesPolicy(apiObject *awstypes.MixedInstancesPolicy) map[s
 	}
 
 	if v := apiObject.LaunchTemplate; v != nil {
-		tfMap["launch_template"] = []interface{}{flattenLaunchTemplate(v)}
+		tfMap[names.AttrLaunchTemplate] = []interface{}{flattenLaunchTemplate(v)}
 	}
 
 	return tfMap
@@ -3861,7 +3861,7 @@ func flattenTrafficSourceIdentifier(apiObject awstypes.TrafficSourceIdentifier) 
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Identifier; v != nil {
-		tfMap["identifier"] = aws.ToString(v)
+		tfMap[names.AttrIdentifier] = aws.ToString(v)
 	}
 
 	if v := apiObject.Type; v != nil {
@@ -4017,7 +4017,7 @@ func validateGroupInstanceRefreshTriggerFields(i interface{}, path cty.Path) dia
 		return sdkdiag.AppendErrorf(diags, "expected type to be string")
 	}
 
-	if v == "launch_configuration" || v == "launch_template" || v == "mixed_instances_policy" {
+	if v == "launch_configuration" || v == names.AttrLaunchTemplate || v == "mixed_instances_policy" {
 		return diag.Diagnostics{
 			diag.Diagnostic{
 				Severity: diag.Warning,

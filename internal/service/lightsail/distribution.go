@@ -77,7 +77,7 @@ func ResourceDistribution() *schema.Resource {
 							Description:  "The cache behavior for the specified path.",
 							ValidateFunc: validation.StringInSlice(flattenBehaviorEnumValues(types.BehaviorEnum("").Values()), false),
 						},
-						"path": {
+						names.AttrPath: {
 							Type:        schema.TypeString,
 							Required:    true,
 							Description: "The path to a directory or file to cached, or not cache. Use an asterisk symbol to specify wildcard directories (path/to/assets/*), and file types (*.html, *jpg, *js). Directories and file paths are case-sensitive.",
@@ -222,7 +222,7 @@ func ResourceDistribution() *schema.Resource {
 				Computed:    true,
 				Description: "The domain name of the distribution.",
 			},
-			"ip_address_type": {
+			names.AttrIPAddressType: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Description:  "The IP address type of the distribution.",
@@ -286,7 +286,7 @@ func ResourceDistribution() *schema.Resource {
 							ValidateFunc: verify.ValidRegionName,
 							Description:  "The AWS Region name of the origin resource.",
 						},
-						"resource_type": {
+						names.AttrResourceType: {
 							Type:        schema.TypeString,
 							Computed:    true,
 							Description: "The resource type of the origin resource (e.g., Instance).",
@@ -299,7 +299,7 @@ func ResourceDistribution() *schema.Resource {
 				Computed:    true,
 				Description: "The public DNS of the origin.",
 			},
-			"resource_type": {
+			names.AttrResourceType: {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "The Lightsail resource type (e.g., Distribution).",
@@ -347,7 +347,7 @@ func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, met
 		in.CacheBehaviors = expandCacheBehaviorsPerPath(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("ip_address_type"); ok {
+	if v, ok := d.GetOk(names.AttrIPAddressType); ok {
 		in.IpAddressType = types.IpAddressType(v.(string))
 	}
 
@@ -438,14 +438,14 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	d.Set(names.AttrDomainName, out.DomainName)
 	d.Set("is_enabled", out.IsEnabled)
-	d.Set("ip_address_type", out.IpAddressType)
+	d.Set(names.AttrIPAddressType, out.IpAddressType)
 	d.Set("location", []interface{}{flattenResourceLocation(out.Location)})
 	if err := d.Set("origin", []interface{}{flattenOrigin(out.Origin)}); err != nil {
 		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionSetting, ResNameDistribution, d.Id(), err)
 	}
 	d.Set(names.AttrName, out.Name)
 	d.Set("origin_public_dns", out.OriginPublicDNS)
-	d.Set("resource_type", out.ResourceType)
+	d.Set(names.AttrResourceType, out.ResourceType)
 	d.Set(names.AttrStatus, out.Status)
 	d.Set("support_code", out.SupportCode)
 
@@ -505,11 +505,11 @@ func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, met
 		bundleUpdate = true
 	}
 
-	if d.HasChange("ip_address_type") {
+	if d.HasChange(names.AttrIPAddressType) {
 		out, err := conn.SetIpAddressType(ctx, &lightsail.SetIpAddressTypeInput{
 			ResourceName:  aws.String(d.Id()),
 			ResourceType:  types.ResourceTypeDistribution,
-			IpAddressType: types.IpAddressType(d.Get("ip_address_type").(string)),
+			IpAddressType: types.IpAddressType(d.Get(names.AttrIPAddressType).(string)),
 		})
 
 		if err != nil {
@@ -713,7 +713,7 @@ func flattenCacheBehaviorPerPath(apiObject types.CacheBehaviorPerPath) map[strin
 	}
 
 	if v := apiObject.Path; v != nil {
-		m["path"] = aws.ToString(v)
+		m[names.AttrPath] = aws.ToString(v)
 	}
 
 	return m
@@ -771,7 +771,7 @@ func flattenOrigin(apiObject *types.Origin) map[string]interface{} {
 	}
 
 	if v := apiObject.ResourceType; v != "" {
-		m["resource_type"] = v
+		m[names.AttrResourceType] = v
 	}
 
 	return m
@@ -810,7 +810,7 @@ func expandCacheBehaviorPerPath(tfMap map[string]interface{}) types.CacheBehavio
 		a.Behavior = types.BehaviorEnum(v)
 	}
 
-	if v, ok := tfMap["path"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPath].(string); ok && v != "" {
 		a.Path = aws.String(v)
 	}
 

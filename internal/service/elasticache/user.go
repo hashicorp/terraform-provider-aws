@@ -117,7 +117,7 @@ func resourceUser() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"user_name": {
+			names.AttrUserName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -137,7 +137,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		NoPasswordRequired: aws.Bool(d.Get("no_password_required").(bool)),
 		Tags:               getTagsIn(ctx),
 		UserId:             aws.String(userID),
-		UserName:           aws.String(d.Get("user_name").(string)),
+		UserName:           aws.String(d.Get(names.AttrUserName).(string)),
 	}
 
 	if v, ok := d.GetOk("authentication_mode"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -219,7 +219,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 	d.Set("engine", user.Engine)
 	d.Set("user_id", user.UserId)
-	d.Set("user_name", user.UserName)
+	d.Set(names.AttrUserName, user.UserName)
 
 	return diags
 }

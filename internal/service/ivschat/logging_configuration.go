@@ -70,7 +70,7 @@ func ResourceLoggingConfiguration() *schema.Resource {
 							},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"log_group_name": {
+									names.AttrLogGroupName: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_./#-]{1,512}$`), "must contain only lowercase alphanumeric characters, hyphen, dot, underscore, forward slash, or hash sign, and between 1 and 512 characters"),
@@ -304,7 +304,7 @@ func flattenCloudWatchDestinationConfiguration(apiObject types.CloudWatchLogsDes
 	m := map[string]interface{}{}
 
 	if v := apiObject.LogGroupName; v != nil {
-		m["log_group_name"] = aws.ToString(v)
+		m[names.AttrLogGroupName] = aws.ToString(v)
 	}
 
 	return []interface{}{m}
@@ -363,7 +363,7 @@ func expandCloudWatchLogsDestinationConfiguration(vSettings []interface{}) *type
 
 	tfMap := vSettings[0].(map[string]interface{})
 
-	if v, ok := tfMap["log_group_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrLogGroupName].(string); ok && v != "" {
 		a.LogGroupName = aws.String(v)
 	}
 

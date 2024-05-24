@@ -32,7 +32,7 @@ func resourceNamedQuery() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"database": {
+			names.AttrDatabase: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -68,7 +68,7 @@ func resourceNamedQueryCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	name := d.Get(names.AttrName).(string)
 	input := &athena.CreateNamedQueryInput{
-		Database:    aws.String(d.Get("database").(string)),
+		Database:    aws.String(d.Get(names.AttrDatabase).(string)),
 		Name:        aws.String(name),
 		QueryString: aws.String(d.Get("query").(string)),
 	}
@@ -108,7 +108,7 @@ func resourceNamedQueryRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading Athena Named Query (%s): %s", d.Id(), err)
 	}
 
-	d.Set("database", namedQuery.Database)
+	d.Set(names.AttrDatabase, namedQuery.Database)
 	d.Set(names.AttrDescription, namedQuery.Description)
 	d.Set(names.AttrName, namedQuery.Name)
 	d.Set("query", namedQuery.QueryString)

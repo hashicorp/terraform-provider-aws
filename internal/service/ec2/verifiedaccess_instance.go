@@ -36,7 +36,7 @@ func ResourceVerifiedAccessInstance() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"creation_time": {
+			names.AttrCreationTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -133,7 +133,7 @@ func resourceVerifiedAccessInstanceRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "reading Verified Access Instance (%s): %s", d.Id(), err)
 	}
 
-	d.Set("creation_time", output.CreationTime)
+	d.Set(names.AttrCreationTime, output.CreationTime)
 	d.Set(names.AttrDescription, output.Description)
 	d.Set("fips_enabled", output.FipsEnabled)
 	d.Set("last_updated_time", output.LastUpdatedTime)

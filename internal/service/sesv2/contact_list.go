@@ -77,7 +77,7 @@ func ResourceContactList() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"display_name": {
+						names.AttrDisplayName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -270,7 +270,7 @@ func expandTopic(tfMap map[string]interface{}) *types.Topic {
 		apiObject.Description = aws.String(v)
 	}
 
-	if v, ok := tfMap["display_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDisplayName].(string); ok && v != "" {
 		apiObject.DisplayName = aws.String(v)
 	}
 
@@ -309,7 +309,7 @@ func flattenTopic(apiObject *types.Topic) map[string]interface{} {
 	}
 
 	if v := apiObject.DisplayName; v != nil {
-		tfMap["display_name"] = aws.ToString(v)
+		tfMap[names.AttrDisplayName] = aws.ToString(v)
 	}
 
 	if v := apiObject.TopicName; v != nil {

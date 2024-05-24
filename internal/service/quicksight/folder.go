@@ -59,7 +59,7 @@ func ResourceFolder() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			"created_time": {
+			names.AttrCreatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -103,7 +103,7 @@ func ResourceFolder() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"permissions": {
+			names.AttrPermissions: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MinItems: 1,
@@ -117,7 +117,7 @@ func ResourceFolder() *schema.Resource {
 							MaxItems: 16,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"principal": {
+						names.AttrPrincipal: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 256),
@@ -163,7 +163,7 @@ func resourceFolderCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		in.ParentFolderArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("permissions"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrPermissions); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		in.Permissions = expandResourcePermissions(v.([]interface{}))
 	}
 
@@ -200,7 +200,7 @@ func resourceFolderRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.Set(names.AttrARN, out.Arn)
 	d.Set("aws_account_id", awsAccountId)
-	d.Set("created_time", out.CreatedTime.Format(time.RFC3339))
+	d.Set(names.AttrCreatedTime, out.CreatedTime.Format(time.RFC3339))
 	d.Set("folder_id", out.FolderId)
 	d.Set("folder_type", out.FolderType)
 	d.Set("last_updated_time", out.LastUpdatedTime.Format(time.RFC3339))
@@ -223,7 +223,7 @@ func resourceFolderRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.Errorf("describing QuickSight Folder (%s) Permissions: %s", d.Id(), err)
 	}
 
-	if err := d.Set("permissions", flattenPermissions(permsResp.Permissions)); err != nil {
+	if err := d.Set(names.AttrPermissions, flattenPermissions(permsResp.Permissions)); err != nil {
 		return diag.Errorf("setting permissions: %s", err)
 	}
 	return nil
@@ -251,8 +251,8 @@ func resourceFolderUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	if d.HasChange("permissions") {
-		oraw, nraw := d.GetChange("permissions")
+	if d.HasChange(names.AttrPermissions) {
+		oraw, nraw := d.GetChange(names.AttrPermissions)
 		o := oraw.([]interface{})
 		n := nraw.([]interface{})
 

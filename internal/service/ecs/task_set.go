@@ -62,7 +62,7 @@ func ResourceTaskSet() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
-						"weight": {
+						names.AttrWeight: {
 							Type:         schema.TypeInt,
 							Required:     true,
 							ForceNew:     true,
@@ -76,13 +76,13 @@ func ResourceTaskSet() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"external_id": {
+			names.AttrExternalID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 				Computed: true,
 			},
-			"force_delete": {
+			names.AttrForceDelete: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -128,7 +128,7 @@ func ResourceTaskSet() *schema.Resource {
 					},
 				},
 			},
-			"network_configuration": {
+			names.AttrNetworkConfiguration: {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
@@ -148,7 +148,7 @@ func ResourceTaskSet() *schema.Resource {
 							ForceNew: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"subnets": {
+						names.AttrSubnets: {
 							Type:     schema.TypeSet,
 							MaxItems: 16,
 							Required: true,
@@ -171,7 +171,7 @@ func ResourceTaskSet() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"unit": {
+						names.AttrUnit: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      ecs.ScaleUnitPercent,
@@ -289,7 +289,7 @@ func resourceTaskSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.CapacityProviderStrategy = expandCapacityProviderStrategy(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("external_id"); ok {
+	if v, ok := d.GetOk(names.AttrExternalID); ok {
 		input.ExternalId = aws.String(v.(string))
 	}
 
@@ -301,7 +301,7 @@ func resourceTaskSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.LoadBalancers = expandTaskSetLoadBalancers(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("network_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrNetworkConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.NetworkConfiguration = expandNetworkConfiguration(v.([]interface{}))
 	}
 
@@ -410,7 +410,7 @@ func resourceTaskSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("cluster", cluster)
 	d.Set("launch_type", taskSet.LaunchType)
 	d.Set("platform_version", taskSet.PlatformVersion)
-	d.Set("external_id", taskSet.ExternalId)
+	d.Set(names.AttrExternalID, taskSet.ExternalId)
 	d.Set("service", service)
 	d.Set(names.AttrStatus, taskSet.Status)
 	d.Set("stability_status", taskSet.StabilityStatus)
@@ -425,7 +425,7 @@ func resourceTaskSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting load_balancer: %s", err)
 	}
 
-	if err := d.Set("network_configuration", flattenNetworkConfiguration(taskSet.NetworkConfiguration)); err != nil {
+	if err := d.Set(names.AttrNetworkConfiguration, flattenNetworkConfiguration(taskSet.NetworkConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting network_configuration: %s", err)
 	}
 
@@ -491,7 +491,7 @@ func resourceTaskSetDelete(ctx context.Context, d *schema.ResourceData, meta int
 		Cluster: aws.String(cluster),
 		Service: aws.String(service),
 		TaskSet: aws.String(taskSetId),
-		Force:   aws.Bool(d.Get("force_delete").(bool)),
+		Force:   aws.Bool(d.Get(names.AttrForceDelete).(bool)),
 	}
 
 	_, err = conn.DeleteTaskSetWithContext(ctx, input)

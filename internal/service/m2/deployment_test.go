@@ -42,7 +42,7 @@ func TestAccM2Deployment_basic(t *testing.T) {
 				Config: testAccDeploymentConfig_basic(rName, "bluage", 1, 1, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
-					resource.TestCheckResourceAttr(resourceName, "application_version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "application_version", acctest.Ct1),
 				),
 			},
 			{
@@ -85,7 +85,7 @@ func TestAccM2Deployment_disappears(t *testing.T) {
 	})
 }
 
-func TestAccM2Deployment_nostart(t *testing.T) {
+func TestAccM2Deployment_start(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -108,13 +108,20 @@ func TestAccM2Deployment_nostart(t *testing.T) {
 				Config: testAccDeploymentConfig_basic(rName, "bluage", 1, 1, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
-					resource.TestCheckResourceAttr(resourceName, "application_version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "application_version", acctest.Ct1),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDeploymentConfig_basic(rName, "bluage", 1, 1, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
+					resource.TestCheckResourceAttr(resourceName, "application_version", acctest.Ct1),
+				),
 			},
 		},
 	})
@@ -143,14 +150,14 @@ func TestAccM2Deployment_update(t *testing.T) {
 				Config: testAccDeploymentConfig_basic(rName, "bluage", 1, 1, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
-					resource.TestCheckResourceAttr(resourceName, "application_version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "application_version", acctest.Ct1),
 				),
 			},
 			{
 				Config: testAccDeploymentConfig_basic(rName, "bluage", 2, 2, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
-					resource.TestCheckResourceAttr(resourceName, "application_version", "2"),
+					resource.TestCheckResourceAttr(resourceName, "application_version", acctest.Ct2),
 				),
 			},
 			{

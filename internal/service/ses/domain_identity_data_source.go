@@ -28,7 +28,7 @@ func DataSourceDomainIdentity() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain": {
+			names.AttrDomain: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
@@ -45,9 +45,9 @@ func dataSourceDomainIdentityRead(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
-	domainName := d.Get("domain").(string)
+	domainName := d.Get(names.AttrDomain).(string)
 	d.SetId(domainName)
-	d.Set("domain", domainName)
+	d.Set(names.AttrDomain, domainName)
 
 	readOpts := &ses.GetIdentityVerificationAttributesInput{
 		Identities: []*string{

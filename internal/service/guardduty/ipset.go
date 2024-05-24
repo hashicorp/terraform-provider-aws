@@ -52,7 +52,7 @@ func ResourceIPSet() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"format": {
+			names.AttrFormat: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -82,7 +82,7 @@ func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	input := &guardduty.CreateIPSetInput{
 		DetectorId: aws.String(detectorID),
 		Name:       aws.String(d.Get(names.AttrName).(string)),
-		Format:     aws.String(d.Get("format").(string)),
+		Format:     aws.String(d.Get(names.AttrFormat).(string)),
 		Location:   aws.String(d.Get("location").(string)),
 		Activate:   aws.Bool(d.Get("activate").(bool)),
 		Tags:       getTagsIn(ctx),
@@ -144,7 +144,7 @@ func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set(names.AttrARN, arn)
 
 	d.Set("detector_id", detectorId)
-	d.Set("format", resp.Format)
+	d.Set(names.AttrFormat, resp.Format)
 	d.Set("location", resp.Location)
 	d.Set(names.AttrName, resp.Name)
 	d.Set("activate", aws.StringValue(resp.Status) == guardduty.IpSetStatusActive)

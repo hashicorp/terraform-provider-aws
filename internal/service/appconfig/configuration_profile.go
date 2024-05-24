@@ -96,7 +96,7 @@ func ResourceConfigurationProfile() *schema.Resource {
 				MaxItems: 2,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"content": {
+						names.AttrContent: {
 							Type:      schema.TypeString,
 							Optional:  true,
 							Sensitive: true,
@@ -309,7 +309,7 @@ func expandValidator(tfMap map[string]interface{}) awstypes.Validator {
 	validator := awstypes.Validator{}
 
 	// AppConfig API supports empty content
-	if v, ok := tfMap["content"].(string); ok {
+	if v, ok := tfMap[names.AttrContent].(string); ok {
 		validator.Content = aws.String(v)
 	}
 
@@ -343,7 +343,7 @@ func flattenValidator(validator awstypes.Validator) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := validator.Content; v != nil {
-		tfMap["content"] = aws.ToString(v)
+		tfMap[names.AttrContent] = aws.ToString(v)
 	}
 
 	tfMap[names.AttrType] = string(validator.Type)

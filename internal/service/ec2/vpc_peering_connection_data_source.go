@@ -50,7 +50,7 @@ func DataSourceVPCPeeringConnection() *schema.Resource {
 					},
 				},
 			},
-			"filter": customFiltersSchema(),
+			names.AttrFilter: customFiltersSchema(),
 			names.AttrID: {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -117,7 +117,7 @@ func DataSourceVPCPeeringConnection() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"region": {
+			names.AttrRegion: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -172,7 +172,7 @@ func dataSourceVPCPeeringConnectionRead(ctx context.Context, d *schema.ResourceD
 	}
 
 	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get("filter").(*schema.Set),
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {
@@ -211,7 +211,7 @@ func dataSourceVPCPeeringConnectionRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "setting ipv6_cidr_block_set: %s", err)
 	}
 
-	d.Set("region", vpcPeeringConnection.RequesterVpcInfo.Region)
+	d.Set(names.AttrRegion, vpcPeeringConnection.RequesterVpcInfo.Region)
 	d.Set("peer_vpc_id", vpcPeeringConnection.AccepterVpcInfo.VpcId)
 	d.Set("peer_owner_id", vpcPeeringConnection.AccepterVpcInfo.OwnerId)
 	d.Set("peer_cidr_block", vpcPeeringConnection.AccepterVpcInfo.CidrBlock)

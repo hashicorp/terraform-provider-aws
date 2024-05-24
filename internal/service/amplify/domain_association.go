@@ -77,7 +77,7 @@ func resourceDomainAssociation() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"prefix": {
+						names.AttrPrefix: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(0, 255),
@@ -352,7 +352,7 @@ func expandSubDomainSetting(tfMap map[string]interface{}) *types.SubDomainSettin
 	}
 
 	// Empty prefix is allowed.
-	if v, ok := tfMap["prefix"].(string); ok {
+	if v, ok := tfMap[names.AttrPrefix].(string); ok {
 		apiObject.Prefix = aws.String(v)
 	}
 
@@ -400,7 +400,7 @@ func flattenSubDomain(apiObject types.SubDomain) map[string]interface{} {
 		}
 
 		if v := apiObject.Prefix; v != nil {
-			tfMap["prefix"] = aws.ToString(v)
+			tfMap[names.AttrPrefix] = aws.ToString(v)
 		}
 	}
 

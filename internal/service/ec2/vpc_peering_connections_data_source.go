@@ -27,8 +27,8 @@ func DataSourceVPCPeeringConnections() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"filter": customFiltersSchema(),
-			"ids": {
+			names.AttrFilter: customFiltersSchema(),
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -48,7 +48,7 @@ func dataSourceVPCPeeringConnectionsRead(ctx context.Context, d *schema.Resource
 		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
 	)...)
 	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get("filter").(*schema.Set),
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 	if len(input.Filters) == 0 {
 		input.Filters = nil
@@ -67,7 +67,7 @@ func dataSourceVPCPeeringConnectionsRead(ctx context.Context, d *schema.Resource
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("ids", vpcPeeringConnectionIDs)
+	d.Set(names.AttrIDs, vpcPeeringConnectionIDs)
 
 	return diags
 }

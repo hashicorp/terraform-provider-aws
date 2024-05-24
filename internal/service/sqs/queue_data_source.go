@@ -36,7 +36,7 @@ func dataSourceQueue() *schema.Resource {
 				Required: true,
 			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
-			"url": {
+			names.AttrURL: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -64,7 +64,7 @@ func dataSourceQueueRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(queueURL)
 	d.Set(names.AttrARN, attributesOutput)
-	d.Set("url", queueURL)
+	d.Set(names.AttrURL, queueURL)
 
 	tags, err := listTags(ctx, conn, queueURL)
 

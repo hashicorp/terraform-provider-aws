@@ -113,7 +113,7 @@ func resourceEventSourceMapping() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"destination_arn": {
+									names.AttrDestinationARN: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
@@ -165,7 +165,7 @@ func resourceEventSourceMapping() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"filter": {
+						names.AttrFilter: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							MaxItems: 10,
@@ -182,7 +182,7 @@ func resourceEventSourceMapping() *schema.Resource {
 					},
 				},
 			},
-			"function_arn": {
+			names.AttrFunctionARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -263,7 +263,7 @@ func resourceEventSourceMapping() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"endpoints": {
+						names.AttrEndpoints: {
 							Type:     schema.TypeMap,
 							Required: true,
 							ForceNew: true,
@@ -316,7 +316,7 @@ func resourceEventSourceMapping() *schema.Resource {
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.SourceAccessType](),
 						},
-						"uri": {
+						names.AttrURI: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -538,7 +538,7 @@ func resourceEventSourceMappingRead(ctx context.Context, d *schema.ResourceData,
 	} else {
 		d.Set("filter_criteria", nil)
 	}
-	d.Set("function_arn", output.FunctionArn)
+	d.Set(names.AttrFunctionARN, output.FunctionArn)
 	d.Set("function_name", output.FunctionArn)
 	d.Set("function_response_types", output.FunctionResponseTypes)
 	if output.LastModified != nil {
@@ -916,7 +916,7 @@ func expandOnFailure(tfMap map[string]interface{}) *awstypes.OnFailure {
 
 	apiObject := &awstypes.OnFailure{}
 
-	if v, ok := tfMap["destination_arn"].(string); ok {
+	if v, ok := tfMap[names.AttrDestinationARN].(string); ok {
 		apiObject.Destination = aws.String(v)
 	}
 
@@ -965,7 +965,7 @@ func flattenOnFailure(apiObject *awstypes.OnFailure) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Destination; v != nil {
-		tfMap["destination_arn"] = aws.ToString(v)
+		tfMap[names.AttrDestinationARN] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -978,7 +978,7 @@ func expandSelfManagedEventSource(tfMap map[string]interface{}) *awstypes.SelfMa
 
 	apiObject := &awstypes.SelfManagedEventSource{}
 
-	if v, ok := tfMap["endpoints"].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrEndpoints].(map[string]interface{}); ok && len(v) > 0 {
 		m := map[string][]string{}
 
 		for k, v := range v {
@@ -1005,7 +1005,7 @@ func flattenSelfManagedEventSource(apiObject *awstypes.SelfManagedEventSource) m
 			m[k] = strings.Join(v, ",")
 		}
 
-		tfMap["endpoints"] = m
+		tfMap[names.AttrEndpoints] = m
 	}
 
 	return tfMap
@@ -1078,7 +1078,7 @@ func expandSourceAccessConfiguration(tfMap map[string]interface{}) *awstypes.Sou
 		apiObject.Type = awstypes.SourceAccessType(v)
 	}
 
-	if v, ok := tfMap["uri"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrURI].(string); ok && v != "" {
 		apiObject.URI = aws.String(v)
 	}
 
@@ -1121,7 +1121,7 @@ func flattenSourceAccessConfiguration(apiObject *awstypes.SourceAccessConfigurat
 	}
 
 	if v := apiObject.URI; v != nil {
-		tfMap["uri"] = aws.ToString(v)
+		tfMap[names.AttrURI] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -1148,7 +1148,7 @@ func expandFilterCriteria(tfMap map[string]interface{}) *awstypes.FilterCriteria
 
 	apiObject := &awstypes.FilterCriteria{}
 
-	if v, ok := tfMap["filter"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrFilter].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.Filters = expandFilters(v.List())
 	}
 
@@ -1163,7 +1163,7 @@ func flattenFilterCriteria(apiObject *awstypes.FilterCriteria) map[string]interf
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Filters; len(v) > 0 {
-		tfMap["filter"] = flattenFilters(v)
+		tfMap[names.AttrFilter] = flattenFilters(v)
 	}
 
 	return tfMap

@@ -70,7 +70,7 @@ func (r *subscriberNotificationResource) Schema(ctx context.Context, req resourc
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"configuration": schema.ListNestedBlock{
+			names.AttrConfiguration: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[subscriberNotificationResourceConfigurationModel](ctx),
 				Validators: []validator.List{
 					listvalidator.IsRequired(),
@@ -92,7 +92,7 @@ func (r *subscriberNotificationResource) Schema(ctx context.Context, req resourc
 										Optional:  true,
 										Sensitive: true,
 									},
-									"endpoint": schema.StringAttribute{
+									names.AttrEndpoint: schema.StringAttribute{
 										Required: true,
 									},
 									"http_method": schema.StringAttribute{

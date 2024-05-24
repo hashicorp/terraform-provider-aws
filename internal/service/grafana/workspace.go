@@ -64,7 +64,7 @@ func ResourceWorkspace() *schema.Resource {
 					ValidateFunc: validation.StringInSlice(managedgrafana.AuthenticationProviderTypes_Values(), false),
 				},
 			},
-			"configuration": {
+			names.AttrConfiguration: {
 				Type:                  schema.TypeString,
 				Optional:              true,
 				Computed:              true,
@@ -88,7 +88,7 @@ func ResourceWorkspace() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -160,7 +160,7 @@ func ResourceWorkspace() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_configuration": {
+			names.AttrVPCConfiguration: {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
@@ -200,7 +200,7 @@ func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 		Tags:                    getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("configuration"); ok {
+	if v, ok := d.GetOk(names.AttrConfiguration); ok {
 		input.Configuration = aws.String(v.(string))
 	}
 
@@ -244,7 +244,7 @@ func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.StackSetName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("vpc_configuration"); ok {
+	if v, ok := d.GetOk(names.AttrVPCConfiguration); ok {
 		input.VpcConfiguration = expandVPCConfiguration(v.([]interface{}))
 	}
 
@@ -292,7 +292,7 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("authentication_providers", workspace.Authentication.Providers)
 	d.Set("data_sources", workspace.DataSources)
 	d.Set(names.AttrDescription, workspace.Description)
-	d.Set("endpoint", workspace.Endpoint)
+	d.Set(names.AttrEndpoint, workspace.Endpoint)
 	d.Set("grafana_version", workspace.GrafanaVersion)
 	d.Set(names.AttrName, workspace.Name)
 	if err := d.Set("network_access_control", flattenNetworkAccessControl(workspace.NetworkAccessControl)); err != nil {
@@ -305,7 +305,7 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set(names.AttrRoleARN, workspace.WorkspaceRoleArn)
 	d.Set("saml_configuration_status", workspace.Authentication.SamlConfigurationStatus)
 	d.Set("stack_set_name", workspace.StackSetName)
-	if err := d.Set("vpc_configuration", flattenVPCConfiguration(workspace.VpcConfiguration)); err != nil {
+	if err := d.Set(names.AttrVPCConfiguration, flattenVPCConfiguration(workspace.VpcConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc_configuration: %s", err)
 	}
 
@@ -321,7 +321,7 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "reading Grafana Workspace (%s) configuration: %s", d.Id(), err)
 	}
 
-	d.Set("configuration", output.Configuration)
+	d.Set(names.AttrConfiguration, output.Configuration)
 
 	return diags
 }
@@ -330,7 +330,7 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GrafanaConn(ctx)
 
-	if d.HasChangesExcept("configuration", "grafana_version", names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept(names.AttrConfiguration, "grafana_version", names.AttrTags, names.AttrTagsAll) {
 		input := &managedgrafana.UpdateWorkspaceInput{
 			WorkspaceId: aws.String(d.Id()),
 		}
@@ -385,8 +385,8 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			input.StackSetName = aws.String(d.Get("stack_set_name").(string))
 		}
 
-		if d.HasChange("vpc_configuration") {
-			if v, ok := d.Get("vpc_configuration").([]interface{}); ok {
+		if d.HasChange(names.AttrVPCConfiguration) {
+			if v, ok := d.Get(names.AttrVPCConfiguration).([]interface{}); ok {
 				if len(v) > 0 {
 					input.VpcConfiguration = expandVPCConfiguration(v)
 				} else {
@@ -406,9 +406,9 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 	}
 
-	if d.HasChanges("configuration", "grafana_version") {
+	if d.HasChanges(names.AttrConfiguration, "grafana_version") {
 		input := &managedgrafana.UpdateWorkspaceConfigurationInput{
-			Configuration: aws.String(d.Get("configuration").(string)),
+			Configuration: aws.String(d.Get(names.AttrConfiguration).(string)),
 			WorkspaceId:   aws.String(d.Id()),
 		}
 

@@ -43,13 +43,13 @@ func DataSourceAvailabilityZones() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": customFiltersSchema(),
+			names.AttrFilter: customFiltersSchema(),
 			"group_names": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"names": {
+			names.AttrNames: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -89,7 +89,7 @@ func dataSourceAvailabilityZonesRead(ctx context.Context, d *schema.ResourceData
 		}
 	}
 
-	if filters, filtersOk := d.GetOk("filter"); filtersOk {
+	if filters, filtersOk := d.GetOk(names.AttrFilter); filtersOk {
 		request.Filters = append(request.Filters, newCustomFilterList(
 			filters.(*schema.Set),
 		)...)
@@ -114,7 +114,7 @@ func dataSourceAvailabilityZonesRead(ctx context.Context, d *schema.ResourceData
 	excludeZoneIDs := d.Get("exclude_zone_ids").(*schema.Set)
 
 	groupNames := schema.NewSet(schema.HashString, nil)
-	names := []string{}
+	nms := []string{}
 	zoneIds := []string{}
 	for _, v := range resp.AvailabilityZones {
 		groupName := aws.StringValue(v.GroupName)
@@ -133,7 +133,7 @@ func dataSourceAvailabilityZonesRead(ctx context.Context, d *schema.ResourceData
 			groupNames.Add(groupName)
 		}
 
-		names = append(names, name)
+		nms = append(nms, name)
 		zoneIds = append(zoneIds, zoneID)
 	}
 
@@ -142,7 +142,7 @@ func dataSourceAvailabilityZonesRead(ctx context.Context, d *schema.ResourceData
 	if err := d.Set("group_names", groupNames); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting group_names: %s", err)
 	}
-	if err := d.Set("names", names); err != nil {
+	if err := d.Set(names.AttrNames, nms); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting Availability Zone names: %s", err)
 	}
 	if err := d.Set("zone_ids", zoneIds); err != nil {

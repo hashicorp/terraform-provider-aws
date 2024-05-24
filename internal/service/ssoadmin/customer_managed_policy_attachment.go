@@ -56,7 +56,7 @@ func ResourceCustomerManagedPolicyAttachment() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: validation.StringLenBetween(0, 128),
 						},
-						"path": {
+						names.AttrPath: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      "/",
@@ -88,7 +88,7 @@ func resourceCustomerManagedPolicyAttachmentCreate(ctx context.Context, d *schem
 
 	tfMap := d.Get("customer_managed_policy_reference").([]interface{})[0].(map[string]interface{})
 	policyName := tfMap[names.AttrName].(string)
-	policyPath := tfMap["path"].(string)
+	policyPath := tfMap[names.AttrPath].(string)
 	instanceARN := d.Get("instance_arn").(string)
 	permissionSetARN := d.Get("permission_set_arn").(string)
 	id := CustomerManagedPolicyAttachmentCreateResourceID(policyName, policyPath, permissionSetARN, instanceARN)
@@ -270,7 +270,7 @@ func expandCustomerManagedPolicyReference(tfMap map[string]interface{}) *awstype
 		apiObject.Name = aws.String(v)
 	}
 
-	if v, ok := tfMap["path"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPath].(string); ok && v != "" {
 		apiObject.Path = aws.String(v)
 	}
 
@@ -289,7 +289,7 @@ func flattenCustomerManagedPolicyReference(apiObject *awstypes.CustomerManagedPo
 	}
 
 	if v := apiObject.Path; v != nil {
-		tfMap["path"] = aws.ToString(v)
+		tfMap[names.AttrPath] = aws.ToString(v)
 	}
 
 	return tfMap

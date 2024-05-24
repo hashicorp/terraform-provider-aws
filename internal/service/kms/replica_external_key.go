@@ -74,7 +74,7 @@ func resourceReplicaExternalKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"key_id": {
+			names.AttrKeyID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -238,7 +238,7 @@ func resourceReplicaExternalKeyRead(ctx context.Context, d *schema.ResourceData,
 	d.Set(names.AttrDescription, key.metadata.Description)
 	d.Set(names.AttrEnabled, key.metadata.Enabled)
 	d.Set("expiration_model", key.metadata.ExpirationModel)
-	d.Set("key_id", key.metadata.KeyId)
+	d.Set(names.AttrKeyID, key.metadata.KeyId)
 	d.Set("key_state", key.metadata.KeyState)
 	d.Set("key_usage", key.metadata.KeyUsage)
 

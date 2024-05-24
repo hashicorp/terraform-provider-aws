@@ -62,7 +62,7 @@ func (d *dataSourceNotificationChannel) Schema(ctx context.Context, req datasour
 				CustomType: fwtypes.NewListNestedObjectTypeOf[snsData](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"topic_arn": schema.StringAttribute{
+						names.AttrTopicARN: schema.StringAttribute{
 							Computed:   true,
 							CustomType: fwtypes.ARNType,
 						},

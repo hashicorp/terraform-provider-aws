@@ -23,7 +23,7 @@ func DataSourceFirewallDomainList() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_time": {
+			names.AttrCreationTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -55,7 +55,7 @@ func DataSourceFirewallDomainList() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status_message": {
+			names.AttrStatusMessage: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -75,7 +75,7 @@ func dataSourceFirewallDomainListRead(ctx context.Context, d *schema.ResourceDat
 
 	d.SetId(aws.StringValue(firewallDomainList.Id))
 	d.Set(names.AttrARN, firewallDomainList.Arn)
-	d.Set("creation_time", firewallDomainList.CreationTime)
+	d.Set(names.AttrCreationTime, firewallDomainList.CreationTime)
 	d.Set("creator_request_id", firewallDomainList.CreatorRequestId)
 	d.Set("domain_count", firewallDomainList.DomainCount)
 	d.Set("firewall_domain_list_id", firewallDomainList.Id)
@@ -83,7 +83,7 @@ func dataSourceFirewallDomainListRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("managed_owner_name", firewallDomainList.ManagedOwnerName)
 	d.Set("modification_time", firewallDomainList.ModificationTime)
 	d.Set(names.AttrStatus, firewallDomainList.Status)
-	d.Set("status_message", firewallDomainList.StatusMessage)
+	d.Set(names.AttrStatusMessage, firewallDomainList.StatusMessage)
 
 	return nil
 }

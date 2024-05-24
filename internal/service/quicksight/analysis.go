@@ -67,7 +67,7 @@ func ResourceAnalysis() *schema.Resource {
 					ForceNew:     true,
 					ValidateFunc: verify.ValidAccountID,
 				},
-				"created_time": {
+				names.AttrCreatedTime: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -91,7 +91,7 @@ func ResourceAnalysis() *schema.Resource {
 					ValidateFunc: validation.StringLenBetween(1, 2048),
 				},
 				names.AttrParameters: quicksightschema.ParametersSchema(),
-				"permissions": {
+				names.AttrPermissions: {
 					Type:     schema.TypeSet,
 					Optional: true,
 					MinItems: 1,
@@ -105,7 +105,7 @@ func ResourceAnalysis() *schema.Resource {
 								MaxItems: 16,
 								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
-							"principal": {
+							names.AttrPrincipal: {
 								Type:         schema.TypeString,
 								Required:     true,
 								ValidateFunc: validation.StringLenBetween(1, 256),
@@ -174,7 +174,7 @@ func resourceAnalysisCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.Parameters = quicksightschema.ExpandParameters(d.Get(names.AttrParameters).([]interface{}))
 	}
 
-	if v, ok := d.Get("permissions").(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := d.Get(names.AttrPermissions).(*schema.Set); ok && v.Len() > 0 {
 		input.Permissions = expandResourcePermissions(v.List())
 	}
 
@@ -219,7 +219,7 @@ func resourceAnalysisRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.Set(names.AttrARN, out.Arn)
 	d.Set("aws_account_id", awsAccountId)
-	d.Set("created_time", out.CreatedTime.Format(time.RFC3339))
+	d.Set(names.AttrCreatedTime, out.CreatedTime.Format(time.RFC3339))
 	d.Set("last_updated_time", out.LastUpdatedTime.Format(time.RFC3339))
 	d.Set(names.AttrName, out.Name)
 	d.Set(names.AttrStatus, out.Status)
@@ -247,7 +247,7 @@ func resourceAnalysisRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag.Errorf("describing QuickSight Analysis (%s) Permissions: %s", d.Id(), err)
 	}
 
-	if err := d.Set("permissions", flattenPermissions(permsResp.Permissions)); err != nil {
+	if err := d.Set(names.AttrPermissions, flattenPermissions(permsResp.Permissions)); err != nil {
 		return diag.Errorf("setting permissions: %s", err)
 	}
 
@@ -262,7 +262,7 @@ func resourceAnalysisUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		return diag.FromErr(err)
 	}
 
-	if d.HasChangesExcept("permissions", names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept(names.AttrPermissions, names.AttrTags, names.AttrTagsAll) {
 		in := &quicksight.UpdateAnalysisInput{
 			AwsAccountId: aws.String(awsAccountId),
 			AnalysisId:   aws.String(analysisId),
@@ -291,8 +291,8 @@ func resourceAnalysisUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
-	if d.HasChange("permissions") {
-		oraw, nraw := d.GetChange("permissions")
+	if d.HasChange(names.AttrPermissions) {
+		oraw, nraw := d.GetChange(names.AttrPermissions)
 		o := oraw.(*schema.Set)
 		n := nraw.(*schema.Set)
 

@@ -84,7 +84,7 @@ func ResourceService() *schema.Resource {
 					},
 				},
 			},
-			"force_destroy": {
+			names.AttrForceDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -282,7 +282,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 
-	if d.Get("force_destroy").(bool) {
+	if d.Get(names.AttrForceDestroy).(bool) {
 		var errs []error
 		input := &servicediscovery.ListInstancesInput{
 			ServiceId: aws.String(d.Id()),

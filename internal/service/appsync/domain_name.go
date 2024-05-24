@@ -38,7 +38,7 @@ func ResourceDomainName() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"certificate_arn": {
+			names.AttrCertificateARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -53,7 +53,7 @@ func ResourceDomainName() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"hosted_zone_id": {
+			names.AttrHostedZoneID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -66,7 +66,7 @@ func resourceDomainNameCreate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
 	params := &appsync.CreateDomainNameInput{
-		CertificateArn: aws.String(d.Get("certificate_arn").(string)),
+		CertificateArn: aws.String(d.Get(names.AttrCertificateARN).(string)),
 		Description:    aws.String(d.Get(names.AttrDescription).(string)),
 		DomainName:     aws.String(d.Get(names.AttrDomainName).(string)),
 	}
@@ -98,8 +98,8 @@ func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.Set(names.AttrDomainName, domainName.DomainName)
 	d.Set(names.AttrDescription, domainName.Description)
-	d.Set("certificate_arn", domainName.CertificateArn)
-	d.Set("hosted_zone_id", domainName.HostedZoneId)
+	d.Set(names.AttrCertificateARN, domainName.CertificateArn)
+	d.Set(names.AttrHostedZoneID, domainName.HostedZoneId)
 	d.Set("appsync_domain_name", domainName.AppsyncDomainName)
 
 	return diags

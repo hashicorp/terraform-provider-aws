@@ -20,7 +20,7 @@ func DataSourceResolverFirewallRules() *schema.Resource {
 		ReadWithoutTimeout: dataSourceResolverFirewallFirewallRulesRead,
 
 		Schema: map[string]*schema.Schema{
-			"action": {
+			names.AttrAction: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -33,7 +33,7 @@ func DataSourceResolverFirewallRules() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"action": {
+						names.AttrAction: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -53,7 +53,7 @@ func DataSourceResolverFirewallRules() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"creation_time": {
+						names.AttrCreationTime: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -77,14 +77,14 @@ func DataSourceResolverFirewallRules() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"priority": {
+						names.AttrPriority: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"priority": {
+			names.AttrPriority: {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
@@ -97,11 +97,11 @@ func dataSourceResolverFirewallFirewallRulesRead(ctx context.Context, d *schema.
 
 	firewallRuleGroupID := d.Get("firewall_rule_group_id").(string)
 	rules, err := findFirewallRules(ctx, conn, firewallRuleGroupID, func(rule *route53resolver.FirewallRule) bool {
-		if v, ok := d.GetOk("action"); ok && aws.StringValue(rule.Action) != v.(string) {
+		if v, ok := d.GetOk(names.AttrAction); ok && aws.StringValue(rule.Action) != v.(string) {
 			return false
 		}
 
-		if v, ok := d.GetOk("priority"); ok && aws.Int64Value(rule.Priority) != int64(v.(int)) {
+		if v, ok := d.GetOk(names.AttrPriority); ok && aws.Int64Value(rule.Priority) != int64(v.(int)) {
 			return false
 		}
 
@@ -152,7 +152,7 @@ func flattenFirewallRule(apiObject *route53resolver.FirewallRule) map[string]int
 	tfMap := map[string]interface{}{}
 
 	if apiObject.Action != nil {
-		tfMap["action"] = aws.StringValue(apiObject.Action)
+		tfMap[names.AttrAction] = aws.StringValue(apiObject.Action)
 	}
 	if apiObject.BlockOverrideDnsType != nil {
 		tfMap["block_override_dns_type"] = aws.StringValue(apiObject.BlockOverrideDnsType)
@@ -167,7 +167,7 @@ func flattenFirewallRule(apiObject *route53resolver.FirewallRule) map[string]int
 		tfMap["block_response"] = aws.StringValue(apiObject.BlockResponse)
 	}
 	if apiObject.CreationTime != nil {
-		tfMap["creation_time"] = aws.StringValue(apiObject.CreationTime)
+		tfMap[names.AttrCreationTime] = aws.StringValue(apiObject.CreationTime)
 	}
 	if apiObject.CreatorRequestId != nil {
 		tfMap["creator_request_id"] = aws.StringValue(apiObject.CreatorRequestId)
@@ -185,7 +185,7 @@ func flattenFirewallRule(apiObject *route53resolver.FirewallRule) map[string]int
 		tfMap[names.AttrName] = aws.StringValue(apiObject.Name)
 	}
 	if apiObject.Priority != nil {
-		tfMap["priority"] = aws.Int64Value(apiObject.Priority)
+		tfMap[names.AttrPriority] = aws.Int64Value(apiObject.Priority)
 	}
 	return tfMap
 }

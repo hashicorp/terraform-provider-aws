@@ -29,7 +29,7 @@ func ResourceStaticIP() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"ip_address": {
+			names.AttrIPAddress: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -82,7 +82,7 @@ func resourceStaticIPRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.Set(names.AttrARN, out.StaticIp.Arn)
-	d.Set("ip_address", out.StaticIp.IpAddress)
+	d.Set(names.AttrIPAddress, out.StaticIp.IpAddress)
 	d.Set("support_code", out.StaticIp.SupportCode)
 
 	return diags

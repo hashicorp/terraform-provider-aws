@@ -31,7 +31,7 @@ func TestAccECSServiceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "desired_count", dataSourceName, "desired_count"),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_type", dataSourceName, "launch_type"),
 					resource.TestCheckResourceAttrPair(resourceName, "scheduling_strategy", dataSourceName, "scheduling_strategy"),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, "service_name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrServiceName),
 					resource.TestCheckResourceAttrPair(resourceName, "task_definition", dataSourceName, "task_definition"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTags, dataSourceName, names.AttrTags),
 				),

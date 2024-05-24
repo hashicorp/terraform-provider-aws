@@ -87,7 +87,7 @@ func DataSourceOrderableDBInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"storage_type": {
+			names.AttrStorageType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -191,7 +191,7 @@ func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("multi_az_capable", orderableDBInstance.MultiAZCapable)
 	d.Set("instance_class", orderableDBInstance.DBInstanceClass)
 	d.Set("read_replica_capable", orderableDBInstance.ReadReplicaCapable)
-	d.Set("storage_type", orderableDBInstance.StorageType)
+	d.Set(names.AttrStorageType, orderableDBInstance.StorageType)
 	d.Set("supports_enhanced_monitoring", orderableDBInstance.SupportsEnhancedMonitoring)
 	d.Set("supports_iam_database_authentication", orderableDBInstance.SupportsIAMDatabaseAuthentication)
 	d.Set("supports_iops", orderableDBInstance.SupportsIops)

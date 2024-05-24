@@ -47,7 +47,7 @@ func ResourceClusterActivityStream() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"mode": {
+			names.AttrMode: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -71,7 +71,7 @@ func resourceClusterActivityStreamCreate(ctx context.Context, d *schema.Resource
 		ApplyImmediately:                aws.Bool(true),
 		EngineNativeAuditFieldsIncluded: aws.Bool(d.Get("engine_native_audit_fields_included").(bool)),
 		KmsKeyId:                        aws.String(d.Get(names.AttrKMSKeyID).(string)),
-		Mode:                            aws.String(d.Get("mode").(string)),
+		Mode:                            aws.String(d.Get(names.AttrMode).(string)),
 		ResourceArn:                     aws.String(arn),
 	}
 
@@ -106,7 +106,7 @@ func resourceClusterActivityStreamRead(ctx context.Context, d *schema.ResourceDa
 
 	d.Set("kinesis_stream_name", output.ActivityStreamKinesisStreamName)
 	d.Set(names.AttrKMSKeyID, output.ActivityStreamKmsKeyId)
-	d.Set("mode", output.ActivityStreamMode)
+	d.Set(names.AttrMode, output.ActivityStreamMode)
 	d.Set(names.AttrResourceARN, output.DBClusterArn)
 
 	return nil

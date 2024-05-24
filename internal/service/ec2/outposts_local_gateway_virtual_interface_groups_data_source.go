@@ -27,8 +27,8 @@ func DataSourceLocalGatewayVirtualInterfaceGroups() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"filter": customFiltersSchema(),
-			"ids": {
+			names.AttrFilter: customFiltersSchema(),
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -54,7 +54,7 @@ func dataSourceLocalGatewayVirtualInterfaceGroupsRead(ctx context.Context, d *sc
 	)...)
 
 	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get("filter").(*schema.Set),
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {
@@ -75,7 +75,7 @@ func dataSourceLocalGatewayVirtualInterfaceGroupsRead(ctx context.Context, d *sc
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("ids", groupIDs)
+	d.Set(names.AttrIDs, groupIDs)
 	d.Set("local_gateway_virtual_interface_ids", interfaceIDs)
 
 	return diags

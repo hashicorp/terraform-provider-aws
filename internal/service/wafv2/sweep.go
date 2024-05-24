@@ -73,7 +73,7 @@ func sweepIPSets(region string) error {
 			d.SetId(aws.ToString(v.Id))
 			d.Set("lock_token", v.LockToken)
 			d.Set(names.AttrName, v.Name)
-			d.Set("scope", input.Scope)
+			d.Set(names.AttrScope, input.Scope)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -122,7 +122,7 @@ func sweepRegexPatternSets(region string) error {
 			d.SetId(aws.ToString(v.Id))
 			d.Set("lock_token", v.LockToken)
 			d.Set(names.AttrName, v.Name)
-			d.Set("scope", input.Scope)
+			d.Set(names.AttrScope, input.Scope)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -171,7 +171,7 @@ func sweepRuleGroups(region string) error {
 			d.SetId(aws.ToString(v.Id))
 			d.Set("lock_token", v.LockToken)
 			d.Set(names.AttrName, v.Name)
-			d.Set("scope", input.Scope)
+			d.Set(names.AttrScope, input.Scope)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -230,7 +230,7 @@ func sweepWebACLs(region string) error {
 			d.SetId(aws.ToString(v.Id))
 			d.Set("lock_token", v.LockToken)
 			d.Set(names.AttrName, name)
-			d.Set("scope", input.Scope)
+			d.Set(names.AttrScope, input.Scope)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

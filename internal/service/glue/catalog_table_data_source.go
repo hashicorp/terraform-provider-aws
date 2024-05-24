@@ -31,7 +31,7 @@ func DataSourceCatalogTable() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"catalog_id": {
+			names.AttrCatalogID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -52,7 +52,7 @@ func DataSourceCatalogTable() *schema.Resource {
 					validation.StringDoesNotMatch(regexache.MustCompile(`[A-Z]`), "uppercase characters cannot be used"),
 				),
 			},
-			"owner": {
+			names.AttrOwner: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -87,7 +87,7 @@ func DataSourceCatalogTable() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"comment": {
+						names.AttrComment: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -129,7 +129,7 @@ func DataSourceCatalogTable() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"comment": {
+									names.AttrComment: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -288,7 +288,7 @@ func DataSourceCatalogTable() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"catalog_id": {
+						names.AttrCatalogID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -300,7 +300,7 @@ func DataSourceCatalogTable() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"region": {
+						names.AttrRegion: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -370,10 +370,10 @@ func dataSourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set(names.AttrARN, tableArn)
 
 	d.Set(names.AttrName, table.Name)
-	d.Set("catalog_id", catalogID)
+	d.Set(names.AttrCatalogID, catalogID)
 	d.Set(names.AttrDatabaseName, dbName)
 	d.Set(names.AttrDescription, table.Description)
-	d.Set("owner", table.Owner)
+	d.Set(names.AttrOwner, table.Owner)
 	d.Set("retention", table.Retention)
 
 	if err := d.Set("storage_descriptor", flattenStorageDescriptor(table.StorageDescriptor)); err != nil {

@@ -46,7 +46,7 @@ func ResourceBillingGroup() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"creation_date": {
+						names.AttrCreationDate: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -59,7 +59,7 @@ func ResourceBillingGroup() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
-			"properties": {
+			names.AttrProperties: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -94,7 +94,7 @@ func resourceBillingGroupCreate(ctx context.Context, d *schema.ResourceData, met
 		Tags:             getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("properties"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrProperties); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.BillingGroupProperties = expandBillingGroupProperties(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -136,11 +136,11 @@ func resourceBillingGroupRead(ctx context.Context, d *schema.ResourceData, meta 
 		d.Set("metadata", nil)
 	}
 	if v := flattenBillingGroupProperties(output.BillingGroupProperties); len(v) > 0 {
-		if err := d.Set("properties", []interface{}{v}); err != nil {
+		if err := d.Set(names.AttrProperties, []interface{}{v}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting properties: %s", err)
 		}
 	} else {
-		d.Set("properties", nil)
+		d.Set(names.AttrProperties, nil)
 	}
 	d.Set(names.AttrVersion, output.Version)
 
@@ -157,7 +157,7 @@ func resourceBillingGroupUpdate(ctx context.Context, d *schema.ResourceData, met
 			ExpectedVersion:  aws.Int64(int64(d.Get(names.AttrVersion).(int))),
 		}
 
-		if v, ok := d.GetOk("properties"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if v, ok := d.GetOk(names.AttrProperties); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input.BillingGroupProperties = expandBillingGroupProperties(v.([]interface{})[0].(map[string]interface{}))
 		} else {
 			input.BillingGroupProperties = &iot.BillingGroupProperties{}
@@ -240,7 +240,7 @@ func flattenBillingGroupMetadata(apiObject *iot.BillingGroupMetadata) map[string
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.CreationDate; v != nil {
-		tfMap["creation_date"] = aws.TimeValue(v).Format(time.RFC3339)
+		tfMap[names.AttrCreationDate] = aws.TimeValue(v).Format(time.RFC3339)
 	}
 
 	return tfMap

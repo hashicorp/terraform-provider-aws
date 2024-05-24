@@ -87,7 +87,7 @@ var (
 				return json
 			},
 		},
-		"display_name": {
+		names.AttrDisplayName: {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
@@ -160,7 +160,7 @@ var (
 			ForceNew:      true,
 			ConflictsWith: []string{names.AttrName},
 		},
-		"owner": {
+		names.AttrOwner: {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
@@ -216,7 +216,7 @@ var (
 		"beginning_archive_time":                   topicAttributeNameBeginningArchiveTime,
 		"content_based_deduplication":              topicAttributeNameContentBasedDeduplication,
 		"delivery_policy":                          topicAttributeNameDeliveryPolicy,
-		"display_name":                             topicAttributeNameDisplayName,
+		names.AttrDisplayName:                      topicAttributeNameDisplayName,
 		"fifo_topic":                               topicAttributeNameFIFOTopic,
 		"firehose_failure_feedback_role_arn":       topicAttributeNameFirehoseFailureFeedbackRoleARN,
 		"firehose_success_feedback_role_arn":       topicAttributeNameFirehoseSuccessFeedbackRoleARN,
@@ -228,7 +228,7 @@ var (
 		"lambda_failure_feedback_role_arn":         topicAttributeNameLambdaFailureFeedbackRoleARN,
 		"lambda_success_feedback_role_arn":         topicAttributeNameLambdaSuccessFeedbackRoleARN,
 		"lambda_success_feedback_sample_rate":      topicAttributeNameLambdaSuccessFeedbackSampleRate,
-		"owner":                                    topicAttributeNameOwner,
+		names.AttrOwner:                            topicAttributeNameOwner,
 		names.AttrPolicy:                           topicAttributeNamePolicy,
 		"signature_version":                        topicAttributeNameSignatureVersion,
 		"sqs_failure_feedback_role_arn":            topicAttributeNameSQSFailureFeedbackRoleARN,

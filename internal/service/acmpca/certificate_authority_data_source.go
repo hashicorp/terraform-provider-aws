@@ -31,11 +31,11 @@ func dataSourceCertificateAuthority() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"certificate": {
+			names.AttrCertificate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"certificate_chain": {
+			names.AttrCertificateChain: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -79,7 +79,7 @@ func dataSourceCertificateAuthority() *schema.Resource {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									"s3_bucket_name": {
+									names.AttrS3BucketName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -169,11 +169,11 @@ func dataSourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "reading ACM PCA Certificate Authority (%s) Certificate: %s", d.Id(), err)
 	}
 
-	d.Set("certificate", "")
-	d.Set("certificate_chain", "")
+	d.Set(names.AttrCertificate, "")
+	d.Set(names.AttrCertificateChain, "")
 	if outputGCACert != nil {
-		d.Set("certificate", outputGCACert.Certificate)
-		d.Set("certificate_chain", outputGCACert.CertificateChain)
+		d.Set(names.AttrCertificate, outputGCACert.Certificate)
+		d.Set(names.AttrCertificateChain, outputGCACert.CertificateChain)
 	}
 
 	outputGCACsr, err := conn.GetCertificateAuthorityCsr(ctx, &acmpca.GetCertificateAuthorityCsrInput{

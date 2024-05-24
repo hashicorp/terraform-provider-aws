@@ -50,7 +50,7 @@ func ResourceLag() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validConnectionBandWidth(),
 			},
-			"force_destroy": {
+			names.AttrForceDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -76,7 +76,7 @@ func ResourceLag() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"provider_name": {
+			names.AttrProviderName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -111,7 +111,7 @@ func resourceLagCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.NumberOfConnections = aws.Int64(1)
 	}
 
-	if v, ok := d.GetOk("provider_name"); ok {
+	if v, ok := d.GetOk(names.AttrProviderName); ok {
 		input.ProviderName = aws.String(v.(string))
 	}
 
@@ -164,7 +164,7 @@ func resourceLagRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("location", lag.Location)
 	d.Set(names.AttrName, lag.LagName)
 	d.Set("owner_account_id", lag.OwnerAccount)
-	d.Set("provider_name", lag.ProviderName)
+	d.Set(names.AttrProviderName, lag.ProviderName)
 
 	return diags
 }
@@ -194,7 +194,7 @@ func resourceLagDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
-	if d.Get("force_destroy").(bool) {
+	if d.Get(names.AttrForceDestroy).(bool) {
 		lag, err := FindLagByID(ctx, conn, d.Id())
 
 		if tfresource.NotFound(err) {

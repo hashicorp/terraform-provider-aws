@@ -54,7 +54,7 @@ func TestAccLexModelsBotAlias_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bot_name", testBotAliasID),
 					resource.TestCheckResourceAttr(resourceName, "bot_version", tflexmodels.BotVersionLatest),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, testBotAliasID),
-					resource.TestCheckResourceAttr(resourceName, "conversation_logs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "conversation_logs.#", acctest.Ct0),
 				),
 			},
 			{
@@ -107,7 +107,7 @@ func testAccBotAlias_botVersion(t *testing.T) {
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBotAliasExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "bot_version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "bot_version", acctest.Ct1),
 				),
 			},
 			{
@@ -149,11 +149,11 @@ func TestAccLexModelsBotAlias_conversationLogsText(t *testing.T) {
 					testAccCheckBotAliasExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "bot_version", tflexmodels.BotVersionLatest),
 					resource.TestCheckResourceAttrPair(resourceName, "conversation_logs.0.iam_role_arn", iamRoleResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "conversation_logs.0.log_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "conversation_logs.0.log_settings.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "conversation_logs.0.log_settings.*", map[string]string{
-						"destination":       "CLOUDWATCH_LOGS",
-						"log_type":          "TEXT",
-						names.AttrKMSKeyARN: "",
+						names.AttrDestination: "CLOUDWATCH_LOGS",
+						"log_type":            "TEXT",
+						names.AttrKMSKeyARN:   "",
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "conversation_logs.0.log_settings.*.resource_arn", cloudwatchLogGroupResourceName, names.AttrARN),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "conversation_logs.0.log_settings.*", map[string]*regexp.Regexp{
@@ -200,10 +200,10 @@ func TestAccLexModelsBotAlias_conversationLogsAudio(t *testing.T) {
 					testAccCheckBotAliasExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "bot_version", tflexmodels.BotVersionLatest),
 					resource.TestCheckResourceAttrPair(resourceName, "conversation_logs.0.iam_role_arn", iamRoleResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "conversation_logs.0.log_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "conversation_logs.0.log_settings.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "conversation_logs.0.log_settings.*", map[string]string{
-						"destination": "S3",
-						"log_type":    "AUDIO",
+						names.AttrDestination: "S3",
+						"log_type":            "AUDIO",
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "conversation_logs.0.log_settings.*.resource_arn", s3BucketResourceName, names.AttrARN),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "conversation_logs.0.log_settings.*.kms_key_arn", kmsKeyResourceName, names.AttrARN),
@@ -252,18 +252,18 @@ func TestAccLexModelsBotAlias_conversationLogsBoth(t *testing.T) {
 					testAccCheckBotAliasExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "bot_version", tflexmodels.BotVersionLatest),
 					resource.TestCheckResourceAttrPair(resourceName, "conversation_logs.0.iam_role_arn", iamRoleResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "conversation_logs.0.log_settings.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "conversation_logs.0.log_settings.#", acctest.Ct2),
 
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "conversation_logs.0.log_settings.*", map[string]string{
-						"destination":       "CLOUDWATCH_LOGS",
-						"log_type":          "TEXT",
-						names.AttrKMSKeyARN: "",
+						names.AttrDestination: "CLOUDWATCH_LOGS",
+						"log_type":            "TEXT",
+						names.AttrKMSKeyARN:   "",
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "conversation_logs.0.log_settings.*.resource_arn", cloudwatchLogGroupResourceName, names.AttrARN),
 
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "conversation_logs.0.log_settings.*", map[string]string{
-						"destination": "S3",
-						"log_type":    "AUDIO",
+						names.AttrDestination: "S3",
+						"log_type":            "AUDIO",
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "conversation_logs.0.log_settings.*.resource_arn", s3BucketResourceName, names.AttrARN),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "conversation_logs.0.log_settings.*.kms_key_arn", kmsKeyResourceName, names.AttrARN),

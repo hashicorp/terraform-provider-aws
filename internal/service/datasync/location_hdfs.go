@@ -168,7 +168,7 @@ func resourceLocationHDFS() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"uri": {
+			names.AttrURI: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -284,7 +284,7 @@ func resourceLocationHDFSRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("replication_factor", output.ReplicationFactor)
 	d.Set("simple_user", output.SimpleUser)
 	d.Set("subdirectory", subdirectory)
-	d.Set("uri", uri)
+	d.Set(names.AttrURI, uri)
 
 	return diags
 }

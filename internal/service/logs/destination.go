@@ -58,7 +58,7 @@ func resourceDestination() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"target_arn": {
+			names.AttrTargetARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -82,7 +82,7 @@ func resourceDestinationCreate(ctx context.Context, d *schema.ResourceData, meta
 	input := &cloudwatchlogs.PutDestinationInput{
 		DestinationName: aws.String(name),
 		RoleArn:         aws.String(d.Get(names.AttrRoleARN).(string)),
-		TargetArn:       aws.String(d.Get("target_arn").(string)),
+		TargetArn:       aws.String(d.Get(names.AttrTargetARN).(string)),
 	}
 
 	outputRaw, err := tfresource.RetryWhenIsA[*types.InvalidParameterException](ctx, propagationTimeout, func() (interface{}, error) {
@@ -125,7 +125,7 @@ func resourceDestinationRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set(names.AttrARN, destination.Arn)
 	d.Set(names.AttrName, destination.DestinationName)
 	d.Set(names.AttrRoleARN, destination.RoleArn)
-	d.Set("target_arn", destination.TargetArn)
+	d.Set(names.AttrTargetARN, destination.TargetArn)
 
 	return diags
 }
@@ -139,7 +139,7 @@ func resourceDestinationUpdate(ctx context.Context, d *schema.ResourceData, meta
 		input := &cloudwatchlogs.PutDestinationInput{
 			DestinationName: aws.String(d.Id()),
 			RoleArn:         aws.String(d.Get(names.AttrRoleARN).(string)),
-			TargetArn:       aws.String(d.Get("target_arn").(string)),
+			TargetArn:       aws.String(d.Get(names.AttrTargetARN).(string)),
 		}
 
 		_, err := tfresource.RetryWhenIsA[*types.InvalidParameterException](ctx, propagationTimeout, func() (interface{}, error) {

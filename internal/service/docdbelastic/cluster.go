@@ -81,7 +81,7 @@ func (r *resourceCluster) Schema(ctx context.Context, _ resource.SchemaRequest, 
 					enum.FrameworkValidate[awstypes.Auth](),
 				},
 			},
-			"endpoint": schema.StringAttribute{
+			names.AttrEndpoint: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),

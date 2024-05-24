@@ -111,7 +111,7 @@ func expandContainers(containers []interface{}) []*batch.EksContainer {
 		if v, ok := containerMap[names.AttrName].(string); ok && v != "" {
 			container.Name = aws.String(v)
 		}
-		if r, ok := containerMap["resources"].([]interface{}); ok && len(r) > 0 {
+		if r, ok := containerMap[names.AttrResources].([]interface{}); ok && len(r) > 0 {
 			resources := &batch.EksContainerResourceRequirements{}
 			res := r[0].(map[string]interface{})
 			if v, ok := res["limits"]; ok {
@@ -172,7 +172,7 @@ func expandVolumes(volumes []interface{}) []*batch.EksVolume {
 		if h, ok := volumeMap["host_path"].([]interface{}); ok && len(h) > 0 {
 			volume.HostPath = &batch.EksHostPath{}
 			if host, ok := h[0].(map[string]interface{}); ok {
-				if v, ok := host["path"]; ok {
+				if v, ok := host[names.AttrPath]; ok {
 					volume.HostPath.Path = aws.String(v.(string))
 				}
 			}
@@ -291,7 +291,7 @@ func flattenEKSContainers(containers []*batch.EksContainer) (tfList []interface{
 		}
 
 		if v := container.Resources; v != nil {
-			tfMap["resources"] = []map[string]interface{}{{
+			tfMap[names.AttrResources] = []map[string]interface{}{{
 				"limits":   flex.FlattenStringMap(v.Limits),
 				"requests": flex.FlattenStringMap(v.Requests),
 			}}
@@ -371,7 +371,7 @@ func flattenEKSVolumes(volumes []*batch.EksVolume) (tfList []interface{}) {
 
 		if v := v.HostPath; v != nil {
 			tfMap["host_path"] = []map[string]interface{}{{
-				"path": aws.StringValue(v.Path),
+				names.AttrPath: aws.StringValue(v.Path),
 			}}
 		}
 

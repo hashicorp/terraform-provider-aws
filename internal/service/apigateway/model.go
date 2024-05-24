@@ -59,7 +59,7 @@ func resourceModel() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"content_type": {
+			names.AttrContentType: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -78,7 +78,7 @@ func resourceModel() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"schema": {
+			names.AttrSchema: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateFunc:     validation.StringIsJSON,
@@ -98,7 +98,7 @@ func resourceModelCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	name := d.Get(names.AttrName).(string)
 	input := &apigateway.CreateModelInput{
-		ContentType: aws.String(d.Get("content_type").(string)),
+		ContentType: aws.String(d.Get(names.AttrContentType).(string)),
 		Name:        aws.String(name),
 		RestApiId:   aws.String(d.Get("rest_api_id").(string)),
 	}
@@ -107,7 +107,7 @@ func resourceModelCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("schema"); ok {
+	if v, ok := d.GetOk(names.AttrSchema); ok {
 		input.Schema = aws.String(v.(string))
 	}
 
@@ -138,9 +138,9 @@ func resourceModelRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway Model (%s): %s", d.Id(), err)
 	}
 
-	d.Set("content_type", model.ContentType)
+	d.Set(names.AttrContentType, model.ContentType)
 	d.Set(names.AttrDescription, model.Description)
-	d.Set("schema", model.Schema)
+	d.Set(names.AttrSchema, model.Schema)
 
 	return diags
 }
@@ -159,11 +159,11 @@ func resourceModelUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		})
 	}
 
-	if d.HasChange("schema") {
+	if d.HasChange(names.AttrSchema) {
 		operations = append(operations, types.PatchOperation{
 			Op:    types.OpReplace,
 			Path:  aws.String("/schema"),
-			Value: aws.String(d.Get("schema").(string)),
+			Value: aws.String(d.Get(names.AttrSchema).(string)),
 		})
 	}
 

@@ -148,7 +148,7 @@ func resourceIntegration() *schema.Resource {
 							// Length between [1-512].
 							Elem: &schema.Schema{Type: schema.TypeString},
 						},
-						"status_code": {
+						names.AttrStatusCode: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -401,7 +401,7 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 				continue
 			}
 
-			if v, ok := tfMap["status_code"].(string); ok && v != "" {
+			if v, ok := tfMap[names.AttrStatusCode].(string); ok && v != "" {
 				if input.ResponseParameters == nil {
 					input.ResponseParameters = map[string]map[string]string{}
 				}
@@ -548,7 +548,7 @@ func expandIntegrationResponseParameters(tfList []interface{}) map[string]map[st
 			continue
 		}
 
-		if vStatusCode, ok := tfMap["status_code"].(string); ok && vStatusCode != "" {
+		if vStatusCode, ok := tfMap[names.AttrStatusCode].(string); ok && vStatusCode != "" {
 			if v, ok := tfMap["mappings"].(map[string]interface{}); ok && len(v) > 0 {
 				responseParameters[vStatusCode] = flex.ExpandStringValueMap(v)
 			}
@@ -572,7 +572,7 @@ func flattenIntegrationResponseParameters(responseParameters map[string]map[stri
 
 		tfMap := map[string]interface{}{}
 
-		tfMap["status_code"] = statusCode
+		tfMap[names.AttrStatusCode] = statusCode
 		tfMap["mappings"] = mappings
 
 		tfList = append(tfList, tfMap)

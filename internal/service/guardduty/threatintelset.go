@@ -52,7 +52,7 @@ func ResourceThreatIntelSet() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"format": {
+			names.AttrFormat: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -83,7 +83,7 @@ func resourceThreatIntelSetCreate(ctx context.Context, d *schema.ResourceData, m
 	input := &guardduty.CreateThreatIntelSetInput{
 		DetectorId: aws.String(detectorID),
 		Name:       aws.String(name),
-		Format:     aws.String(d.Get("format").(string)),
+		Format:     aws.String(d.Get(names.AttrFormat).(string)),
 		Location:   aws.String(d.Get("location").(string)),
 		Activate:   aws.Bool(d.Get("activate").(bool)),
 		Tags:       getTagsIn(ctx),
@@ -144,7 +144,7 @@ func resourceThreatIntelSetRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set(names.AttrARN, arn)
 
 	d.Set("detector_id", detectorId)
-	d.Set("format", resp.Format)
+	d.Set(names.AttrFormat, resp.Format)
 	d.Set("location", resp.Location)
 	d.Set(names.AttrName, resp.Name)
 	d.Set("activate", aws.StringValue(resp.Status) == guardduty.ThreatIntelSetStatusActive)

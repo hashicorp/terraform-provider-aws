@@ -55,7 +55,7 @@ func DataSourceReplicationInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"publicly_accessible": {
+			names.AttrPubliclyAccessible: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -118,7 +118,7 @@ func dataSourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("multi_az", instance.MultiAZ)
 	d.Set("network_type", instance.NetworkType)
 	d.Set(names.AttrPreferredMaintenanceWindow, instance.PreferredMaintenanceWindow)
-	d.Set("publicly_accessible", instance.PubliclyAccessible)
+	d.Set(names.AttrPubliclyAccessible, instance.PubliclyAccessible)
 	arn := aws.StringValue(instance.ReplicationInstanceArn)
 	d.Set("replication_instance_arn", arn)
 	d.Set("replication_instance_class", instance.ReplicationInstanceClass)

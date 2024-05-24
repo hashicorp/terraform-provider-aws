@@ -53,7 +53,7 @@ func ResourceBucket() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"force_delete": {
+			names.AttrForceDelete: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -63,7 +63,7 @@ func ResourceBucket() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"region": {
+			names.AttrRegion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -73,7 +73,7 @@ func ResourceBucket() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"url": {
+			names.AttrURL: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -134,9 +134,9 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("bundle_id", out.BundleId)
 	d.Set(names.AttrCreatedAt, out.CreatedAt.Format(time.RFC3339))
 	d.Set(names.AttrName, out.Name)
-	d.Set("region", out.Location.RegionName)
+	d.Set(names.AttrRegion, out.Location.RegionName)
 	d.Set("support_code", out.SupportCode)
-	d.Set("url", out.Url)
+	d.Set(names.AttrURL, out.Url)
 
 	setTagsOut(ctx, out.Tags)
 
@@ -177,7 +177,7 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	log.Printf("[DEBUG] Deleting Lightsail Bucket: %s", d.Id())
 	out, err := conn.DeleteBucket(ctx, &lightsail.DeleteBucketInput{
 		BucketName:  aws.String(d.Id()),
-		ForceDelete: aws.Bool(d.Get("force_delete").(bool)),
+		ForceDelete: aws.Bool(d.Get(names.AttrForceDelete).(bool)),
 	})
 
 	if err != nil && errs.IsA[*types.NotFoundException](err) {

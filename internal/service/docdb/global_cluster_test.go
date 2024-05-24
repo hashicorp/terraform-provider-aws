@@ -42,12 +42,12 @@ func TestAccDocDBGlobalCluster_basic(t *testing.T) {
 					//This is a rds arn
 					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("global-cluster:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, ""),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection", acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, "engine"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
 					resource.TestCheckResourceAttr(resourceName, "global_cluster_identifier", rName),
 					resource.TestMatchResourceAttr(resourceName, "global_cluster_resource_id", regexache.MustCompile(`cluster-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", acctest.CtFalse),
 				),
 			},
 			{
@@ -135,7 +135,7 @@ func TestAccDocDBGlobalCluster_DeletionProtection(t *testing.T) {
 				Config: testAccGlobalClusterConfig_deletionProtection(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "true"),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection", acctest.CtTrue),
 				),
 			},
 			{
@@ -148,7 +148,7 @@ func TestAccDocDBGlobalCluster_DeletionProtection(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster2),
 					testAccCheckGlobalClusterNotRecreated(&globalCluster1, &globalCluster2),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection", acctest.CtFalse),
 				),
 			},
 		},
@@ -287,7 +287,7 @@ func TestAccDocDBGlobalCluster_StorageEncrypted(t *testing.T) {
 				Config: testAccGlobalClusterConfig_storageEncrypted(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
-					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "true"),
+					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", acctest.CtTrue),
 				),
 			},
 			{
@@ -300,7 +300,7 @@ func TestAccDocDBGlobalCluster_StorageEncrypted(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster2),
 					testAccCheckGlobalClusterRecreated(&globalCluster1, &globalCluster2),
-					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", acctest.CtFalse),
 				),
 			},
 		},

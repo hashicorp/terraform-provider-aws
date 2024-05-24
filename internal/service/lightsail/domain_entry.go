@@ -55,7 +55,7 @@ func ResourceDomainEntry() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"target": {
+			names.AttrTarget: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -90,7 +90,7 @@ func resourceDomainEntryCreate(ctx context.Context, d *schema.ResourceData, meta
 		DomainEntry: &types.DomainEntry{
 			IsAlias: aws.Bool(d.Get("is_alias").(bool)),
 			Name:    aws.String(expandDomainEntryName(name, d.Get(names.AttrDomainName).(string))),
-			Target:  aws.String(d.Get("target").(string)),
+			Target:  aws.String(d.Get(names.AttrTarget).(string)),
 			Type:    aws.String(d.Get(names.AttrType).(string)),
 		},
 	}
@@ -112,7 +112,7 @@ func resourceDomainEntryCreate(ctx context.Context, d *schema.ResourceData, meta
 		name,
 		d.Get(names.AttrDomainName).(string),
 		d.Get(names.AttrType).(string),
-		d.Get("target").(string),
+		d.Get(names.AttrTarget).(string),
 	}
 
 	id, err := flex.FlattenResourceId(idParts, DomainEntryIdPartsCount, true)
@@ -174,7 +174,7 @@ func resourceDomainEntryRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set(names.AttrDomainName, domainName)
 	d.Set(names.AttrType, entry.Type)
 	d.Set("is_alias", entry.IsAlias)
-	d.Set("target", entry.Target)
+	d.Set(names.AttrTarget, entry.Target)
 
 	return diags
 }

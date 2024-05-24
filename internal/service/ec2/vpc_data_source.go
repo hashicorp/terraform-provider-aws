@@ -83,7 +83,7 @@ func DataSourceVPC() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"filter": customFiltersSchema(),
+			names.AttrFilter: customFiltersSchema(),
 			names.AttrID: {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -147,7 +147,7 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.VpcIds = []string{v.(string)}
 	}
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(d.Get("filter").(*schema.Set))...)
+	input.Filters = append(input.Filters, newCustomFilterListV2(d.Get(names.AttrFilter).(*schema.Set))...)
 	input.Filters = append(input.Filters, tagFilters(ctx)...)
 
 	if len(input.Filters) == 0 {
@@ -196,7 +196,7 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("enable_network_address_usage_metrics", v)
 	}
 
-	if v, err := findVPCMainRouteTableV2(ctx, conn, d.Id()); err != nil {
+	if v, err := findVPCMainRouteTable(ctx, conn, d.Id()); err != nil {
 		log.Printf("[WARN] Error reading EC2 VPC (%s) main Route Table: %s", d.Id(), err)
 		d.Set("main_route_table_id", nil)
 	} else {

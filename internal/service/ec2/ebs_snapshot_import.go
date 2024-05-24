@@ -54,7 +54,7 @@ func ResourceEBSSnapshotImport() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"comment": {
+						names.AttrComment: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -101,13 +101,13 @@ func ResourceEBSSnapshotImport() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 						},
-						"format": {
+						names.AttrFormat: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ForceNew:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.DiskImageFormat](),
 						},
-						"url": {
+						names.AttrURL: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
@@ -120,7 +120,7 @@ func ResourceEBSSnapshotImport() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"s3_bucket": {
+									names.AttrS3Bucket: {
 										Type:     schema.TypeString,
 										Required: true,
 										ForceNew: true,
@@ -137,7 +137,7 @@ func ResourceEBSSnapshotImport() *schema.Resource {
 					},
 				},
 			},
-			"encrypted": {
+			names.AttrEncrypted: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				ForceNew: true,
@@ -185,7 +185,7 @@ func ResourceEBSSnapshotImport() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"volume_size": {
+			names.AttrVolumeSize: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -214,7 +214,7 @@ func resourceEBSSnapshotImportCreate(ctx context.Context, d *schema.ResourceData
 		input.DiskContainer = expandSnapshotDiskContainer(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("encrypted"); ok {
+	if v, ok := d.GetOk(names.AttrEncrypted); ok {
 		input.Encrypted = aws.Bool(v.(bool))
 	}
 
@@ -294,12 +294,12 @@ func resourceEBSSnapshotImportRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set(names.AttrARN, arn)
 	d.Set("data_encryption_key_id", snapshot.DataEncryptionKeyId)
 	d.Set(names.AttrDescription, snapshot.Description)
-	d.Set("encrypted", snapshot.Encrypted)
+	d.Set(names.AttrEncrypted, snapshot.Encrypted)
 	d.Set(names.AttrKMSKeyID, snapshot.KmsKeyId)
 	d.Set("owner_alias", snapshot.OwnerAlias)
 	d.Set(names.AttrOwnerID, snapshot.OwnerId)
 	d.Set("storage_tier", snapshot.StorageTier)
-	d.Set("volume_size", snapshot.VolumeSize)
+	d.Set(names.AttrVolumeSize, snapshot.VolumeSize)
 
 	setTagsOutV2(ctx, snapshot.Tags)
 
@@ -313,7 +313,7 @@ func expandClientData(tfMap map[string]interface{}) *awstypes.ClientData {
 
 	apiObject := &awstypes.ClientData{}
 
-	if v, ok := tfMap["comment"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrComment].(string); ok && v != "" {
 		apiObject.Comment = aws.String(v)
 	}
 
@@ -347,11 +347,11 @@ func expandSnapshotDiskContainer(tfMap map[string]interface{}) *awstypes.Snapsho
 		apiObject.Description = aws.String(v)
 	}
 
-	if v, ok := tfMap["format"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrFormat].(string); ok && v != "" {
 		apiObject.Format = aws.String(v)
 	}
 
-	if v, ok := tfMap["url"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrURL].(string); ok && v != "" {
 		apiObject.Url = aws.String(v)
 	}
 
@@ -369,7 +369,7 @@ func expandUserBucket(tfMap map[string]interface{}) *awstypes.UserBucket {
 
 	apiObject := &awstypes.UserBucket{}
 
-	if v, ok := tfMap["s3_bucket"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrS3Bucket].(string); ok && v != "" {
 		apiObject.S3Bucket = aws.String(v)
 	}
 

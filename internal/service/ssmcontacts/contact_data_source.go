@@ -25,11 +25,11 @@ func DataSourceContact() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"alias": {
+			names.AttrAlias: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"display_name": {
+			names.AttrDisplayName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},

@@ -34,7 +34,7 @@ func ResourceAccess() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"external_id": {
+			names.AttrExternalID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 256),
@@ -57,7 +57,7 @@ func ResourceAccess() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(0, 1024),
 						},
-						"target": {
+						names.AttrTarget: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(0, 1024),
@@ -108,7 +108,7 @@ func ResourceAccess() *schema.Resource {
 				},
 			},
 
-			"role": {
+			names.AttrRole: {
 				Type: schema.TypeString,
 				// Although Role is required in the API it is not currently returned on Read.
 				// Required:     true,
@@ -130,7 +130,7 @@ func resourceAccessCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
-	externalID := d.Get("external_id").(string)
+	externalID := d.Get(names.AttrExternalID).(string)
 	serverID := d.Get("server_id").(string)
 	id := AccessCreateResourceID(serverID, externalID)
 	input := &transfer.CreateAccessInput{
@@ -163,7 +163,7 @@ func resourceAccessCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.PosixProfile = expandUserPOSIXUser(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("role"); ok {
+	if v, ok := d.GetOk(names.AttrRole); ok {
 		input.Role = aws.String(v.(string))
 	}
 
@@ -201,7 +201,7 @@ func resourceAccessRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading Transfer Access (%s): %s", d.Id(), err)
 	}
 
-	d.Set("external_id", access.ExternalId)
+	d.Set(names.AttrExternalID, access.ExternalId)
 	d.Set("home_directory", access.HomeDirectory)
 	if err := d.Set("home_directory_mappings", flattenHomeDirectoryMappings(access.HomeDirectoryMappings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting home_directory_mappings: %s", err)
@@ -266,8 +266,8 @@ func resourceAccessUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.PosixProfile = expandUserPOSIXUser(d.Get("posix_profile").([]interface{}))
 	}
 
-	if d.HasChange("role") {
-		input.Role = aws.String(d.Get("role").(string))
+	if d.HasChange(names.AttrRole) {
+		input.Role = aws.String(d.Get(names.AttrRole).(string))
 	}
 
 	log.Printf("[DEBUG] Updating Transfer Access: %s", input)

@@ -39,7 +39,7 @@ func DataSourceUser() *schema.Resource {
 					Optional: true,
 					Computed: true,
 				},
-				"email": {
+				names.AttrEmail: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -47,7 +47,7 @@ func DataSourceUser() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"namespace": {
+				names.AttrNamespace: {
 					Type:     schema.TypeString,
 					Optional: true,
 					Default:  DefaultUserNamespace,
@@ -60,7 +60,7 @@ func DataSourceUser() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"user_name": {
+				names.AttrUserName: {
 					Type:     schema.TypeString,
 					Required: true,
 				},
@@ -81,9 +81,9 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if v, ok := d.GetOk("aws_account_id"); ok {
 		awsAccountID = v.(string)
 	}
-	namespace := d.Get("namespace").(string)
+	namespace := d.Get(names.AttrNamespace).(string)
 	in := &quicksight.DescribeUserInput{
-		UserName:     aws.String(d.Get("user_name").(string)),
+		UserName:     aws.String(d.Get(names.AttrUserName).(string)),
 		AwsAccountId: aws.String(awsAccountID),
 		Namespace:    aws.String(namespace),
 	}
@@ -100,10 +100,10 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("active", out.User.Active)
 	d.Set(names.AttrARN, out.User.Arn)
 	d.Set("aws_account_id", awsAccountID)
-	d.Set("email", out.User.Email)
+	d.Set(names.AttrEmail, out.User.Email)
 	d.Set("identity_type", out.User.IdentityType)
 	d.Set("principal_id", out.User.PrincipalId)
-	d.Set("user_name", out.User.UserName)
+	d.Set(names.AttrUserName, out.User.UserName)
 	d.Set("user_role", out.User.Role)
 
 	return diags

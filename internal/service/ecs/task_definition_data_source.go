@@ -34,11 +34,11 @@ func DataSourceTaskDefinition() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"execution_role_arn": {
+			names.AttrExecutionRoleARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"family": {
+			names.AttrFamily: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -81,8 +81,8 @@ func dataSourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, m
 	d.SetId(aws.StringValue(taskDefinition.TaskDefinitionArn))
 	d.Set(names.AttrARN, taskDefinition.TaskDefinitionArn)
 	d.Set("arn_without_revision", StripRevision(aws.StringValue(taskDefinition.TaskDefinitionArn)))
-	d.Set("execution_role_arn", taskDefinition.ExecutionRoleArn)
-	d.Set("family", taskDefinition.Family)
+	d.Set(names.AttrExecutionRoleARN, taskDefinition.ExecutionRoleArn)
+	d.Set(names.AttrFamily, taskDefinition.Family)
 	d.Set("network_mode", taskDefinition.NetworkMode)
 	d.Set("revision", taskDefinition.Revision)
 	d.Set(names.AttrStatus, taskDefinition.Status)

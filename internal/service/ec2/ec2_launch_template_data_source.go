@@ -40,7 +40,7 @@ func DataSourceLaunchTemplate() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"device_name": {
+						names.AttrDeviceName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -53,11 +53,11 @@ func DataSourceLaunchTemplate() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"encrypted": {
+									names.AttrEncrypted: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"iops": {
+									names.AttrIOPS: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
@@ -65,7 +65,7 @@ func DataSourceLaunchTemplate() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"snapshot_id": {
+									names.AttrSnapshotID: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -73,11 +73,11 @@ func DataSourceLaunchTemplate() *schema.Resource {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									"volume_size": {
+									names.AttrVolumeSize: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									"volume_type": {
+									names.AttrVolumeType: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -211,7 +211,7 @@ func DataSourceLaunchTemplate() *schema.Resource {
 					},
 				},
 			},
-			"filter": customFiltersSchema(),
+			names.AttrFilter: customFiltersSchema(),
 			"hibernation_options": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -696,7 +696,7 @@ func DataSourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"group_name": {
+						names.AttrGroupName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -757,7 +757,7 @@ func DataSourceLaunchTemplate() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"resource_type": {
+						names.AttrResourceType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -795,7 +795,7 @@ func dataSourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get("filter").(*schema.Set),
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	input.Filters = append(input.Filters, newTagFilterList(

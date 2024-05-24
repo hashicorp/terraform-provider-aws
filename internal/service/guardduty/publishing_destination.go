@@ -45,7 +45,7 @@ func ResourcePublishingDestination() *schema.Resource {
 				Default:      guardduty.DestinationTypeS3,
 				ValidateFunc: validation.StringInSlice(guardduty.DestinationType_Values(), false),
 			},
-			"destination_arn": {
+			names.AttrDestinationARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -67,7 +67,7 @@ func resourcePublishingDestinationCreate(ctx context.Context, d *schema.Resource
 	input := guardduty.CreatePublishingDestinationInput{
 		DetectorId: aws.String(detectorID),
 		DestinationProperties: &guardduty.DestinationProperties{
-			DestinationArn: aws.String(d.Get("destination_arn").(string)),
+			DestinationArn: aws.String(d.Get(names.AttrDestinationARN).(string)),
 			KmsKeyArn:      aws.String(d.Get(names.AttrKMSKeyARN).(string)),
 		},
 		DestinationType: aws.String(d.Get("destination_type").(string)),
@@ -118,7 +118,7 @@ func resourcePublishingDestinationRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("detector_id", detectorId)
 	d.Set("destination_type", gdo.DestinationType)
 	d.Set(names.AttrKMSKeyARN, gdo.DestinationProperties.KmsKeyArn)
-	d.Set("destination_arn", gdo.DestinationProperties.DestinationArn)
+	d.Set(names.AttrDestinationARN, gdo.DestinationProperties.DestinationArn)
 	return diags
 }
 
@@ -136,7 +136,7 @@ func resourcePublishingDestinationUpdate(ctx context.Context, d *schema.Resource
 		DestinationId: aws.String(destinationId),
 		DetectorId:    aws.String(detectorId),
 		DestinationProperties: &guardduty.DestinationProperties{
-			DestinationArn: aws.String(d.Get("destination_arn").(string)),
+			DestinationArn: aws.String(d.Get(names.AttrDestinationARN).(string)),
 			KmsKeyArn:      aws.String(d.Get(names.AttrKMSKeyARN).(string)),
 		},
 	}

@@ -36,7 +36,7 @@ func ResourceVerifiedAccessGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"creation_time": {
+			names.AttrCreationTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -53,7 +53,7 @@ func ResourceVerifiedAccessGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner": {
+			names.AttrOwner: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -149,11 +149,11 @@ func resourceVerifiedAccessGroupRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading Verified Access Group (%s): %s", d.Id(), err)
 	}
 
-	d.Set("creation_time", group.CreationTime)
+	d.Set(names.AttrCreationTime, group.CreationTime)
 	d.Set("deletion_time", group.DeletionTime)
 	d.Set(names.AttrDescription, group.Description)
 	d.Set("last_updated_time", group.LastUpdatedTime)
-	d.Set("owner", group.Owner)
+	d.Set(names.AttrOwner, group.Owner)
 	if v := group.SseSpecification; v != nil {
 		if err := d.Set("sse_configuration", flattenVerifiedAccessSseSpecificationResponse(v)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting sse_configuration: %s", err)

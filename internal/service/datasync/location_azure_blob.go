@@ -104,7 +104,7 @@ func resourceLocationAzureBlob() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"uri": {
+			names.AttrURI: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -188,7 +188,7 @@ func resourceLocationAzureBlobRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("container_url", containerURL)
 	d.Set("sas_configuration", d.Get("sas_configuration"))
 	d.Set("subdirectory", subdirectory[strings.IndexAny(subdirectory[1:], "/")+1:])
-	d.Set("uri", uri)
+	d.Set(names.AttrURI, uri)
 
 	return diags
 }

@@ -41,7 +41,7 @@ func resourceTopicPolicy() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"owner": {
+			names.AttrOwner: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -108,7 +108,7 @@ func resourceTopicPolicyRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.Set(names.AttrARN, attributes[topicAttributeNameTopicARN])
-	d.Set("owner", attributes[topicAttributeNameOwner])
+	d.Set(names.AttrOwner, attributes[topicAttributeNameOwner])
 
 	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), policy)
 	if err != nil {
@@ -127,7 +127,7 @@ func resourceTopicPolicyDelete(ctx context.Context, d *schema.ResourceData, meta
 	// It is impossible to delete a policy or set to empty
 	// (confirmed by AWS Support representative)
 	// so we instead set it back to the default one.
-	err := putTopicPolicy(ctx, conn, d.Id(), defaultTopicPolicy(d.Id(), d.Get("owner").(string)))
+	err := putTopicPolicy(ctx, conn, d.Id(), defaultTopicPolicy(d.Id(), d.Get(names.AttrOwner).(string)))
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags

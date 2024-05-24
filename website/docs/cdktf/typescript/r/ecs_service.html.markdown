@@ -385,11 +385,7 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `cluster` - Amazon Resource Name (ARN) of cluster which the service runs on.
-* `desiredCount` - Number of instances of the task definition.
-* `iamRole` - ARN of IAM role used for ELB.
 * `id` - ARN that identifies the service.
-* `name` - Name of the service.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
@@ -432,4 +428,4 @@ Using `terraform import`, import ECS services using the `name` together with ecs
 % terraform import aws_ecs_service.imported cluster-name/service-name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-9d0acc958d56894e4546e62b5564d5301bfd197e1b28fb44144dd826623729b2 -->
+<!-- cache-key: cdktf-0.20.1 input-dd55535bb7db25f8435815a60aa6eedb4997029ca82aa9cac48b94dd5e317c62 -->

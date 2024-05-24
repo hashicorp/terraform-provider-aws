@@ -23,7 +23,7 @@ func DataSourceDevEnvironment() *schema.Resource {
 		ReadWithoutTimeout: dataSourceDevEnvironmentRead,
 
 		Schema: map[string]*schema.Schema{
-			"alias": {
+			names.AttrAlias: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -68,7 +68,7 @@ func DataSourceDevEnvironment() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"size": {
+						names.AttrSize: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -89,7 +89,7 @@ func DataSourceDevEnvironment() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"repository_name": {
+						names.AttrRepositoryName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -104,7 +104,7 @@ func DataSourceDevEnvironment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status_reason": {
+			names.AttrStatusReason: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -133,7 +133,7 @@ func dataSourceDevEnvironmentRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId(aws.ToString(out.Id))
 
-	d.Set("alias", out.Alias)
+	d.Set(names.AttrAlias, out.Alias)
 	d.Set("creator_id", out.CreatorId)
 	d.Set("project_name", out.ProjectName)
 	d.Set("space_name", out.SpaceName)
@@ -142,7 +142,7 @@ func dataSourceDevEnvironmentRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("inactivity_timeout_minutes", out.InactivityTimeoutMinutes)
 	d.Set("persistent_storage", flattenPersistentStorage(out.PersistentStorage))
 	d.Set(names.AttrStatus, out.Status)
-	d.Set("status_reason", out.StatusReason)
+	d.Set(names.AttrStatusReason, out.StatusReason)
 
 	if err := d.Set("ides", flattenIdes(out.Ides)); err != nil {
 		return create.AppendDiagError(diags, names.CodeCatalyst, create.ErrActionSetting, ResNameDevEnvironment, d.Id(), err)

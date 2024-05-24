@@ -30,7 +30,7 @@ func DataSourceActivity() *schema.Resource {
 					names.AttrName,
 				},
 			},
-			"creation_date": {
+			names.AttrCreationDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -83,7 +83,7 @@ func dataSourceActivityRead(ctx context.Context, d *schema.ResourceData, meta in
 		arn := aws.StringValue(activity.ActivityArn)
 		d.SetId(arn)
 		d.Set(names.AttrARN, arn)
-		d.Set("creation_date", activity.CreationDate.Format(time.RFC3339))
+		d.Set(names.AttrCreationDate, activity.CreationDate.Format(time.RFC3339))
 		d.Set(names.AttrName, activity.Name)
 	} else if v, ok := d.GetOk(names.AttrARN); ok {
 		arn := v.(string)
@@ -96,7 +96,7 @@ func dataSourceActivityRead(ctx context.Context, d *schema.ResourceData, meta in
 		arn = aws.StringValue(activity.ActivityArn)
 		d.SetId(arn)
 		d.Set(names.AttrARN, arn)
-		d.Set("creation_date", activity.CreationDate.Format(time.RFC3339))
+		d.Set(names.AttrCreationDate, activity.CreationDate.Format(time.RFC3339))
 		d.Set(names.AttrName, activity.Name)
 	}
 

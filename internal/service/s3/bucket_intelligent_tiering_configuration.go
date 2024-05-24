@@ -42,13 +42,13 @@ func resourceBucketIntelligentTieringConfiguration() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"filter": {
+			names.AttrFilter: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"prefix": {
+						names.AttrPrefix: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							AtLeastOneOf: []string{"filter.0.prefix", "filter.0.tags"},
@@ -105,7 +105,7 @@ func resourceBucketIntelligentTieringConfigurationPut(ctx context.Context, d *sc
 		Status: types.IntelligentTieringStatus(d.Get(names.AttrStatus).(string)),
 	}
 
-	if v, ok := d.GetOk("filter"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrFilter); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		intelligentTieringConfiguration.Filter = expandIntelligentTieringFilter(ctx, v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -170,11 +170,11 @@ func resourceBucketIntelligentTieringConfigurationRead(ctx context.Context, d *s
 
 	d.Set(names.AttrBucket, bucket)
 	if output.Filter != nil {
-		if err := d.Set("filter", []interface{}{flattenIntelligentTieringFilter(ctx, output.Filter)}); err != nil {
+		if err := d.Set(names.AttrFilter, []interface{}{flattenIntelligentTieringFilter(ctx, output.Filter)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting filter: %s", err)
 		}
 	} else {
-		d.Set("filter", nil)
+		d.Set(names.AttrFilter, nil)
 	}
 	d.Set(names.AttrName, output.Id)
 	d.Set(names.AttrStatus, output.Status)
@@ -271,7 +271,7 @@ func expandIntelligentTieringFilter(ctx context.Context, tfMap map[string]interf
 
 	var prefix string
 
-	if v, ok := tfMap["prefix"].(string); ok {
+	if v, ok := tfMap[names.AttrPrefix].(string); ok {
 		prefix = v
 	}
 
@@ -362,7 +362,7 @@ func flattenIntelligentTieringFilter(ctx context.Context, apiObject *types.Intel
 
 	if apiObject.And == nil {
 		if v := apiObject.Prefix; v != nil {
-			tfMap["prefix"] = aws.ToString(v)
+			tfMap[names.AttrPrefix] = aws.ToString(v)
 		}
 
 		if v := apiObject.Tag; v != nil {
@@ -372,7 +372,7 @@ func flattenIntelligentTieringFilter(ctx context.Context, apiObject *types.Intel
 		apiObject := apiObject.And
 
 		if v := apiObject.Prefix; v != nil {
-			tfMap["prefix"] = aws.ToString(v)
+			tfMap[names.AttrPrefix] = aws.ToString(v)
 		}
 
 		if v := apiObject.Tags; v != nil {

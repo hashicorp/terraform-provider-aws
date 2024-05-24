@@ -26,7 +26,7 @@ import (
 
 // @SDKResource("aws_storagegateway_smb_file_share", name="SMB File Share")
 // @Tags(identifierAttribute="arn")
-func ResourceSMBFileShare() *schema.Resource {
+func resourceSMBFileShare() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSMBFileShareCreate,
 		ReadWithoutTimeout:   resourceSMBFileShareRead,
@@ -165,7 +165,7 @@ func ResourceSMBFileShare() *schema.Resource {
 					validation.StringLenBetween(2, 100),
 				),
 			},
-			"path": {
+			names.AttrPath: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -346,7 +346,7 @@ func resourceSMBFileShareRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("notification_policy", fileshare.NotificationPolicy)
 	d.Set("object_acl", fileshare.ObjectACL)
 	d.Set("oplocks_enabled", fileshare.OplocksEnabled)
-	d.Set("path", fileshare.Path)
+	d.Set(names.AttrPath, fileshare.Path)
 	d.Set("read_only", fileshare.ReadOnly)
 	d.Set("requester_pays", fileshare.RequesterPays)
 	d.Set(names.AttrRoleARN, fileshare.Role)
@@ -383,7 +383,11 @@ func resourceSMBFileShareUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		if d.HasChange("cache_attributes") {
-			input.CacheAttributes = expandCacheAttributes(d.Get("cache_attributes").([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("cache_attributes"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.CacheAttributes = expandCacheAttributes(v.([]interface{})[0].(map[string]interface{}))
+			} else {
+				input.CacheAttributes = &storagegateway.CacheAttributes{}
+			}
 		}
 
 		if d.HasChange("case_sensitivity") {

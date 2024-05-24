@@ -36,7 +36,7 @@ func TestAccOutpostsOutpostDataSource_id(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARNIgnoreRegionAndAccount(dataSourceName, "site_arn", "outposts", regexache.MustCompile(`site/os.+$`).String()),
 					resource.TestCheckResourceAttrSet(dataSourceName, "site_id"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "supported_hardware_type"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "tags.%"),
+					resource.TestCheckResourceAttrSet(dataSourceName, acctest.CtTagsPercent),
 				),
 			},
 		},

@@ -31,7 +31,7 @@ func TestAccGlueConnectionDataSource_basic(t *testing.T) {
 				Config: testAccConnectionDataSourceConfig_basic(rName, jdbcConnectionUrl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccConnectionCheckDataSource(datasourceName),
-					resource.TestCheckResourceAttrPair(datasourceName, "catalog_id", resourceName, "catalog_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrCatalogID, resourceName, names.AttrCatalogID),
 					resource.TestCheckResourceAttrPair(datasourceName, "connection_type", resourceName, "connection_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),

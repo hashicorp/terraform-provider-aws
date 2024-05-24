@@ -76,7 +76,7 @@ func ResourceBotAlias() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"iam_role_arn": {
+						names.AttrIAMRoleARN: {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.All(
@@ -321,7 +321,7 @@ func resourceBotAliasImport(ctx context.Context, d *schema.ResourceData, _ inter
 
 var logSettings = &schema.Resource{
 	Schema: map[string]*schema.Schema{
-		"destination": {
+		names.AttrDestination: {
 			Type:         schema.TypeString,
 			Required:     true,
 			ValidateFunc: validation.StringInSlice(lexmodelbuildingservice.Destination_Values(), false),
@@ -357,8 +357,8 @@ var logSettings = &schema.Resource{
 func flattenConversationLogs(response *lexmodelbuildingservice.ConversationLogsResponse) (flattened []map[string]interface{}) {
 	return []map[string]interface{}{
 		{
-			"iam_role_arn": aws.StringValue(response.IamRoleArn),
-			"log_settings": flattenLogSettings(response.LogSettings),
+			names.AttrIAMRoleARN: aws.StringValue(response.IamRoleArn),
+			"log_settings":       flattenLogSettings(response.LogSettings),
 		},
 	}
 }
@@ -371,7 +371,7 @@ func expandConversationLogs(rawObject interface{}) (*lexmodelbuildingservice.Con
 		return nil, err
 	}
 	return &lexmodelbuildingservice.ConversationLogsRequest{
-		IamRoleArn:  aws.String(request["iam_role_arn"].(string)),
+		IamRoleArn:  aws.String(request[names.AttrIAMRoleARN].(string)),
 		LogSettings: logSettings,
 	}, nil
 }
@@ -379,7 +379,7 @@ func expandConversationLogs(rawObject interface{}) (*lexmodelbuildingservice.Con
 func flattenLogSettings(responses []*lexmodelbuildingservice.LogSettingsResponse) (flattened []map[string]interface{}) {
 	for _, response := range responses {
 		flattened = append(flattened, map[string]interface{}{
-			"destination":         response.Destination,
+			names.AttrDestination: response.Destination,
 			names.AttrKMSKeyARN:   response.KmsKeyArn,
 			"log_type":            response.LogType,
 			names.AttrResourceARN: response.ResourceArn,
@@ -397,7 +397,7 @@ func expandLogSettings(rawValues []interface{}) ([]*lexmodelbuildingservice.LogS
 		if !ok {
 			continue
 		}
-		destination := value["destination"].(string)
+		destination := value[names.AttrDestination].(string)
 		request := &lexmodelbuildingservice.LogSettingsRequest{
 			Destination: aws.String(destination),
 			LogType:     aws.String(value["log_type"].(string)),

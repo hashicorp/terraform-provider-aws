@@ -55,7 +55,7 @@ func resourceWebhook() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"url": {
+			names.AttrURL: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -121,7 +121,7 @@ func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set(names.AttrARN, webhookArn)
 	d.Set("branch_name", webhook.BranchName)
 	d.Set(names.AttrDescription, webhook.Description)
-	d.Set("url", webhook.WebhookUrl)
+	d.Set(names.AttrURL, webhook.WebhookUrl)
 
 	return diags
 }

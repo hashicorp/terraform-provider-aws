@@ -55,7 +55,7 @@ func dataSourceResources() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"values": {
+						names.AttrValues: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							MaxItems: 20,
@@ -161,7 +161,7 @@ func expandTagFilters(filters []interface{}) []types.TagFilter {
 			Key: aws.String(m[names.AttrKey].(string)),
 		}
 
-		if v, ok := m["values"]; ok && v.(*schema.Set).Len() > 0 {
+		if v, ok := m[names.AttrValues]; ok && v.(*schema.Set).Len() > 0 {
 			result[i].Values = flex.ExpandStringValueSet(v.(*schema.Set))
 		}
 	}

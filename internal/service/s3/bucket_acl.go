@@ -65,7 +65,7 @@ func resourceBucketACL() *schema.Resource {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
-												"display_name": {
+												names.AttrDisplayName: {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
@@ -78,7 +78,7 @@ func resourceBucketACL() *schema.Resource {
 													Required:         true,
 													ValidateDiagFunc: enum.Validate[types.Type](),
 												},
-												"uri": {
+												names.AttrURI: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
@@ -93,13 +93,13 @@ func resourceBucketACL() *schema.Resource {
 								},
 							},
 						},
-						"owner": {
+						names.AttrOwner: {
 							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"display_name": {
+									names.AttrDisplayName: {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
@@ -304,7 +304,7 @@ func expandAccessControlPolicy(l []interface{}) *types.AccessControlPolicy {
 		result.Grants = expandGrants(v.List())
 	}
 
-	if v, ok := tfMap["owner"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[names.AttrOwner].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		result.Owner = expandOwner(v)
 	}
 
@@ -360,7 +360,7 @@ func expandACLGrantee(l []interface{}) *types.Grantee {
 		result.Type = types.Type(v)
 	}
 
-	if v, ok := tfMap["uri"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrURI].(string); ok && v != "" {
 		result.URI = aws.String(v)
 	}
 
@@ -379,7 +379,7 @@ func expandOwner(l []interface{}) *types.Owner {
 
 	owner := &types.Owner{}
 
-	if v, ok := tfMap["display_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDisplayName].(string); ok && v != "" {
 		owner.DisplayName = aws.String(v)
 	}
 
@@ -402,7 +402,7 @@ func flattenBucketACL(apiObject *s3.GetBucketAclOutput) []interface{} {
 	}
 
 	if apiObject.Owner != nil {
-		m["owner"] = flattenOwner(apiObject.Owner)
+		m[names.AttrOwner] = flattenOwner(apiObject.Owner)
 	}
 
 	return []interface{}{m}
@@ -436,7 +436,7 @@ func flattenACLGrantee(grantee *types.Grantee) []interface{} {
 	}
 
 	if grantee.DisplayName != nil {
-		m["display_name"] = aws.ToString(grantee.DisplayName)
+		m[names.AttrDisplayName] = aws.ToString(grantee.DisplayName)
 	}
 
 	if grantee.EmailAddress != nil {
@@ -448,7 +448,7 @@ func flattenACLGrantee(grantee *types.Grantee) []interface{} {
 	}
 
 	if grantee.URI != nil {
-		m["uri"] = aws.ToString(grantee.URI)
+		m[names.AttrURI] = aws.ToString(grantee.URI)
 	}
 
 	return []interface{}{m}
@@ -462,7 +462,7 @@ func flattenOwner(owner *types.Owner) []interface{} {
 	m := make(map[string]interface{})
 
 	if owner.DisplayName != nil {
-		m["display_name"] = aws.ToString(owner.DisplayName)
+		m[names.AttrDisplayName] = aws.ToString(owner.DisplayName)
 	}
 
 	if owner.ID != nil {

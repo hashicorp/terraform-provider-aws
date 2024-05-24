@@ -50,7 +50,7 @@ func ResourceAccessControlAttributes() *schema.Resource {
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"source": {
+									names.AttrSource: {
 										Type:     schema.TypeSet,
 										Required: true,
 										MinItems: 1,
@@ -72,7 +72,7 @@ func ResourceAccessControlAttributes() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status_reason": {
+			names.AttrStatusReason: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -124,7 +124,7 @@ func resourceAccessControlAttributesRead(ctx context.Context, d *schema.Resource
 		return sdkdiag.AppendErrorf(diags, "setting attribute: %s", err)
 	}
 	d.Set(names.AttrStatus, output.Status)
-	d.Set("status_reason", output.StatusReason)
+	d.Set(names.AttrStatusReason, output.StatusReason)
 
 	return diags
 }
@@ -200,7 +200,7 @@ func expandAccessControlAttributes(d *schema.ResourceData) []awstypes.AccessCont
 			attribute.Key = aws.String(key)
 		}
 		val := attr[names.AttrValue].(*schema.Set).List()[0].(map[string]interface{})
-		if v, ok := val["source"].(*schema.Set); ok && len(v.List()) > 0 {
+		if v, ok := val[names.AttrSource].(*schema.Set); ok && len(v.List()) > 0 {
 			attribute.Value = &awstypes.AccessControlAttributeValue{
 				Source: flex.ExpandStringValueSet(v),
 			}
@@ -220,7 +220,7 @@ func flattenAccessControlAttributes(attributes []awstypes.AccessControlAttribute
 	for _, attr := range attributes {
 		var val []interface{}
 		val = append(val, map[string]interface{}{
-			"source": flex.FlattenStringValueSet(attr.Value.Source),
+			names.AttrSource: flex.FlattenStringValueSet(attr.Value.Source),
 		})
 		results = append(results, map[string]interface{}{
 			names.AttrKey:   aws.ToString(attr.Key),

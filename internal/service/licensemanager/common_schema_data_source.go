@@ -15,7 +15,7 @@ func BuildFiltersDataSource(set *schema.Set) []*licensemanager.Filter {
 	for _, v := range set.List() {
 		m := v.(map[string]interface{})
 		var filterValues []*string
-		for _, e := range m["values"].([]interface{}) {
+		for _, e := range m[names.AttrValues].([]interface{}) {
 			filterValues = append(filterValues, aws.String(e.(string)))
 		}
 		filters = append(filters, &licensemanager.Filter{
@@ -37,7 +37,7 @@ func DataSourceFiltersSchema() *schema.Schema {
 					Required: true,
 				},
 
-				"values": {
+				names.AttrValues: {
 					Type:     schema.TypeList,
 					Required: true,
 					MinItems: 1,

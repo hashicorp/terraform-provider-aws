@@ -53,7 +53,7 @@ func resourceCluster() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"apply_immediately": {
+			names.AttrApplyImmediately: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
@@ -85,7 +85,7 @@ func resourceCluster() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"address": {
+						names.AttrAddress: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -167,7 +167,7 @@ func resourceCluster() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"destination": {
+						names.AttrDestination: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -567,7 +567,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &elasticache.ModifyCacheClusterInput{
 			CacheClusterId:   aws.String(d.Id()),
-			ApplyImmediately: aws.Bool(d.Get("apply_immediately").(bool)),
+			ApplyImmediately: aws.Bool(d.Get(names.AttrApplyImmediately).(bool)),
 		}
 
 		requestUpdate := false
@@ -949,7 +949,7 @@ func setCacheNodeData(d *schema.ResourceData, c *elasticache.CacheCluster) error
 		}
 		cacheNodeData = append(cacheNodeData, map[string]interface{}{
 			names.AttrID:               aws.StringValue(node.CacheNodeId),
-			"address":                  aws.StringValue(node.Endpoint.Address),
+			names.AttrAddress:          aws.StringValue(node.Endpoint.Address),
 			names.AttrPort:             aws.Int64Value(node.Endpoint.Port),
 			names.AttrAvailabilityZone: aws.StringValue(node.CustomerAvailabilityZone),
 			"outpost_arn":              aws.StringValue(node.CustomerOutpostArn),

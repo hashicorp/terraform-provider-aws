@@ -1,13 +1,12 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package ssm_test
+package ssm
 
 import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -38,8 +37,7 @@ func TestAssociationRuleMigrateState(t *testing.T) {
 			ID:         tc.ID,
 			Attributes: tc.Attributes,
 		}
-		is, err := tfssm.AssociationMigrateState(
-			tc.StateVersion, is, tc.Meta)
+		is, err := associationMigrateState(tc.StateVersion, is, tc.Meta)
 
 		if err != nil {
 			t.Fatalf("bad: %s, err: %#v", tn, err)

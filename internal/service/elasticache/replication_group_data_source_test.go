@@ -33,7 +33,7 @@ func TestAccElastiCacheReplicationGroupDataSource_basic(t *testing.T) {
 			{
 				Config: testAccReplicationGroupDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "auth_token_enabled", "false"),
+					resource.TestCheckResourceAttr(dataSourceName, "auth_token_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "automatic_failover_enabled", resourceName, "automatic_failover_enabled"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "multi_az_enabled", resourceName, "multi_az_enabled"),
@@ -70,7 +70,7 @@ func TestAccElastiCacheReplicationGroupDataSource_clusterMode(t *testing.T) {
 			{
 				Config: testAccReplicationGroupDataSourceConfig_clusterMode(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "auth_token_enabled", "false"),
+					resource.TestCheckResourceAttr(dataSourceName, "auth_token_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(dataSourceName, "automatic_failover_enabled", resourceName, "automatic_failover_enabled"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "multi_az_enabled", resourceName, "multi_az_enabled"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "configuration_endpoint_address", resourceName, "configuration_endpoint_address"),
@@ -150,7 +150,7 @@ func TestAccElastiCacheReplicationGroupDataSource_Engine_Redis_LogDeliveryConfig
 					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configuration.0.log_type", "slow-log"),
 					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configuration.1.destination", rName),
 					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configuration.1.destination_type", "kinesis-firehose"),
-					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configuration.1.log_format", "json"),
+					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configuration.1.log_format", names.AttrJSON),
 					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configuration.1.log_type", "engine-log"),
 				),
 			},

@@ -27,7 +27,7 @@ func dataSourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"path": {
+			names.AttrPath: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -39,7 +39,7 @@ func dataSourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"user_name": {
+			names.AttrUserName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -53,7 +53,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	userName := d.Get("user_name").(string)
+	userName := d.Get(names.AttrUserName).(string)
 	req := &iam.GetUserInput{
 		UserName: aws.String(userName),
 	}
@@ -67,7 +67,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	user := resp.User
 	d.SetId(aws.ToString(user.UserId))
 	d.Set(names.AttrARN, user.Arn)
-	d.Set("path", user.Path)
+	d.Set(names.AttrPath, user.Path)
 	d.Set("permissions_boundary", "")
 	if user.PermissionsBoundary != nil {
 		d.Set("permissions_boundary", user.PermissionsBoundary.PermissionsBoundaryArn)

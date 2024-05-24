@@ -85,7 +85,7 @@ func ResourceNetworkInsightsAnalysis() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status_message": {
+			names.AttrStatusMessage: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -528,11 +528,11 @@ var networkInsightsAnalysisPathComponentsSchema = &schema.Schema{
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"resource_id": {
+						names.AttrResourceID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"resource_type": {
+						names.AttrResourceType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -640,7 +640,7 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 					},
 				},
 			},
-			"address": {
+			names.AttrAddress: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -735,7 +735,7 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 					},
 				},
 			},
-			"destination": {
+			names.AttrDestination: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -1281,11 +1281,11 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"resource_id": {
+						names.AttrResourceID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"resource_type": {
+						names.AttrResourceType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -1471,7 +1471,7 @@ func resourceNetworkInsightsAnalysisRead(ctx context.Context, d *schema.Resource
 	}
 	d.Set("start_date", output.StartDate.Format(time.RFC3339))
 	d.Set(names.AttrStatus, output.Status)
-	d.Set("status_message", output.StatusMessage)
+	d.Set(names.AttrStatusMessage, output.StatusMessage)
 	d.Set("warning_message", output.WarningMessage)
 
 	setTagsOut(ctx, output.Tags)
@@ -1677,7 +1677,7 @@ func flattenAnalysisLoadBalancerTarget(apiObject *ec2.AnalysisLoadBalancerTarget
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Address; v != nil {
-		tfMap["address"] = aws.StringValue(v)
+		tfMap[names.AttrAddress] = aws.StringValue(v)
 	}
 
 	if v := apiObject.AvailabilityZone; v != nil {
@@ -1821,7 +1821,7 @@ func flattenExplanation(apiObject *ec2.Explanation) map[string]interface{} {
 	}
 
 	if v := apiObject.Address; v != nil {
-		tfMap["address"] = aws.StringValue(v)
+		tfMap[names.AttrAddress] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Addresses; v != nil {
@@ -1853,7 +1853,7 @@ func flattenExplanation(apiObject *ec2.Explanation) map[string]interface{} {
 	}
 
 	if v := apiObject.Destination; v != nil {
-		tfMap["destination"] = []interface{}{flattenAnalysisComponent(v)}
+		tfMap[names.AttrDestination] = []interface{}{flattenAnalysisComponent(v)}
 	}
 
 	if v := apiObject.DestinationVpc; v != nil {
@@ -2169,11 +2169,11 @@ func flattenTransitGatewayRouteTableRoute(apiObject *ec2.TransitGatewayRouteTabl
 	}
 
 	if v := apiObject.ResourceId; v != nil {
-		tfMap["resource_id"] = aws.StringValue(v)
+		tfMap[names.AttrResourceID] = aws.StringValue(v)
 	}
 
 	if v := apiObject.ResourceType; v != nil {
-		tfMap["resource_type"] = aws.StringValue(v)
+		tfMap[names.AttrResourceType] = aws.StringValue(v)
 	}
 
 	if v := apiObject.RouteOrigin; v != nil {

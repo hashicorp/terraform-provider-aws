@@ -32,7 +32,7 @@ func DataSourceInstanceStorageConfig() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
-			"resource_type": {
+			names.AttrResourceType: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(connect.InstanceStorageResourceType_Values(), false),
@@ -59,7 +59,7 @@ func DataSourceInstanceStorageConfig() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"stream_arn": {
+									names.AttrStreamARN: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -80,14 +80,14 @@ func DataSourceInstanceStorageConfig() *schema.Resource {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												"key_id": {
+												names.AttrKeyID: {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
 											},
 										},
 									},
-									"prefix": {
+									names.AttrPrefix: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -107,7 +107,7 @@ func DataSourceInstanceStorageConfig() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"bucket_prefix": {
+									names.AttrBucketPrefix: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -120,7 +120,7 @@ func DataSourceInstanceStorageConfig() *schema.Resource {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												"key_id": {
+												names.AttrKeyID: {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
@@ -130,7 +130,7 @@ func DataSourceInstanceStorageConfig() *schema.Resource {
 								},
 							},
 						},
-						"storage_type": {
+						names.AttrStorageType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -148,7 +148,7 @@ func dataSourceInstanceStorageConfigRead(ctx context.Context, d *schema.Resource
 
 	associationId := d.Get("association_id").(string)
 	instanceId := d.Get(names.AttrInstanceID).(string)
-	resourceType := d.Get("resource_type").(string)
+	resourceType := d.Get(names.AttrResourceType).(string)
 
 	input := &connect.DescribeInstanceStorageConfigInput{
 		AssociationId: aws.String(associationId),

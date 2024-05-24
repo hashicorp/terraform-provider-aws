@@ -51,7 +51,7 @@ func (d *userGroupsDataSource) Schema(ctx context.Context, request datasource.Sc
 						names.AttrDescription: schema.StringAttribute{
 							Computed: true,
 						},
-						"group_name": schema.StringAttribute{
+						names.AttrGroupName: schema.StringAttribute{
 							Computed: true,
 						},
 						"precedence": schema.Int64Attribute{

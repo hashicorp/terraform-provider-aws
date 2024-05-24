@@ -36,7 +36,7 @@ func ResourcePlan() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"stage": {
+			names.AttrStage: {
 				Type:     schema.TypeList,
 				Required: true,
 				Elem: &schema.Resource{
@@ -45,7 +45,7 @@ func ResourcePlan() *schema.Resource {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
-						"target": {
+						names.AttrTarget: {
 							Type:     schema.TypeList,
 							Optional: true,
 							Elem: &schema.Resource{
@@ -102,7 +102,7 @@ func resourcePlanCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 
 	contactId := d.Get("contact_id").(string)
-	stages := expandStages(d.Get("stage").([]interface{}))
+	stages := expandStages(d.Get(names.AttrStage).([]interface{}))
 	plan := &types.Plan{
 		Stages: stages,
 	}
@@ -159,8 +159,8 @@ func resourcePlanUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		ContactId: aws.String(d.Id()),
 	}
 
-	if d.HasChanges("stage") {
-		stages := expandStages(d.Get("stage").([]interface{}))
+	if d.HasChanges(names.AttrStage) {
+		stages := expandStages(d.Get(names.AttrStage).([]interface{}))
 		in.Plan = &types.Plan{
 			Stages: stages,
 		}

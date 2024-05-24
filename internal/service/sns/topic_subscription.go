@@ -56,7 +56,7 @@ var (
 				return json
 			},
 		},
-		"endpoint": {
+		names.AttrEndpoint: {
 			Type:     schema.TypeString,
 			Required: true,
 			ForceNew: true,
@@ -129,7 +129,7 @@ var (
 			Optional:     true,
 			ValidateFunc: verify.ValidARN,
 		},
-		"topic_arn": {
+		names.AttrTopicARN: {
 			Type:         schema.TypeString,
 			Required:     true,
 			ForceNew:     true,
@@ -141,7 +141,7 @@ var (
 		names.AttrARN:                    subscriptionAttributeNameSubscriptionARN,
 		"confirmation_was_authenticated": subscriptionAttributeNameConfirmationWasAuthenticated,
 		"delivery_policy":                subscriptionAttributeNameDeliveryPolicy,
-		"endpoint":                       subscriptionAttributeNameEndpoint,
+		names.AttrEndpoint:               subscriptionAttributeNameEndpoint,
 		"filter_policy":                  subscriptionAttributeNameFilterPolicy,
 		"filter_policy_scope":            subscriptionAttributeNameFilterPolicyScope,
 		names.AttrOwnerID:                subscriptionAttributeNameOwner,
@@ -151,7 +151,7 @@ var (
 		"redrive_policy":                 subscriptionAttributeNameRedrivePolicy,
 		"replay_policy":                  subscriptionAttributeNameReplayPolicy,
 		"subscription_role_arn":          subscriptionAttributeNameSubscriptionRoleARN,
-		"topic_arn":                      subscriptionAttributeNameTopicARN,
+		names.AttrTopicARN:               subscriptionAttributeNameTopicARN,
 	}, subscriptionSchema).WithMissingSetToNil("*")
 )
 
@@ -189,10 +189,10 @@ func resourceTopicSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 	protocol := d.Get(names.AttrProtocol).(string)
 	input := &sns.SubscribeInput{
 		Attributes:            attributes,
-		Endpoint:              aws.String(d.Get("endpoint").(string)),
+		Endpoint:              aws.String(d.Get(names.AttrEndpoint).(string)),
 		Protocol:              aws.String(protocol),
 		ReturnSubscriptionArn: true, // even if not confirmed, will get ARN
-		TopicArn:              aws.String(d.Get("topic_arn").(string)),
+		TopicArn:              aws.String(d.Get(names.AttrTopicARN).(string)),
 	}
 
 	output, err := conn.Subscribe(ctx, input)
@@ -209,7 +209,7 @@ func resourceTopicSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 		waitForConfirmation = false
 	}
 
-	if strings.Contains(protocol, "email") {
+	if strings.Contains(protocol, names.AttrEmail) {
 		waitForConfirmation = false
 	}
 

@@ -52,7 +52,7 @@ func DataSourceTransitGatewayMulticastDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": customFiltersSchema(),
+			names.AttrFilter: customFiltersSchema(),
 			"igmpv2_support": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -132,7 +132,7 @@ func dataSourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.
 	}
 
 	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get("filter").(*schema.Set),
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {

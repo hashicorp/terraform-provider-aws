@@ -208,7 +208,7 @@ linters-settings:
     require-explanation: true
     require-specific: true
     allow-no-explanation:
-      - gomnd
+      - mnd
       - paralleltest
       - tparallel
       - unparam

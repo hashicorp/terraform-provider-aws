@@ -49,7 +49,7 @@ func DataSourceTransitGatewayConnectPeer() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": customFiltersSchema(),
+			names.AttrFilter: customFiltersSchema(),
 			"inside_cidr_blocks": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -90,7 +90,7 @@ func dataSourceTransitGatewayConnectPeerRead(ctx context.Context, d *schema.Reso
 	}
 
 	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get("filter").(*schema.Set),
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	transitGatewayConnectPeer, err := FindTransitGatewayConnectPeer(ctx, conn, input)

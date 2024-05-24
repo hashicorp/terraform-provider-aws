@@ -48,7 +48,7 @@ func resourceBackup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"file_system_id": {
+			names.AttrFileSystemID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -89,7 +89,7 @@ func resourceBackupCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		Tags:               getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("file_system_id"); ok {
+	if v, ok := d.GetOk(names.AttrFileSystemID); ok {
 		input.FileSystemId = aws.String(v.(string))
 	}
 
@@ -138,7 +138,7 @@ func resourceBackupRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.Set(names.AttrARN, backup.ResourceARN)
 	if backup.FileSystem != nil {
-		d.Set("file_system_id", backup.FileSystem.FileSystemId)
+		d.Set(names.AttrFileSystemID, backup.FileSystem.FileSystemId)
 	}
 	d.Set(names.AttrKMSKeyID, backup.KmsKeyId)
 	d.Set(names.AttrOwnerID, backup.OwnerId)

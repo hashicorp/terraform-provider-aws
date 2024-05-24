@@ -45,7 +45,7 @@ func ResourceVoiceConnectorGroup() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 256),
 						},
-						"priority": {
+						names.AttrPriority: {
 							Type:         schema.TypeInt,
 							Required:     true,
 							ValidateFunc: validation.IntBetween(1, 99),
@@ -174,7 +174,7 @@ func expandVoiceConnectorItems(data []interface{}) []awstypes.VoiceConnectorItem
 		item := rItem.(map[string]interface{})
 		connectorsItems = append(connectorsItems, awstypes.VoiceConnectorItem{
 			VoiceConnectorId: aws.String(item["voice_connector_id"].(string)),
-			Priority:         aws.Int32(int32(item["priority"].(int))),
+			Priority:         aws.Int32(int32(item[names.AttrPriority].(int))),
 		})
 	}
 
@@ -186,7 +186,7 @@ func flattenVoiceConnectorItems(connectors []awstypes.VoiceConnectorItem) []inte
 
 	for _, c := range connectors {
 		rawC := map[string]interface{}{
-			"priority":           c.Priority,
+			names.AttrPriority:   c.Priority,
 			"voice_connector_id": aws.ToString(c.VoiceConnectorId),
 		}
 		rawConnectors = append(rawConnectors, rawC)

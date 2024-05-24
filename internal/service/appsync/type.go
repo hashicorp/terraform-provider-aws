@@ -50,7 +50,7 @@ func ResourceType() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"format": {
+			names.AttrFormat: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(appsync.TypeDefinitionFormat_Values(), false),
@@ -72,7 +72,7 @@ func resourceTypeCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	params := &appsync.CreateTypeInput{
 		ApiId:      aws.String(apiID),
 		Definition: aws.String(d.Get("definition").(string)),
-		Format:     aws.String(d.Get("format").(string)),
+		Format:     aws.String(d.Get(names.AttrFormat).(string)),
 	}
 
 	out, err := conn.CreateTypeWithContext(ctx, params)
@@ -108,7 +108,7 @@ func resourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("api_id", apiID)
 	d.Set(names.AttrARN, resp.Arn)
 	d.Set(names.AttrName, resp.Name)
-	d.Set("format", resp.Format)
+	d.Set(names.AttrFormat, resp.Format)
 	d.Set("definition", resp.Definition)
 	d.Set(names.AttrDescription, resp.Description)
 
@@ -121,7 +121,7 @@ func resourceTypeUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	params := &appsync.UpdateTypeInput{
 		ApiId:      aws.String(d.Get("api_id").(string)),
-		Format:     aws.String(d.Get("format").(string)),
+		Format:     aws.String(d.Get(names.AttrFormat).(string)),
 		TypeName:   aws.String(d.Get(names.AttrName).(string)),
 		Definition: aws.String(d.Get("definition").(string)),
 	}

@@ -56,7 +56,7 @@ func ResourceProject() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_time": {
+			names.AttrCreatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -103,7 +103,7 @@ func ResourceProject() *schema.Resource {
 											validation.StringMatch(regexache.MustCompile(`^[0-9a-z][0-9a-z-]*[0-9a-z]$`), "must be a valid Bucket name"),
 										),
 									},
-									"prefix": {
+									names.AttrPrefix: {
 										Type:     schema.TypeString,
 										Optional: true,
 										ValidateFunc: validation.All(
@@ -217,7 +217,7 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("active_experiment_count", project.ActiveExperimentCount)
 	d.Set("active_launch_count", project.ActiveLaunchCount)
 	d.Set(names.AttrARN, project.Arn)
-	d.Set("created_time", aws.ToTime(project.CreatedTime).Format(time.RFC3339))
+	d.Set(names.AttrCreatedTime, aws.ToTime(project.CreatedTime).Format(time.RFC3339))
 	d.Set(names.AttrDescription, project.Description)
 	d.Set("experiment_count", project.ExperimentCount)
 	d.Set("feature_count", project.FeatureCount)
@@ -374,7 +374,7 @@ func expandS3Destination(s3Destination []interface{}) *awstypes.S3DestinationCon
 		result.Bucket = aws.String(v)
 	}
 
-	if v, ok := tfMap["prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPrefix].(string); ok && v != "" {
 		result.Prefix = aws.String(v)
 	}
 
@@ -425,7 +425,7 @@ func flattenS3Destination(s3Destination *awstypes.S3Destination) []interface{} {
 	}
 
 	if s3Destination.Prefix != nil {
-		values["prefix"] = aws.ToString(s3Destination.Prefix)
+		values[names.AttrPrefix] = aws.ToString(s3Destination.Prefix)
 	}
 
 	return []interface{}{values}

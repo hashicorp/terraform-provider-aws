@@ -19,7 +19,7 @@ func expandCapacityProviderStrategy(cps *schema.Set) []*ecs.CapacityProviderStra
 		if val, ok := cp["base"]; ok {
 			ps.Base = aws.Int64(int64(val.(int)))
 		}
-		if val, ok := cp["weight"]; ok {
+		if val, ok := cp[names.AttrWeight]; ok {
 			ps.Weight = aws.Int64(int64(val.(int)))
 		}
 		if val, ok := cp["capacity_provider"]; ok {
@@ -40,7 +40,7 @@ func flattenCapacityProviderStrategy(cps []*ecs.CapacityProviderStrategyItem) []
 		s := make(map[string]interface{})
 		s["capacity_provider"] = aws.StringValue(cp.CapacityProvider)
 		if cp.Weight != nil {
-			s["weight"] = aws.Int64Value(cp.Weight)
+			s[names.AttrWeight] = aws.Int64Value(cp.Weight)
 		}
 		if cp.Base != nil {
 			s["base"] = aws.Int64Value(cp.Base)
@@ -198,7 +198,7 @@ func expandScale(l []interface{}) *ecs.Scale {
 
 	result := &ecs.Scale{}
 
-	if v, ok := tfMap["unit"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrUnit].(string); ok && v != "" {
 		result.Unit = aws.String(v)
 	}
 
@@ -216,7 +216,7 @@ func flattenScale(scale *ecs.Scale) []map[string]interface{} {
 	}
 
 	m := make(map[string]interface{})
-	m["unit"] = aws.StringValue(scale.Unit)
+	m[names.AttrUnit] = aws.StringValue(scale.Unit)
 	m[names.AttrValue] = aws.Float64Value(scale.Value)
 
 	return []map[string]interface{}{m}

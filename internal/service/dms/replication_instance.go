@@ -55,7 +55,7 @@ func ResourceReplicationInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"apply_immediately": {
+			names.AttrApplyImmediately: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -99,7 +99,7 @@ func ResourceReplicationInstance() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
 			},
-			"publicly_accessible": {
+			names.AttrPubliclyAccessible: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
@@ -158,7 +158,7 @@ func resourceReplicationInstanceCreate(ctx context.Context, d *schema.ResourceDa
 	replicationInstanceID := d.Get("replication_instance_id").(string)
 	input := &dms.CreateReplicationInstanceInput{
 		AutoMinorVersionUpgrade:       aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
-		PubliclyAccessible:            aws.Bool(d.Get("publicly_accessible").(bool)),
+		PubliclyAccessible:            aws.Bool(d.Get(names.AttrPubliclyAccessible).(bool)),
 		MultiAZ:                       aws.Bool(d.Get("multi_az").(bool)),
 		ReplicationInstanceClass:      aws.String(d.Get("replication_instance_class").(string)),
 		ReplicationInstanceIdentifier: aws.String(replicationInstanceID),
@@ -233,7 +233,7 @@ func resourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceData
 	d.Set("multi_az", instance.MultiAZ)
 	d.Set("network_type", instance.NetworkType)
 	d.Set(names.AttrPreferredMaintenanceWindow, instance.PreferredMaintenanceWindow)
-	d.Set("publicly_accessible", instance.PubliclyAccessible)
+	d.Set(names.AttrPubliclyAccessible, instance.PubliclyAccessible)
 	d.Set("replication_instance_arn", instance.ReplicationInstanceArn)
 	d.Set("replication_instance_class", instance.ReplicationInstanceClass)
 	d.Set("replication_instance_id", instance.ReplicationInstanceIdentifier)
@@ -257,7 +257,7 @@ func resourceReplicationInstanceUpdate(ctx context.Context, d *schema.ResourceDa
 		// as it results in InvalidParameterCombination: No modifications were requested
 		input := &dms.ModifyReplicationInstanceInput{
 			AllowMajorVersionUpgrade: aws.Bool(d.Get("allow_major_version_upgrade").(bool)),
-			ApplyImmediately:         aws.Bool(d.Get("apply_immediately").(bool)),
+			ApplyImmediately:         aws.Bool(d.Get(names.AttrApplyImmediately).(bool)),
 			ReplicationInstanceArn:   aws.String(d.Get("replication_instance_arn").(string)),
 		}
 

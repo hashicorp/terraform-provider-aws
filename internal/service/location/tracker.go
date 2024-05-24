@@ -33,7 +33,7 @@ func ResourceTracker() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			"create_time": {
+			names.AttrCreateTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -137,7 +137,7 @@ func resourceTrackerRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "getting Location Service Map (%s): empty response", d.Id())
 	}
 
-	d.Set("create_time", aws.TimeValue(output.CreateTime).Format(time.RFC3339))
+	d.Set(names.AttrCreateTime, aws.TimeValue(output.CreateTime).Format(time.RFC3339))
 	d.Set(names.AttrDescription, output.Description)
 	d.Set(names.AttrKMSKeyID, output.KmsKeyId)
 	d.Set("position_filtering", output.PositionFiltering)

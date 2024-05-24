@@ -39,7 +39,7 @@ func DataSourcePortfolio() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_time": {
+			names.AttrCreatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -55,7 +55,7 @@ func DataSourcePortfolio() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"provider_name": {
+			names.AttrProviderName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -90,14 +90,14 @@ func dataSourcePortfolioRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.SetId(aws.StringValue(detail.Id))
 
-	if err := d.Set("created_time", aws.TimeValue(detail.CreatedTime).Format(time.RFC3339)); err != nil {
+	if err := d.Set(names.AttrCreatedTime, aws.TimeValue(detail.CreatedTime).Format(time.RFC3339)); err != nil {
 		log.Printf("[DEBUG] Error setting created_time: %s", err)
 	}
 
 	d.Set(names.AttrARN, detail.ARN)
 	d.Set(names.AttrDescription, detail.Description)
 	d.Set(names.AttrName, detail.DisplayName)
-	d.Set("provider_name", detail.ProviderName)
+	d.Set(names.AttrProviderName, detail.ProviderName)
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	tags := KeyValueTags(ctx, output.Tags)

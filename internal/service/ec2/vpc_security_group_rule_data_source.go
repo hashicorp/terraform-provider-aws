@@ -77,7 +77,7 @@ func (d *securityGroupRuleDataSource) Schema(ctx context.Context, request dataso
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"filter": customFiltersBlock(),
+			names.AttrFilter: customFiltersBlock(),
 		},
 	}
 }

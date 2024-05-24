@@ -143,18 +143,18 @@ func ResourceSpotFleetRequest() *schema.Resource {
 										Default:  true,
 										ForceNew: true,
 									},
-									"device_name": {
+									names.AttrDeviceName: {
 										Type:     schema.TypeString,
 										Required: true,
 										ForceNew: true,
 									},
-									"encrypted": {
+									names.AttrEncrypted: {
 										Type:     schema.TypeBool,
 										Optional: true,
 										Computed: true,
 										ForceNew: true,
 									},
-									"iops": {
+									names.AttrIOPS: {
 										Type:     schema.TypeInt,
 										Optional: true,
 										Computed: true,
@@ -166,7 +166,7 @@ func ResourceSpotFleetRequest() *schema.Resource {
 										Computed: true,
 										ForceNew: true,
 									},
-									"snapshot_id": {
+									names.AttrSnapshotID: {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
@@ -178,13 +178,13 @@ func ResourceSpotFleetRequest() *schema.Resource {
 										Computed: true,
 										ForceNew: true,
 									},
-									"volume_size": {
+									names.AttrVolumeSize: {
 										Type:     schema.TypeInt,
 										Optional: true,
 										Computed: true,
 										ForceNew: true,
 									},
-									"volume_type": {
+									names.AttrVolumeType: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Computed:     true,
@@ -207,7 +207,7 @@ func ResourceSpotFleetRequest() *schema.Resource {
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"device_name": {
+									names.AttrDeviceName: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -278,13 +278,13 @@ func ResourceSpotFleetRequest() *schema.Resource {
 										Default:  true,
 										ForceNew: true,
 									},
-									"encrypted": {
+									names.AttrEncrypted: {
 										Type:     schema.TypeBool,
 										Optional: true,
 										Computed: true,
 										ForceNew: true,
 									},
-									"iops": {
+									names.AttrIOPS: {
 										Type:     schema.TypeInt,
 										Optional: true,
 										Computed: true,
@@ -302,13 +302,13 @@ func ResourceSpotFleetRequest() *schema.Resource {
 										Computed: true,
 										ForceNew: true,
 									},
-									"volume_size": {
+									names.AttrVolumeSize: {
 										Type:     schema.TypeInt,
 										Optional: true,
 										Computed: true,
 										ForceNew: true,
 									},
-									"volume_type": {
+									names.AttrVolumeType: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Computed:     true,
@@ -720,7 +720,7 @@ func ResourceSpotFleetRequest() *schema.Resource {
 										Optional: true,
 										ForceNew: true,
 									},
-									"priority": {
+									names.AttrPriority: {
 										Type:     schema.TypeFloat,
 										Optional: true,
 										Computed: true,
@@ -1344,11 +1344,11 @@ func readSpotFleetBlockDeviceMappingsFromConfig(ctx context.Context, d map[strin
 				DeleteOnTermination: aws.Bool(bd[names.AttrDeleteOnTermination].(bool)),
 			}
 
-			if v, ok := bd["snapshot_id"].(string); ok && v != "" {
+			if v, ok := bd[names.AttrSnapshotID].(string); ok && v != "" {
 				ebs.SnapshotId = aws.String(v)
 			}
 
-			if v, ok := bd["encrypted"].(bool); ok && v {
+			if v, ok := bd[names.AttrEncrypted].(bool); ok && v {
 				ebs.Encrypted = aws.Bool(v)
 			}
 
@@ -1356,15 +1356,15 @@ func readSpotFleetBlockDeviceMappingsFromConfig(ctx context.Context, d map[strin
 				ebs.KmsKeyId = aws.String(v)
 			}
 
-			if v, ok := bd["volume_size"].(int); ok && v != 0 {
+			if v, ok := bd[names.AttrVolumeSize].(int); ok && v != 0 {
 				ebs.VolumeSize = aws.Int64(int64(v))
 			}
 
-			if v, ok := bd["volume_type"].(string); ok && v != "" {
+			if v, ok := bd[names.AttrVolumeType].(string); ok && v != "" {
 				ebs.VolumeType = aws.String(v)
 			}
 
-			if v, ok := bd["iops"].(int); ok && v > 0 {
+			if v, ok := bd[names.AttrIOPS].(int); ok && v > 0 {
 				ebs.Iops = aws.Int64(int64(v))
 			}
 
@@ -1373,7 +1373,7 @@ func readSpotFleetBlockDeviceMappingsFromConfig(ctx context.Context, d map[strin
 			}
 
 			blockDevices = append(blockDevices, &ec2.BlockDeviceMapping{
-				DeviceName: aws.String(bd["device_name"].(string)),
+				DeviceName: aws.String(bd[names.AttrDeviceName].(string)),
 				Ebs:        ebs,
 			})
 		}
@@ -1384,7 +1384,7 @@ func readSpotFleetBlockDeviceMappingsFromConfig(ctx context.Context, d map[strin
 		for _, v := range vL {
 			bd := v.(map[string]interface{})
 			blockDevices = append(blockDevices, &ec2.BlockDeviceMapping{
-				DeviceName:  aws.String(bd["device_name"].(string)),
+				DeviceName:  aws.String(bd[names.AttrDeviceName].(string)),
 				VirtualName: aws.String(bd["virtual_name"].(string)),
 			})
 		}
@@ -1401,7 +1401,7 @@ func readSpotFleetBlockDeviceMappingsFromConfig(ctx context.Context, d map[strin
 				DeleteOnTermination: aws.Bool(bd[names.AttrDeleteOnTermination].(bool)),
 			}
 
-			if v, ok := bd["encrypted"].(bool); ok && v {
+			if v, ok := bd[names.AttrEncrypted].(bool); ok && v {
 				ebs.Encrypted = aws.Bool(v)
 			}
 
@@ -1409,15 +1409,15 @@ func readSpotFleetBlockDeviceMappingsFromConfig(ctx context.Context, d map[strin
 				ebs.KmsKeyId = aws.String(v)
 			}
 
-			if v, ok := bd["volume_size"].(int); ok && v != 0 {
+			if v, ok := bd[names.AttrVolumeSize].(int); ok && v != 0 {
 				ebs.VolumeSize = aws.Int64(int64(v))
 			}
 
-			if v, ok := bd["volume_type"].(string); ok && v != "" {
+			if v, ok := bd[names.AttrVolumeType].(string); ok && v != "" {
 				ebs.VolumeType = aws.String(v)
 			}
 
-			if v, ok := bd["iops"].(int); ok && v > 0 {
+			if v, ok := bd[names.AttrIOPS].(int); ok && v > 0 {
 				ebs.Iops = aws.Int64(int64(v))
 			}
 
@@ -1546,7 +1546,7 @@ func expandLaunchTemplateOverrides(tfMap map[string]interface{}) *ec2.LaunchTemp
 		apiObject.InstanceType = aws.String(v)
 	}
 
-	if v, ok := tfMap["priority"].(float64); ok && v != 0.0 {
+	if v, ok := tfMap[names.AttrPriority].(float64); ok && v != 0.0 {
 		apiObject.Priority = aws.Float64(v)
 	}
 
@@ -1972,7 +1972,7 @@ func ebsBlockDevicesToSet(bdm []*ec2.BlockDeviceMapping, rootDevName *string) *s
 					continue
 				}
 
-				m["device_name"] = aws.StringValue(val.DeviceName)
+				m[names.AttrDeviceName] = aws.StringValue(val.DeviceName)
 			}
 
 			if ebs.DeleteOnTermination != nil {
@@ -1980,11 +1980,11 @@ func ebsBlockDevicesToSet(bdm []*ec2.BlockDeviceMapping, rootDevName *string) *s
 			}
 
 			if ebs.SnapshotId != nil {
-				m["snapshot_id"] = aws.StringValue(ebs.SnapshotId)
+				m[names.AttrSnapshotID] = aws.StringValue(ebs.SnapshotId)
 			}
 
 			if ebs.Encrypted != nil {
-				m["encrypted"] = aws.BoolValue(ebs.Encrypted)
+				m[names.AttrEncrypted] = aws.BoolValue(ebs.Encrypted)
 			}
 
 			if ebs.KmsKeyId != nil {
@@ -1992,15 +1992,15 @@ func ebsBlockDevicesToSet(bdm []*ec2.BlockDeviceMapping, rootDevName *string) *s
 			}
 
 			if ebs.VolumeSize != nil {
-				m["volume_size"] = aws.Int64Value(ebs.VolumeSize)
+				m[names.AttrVolumeSize] = aws.Int64Value(ebs.VolumeSize)
 			}
 
 			if ebs.VolumeType != nil {
-				m["volume_type"] = aws.StringValue(ebs.VolumeType)
+				m[names.AttrVolumeType] = aws.StringValue(ebs.VolumeType)
 			}
 
 			if ebs.Iops != nil {
-				m["iops"] = aws.Int64Value(ebs.Iops)
+				m[names.AttrIOPS] = aws.Int64Value(ebs.Iops)
 			}
 
 			if ebs.Throughput != nil {
@@ -2023,7 +2023,7 @@ func ephemeralBlockDevicesToSet(bdm []*ec2.BlockDeviceMapping) *schema.Set {
 			m["virtual_name"] = aws.StringValue(val.VirtualName)
 
 			if val.DeviceName != nil {
-				m["device_name"] = aws.StringValue(val.DeviceName)
+				m[names.AttrDeviceName] = aws.StringValue(val.DeviceName)
 			}
 
 			set.Add(m)
@@ -2045,7 +2045,7 @@ func rootBlockDeviceToSet(bdm []*ec2.BlockDeviceMapping, rootDevName *string) *s
 				}
 
 				if val.Ebs.Encrypted != nil {
-					m["encrypted"] = aws.BoolValue(val.Ebs.Encrypted)
+					m[names.AttrEncrypted] = aws.BoolValue(val.Ebs.Encrypted)
 				}
 
 				if val.Ebs.KmsKeyId != nil {
@@ -2053,15 +2053,15 @@ func rootBlockDeviceToSet(bdm []*ec2.BlockDeviceMapping, rootDevName *string) *s
 				}
 
 				if val.Ebs.VolumeSize != nil {
-					m["volume_size"] = aws.Int64Value(val.Ebs.VolumeSize)
+					m[names.AttrVolumeSize] = aws.Int64Value(val.Ebs.VolumeSize)
 				}
 
 				if val.Ebs.VolumeType != nil {
-					m["volume_type"] = aws.StringValue(val.Ebs.VolumeType)
+					m[names.AttrVolumeType] = aws.StringValue(val.Ebs.VolumeType)
 				}
 
 				if val.Ebs.Iops != nil {
-					m["iops"] = aws.Int64Value(val.Ebs.Iops)
+					m[names.AttrIOPS] = aws.Int64Value(val.Ebs.Iops)
 				}
 
 				if val.Ebs.Throughput != nil {
@@ -2079,7 +2079,7 @@ func rootBlockDeviceToSet(bdm []*ec2.BlockDeviceMapping, rootDevName *string) *s
 func hashEphemeralBlockDevice(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%s-", m["device_name"].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["virtual_name"].(string)))
 	return create.StringHashcode(buf.String())
 }
@@ -2107,10 +2107,10 @@ func hashLaunchSpecification(v interface{}) int {
 func hashEBSBlockDevice(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
-	if name, ok := m["device_name"]; ok {
+	if name, ok := m[names.AttrDeviceName]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", name.(string)))
 	}
-	if id, ok := m["snapshot_id"]; ok {
+	if id, ok := m[names.AttrSnapshotID]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", id.(string)))
 	}
 	return create.StringHashcode(buf.String())
@@ -2194,7 +2194,7 @@ func flattenLaunchTemplateOverrides(apiObject *ec2.LaunchTemplateOverrides) map[
 	}
 
 	if v := apiObject.Priority; v != nil {
-		tfMap["priority"] = aws.Float64Value(v)
+		tfMap[names.AttrPriority] = aws.Float64Value(v)
 	}
 
 	if v := apiObject.SpotPrice; v != nil {

@@ -27,8 +27,8 @@ func DataSourceTransitGatewayAttachments() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"filter": customFiltersSchema(),
-			"ids": {
+			names.AttrFilter: customFiltersSchema(),
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -45,7 +45,7 @@ func dataSourceTransitGatewayAttachmentsRead(ctx context.Context, d *schema.Reso
 	input := &ec2.DescribeTransitGatewayAttachmentsInput{}
 
 	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get("filter").(*schema.Set),
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	if v, ok := d.GetOk(names.AttrTags); ok {
@@ -67,7 +67,7 @@ func dataSourceTransitGatewayAttachmentsRead(ctx context.Context, d *schema.Reso
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("ids", attachmentIDs)
+	d.Set(names.AttrIDs, attachmentIDs)
 
 	return diags
 }

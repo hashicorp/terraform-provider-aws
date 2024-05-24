@@ -189,7 +189,7 @@ func TestValidateKeyOrAlias(t *testing.T) {
 		t.Run(tc.Value, func(t *testing.T) {
 			t.Parallel()
 
-			_, errors := ValidateKeyOrAlias(tc.Value, "key_id")
+			_, errors := ValidateKeyOrAlias(tc.Value, names.AttrKeyID)
 			if (len(errors) == 0) != tc.valid {
 				t.Errorf("%q ValidateKMSKeyOrAlias failed: %v", tc.Value, errors)
 			}
@@ -235,7 +235,7 @@ func TestValidateKeyARN(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			aWs, aEs := validateKeyARN(testcase.in, "field")
+			aWs, aEs := validateKeyARN(testcase.in, names.AttrField)
 			if len(aWs) != 0 {
 				t.Errorf("expected no warnings, got %v", aWs)
 			}

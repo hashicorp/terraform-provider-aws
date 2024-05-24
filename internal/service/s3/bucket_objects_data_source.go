@@ -63,7 +63,7 @@ func dataSourceBucketObjects() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"prefix": {
+			names.AttrPrefix: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -102,7 +102,7 @@ func dataSourceBucketObjectsRead(ctx context.Context, d *schema.ResourceData, me
 		input.MaxKeys = aws.Int32(int32(maxKeys))
 	}
 
-	if s, ok := d.GetOk("prefix"); ok {
+	if s, ok := d.GetOk(names.AttrPrefix); ok {
 		input.Prefix = aws.String(s.(string))
 	}
 

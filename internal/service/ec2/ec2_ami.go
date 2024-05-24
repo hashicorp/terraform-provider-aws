@@ -103,17 +103,17 @@ func ResourceAMI() *schema.Resource {
 							Default:  true,
 							ForceNew: true,
 						},
-						"device_name": {
+						names.AttrDeviceName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
 						},
-						"encrypted": {
+						names.AttrEncrypted: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							ForceNew: true,
 						},
-						"iops": {
+						names.AttrIOPS: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							ForceNew: true,
@@ -124,7 +124,7 @@ func ResourceAMI() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"snapshot_id": {
+						names.AttrSnapshotID: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -135,13 +135,13 @@ func ResourceAMI() *schema.Resource {
 							Computed: true,
 							ForceNew: true,
 						},
-						"volume_size": {
+						names.AttrVolumeSize: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
-						"volume_type": {
+						names.AttrVolumeType: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
@@ -153,8 +153,8 @@ func ResourceAMI() *schema.Resource {
 				Set: func(v interface{}) int {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["device_name"].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m["snapshot_id"].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrSnapshotID].(string)))
 					return create.StringHashcode(buf.String())
 				},
 			},
@@ -170,7 +170,7 @@ func ResourceAMI() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"device_name": {
+						names.AttrDeviceName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -183,7 +183,7 @@ func ResourceAMI() *schema.Resource {
 				Set: func(v interface{}) int {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["device_name"].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
 					buf.WriteString(fmt.Sprintf("%s-", m["virtual_name"].(string)))
 					return create.StringHashcode(buf.String())
 				},
@@ -337,13 +337,13 @@ func resourceAMICreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 			var encrypted bool
 
-			if v, ok := tfMap["encrypted"].(bool); ok {
+			if v, ok := tfMap[names.AttrEncrypted].(bool); ok {
 				encrypted = v
 			}
 
 			var snapshot string
 
-			if v, ok := tfMap["snapshot_id"].(string); ok && v != "" {
+			if v, ok := tfMap[names.AttrSnapshotID].(string); ok && v != "" {
 				snapshot = v
 			}
 
@@ -511,7 +511,7 @@ func resourceAMIDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 		req := &ec2.DeleteSnapshotInput{}
 		for _, ebsBlockDevI := range ebsBlockDevsSet.List() {
 			ebsBlockDev := ebsBlockDevI.(map[string]interface{})
-			snapshotId := ebsBlockDev["snapshot_id"].(string)
+			snapshotId := ebsBlockDev[names.AttrSnapshotID].(string)
 			if snapshotId != "" {
 				req.SnapshotId = aws.String(snapshotId)
 				_, err := conn.DeleteSnapshotWithContext(ctx, req)
@@ -614,18 +614,18 @@ func expandBlockDeviceMappingForAMIEBSBlockDevice(tfMap map[string]interface{}) 
 		apiObject.Ebs.DeleteOnTermination = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["device_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDeviceName].(string); ok && v != "" {
 		apiObject.DeviceName = aws.String(v)
 	}
 
-	if v, ok := tfMap["iops"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrIOPS].(int); ok && v != 0 {
 		apiObject.Ebs.Iops = aws.Int64(int64(v))
 	}
 
 	// "Parameter encrypted is invalid. You cannot specify the encrypted flag if specifying a snapshot id in a block device mapping."
-	if v, ok := tfMap["snapshot_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrSnapshotID].(string); ok && v != "" {
 		apiObject.Ebs.SnapshotId = aws.String(v)
-	} else if v, ok := tfMap["encrypted"].(bool); ok {
+	} else if v, ok := tfMap[names.AttrEncrypted].(bool); ok {
 		apiObject.Ebs.Encrypted = aws.Bool(v)
 	}
 
@@ -633,11 +633,11 @@ func expandBlockDeviceMappingForAMIEBSBlockDevice(tfMap map[string]interface{}) 
 		apiObject.Ebs.Throughput = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["volume_size"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrVolumeSize].(int); ok && v != 0 {
 		apiObject.Ebs.VolumeSize = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["volume_type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrVolumeType].(string); ok && v != "" {
 		apiObject.Ebs.VolumeType = aws.String(v)
 	}
 
@@ -690,19 +690,19 @@ func flattenBlockDeviceMappingForAMIEBSBlockDevice(apiObject *ec2.BlockDeviceMap
 	}
 
 	if v := apiObject.DeviceName; v != nil {
-		tfMap["device_name"] = aws.StringValue(v)
+		tfMap[names.AttrDeviceName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Ebs.Encrypted; v != nil {
-		tfMap["encrypted"] = aws.BoolValue(v)
+		tfMap[names.AttrEncrypted] = aws.BoolValue(v)
 	}
 
 	if v := apiObject.Ebs.Iops; v != nil {
-		tfMap["iops"] = aws.Int64Value(v)
+		tfMap[names.AttrIOPS] = aws.Int64Value(v)
 	}
 
 	if v := apiObject.Ebs.SnapshotId; v != nil {
-		tfMap["snapshot_id"] = aws.StringValue(v)
+		tfMap[names.AttrSnapshotID] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Ebs.Throughput; v != nil {
@@ -710,11 +710,11 @@ func flattenBlockDeviceMappingForAMIEBSBlockDevice(apiObject *ec2.BlockDeviceMap
 	}
 
 	if v := apiObject.Ebs.VolumeSize; v != nil {
-		tfMap["volume_size"] = aws.Int64Value(v)
+		tfMap[names.AttrVolumeSize] = aws.Int64Value(v)
 	}
 
 	if v := apiObject.Ebs.VolumeType; v != nil {
-		tfMap["volume_type"] = aws.StringValue(v)
+		tfMap[names.AttrVolumeType] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Ebs.OutpostArn; v != nil {
@@ -753,7 +753,7 @@ func expandBlockDeviceMappingForAMIEphemeralBlockDevice(tfMap map[string]interfa
 
 	apiObject := &ec2.BlockDeviceMapping{}
 
-	if v, ok := tfMap["device_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDeviceName].(string); ok && v != "" {
 		apiObject.DeviceName = aws.String(v)
 	}
 
@@ -798,7 +798,7 @@ func flattenBlockDeviceMappingForAMIEphemeralBlockDevice(apiObject *ec2.BlockDev
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.DeviceName; v != nil {
-		tfMap["device_name"] = aws.StringValue(v)
+		tfMap[names.AttrDeviceName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.VirtualName; v != nil {

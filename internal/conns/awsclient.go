@@ -297,7 +297,7 @@ func (c *AWSClient) resolveEndpoint(ctx context.Context, servicePackageName stri
 	if names.ClientSDKV1(servicePackageName) {
 		endpoint = aws_sdkv2.ToString(c.awsConfig.BaseEndpoint)
 
-		envvar := names.AwsServiceEnvVar(servicePackageName)
+		envvar := names.AWSServiceEnvVar(servicePackageName)
 		svc := os.Getenv(envvar)
 		if svc != "" {
 			return svc
@@ -307,7 +307,7 @@ func (c *AWSClient) resolveEndpoint(ctx context.Context, servicePackageName stri
 			return base
 		}
 
-		sdkId := names.SdkId(servicePackageName)
+		sdkId := names.SDKID(servicePackageName)
 		endpoint, found, err := resolveServiceBaseEndpoint(ctx, sdkId, c.awsConfig.ConfigSources)
 		if found && err == nil {
 			return endpoint

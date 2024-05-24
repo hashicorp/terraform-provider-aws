@@ -153,7 +153,7 @@ func (lt *opsworksLayerType) resourceSchema() *schema.Resource {
 									Default:      opsworks.CloudWatchLogsInitialPositionStartOfFile,
 									ValidateFunc: validation.StringInSlice(opsworks.CloudWatchLogsInitialPosition_Values(), false),
 								},
-								"log_group_name": {
+								names.AttrLogGroupName: {
 									Type:     schema.TypeString,
 									Required: true,
 								},
@@ -227,12 +227,12 @@ func (lt *opsworksLayerType) resourceSchema() *schema.Resource {
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"encrypted": {
+					names.AttrEncrypted: {
 						Type:     schema.TypeBool,
 						Optional: true,
 						Default:  false,
 					},
-					"iops": {
+					names.AttrIOPS: {
 						Type:     schema.TypeInt,
 						Optional: true,
 						Default:  0,
@@ -250,7 +250,7 @@ func (lt *opsworksLayerType) resourceSchema() *schema.Resource {
 						Optional: true,
 						Default:  "",
 					},
-					"size": {
+					names.AttrSize: {
 						Type:     schema.TypeInt,
 						Required: true,
 					},
@@ -318,7 +318,7 @@ func (lt *opsworksLayerType) resourceSchema() *schema.Resource {
 									Default:      10,
 									ValidateFunc: validation.IntBetween(1, 100),
 								},
-								"instance_count": {
+								names.AttrInstanceCount: {
 									Type:     schema.TypeInt,
 									Optional: true,
 									Default:  1,
@@ -368,7 +368,7 @@ func (lt *opsworksLayerType) resourceSchema() *schema.Resource {
 									Default:      5,
 									ValidateFunc: validation.IntBetween(1, 100),
 								},
-								"instance_count": {
+								names.AttrInstanceCount: {
 									Type:     schema.TypeInt,
 									Optional: true,
 									Default:  1,
@@ -1079,7 +1079,7 @@ func expandCloudWatchLogsLogStream(tfMap map[string]interface{}) *opsworks.Cloud
 		apiObject.InitialPosition = aws.String(v)
 	}
 
-	if v, ok := tfMap["log_group_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrLogGroupName].(string); ok && v != "" {
 		apiObject.LogGroupName = aws.String(v)
 	}
 
@@ -1178,7 +1178,7 @@ func flattenCloudWatchLogsLogStream(apiObject *opsworks.CloudWatchLogsLogStream)
 	}
 
 	if v := apiObject.LogGroupName; v != nil {
-		tfMap["log_group_name"] = aws.StringValue(v)
+		tfMap[names.AttrLogGroupName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.MultiLineStartPattern; v != nil {
@@ -1217,11 +1217,11 @@ func expandVolumeConfiguration(tfMap map[string]interface{}) *opsworks.VolumeCon
 
 	apiObject := &opsworks.VolumeConfiguration{}
 
-	if v, ok := tfMap["encrypted"].(bool); ok {
+	if v, ok := tfMap[names.AttrEncrypted].(bool); ok {
 		apiObject.Encrypted = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["iops"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrIOPS].(int); ok && v != 0 {
 		apiObject.Iops = aws.Int64(int64(v))
 	}
 
@@ -1239,7 +1239,7 @@ func expandVolumeConfiguration(tfMap map[string]interface{}) *opsworks.VolumeCon
 		}
 	}
 
-	if v, ok := tfMap["size"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrSize].(int); ok && v != 0 {
 		apiObject.Size = aws.Int64(int64(v))
 	}
 
@@ -1284,11 +1284,11 @@ func flattenVolumeConfiguration(apiObject *opsworks.VolumeConfiguration) map[str
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Encrypted; v != nil {
-		tfMap["encrypted"] = aws.BoolValue(v)
+		tfMap[names.AttrEncrypted] = aws.BoolValue(v)
 	}
 
 	if v := apiObject.Iops; v != nil {
-		tfMap["iops"] = aws.Int64Value(v)
+		tfMap[names.AttrIOPS] = aws.Int64Value(v)
 	}
 
 	if v := apiObject.MountPoint; v != nil {
@@ -1304,7 +1304,7 @@ func flattenVolumeConfiguration(apiObject *opsworks.VolumeConfiguration) map[str
 	}
 
 	if v := apiObject.Size; v != nil {
-		tfMap["size"] = aws.Int64Value(v)
+		tfMap[names.AttrSize] = aws.Int64Value(v)
 	}
 
 	if v := apiObject.VolumeType; v != nil {
@@ -1373,7 +1373,7 @@ func expandAutoScalingThresholds(tfMap map[string]interface{}) *opsworks.AutoSca
 		apiObject.IgnoreMetricsTime = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["instance_count"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrInstanceCount].(int); ok && v != 0 {
 		apiObject.InstanceCount = aws.Int64(int64(v))
 	}
 
@@ -1434,7 +1434,7 @@ func flattenAutoScalingThresholds(apiObject *opsworks.AutoScalingThresholds) map
 	}
 
 	if v := apiObject.InstanceCount; v != nil {
-		tfMap["instance_count"] = aws.Int64Value(v)
+		tfMap[names.AttrInstanceCount] = aws.Int64Value(v)
 	}
 
 	if v := apiObject.LoadThreshold; v != nil {

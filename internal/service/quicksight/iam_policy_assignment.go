@@ -80,7 +80,7 @@ func (r *resourceIAMPolicyAssignment) Schema(ctx context.Context, req resource.S
 				},
 			},
 			names.AttrID: framework.IDAttribute(),
-			"namespace": schema.StringAttribute{
+			names.AttrNamespace: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				Default:  stringdefault.StaticString(DefaultIAMPolicyAssignmentNamespace),

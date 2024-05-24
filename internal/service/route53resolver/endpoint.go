@@ -56,7 +56,7 @@ func ResourceEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"ip_address": {
+			names.AttrIPAddress: {
 				Type:     schema.TypeSet,
 				Required: true,
 				MinItems: 2,
@@ -131,7 +131,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 	input := &route53resolver.CreateResolverEndpointInput{
 		CreatorRequestId: aws.String(id.PrefixedUniqueId("tf-r53-resolver-endpoint-")),
 		Direction:        aws.String(d.Get("direction").(string)),
-		IpAddresses:      expandEndpointIPAddresses(d.Get("ip_address").(*schema.Set)),
+		IpAddresses:      expandEndpointIPAddresses(d.Get(names.AttrIPAddress).(*schema.Set)),
 		SecurityGroupIds: flex.ExpandStringSet(d.Get(names.AttrSecurityGroupIDs).(*schema.Set)),
 		Tags:             getTagsIn(ctx),
 	}
@@ -193,7 +193,7 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag.Errorf("listing Route53 Resolver Endpoint (%s) IP addresses: %s", d.Id(), err)
 	}
 
-	if err := d.Set("ip_address", schema.NewSet(endpointHashIPAddress, flattenEndpointIPAddresses(ipAddresses))); err != nil {
+	if err := d.Set(names.AttrIPAddress, schema.NewSet(endpointHashIPAddress, flattenEndpointIPAddresses(ipAddresses))); err != nil {
 		return diag.Errorf("setting ip_address: %s", err)
 	}
 
@@ -231,8 +231,8 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
-	if d.HasChange("ip_address") {
-		oraw, nraw := d.GetChange("ip_address")
+	if d.HasChange(names.AttrIPAddress) {
+		oraw, nraw := d.GetChange(names.AttrIPAddress)
 		o := oraw.(*schema.Set)
 		n := nraw.(*schema.Set)
 		del := o.Difference(n).List()

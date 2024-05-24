@@ -52,7 +52,7 @@ func TestAccKendraQuerySuggestionsBlockListDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "source_s3_path.0.key", resourceName, "source_s3_path.0.key"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrStatus, resourceName, names.AttrStatus),
 					resource.TestCheckResourceAttrSet(datasourceName, "updated_at"),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.Key1", resourceName, "tags.Key1")),
 			},
 		},

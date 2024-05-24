@@ -82,7 +82,7 @@ func resourceMonitor() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"bucket_prefix": {
+									names.AttrBucketPrefix: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -110,7 +110,7 @@ func resourceMonitor() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
-			"resources": {
+			names.AttrResources: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
@@ -167,7 +167,7 @@ func resourceMonitorCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.MaxCityNetworksToMonitor = aws.Int32(int32(v.(int)))
 	}
 
-	if v, ok := d.GetOk("resources"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrResources); ok && v.(*schema.Set).Len() > 0 {
 		input.Resources = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
@@ -235,7 +235,7 @@ func resourceMonitorRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	d.Set("monitor_name", monitor.MonitorName)
 	d.Set("max_city_networks_to_monitor", monitor.MaxCityNetworksToMonitor)
-	d.Set("resources", flex.FlattenStringValueSet(monitor.Resources))
+	d.Set(names.AttrResources, flex.FlattenStringValueSet(monitor.Resources))
 	d.Set(names.AttrStatus, monitor.Status)
 	d.Set("traffic_percentage_to_monitor", monitor.TrafficPercentageToMonitor)
 
@@ -266,8 +266,8 @@ func resourceMonitorUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.MaxCityNetworksToMonitor = aws.Int32(int32(d.Get("max_city_networks_to_monitor").(int)))
 		}
 
-		if d.HasChange("resources") {
-			o, n := d.GetChange("resources")
+		if d.HasChange(names.AttrResources) {
+			o, n := d.GetChange(names.AttrResources)
 			os, ns := o.(*schema.Set), n.(*schema.Set)
 			if add := flex.ExpandStringValueSet(ns.Difference(os)); len(add) > 0 {
 				input.ResourcesToAdd = add
@@ -455,7 +455,7 @@ func expandS3Config(tfList []interface{}) *types.S3Config {
 		apiObject.BucketName = aws.String(v)
 	}
 
-	if v, ok := tfMap["bucket_prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketPrefix].(string); ok && v != "" {
 		apiObject.BucketPrefix = aws.String(v)
 	}
 
@@ -502,7 +502,7 @@ func flattenS3Config(apiObject *types.S3Config) []interface{} {
 	}
 
 	if apiObject.BucketPrefix != nil {
-		tfMap["bucket_prefix"] = aws.ToString(apiObject.BucketPrefix)
+		tfMap[names.AttrBucketPrefix] = aws.ToString(apiObject.BucketPrefix)
 	}
 
 	return []interface{}{tfMap}

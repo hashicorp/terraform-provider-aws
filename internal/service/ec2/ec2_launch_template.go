@@ -53,7 +53,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"device_name": {
+						names.AttrDeviceName: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -69,13 +69,13 @@ func ResourceLaunchTemplate() *schema.Resource {
 										DiffSuppressFunc: nullable.DiffSuppressNullableBool,
 										ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 									},
-									"encrypted": {
+									names.AttrEncrypted: {
 										Type:             nullable.TypeNullableBool,
 										Optional:         true,
 										DiffSuppressFunc: nullable.DiffSuppressNullableBool,
 										ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 									},
-									"iops": {
+									names.AttrIOPS: {
 										Type:     schema.TypeInt,
 										Computed: true,
 										Optional: true,
@@ -85,7 +85,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: verify.ValidARN,
 									},
-									"snapshot_id": {
+									names.AttrSnapshotID: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -95,12 +95,12 @@ func ResourceLaunchTemplate() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: validation.IntBetween(125, 1000),
 									},
-									"volume_size": {
+									names.AttrVolumeSize: {
 										Type:     schema.TypeInt,
 										Optional: true,
 										Computed: true,
 									},
-									"volume_type": {
+									names.AttrVolumeType: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Computed:     true,
@@ -851,7 +851,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"group_name": {
+						names.AttrGroupName: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -918,7 +918,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"resource_type": {
+						names.AttrResourceType: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice(ec2.ResourceType_Values(), false),
@@ -1325,7 +1325,7 @@ func expandLaunchTemplateBlockDeviceMappingRequest(tfMap map[string]interface{})
 		apiObject.Ebs = expandLaunchTemplateEBSBlockDeviceRequest(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["device_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDeviceName].(string); ok && v != "" {
 		apiObject.DeviceName = aws.String(v)
 	}
 
@@ -1377,11 +1377,11 @@ func expandLaunchTemplateEBSBlockDeviceRequest(tfMap map[string]interface{}) *ec
 		apiObject.DeleteOnTermination = aws.Bool(v)
 	}
 
-	if v, null, _ := nullable.Bool(tfMap["encrypted"].(string)).ValueBool(); !null {
+	if v, null, _ := nullable.Bool(tfMap[names.AttrEncrypted].(string)).ValueBool(); !null {
 		apiObject.Encrypted = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["iops"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrIOPS].(int); ok && v != 0 {
 		apiObject.Iops = aws.Int64(int64(v))
 	}
 
@@ -1389,7 +1389,7 @@ func expandLaunchTemplateEBSBlockDeviceRequest(tfMap map[string]interface{}) *ec
 		apiObject.KmsKeyId = aws.String(v)
 	}
 
-	if v, ok := tfMap["snapshot_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrSnapshotID].(string); ok && v != "" {
 		apiObject.SnapshotId = aws.String(v)
 	}
 
@@ -1397,11 +1397,11 @@ func expandLaunchTemplateEBSBlockDeviceRequest(tfMap map[string]interface{}) *ec
 		apiObject.Throughput = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["volume_size"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrVolumeSize].(int); ok && v != 0 {
 		apiObject.VolumeSize = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["volume_type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrVolumeType].(string); ok && v != "" {
 		apiObject.VolumeType = aws.String(v)
 	}
 
@@ -2103,7 +2103,7 @@ func expandLaunchTemplatePlacementRequest(tfMap map[string]interface{}) *ec2.Lau
 		apiObject.AvailabilityZone = aws.String(v)
 	}
 
-	if v, ok := tfMap["group_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrGroupName].(string); ok && v != "" {
 		apiObject.GroupName = aws.String(v)
 	}
 
@@ -2154,7 +2154,7 @@ func expandLaunchTemplateTagSpecificationRequest(ctx context.Context, tfMap map[
 
 	apiObject := &ec2.LaunchTemplateTagSpecificationRequest{}
 
-	if v, ok := tfMap["resource_type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrResourceType].(string); ok && v != "" {
 		apiObject.ResourceType = aws.String(v)
 	}
 
@@ -2351,7 +2351,7 @@ func flattenLaunchTemplateBlockDeviceMapping(apiObject *ec2.LaunchTemplateBlockD
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.DeviceName; v != nil {
-		tfMap["device_name"] = aws.StringValue(v)
+		tfMap[names.AttrDeviceName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Ebs; v != nil {
@@ -2399,11 +2399,11 @@ func flattenLaunchTemplateEBSBlockDevice(apiObject *ec2.LaunchTemplateEbsBlockDe
 	}
 
 	if v := apiObject.Encrypted; v != nil {
-		tfMap["encrypted"] = strconv.FormatBool(aws.BoolValue(v))
+		tfMap[names.AttrEncrypted] = strconv.FormatBool(aws.BoolValue(v))
 	}
 
 	if v := apiObject.Iops; v != nil {
-		tfMap["iops"] = aws.Int64Value(v)
+		tfMap[names.AttrIOPS] = aws.Int64Value(v)
 	}
 
 	if v := apiObject.KmsKeyId; v != nil {
@@ -2411,7 +2411,7 @@ func flattenLaunchTemplateEBSBlockDevice(apiObject *ec2.LaunchTemplateEbsBlockDe
 	}
 
 	if v := apiObject.SnapshotId; v != nil {
-		tfMap["snapshot_id"] = aws.StringValue(v)
+		tfMap[names.AttrSnapshotID] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Throughput; v != nil {
@@ -2419,11 +2419,11 @@ func flattenLaunchTemplateEBSBlockDevice(apiObject *ec2.LaunchTemplateEbsBlockDe
 	}
 
 	if v := apiObject.VolumeSize; v != nil {
-		tfMap["volume_size"] = aws.Int64Value(v)
+		tfMap[names.AttrVolumeSize] = aws.Int64Value(v)
 	}
 
 	if v := apiObject.VolumeType; v != nil {
-		tfMap["volume_type"] = aws.StringValue(v)
+		tfMap[names.AttrVolumeType] = aws.StringValue(v)
 	}
 
 	return tfMap
@@ -3097,7 +3097,7 @@ func flattenLaunchTemplatePlacement(apiObject *ec2.LaunchTemplatePlacement) map[
 	}
 
 	if v := apiObject.GroupName; v != nil {
-		tfMap["group_name"] = aws.StringValue(v)
+		tfMap[names.AttrGroupName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.HostId; v != nil {
@@ -3148,7 +3148,7 @@ func flattenLaunchTemplateTagSpecification(ctx context.Context, apiObject *ec2.L
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.ResourceType; v != nil {
-		tfMap["resource_type"] = aws.StringValue(v)
+		tfMap[names.AttrResourceType] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Tags; len(v) > 0 {

@@ -89,7 +89,7 @@ func ResourceDevEndpoint() *schema.Resource {
 				ValidateFunc:  validation.IntAtLeast(2),
 				ConflictsWith: []string{"number_of_nodes"},
 			},
-			"public_key": {
+			names.AttrPublicKey: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"public_keys"},
@@ -99,7 +99,7 @@ func ResourceDevEndpoint() *schema.Resource {
 				Optional:      true,
 				Elem:          &schema.Schema{Type: schema.TypeString},
 				Set:           schema.HashString,
-				ConflictsWith: []string{"public_key"},
+				ConflictsWith: []string{names.AttrPublicKey},
 				MaxItems:      5,
 			},
 			names.AttrRoleARN: {
@@ -207,7 +207,7 @@ func resourceDevEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.NumberOfWorkers = aws.Int64(int64(v.(int)))
 	}
 
-	if v, ok := d.GetOk("public_key"); ok {
+	if v, ok := d.GetOk(names.AttrPublicKey); ok {
 		input.PublicKey = aws.String(v.(string))
 	}
 
@@ -343,7 +343,7 @@ func resourceDevEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting public_address for Glue Dev Endpoint (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("public_key", endpoint.PublicKey); err != nil {
+	if err := d.Set(names.AttrPublicKey, endpoint.PublicKey); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting public_key for Glue Dev Endpoint (%s): %s", d.Id(), err)
 	}
 
@@ -435,8 +435,8 @@ func resourceDevEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 		hasChanged = true
 	}
 
-	if d.HasChange("public_key") {
-		input.PublicKey = aws.String(d.Get("public_key").(string))
+	if d.HasChange(names.AttrPublicKey) {
+		input.PublicKey = aws.String(d.Get(names.AttrPublicKey).(string))
 
 		hasChanged = true
 	}

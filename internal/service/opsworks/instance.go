@@ -313,34 +313,34 @@ func ResourceInstance() *schema.Resource {
 							ForceNew: true,
 						},
 
-						"device_name": {
+						names.AttrDeviceName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
 						},
 
-						"iops": {
+						names.AttrIOPS: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
 
-						"snapshot_id": {
+						names.AttrSnapshotID: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
 
-						"volume_size": {
+						names.AttrVolumeSize: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
 
-						"volume_type": {
+						names.AttrVolumeType: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -351,8 +351,8 @@ func ResourceInstance() *schema.Resource {
 				Set: func(v interface{}) int {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["device_name"].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m["snapshot_id"].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrSnapshotID].(string)))
 					return create.StringHashcode(buf.String())
 				},
 			},
@@ -363,7 +363,7 @@ func ResourceInstance() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"device_name": {
+						names.AttrDeviceName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -377,7 +377,7 @@ func ResourceInstance() *schema.Resource {
 				Set: func(v interface{}) int {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["device_name"].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
 					buf.WriteString(fmt.Sprintf("%s-", m["virtual_name"].(string)))
 					return create.StringHashcode(buf.String())
 				},
@@ -404,21 +404,21 @@ func ResourceInstance() *schema.Resource {
 							ForceNew: true,
 						},
 
-						"iops": {
+						names.AttrIOPS: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
 
-						"volume_size": {
+						names.AttrVolumeSize: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
 
-						"volume_type": {
+						names.AttrVolumeType: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -639,24 +639,24 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 				DeleteOnTermination: aws.Bool(bd[names.AttrDeleteOnTermination].(bool)),
 			}
 
-			if v, ok := bd["snapshot_id"].(string); ok && v != "" {
+			if v, ok := bd[names.AttrSnapshotID].(string); ok && v != "" {
 				ebs.SnapshotId = aws.String(v)
 			}
 
-			if v, ok := bd["volume_size"].(int); ok && v != 0 {
+			if v, ok := bd[names.AttrVolumeSize].(int); ok && v != 0 {
 				ebs.VolumeSize = aws.Int64(int64(v))
 			}
 
-			if v, ok := bd["volume_type"].(string); ok && v != "" {
+			if v, ok := bd[names.AttrVolumeType].(string); ok && v != "" {
 				ebs.VolumeType = aws.String(v)
 			}
 
-			if v, ok := bd["iops"].(int); ok && v > 0 {
+			if v, ok := bd[names.AttrIOPS].(int); ok && v > 0 {
 				ebs.Iops = aws.Int64(int64(v))
 			}
 
 			blockDevices = append(blockDevices, &opsworks.BlockDeviceMapping{
-				DeviceName: aws.String(bd["device_name"].(string)),
+				DeviceName: aws.String(bd[names.AttrDeviceName].(string)),
 				Ebs:        ebs,
 			})
 		}
@@ -667,7 +667,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		for _, v := range vL {
 			bd := v.(map[string]interface{})
 			blockDevices = append(blockDevices, &opsworks.BlockDeviceMapping{
-				DeviceName:  aws.String(bd["device_name"].(string)),
+				DeviceName:  aws.String(bd[names.AttrDeviceName].(string)),
 				VirtualName: aws.String(bd["virtual_name"].(string)),
 			})
 		}
@@ -684,15 +684,15 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 				DeleteOnTermination: aws.Bool(bd[names.AttrDeleteOnTermination].(bool)),
 			}
 
-			if v, ok := bd["volume_size"].(int); ok && v != 0 {
+			if v, ok := bd[names.AttrVolumeSize].(int); ok && v != 0 {
 				ebs.VolumeSize = aws.Int64(int64(v))
 			}
 
-			if v, ok := bd["volume_type"].(string); ok && v != "" {
+			if v, ok := bd[names.AttrVolumeType].(string); ok && v != "" {
 				ebs.VolumeType = aws.String(v)
 			}
 
-			if v, ok := bd["iops"].(int); ok && v > 0 {
+			if v, ok := bd[names.AttrIOPS].(int); ok && v > 0 {
 				ebs.Iops = aws.Int64(int64(v))
 			}
 
@@ -991,26 +991,26 @@ func readBlockDevices(instance *opsworks.Instance) map[string]interface{} {
 			bd[names.AttrDeleteOnTermination] = aws.BoolValue(bdm.Ebs.DeleteOnTermination)
 		}
 		if bdm.Ebs != nil && bdm.Ebs.VolumeSize != nil {
-			bd["volume_size"] = aws.Int64Value(bdm.Ebs.VolumeSize)
+			bd[names.AttrVolumeSize] = aws.Int64Value(bdm.Ebs.VolumeSize)
 		}
 		if bdm.Ebs != nil && bdm.Ebs.VolumeType != nil {
-			bd["volume_type"] = aws.StringValue(bdm.Ebs.VolumeType)
+			bd[names.AttrVolumeType] = aws.StringValue(bdm.Ebs.VolumeType)
 		}
 		if bdm.Ebs != nil && bdm.Ebs.Iops != nil {
-			bd["iops"] = aws.Int64Value(bdm.Ebs.Iops)
+			bd[names.AttrIOPS] = aws.Int64Value(bdm.Ebs.Iops)
 		}
 		if aws.StringValue(bdm.DeviceName) == "ROOT_DEVICE" {
 			blockDevices["root"] = bd
 		} else {
 			if bdm.DeviceName != nil {
-				bd["device_name"] = aws.StringValue(bdm.DeviceName)
+				bd[names.AttrDeviceName] = aws.StringValue(bdm.DeviceName)
 			}
 			if bdm.VirtualName != nil {
 				bd["virtual_name"] = aws.StringValue(bdm.VirtualName)
 				blockDevices["ephemeral"] = append(blockDevices["ephemeral"].([]map[string]interface{}), bd)
 			} else {
 				if bdm.Ebs != nil && bdm.Ebs.SnapshotId != nil {
-					bd["snapshot_id"] = aws.StringValue(bdm.Ebs.SnapshotId)
+					bd[names.AttrSnapshotID] = aws.StringValue(bdm.Ebs.SnapshotId)
 				}
 				blockDevices["ebs"] = append(blockDevices["ebs"].([]map[string]interface{}), bd)
 			}

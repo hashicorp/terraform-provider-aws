@@ -47,7 +47,7 @@ func ResourceVault() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"force_destroy": {
+			names.AttrForceDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -141,7 +141,7 @@ func resourceVaultDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
-	if d.Get("force_destroy").(bool) {
+	if d.Get(names.AttrForceDestroy).(bool) {
 		input := &backup.ListRecoveryPointsByBackupVaultInput{
 			BackupVaultName: aws.String(d.Id()),
 		}

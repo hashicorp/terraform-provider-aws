@@ -75,7 +75,7 @@ func ResourceGlobalCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"force_destroy": {
+			names.AttrForceDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -111,7 +111,7 @@ func ResourceGlobalCluster() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"engine"},
-				RequiredWith:  []string{"force_destroy"},
+				RequiredWith:  []string{names.AttrForceDestroy},
 			},
 			"storage_encrypted": {
 				Type:     schema.TypeBool,
@@ -262,7 +262,7 @@ func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 	deadline := tfresource.NewDeadline(d.Timeout(schema.TimeoutDelete))
 
-	if d.Get("force_destroy").(bool) {
+	if d.Get(names.AttrForceDestroy).(bool) {
 		log.Printf("[DEBUG] Removing cluster members from RDS Global Cluster: %s", d.Id())
 
 		// The writer cluster must be removed last

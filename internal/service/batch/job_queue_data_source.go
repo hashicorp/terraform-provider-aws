@@ -43,7 +43,7 @@ func DataSourceJobQueue() *schema.Resource {
 				Computed: true,
 			},
 
-			"status_reason": {
+			names.AttrStatusReason: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -55,7 +55,7 @@ func DataSourceJobQueue() *schema.Resource {
 
 			names.AttrTags: tftags.TagsSchemaComputed(),
 
-			"priority": {
+			names.AttrPriority: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -107,9 +107,9 @@ func dataSourceJobQueueRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set(names.AttrName, jobQueue.JobQueueName)
 	d.Set("scheduling_policy_arn", jobQueue.SchedulingPolicyArn)
 	d.Set(names.AttrStatus, jobQueue.Status)
-	d.Set("status_reason", jobQueue.StatusReason)
+	d.Set(names.AttrStatusReason, jobQueue.StatusReason)
 	d.Set(names.AttrState, jobQueue.State)
-	d.Set("priority", jobQueue.Priority)
+	d.Set(names.AttrPriority, jobQueue.Priority)
 
 	ceos := make([]map[string]interface{}, 0)
 	for _, v := range jobQueue.ComputeEnvironmentOrder {

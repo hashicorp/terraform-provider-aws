@@ -47,7 +47,7 @@ func resourceAggregateAuthorization() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"region": {
+			names.AttrRegion: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -64,7 +64,7 @@ func resourceAggregateAuthorizationCreate(ctx context.Context, d *schema.Resourc
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
-	accountID, region := d.Get(names.AttrAccountID).(string), d.Get("region").(string)
+	accountID, region := d.Get(names.AttrAccountID).(string), d.Get(names.AttrRegion).(string)
 	id := aggregateAuthorizationCreateResourceID(accountID, region)
 	input := &configservice.PutAggregationAuthorizationInput{
 		AuthorizedAccountId: aws.String(accountID),
@@ -106,7 +106,7 @@ func resourceAggregateAuthorizationRead(ctx context.Context, d *schema.ResourceD
 
 	d.Set(names.AttrAccountID, aggregationAuthorization.AuthorizedAccountId)
 	d.Set(names.AttrARN, aggregationAuthorization.AggregationAuthorizationArn)
-	d.Set("region", aggregationAuthorization.AuthorizedAwsRegion)
+	d.Set(names.AttrRegion, aggregationAuthorization.AuthorizedAwsRegion)
 
 	return diags
 }

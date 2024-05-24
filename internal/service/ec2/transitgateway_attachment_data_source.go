@@ -37,8 +37,8 @@ func DataSourceTransitGatewayAttachment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": customFiltersSchema(),
-			"resource_id": {
+			names.AttrFilter: customFiltersSchema(),
+			names.AttrResourceID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -46,7 +46,7 @@ func DataSourceTransitGatewayAttachment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"resource_type": {
+			names.AttrResourceType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -80,7 +80,7 @@ func dataSourceTransitGatewayAttachmentRead(ctx context.Context, d *schema.Resou
 	input := &ec2.DescribeTransitGatewayAttachmentsInput{}
 
 	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get("filter").(*schema.Set),
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {
@@ -117,9 +117,9 @@ func dataSourceTransitGatewayAttachmentRead(ctx context.Context, d *schema.Resou
 		d.Set("association_state", nil)
 		d.Set("association_transit_gateway_route_table_id", nil)
 	}
-	d.Set("resource_id", transitGatewayAttachment.ResourceId)
+	d.Set(names.AttrResourceID, transitGatewayAttachment.ResourceId)
 	d.Set("resource_owner_id", resourceOwnerID)
-	d.Set("resource_type", transitGatewayAttachment.ResourceType)
+	d.Set(names.AttrResourceType, transitGatewayAttachment.ResourceType)
 	d.Set(names.AttrState, transitGatewayAttachment.State)
 	d.Set(names.AttrTransitGatewayAttachmentID, transitGatewayAttachmentID)
 	d.Set(names.AttrTransitGatewayID, transitGatewayAttachment.TransitGatewayId)

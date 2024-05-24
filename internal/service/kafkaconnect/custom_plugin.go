@@ -42,7 +42,7 @@ func ResourceCustomPlugin() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"content_type": {
+			names.AttrContentType: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -113,7 +113,7 @@ func resourceCustomPluginCreate(ctx context.Context, d *schema.ResourceData, met
 
 	name := d.Get(names.AttrName).(string)
 	input := &kafkaconnect.CreateCustomPluginInput{
-		ContentType: aws.String(d.Get("content_type").(string)),
+		ContentType: aws.String(d.Get(names.AttrContentType).(string)),
 		Location:    expandCustomPluginLocation(d.Get("location").([]interface{})[0].(map[string]interface{})),
 		Name:        aws.String(name),
 	}
@@ -163,7 +163,7 @@ func resourceCustomPluginRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrState, plugin.CustomPluginState)
 
 	if plugin.LatestRevision != nil {
-		d.Set("content_type", plugin.LatestRevision.ContentType)
+		d.Set(names.AttrContentType, plugin.LatestRevision.ContentType)
 		d.Set("latest_revision", plugin.LatestRevision.Revision)
 		if plugin.LatestRevision.Location != nil {
 			if err := d.Set("location", []interface{}{flattenCustomPluginLocationDescription(plugin.LatestRevision.Location)}); err != nil {
@@ -173,7 +173,7 @@ func resourceCustomPluginRead(ctx context.Context, d *schema.ResourceData, meta 
 			d.Set("location", nil)
 		}
 	} else {
-		d.Set("content_type", nil)
+		d.Set(names.AttrContentType, nil)
 		d.Set("latest_revision", nil)
 		d.Set("location", nil)
 	}

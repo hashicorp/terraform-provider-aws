@@ -50,7 +50,7 @@ func ResourceEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_time": {
+			names.AttrCreationTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -147,7 +147,7 @@ func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set(names.AttrARN, endpoint.EndpointArn)
 	d.Set("cidr_block", endpoint.CidrBlock)
 	if endpoint.CreationTime != nil {
-		d.Set("creation_time", aws.TimeValue(endpoint.CreationTime).Format(time.RFC3339))
+		d.Set(names.AttrCreationTime, aws.TimeValue(endpoint.CreationTime).Format(time.RFC3339))
 	}
 	d.Set("customer_owned_ipv4_pool", endpoint.CustomerOwnedIpv4Pool)
 	if err := d.Set("network_interfaces", flattenNetworkInterfaces(endpoint.NetworkInterfaces)); err != nil {

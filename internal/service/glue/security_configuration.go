@@ -29,7 +29,7 @@ func ResourceSecurityConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"encryption_configuration": {
+			names.AttrEncryptionConfiguration: {
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
@@ -131,7 +131,7 @@ func resourceSecurityConfigurationCreate(ctx context.Context, d *schema.Resource
 	name := d.Get(names.AttrName).(string)
 
 	input := &glue.CreateSecurityConfigurationInput{
-		EncryptionConfiguration: expandEncryptionConfiguration(d.Get("encryption_configuration").([]interface{})),
+		EncryptionConfiguration: expandEncryptionConfiguration(d.Get(names.AttrEncryptionConfiguration).([]interface{})),
 		Name:                    aws.String(name),
 	}
 
@@ -174,7 +174,7 @@ func resourceSecurityConfigurationRead(ctx context.Context, d *schema.ResourceDa
 		return diags
 	}
 
-	if err := d.Set("encryption_configuration", flattenEncryptionConfiguration(securityConfiguration.EncryptionConfiguration)); err != nil {
+	if err := d.Set(names.AttrEncryptionConfiguration, flattenEncryptionConfiguration(securityConfiguration.EncryptionConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting encryption_configuration: %s", err)
 	}
 

@@ -92,7 +92,7 @@ func ResourceKxScalingGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status_reason": {
+			names.AttrStatusReason: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -164,7 +164,7 @@ func resourceKxScalingGroupRead(ctx context.Context, d *schema.ResourceData, met
 	}
 	d.Set(names.AttrARN, out.ScalingGroupArn)
 	d.Set(names.AttrStatus, out.Status)
-	d.Set("status_reason", out.StatusReason)
+	d.Set(names.AttrStatusReason, out.StatusReason)
 	d.Set("created_timestamp", out.CreatedTimestamp.String())
 	d.Set("last_modified_timestamp", out.LastModifiedTimestamp.String())
 	d.Set(names.AttrName, out.ScalingGroupName)

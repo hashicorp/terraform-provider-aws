@@ -48,7 +48,7 @@ func resourceResource() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"resource_type": {
+			names.AttrResourceType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -102,7 +102,7 @@ func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.Set(names.AttrResourceARN, output.Identifier.ResourceArn)
-	d.Set("resource_type", output.Identifier.ResourceType)
+	d.Set(names.AttrResourceType, output.Identifier.ResourceType)
 
 	return nil
 }

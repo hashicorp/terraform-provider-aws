@@ -31,6 +31,7 @@ import (
 
 // @SDKResource("aws_s3_object_copy", name="Object Copy")
 // @Tags(identifierAttribute="arn", resourceType="ObjectCopy")
+// @Testing(noImport=true)
 func resourceObjectCopy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceObjectCopyCreate,
@@ -102,7 +103,7 @@ func resourceObjectCopy() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"content_type": {
+			names.AttrContentType: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -161,7 +162,7 @@ func resourceObjectCopy() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IsRFC3339Time,
 			},
-			"force_destroy": {
+			names.AttrForceDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -173,7 +174,7 @@ func resourceObjectCopy() *schema.Resource {
 				ConflictsWith: []string{"acl"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"email": {
+						names.AttrEmail: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -181,7 +182,7 @@ func resourceObjectCopy() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"permissions": {
+						names.AttrPermissions: {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem: &schema.Schema{
@@ -200,7 +201,7 @@ func resourceObjectCopy() *schema.Resource {
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[types.Type](),
 						},
-						"uri": {
+						names.AttrURI: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -276,7 +277,7 @@ func resourceObjectCopy() *schema.Resource {
 				Computed:         true,
 				ValidateDiagFunc: enum.Validate[types.ServerSideEncryption](),
 			},
-			"source": {
+			names.AttrSource: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -373,7 +374,7 @@ func resourceObjectCopyRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("content_disposition", output.ContentDisposition)
 	d.Set("content_encoding", output.ContentEncoding)
 	d.Set("content_language", output.ContentLanguage)
-	d.Set("content_type", output.ContentType)
+	d.Set(names.AttrContentType, output.ContentType)
 	d.Set("customer_algorithm", output.SSECustomerAlgorithm)
 	d.Set("customer_key_md5", output.SSECustomerKeyMD5)
 	// See https://forums.aws.amazon.com/thread.jspa?threadID=44003
@@ -426,7 +427,7 @@ func resourceObjectCopyUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		"content_disposition",
 		"content_encoding",
 		"content_language",
-		"content_type",
+		names.AttrContentType,
 		"customer_algorithm",
 		"customer_key",
 		"customer_key_md5",
@@ -444,7 +445,7 @@ func resourceObjectCopyUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		"object_lock_retain_until_date",
 		"request_payer",
 		"server_side_encryption",
-		"source",
+		names.AttrSource,
 		"source_customer_algorithm",
 		"source_customer_key",
 		"source_customer_key_md5",
@@ -476,7 +477,7 @@ func resourceObjectCopyDelete(ctx context.Context, d *schema.ResourceData, meta 
 
 	var err error
 	if _, ok := d.GetOk("version_id"); ok {
-		_, err = deleteAllObjectVersions(ctx, conn, bucket, key, d.Get("force_destroy").(bool), false, optFns...)
+		_, err = deleteAllObjectVersions(ctx, conn, bucket, key, d.Get(names.AttrForceDestroy).(bool), false, optFns...)
 	} else {
 		err = deleteObjectVersion(ctx, conn, bucket, key, "", false, optFns...)
 	}
@@ -503,7 +504,7 @@ func resourceObjectCopyDoCopy(ctx context.Context, d *schema.ResourceData, meta 
 
 	input := &s3.CopyObjectInput{
 		Bucket:     aws.String(bucket),
-		CopySource: aws.String(url.QueryEscape(d.Get("source").(string))),
+		CopySource: aws.String(url.QueryEscape(d.Get(names.AttrSource).(string))),
 		Key:        aws.String(sdkv1CompatibleCleanKey(d.Get(names.AttrKey).(string))),
 	}
 
@@ -535,7 +536,7 @@ func resourceObjectCopyDoCopy(ctx context.Context, d *schema.ResourceData, meta 
 		input.ContentLanguage = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("content_type"); ok {
+	if v, ok := d.GetOk(names.AttrContentType); ok {
 		input.ContentType = aws.String(v.(string))
 	}
 
@@ -689,7 +690,7 @@ func expandObjectCopyGrant(tfMap map[string]interface{}) string {
 
 	apiObject := &types.Grantee{}
 
-	if v, ok := tfMap["email"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrEmail].(string); ok && v != "" {
 		apiObject.EmailAddress = aws.String(v)
 	}
 
@@ -701,7 +702,7 @@ func expandObjectCopyGrant(tfMap map[string]interface{}) string {
 		apiObject.Type = types.Type(v)
 	}
 
-	if v, ok := tfMap["uri"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrURI].(string); ok && v != "" {
 		apiObject.URI = aws.String(v)
 	}
 
@@ -738,7 +739,7 @@ func expandObjectCopyGrants(tfList []interface{}) *s3Grants {
 			continue
 		}
 
-		for _, perm := range tfMap["permissions"].(*schema.Set).List() {
+		for _, perm := range tfMap[names.AttrPermissions].(*schema.Set).List() {
 			if v := expandObjectCopyGrant(tfMap); v != "" {
 				switch types.Permission(perm.(string)) {
 				case types.PermissionFullControl:
@@ -789,10 +790,10 @@ func grantHash(v interface{}) int {
 	if v, ok := m[names.AttrType]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
-	if v, ok := m["uri"]; ok {
+	if v, ok := m[names.AttrURI]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
-	if p, ok := m["permissions"]; ok {
+	if p, ok := m[names.AttrPermissions]; ok {
 		buf.WriteString(fmt.Sprintf("%v-", p.(*schema.Set).List()))
 	}
 	return create.StringHashcode(buf.String())

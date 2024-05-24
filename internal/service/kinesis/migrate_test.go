@@ -14,14 +14,14 @@ import (
 
 func testResourceStreamStateDataV0() map[string]interface{} {
 	return map[string]interface{}{
-		names.AttrARN:         "arn:aws:test:us-east-1:123456789012:test", //lintignore:AWSAT003,AWSAT005
-		"encryption_type":     "NONE",
-		names.AttrKMSKeyID:    "",
-		names.AttrName:        "test",
-		"retention_period":    24,
-		"shard_count":         1,
-		"shard_level_metrics": []interface{}{},
-		names.AttrTags:        map[string]interface{}{"key1": "value1"},
+		names.AttrARN:             "arn:aws:test:us-east-1:123456789012:test", //lintignore:AWSAT003,AWSAT005
+		"encryption_type":         "NONE",
+		names.AttrKMSKeyID:        "",
+		names.AttrName:            "test",
+		names.AttrRetentionPeriod: 24,
+		"shard_count":             1,
+		"shard_level_metrics":     []interface{}{},
+		names.AttrTags:            map[string]interface{}{acctest.CtKey1: acctest.CtValue1},
 	}
 }
 
@@ -33,7 +33,7 @@ func testResourceStreamStateDataV1() map[string]interface{} {
 		"enforce_consumer_deletion": false,
 		names.AttrKMSKeyID:          v0[names.AttrKMSKeyID],
 		names.AttrName:              v0[names.AttrName],
-		"retention_period":          v0["retention_period"],
+		names.AttrRetentionPeriod:   v0[names.AttrRetentionPeriod],
 		"shard_count":               v0["shard_count"],
 		"shard_level_metrics":       v0["shard_level_metrics"],
 		names.AttrTags:              v0[names.AttrTags],

@@ -74,7 +74,7 @@ func ResourceVirtualCluster() *schema.Resource {
 										ForceNew: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"namespace": {
+												names.AttrNamespace: {
 													Type:     schema.TypeString,
 													Optional: true,
 													ForceNew: true,
@@ -252,7 +252,7 @@ func expandEKSInfo(tfMap map[string]interface{}) *emrcontainers.EksInfo {
 
 	apiObject := &emrcontainers.EksInfo{}
 
-	if v, ok := tfMap["namespace"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrNamespace].(string); ok && v != "" {
 		apiObject.Namespace = aws.String(v)
 	}
 
@@ -303,7 +303,7 @@ func flattenEKSInfo(apiObject *emrcontainers.EksInfo) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Namespace; v != nil {
-		tfMap["namespace"] = aws.StringValue(v)
+		tfMap[names.AttrNamespace] = aws.StringValue(v)
 	}
 
 	return tfMap

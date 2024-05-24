@@ -52,7 +52,7 @@ func ResourceLaunch() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_time": {
+			names.AttrCreatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -268,7 +268,7 @@ func ResourceLaunch() *schema.Resource {
 											},
 										},
 									},
-									"start_time": {
+									names.AttrStartTime: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidUTCTimestamp,
@@ -283,7 +283,7 @@ func ResourceLaunch() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status_reason": {
+			names.AttrStatusReason: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -385,14 +385,14 @@ func resourceLaunchRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.Set(names.AttrARN, launch.Arn)
-	d.Set("created_time", aws.ToTime(launch.CreatedTime).Format(time.RFC3339))
+	d.Set(names.AttrCreatedTime, aws.ToTime(launch.CreatedTime).Format(time.RFC3339))
 	d.Set(names.AttrDescription, launch.Description)
 	d.Set("last_updated_time", aws.ToTime(launch.LastUpdatedTime).Format(time.RFC3339))
 	d.Set(names.AttrName, launch.Name)
 	d.Set("project", launch.Project)
 	d.Set("randomization_salt", launch.RandomizationSalt)
 	d.Set(names.AttrStatus, launch.Status)
-	d.Set("status_reason", launch.StatusReason)
+	d.Set(names.AttrStatusReason, launch.StatusReason)
 	d.Set(names.AttrType, launch.Type)
 
 	setTagsOut(ctx, launch.Tags)
@@ -563,7 +563,7 @@ func expandSteps(tfMaps []interface{}) []awstypes.ScheduledSplitConfig {
 }
 
 func expandStep(tfMap map[string]interface{}) awstypes.ScheduledSplitConfig {
-	t, _ := time.Parse(time.RFC3339, tfMap["start_time"].(string))
+	t, _ := time.Parse(time.RFC3339, tfMap[names.AttrStartTime].(string))
 	startTime := aws.Time(t)
 
 	apiObject := awstypes.ScheduledSplitConfig{
@@ -740,8 +740,8 @@ func flattenStep(apiObject awstypes.ScheduledSplit) map[string]interface{} {
 	}
 
 	tfMap := map[string]interface{}{
-		"group_weights": apiObject.GroupWeights,
-		"start_time":    aws.ToTime(apiObject.StartTime).Format(time.RFC3339),
+		"group_weights":     apiObject.GroupWeights,
+		names.AttrStartTime: aws.ToTime(apiObject.StartTime).Format(time.RFC3339),
 	}
 
 	if v := apiObject.SegmentOverrides; v != nil {

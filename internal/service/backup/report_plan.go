@@ -43,7 +43,7 @@ func ResourceReportPlan() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_time": {
+			names.AttrCreationTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -76,11 +76,11 @@ func ResourceReportPlan() *schema.Resource {
 								ValidateFunc: validation.StringInSlice(reportDeliveryChannelFormat_Values(), false),
 							},
 						},
-						"s3_bucket_name": {
+						names.AttrS3BucketName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"s3_key_prefix": {
+						names.AttrS3KeyPrefix: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -193,7 +193,7 @@ func resourceReportPlanRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	d.Set(names.AttrARN, reportPlan.ReportPlanArn)
-	d.Set("creation_time", reportPlan.CreationTime.Format(time.RFC3339))
+	d.Set(names.AttrCreationTime, reportPlan.CreationTime.Format(time.RFC3339))
 	d.Set("deployment_status", reportPlan.DeploymentStatus)
 	d.Set(names.AttrDescription, reportPlan.ReportPlanDescription)
 	d.Set(names.AttrName, reportPlan.ReportPlanName)
@@ -268,14 +268,14 @@ func expandReportDeliveryChannel(reportDeliveryChannel []interface{}) *backup.Re
 	}
 
 	result := &backup.ReportDeliveryChannel{
-		S3BucketName: aws.String(tfMap["s3_bucket_name"].(string)),
+		S3BucketName: aws.String(tfMap[names.AttrS3BucketName].(string)),
 	}
 
 	if v, ok := tfMap["formats"]; ok && v.(*schema.Set).Len() > 0 {
 		result.Formats = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	if v, ok := tfMap["s3_key_prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrS3KeyPrefix].(string); ok && v != "" {
 		result.S3KeyPrefix = aws.String(v)
 	}
 
@@ -325,7 +325,7 @@ func flattenReportDeliveryChannel(reportDeliveryChannel *backup.ReportDeliveryCh
 	}
 
 	values := map[string]interface{}{
-		"s3_bucket_name": aws.StringValue(reportDeliveryChannel.S3BucketName),
+		names.AttrS3BucketName: aws.StringValue(reportDeliveryChannel.S3BucketName),
 	}
 
 	if reportDeliveryChannel.Formats != nil && len(reportDeliveryChannel.Formats) > 0 {
@@ -333,7 +333,7 @@ func flattenReportDeliveryChannel(reportDeliveryChannel *backup.ReportDeliveryCh
 	}
 
 	if v := reportDeliveryChannel.S3KeyPrefix; v != nil {
-		values["s3_key_prefix"] = aws.StringValue(v)
+		values[names.AttrS3KeyPrefix] = aws.StringValue(v)
 	}
 
 	return []interface{}{values}

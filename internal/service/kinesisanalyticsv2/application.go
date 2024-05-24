@@ -785,7 +785,7 @@ func ResourceApplication() *schema.Resource {
 													},
 												},
 
-												"table_name": {
+												names.AttrTableName: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.StringLenBetween(1, 32),
@@ -804,7 +804,7 @@ func ResourceApplication() *schema.Resource {
 							},
 						},
 
-						"vpc_configuration": {
+						names.AttrVPCConfiguration: {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
@@ -1793,7 +1793,7 @@ func expandApplicationConfiguration(vApplicationConfiguration []interface{}) *ki
 		applicationConfiguration.SqlApplicationConfiguration = sqlApplicationConfiguration
 	}
 
-	if vVpcConfiguration, ok := mApplicationConfiguration["vpc_configuration"].([]interface{}); ok && len(vVpcConfiguration) > 0 && vVpcConfiguration[0] != nil {
+	if vVpcConfiguration, ok := mApplicationConfiguration[names.AttrVPCConfiguration].([]interface{}); ok && len(vVpcConfiguration) > 0 && vVpcConfiguration[0] != nil {
 		applicationConfiguration.VpcConfigurations = []*kinesisanalyticsv2.VpcConfiguration{expandVPCConfiguration(vVpcConfiguration)}
 	}
 
@@ -2366,7 +2366,7 @@ func expandReferenceDataSource(vReferenceDataSource []interface{}) *kinesisanaly
 		referenceDataSource.S3ReferenceDataSource = s3ReferenceDataSource
 	}
 
-	if vTableName, ok := mReferenceDataSource["table_name"].(string); ok && vTableName != "" {
+	if vTableName, ok := mReferenceDataSource[names.AttrTableName].(string); ok && vTableName != "" {
 		referenceDataSource.TableName = aws.String(vTableName)
 	}
 
@@ -2405,7 +2405,7 @@ func expandReferenceDataSourceUpdate(vReferenceDataSource []interface{}) *kinesi
 		referenceDataSourceUpdate.S3ReferenceDataSourceUpdate = s3ReferenceDataSourceUpdate
 	}
 
-	if vTableName, ok := mReferenceDataSource["table_name"].(string); ok && vTableName != "" {
+	if vTableName, ok := mReferenceDataSource[names.AttrTableName].(string); ok && vTableName != "" {
 		referenceDataSourceUpdate.TableNameUpdate = aws.String(vTableName)
 	}
 
@@ -2761,8 +2761,8 @@ func flattenApplicationConfigurationDescription(applicationConfigurationDescript
 			referenceDataSourceDescription := referenceDataSourceDescriptions[0]
 
 			mReferenceDataSource := map[string]interface{}{
-				"reference_id": aws.StringValue(referenceDataSourceDescription.ReferenceId),
-				"table_name":   aws.StringValue(referenceDataSourceDescription.TableName),
+				"reference_id":      aws.StringValue(referenceDataSourceDescription.ReferenceId),
+				names.AttrTableName: aws.StringValue(referenceDataSourceDescription.TableName),
 			}
 
 			if referenceSchema := referenceDataSourceDescription.ReferenceSchema; referenceSchema != nil {
@@ -2794,7 +2794,7 @@ func flattenApplicationConfigurationDescription(applicationConfigurationDescript
 			names.AttrVPCID:            aws.StringValue(vpcConfigurationDescription.VpcId),
 		}
 
-		mApplicationConfiguration["vpc_configuration"] = []interface{}{mVpcConfiguration}
+		mApplicationConfiguration[names.AttrVPCConfiguration] = []interface{}{mVpcConfiguration}
 	}
 
 	return []interface{}{mApplicationConfiguration}

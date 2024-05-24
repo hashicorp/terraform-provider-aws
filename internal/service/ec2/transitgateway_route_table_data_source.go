@@ -42,7 +42,7 @@ func DataSourceTransitGatewayRouteTable() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"filter": customFiltersSchema(),
+			names.AttrFilter: customFiltersSchema(),
 			names.AttrID: {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -65,7 +65,7 @@ func dataSourceTransitGatewayRouteTableRead(ctx context.Context, d *schema.Resou
 	input := &ec2.DescribeTransitGatewayRouteTablesInput{}
 
 	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get("filter").(*schema.Set),
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {

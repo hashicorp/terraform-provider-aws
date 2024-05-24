@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
@@ -55,7 +56,6 @@ func newAgentResource(context.Context) (resource.ResourceWithConfigure, error) {
 
 type agentResource struct {
 	framework.ResourceWithConfigure
-	framework.WithImportByID
 	framework.WithTimeouts
 }
 
@@ -249,8 +249,6 @@ func (r *agentResource) Read(ctx context.Context, request resource.ReadRequest, 
 		return
 	}
 
-	data.PrepareAgent = types.BoolValue(agent.AgentStatus == awstypes.AgentStatusPrepared)
-
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -364,6 +362,12 @@ func (r *agentResource) Delete(ctx context.Context, request resource.DeleteReque
 
 		return
 	}
+}
+
+func (r *agentResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), req.ID)...)
+	// Set prepare_agent to default value on import
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("prepare_agent"), true)...)
 }
 
 func (r *agentResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {

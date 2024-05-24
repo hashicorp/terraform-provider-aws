@@ -32,7 +32,7 @@ func ResourcePartitionIndex() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"catalog_id": {
+			names.AttrCatalogID: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
@@ -44,7 +44,7 @@ func ResourcePartitionIndex() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
-			"table_name": {
+			names.AttrTableName: {
 				Type:         schema.TypeString,
 				ForceNew:     true,
 				Required:     true,
@@ -89,7 +89,7 @@ func resourcePartitionIndexCreate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
 	dbName := d.Get(names.AttrDatabaseName).(string)
-	tableName := d.Get("table_name").(string)
+	tableName := d.Get(names.AttrTableName).(string)
 
 	input := &glue.CreatePartitionIndexInput{
 		CatalogId:      aws.String(catalogID),
@@ -134,8 +134,8 @@ func resourcePartitionIndexRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading Glue Partition Index (%s): %s", d.Id(), err)
 	}
 
-	d.Set("table_name", tableName)
-	d.Set("catalog_id", catalogID)
+	d.Set(names.AttrTableName, tableName)
+	d.Set(names.AttrCatalogID, catalogID)
 	d.Set(names.AttrDatabaseName, dbName)
 
 	if err := d.Set("partition_index", []map[string]interface{}{flattenPartitionIndex(partition)}); err != nil {

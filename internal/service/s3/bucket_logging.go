@@ -63,7 +63,7 @@ func resourceBucketLogging() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"display_name": {
+									names.AttrDisplayName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -80,7 +80,7 @@ func resourceBucketLogging() *schema.Resource {
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[types.Type](),
 									},
-									"uri": {
+									names.AttrURI: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -363,7 +363,7 @@ func expandLoggingGrantee(l []interface{}) *types.Grantee {
 
 	grantee := &types.Grantee{}
 
-	if v, ok := tfMap["display_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDisplayName].(string); ok && v != "" {
 		grantee.DisplayName = aws.String(v)
 	}
 
@@ -379,7 +379,7 @@ func expandLoggingGrantee(l []interface{}) *types.Grantee {
 		grantee.Type = types.Type(v)
 	}
 
-	if v, ok := tfMap["uri"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrURI].(string); ok && v != "" {
 		grantee.URI = aws.String(v)
 	}
 
@@ -414,7 +414,7 @@ func flattenLoggingGrantee(g *types.Grantee) []interface{} {
 	}
 
 	if g.DisplayName != nil {
-		m["display_name"] = aws.ToString(g.DisplayName)
+		m[names.AttrDisplayName] = aws.ToString(g.DisplayName)
 	}
 
 	if g.EmailAddress != nil {
@@ -426,7 +426,7 @@ func flattenLoggingGrantee(g *types.Grantee) []interface{} {
 	}
 
 	if g.URI != nil {
-		m["uri"] = aws.ToString(g.URI)
+		m[names.AttrURI] = aws.ToString(g.URI)
 	}
 
 	return []interface{}{m}

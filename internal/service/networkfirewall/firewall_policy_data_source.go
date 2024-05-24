@@ -70,14 +70,14 @@ func DataSourceFirewallPolicy() *schema.Resource {
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"action": {
+												names.AttrAction: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
 											},
 										},
 									},
-									"priority": {
+									names.AttrPriority: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
@@ -104,7 +104,7 @@ func DataSourceFirewallPolicy() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"priority": {
+									names.AttrPriority: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},

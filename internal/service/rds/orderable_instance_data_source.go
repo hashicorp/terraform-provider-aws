@@ -121,7 +121,7 @@ func DataSourceOrderableInstance() *schema.Resource {
 				Computed: true,
 			},
 
-			"storage_type": {
+			names.AttrStorageType: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -256,7 +256,7 @@ func dataSourceOrderableInstanceRead(ctx context.Context, d *schema.ResourceData
 				}
 			}
 
-			if v, ok := d.GetOk("storage_type"); ok {
+			if v, ok := d.GetOk(names.AttrStorageType); ok {
 				if aws.StringValue(instanceOption.StorageType) != v.(string) {
 					continue
 				}
@@ -486,7 +486,7 @@ func dataSourceOrderableInstanceRead(ctx context.Context, d *schema.ResourceData
 	d.Set("multi_az_capable", found.MultiAZCapable)
 	d.Set("outpost_capable", found.OutpostCapable)
 	d.Set("read_replica_capable", found.ReadReplicaCapable)
-	d.Set("storage_type", found.StorageType)
+	d.Set(names.AttrStorageType, found.StorageType)
 	d.Set("supported_engine_modes", aws.StringValueSlice(found.SupportedEngineModes))
 	d.Set("supported_network_types", aws.StringValueSlice(found.SupportedNetworkTypes))
 	d.Set("supports_clusters", found.SupportsClusters)

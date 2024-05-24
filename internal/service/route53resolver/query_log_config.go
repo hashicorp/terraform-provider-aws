@@ -40,7 +40,7 @@ func ResourceQueryLogConfig() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"destination_arn": {
+			names.AttrDestinationARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -74,7 +74,7 @@ func resourceQueryLogConfigCreate(ctx context.Context, d *schema.ResourceData, m
 	name := d.Get(names.AttrName).(string)
 	input := &route53resolver.CreateResolverQueryLogConfigInput{
 		CreatorRequestId: aws.String(id.PrefixedUniqueId("tf-r53-resolver-query-log-config-")),
-		DestinationArn:   aws.String(d.Get("destination_arn").(string)),
+		DestinationArn:   aws.String(d.Get(names.AttrDestinationARN).(string)),
 		Name:             aws.String(name),
 		Tags:             getTagsIn(ctx),
 	}
@@ -111,7 +111,7 @@ func resourceQueryLogConfigRead(ctx context.Context, d *schema.ResourceData, met
 
 	arn := aws.StringValue(queryLogConfig.Arn)
 	d.Set(names.AttrARN, arn)
-	d.Set("destination_arn", queryLogConfig.DestinationArn)
+	d.Set(names.AttrDestinationARN, queryLogConfig.DestinationArn)
 	d.Set(names.AttrName, queryLogConfig.Name)
 	d.Set(names.AttrOwnerID, queryLogConfig.OwnerId)
 	d.Set("share_status", queryLogConfig.ShareStatus)

@@ -41,7 +41,7 @@ func TestAccMediaLiveInputDataSource_basic(t *testing.T) {
 					testAccCheckInputExists(ctx, dataSourceName, &input),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
-					resource.TestCheckResourceAttr(dataSourceName, "destinations.#", "2"),
+					resource.TestCheckResourceAttr(dataSourceName, "destinations.#", acctest.Ct2),
 					resource.TestCheckResourceAttrPair(resourceName, "input_class", dataSourceName, "input_class"),
 					resource.TestCheckResourceAttrPair(resourceName, "input_devices", dataSourceName, "input_devices"),
 					resource.TestCheckResourceAttrPair(resourceName, "input_partner_ids", dataSourceName, "input_partner_ids"),

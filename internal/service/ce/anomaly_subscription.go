@@ -81,7 +81,7 @@ func resourceAnomalySubscription() *schema.Resource {
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"address": {
+						names.AttrAddress: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -267,7 +267,7 @@ func expandSubscribers(tfList []interface{}) []awstypes.Subscriber {
 		}
 
 		apiObjects = append(apiObjects, awstypes.Subscriber{
-			Address: aws.String(tfMap["address"].(string)),
+			Address: aws.String(tfMap[names.AttrAddress].(string)),
 			Type:    awstypes.SubscriberType(tfMap[names.AttrType].(string)),
 		})
 	}
@@ -284,8 +284,8 @@ func flattenSubscribers(apiObjects []awstypes.Subscriber) []interface{} {
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, map[string]interface{}{
-			"address":      aws.ToString(apiObject.Address),
-			names.AttrType: apiObject.Type,
+			names.AttrAddress: aws.ToString(apiObject.Address),
+			names.AttrType:    apiObject.Type,
 		})
 	}
 

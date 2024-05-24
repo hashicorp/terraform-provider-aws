@@ -55,7 +55,7 @@ func dataSourcePrincipalPolicySimulation() *schema.Resource {
 							Required:    true,
 							Description: `The type that the simulator should use to interpret the strings given in argument "values".`,
 						},
-						"values": {
+						names.AttrValues: {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem: &schema.Schema{
@@ -233,7 +233,7 @@ func dataSourcePrincipalPolicySimulationRead(ctx context.Context, d *schema.Reso
 		entry := awstypes.ContextEntry{
 			ContextKeyName:   aws.String(entryRaw[names.AttrKey].(string)),
 			ContextKeyType:   awstypes.ContextKeyTypeEnum(entryRaw[names.AttrType].(string)),
-			ContextKeyValues: setAsAWSStringSlice(entryRaw["values"]),
+			ContextKeyValues: setAsAWSStringSlice(entryRaw[names.AttrValues]),
 		}
 		input.ContextEntries = append(input.ContextEntries, entry)
 	}

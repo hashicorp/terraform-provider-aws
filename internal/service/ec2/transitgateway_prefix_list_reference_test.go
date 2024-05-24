@@ -41,7 +41,7 @@ func testAccTransitGatewayPrefixListReference_basic(t *testing.T, semaphore tfsy
 				Config: testAccTransitGatewayPrefixListReferenceConfig_blackhole(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccTransitGatewayPrefixListReferenceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "blackhole", "true"),
+					resource.TestCheckResourceAttr(resourceName, "blackhole", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "prefix_list_id", managedPrefixListResourceName, names.AttrID),
 					acctest.CheckResourceAttrAccountID(resourceName, "prefix_list_owner_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayAttachmentID, ""),
@@ -136,7 +136,7 @@ func testAccTransitGatewayPrefixListReference_TransitGatewayAttachmentID(t *test
 				Config: testAccTransitGatewayPrefixListReferenceConfig_attachmentID(rName, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccTransitGatewayPrefixListReferenceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "blackhole", "false"),
+					resource.TestCheckResourceAttr(resourceName, "blackhole", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayAttachmentID, transitGatewayVpcAttachmentResourceName1, names.AttrID),
 				),
 			},
@@ -149,7 +149,7 @@ func testAccTransitGatewayPrefixListReference_TransitGatewayAttachmentID(t *test
 				Config: testAccTransitGatewayPrefixListReferenceConfig_attachmentID(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccTransitGatewayPrefixListReferenceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "blackhole", "false"),
+					resource.TestCheckResourceAttr(resourceName, "blackhole", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayAttachmentID, transitGatewayVpcAttachmentResourceName2, names.AttrID),
 				),
 			},

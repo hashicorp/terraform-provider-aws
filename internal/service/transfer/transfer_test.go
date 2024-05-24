@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccTransfer_serial(t *testing.T) {
@@ -15,20 +14,20 @@ func TestAccTransfer_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Access": {
-			"disappears": testAccAccess_disappears,
-			"EFSBasic":   testAccAccess_efs_basic,
-			"S3Basic":    testAccAccess_s3_basic,
-			"S3Policy":   testAccAccess_s3_policy,
+			acctest.CtDisappears: testAccAccess_disappears,
+			"EFSBasic":           testAccAccess_efs_basic,
+			"S3Basic":            testAccAccess_s3_basic,
+			"S3Policy":           testAccAccess_s3_policy,
 		},
 		"Agreement": {
-			"basic":        testAccAgreement_basic,
-			"disappears":   testAccAgreement_disappears,
-			names.AttrTags: testAccAgreement_tags,
+			acctest.CtBasic:      testAccAgreement_basic,
+			acctest.CtDisappears: testAccAgreement_disappears,
+			"tags":               testAccAgreement_tags,
 		},
 		"Server": {
-			"basic":                           testAccServer_basic,
-			"disappears":                      testAccServer_disappears,
-			names.AttrTags:                    testAccServer_tags,
+			acctest.CtBasic:                   testAccServer_basic,
+			acctest.CtDisappears:              testAccServer_disappears,
+			"tags":                            testAccServer_tags,
 			"APIGateway":                      testAccServer_apiGateway,
 			"APIGatewayForceDestroy":          testAccServer_apiGateway_forceDestroy,
 			"AuthenticationLoginBanners":      testAccServer_authenticationLoginBanners,
@@ -62,18 +61,18 @@ func TestAccTransfer_serial(t *testing.T) {
 			"Workflow":                                               testAccServer_workflowDetails,
 		},
 		"SSHKey": {
-			"basic": testAccSSHKey_basic,
+			acctest.CtBasic: testAccSSHKey_basic,
 		},
 		"Tag": {
-			"basic":      testAccTag_basic,
-			"disappears": testAccTag_disappears,
-			"Value":      testAccTag_value,
-			"System":     testAccTag_system,
+			acctest.CtBasic:      testAccTag_basic,
+			acctest.CtDisappears: testAccTag_disappears,
+			"Value":              testAccTag_value,
+			"System":             testAccTag_system,
 		},
 		"User": {
-			"basic":                 testAccUser_basic,
-			"disappears":            testAccUser_disappears,
-			names.AttrTags:          testAccUser_tags,
+			acctest.CtBasic:         testAccUser_basic,
+			acctest.CtDisappears:    testAccUser_disappears,
+			"tags":                  testAccUser_tags,
 			"HomeDirectoryMappings": testAccUser_homeDirectoryMappings,
 			"ModifyWithOptions":     testAccUser_modifyWithOptions,
 			"Posix":                 testAccUser_posix,
