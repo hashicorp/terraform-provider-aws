@@ -77,8 +77,8 @@ func testAccTrail_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrailExists(ctx, resourceName, &trail),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "cloudtrail", fmt.Sprintf("trail/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "include_global_service_events", "true"),
-					resource.TestCheckResourceAttr(resourceName, "is_organization_trail", "false"),
+					resource.TestCheckResourceAttr(resourceName, "include_global_service_events", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "is_organization_trail", acctest.CtFalse),
 					testAccCheckLogValidationEnabled(resourceName, false, &trail),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 				),
@@ -93,7 +93,7 @@ func testAccTrail_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrailExists(ctx, resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, names.AttrS3KeyPrefix, names.AttrPrefix),
-					resource.TestCheckResourceAttr(resourceName, "include_global_service_events", "false"),
+					resource.TestCheckResourceAttr(resourceName, "include_global_service_events", acctest.CtFalse),
 					testAccCheckLogValidationEnabled(resourceName, false, &trail),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 				),
@@ -220,7 +220,7 @@ func testAccTrail_multiRegion(t *testing.T) {
 				Config: testAccCloudTrailConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrailExists(ctx, resourceName, &trail),
-					resource.TestCheckResourceAttr(resourceName, "is_multi_region_trail", "false"),
+					resource.TestCheckResourceAttr(resourceName, "is_multi_region_trail", acctest.CtFalse),
 					testAccCheckLogValidationEnabled(resourceName, false, &trail),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 				),
@@ -229,7 +229,7 @@ func testAccTrail_multiRegion(t *testing.T) {
 				Config: testAccCloudTrailConfig_multiRegion(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrailExists(ctx, resourceName, &trail),
-					resource.TestCheckResourceAttr(resourceName, "is_multi_region_trail", "true"),
+					resource.TestCheckResourceAttr(resourceName, "is_multi_region_trail", acctest.CtTrue),
 					testAccCheckLogValidationEnabled(resourceName, false, &trail),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 				),
@@ -243,7 +243,7 @@ func testAccTrail_multiRegion(t *testing.T) {
 				Config: testAccCloudTrailConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrailExists(ctx, resourceName, &trail),
-					resource.TestCheckResourceAttr(resourceName, "is_multi_region_trail", "false"),
+					resource.TestCheckResourceAttr(resourceName, "is_multi_region_trail", acctest.CtFalse),
 					testAccCheckLogValidationEnabled(resourceName, false, &trail),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 				),
@@ -268,7 +268,7 @@ func testAccTrail_organization(t *testing.T) {
 				Config: testAccCloudTrailConfig_organization(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrailExists(ctx, resourceName, &trail),
-					resource.TestCheckResourceAttr(resourceName, "is_organization_trail", "true"),
+					resource.TestCheckResourceAttr(resourceName, "is_organization_trail", acctest.CtTrue),
 					testAccCheckLogValidationEnabled(resourceName, false, &trail),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 				),
@@ -282,7 +282,7 @@ func testAccTrail_organization(t *testing.T) {
 				Config: testAccCloudTrailConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrailExists(ctx, resourceName, &trail),
-					resource.TestCheckResourceAttr(resourceName, "is_organization_trail", "false"),
+					resource.TestCheckResourceAttr(resourceName, "is_organization_trail", acctest.CtFalse),
 					testAccCheckLogValidationEnabled(resourceName, false, &trail),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 				),
@@ -308,7 +308,7 @@ func testAccTrail_logValidation(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrailExists(ctx, resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, names.AttrS3KeyPrefix, ""),
-					resource.TestCheckResourceAttr(resourceName, "include_global_service_events", "true"),
+					resource.TestCheckResourceAttr(resourceName, "include_global_service_events", acctest.CtTrue),
 					testAccCheckLogValidationEnabled(resourceName, true, &trail),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 				),
@@ -323,7 +323,7 @@ func testAccTrail_logValidation(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrailExists(ctx, resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, names.AttrS3KeyPrefix, ""),
-					resource.TestCheckResourceAttr(resourceName, "include_global_service_events", "true"),
+					resource.TestCheckResourceAttr(resourceName, "include_global_service_events", acctest.CtTrue),
 					testAccCheckLogValidationEnabled(resourceName, false, &trail),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 				),
@@ -351,7 +351,7 @@ func testAccTrail_kmsKey(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrailExists(ctx, resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, names.AttrS3KeyPrefix, ""),
-					resource.TestCheckResourceAttr(resourceName, "include_global_service_events", "true"),
+					resource.TestCheckResourceAttr(resourceName, "include_global_service_events", acctest.CtTrue),
 					testAccCheckLogValidationEnabled(resourceName, false, &trail),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, kmsResourceName, names.AttrARN),
 				),
@@ -427,7 +427,7 @@ func testAccTrail_globalServiceEvents(t *testing.T) {
 				Config: testAccCloudTrailConfig_globalServiceEvents(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrailExists(ctx, resourceName, &trail),
-					resource.TestCheckResourceAttr(resourceName, "include_global_service_events", "false"),
+					resource.TestCheckResourceAttr(resourceName, "include_global_service_events", acctest.CtFalse),
 				),
 			},
 			{
@@ -459,7 +459,7 @@ func testAccTrail_eventSelector(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.0.values.#", acctest.Ct2),
 					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "event_selector.0.data_resource.0.values.0", "s3", fmt.Sprintf("%s-2/isen", rName)),
 					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "event_selector.0.data_resource.0.values.1", "s3", fmt.Sprintf("%s-2/ko", rName)),
-					resource.TestCheckResourceAttr(resourceName, "event_selector.0.include_management_events", "false"),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.0.include_management_events", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.read_write_type", "ReadOnly"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.exclude_management_event_sources.#", acctest.Ct0),
 				),
@@ -473,7 +473,7 @@ func testAccTrail_eventSelector(t *testing.T) {
 				Config: testAccCloudTrailConfig_eventSelectorReadWriteType(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "event_selector.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "event_selector.0.include_management_events", "true"),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.0.include_management_events", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.read_write_type", "WriteOnly"),
 				),
 			},
@@ -486,7 +486,7 @@ func testAccTrail_eventSelector(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.0.values.#", acctest.Ct2),
 					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "event_selector.0.data_resource.0.values.0", "s3", fmt.Sprintf("%s-2/isen", rName)),
 					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "event_selector.0.data_resource.0.values.1", "s3", fmt.Sprintf("%s-2/ko", rName)),
-					resource.TestCheckResourceAttr(resourceName, "event_selector.0.include_management_events", "true"),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.0.include_management_events", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.read_write_type", "ReadOnly"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.1.data_resource.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.1.data_resource.0.type", "AWS::S3::Object"),
@@ -497,7 +497,7 @@ func testAccTrail_eventSelector(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "event_selector.1.data_resource.1.values.#", acctest.Ct1),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "event_selector.1.data_resource.1.values.0", "lambda", fmt.Sprintf("function:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.exclude_management_event_sources.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "event_selector.1.include_management_events", "false"),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.1.include_management_events", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.1.read_write_type", "All"),
 				),
 			},
@@ -530,7 +530,7 @@ func testAccTrail_eventSelectorDynamoDB(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.0.type", "AWS::DynamoDB::Table"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.0.values.#", acctest.Ct1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "event_selector.0.data_resource.0.values.0", "dynamodb", regexache.MustCompile(`table/tf-acc-test-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "event_selector.0.include_management_events", "true"),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.0.include_management_events", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.read_write_type", "All"),
 				),
 			},
@@ -553,7 +553,7 @@ func testAccTrail_eventSelectorExclude(t *testing.T) {
 				Config: testAccCloudTrailConfig_eventSelectorExcludeKMS(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "event_selector.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "event_selector.0.include_management_events", "true"),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.0.include_management_events", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.exclude_management_event_sources.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_selector.0.exclude_management_event_sources.*", "kms.amazonaws.com"),
 				),
@@ -567,7 +567,7 @@ func testAccTrail_eventSelectorExclude(t *testing.T) {
 				Config: testAccCloudTrailConfig_eventSelectorExcludeKMSAndRDSData(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "event_selector.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "event_selector.0.include_management_events", "true"),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.0.include_management_events", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.exclude_management_event_sources.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_selector.0.exclude_management_event_sources.*", "kms.amazonaws.com"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_selector.0.exclude_management_event_sources.*", "rdsdata.amazonaws.com"),
@@ -670,7 +670,7 @@ func testAccTrail_advancedEventSelector(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_event_selector.0.field_selector.*", map[string]string{
 						names.AttrField: "readOnly",
 						"equals.#":      acctest.Ct1,
-						"equals.0":      "false",
+						"equals.0":      acctest.CtFalse,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_event_selector.0.field_selector.*", map[string]string{
 						names.AttrField: "resources.type",
@@ -693,7 +693,7 @@ func testAccTrail_advancedEventSelector(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_event_selector.2.field_selector.*", map[string]string{
 						names.AttrField: "readOnly",
 						"equals.#":      acctest.Ct1,
-						"equals.0":      "true",
+						"equals.0":      acctest.CtTrue,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_event_selector.2.field_selector.*", map[string]string{
 						names.AttrField: "resources.type",
@@ -710,7 +710,7 @@ func testAccTrail_advancedEventSelector(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_event_selector.3.field_selector.*", map[string]string{
 						names.AttrField: "readOnly",
 						"equals.#":      acctest.Ct1,
-						"equals.0":      "false",
+						"equals.0":      acctest.CtFalse,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_event_selector.3.field_selector.*", map[string]string{
 						names.AttrField: "resources.type",
