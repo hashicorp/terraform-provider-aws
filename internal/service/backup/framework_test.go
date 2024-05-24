@@ -25,7 +25,7 @@ func TestAccBackupFramework_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Resource": {
 			acctest.CtBasic:                testAccFramework_basic,
-			acctest.CtDisappears:                   testAccFramework_disappears,
+			acctest.CtDisappears:           testAccFramework_disappears,
 			"UpdateTags":                   testAccFramework_updateTags,
 			"UpdateControlScope":           testAccFramework_updateControlScope,
 			"UpdateControlInputParameters": testAccFramework_updateControlInputParameters,
