@@ -36,10 +36,10 @@ func TestExpandTableItemAttributes(t *testing.T) {
 		"BOOL": {
 			input: `{"true":{"BOOL":true},"false":{"BOOL":false}}`,
 			expected: map[string]awstypes.AttributeValue{
-				"true": &awstypes.AttributeValueMemberBOOL{
+				acctest.CtTrue: &awstypes.AttributeValueMemberBOOL{
 					Value: true,
 				},
-				"false": &awstypes.AttributeValueMemberBOOL{
+				acctest.CtFalse: &awstypes.AttributeValueMemberBOOL{
 					Value: false,
 				},
 			},
@@ -189,10 +189,10 @@ func TestFlattenTableItemAttributes(t *testing.T) {
 		},
 		"BOOL": {
 			attrs: map[string]awstypes.AttributeValue{
-				"true": &awstypes.AttributeValueMemberBOOL{
+				acctest.CtTrue: &awstypes.AttributeValueMemberBOOL{
 					Value: true,
 				},
-				"false": &awstypes.AttributeValueMemberBOOL{
+				acctest.CtFalse: &awstypes.AttributeValueMemberBOOL{
 					Value: false,
 				},
 			},
