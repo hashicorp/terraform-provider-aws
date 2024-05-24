@@ -56,11 +56,11 @@ func TestAccAppConfigExtensionAssociation_Parameters(t *testing.T) {
 	resourceName := "aws_appconfig_extension_association.test"
 	pName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	pDescription1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	pRequiredTrue := "true"
+	pRequiredTrue := acctest.CtTrue
 	pValue1 := "ParameterValue1"
 	pName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	pDescription2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	pRequiredFalse := "false"
+	pRequiredFalse := acctest.CtFalse
 	pValue2 := "ParameterValue2"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -70,7 +70,7 @@ func TestAccAppConfigExtensionAssociation_Parameters(t *testing.T) {
 		CheckDestroy:             testAccCheckExtensionAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExtensionAssociationConfig_parameters1(rName, pName1, pDescription1, pRequiredTrue, pValue1),
+				Config: testAccExtensionAssociationConfig_parameters1(rName, pName1, pDescription1, acctest.CtTrue, pValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionAssociationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct1),
@@ -92,7 +92,7 @@ func TestAccAppConfigExtensionAssociation_Parameters(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccExtensionAssociationConfig_parameters1(rName, pName2, pDescription2, pRequiredFalse, pValue2),
+				Config: testAccExtensionAssociationConfig_parameters1(rName, pName2, pDescription2, acctest.CtFalse, pValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionAssociationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct1),
@@ -100,7 +100,7 @@ func TestAccAppConfigExtensionAssociation_Parameters(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccExtensionAssociationConfig_parametersNotRequired(rName, pName2, pDescription2, pRequiredFalse, pValue2),
+				Config: testAccExtensionAssociationConfig_parametersNotRequired(rName, pName2, pDescription2, acctest.CtFalse, pValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionAssociationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct0),
