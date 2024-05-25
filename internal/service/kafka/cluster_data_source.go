@@ -58,6 +58,133 @@ func dataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"broker_node_group_info": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"az_distribution": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"client_subnets": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"connectivity_info": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"vpc_connectivity": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"client_authentication": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"sasl": {
+																Type:     schema.TypeList,
+																Computed: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"iam": {
+																			Type:     schema.TypeBool,
+																			Computed: true,
+																		},
+																		"scram": {
+																			Type:     schema.TypeBool,
+																			Computed: true,
+																		},
+																	},
+																},
+															},
+															"tls": {
+																Type:     schema.TypeBool,
+																Computed: true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"public_access": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrType: {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						names.AttrInstanceType: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrSecurityGroups: {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"storage_info": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"ebs_storage_info": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"provisioned_throughput": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															// This feature is available for
+															// storage volume larger than 10 GiB and
+															// broker types kafka.m5.4xlarge and larger.
+															names.AttrEnabled: {
+																Type:     schema.TypeBool,
+																Computed: true,
+															},
+															// Minimum and maximum for this varies between broker type
+															// https://docs.aws.amazon.com/msk/latest/developerguide/msk-provision-throughput.html
+															"volume_throughput": {
+																Type:     schema.TypeInt,
+																Computed: true,
+															},
+														},
+													},
+												},
+												names.AttrVolumeSize: {
+													Type:     schema.TypeInt,
+													Computed: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			names.AttrClusterName: {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -128,6 +255,13 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("number_of_broker_nodes", cluster.NumberOfBrokerNodes)
 	d.Set("zookeeper_connect_string", SortEndpointsString(aws.ToString(cluster.ZookeeperConnectString)))
 	d.Set("zookeeper_connect_string_tls", SortEndpointsString(aws.ToString(cluster.ZookeeperConnectStringTls)))
+	if cluster.BrokerNodeGroupInfo != nil {
+		if err := d.Set("broker_node_group_info", []interface{}{flattenBrokerNodeGroupInfo(cluster.BrokerNodeGroupInfo)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting broker_node_group_info: %s", err)
+		}
+	} else {
+		d.Set("broker_node_group_info", nil)
+	}
 
 	if err := d.Set(names.AttrTags, KeyValueTags(ctx, cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
