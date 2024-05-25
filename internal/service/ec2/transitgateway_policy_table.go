@@ -8,10 +8,11 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -61,24 +62,24 @@ func ResourceTransitGatewayPolicyTable() *schema.Resource {
 
 func resourceTransitGatewayPolicyTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	transitGatewayID := d.Get(names.AttrTransitGatewayID).(string)
 	input := &ec2.CreateTransitGatewayPolicyTableInput{
-		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeTransitGatewayPolicyTable),
+		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeTransitGatewayPolicyTable),
 		TransitGatewayId:  aws.String(transitGatewayID),
 	}
 
-	log.Printf("[DEBUG] Creating EC2 Transit Gateway Policy Table: %s", input)
-	output, err := conn.CreateTransitGatewayPolicyTableWithContext(ctx, input)
+	log.Printf("[DEBUG] Creating EC2 Transit Gateway Policy Table: %+v", input)
+	output, err := conn.CreateTransitGatewayPolicyTable(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Transit Gateway (%s) Policy Table: %s", transitGatewayID, err)
 	}
 
-	d.SetId(aws.StringValue(output.TransitGatewayPolicyTable.TransitGatewayPolicyTableId))
+	d.SetId(aws.ToString(output.TransitGatewayPolicyTable.TransitGatewayPolicyTableId))
 
-	if _, err := WaitTransitGatewayPolicyTableCreated(ctx, conn, d.Id()); err != nil {
+	if _, err := waitTransitGatewayPolicyTableCreated(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Transit Gateway Policy Table (%s) create: %s", d.Id(), err)
 	}
 
@@ -87,9 +88,9 @@ func resourceTransitGatewayPolicyTableCreate(ctx context.Context, d *schema.Reso
 
 func resourceTransitGatewayPolicyTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	transitGatewayPolicyTable, err := FindTransitGatewayPolicyTableByID(ctx, conn, d.Id())
+	transitGatewayPolicyTable, err := findTransitGatewayPolicyTableByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Transit Gateway Policy Table (%s) not found, removing from state", d.Id())
@@ -103,7 +104,7 @@ func resourceTransitGatewayPolicyTableRead(ctx context.Context, d *schema.Resour
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   ec2.ServiceName,
+		Service:   names.EC2,
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("transit-gateway-policy-table/%s", d.Id()),
@@ -127,10 +128,10 @@ func resourceTransitGatewayPolicyTableUpdate(ctx context.Context, d *schema.Reso
 
 func resourceTransitGatewayPolicyTableDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Policy Table: %s", d.Id())
-	_, err := conn.DeleteTransitGatewayPolicyTableWithContext(ctx, &ec2.DeleteTransitGatewayPolicyTableInput{
+	_, err := conn.DeleteTransitGatewayPolicyTable(ctx, &ec2.DeleteTransitGatewayPolicyTableInput{
 		TransitGatewayPolicyTableId: aws.String(d.Id()),
 	})
 
@@ -142,7 +143,7 @@ func resourceTransitGatewayPolicyTableDelete(ctx context.Context, d *schema.Reso
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 Transit Gateway Policy Table (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitTransitGatewayPolicyTableDeleted(ctx, conn, d.Id()); err != nil {
+	if _, err := waitTransitGatewayPolicyTableDeleted(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Transit Gateway Policy Table (%s) delete: %s", d.Id(), err)
 	}
 
