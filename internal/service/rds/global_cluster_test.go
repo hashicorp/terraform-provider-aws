@@ -713,7 +713,7 @@ func testAccGlobalClusterConfig_engineLifecycleSupport_disabled(rName string) st
 resource "aws_rds_global_cluster" "test" {
   global_cluster_identifier = %[1]q
   engine                    = "aurora-postgresql"
-  engine_lifecycle_support  = "engine_lifecycle_support"
+  engine_lifecycle_support  = "open-source-rds-extended-support-disabled"
 }
 `, rName)
 }
