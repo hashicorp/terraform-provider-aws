@@ -639,7 +639,7 @@ func resourceEndpointConfigurationRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "setting async_inference_config for SageMaker Endpoint Configuration (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set(names.AttrVPCConfig, flattenVPCConfigResponse(model.VpcConfig)); err != nil {
+	if err := d.Set(names.AttrVPCConfig, flattenVPCConfigResponse(endpointConfig.VpcConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
 	}
 
@@ -848,19 +848,6 @@ func flattenDataCaptureConfig(dataCaptureConfig *sagemaker.DataCaptureConfig) []
 	return []map[string]interface{}{cfg}
 }
 
-func flattenVPCConfigResponse(vpcConfig *sagemaker.VpcConfig) []map[string]interface{} {
-	if vpcConfig == nil {
-		return []map[string]interface{}{}
-	}
-
-	m := map[string]interface{}{
-		names.AttrSecurityGroupIDs: flex.FlattenStringSet(vpcConfig.SecurityGroupIds),
-		names.AttrSubnets:          flex.FlattenStringSet(vpcConfig.Subnets),
-	}
-
-	return []map[string]interface{}{m}
-}
-
 func expandCaptureOptions(configured []interface{}) []*sagemaker.CaptureOption {
 	containers := make([]*sagemaker.CaptureOption, 0, len(configured))
 
@@ -1064,19 +1051,6 @@ func expandCoreDumpConfig(configured []interface{}) *sagemaker.ProductionVariant
 	}
 
 	return c
-}
-
-func expandVPCConfigRequest(l []interface{}) *sagemaker.VpcConfig {
-	if len(l) == 0 {
-		return nil
-	}
-
-	m := l[0].(map[string]interface{})
-
-	return &sagemaker.VpcConfig{
-		SecurityGroupIds: flex.ExpandStringSet(m[names.AttrSecurityGroupIDs].(*schema.Set)),
-		Subnets:          flex.ExpandStringSet(m[names.AttrSubnets].(*schema.Set)),
-	}
 }
 
 func flattenEndpointConfigAsyncInferenceConfig(config *sagemaker.AsyncInferenceConfig) []map[string]interface{} {
