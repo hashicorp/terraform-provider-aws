@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func testAccTransitGatewayMulticastGroupMember_basic(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v ec2.TransitGatewayMulticastGroup
+	var v awstypes.TransitGatewayMulticastGroup
 	resourceName := "aws_ec2_transit_gateway_multicast_group_member.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -48,7 +48,7 @@ func testAccTransitGatewayMulticastGroupMember_basic(t *testing.T, semaphore tfs
 
 func testAccTransitGatewayMulticastGroupMember_disappears(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v ec2.TransitGatewayMulticastGroup
+	var v awstypes.TransitGatewayMulticastGroup
 	resourceName := "aws_ec2_transit_gateway_multicast_group_member.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -76,7 +76,7 @@ func testAccTransitGatewayMulticastGroupMember_disappears(t *testing.T, semaphor
 
 func testAccTransitGatewayMulticastGroupMember_Disappears_domain(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v ec2.TransitGatewayMulticastGroup
+	var v awstypes.TransitGatewayMulticastGroup
 	resourceName := "aws_ec2_transit_gateway_multicast_group_member.test"
 	domainResourceName := "aws_ec2_transit_gateway_multicast_domain.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -105,7 +105,7 @@ func testAccTransitGatewayMulticastGroupMember_Disappears_domain(t *testing.T, s
 
 func testAccTransitGatewayMulticastGroupMember_twoMembers(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v1, v2 ec2.TransitGatewayMulticastGroup
+	var v1, v2 awstypes.TransitGatewayMulticastGroup
 	resource1Name := "aws_ec2_transit_gateway_multicast_group_member.test1"
 	resource2Name := "aws_ec2_transit_gateway_multicast_group_member.test2"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -131,7 +131,7 @@ func testAccTransitGatewayMulticastGroupMember_twoMembers(t *testing.T, semaphor
 	})
 }
 
-func testAccCheckTransitGatewayMulticastGroupMemberExists(ctx context.Context, n string, v *ec2.TransitGatewayMulticastGroup) resource.TestCheckFunc {
+func testAccCheckTransitGatewayMulticastGroupMemberExists(ctx context.Context, n string, v *awstypes.TransitGatewayMulticastGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -148,7 +148,7 @@ func testAccCheckTransitGatewayMulticastGroupMemberExists(ctx context.Context, n
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindTransitGatewayMulticastGroupMemberByThreePartKey(ctx, conn, multicastDomainID, groupIPAddress, eniID)
 
@@ -164,7 +164,7 @@ func testAccCheckTransitGatewayMulticastGroupMemberExists(ctx context.Context, n
 
 func testAccCheckTransitGatewayMulticastGroupMemberDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_transit_gateway_multicast_group_member" {
