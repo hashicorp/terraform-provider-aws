@@ -224,6 +224,12 @@ func ResourceEndpointConfiguration() *schema.Resource {
 					},
 				},
 			},
+			names.AttrExecutionRoleARN: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
+			},
 			names.AttrKMSKeyARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -245,6 +251,26 @@ func ResourceEndpointConfiguration() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validPrefix,
+			},
+			names.AttrVPCConfig: {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrSubnets: {
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						names.AttrSecurityGroupIDs: {
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
 			},
 			"production_variants": {
 				Type:     schema.TypeList,
@@ -541,8 +567,16 @@ func resourceEndpointConfigurationCreate(ctx context.Context, d *schema.Resource
 		Tags:               getTagsIn(ctx),
 	}
 
+	if v, ok := d.GetOk(names.AttrExecutionRoleARN); ok {
+		createOpts.ExecutionRoleArn = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk(names.AttrKMSKeyARN); ok {
 		createOpts.KmsKeyId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk(names.AttrVPCConfig); ok {
+		createOpts.VpcConfig = expandVPCConfigRequest(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("shadow_production_variants"); ok && len(v.([]interface{})) > 0 {
@@ -586,6 +620,7 @@ func resourceEndpointConfigurationRead(ctx context.Context, d *schema.ResourceDa
 	d.Set(names.AttrARN, endpointConfig.EndpointConfigArn)
 	d.Set(names.AttrName, endpointConfig.EndpointConfigName)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(endpointConfig.EndpointConfigName)))
+	d.Set(names.AttrExecutionRoleARN, endpointConfig.ExecutionRoleArn)
 	d.Set(names.AttrKMSKeyARN, endpointConfig.KmsKeyId)
 
 	if err := d.Set("production_variants", flattenProductionVariants(endpointConfig.ProductionVariants)); err != nil {
@@ -602,6 +637,10 @@ func resourceEndpointConfigurationRead(ctx context.Context, d *schema.ResourceDa
 
 	if err := d.Set("async_inference_config", flattenEndpointConfigAsyncInferenceConfig(endpointConfig.AsyncInferenceConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting async_inference_config for SageMaker Endpoint Configuration (%s): %s", d.Id(), err)
+	}
+
+	if err := d.Set(names.AttrVPCConfig, flattenVPCConfigResponse(model.VpcConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
 	}
 
 	return diags
@@ -809,6 +848,19 @@ func flattenDataCaptureConfig(dataCaptureConfig *sagemaker.DataCaptureConfig) []
 	return []map[string]interface{}{cfg}
 }
 
+func flattenVPCConfigResponse(vpcConfig *sagemaker.VpcConfig) []map[string]interface{} {
+	if vpcConfig == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		names.AttrSecurityGroupIDs: flex.FlattenStringSet(vpcConfig.SecurityGroupIds),
+		names.AttrSubnets:          flex.FlattenStringSet(vpcConfig.Subnets),
+	}
+
+	return []map[string]interface{}{m}
+}
+
 func expandCaptureOptions(configured []interface{}) []*sagemaker.CaptureOption {
 	containers := make([]*sagemaker.CaptureOption, 0, len(configured))
 
@@ -1012,6 +1064,19 @@ func expandCoreDumpConfig(configured []interface{}) *sagemaker.ProductionVariant
 	}
 
 	return c
+}
+
+func expandVPCConfigRequest(l []interface{}) *sagemaker.VpcConfig {
+	if len(l) == 0 {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	return &sagemaker.VpcConfig{
+		SecurityGroupIds: flex.ExpandStringSet(m[names.AttrSecurityGroupIDs].(*schema.Set)),
+		Subnets:          flex.ExpandStringSet(m[names.AttrSubnets].(*schema.Set)),
+	}
 }
 
 func flattenEndpointConfigAsyncInferenceConfig(config *sagemaker.AsyncInferenceConfig) []map[string]interface{} {
