@@ -348,7 +348,7 @@ func ResourceEndpointConfiguration() *schema.Resource {
 						},
 						"model_name": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 							ForceNew: true,
 						},
 						"routing_config": {

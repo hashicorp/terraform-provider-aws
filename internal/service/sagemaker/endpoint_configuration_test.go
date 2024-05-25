@@ -998,13 +998,12 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
 }
 
 func testAccEndpointConfigurationConfig_vpcBasic(rName string) string {
-	return acctest.ConfigCompose(testAccEndpointConfigurationConfig_base(rName), acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_sagemaker_endpoint_configuration" "test" {
   name = %[1]q
 
   production_variants {
     variant_name           = "variant-1"
-    model_name             = aws_sagemaker_model.test.name
     initial_instance_count = 2
     instance_type          = "ml.t2.medium"
     initial_variant_weight = 1
