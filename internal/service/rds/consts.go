@@ -190,6 +190,18 @@ func EngineMode_Values() []string {
 }
 
 const (
+	EngineLifecycleSupport         = "open-source-rds-extended-support"
+	EngineLifecycleSupportDisabled = "open-source-rds-extended-support-disabled"
+)
+
+func EngineLifecycleSupport_Values() []string {
+	return []string{
+		EngineLifecycleSupport,
+		EngineLifecycleSupportDisabled,
+	}
+}
+
+const (
 	ExportableLogTypeAgent      = "agent"
 	ExportableLogTypeAlert      = "alert"
 	ExportableLogTypeAudit      = "audit"
