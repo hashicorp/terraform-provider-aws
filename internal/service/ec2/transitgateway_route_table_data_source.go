@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -59,12 +59,12 @@ func DataSourceTransitGatewayRouteTable() *schema.Resource {
 
 func dataSourceTransitGatewayRouteTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeTransitGatewayRouteTablesInput{}
 
-	input.Filters = append(input.Filters, newCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterListV2(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
@@ -74,19 +74,19 @@ func dataSourceTransitGatewayRouteTableRead(ctx context.Context, d *schema.Resou
 	}
 
 	if v, ok := d.GetOk(names.AttrID); ok {
-		input.TransitGatewayRouteTableIds = aws.StringSlice([]string{v.(string)})
+		input.TransitGatewayRouteTableIds = []string{v.(string)}
 	}
 
-	transitGatewayRouteTable, err := FindTransitGatewayRouteTable(ctx, conn, input)
+	transitGatewayRouteTable, err := findTransitGatewayRouteTable(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Transit Gateway Route Table", err))
 	}
 
-	d.SetId(aws.StringValue(transitGatewayRouteTable.TransitGatewayRouteTableId))
+	d.SetId(aws.ToString(transitGatewayRouteTable.TransitGatewayRouteTableId))
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   ec2.ServiceName,
+		Service:   names.EC2,
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("transit-gateway-route-table/%s", d.Id()),
