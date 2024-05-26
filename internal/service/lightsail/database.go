@@ -13,11 +13,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -27,7 +29,7 @@ const (
 )
 
 // @SDKResource("aws_lightsail_database", name="Database")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="id", resourceType="Database")
 func ResourceDatabase() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDatabaseCreate,
@@ -400,7 +402,11 @@ func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta in
 
 	// Some Operations can complete before the Database enters the Available state. Added a waiter to make sure the Database is available before continuing.
 	if _, err := waitDatabaseModified(ctx, conn, aws.String(d.Id())); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Lightsail Relational Database (%s) to become available: %s", d.Id(), err)
+		if err != nil && IsANotFoundError(err) {
+			return diags
+		} else {
+			return sdkdiag.AppendErrorf(diags, "waiting for Lightsail Relational Database (%s) to become available: %s", d.Id(), err)
+		}
 	}
 
 	skipFinalSnapshot := d.Get("skip_final_snapshot").(bool)
@@ -419,6 +425,10 @@ func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	output, err := conn.DeleteRelationalDatabase(ctx, input)
+
+	if err != nil && IsANotFoundError(err) {
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Lightsail Relational Database (%s): %s", d.Id(), err)
@@ -439,4 +449,29 @@ func resourceDatabaseImport(ctx context.Context, d *schema.ResourceData, meta in
 	// that final_snapshot_identifier is not required
 	d.Set("skip_final_snapshot", true)
 	return []*schema.ResourceData{d}, nil
+}
+
+func FindDatabaseById(ctx context.Context, conn *lightsail.Client, id string) (*types.RelationalDatabase, error) {
+	in := &lightsail.GetRelationalDatabaseInput{
+		RelationalDatabaseName: aws.String(id),
+	}
+
+	out, err := conn.GetRelationalDatabase(ctx, in)
+
+	if IsANotFoundError(err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil || out.RelationalDatabase == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out.RelationalDatabase, nil
 }

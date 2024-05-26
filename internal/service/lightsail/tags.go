@@ -21,8 +21,32 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 		err  error
 	)
 	switch resourceType {
+	case "Bucket":
+		tags, err = bucketListTags(ctx, meta.(*conns.AWSClient).LightsailClient(ctx), identifier)
+
+	case "Cetificate":
+		tags, err = certificateListTags(ctx, meta.(*conns.AWSClient).LightsailClient(ctx), identifier)
+
+	case "Container Service":
+		tags, err = containerServiceListTags(ctx, meta.(*conns.AWSClient).LightsailClient(ctx), identifier)
+
+	case "Database":
+		tags, err = databaseListTags(ctx, meta.(*conns.AWSClient).LightsailClient(ctx), identifier)
+
+	case "Disk":
+		tags, err = diskListTags(ctx, meta.(*conns.AWSClient).LightsailClient(ctx), identifier)
+
+	case "Distribution":
+		tags, err = distributionListTags(ctx, meta.(*conns.AWSClient).LightsailClient(ctx), identifier)
+
 	case "Instance":
 		tags, err = instanceListTags(ctx, meta.(*conns.AWSClient).LightsailClient(ctx), identifier)
+
+	case "KeyPair":
+		tags, err = keyPairListTags(ctx, meta.(*conns.AWSClient).LightsailClient(ctx), identifier)
+
+	case "LB":
+		tags, err = lbListTags(ctx, meta.(*conns.AWSClient).LightsailClient(ctx), identifier)
 
 	default:
 		return nil
@@ -39,8 +63,88 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 	return nil
 }
 
+func bucketListTags(ctx context.Context, client *lightsail.Client, id string) (tftags.KeyValueTags, error) {
+	out, err := FindBucketById(ctx, client, id)
+
+	if err != nil {
+		return tftags.New(ctx, nil), err
+	}
+
+	return KeyValueTags(ctx, out.Tags), nil
+}
+
+func certificateListTags(ctx context.Context, client *lightsail.Client, id string) (tftags.KeyValueTags, error) {
+	out, err := FindCertificateById(ctx, client, id)
+
+	if err != nil {
+		return tftags.New(ctx, nil), err
+	}
+
+	return KeyValueTags(ctx, out.Tags), nil
+}
+
+func containerServiceListTags(ctx context.Context, client *lightsail.Client, id string) (tftags.KeyValueTags, error) {
+	out, err := FindContainerServiceByName(ctx, client, id)
+
+	if err != nil {
+		return tftags.New(ctx, nil), err
+	}
+
+	return KeyValueTags(ctx, out.Tags), nil
+}
+
+func databaseListTags(ctx context.Context, client *lightsail.Client, id string) (tftags.KeyValueTags, error) {
+	out, err := FindDatabaseById(ctx, client, id)
+
+	if err != nil {
+		return tftags.New(ctx, nil), err
+	}
+
+	return KeyValueTags(ctx, out.Tags), nil
+}
+
+func diskListTags(ctx context.Context, client *lightsail.Client, id string) (tftags.KeyValueTags, error) {
+	out, err := FindDiskById(ctx, client, id)
+
+	if err != nil {
+		return tftags.New(ctx, nil), err
+	}
+
+	return KeyValueTags(ctx, out.Tags), nil
+}
+
+func distributionListTags(ctx context.Context, client *lightsail.Client, id string) (tftags.KeyValueTags, error) {
+	out, err := FindDistributionByID(ctx, client, id)
+
+	if err != nil {
+		return tftags.New(ctx, nil), err
+	}
+
+	return KeyValueTags(ctx, out.Tags), nil
+}
+
 func instanceListTags(ctx context.Context, client *lightsail.Client, id string) (tftags.KeyValueTags, error) {
 	out, err := FindInstanceById(ctx, client, id)
+
+	if err != nil {
+		return tftags.New(ctx, nil), err
+	}
+
+	return KeyValueTags(ctx, out.Tags), nil
+}
+
+func keyPairListTags(ctx context.Context, client *lightsail.Client, id string) (tftags.KeyValueTags, error) {
+	out, err := FindKeyPairById(ctx, client, id)
+
+	if err != nil {
+		return tftags.New(ctx, nil), err
+	}
+
+	return KeyValueTags(ctx, out.Tags), nil
+}
+
+func lbListTags(ctx context.Context, client *lightsail.Client, id string) (tftags.KeyValueTags, error) {
+	out, err := FindLoadBalancerById(ctx, client, id)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err

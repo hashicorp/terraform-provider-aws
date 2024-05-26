@@ -46,7 +46,7 @@ func TestAccLightsailDatabase_basic(t *testing.T) {
 					testAccCheckDatabaseExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "relational_database_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "blueprint_id", "mysql_8_0"),
-					resource.TestCheckResourceAttr(resourceName, "bundle_id", "micro_1_0"),
+					resource.TestCheckResourceAttr(resourceName, "bundle_id", "micro_2_0"),
 					resource.TestCheckResourceAttr(resourceName, "master_database_name", "testdatabasename"),
 					resource.TestCheckResourceAttr(resourceName, "master_username", "test"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
@@ -344,11 +344,11 @@ func TestAccLightsailDatabase_preferredBackupWindow(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDatabaseConfig_preferredBackupWindow(rName, backupWindowInvalidHour),
-				ExpectError: regexache.MustCompile(`must satisfy the format of \"hh24:mi-hh24:mi\".`),
+				ExpectError: regexache.MustCompile(`must satisfy the format of \"hh24:mi-hh24:mi\"`),
 			},
 			{
 				Config:      testAccDatabaseConfig_preferredBackupWindow(rName, backupWindowInvalidMinute),
-				ExpectError: regexache.MustCompile(`must satisfy the format of \"hh24:mi-hh24:mi\".`),
+				ExpectError: regexache.MustCompile(`must satisfy the format of \"hh24:mi-hh24:mi\"`),
 			},
 			{
 				Config: testAccDatabaseConfig_preferredBackupWindow(rName, "09:30-10:00"),
@@ -399,15 +399,15 @@ func TestAccLightsailDatabase_preferredMaintenanceWindow(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDatabaseConfig_preferredMaintenanceWindow(rName, maintenanceWindowInvalidDay),
-				ExpectError: regexache.MustCompile(`must satisfy the format of \"ddd:hh24:mi-ddd:hh24:mi\".`),
+				ExpectError: regexache.MustCompile(`must satisfy the format of \"ddd:hh24:mi-ddd:hh24:mi\"`),
 			},
 			{
 				Config:      testAccDatabaseConfig_preferredMaintenanceWindow(rName, maintenanceWindowInvalidHour),
-				ExpectError: regexache.MustCompile(`must satisfy the format of \"ddd:hh24:mi-ddd:hh24:mi\".`),
+				ExpectError: regexache.MustCompile(`must satisfy the format of \"ddd:hh24:mi-ddd:hh24:mi\"`),
 			},
 			{
 				Config:      testAccDatabaseConfig_preferredMaintenanceWindow(rName, maintenanceWindowInvalidMinute),
-				ExpectError: regexache.MustCompile(`must satisfy the format of \"ddd:hh24:mi-ddd:hh24:mi\".`),
+				ExpectError: regexache.MustCompile(`must satisfy the format of \"ddd:hh24:mi-ddd:hh24:mi\"`),
 			},
 			{
 				Config: testAccDatabaseConfig_preferredMaintenanceWindow(rName, "tue:04:30-tue:05:00"),
@@ -638,6 +638,61 @@ func TestAccLightsailDatabase_tags(t *testing.T) {
 	})
 }
 
+func TestAccLightsailDatabase_keyOnlyTags(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lightsail_database.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDatabaseDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDatabaseConfig_tags1(rName, acctest.CtKey1, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDatabaseExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrApplyImmediately,
+					"master_password",
+					"skip_final_snapshot",
+					"final_snapshot_name",
+				},
+			},
+			{
+				Config: testAccDatabaseConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDatabaseExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, ""),
+				),
+			},
+			{
+				Config: testAccDatabaseConfig_tags1(rName, acctest.CtKey2, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDatabaseExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, ""),
+				),
+			},
+		},
+	})
+}
+
 func TestAccLightsailDatabase_ha(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lightsail_database.test"
@@ -658,7 +713,7 @@ func TestAccLightsailDatabase_ha(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "relational_database_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "bundle_id", "micro_ha_1_0"),
+					resource.TestCheckResourceAttr(resourceName, "bundle_id", "micro_ha_2_0"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 				),
 			},
@@ -844,13 +899,13 @@ resource "aws_lightsail_database" "test" {
   master_password          = "testdatabasepassword"
   master_username          = "test"
   blueprint_id             = "mysql_8_0"
-  bundle_id                = "micro_1_0"
+  bundle_id                = "micro_2_0"
   skip_final_snapshot      = true
 }
 `, rName))
 }
 
-func testAccDatabaseConfig_masterDatabaseName(rName string, masterDatabaseName string) string {
+func testAccDatabaseConfig_masterDatabaseName(rName, masterDatabaseName string) string {
 	return acctest.ConfigCompose(
 		testAccDatabaseConfig_base(),
 		fmt.Sprintf(`	
@@ -861,13 +916,13 @@ resource "aws_lightsail_database" "test" {
   master_password          = "testdatabasepassword"
   master_username          = "test"
   blueprint_id             = "mysql_8_0"
-  bundle_id                = "micro_1_0"
+  bundle_id                = "micro_2_0"
   skip_final_snapshot      = true
 }
 `, rName, masterDatabaseName))
 }
 
-func testAccDatabaseConfig_masterUsername(rName string, masterUsername string) string {
+func testAccDatabaseConfig_masterUsername(rName, masterUsername string) string {
 	return acctest.ConfigCompose(
 		testAccDatabaseConfig_base(),
 		fmt.Sprintf(`	
@@ -878,13 +933,13 @@ resource "aws_lightsail_database" "test" {
   master_password          = "testdatabasepassword"
   master_username          = %[2]q
   blueprint_id             = "mysql_8_0"
-  bundle_id                = "micro_1_0"
+  bundle_id                = "micro_2_0"
   skip_final_snapshot      = true
 }
 `, rName, masterUsername))
 }
 
-func testAccDatabaseConfig_masterPassword(rName string, masterPassword string) string {
+func testAccDatabaseConfig_masterPassword(rName, masterPassword string) string {
 	return acctest.ConfigCompose(
 		testAccDatabaseConfig_base(),
 		fmt.Sprintf(`	
@@ -895,13 +950,13 @@ resource "aws_lightsail_database" "test" {
   master_password          = %[2]q
   master_username          = "testusername"
   blueprint_id             = "mysql_8_0"
-  bundle_id                = "micro_1_0"
+  bundle_id                = "micro_2_0"
   skip_final_snapshot      = true
 }
 `, rName, masterPassword))
 }
 
-func testAccDatabaseConfig_preferredBackupWindow(rName string, preferredBackupWindow string) string {
+func testAccDatabaseConfig_preferredBackupWindow(rName, preferredBackupWindow string) string {
 	return acctest.ConfigCompose(
 		testAccDatabaseConfig_base(),
 		fmt.Sprintf(`	
@@ -912,7 +967,7 @@ resource "aws_lightsail_database" "test" {
   master_password          = "testdatabasepassword"
   master_username          = "test"
   blueprint_id             = "mysql_8_0"
-  bundle_id                = "micro_1_0"
+  bundle_id                = "micro_2_0"
   preferred_backup_window  = %[2]q
   apply_immediately        = true
   skip_final_snapshot      = true
@@ -920,7 +975,7 @@ resource "aws_lightsail_database" "test" {
 `, rName, preferredBackupWindow))
 }
 
-func testAccDatabaseConfig_preferredMaintenanceWindow(rName string, preferredMaintenanceWindow string) string {
+func testAccDatabaseConfig_preferredMaintenanceWindow(rName, preferredMaintenanceWindow string) string {
 	return acctest.ConfigCompose(
 		testAccDatabaseConfig_base(),
 		fmt.Sprintf(`	
@@ -931,7 +986,7 @@ resource "aws_lightsail_database" "test" {
   master_password              = "testdatabasepassword"
   master_username              = "test"
   blueprint_id                 = "mysql_8_0"
-  bundle_id                    = "micro_1_0"
+  bundle_id                    = "micro_2_0"
   preferred_maintenance_window = %[2]q
   apply_immediately            = true
   skip_final_snapshot          = true
@@ -950,7 +1005,7 @@ resource "aws_lightsail_database" "test" {
   master_password          = "testdatabasepassword"
   master_username          = "test"
   blueprint_id             = "mysql_8_0"
-  bundle_id                = "micro_1_0"
+  bundle_id                = "micro_2_0"
   publicly_accessible      = %[2]t
   apply_immediately        = true
   skip_final_snapshot      = true
@@ -969,7 +1024,7 @@ resource "aws_lightsail_database" "test" {
   master_password          = "testdatabasepassword"
   master_username          = "test"
   blueprint_id             = "mysql_8_0"
-  bundle_id                = "micro_1_0"
+  bundle_id                = "micro_2_0"
   backup_retention_enabled = %[2]t
   apply_immediately        = true
   skip_final_snapshot      = true
@@ -977,7 +1032,7 @@ resource "aws_lightsail_database" "test" {
 `, rName, backupRetentionEnabled))
 }
 
-func testAccDatabaseConfig_finalSnapshotName(rName string, sName string) string {
+func testAccDatabaseConfig_finalSnapshotName(rName, sName string) string {
 	return acctest.ConfigCompose(
 		testAccDatabaseConfig_base(),
 		fmt.Sprintf(`	
@@ -988,13 +1043,13 @@ resource "aws_lightsail_database" "test" {
   master_password          = "testdatabasepassword"
   master_username          = "test"
   blueprint_id             = "mysql_8_0"
-  bundle_id                = "micro_1_0"
+  bundle_id                = "micro_2_0"
   final_snapshot_name      = %[2]q
 }
 `, rName, sName))
 }
 
-func testAccDatabaseConfig_tags1(rName string, tagKey1, tagValue1 string) string {
+func testAccDatabaseConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
 		testAccDatabaseConfig_base(),
 		fmt.Sprintf(`	
@@ -1005,7 +1060,7 @@ resource "aws_lightsail_database" "test" {
   master_password          = "testdatabasepassword"
   master_username          = "test"
   blueprint_id             = "mysql_8_0"
-  bundle_id                = "micro_1_0"
+  bundle_id                = "micro_2_0"
   skip_final_snapshot      = true
   tags = {
     %[2]q = %[3]q
@@ -1025,7 +1080,7 @@ resource "aws_lightsail_database" "test" {
   master_password          = "testdatabasepassword"
   master_username          = "test"
   blueprint_id             = "mysql_8_0"
-  bundle_id                = "micro_1_0"
+  bundle_id                = "micro_2_0"
   skip_final_snapshot      = true
   tags = {
     %[2]q = %[3]q
@@ -1045,7 +1100,7 @@ resource "aws_lightsail_database" "test" {
   master_password          = "testdatabasepassword"
   master_username          = "test"
   blueprint_id             = "mysql_8_0"
-  bundle_id                = "micro_ha_1_0"
+  bundle_id                = "micro_ha_2_0"
   skip_final_snapshot      = true
 }
 `, rName))
