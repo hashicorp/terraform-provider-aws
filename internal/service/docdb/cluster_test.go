@@ -1298,7 +1298,7 @@ resource "aws_docdb_cluster" "restore" {
 
   restore_to_point_in_time {
     source_cluster_identifier  = aws_docdb_cluster.test.cluster_identifier
-    restore_type               = "standard"
+    restore_type               = "full-copy"
     use_latest_restorable_time = true
   }
 }
