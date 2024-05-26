@@ -1294,7 +1294,7 @@ resource "aws_docdb_cluster" "test" {
 func testAccClusterConfig_pointInTimeRestoreSource(rName string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_baseForPITR(rName), fmt.Sprintf(`
 resource "aws_docdb_cluster" "restore" {
-  cluster_identifier = %[1]q
+  cluster_identifier = "%[1]s-restore"
 
   restore_to_point_in_time {
     source_cluster_identifier  = aws_docdb_cluster.test.cluster_identifier
