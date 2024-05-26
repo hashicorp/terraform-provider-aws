@@ -106,7 +106,7 @@ func resourceTransitGatewayRouteTableAssociationCreate(ctx context.Context, d *s
 
 	d.SetId(id)
 
-	if _, err := waitTransitGatewayRouteTableAssociationCreated(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
+	if err := waitTransitGatewayRouteTableAssociationCreated(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Transit Gateway Route Table Association (%s) create: %s", d.Id(), err)
 	}
 
@@ -185,7 +185,7 @@ func transitGatewayRouteTableAssociationUpdate(ctx context.Context, conn *ec2.Cl
 				return fmt.Errorf("creating EC2 Transit Gateway Route Table Association (%s): %w", id, err)
 			}
 
-			if _, err := waitTransitGatewayRouteTableAssociationCreated(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
+			if err := waitTransitGatewayRouteTableAssociationCreated(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
 				return fmt.Errorf("waiting for EC2 Transit Gateway Route Table Association (%s) create: %w", id, err)
 			}
 		}
@@ -199,7 +199,7 @@ func transitGatewayRouteTableAssociationUpdate(ctx context.Context, conn *ec2.Cl
 
 	if !associate {
 		// Disassociation must be done only on already associated state.
-		if _, err := waitTransitGatewayRouteTableAssociationCreated(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
+		if err := waitTransitGatewayRouteTableAssociationCreated(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
 			return fmt.Errorf("waiting for EC2 Transit Gateway Route Table Association (%s) create: %w", id, err)
 		}
 
@@ -227,7 +227,7 @@ func disassociateTransitGatewayRouteTable(ctx context.Context, conn *ec2.Client,
 		return fmt.Errorf("deleting EC2 Transit Gateway Route Table (%s) Association (%s): %w", transitGatewayRouteTableID, transitGatewayAttachmentID, err)
 	}
 
-	if _, err := waitTransitGatewayRouteTableAssociationDeleted(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
+	if err := waitTransitGatewayRouteTableAssociationDeleted(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
 		return fmt.Errorf("waiting for EC2 Transit Gateway Route Table (%s) Association (%s) delete: %w", transitGatewayRouteTableID, transitGatewayAttachmentID, err)
 	}
 

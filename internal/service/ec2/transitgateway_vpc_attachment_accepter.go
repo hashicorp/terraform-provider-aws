@@ -241,7 +241,7 @@ func resourceTransitGatewayVPCAttachmentAccepterDelete(ctx context.Context, d *s
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 Transit Gateway VPC Attachment (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitTransitGatewayVPCAttachmentDeleted(ctx, conn, d.Id()); err != nil {
+	if err := waitTransitGatewayVPCAttachmentDeleted(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 Transit Gateway VPC Attachment (%s): waiting for completion: %s", d.Id(), err)
 	}
 

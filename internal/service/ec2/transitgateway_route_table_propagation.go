@@ -77,7 +77,7 @@ func resourceTransitGatewayRouteTablePropagationCreate(ctx context.Context, d *s
 
 	d.SetId(id)
 
-	if _, err := waitTransitGatewayRouteTablePropagationCreated(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
+	if err := waitTransitGatewayRouteTablePropagationCreated(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Transit Gateway Route Table Propagation (%s) create: %s", d.Id(), err)
 	}
 
@@ -138,7 +138,7 @@ func resourceTransitGatewayRouteTablePropagationDelete(ctx context.Context, d *s
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 Transit Gateway Route Table Propagation (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitTransitGatewayRouteTablePropagationDeleted(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
+	if err := waitTransitGatewayRouteTablePropagationDeleted(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Transit Gateway Route Table Propagation (%s) delete: %s", d.Id(), err)
 	}
 
@@ -167,7 +167,7 @@ func transitGatewayRouteTablePropagationUpdate(ctx context.Context, conn *ec2.Cl
 				return fmt.Errorf("creating EC2 Transit Gateway Route Table Propagation (%s): %w", id, err)
 			}
 
-			if _, err := waitTransitGatewayRouteTablePropagationCreated(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
+			if err := waitTransitGatewayRouteTablePropagationCreated(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
 				return fmt.Errorf("waiting for EC2 Transit Gateway Route Table Propagation (%s) create: %w", id, err)
 			}
 		}
@@ -181,7 +181,7 @@ func transitGatewayRouteTablePropagationUpdate(ctx context.Context, conn *ec2.Cl
 
 	if !enable {
 		// Disabling must be done only on already enabled state.
-		if _, err := waitTransitGatewayRouteTablePropagationCreated(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
+		if err := waitTransitGatewayRouteTablePropagationCreated(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
 			return fmt.Errorf("waiting for EC2 Transit Gateway Route Table Propagation (%s) create: %w", id, err)
 		}
 
@@ -194,7 +194,7 @@ func transitGatewayRouteTablePropagationUpdate(ctx context.Context, conn *ec2.Cl
 			return fmt.Errorf("deleting EC2 Transit Gateway Route Table Propagation (%s): %w", id, err)
 		}
 
-		if _, err := waitTransitGatewayRouteTablePropagationDeleted(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
+		if err := waitTransitGatewayRouteTablePropagationDeleted(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID); err != nil {
 			return fmt.Errorf("waiting for EC2 Transit Gateway Route Table Propagation (%s) delete: %w", id, err)
 		}
 	}
