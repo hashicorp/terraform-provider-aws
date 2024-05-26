@@ -37,6 +37,8 @@ func TestAccQBusinessPlugin_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "plugin_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "basic_auth_configuration.0.role_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "basic_auth_configuration.0.secret_arn"),
 				),
 			},
 			{
