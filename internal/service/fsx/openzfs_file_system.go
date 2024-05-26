@@ -86,6 +86,14 @@ func resourceOpenZFSFileSystem() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`^([01]\d|2[0-3]):?([0-5]\d)$`), "must be in the format HH:MM"),
 				),
 			},
+			"delete_options": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(fsx.DeleteFileSystemOpenZFSOption_Values(), false),
+				},
+			},
 			"deployment_type": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -126,6 +134,32 @@ func resourceOpenZFSFileSystem() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
+			},
+			"final_backup_tags": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				MinItems: 1,
+				MaxItems: 50,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrKey: {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(1, 128),
+								validation.StringMatch(regexache.MustCompile(`^([\p{L}\p{Z}\p{N}_.:/=+\-@]*)$`), "must be a valid tag key"),
+							),
+						},
+						names.AttrValue: {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(0, 128),
+								validation.StringMatch(regexache.MustCompile(`^([\p{L}\p{Z}\p{N}_.:/=+\-@]*)$`), "must be a valid tag value"),
+							),
+						},
+					},
+				},
 			},
 			names.AttrKMSKeyID: {
 				Type:         schema.TypeString,
@@ -534,7 +568,13 @@ func resourceOpenZFSFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept(
+		"delete_options",
+		"final_backup_tags",
+		"skip_final_backup",
+		names.AttrTags,
+		names.AttrTagsAll,
+	) {
 		input := &fsx.UpdateFileSystemInput{
 			ClientRequestToken:   aws.String(id.UniqueId()),
 			FileSystemId:         aws.String(d.Id()),
@@ -633,13 +673,23 @@ func resourceOpenZFSFileSystemDelete(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
-	log.Printf("[DEBUG] Deleting FSx for OpenZFS File System: %s", d.Id())
-	_, err := conn.DeleteFileSystemWithContext(ctx, &fsx.DeleteFileSystemInput{
+	input := &fsx.DeleteFileSystemInput{
 		FileSystemId: aws.String(d.Id()),
 		OpenZFSConfiguration: &fsx.DeleteFileSystemOpenZFSConfiguration{
 			SkipFinalBackup: aws.Bool(d.Get("skip_final_backup").(bool)),
 		},
-	})
+	}
+
+	if v, ok := d.GetOk("delete_options"); ok {
+		input.OpenZFSConfiguration.Options = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("final_backup_tags"); ok {
+		input.OpenZFSConfiguration.FinalBackupTags = expandFinalBackupTags(v.(*schema.Set))
+	}
+
+	log.Printf("[DEBUG] Deleting FSx for OpenZFS File System: %s", d.Id())
+	_, err := conn.DeleteFileSystemWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeFileSystemNotFound) {
 		return diags

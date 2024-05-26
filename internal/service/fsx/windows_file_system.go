@@ -165,6 +165,32 @@ func resourceWindowsFileSystem() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"final_backup_tags": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				MinItems: 1,
+				MaxItems: 50,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrKey: {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(1, 128),
+								validation.StringMatch(regexache.MustCompile(`^([\p{L}\p{Z}\p{N}_.:/=+\-@]*)$`), "must be a valid tag key"),
+							),
+						},
+						names.AttrValue: {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(0, 128),
+								validation.StringMatch(regexache.MustCompile(`^([\p{L}\p{Z}\p{N}_.:/=+\-@]*)$`), "must be a valid tag value"),
+							),
+						},
+					},
+				},
+			},
 			names.AttrKMSKeyID: {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -541,7 +567,13 @@ func resourceWindowsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 		}
 	}
 
-	if d.HasChangesExcept("aliases", names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept(
+		"aliases",
+		"final_backup_tags",
+		"skip_final_backup",
+		names.AttrTags,
+		names.AttrTagsAll,
+	) {
 		input := &fsx.UpdateFileSystemInput{
 			ClientRequestToken:   aws.String(id.UniqueId()),
 			FileSystemId:         aws.String(d.Id()),
@@ -609,6 +641,10 @@ func resourceWindowsFileSystemDelete(ctx context.Context, d *schema.ResourceData
 		WindowsConfiguration: &fsx.DeleteFileSystemWindowsConfiguration{
 			SkipFinalBackup: aws.Bool(d.Get("skip_final_backup").(bool)),
 		},
+	}
+
+	if v, ok := d.GetOk("final_backup_tags"); ok {
+		input.WindowsConfiguration.FinalBackupTags = expandFinalBackupTags(v.(*schema.Set))
 	}
 
 	log.Printf("[DEBUG] Deleting FSx for Windows File Server File System: %s", d.Id())
