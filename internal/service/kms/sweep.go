@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -75,7 +76,7 @@ func sweepKeys(region string) error {
 			r := resourceKey()
 			d := r.Data(nil)
 			d.SetId(keyID)
-			d.Set("key_id", keyID)
+			d.Set(names.AttrKeyID, keyID)
 			d.Set("deletion_window_in_days", 7) //nolint:mnd // 7 days is the minimum value
 
 			sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))

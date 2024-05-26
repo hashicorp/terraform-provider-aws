@@ -61,8 +61,8 @@ func (*applicationResource) Metadata(_ context.Context, request resource.Metadat
 func (r *applicationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"application_id": framework.IDAttribute(),
-			names.AttrARN:    framework.ARNAttributeComputedOnly(),
+			names.AttrApplicationID: framework.IDAttribute(),
+			names.AttrARN:           framework.ARNAttributeComputedOnly(),
 			"current_version": schema.Int64Attribute{
 				Computed: true,
 			},
@@ -114,12 +114,12 @@ func (r *applicationResource) Schema(ctx context.Context, request resource.Schem
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"content": schema.StringAttribute{
+						names.AttrContent: schema.StringAttribute{
 							Optional: true,
 							Validators: []validator.String{
 								stringvalidator.LengthBetween(1, 65000),
 								stringvalidator.ExactlyOneOf(
-									path.MatchRelative().AtParent().AtName("content"),
+									path.MatchRelative().AtParent().AtName(names.AttrContent),
 									path.MatchRelative().AtParent().AtName("s3_location"),
 								),
 							},

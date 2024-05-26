@@ -35,7 +35,7 @@ func dataSourceCertificateAuthority() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"certificate_chain": {
+			names.AttrCertificateChain: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -170,10 +170,10 @@ func dataSourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceD
 	}
 
 	d.Set(names.AttrCertificate, "")
-	d.Set("certificate_chain", "")
+	d.Set(names.AttrCertificateChain, "")
 	if outputGCACert != nil {
 		d.Set(names.AttrCertificate, outputGCACert.Certificate)
-		d.Set("certificate_chain", outputGCACert.CertificateChain)
+		d.Set(names.AttrCertificateChain, outputGCACert.CertificateChain)
 	}
 
 	outputGCACsr, err := conn.GetCertificateAuthorityCsr(ctx, &acmpca.GetCertificateAuthorityCsrInput{

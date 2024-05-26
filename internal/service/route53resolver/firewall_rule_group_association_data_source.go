@@ -63,7 +63,7 @@ func DataSourceFirewallRuleGroupAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status_message": {
+			names.AttrStatusMessage: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -97,7 +97,7 @@ func dataSourceRuleGroupAssociationRead(ctx context.Context, d *schema.ResourceD
 	d.Set(names.AttrName, ruleGroupAssociation.Name)
 	d.Set(names.AttrPriority, ruleGroupAssociation.Priority)
 	d.Set(names.AttrStatus, ruleGroupAssociation.Status)
-	d.Set("status_message", ruleGroupAssociation.StatusMessage)
+	d.Set(names.AttrStatusMessage, ruleGroupAssociation.StatusMessage)
 	d.Set(names.AttrVPCID, ruleGroupAssociation.VpcId)
 
 	return nil

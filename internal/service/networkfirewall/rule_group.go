@@ -153,7 +153,7 @@ func ResourceRuleGroup() *schema.Resource {
 													Required:     true,
 													ValidateFunc: validation.StringInSlice(networkfirewall.StatefulAction_Values(), false),
 												},
-												"header": {
+												names.AttrHeader: {
 													Type:     schema.TypeList,
 													Required: true,
 													MaxItems: 1,
@@ -769,7 +769,7 @@ func expandStatefulRules(l []interface{}) []*networkfirewall.StatefulRule {
 		if v, ok := tfMap[names.AttrAction].(string); ok && v != "" {
 			rule.Action = aws.String(v)
 		}
-		if v, ok := tfMap["header"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		if v, ok := tfMap[names.AttrHeader].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 			rule.Header = expandStatefulRuleHeader(v)
 		}
 		if v, ok := tfMap["rule_option"].(*schema.Set); ok && v.Len() > 0 {
@@ -1244,7 +1244,7 @@ func flattenStatefulRules(sr []*networkfirewall.StatefulRule) []interface{} {
 	for _, s := range sr {
 		m := map[string]interface{}{
 			names.AttrAction: aws.StringValue(s.Action),
-			"header":         flattenHeader(s.Header),
+			names.AttrHeader: flattenHeader(s.Header),
 			"rule_option":    flattenRuleOptions(s.RuleOptions),
 		}
 		rules = append(rules, m)

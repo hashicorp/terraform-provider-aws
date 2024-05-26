@@ -14,9 +14,9 @@ func TestAccInspector2_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Enabler": {
-			"basic":                              testAccEnabler_basic,
+			acctest.CtBasic:                      testAccEnabler_basic,
 			"accountID":                          testAccEnabler_accountID,
-			"disappears":                         testAccEnabler_disappears,
+			acctest.CtDisappears:                 testAccEnabler_disappears,
 			"lambda":                             testAccEnabler_lambda,
 			"updateResourceTypes":                testAccEnabler_updateResourceTypes,
 			"updateResourceTypes_disjoint":       testAccEnabler_updateResourceTypes_disjoint,
@@ -27,19 +27,19 @@ func TestAccInspector2_serial(t *testing.T) {
 			"memberAccount_disappearsMemberAssociation":      testAccEnabler_memberAccount_disappearsMemberAssociation,
 		},
 		"DelegatedAdminAccount": {
-			"basic":      testAccDelegatedAdminAccount_basic,
-			"disappears": testAccDelegatedAdminAccount_disappears,
+			acctest.CtBasic:      testAccDelegatedAdminAccount_basic,
+			acctest.CtDisappears: testAccDelegatedAdminAccount_disappears,
 		},
 		"MemberAssociation": {
-			"basic":      testAccMemberAssociation_basic,
-			"disappears": testAccMemberAssociation_disappears,
+			acctest.CtBasic:      testAccMemberAssociation_basic,
+			acctest.CtDisappears: testAccMemberAssociation_disappears,
 		},
 		"OrganizationConfiguration": {
-			"basic":      testAccOrganizationConfiguration_basic,
-			"disappears": testAccOrganizationConfiguration_disappears,
-			"ec2ECR":     testAccOrganizationConfiguration_ec2ECR,
-			"lambda":     testAccOrganizationConfiguration_lambda,
-			"lambdaCode": testAccOrganizationConfiguration_lambdaCode,
+			acctest.CtBasic:      testAccOrganizationConfiguration_basic,
+			acctest.CtDisappears: testAccOrganizationConfiguration_disappears,
+			"ec2ECR":             testAccOrganizationConfiguration_ec2ECR,
+			"lambda":             testAccOrganizationConfiguration_lambda,
+			"lambdaCode":         testAccOrganizationConfiguration_lambdaCode,
 		},
 	}
 

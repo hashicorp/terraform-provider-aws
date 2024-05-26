@@ -258,7 +258,7 @@ func sweepInstanceProfile(ctx context.Context, client *conns.AWSClient) ([]sweep
 			if r := len(roles); r > 1 {
 				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("unexpected number of roles for IAM Instance Profile (%s): %d", name, r))
 			} else if r == 1 {
-				d.Set("role", roles[0].RoleName)
+				d.Set(names.AttrRole, roles[0].RoleName)
 			}
 
 			sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))
@@ -686,7 +686,7 @@ func roleNameFilter(name string) bool {
 		"KinesisFirehoseServiceRole-test",
 		"rds",
 		"resource-test-terraform-",
-		"role",
+		names.AttrRole,
 		"sns-delivery-status",
 		"ssm_role",
 		"ssm-role",

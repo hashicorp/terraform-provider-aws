@@ -116,7 +116,7 @@ func ResourceFeatureGroup() *schema.Resource {
 										Computed: true,
 										ForceNew: true,
 									},
-									"database": {
+									names.AttrDatabase: {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
@@ -203,7 +203,7 @@ func ResourceFeatureGroup() *schema.Resource {
 								},
 							},
 						},
-						"storage_type": {
+						names.AttrStorageType: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
@@ -445,7 +445,7 @@ func expandFeatureGroupOnlineStoreConfig(l []interface{}) *sagemaker.OnlineStore
 		config.SecurityConfig = expandFeatureGroupOnlineStoreConfigSecurityConfig(v)
 	}
 
-	if v, ok := m["storage_type"].(string); ok && v != "" {
+	if v, ok := m[names.AttrStorageType].(string); ok && v != "" {
 		config.StorageType = aws.String(v)
 	}
 
@@ -470,7 +470,7 @@ func flattenFeatureGroupOnlineStoreConfig(config *sagemaker.OnlineStoreConfig) [
 	}
 
 	if config.StorageType != nil {
-		m["storage_type"] = aws.StringValue(config.StorageType)
+		m[names.AttrStorageType] = aws.StringValue(config.StorageType)
 	}
 
 	if config.TtlDuration != nil {
@@ -634,7 +634,7 @@ func expandFeatureGroupOfflineStoreConfigDataCatalogConfig(l []interface{}) *sag
 
 	config := &sagemaker.DataCatalogConfig{
 		Catalog:   aws.String(m["catalog"].(string)),
-		Database:  aws.String(m["database"].(string)),
+		Database:  aws.String(m[names.AttrDatabase].(string)),
 		TableName: aws.String(m[names.AttrTableName].(string)),
 	}
 
@@ -648,7 +648,7 @@ func flattenFeatureGroupOfflineStoreConfigDataCatalogConfig(config *sagemaker.Da
 
 	m := map[string]interface{}{
 		"catalog":           aws.StringValue(config.Catalog),
-		"database":          aws.StringValue(config.Database),
+		names.AttrDatabase:  aws.StringValue(config.Database),
 		names.AttrTableName: aws.StringValue(config.TableName),
 	}
 

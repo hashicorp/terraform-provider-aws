@@ -112,7 +112,7 @@ func resourceEndpoint() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"health_check": {
+												names.AttrHealthCheck: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
@@ -493,7 +493,7 @@ func expandPrimary(tfMap map[string]interface{}) *types.Primary {
 
 	apiObject := &types.Primary{}
 
-	if v, ok := tfMap["health_check"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrHealthCheck].(string); ok && v != "" {
 		apiObject.HealthCheck = aws.String(v)
 	}
 
@@ -594,7 +594,7 @@ func flattenPrimary(apiObject *types.Primary) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.HealthCheck; v != nil {
-		tfMap["health_check"] = aws.ToString(v)
+		tfMap[names.AttrHealthCheck] = aws.ToString(v)
 	}
 
 	return tfMap

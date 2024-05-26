@@ -164,7 +164,7 @@ func ResourcePipeline() *schema.Resource {
 				Computed: true,
 			},
 
-			"role": {
+			names.AttrRole: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -243,7 +243,7 @@ func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta in
 		ContentConfig:   expandETPiplineOutputConfig(d, "content_config"),
 		InputBucket:     aws.String(d.Get("input_bucket").(string)),
 		Notifications:   expandETNotifications(d),
-		Role:            aws.String(d.Get("role").(string)),
+		Role:            aws.String(d.Get(names.AttrRole).(string)),
 		ThumbnailConfig: expandETPiplineOutputConfig(d, "thumbnail_config"),
 	}
 
@@ -439,8 +439,8 @@ func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		req.Notifications = expandETNotifications(d)
 	}
 
-	if d.HasChange("role") {
-		req.Role = aws.String(d.Get("role").(string))
+	if d.HasChange(names.AttrRole) {
+		req.Role = aws.String(d.Get(names.AttrRole).(string))
 	}
 
 	if d.HasChange("thumbnail_config") {
@@ -506,7 +506,7 @@ func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "setting notifications: %s", err)
 	}
 
-	d.Set("role", pipeline.Role)
+	d.Set(names.AttrRole, pipeline.Role)
 
 	if pipeline.ThumbnailConfig != nil {
 		err := d.Set("thumbnail_config", flattenETPipelineOutputConfig(pipeline.ThumbnailConfig))

@@ -36,7 +36,7 @@ func dataSourceOpenzfsSnapshot() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrFilter: snapshotFiltersSchema(),
-			"most_recent": {
+			names.AttrMostRecent: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -45,7 +45,7 @@ func dataSourceOpenzfsSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"snapshot_id": {
+			names.AttrSnapshotID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -92,7 +92,7 @@ func dataSourceOpenZFSSnapshotRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if len(snapshots) > 1 {
-		if !d.Get("most_recent").(bool) {
+		if !d.Get(names.AttrMostRecent).(bool) {
 			return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more "+
 				"specific search criteria, or set `most_recent` attribute to true.")
 		}
@@ -107,7 +107,7 @@ func dataSourceOpenZFSSnapshotRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set(names.AttrARN, snapshot.ResourceARN)
 	d.Set(names.AttrCreationTime, snapshot.CreationTime.Format(time.RFC3339))
 	d.Set(names.AttrName, snapshot.Name)
-	d.Set("snapshot_id", snapshot.SnapshotId)
+	d.Set(names.AttrSnapshotID, snapshot.SnapshotId)
 	d.Set("volume_id", snapshot.VolumeId)
 
 	setTagsOut(ctx, snapshot.Tags)

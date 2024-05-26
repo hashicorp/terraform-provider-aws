@@ -114,7 +114,7 @@ func testAccMember_message(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"message", "disable_email_notification"},
+				ImportStateVerifyIgnore: []string{names.AttrMessage, "disable_email_notification"},
 			},
 		},
 	})

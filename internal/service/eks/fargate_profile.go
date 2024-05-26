@@ -53,7 +53,7 @@ func resourceFargateProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"cluster_name": {
+			names.AttrClusterName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -114,7 +114,7 @@ func resourceFargateProfileCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
-	clusterName := d.Get("cluster_name").(string)
+	clusterName := d.Get(names.AttrClusterName).(string)
 	fargateProfileName := d.Get("fargate_profile_name").(string)
 	profileID := FargateProfileCreateResourceID(clusterName, fargateProfileName)
 	input := &eks.CreateFargateProfileInput{
@@ -173,7 +173,7 @@ func resourceFargateProfileRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.Set(names.AttrARN, fargateProfile.FargateProfileArn)
-	d.Set("cluster_name", fargateProfile.ClusterName)
+	d.Set(names.AttrClusterName, fargateProfile.ClusterName)
 	d.Set("fargate_profile_name", fargateProfile.FargateProfileName)
 	d.Set("pod_execution_role_arn", fargateProfile.PodExecutionRoleArn)
 	if err := d.Set("selector", flattenFargateProfileSelectors(fargateProfile.Selectors)); err != nil {
@@ -203,7 +203,7 @@ func resourceFargateProfileDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	// mutex lock for creation/deletion serialization
-	mutexKey := fmt.Sprintf("%s-fargate-profiles", d.Get("cluster_name").(string))
+	mutexKey := fmt.Sprintf("%s-fargate-profiles", d.Get(names.AttrClusterName).(string))
 	conns.GlobalMutexKV.Lock(mutexKey)
 	defer conns.GlobalMutexKV.Unlock(mutexKey)
 

@@ -70,7 +70,7 @@ func ResourceCapacityReservation() *schema.Resource {
 				ForceNew: true,
 				Default:  false,
 			},
-			"instance_count": {
+			names.AttrInstanceCount: {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
@@ -127,7 +127,7 @@ func resourceCapacityReservationCreate(ctx context.Context, d *schema.ResourceDa
 		AvailabilityZone:  aws.String(d.Get(names.AttrAvailabilityZone).(string)),
 		ClientToken:       aws.String(id.UniqueId()),
 		EndDateType:       aws.String(d.Get("end_date_type").(string)),
-		InstanceCount:     aws.Int64(int64(d.Get("instance_count").(int))),
+		InstanceCount:     aws.Int64(int64(d.Get(names.AttrInstanceCount).(int))),
 		InstancePlatform:  aws.String(d.Get("instance_platform").(string)),
 		InstanceType:      aws.String(d.Get(names.AttrInstanceType).(string)),
 		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeCapacityReservation),
@@ -204,7 +204,7 @@ func resourceCapacityReservationRead(ctx context.Context, d *schema.ResourceData
 	}
 	d.Set("end_date_type", reservation.EndDateType)
 	d.Set("ephemeral_storage", reservation.EphemeralStorage)
-	d.Set("instance_count", reservation.TotalInstanceCount)
+	d.Set(names.AttrInstanceCount, reservation.TotalInstanceCount)
 	d.Set("instance_match_criteria", reservation.InstanceMatchCriteria)
 	d.Set("instance_platform", reservation.InstancePlatform)
 	d.Set(names.AttrInstanceType, reservation.InstanceType)
@@ -226,7 +226,7 @@ func resourceCapacityReservationUpdate(ctx context.Context, d *schema.ResourceDa
 		input := &ec2.ModifyCapacityReservationInput{
 			CapacityReservationId: aws.String(d.Id()),
 			EndDateType:           aws.String(d.Get("end_date_type").(string)),
-			InstanceCount:         aws.Int64(int64(d.Get("instance_count").(int))),
+			InstanceCount:         aws.Int64(int64(d.Get(names.AttrInstanceCount).(int))),
 		}
 
 		if v, ok := d.GetOk("end_date"); ok {

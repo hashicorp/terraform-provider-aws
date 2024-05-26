@@ -116,7 +116,7 @@ func (r *managedUserPoolClientResource) Schema(ctx context.Context, request reso
 					setplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"client_secret": schema.StringAttribute{
+			names.AttrClientSecret: schema.StringAttribute{
 				Computed:  true,
 				Sensitive: true,
 				PlanModifiers: []planmodifier.String{
@@ -267,24 +267,24 @@ func (r *managedUserPoolClientResource) Schema(ctx context.Context, request reso
 							Validators: []validator.String{
 								stringvalidator.ExactlyOneOf(
 									path.MatchRelative().AtParent().AtName("application_arn"),
-									path.MatchRelative().AtParent().AtName("application_id"),
+									path.MatchRelative().AtParent().AtName(names.AttrApplicationID),
 								),
 								stringvalidator.ConflictsWith(
-									path.MatchRelative().AtParent().AtName("external_id"),
+									path.MatchRelative().AtParent().AtName(names.AttrExternalID),
 									path.MatchRelative().AtParent().AtName(names.AttrRoleARN),
 								),
 							},
 						},
-						"application_id": schema.StringAttribute{
+						names.AttrApplicationID: schema.StringAttribute{
 							Optional: true,
 							Validators: []validator.String{
 								stringvalidator.AlsoRequires(
-									path.MatchRelative().AtParent().AtName("external_id"),
+									path.MatchRelative().AtParent().AtName(names.AttrExternalID),
 									path.MatchRelative().AtParent().AtName(names.AttrRoleARN),
 								),
 							},
 						},
-						"external_id": schema.StringAttribute{
+						names.AttrExternalID: schema.StringAttribute{
 							Optional: true,
 						},
 						names.AttrRoleARN: schema.StringAttribute{

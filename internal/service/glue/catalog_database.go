@@ -65,7 +65,7 @@ func ResourceCatalogDatabase() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"permissions": {
+						names.AttrPermissions: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Schema{
@@ -456,7 +456,7 @@ func expandDatabasePrincipalPermission(tfMap map[string]interface{}) *glue.Princ
 
 	apiObject := &glue.PrincipalPermissions{}
 
-	if v, ok := tfMap["permissions"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrPermissions].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.Permissions = flex.ExpandStringSet(v)
 	}
 
@@ -507,7 +507,7 @@ func flattenDatabasePrincipalPermission(apiObject *glue.PrincipalPermissions) ma
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Permissions; v != nil {
-		tfMap["permissions"] = flex.FlattenStringSet(v)
+		tfMap[names.AttrPermissions] = flex.FlattenStringSet(v)
 	}
 
 	if v := apiObject.Principal; v != nil {

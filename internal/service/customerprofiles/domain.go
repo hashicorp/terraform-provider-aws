@@ -173,7 +173,7 @@ func ResourceDomain() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"rule": {
+									names.AttrRule: {
 										Type:     schema.TypeList,
 										Required: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
@@ -686,7 +686,7 @@ func expandMatchingRules(tfMap []interface{}) []types.MatchingRule {
 
 		apiObject := types.MatchingRule{}
 
-		if v, ok := matchingRule["rule"]; ok {
+		if v, ok := matchingRule[names.AttrRule]; ok {
 			apiObject.Rule = flex.ExpandStringValueList(v.([]interface{}))
 		}
 
@@ -900,7 +900,7 @@ func flattenMatchingRules(apiObject []types.MatchingRule) []interface{} {
 	for _, matchingRule := range apiObject {
 		if v := matchingRule.Rule; v != nil {
 			tfMap := map[string]interface{}{}
-			tfMap["rule"] = flex.FlattenStringValueList(v)
+			tfMap[names.AttrRule] = flex.FlattenStringValueList(v)
 			tfList = append(tfList, tfMap)
 		}
 	}

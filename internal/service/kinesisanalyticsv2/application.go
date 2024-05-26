@@ -804,7 +804,7 @@ func ResourceApplication() *schema.Resource {
 							},
 						},
 
-						"vpc_configuration": {
+						names.AttrVPCConfiguration: {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
@@ -1793,7 +1793,7 @@ func expandApplicationConfiguration(vApplicationConfiguration []interface{}) *ki
 		applicationConfiguration.SqlApplicationConfiguration = sqlApplicationConfiguration
 	}
 
-	if vVpcConfiguration, ok := mApplicationConfiguration["vpc_configuration"].([]interface{}); ok && len(vVpcConfiguration) > 0 && vVpcConfiguration[0] != nil {
+	if vVpcConfiguration, ok := mApplicationConfiguration[names.AttrVPCConfiguration].([]interface{}); ok && len(vVpcConfiguration) > 0 && vVpcConfiguration[0] != nil {
 		applicationConfiguration.VpcConfigurations = []*kinesisanalyticsv2.VpcConfiguration{expandVPCConfiguration(vVpcConfiguration)}
 	}
 
@@ -2794,7 +2794,7 @@ func flattenApplicationConfigurationDescription(applicationConfigurationDescript
 			names.AttrVPCID:            aws.StringValue(vpcConfigurationDescription.VpcId),
 		}
 
-		mApplicationConfiguration["vpc_configuration"] = []interface{}{mVpcConfiguration}
+		mApplicationConfiguration[names.AttrVPCConfiguration] = []interface{}{mVpcConfiguration}
 	}
 
 	return []interface{}{mApplicationConfiguration}

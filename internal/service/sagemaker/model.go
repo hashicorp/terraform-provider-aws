@@ -53,7 +53,7 @@ func ResourceModel() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: validName,
 						},
-						"environment": {
+						names.AttrEnvironment: {
 							Type:         schema.TypeMap,
 							Optional:     true,
 							ForceNew:     true,
@@ -200,7 +200,7 @@ func ResourceModel() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: validName,
 						},
-						"environment": {
+						names.AttrEnvironment: {
 							Type:         schema.TypeMap,
 							Optional:     true,
 							ForceNew:     true,
@@ -310,7 +310,7 @@ func ResourceModel() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"subnets": {
+						names.AttrSubnets: {
 							Type:     schema.TypeSet,
 							Required: true,
 							MaxItems: 16,
@@ -393,7 +393,7 @@ func expandVPCConfigRequest(l []interface{}) *sagemaker.VpcConfig {
 
 	return &sagemaker.VpcConfig{
 		SecurityGroupIds: flex.ExpandStringSet(m[names.AttrSecurityGroupIDs].(*schema.Set)),
-		Subnets:          flex.ExpandStringSet(m["subnets"].(*schema.Set)),
+		Subnets:          flex.ExpandStringSet(m[names.AttrSubnets].(*schema.Set)),
 	}
 }
 
@@ -447,7 +447,7 @@ func flattenVPCConfigResponse(vpcConfig *sagemaker.VpcConfig) []map[string]inter
 
 	m := map[string]interface{}{
 		names.AttrSecurityGroupIDs: flex.FlattenStringSet(vpcConfig.SecurityGroupIds),
-		"subnets":                  flex.FlattenStringSet(vpcConfig.Subnets),
+		names.AttrSubnets:          flex.FlattenStringSet(vpcConfig.Subnets),
 	}
 
 	return []map[string]interface{}{m}
@@ -513,7 +513,7 @@ func expandContainer(m map[string]interface{}) *sagemaker.ContainerDefinition {
 	if v, ok := m["model_data_source"]; ok {
 		container.ModelDataSource = expandModelDataSource(v.([]interface{}))
 	}
-	if v, ok := m["environment"].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := m[names.AttrEnvironment].(map[string]interface{}); ok && len(v) > 0 {
 		container.Environment = flex.ExpandStringMap(v)
 	}
 
@@ -632,7 +632,7 @@ func flattenContainer(container *sagemaker.ContainerDefinition) []interface{} {
 		cfg["model_package_name"] = aws.StringValue(container.ModelPackageName)
 	}
 	if container.Environment != nil {
-		cfg["environment"] = aws.StringValueMap(container.Environment)
+		cfg[names.AttrEnvironment] = aws.StringValueMap(container.Environment)
 	}
 
 	if container.ImageConfig != nil {

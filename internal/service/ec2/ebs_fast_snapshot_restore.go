@@ -55,7 +55,7 @@ func (r *ebsFastSnapshotRestoreResource) Schema(ctx context.Context, request res
 				},
 			},
 			names.AttrID: framework.IDAttribute(),
-			"snapshot_id": schema.StringAttribute{
+			names.AttrSnapshotID: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),

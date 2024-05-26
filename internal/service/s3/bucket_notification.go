@@ -130,7 +130,7 @@ func resourceBucketNotification() *schema.Resource {
 							Optional: true,
 							Computed: true,
 						},
-						"topic_arn": {
+						names.AttrTopicARN: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -255,7 +255,7 @@ func resourceBucketNotificationPut(ctx context.Context, d *schema.ResourceData, 
 			tc.Id = aws.String(id.PrefixedUniqueId("tf-s3-topic-"))
 		}
 
-		if val, ok := c["topic_arn"].(string); ok {
+		if val, ok := c[names.AttrTopicARN].(string); ok {
 			tc.TopicArn = aws.String(val)
 		}
 
@@ -444,7 +444,7 @@ func flattenTopicConfigurations(configs []types.TopicConfiguration) []map[string
 
 		conf[names.AttrID] = aws.ToString(notification.Id)
 		conf["events"] = notification.Events
-		conf["topic_arn"] = aws.ToString(notification.TopicArn)
+		conf[names.AttrTopicARN] = aws.ToString(notification.TopicArn)
 		topicNotifications = append(topicNotifications, conf)
 	}
 

@@ -36,7 +36,7 @@ func TestAccLambdaFunctionURLDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "cors.0.expose_headers.#", resourceName, "cors.0.expose_headers.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "cors.0.max_age", resourceName, "cors.0.max_age"),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrCreationTime),
-					resource.TestCheckResourceAttrPair(dataSourceName, "function_arn", resourceName, "function_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrFunctionARN, resourceName, names.AttrFunctionARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "function_name", resourceName, "function_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "function_url", resourceName, "function_url"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "invoke_mode", resourceName, "invoke_mode"),

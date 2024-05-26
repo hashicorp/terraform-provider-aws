@@ -137,7 +137,7 @@ func ResourceScalingPlan() *schema.Resource {
 							Default:  false,
 						},
 
-						"max_capacity": {
+						names.AttrMaxCapacity: {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
@@ -188,7 +188,7 @@ func ResourceScalingPlan() *schema.Resource {
 							ValidateDiagFunc: enum.Validate[awstypes.PredictiveScalingMode](),
 						},
 
-						"resource_id": {
+						names.AttrResourceID: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 1600),
@@ -561,7 +561,7 @@ func expandScalingInstructions(vScalingInstructions *schema.Set) []awstypes.Scal
 		if v, ok := mScalingInstruction["disable_dynamic_scaling"].(bool); ok {
 			scalingInstruction.DisableDynamicScaling = aws.Bool(v)
 		}
-		if v, ok := mScalingInstruction["max_capacity"].(int); ok {
+		if v, ok := mScalingInstruction[names.AttrMaxCapacity].(int); ok {
 			scalingInstruction.MaxCapacity = aws.Int32(int32(v))
 		}
 		if v, ok := mScalingInstruction["min_capacity"].(int); ok {
@@ -576,7 +576,7 @@ func expandScalingInstructions(vScalingInstructions *schema.Set) []awstypes.Scal
 		if v, ok := mScalingInstruction["predictive_scaling_mode"].(string); ok && v != "" {
 			scalingInstruction.PredictiveScalingMode = awstypes.PredictiveScalingMode(v)
 		}
-		if v, ok := mScalingInstruction["resource_id"].(string); ok && v != "" {
+		if v, ok := mScalingInstruction[names.AttrResourceID].(string); ok && v != "" {
 			scalingInstruction.ResourceId = aws.String(v)
 		}
 		if v, ok := mScalingInstruction["scalable_dimension"].(string); ok && v != "" {
@@ -731,12 +731,12 @@ func flattenScalingInstructions(scalingInstructions []awstypes.ScalingInstructio
 	for _, scalingInstruction := range scalingInstructions {
 		mScalingInstruction := map[string]interface{}{
 			"disable_dynamic_scaling":                  aws.ToBool(scalingInstruction.DisableDynamicScaling),
-			"max_capacity":                             int(aws.ToInt32(scalingInstruction.MaxCapacity)),
+			names.AttrMaxCapacity:                      int(aws.ToInt32(scalingInstruction.MaxCapacity)),
 			"min_capacity":                             int(aws.ToInt32(scalingInstruction.MinCapacity)),
 			"predictive_scaling_max_capacity_behavior": scalingInstruction.PredictiveScalingMaxCapacityBehavior,
 			"predictive_scaling_max_capacity_buffer":   int(aws.ToInt32(scalingInstruction.PredictiveScalingMaxCapacityBuffer)),
 			"predictive_scaling_mode":                  string(scalingInstruction.PredictiveScalingMode),
-			"resource_id":                              aws.ToString(scalingInstruction.ResourceId),
+			names.AttrResourceID:                       aws.ToString(scalingInstruction.ResourceId),
 			"scalable_dimension":                       string(scalingInstruction.ScalableDimension),
 			"scaling_policy_update_behavior":           string(scalingInstruction.ScalingPolicyUpdateBehavior),
 			"scheduled_action_buffer_time":             int(aws.ToInt32(scalingInstruction.ScheduledActionBufferTime)),

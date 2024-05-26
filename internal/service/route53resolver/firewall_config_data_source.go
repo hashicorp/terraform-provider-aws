@@ -31,7 +31,7 @@ func DataSourceFirewallConfig() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"resource_id": {
+			names.AttrResourceID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -42,7 +42,7 @@ func DataSourceFirewallConfig() *schema.Resource {
 func dataSourceFirewallConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
-	id := d.Get("resource_id").(string)
+	id := d.Get(names.AttrResourceID).(string)
 	firewallConfig, err := findFirewallConfigByResourceID(ctx, conn, id)
 
 	if err != nil {
@@ -52,7 +52,7 @@ func dataSourceFirewallConfigRead(ctx context.Context, d *schema.ResourceData, m
 	d.SetId(aws.StringValue(firewallConfig.Id))
 	d.Set("firewall_fail_open", firewallConfig.FirewallFailOpen)
 	d.Set(names.AttrOwnerID, firewallConfig.OwnerId)
-	d.Set("resource_id", firewallConfig.ResourceId)
+	d.Set(names.AttrResourceID, firewallConfig.ResourceId)
 
 	return nil
 }

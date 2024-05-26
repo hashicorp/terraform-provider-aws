@@ -8,13 +8,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appstream"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/appstream"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/appstream/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,7 +23,7 @@ import (
 
 func TestAccAppStreamUser_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var userOutput appstream.User
+	var userOutput awstypes.User
 	resourceName := "aws_appstream_user.test"
 	authType := "USERPOOL"
 	domain := acctest.RandomDomainName()
@@ -42,8 +43,8 @@ func TestAccAppStreamUser_basic(t *testing.T) {
 					testAccCheckUserExists(ctx, resourceName, &userOutput),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", authType),
 					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, rEmail),
-					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 				),
 			},
 			{
@@ -58,7 +59,7 @@ func TestAccAppStreamUser_basic(t *testing.T) {
 
 func TestAccAppStreamUser_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var userOutput appstream.User
+	var userOutput awstypes.User
 	resourceName := "aws_appstream_user.test"
 	authType := "USERPOOL"
 	domain := acctest.RandomDomainName()
@@ -86,7 +87,7 @@ func TestAccAppStreamUser_disappears(t *testing.T) {
 
 func TestAccAppStreamUser_complete(t *testing.T) {
 	ctx := acctest.Context(t)
-	var userOutput appstream.User
+	var userOutput awstypes.User
 	resourceName := "aws_appstream_user.test"
 	authType := "USERPOOL"
 	firstName := "John"
@@ -108,8 +109,8 @@ func TestAccAppStreamUser_complete(t *testing.T) {
 					testAccCheckUserExists(ctx, resourceName, &userOutput),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", authType),
 					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, rEmail),
-					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
 			{
@@ -124,8 +125,8 @@ func TestAccAppStreamUser_complete(t *testing.T) {
 					testAccCheckUserExists(ctx, resourceName, &userOutput),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", authType),
 					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, rEmail),
-					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 				),
 			},
 			{
@@ -134,22 +135,22 @@ func TestAccAppStreamUser_complete(t *testing.T) {
 					testAccCheckUserExists(ctx, resourceName, &userOutput),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", authType),
 					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, rEmail),
-					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckUserExists(ctx context.Context, resourceName string, appStreamUser *appstream.User) resource.TestCheckFunc {
+func testAccCheckUserExists(ctx context.Context, resourceName string, appStreamUser *awstypes.User) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamClient(ctx)
 
 		userName, authType, err := tfappstream.DecodeUserID(rs.Primary.ID)
 		if err != nil {
@@ -172,7 +173,7 @@ func testAccCheckUserExists(ctx context.Context, resourceName string, appStreamU
 
 func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appstream_user" {
@@ -184,9 +185,9 @@ func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			resp, err := conn.DescribeUsersWithContext(ctx, &appstream.DescribeUsersInput{AuthenticationType: aws.String(authType)})
+			resp, err := conn.DescribeUsers(ctx, &appstream.DescribeUsersInput{AuthenticationType: awstypes.AuthenticationType(authType)})
 
-			if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				continue
 			}
 
@@ -197,7 +198,7 @@ func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
 			found := false
 
 			for _, out := range resp.Users {
-				if aws.StringValue(out.UserName) == userName {
+				if aws.ToString(out.UserName) == userName {
 					found = true
 				}
 			}

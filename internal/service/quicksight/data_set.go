@@ -44,7 +44,7 @@ func ResourceDataSet() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"aws_account_id": {
+				names.AttrAWSAccountID: {
 					Type:         schema.TypeString,
 					Optional:     true,
 					Computed:     true,
@@ -198,7 +198,7 @@ func ResourceDataSet() *schema.Resource {
 						},
 					},
 				},
-				"permissions": {
+				names.AttrPermissions: {
 					Type:     schema.TypeSet,
 					Optional: true,
 					MinItems: 1,
@@ -332,7 +332,7 @@ func ResourceDataSet() *schema.Resource {
 																	Type:     schema.TypeString,
 																	Required: true,
 																},
-																"size": {
+																names.AttrSize: {
 																	Type:     schema.TypeInt,
 																	Required: true,
 																},
@@ -374,7 +374,7 @@ func ResourceDataSet() *schema.Resource {
 func logicalTableMapSchema() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			"alias": {
+			names.AttrAlias: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 64),
@@ -753,7 +753,7 @@ func physicalTableMapSchema() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 64),
 						},
-						"schema": {
+						names.AttrSchema: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -841,7 +841,7 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountId := meta.(*conns.AWSClient).AccountID
-	if v, ok := d.GetOk("aws_account_id"); ok {
+	if v, ok := d.GetOk(names.AttrAWSAccountID); ok {
 		awsAccountId = v.(string)
 	}
 	dataSetID := d.Get("data_set_id").(string)
@@ -877,7 +877,7 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.LogicalTableMap = expandDataSetLogicalTableMap(v.(*schema.Set))
 	}
 
-	if v, ok := d.Get("permissions").(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := d.Get(names.AttrPermissions).(*schema.Set); ok && v.Len() > 0 {
 		input.Permissions = expandResourcePermissions(v.List())
 	}
 
@@ -942,7 +942,7 @@ func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 	dataSet := output.DataSet
 
 	d.Set(names.AttrARN, dataSet.Arn)
-	d.Set("aws_account_id", awsAccountId)
+	d.Set(names.AttrAWSAccountID, awsAccountId)
 	d.Set("data_set_id", dataSet.DataSetId)
 	d.Set(names.AttrName, dataSet.Name)
 	d.Set("import_mode", dataSet.ImportMode)
@@ -992,7 +992,7 @@ func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.Errorf("describing QuickSight Data Source (%s) Permissions: %s", d.Id(), err)
 	}
 
-	if err := d.Set("permissions", flattenPermissions(permsResp.Permissions)); err != nil {
+	if err := d.Set(names.AttrPermissions, flattenPermissions(permsResp.Permissions)); err != nil {
 		return diag.Errorf("setting permissions: %s", err)
 	}
 
@@ -1017,7 +1017,7 @@ func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
-	if d.HasChangesExcept("permissions", names.AttrTags, names.AttrTagsAll, "refresh_properties") {
+	if d.HasChangesExcept(names.AttrPermissions, names.AttrTags, names.AttrTagsAll, "refresh_properties") {
 		awsAccountId, dataSetId, err := ParseDataSetID(d.Id())
 		if err != nil {
 			return diag.FromErr(err)
@@ -1051,13 +1051,13 @@ func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	if d.HasChange("permissions") {
+	if d.HasChange(names.AttrPermissions) {
 		awsAccountId, dataSetId, err := ParseDataSetID(d.Id())
 		if err != nil {
 			return diag.FromErr(err)
 		}
 
-		oraw, nraw := d.GetChange("permissions")
+		oraw, nraw := d.GetChange(names.AttrPermissions)
 		o := oraw.(*schema.Set)
 		n := nraw.(*schema.Set)
 
@@ -1291,7 +1291,7 @@ func expandDataSetLogicalTableMap(tfSet *schema.Set) map[string]*quicksight.Logi
 		logicalTable := &quicksight.LogicalTable{}
 		logicalTableMapID := vMap["logical_table_map_id"].(string)
 
-		if v, ok := vMap["alias"].(string); ok {
+		if v, ok := vMap[names.AttrAlias].(string); ok {
 			logicalTable.Alias = aws.String(v)
 		}
 		if v, ok := vMap[names.AttrSource].([]interface{}); ok {
@@ -1760,7 +1760,7 @@ func expandDataSetRelationalTable(tfMap map[string]interface{}) *quicksight.Rela
 	if v, ok := tfMap[names.AttrName].(string); ok {
 		relationalTable.Name = aws.String(v)
 	}
-	if v, ok := tfMap["schema"].(string); ok {
+	if v, ok := tfMap[names.AttrSchema].(string); ok {
 		relationalTable.Schema = aws.String(v)
 	}
 
@@ -1921,7 +1921,7 @@ func expandLookbackWindow(tfList []interface{}) *quicksight.LookbackWindow {
 	if v, ok := tfMap["column_name"].(string); ok {
 		window.ColumnName = aws.String(v)
 	}
-	if v, ok := tfMap["size"].(int); ok {
+	if v, ok := tfMap[names.AttrSize].(int); ok {
 		window.Size = aws.Int64(int64(v))
 	}
 	if v, ok := tfMap["size_unit"].(string); ok {
@@ -2142,7 +2142,7 @@ func flattenLogicalTableMap(apiObject map[string]*quicksight.LogicalTable, resou
 			"logical_table_map_id": key,
 		}
 		if table.Alias != nil {
-			tfMap["alias"] = aws.StringValue(table.Alias)
+			tfMap[names.AttrAlias] = aws.StringValue(table.Alias)
 		}
 		if table.DataTransforms != nil {
 			tfMap["data_transforms"] = flattenDataTransforms(table.DataTransforms)
@@ -2517,7 +2517,7 @@ func flattenRelationalTable(apiObject *quicksight.RelationalTable) []interface{}
 		tfMap[names.AttrName] = aws.StringValue(apiObject.Name)
 	}
 	if apiObject.Schema != nil {
-		tfMap["schema"] = aws.StringValue(apiObject.Schema)
+		tfMap[names.AttrSchema] = aws.StringValue(apiObject.Schema)
 	}
 
 	return []interface{}{tfMap}
@@ -2658,7 +2658,7 @@ func flattenLookbackWindow(apiObject *quicksight.LookbackWindow) interface{} {
 		tfMap["column_name"] = aws.StringValue(apiObject.ColumnName)
 	}
 	if apiObject.Size != nil {
-		tfMap["size"] = aws.Int64Value(apiObject.Size)
+		tfMap[names.AttrSize] = aws.Int64Value(apiObject.Size)
 	}
 	if apiObject.SizeUnit != nil {
 		tfMap["size_unit"] = aws.StringValue(apiObject.SizeUnit)

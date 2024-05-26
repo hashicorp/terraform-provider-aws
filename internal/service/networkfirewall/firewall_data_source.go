@@ -46,7 +46,7 @@ func DataSourceFirewall() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"key_id": {
+						names.AttrKeyID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -359,8 +359,8 @@ func flattenDataSourceEncryptionConfiguration(encrypt *networkfirewall.Encryptio
 	}
 
 	m := map[string]interface{}{
-		"key_id":       aws.StringValue(encrypt.KeyId),
-		names.AttrType: aws.StringValue(encrypt.Type),
+		names.AttrKeyID: aws.StringValue(encrypt.KeyId),
+		names.AttrType:  aws.StringValue(encrypt.Type),
 	}
 
 	return []interface{}{m}

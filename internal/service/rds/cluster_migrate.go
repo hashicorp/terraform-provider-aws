@@ -134,7 +134,7 @@ func resourceClusterResourceV0() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"engine": {
+			names.AttrEngine: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -176,7 +176,7 @@ func resourceClusterResourceV0() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"iops": {
+			names.AttrIOPS: {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
@@ -329,7 +329,7 @@ func resourceClusterResourceV0() *schema.Resource {
 							Optional: true,
 							Default:  true,
 						},
-						"max_capacity": {
+						names.AttrMaxCapacity: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Default:  clusterScalingConfiguration_DefaultMaxCapacity,
@@ -358,7 +358,7 @@ func resourceClusterResourceV0() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"max_capacity": {
+						names.AttrMaxCapacity: {
 							Type:     schema.TypeFloat,
 							Required: true,
 						},
@@ -384,13 +384,13 @@ func resourceClusterResourceV0() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"storage_encrypted": {
+			names.AttrStorageEncrypted: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"storage_type": {
+			names.AttrStorageType: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

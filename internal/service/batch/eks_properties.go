@@ -111,7 +111,7 @@ func expandContainers(containers []interface{}) []*batch.EksContainer {
 		if v, ok := containerMap[names.AttrName].(string); ok && v != "" {
 			container.Name = aws.String(v)
 		}
-		if r, ok := containerMap["resources"].([]interface{}); ok && len(r) > 0 {
+		if r, ok := containerMap[names.AttrResources].([]interface{}); ok && len(r) > 0 {
 			resources := &batch.EksContainerResourceRequirements{}
 			res := r[0].(map[string]interface{})
 			if v, ok := res["limits"]; ok {
@@ -291,7 +291,7 @@ func flattenEKSContainers(containers []*batch.EksContainer) (tfList []interface{
 		}
 
 		if v := container.Resources; v != nil {
-			tfMap["resources"] = []map[string]interface{}{{
+			tfMap[names.AttrResources] = []map[string]interface{}{{
 				"limits":   flex.FlattenStringMap(v.Limits),
 				"requests": flex.FlattenStringMap(v.Requests),
 			}}

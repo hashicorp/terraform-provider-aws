@@ -307,7 +307,7 @@ func resourceBroker() *schema.Resource {
 				MaxItems: 5,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"storage_type": {
+			names.AttrStorageType: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
@@ -439,7 +439,7 @@ func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	if v, ok := d.GetOk(names.AttrSecurityGroups); ok && v.(*schema.Set).Len() > 0 {
 		input.SecurityGroups = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
-	if v, ok := d.GetOk("storage_type"); ok {
+	if v, ok := d.GetOk(names.AttrStorageType); ok {
 		input.StorageType = types.BrokerStorageType(v.(string))
 	}
 	if v, ok := d.GetOk(names.AttrSubnetIDs); ok {
@@ -492,7 +492,7 @@ func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("pending_data_replication_mode", output.PendingDataReplicationMode)
 	d.Set(names.AttrPubliclyAccessible, output.PubliclyAccessible)
 	d.Set(names.AttrSecurityGroups, output.SecurityGroups)
-	d.Set("storage_type", output.StorageType)
+	d.Set(names.AttrStorageType, output.StorageType)
 	d.Set(names.AttrSubnetIDs, output.SubnetIds)
 
 	if err := d.Set(names.AttrConfiguration, flattenConfiguration(output.Configurations)); err != nil {

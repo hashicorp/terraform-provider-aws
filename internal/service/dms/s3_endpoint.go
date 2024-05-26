@@ -71,7 +71,7 @@ func ResourceS3Endpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"external_id": {
+			names.AttrExternalID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -231,7 +231,7 @@ func ResourceS3Endpoint() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(encryptionMode_Values(), false),
 			},
-			"expected_bucket_owner": {
+			names.AttrExpectedBucketOwner: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidAccountID,
@@ -419,7 +419,7 @@ func resourceS3EndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("endpoint_id", endpoint.EndpointIdentifier)
 	d.Set(names.AttrEndpointType, strings.ToLower(*endpoint.EndpointType)) // For some reason the AWS API only accepts lowercase type but returns it as uppercase
 	d.Set("engine_display_name", endpoint.EngineDisplayName)
-	d.Set("external_id", endpoint.ExternalId)
+	d.Set(names.AttrExternalID, endpoint.ExternalId)
 	// d.Set("external_table_definition", endpoint.ExternalTableDefinition) // set from s3 settings
 	d.Set(names.AttrKMSKeyARN, endpoint.KmsKeyId)
 	// d.Set("service_access_role_arn", endpoint.ServiceAccessRoleArn) // set from s3 settings
@@ -445,7 +445,7 @@ func resourceS3EndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("dict_page_size_limit", s3settings.DictPageSizeLimit)
 	d.Set("enable_statistics", s3settings.EnableStatistics)
 	d.Set("encoding_type", s3settings.EncodingType)
-	d.Set("expected_bucket_owner", s3settings.ExpectedBucketOwner)
+	d.Set(names.AttrExpectedBucketOwner, s3settings.ExpectedBucketOwner)
 	d.Set("ignore_header_rows", s3settings.IgnoreHeaderRows)
 	d.Set("include_op_for_full_load", s3settings.IncludeOpForFullLoad)
 	d.Set("max_file_size", s3settings.MaxFileSize)
@@ -672,7 +672,7 @@ func s3Settings(d *schema.ResourceData, target bool) *dms.S3Settings {
 		s3s.EncryptionMode = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("expected_bucket_owner"); ok { // likely only useful for target
+	if v, ok := d.GetOk(names.AttrExpectedBucketOwner); ok { // likely only useful for target
 		s3s.ExpectedBucketOwner = aws.String(v.(string))
 	}
 

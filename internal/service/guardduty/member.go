@@ -47,7 +47,7 @@ func ResourceMember() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"email": {
+			names.AttrEmail: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -87,7 +87,7 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	input := guardduty.CreateMembersInput{
 		AccountDetails: []*guardduty.AccountDetail{{
 			AccountId: aws.String(accountID),
-			Email:     aws.String(d.Get("email").(string)),
+			Email:     aws.String(d.Get(names.AttrEmail).(string)),
 		}},
 		DetectorId: aws.String(detectorID),
 	}
@@ -159,7 +159,7 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interf
 	member := gmo.Members[0]
 	d.Set(names.AttrAccountID, member.AccountId)
 	d.Set("detector_id", detectorID)
-	d.Set("email", member.Email)
+	d.Set(names.AttrEmail, member.Email)
 
 	status := aws.StringValue(member.RelationshipStatus)
 	d.Set("relationship_status", status)

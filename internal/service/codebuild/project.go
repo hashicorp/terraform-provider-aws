@@ -164,7 +164,7 @@ func resourceProject() *schema.Resource {
 								},
 							},
 						},
-						"service_role": {
+						names.AttrServiceRole: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
@@ -235,7 +235,7 @@ func resourceProject() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"environment": {
+			names.AttrEnvironment: {
 				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1,
@@ -588,7 +588,7 @@ func resourceProject() *schema.Resource {
 					},
 				},
 			},
-			"service_role": {
+			names.AttrServiceRole: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -670,7 +670,7 @@ func resourceProject() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"subnets": {
+						names.AttrSubnets: {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -767,7 +767,7 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.EncryptionKey = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("environment"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrEnvironment); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Environment = expandProjectEnvironment(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -791,7 +791,7 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.SecondarySourceVersions = expandProjectSecondarySourceVersions(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("service_role"); ok {
+	if v, ok := d.GetOk(names.AttrServiceRole); ok {
 		input.ServiceRole = aws.String(v.(string))
 	}
 
@@ -882,7 +882,7 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("concurrent_build_limit", project.ConcurrentBuildLimit)
 	d.Set(names.AttrDescription, project.Description)
 	d.Set("encryption_key", project.EncryptionKey)
-	if err := d.Set("environment", flattenProjectEnvironment(project.Environment)); err != nil {
+	if err := d.Set(names.AttrEnvironment, flattenProjectEnvironment(project.Environment)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting environment: %s", err)
 	}
 	if err := d.Set("file_system_locations", flattenProjectFileSystemLocations(project.FileSystemLocations)); err != nil {
@@ -905,7 +905,7 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if err := d.Set("secondary_source_version", flattenProjectSecondarySourceVersions(project.SecondarySourceVersions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting secondary_source_version: %s", err)
 	}
-	d.Set("service_role", project.ServiceRole)
+	d.Set(names.AttrServiceRole, project.ServiceRole)
 	if project.Source != nil {
 		if err := d.Set(names.AttrSource, []interface{}{flattenProjectSource(project.Source)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting source: %s", err)
@@ -989,8 +989,8 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.EncryptionKey = aws.String(d.Get("encryption_key").(string))
 		}
 
-		if d.HasChange("environment") {
-			if v, ok := d.GetOk("environment"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if d.HasChange(names.AttrEnvironment) {
+			if v, ok := d.GetOk(names.AttrEnvironment); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.Environment = expandProjectEnvironment(v.([]interface{})[0].(map[string]interface{}))
 			}
 		}
@@ -1033,8 +1033,8 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			}
 		}
 
-		if d.HasChange("service_role") {
-			input.ServiceRole = aws.String(d.Get("service_role").(string))
+		if d.HasChange(names.AttrServiceRole) {
+			input.ServiceRole = aws.String(d.Get(names.AttrServiceRole).(string))
 		}
 
 		if d.HasChange(names.AttrSource) {
@@ -1467,7 +1467,7 @@ func expandProjectBuildBatchConfig(tfMap map[string]interface{}) *types.ProjectB
 	}
 
 	apiObject := &types.ProjectBuildBatchConfig{
-		ServiceRole: aws.String(tfMap["service_role"].(string)),
+		ServiceRole: aws.String(tfMap[names.AttrServiceRole].(string)),
 	}
 
 	if v, ok := tfMap["combine_artifacts"].(bool); ok {
@@ -1510,7 +1510,7 @@ func expandVPCConfig(tfMap map[string]interface{}) *types.VpcConfig {
 
 	apiObject := &types.VpcConfig{
 		SecurityGroupIds: flex.ExpandStringValueSet(tfMap[names.AttrSecurityGroupIDs].(*schema.Set)),
-		Subnets:          flex.ExpandStringValueSet(tfMap["subnets"].(*schema.Set)),
+		Subnets:          flex.ExpandStringValueSet(tfMap[names.AttrSubnets].(*schema.Set)),
 		VpcId:            aws.String(tfMap[names.AttrVPCID].(string)),
 	}
 
@@ -1913,7 +1913,7 @@ func flattenVPCConfig(apiObject *types.VpcConfig) []interface{} {
 	tfMap := map[string]interface{}{}
 
 	tfMap[names.AttrVPCID] = aws.ToString(apiObject.VpcId)
-	tfMap["subnets"] = apiObject.Subnets
+	tfMap[names.AttrSubnets] = apiObject.Subnets
 	tfMap[names.AttrSecurityGroupIDs] = apiObject.SecurityGroupIds
 
 	return []interface{}{tfMap}
@@ -1926,7 +1926,7 @@ func flattenBuildBatchConfig(apiObject *types.ProjectBuildBatchConfig) []interfa
 
 	tfMap := map[string]interface{}{}
 
-	tfMap["service_role"] = aws.ToString(apiObject.ServiceRole)
+	tfMap[names.AttrServiceRole] = aws.ToString(apiObject.ServiceRole)
 
 	if apiObject.CombineArtifacts != nil {
 		tfMap["combine_artifacts"] = aws.ToBool(apiObject.CombineArtifacts)

@@ -88,7 +88,7 @@ func resourceGlobalReplicationGroup() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"engine": {
+			names.AttrEngine: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -182,7 +182,7 @@ func resourceGlobalReplicationGroup() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntAtLeast(1),
 			},
-			"parameter_group_name": {
+			names.AttrParameterGroupName: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -236,7 +236,7 @@ func customizeDiffGlobalReplicationGroupParamGroupNameRequiresMajorVersionUpgrad
 // parameter_group_name can only be set when doing a major update,
 // but we also should allow it to stay set afterwards
 func paramGroupNameRequiresMajorVersionUpgrade(diff sdkv2.ResourceDiffer) error {
-	o, n := diff.GetChange("parameter_group_name")
+	o, n := diff.GetChange(names.AttrParameterGroupName)
 	if o.(string) == n.(string) {
 		return nil
 	}
@@ -328,7 +328,7 @@ func resourceGlobalReplicationGroupCreate(ctx context.Context, d *schema.Resourc
 			return sdkdiag.AppendErrorf(diags, "updating ElastiCache Global Replication Group (%s) engine version on creation: cannot downgrade version when creating, is %s, want %s", d.Id(), engineVersion.String(), requestedVersion.String())
 		}
 
-		p := d.Get("parameter_group_name").(string)
+		p := d.Get(names.AttrParameterGroupName).(string)
 
 		if diff[0] == 1 {
 			if err := updateGlobalReplicationGroup(ctx, conn, d.Id(), globalReplicationGroupEngineVersionMajorUpdater(v.(string), p), "engine version (major)", d.Timeout(schema.TimeoutCreate)); err != nil {
@@ -393,7 +393,7 @@ func resourceGlobalReplicationGroupRead(ctx context.Context, d *schema.ResourceD
 	d.Set("auth_token_enabled", globalReplicationGroup.AuthTokenEnabled)
 	d.Set("cache_node_type", globalReplicationGroup.CacheNodeType)
 	d.Set("cluster_enabled", globalReplicationGroup.ClusterEnabled)
-	d.Set("engine", globalReplicationGroup.Engine)
+	d.Set(names.AttrEngine, globalReplicationGroup.Engine)
 	d.Set("global_replication_group_description", globalReplicationGroup.GlobalReplicationGroupDescription)
 	d.Set("global_replication_group_id", globalReplicationGroup.GlobalReplicationGroupId)
 	d.Set("transit_encryption_enabled", globalReplicationGroup.TransitEncryptionEnabled)
@@ -438,7 +438,7 @@ func resourceGlobalReplicationGroupUpdate(ctx context.Context, d *schema.Resourc
 
 		diff := diffVersion(newVersion, oldVersion)
 		if diff[0] == 1 {
-			p := d.Get("parameter_group_name").(string)
+			p := d.Get(names.AttrParameterGroupName).(string)
 			if err := updateGlobalReplicationGroup(ctx, conn, d.Id(), globalReplicationGroupEngineVersionMajorUpdater(n.(string), p), "engine version (major)", d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}

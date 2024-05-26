@@ -136,8 +136,8 @@ func (h *instanceHandler) createBlueGreenInput(d *schema.ResourceData) *rds_sdkv
 	if d.HasChange(names.AttrEngineVersion) {
 		input.TargetEngineVersion = aws.String(d.Get(names.AttrEngineVersion).(string))
 	}
-	if d.HasChange("parameter_group_name") {
-		input.TargetDBParameterGroupName = aws.String(d.Get("parameter_group_name").(string))
+	if d.HasChange(names.AttrParameterGroupName) {
+		input.TargetDBParameterGroupName = aws.String(d.Get(names.AttrParameterGroupName).(string))
 	}
 
 	return input

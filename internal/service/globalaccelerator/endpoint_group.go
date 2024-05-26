@@ -63,7 +63,7 @@ func resourceEndpointGroup() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
 						},
-						"weight": {
+						names.AttrWeight: {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(0, 255),
@@ -380,7 +380,7 @@ func expandEndpointConfiguration(tfMap map[string]interface{}) *awstypes.Endpoin
 		apiObject.EndpointId = aws.String(v)
 	}
 
-	if v, ok := tfMap["weight"].(int); ok {
+	if v, ok := tfMap[names.AttrWeight].(int); ok {
 		apiObject.Weight = aws.Int32(int32(v))
 	}
 
@@ -473,7 +473,7 @@ func flattenEndpointDescription(apiObject *awstypes.EndpointDescription) map[str
 	}
 
 	if v := apiObject.Weight; v != nil {
-		tfMap["weight"] = aws.ToInt32(v)
+		tfMap[names.AttrWeight] = aws.ToInt32(v)
 	}
 
 	return tfMap

@@ -42,7 +42,7 @@ func resourceBucketLogging() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 63),
 			},
-			"expected_bucket_owner": {
+			names.AttrExpectedBucketOwner: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -80,7 +80,7 @@ func resourceBucketLogging() *schema.Resource {
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[types.Type](),
 									},
-									"uri": {
+									names.AttrURI: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -141,7 +141,7 @@ func resourceBucketLoggingCreate(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket := d.Get(names.AttrBucket).(string)
-	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
+	expectedBucketOwner := d.Get(names.AttrExpectedBucketOwner).(string)
 	input := &s3.PutBucketLoggingInput{
 		Bucket: aws.String(bucket),
 		BucketLoggingStatus: &types.BucketLoggingStatus{
@@ -210,7 +210,7 @@ func resourceBucketLoggingRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	d.Set(names.AttrBucket, bucket)
-	d.Set("expected_bucket_owner", expectedBucketOwner)
+	d.Set(names.AttrExpectedBucketOwner, expectedBucketOwner)
 	d.Set("target_bucket", loggingEnabled.TargetBucket)
 	if err := d.Set("target_grant", flattenTargetGrants(loggingEnabled.TargetGrants)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting target_grant: %s", err)
@@ -379,7 +379,7 @@ func expandLoggingGrantee(l []interface{}) *types.Grantee {
 		grantee.Type = types.Type(v)
 	}
 
-	if v, ok := tfMap["uri"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrURI].(string); ok && v != "" {
 		grantee.URI = aws.String(v)
 	}
 
@@ -426,7 +426,7 @@ func flattenLoggingGrantee(g *types.Grantee) []interface{} {
 	}
 
 	if g.URI != nil {
-		m["uri"] = aws.ToString(g.URI)
+		m[names.AttrURI] = aws.ToString(g.URI)
 	}
 
 	return []interface{}{m}

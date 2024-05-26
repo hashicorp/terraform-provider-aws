@@ -14,7 +14,7 @@ resource "aws_batch_job_queue" "test" {
 
   compute_environments = [aws_batch_compute_environment.test.arn]
 
-  tags = var.tags
+  tags = var.resource_tags
 }
 
 resource "aws_batch_compute_environment" "test" {
@@ -81,13 +81,16 @@ resource "aws_iam_instance_profile" "ecs_instance" {
 }
 
 variable "rName" {
-  type     = string
-  nullable = false
+  description = "Name for resource"
+  type        = string
+  nullable    = false
 }
 
-variable "tags" {
+variable "resource_tags" {
+  description = "Tags to set on resource. To specify no tags, set to `null`"
+  # Not setting a default, so that this must explicitly be set to `null` to specify no tags
   type     = map(string)
-  nullable = false
+  nullable = true
 }
 
 variable "provider_tags" {

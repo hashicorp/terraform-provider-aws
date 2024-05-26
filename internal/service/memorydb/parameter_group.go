@@ -53,7 +53,7 @@ func ResourceParameterGroup() *schema.Resource {
 				ForceNew: true,
 				Default:  "Managed by Terraform",
 			},
-			"family": {
+			names.AttrFamily: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -105,7 +105,7 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &memorydb.CreateParameterGroupInput{
 		Description:        aws.String(d.Get(names.AttrDescription).(string)),
-		Family:             aws.String(d.Get("family").(string)),
+		Family:             aws.String(d.Get(names.AttrFamily).(string)),
 		ParameterGroupName: aws.String(name),
 		Tags:               getTagsIn(ctx),
 	}
@@ -198,13 +198,13 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 
 	d.Set(names.AttrARN, group.ARN)
 	d.Set(names.AttrDescription, group.Description)
-	d.Set("family", group.Family)
+	d.Set(names.AttrFamily, group.Family)
 	d.Set(names.AttrName, group.Name)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(group.Name)))
 
 	userDefinedParameters := createUserDefinedParameterMap(d)
 
-	parameters, err := listParameterGroupParameters(ctx, conn, d.Get("family").(string), d.Id(), userDefinedParameters)
+	parameters, err := listParameterGroupParameters(ctx, conn, d.Get(names.AttrFamily).(string), d.Id(), userDefinedParameters)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing parameters for MemoryDB Parameter Group (%s): %s", d.Id(), err)
 	}

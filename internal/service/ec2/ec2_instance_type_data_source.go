@@ -195,7 +195,7 @@ func DataSourceInstanceType() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"size": {
+						names.AttrSize: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -379,7 +379,7 @@ func dataSourceInstanceTypeRead(ctx context.Context, d *schema.ResourceData, met
 			for i, dk := range v.InstanceStorageInfo.Disks {
 				disk := map[string]interface{}{
 					"count":        aws.Int64Value(dk.Count),
-					"size":         aws.Int64Value(dk.SizeInGB),
+					names.AttrSize: aws.Int64Value(dk.SizeInGB),
 					names.AttrType: aws.StringValue(dk.Type),
 				}
 				diskList[i] = disk

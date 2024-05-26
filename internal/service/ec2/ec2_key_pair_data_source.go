@@ -34,7 +34,7 @@ func dataSourceKeyPair() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"create_time": {
+			names.AttrCreateTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -60,7 +60,7 @@ func dataSourceKeyPair() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"public_key": {
+			names.AttrPublicKey: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -107,13 +107,13 @@ func dataSourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta int
 		Resource:  "key-pair/" + keyName,
 	}.String()
 	d.Set(names.AttrARN, arn)
-	d.Set("create_time", aws.ToTime(keyPair.CreateTime).Format(time.RFC3339))
+	d.Set(names.AttrCreateTime, aws.ToTime(keyPair.CreateTime).Format(time.RFC3339))
 	d.Set("fingerprint", keyPair.KeyFingerprint)
 	d.Set("include_public_key", input.IncludePublicKey)
 	d.Set("key_name", keyName)
 	d.Set("key_pair_id", keyPair.KeyPairId)
 	d.Set("key_type", keyPair.KeyType)
-	d.Set("public_key", keyPair.PublicKey)
+	d.Set(names.AttrPublicKey, keyPair.PublicKey)
 
 	setTagsOutV2(ctx, keyPair.Tags)
 

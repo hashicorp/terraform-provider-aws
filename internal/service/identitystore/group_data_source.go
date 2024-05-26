@@ -32,7 +32,7 @@ func DataSourceGroup() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"external_id": {
+						names.AttrExternalID: {
 							Type:         schema.TypeList,
 							Optional:     true,
 							MaxItems:     1,
@@ -43,7 +43,7 @@ func DataSourceGroup() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"issuer": {
+									names.AttrIssuer: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -89,7 +89,7 @@ func DataSourceGroup() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"issuer": {
+						names.AttrIssuer: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

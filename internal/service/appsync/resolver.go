@@ -78,7 +78,7 @@ func ResourceResolver() *schema.Resource {
 				Optional:      true,
 				ConflictsWith: []string{"pipeline_config"},
 			},
-			"field": {
+			names.AttrField: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -184,7 +184,7 @@ func resourceResolverCreate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
-	apiID, typeName, fieldName := d.Get("api_id").(string), d.Get(names.AttrType).(string), d.Get("field").(string)
+	apiID, typeName, fieldName := d.Get("api_id").(string), d.Get(names.AttrType).(string), d.Get(names.AttrField).(string)
 	input := &appsync.CreateResolverInput{
 		ApiId:     aws.String(apiID),
 		FieldName: aws.String(fieldName),
@@ -276,7 +276,7 @@ func resourceResolverRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("api_id", apiID)
 	d.Set(names.AttrARN, resolver.ResolverArn)
 	d.Set(names.AttrType, resolver.TypeName)
-	d.Set("field", resolver.FieldName)
+	d.Set(names.AttrField, resolver.FieldName)
 	d.Set("data_source", resolver.DataSourceName)
 	d.Set("request_template", resolver.RequestMappingTemplate)
 	d.Set("response_template", resolver.ResponseMappingTemplate)

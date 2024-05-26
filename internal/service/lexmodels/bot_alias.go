@@ -76,7 +76,7 @@ func ResourceBotAlias() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"iam_role_arn": {
+						names.AttrIAMRoleARN: {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.All(
@@ -357,8 +357,8 @@ var logSettings = &schema.Resource{
 func flattenConversationLogs(response *lexmodelbuildingservice.ConversationLogsResponse) (flattened []map[string]interface{}) {
 	return []map[string]interface{}{
 		{
-			"iam_role_arn": aws.StringValue(response.IamRoleArn),
-			"log_settings": flattenLogSettings(response.LogSettings),
+			names.AttrIAMRoleARN: aws.StringValue(response.IamRoleArn),
+			"log_settings":       flattenLogSettings(response.LogSettings),
 		},
 	}
 }
@@ -371,7 +371,7 @@ func expandConversationLogs(rawObject interface{}) (*lexmodelbuildingservice.Con
 		return nil, err
 	}
 	return &lexmodelbuildingservice.ConversationLogsRequest{
-		IamRoleArn:  aws.String(request["iam_role_arn"].(string)),
+		IamRoleArn:  aws.String(request[names.AttrIAMRoleARN].(string)),
 		LogSettings: logSettings,
 	}, nil
 }

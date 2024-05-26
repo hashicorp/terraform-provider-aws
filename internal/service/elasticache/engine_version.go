@@ -63,7 +63,7 @@ func customizeDiffValidateClusterEngineVersion(_ context.Context, diff *schema.R
 		return nil
 	}
 
-	return validateClusterEngineVersion(diff.Get("engine").(string), engineVersion.(string))
+	return validateClusterEngineVersion(diff.Get(names.AttrEngine).(string), engineVersion.(string))
 }
 
 // validateClusterEngineVersion validates the correct format for `engine_version`, based on `engine`
@@ -187,11 +187,11 @@ func setEngineVersionRedis(d *schema.ResourceData, version *string) error {
 	return nil
 }
 
-type versionDiff [3]int
+type VersionDiff [3]int
 
 // diffVersion returns a diff of the versions, component by component.
 // Only reports the first diff, since subsequent segments are unimportant for us.
-func diffVersion(n, o *gversion.Version) (result versionDiff) {
+func diffVersion(n, o *gversion.Version) (result VersionDiff) {
 	if n.String() == o.String() {
 		return
 	}

@@ -47,7 +47,7 @@ func TestAccCloudControlResource_basic(t *testing.T) {
 				Config: testAccResourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestMatchResourceAttr(resourceName, names.AttrProperties, regexache.MustCompile(`^\{.*\}$`)),
-					resource.TestMatchResourceAttr(resourceName, "schema", regexache.MustCompile(`^\{.*`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrSchema, regexache.MustCompile(`^\{.*`)),
 				),
 			},
 		},
@@ -320,7 +320,7 @@ func TestAccCloudControlResource_DesiredState_objectValueAdded(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccResourceConfig_desiredStateObjectValue1(rName, "key1", "value1"),
+				Config: testAccResourceConfig_desiredStateObjectValue1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestMatchResourceAttr(resourceName, names.AttrProperties, regexache.MustCompile(`"Value":"value1"`)),
 				),
@@ -341,7 +341,7 @@ func TestAccCloudControlResource_DesiredState_objectValueRemoved(t *testing.T) {
 		CheckDestroy:             testAccCheckResourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceConfig_desiredStateObjectValue1(rName, "key1", "value1"),
+				Config: testAccResourceConfig_desiredStateObjectValue1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestMatchResourceAttr(resourceName, names.AttrProperties, regexache.MustCompile(`"Value":"value1"`)),
 				),
@@ -368,19 +368,19 @@ func TestAccCloudControlResource_DesiredState_objectValueUpdate(t *testing.T) {
 		CheckDestroy:             testAccCheckResourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceConfig_desiredStateObjectValue1(rName, "key1", "value1"),
+				Config: testAccResourceConfig_desiredStateObjectValue1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestMatchResourceAttr(resourceName, names.AttrProperties, regexache.MustCompile(`"Value":"value1"`)),
 				),
 			},
 			{
-				Config: testAccResourceConfig_desiredStateObjectValue1(rName, "key1", "value1updated"),
+				Config: testAccResourceConfig_desiredStateObjectValue1(rName, acctest.CtKey1, acctest.CtValue1Updated),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestMatchResourceAttr(resourceName, names.AttrProperties, regexache.MustCompile(`"Value":"value1updated"`)),
 				),
 			},
 			{
-				Config: testAccResourceConfig_desiredStateObjectValue1(rName, "key2", "value2"),
+				Config: testAccResourceConfig_desiredStateObjectValue1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestMatchResourceAttr(resourceName, names.AttrProperties, regexache.MustCompile(`"Value":"value2"`)),
 				),
@@ -484,7 +484,7 @@ func TestAccCloudControlResource_resourceSchema(t *testing.T) {
 			{
 				Config: testAccResourceConfig_schema(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "schema", "data.aws_cloudformation_type.test", "schema"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSchema, "data.aws_cloudformation_type.test", names.AttrSchema),
 				),
 			},
 		},
@@ -514,7 +514,7 @@ func TestAccCloudControlResource_lambdaFunction(t *testing.T) {
 				Config: testAccResourceConfig_lambdaFunction(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestMatchResourceAttr(resourceName, names.AttrProperties, regexache.MustCompile(`^\{.*\}$`)),
-					resource.TestMatchResourceAttr(resourceName, "schema", regexache.MustCompile(`^\{.*`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrSchema, regexache.MustCompile(`^\{.*`)),
 				),
 			},
 		},

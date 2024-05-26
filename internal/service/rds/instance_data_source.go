@@ -92,7 +92,7 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"engine": {
+			names.AttrEngine: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -104,7 +104,7 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"iops": {
+			names.AttrIOPS: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -185,11 +185,11 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"resource_id": {
+			names.AttrResourceID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"storage_encrypted": {
+			names.AttrStorageEncrypted: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -197,7 +197,7 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"storage_type": {
+			names.AttrStorageType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -273,9 +273,9 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 		d.Set("db_subnet_group", "")
 	}
 	d.Set("enabled_cloudwatch_logs_exports", aws.StringValueSlice(instance.EnabledCloudwatchLogsExports))
-	d.Set("engine", instance.Engine)
+	d.Set(names.AttrEngine, instance.Engine)
 	d.Set(names.AttrEngineVersion, instance.EngineVersion)
-	d.Set("iops", instance.Iops)
+	d.Set(names.AttrIOPS, instance.Iops)
 	d.Set(names.AttrKMSKeyID, instance.KmsKeyId)
 	d.Set("license_model", instance.LicenseModel)
 	d.Set("master_username", instance.MasterUsername)
@@ -297,10 +297,10 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set(names.AttrPreferredMaintenanceWindow, instance.PreferredMaintenanceWindow)
 	d.Set(names.AttrPubliclyAccessible, instance.PubliclyAccessible)
 	d.Set("replicate_source_db", instance.ReadReplicaSourceDBInstanceIdentifier)
-	d.Set("resource_id", instance.DbiResourceId)
-	d.Set("storage_encrypted", instance.StorageEncrypted)
+	d.Set(names.AttrResourceID, instance.DbiResourceId)
+	d.Set(names.AttrStorageEncrypted, instance.StorageEncrypted)
 	d.Set("storage_throughput", instance.StorageThroughput)
-	d.Set("storage_type", instance.StorageType)
+	d.Set(names.AttrStorageType, instance.StorageType)
 	d.Set("timezone", instance.Timezone)
 	vpcSecurityGroupIDs := tfslices.ApplyToAll(instance.VpcSecurityGroups, func(v *rds.VpcSecurityGroupMembership) string {
 		return aws.StringValue(v.VpcSecurityGroupId)

@@ -70,7 +70,7 @@ func ResourcePhoneNumber() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"message": {
+						names.AttrMessage: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -81,7 +81,7 @@ func ResourcePhoneNumber() *schema.Resource {
 					},
 				},
 			},
-			"target_arn": {
+			names.AttrTargetARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -103,7 +103,7 @@ func resourcePhoneNumberCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
-	targetArn := d.Get("target_arn").(string)
+	targetArn := d.Get(names.AttrTargetARN).(string)
 	phoneNumberType := d.Get(names.AttrType).(string)
 	input := &connect.SearchAvailablePhoneNumbersInput{
 		MaxResults:             aws.Int64(1),
@@ -198,7 +198,7 @@ func resourcePhoneNumberRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set(names.AttrDescription, phoneNumberSummary.PhoneNumberDescription)
 	d.Set("phone_number", phoneNumberSummary.PhoneNumber)
 	d.Set(names.AttrType, phoneNumberSummary.PhoneNumberType)
-	d.Set("target_arn", phoneNumberSummary.TargetArn)
+	d.Set(names.AttrTargetARN, phoneNumberSummary.TargetArn)
 
 	if err := d.Set(names.AttrStatus, flattenPhoneNumberStatus(phoneNumberSummary.PhoneNumberStatus)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting status: %s", err)
@@ -221,11 +221,11 @@ func resourcePhoneNumberUpdate(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "generating uuid for ClientToken for Phone Number %s: %s", phoneNumberId, err)
 	}
 
-	if d.HasChange("target_arn") {
+	if d.HasChange(names.AttrTargetARN) {
 		_, err := conn.UpdatePhoneNumberWithContext(ctx, &connect.UpdatePhoneNumberInput{
 			ClientToken:   aws.String(uuid),
 			PhoneNumberId: aws.String(phoneNumberId),
-			TargetArn:     aws.String(d.Get("target_arn").(string)),
+			TargetArn:     aws.String(d.Get(names.AttrTargetARN).(string)),
 		})
 
 		if err != nil {
@@ -274,8 +274,8 @@ func flattenPhoneNumberStatus(apiObject *connect.PhoneNumberStatus) []interface{
 	}
 
 	values := map[string]interface{}{
-		"message":        aws.StringValue(apiObject.Message),
-		names.AttrStatus: aws.StringValue(apiObject.Status),
+		names.AttrMessage: aws.StringValue(apiObject.Message),
+		names.AttrStatus:  aws.StringValue(apiObject.Status),
 	}
 
 	return []interface{}{values}

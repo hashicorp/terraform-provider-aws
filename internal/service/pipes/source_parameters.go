@@ -510,7 +510,7 @@ func sourceParametersSchema() *schema.Schema {
 												),
 											},
 										},
-										"subnets": {
+										names.AttrSubnets: {
 											Type:     schema.TypeSet,
 											Optional: true,
 											MaxItems: 16,
@@ -1212,7 +1212,7 @@ func expandSelfManagedKafkaAccessConfigurationVPC(tfMap map[string]interface{}) 
 		apiObject.SecurityGroup = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := tfMap["subnets"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrSubnets].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.Subnets = flex.ExpandStringValueSet(v)
 	}
 
@@ -1643,7 +1643,7 @@ func flattenSelfManagedKafkaAccessConfigurationVPC(apiObject *types.SelfManagedK
 	}
 
 	if v := apiObject.Subnets; v != nil {
-		tfMap["subnets"] = v
+		tfMap[names.AttrSubnets] = v
 	}
 
 	return tfMap

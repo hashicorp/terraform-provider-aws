@@ -25,8 +25,9 @@ resource "aws_acmpca_certificate_authority" "test" {
 resource "null_resource" "test" {}
 
 variable "rName" {
-  type     = string
-  nullable = false
+  description = "Name for resource"
+  type        = string
+  nullable    = false
 }
 
 variable "unknownTagKey" {
@@ -43,4 +44,3 @@ variable "knownTagValue" {
   type     = string
   nullable = false
 }
-

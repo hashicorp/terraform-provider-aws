@@ -51,7 +51,7 @@ func ResourceCertificate() *schema.Resource {
 				Sensitive:    true,
 				ValidateFunc: validation.StringLenBetween(0, 16384),
 			},
-			"certificate_chain": {
+			names.AttrCertificateChain: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -103,7 +103,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 		Usage:       aws.String(d.Get("usage").(string)),
 	}
 
-	if v, ok := d.GetOk("certificate_chain"); ok {
+	if v, ok := d.GetOk(names.AttrCertificateChain); ok {
 		input.CertificateChain = aws.String(v.(string))
 	}
 
@@ -145,7 +145,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("active_date", aws.ToTime(output.ActiveDate).Format(time.RFC3339))
 	d.Set(names.AttrARN, output.Arn)
 	d.Set(names.AttrCertificate, output.Certificate)
-	d.Set("certificate_chain", output.CertificateChain)
+	d.Set(names.AttrCertificateChain, output.CertificateChain)
 	d.Set("certificate_id", output.CertificateId)
 	d.Set(names.AttrDescription, output.Description)
 	d.Set("inactive_date", aws.ToTime(output.InactiveDate).Format(time.RFC3339))

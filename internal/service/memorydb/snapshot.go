@@ -76,7 +76,7 @@ func ResourceSnapshot() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"parameter_group_name": {
+						names.AttrParameterGroupName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -96,7 +96,7 @@ func ResourceSnapshot() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"topic_arn": {
+						names.AttrTopicARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -107,7 +107,7 @@ func ResourceSnapshot() *schema.Resource {
 					},
 				},
 			},
-			"cluster_name": {
+			names.AttrClusterName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -155,7 +155,7 @@ func resourceSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &memorydb.CreateSnapshotInput{
-		ClusterName:  aws.String(d.Get("cluster_name").(string)),
+		ClusterName:  aws.String(d.Get(names.AttrClusterName).(string)),
 		SnapshotName: aws.String(name),
 		Tags:         getTagsIn(ctx),
 	}
@@ -206,7 +206,7 @@ func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if err := d.Set("cluster_configuration", flattenClusterConfiguration(snapshot.ClusterConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "failed to set cluster_configuration for MemoryDB Snapshot (%s): %s", d.Id(), err)
 	}
-	d.Set("cluster_name", snapshot.ClusterConfiguration.Name)
+	d.Set(names.AttrClusterName, snapshot.ClusterConfiguration.Name)
 	d.Set(names.AttrKMSKeyARN, snapshot.KmsKeyId)
 	d.Set(names.AttrName, snapshot.Name)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(snapshot.Name)))
@@ -246,19 +246,19 @@ func flattenClusterConfiguration(v *memorydb.ClusterConfiguration) []interface{}
 	}
 
 	m := map[string]interface{}{
-		names.AttrDescription:      aws.StringValue(v.Description),
-		names.AttrEngineVersion:    aws.StringValue(v.EngineVersion),
-		"maintenance_window":       aws.StringValue(v.MaintenanceWindow),
-		names.AttrName:             aws.StringValue(v.Name),
-		"node_type":                aws.StringValue(v.NodeType),
-		"num_shards":               aws.Int64Value(v.NumShards),
-		"parameter_group_name":     aws.StringValue(v.ParameterGroupName),
-		names.AttrPort:             aws.Int64Value(v.Port),
-		"snapshot_retention_limit": aws.Int64Value(v.SnapshotRetentionLimit),
-		"snapshot_window":          aws.StringValue(v.SnapshotWindow),
-		"subnet_group_name":        aws.StringValue(v.SubnetGroupName),
-		"topic_arn":                aws.StringValue(v.TopicArn),
-		names.AttrVPCID:            aws.StringValue(v.VpcId),
+		names.AttrDescription:        aws.StringValue(v.Description),
+		names.AttrEngineVersion:      aws.StringValue(v.EngineVersion),
+		"maintenance_window":         aws.StringValue(v.MaintenanceWindow),
+		names.AttrName:               aws.StringValue(v.Name),
+		"node_type":                  aws.StringValue(v.NodeType),
+		"num_shards":                 aws.Int64Value(v.NumShards),
+		names.AttrParameterGroupName: aws.StringValue(v.ParameterGroupName),
+		names.AttrPort:               aws.Int64Value(v.Port),
+		"snapshot_retention_limit":   aws.Int64Value(v.SnapshotRetentionLimit),
+		"snapshot_window":            aws.StringValue(v.SnapshotWindow),
+		"subnet_group_name":          aws.StringValue(v.SubnetGroupName),
+		names.AttrTopicARN:           aws.StringValue(v.TopicArn),
+		names.AttrVPCID:              aws.StringValue(v.VpcId),
 	}
 
 	return []interface{}{m}

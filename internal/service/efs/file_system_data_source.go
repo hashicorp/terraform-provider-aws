@@ -43,7 +43,7 @@ func DataSourceFileSystem() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringLenBetween(0, 64),
 			},
-			"dns_name": {
+			names.AttrDNSName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -152,7 +152,7 @@ func dataSourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("availability_zone_id", fs.AvailabilityZoneId)
 	d.Set("availability_zone_name", fs.AvailabilityZoneName)
 	d.Set("creation_token", fs.CreationToken)
-	d.Set("dns_name", meta.(*conns.AWSClient).RegionalHostname(ctx, d.Id()+".efs"))
+	d.Set(names.AttrDNSName, meta.(*conns.AWSClient).RegionalHostname(ctx, d.Id()+".efs"))
 	d.Set(names.AttrFileSystemID, fsID)
 	d.Set(names.AttrEncrypted, fs.Encrypted)
 	d.Set(names.AttrKMSKeyID, fs.KmsKeyId)

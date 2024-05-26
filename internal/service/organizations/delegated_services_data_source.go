@@ -7,8 +7,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/organizations"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -16,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_organizations_delegated_services")
-func DataSourceDelegatedServices() *schema.Resource {
+// @SDKDataSource("aws_organizations_delegated_services", name="Delegated Services")
+func dataSourceDelegatedServices() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDelegatedServicesRead,
 		Schema: map[string]*schema.Schema{
@@ -47,7 +48,7 @@ func DataSourceDelegatedServices() *schema.Resource {
 }
 
 func dataSourceDelegatedServicesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
+	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
 	accountID := d.Get(names.AttrAccountID).(string)
 	output, err := findDelegatedServicesByAccountID(ctx, conn, accountID)
@@ -64,30 +65,32 @@ func dataSourceDelegatedServicesRead(ctx context.Context, d *schema.ResourceData
 	return nil
 }
 
-func findDelegatedServicesByAccountID(ctx context.Context, conn *organizations.Organizations, accountID string) ([]*organizations.DelegatedService, error) {
+func findDelegatedServicesByAccountID(ctx context.Context, conn *organizations.Client, accountID string) ([]awstypes.DelegatedService, error) {
 	input := &organizations.ListDelegatedServicesForAccountInput{
 		AccountId: aws.String(accountID),
 	}
-	var output []*organizations.DelegatedService
 
-	err := conn.ListDelegatedServicesForAccountPagesWithContext(ctx, input, func(page *organizations.ListDelegatedServicesForAccountOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	return findDelegatedServices(ctx, conn, input)
+}
+
+func findDelegatedServices(ctx context.Context, conn *organizations.Client, input *organizations.ListDelegatedServicesForAccountInput) ([]awstypes.DelegatedService, error) {
+	var output []awstypes.DelegatedService
+
+	pages := organizations.NewListDelegatedServicesForAccountPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
 		}
 
 		output = append(output, page.DelegatedServices...)
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return nil, err
 	}
 
 	return output, nil
 }
 
-func flattenDelegatedServices(apiObjects []*organizations.DelegatedService) []map[string]interface{} {
+func flattenDelegatedServices(apiObjects []awstypes.DelegatedService) []map[string]interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -96,8 +99,8 @@ func flattenDelegatedServices(apiObjects []*organizations.DelegatedService) []ma
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, map[string]interface{}{
-			"delegation_enabled_date": aws.TimeValue(apiObject.DelegationEnabledDate).Format(time.RFC3339),
-			"service_principal":       aws.StringValue(apiObject.ServicePrincipal),
+			"delegation_enabled_date": aws.ToTime(apiObject.DelegationEnabledDate).Format(time.RFC3339),
+			"service_principal":       aws.ToString(apiObject.ServicePrincipal),
 		})
 	}
 

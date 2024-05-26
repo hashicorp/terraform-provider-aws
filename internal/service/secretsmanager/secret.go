@@ -138,7 +138,7 @@ func resourceSecret() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"status_message": {
+						names.AttrStatusMessage: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -572,7 +572,7 @@ func flattenReplicationStatusType(apiObject types.ReplicationStatusType) map[str
 	}
 
 	if v := apiObject.StatusMessage; v != nil {
-		tfMap["status_message"] = aws.ToString(v)
+		tfMap[names.AttrStatusMessage] = aws.ToString(v)
 	}
 
 	return tfMap

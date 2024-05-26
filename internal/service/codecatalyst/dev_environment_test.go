@@ -43,7 +43,7 @@ func TestAccCodeCatalystDevEnvironment_basic(t *testing.T) {
 				Config: testAccDevEnvironmentConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDevEnvironmentExists(ctx, resourceName, &DevEnvironment),
-					resource.TestCheckResourceAttr(resourceName, "alias", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, rName),
 					resource.TestCheckResourceAttr(resourceName, "space_name", "terraform"),
 					resource.TestCheckResourceAttr(resourceName, "project_name", "terraform"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "dev.standard1.small"),
@@ -75,7 +75,7 @@ func TestAccCodeCatalystDevEnvironment_withRepositories(t *testing.T) {
 				Config: testAccDevEnvironmentConfig_withRepositories(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDevEnvironmentExists(ctx, resourceName, &DevEnvironment),
-					resource.TestCheckResourceAttr(resourceName, "alias", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, rName),
 					resource.TestCheckResourceAttr(resourceName, "space_name", "terraform"),
 					resource.TestCheckResourceAttr(resourceName, "project_name", "terraform"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "dev.standard1.small"),

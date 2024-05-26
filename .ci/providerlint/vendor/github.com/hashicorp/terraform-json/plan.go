@@ -60,6 +60,17 @@ type Plan struct {
 	// plan.
 	ResourceChanges []*ResourceChange `json:"resource_changes,omitempty"`
 
+	// DeferredChanges contains the change operations for resources that are deferred
+	// for this plan.
+	DeferredChanges []*DeferredResourceChange `json:"deferred_changes,omitempty"`
+
+	// Complete indicates that all resources have successfully planned changes.
+	// This will be false if there are DeferredChanges or if the -target flag is used.
+	//
+	// Complete was introduced in Terraform 1.8 and will be nil for all previous
+	// Terraform versions.
+	Complete *bool `json:"complete,omitempty"`
+
 	// The change operations for outputs within this plan.
 	OutputChanges map[string]*Change `json:"output_changes,omitempty"`
 
@@ -268,4 +279,14 @@ type Importing struct {
 type PlanVariable struct {
 	// The value for this variable at plan time.
 	Value interface{} `json:"value,omitempty"`
+}
+
+// DeferredResourceChange is a description of a resource change that has been
+// deferred for some reason.
+type DeferredResourceChange struct {
+	// Reason is the reason why this resource change was deferred.
+	Reason string `json:"reason,omitempty"`
+
+	// Change contains any information we have about the deferred change.
+	ResourceChange *ResourceChange `json:"resource_change,omitempty"`
 }

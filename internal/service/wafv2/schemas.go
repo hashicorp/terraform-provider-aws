@@ -235,7 +235,7 @@ func labelMatchStatementSchema() *schema.Schema {
 						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_\-:]+$`), "must contain only alphanumeric, underscore, hyphen, and colon characters"),
 					),
 				},
-				"scope": {
+				names.AttrScope: {
 					Type:             schema.TypeString,
 					Required:         true,
 					ValidateDiagFunc: enum.Validate[awstypes.LabelMatchScope](),
@@ -299,7 +299,7 @@ func sizeConstraintSchema() *schema.Schema {
 					ValidateDiagFunc: enum.Validate[awstypes.ComparisonOperator](),
 				},
 				"field_to_match": fieldToMatchSchema(),
-				"size": {
+				names.AttrSize: {
 					Type:         schema.TypeInt,
 					Required:     true,
 					ValidateFunc: validation.IntBetween(0, math.MaxInt32),
@@ -539,7 +539,59 @@ func requestBodySchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
+				"api_gateway": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"default_size_inspection_limit": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.SizeInspectionLimit](),
+							},
+						},
+					},
+				},
+				"app_runner_service": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"default_size_inspection_limit": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.SizeInspectionLimit](),
+							},
+						},
+					},
+				},
 				"cloudfront": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"default_size_inspection_limit": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.SizeInspectionLimit](),
+							},
+						},
+					},
+				},
+				"cognito_user_pool": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"default_size_inspection_limit": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.SizeInspectionLimit](),
+							},
+						},
+					},
+				},
+				"verified_access_instance": {
 					Type:     schema.TypeList,
 					Optional: true,
 					Elem: &schema.Resource{
@@ -766,7 +818,7 @@ func customResponseBodySchema() *schema.Schema {
 						validation.StringMatch(regexache.MustCompile(`^[\w\-]+$`), "must contain only alphanumeric, hyphen, and underscore characters"),
 					),
 				},
-				"content": {
+				names.AttrContent: {
 					Type:         schema.TypeString,
 					Required:     true,
 					ValidateFunc: validation.StringLenBetween(1, 10240),
@@ -1021,7 +1073,7 @@ func rateBasedStatementSchema(level int) *schema.Schema {
 							},
 							"forwarded_ip": emptySchema(),
 							"http_method":  emptySchema(),
-							"header": {
+							names.AttrHeader: {
 								Type:     schema.TypeList,
 								Optional: true,
 								MaxItems: 1,
@@ -1490,7 +1542,7 @@ func managedRuleGroupConfigATPResponseInspectionSchema() *schema.Schema {
 						},
 					},
 				},
-				"header": {
+				names.AttrHeader: {
 					Type:     schema.TypeList,
 					Optional: true,
 					MaxItems: 1,
@@ -1516,7 +1568,7 @@ func managedRuleGroupConfigATPResponseInspectionSchema() *schema.Schema {
 						},
 					},
 				},
-				"json": {
+				names.AttrJSON: {
 					Type:     schema.TypeList,
 					Optional: true,
 					MaxItems: 1,
@@ -1542,7 +1594,7 @@ func managedRuleGroupConfigATPResponseInspectionSchema() *schema.Schema {
 						},
 					},
 				},
-				"status_code": {
+				names.AttrStatusCode: {
 					Type:     schema.TypeList,
 					Optional: true,
 					MaxItems: 1,

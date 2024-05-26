@@ -131,7 +131,7 @@ func resourceCluster() *schema.Resource {
 								},
 							},
 						},
-						"resources": {
+						names.AttrResources: {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem: &schema.Schema{
@@ -156,7 +156,7 @@ func resourceCluster() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"issuer": {
+									names.AttrIssuer: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -861,7 +861,7 @@ func expandEncryptionConfig(tfList []interface{}) []types.EncryptionConfig {
 			Provider: expandProvider(tfMap["provider"].([]interface{})),
 		}
 
-		if v, ok := tfMap["resources"].(*schema.Set); ok && v.Len() > 0 {
+		if v, ok := tfMap[names.AttrResources].(*schema.Set); ok && v.Len() > 0 {
 			apiObject.Resources = flex.ExpandStringValueSet(v)
 		}
 
@@ -1031,7 +1031,7 @@ func flattenOIDC(oidc *types.OIDC) []map[string]interface{} {
 	}
 
 	m := map[string]interface{}{
-		"issuer": aws.ToString(oidc.Issuer),
+		names.AttrIssuer: aws.ToString(oidc.Issuer),
 	}
 
 	return []map[string]interface{}{m}
@@ -1062,8 +1062,8 @@ func flattenEncryptionConfigs(apiObjects []types.EncryptionConfig) []interface{}
 
 	for _, apiObject := range apiObjects {
 		tfMap := map[string]interface{}{
-			"provider":  flattenProvider(apiObject.Provider),
-			"resources": apiObject.Resources,
+			"provider":          flattenProvider(apiObject.Provider),
+			names.AttrResources: apiObject.Resources,
 		}
 
 		tfList = append(tfList, tfMap)

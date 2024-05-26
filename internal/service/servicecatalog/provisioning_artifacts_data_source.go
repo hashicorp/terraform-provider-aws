@@ -45,7 +45,7 @@ func DataSourceProvisioningArtifacts() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"created_time": {
+						names.AttrCreatedTime: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -128,7 +128,7 @@ func flattenProvisioningArtifactDetail(apiObject *servicecatalog.ProvisioningArt
 		tfMap["active"] = aws.BoolValue(apiObject.Active)
 	}
 	if apiObject.CreatedTime != nil {
-		tfMap["created_time"] = aws.TimeValue(apiObject.CreatedTime).String()
+		tfMap[names.AttrCreatedTime] = aws.TimeValue(apiObject.CreatedTime).String()
 	}
 	if apiObject.Description != nil {
 		tfMap[names.AttrDescription] = aws.StringValue(apiObject.Description)

@@ -28,7 +28,7 @@ func DataSourceEBSVolumes() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			names.AttrFilter: customFiltersSchema(),
-			"ids": {
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -69,7 +69,7 @@ func dataSourceEBSVolumesRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("ids", volumeIDs)
+	d.Set(names.AttrIDs, volumeIDs)
 
 	return diags
 }

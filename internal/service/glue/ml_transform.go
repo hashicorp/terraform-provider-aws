@@ -116,7 +116,7 @@ func ResourceMLTransform() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"max_capacity": {
+			names.AttrMaxCapacity: {
 				Type:          schema.TypeFloat,
 				Optional:      true,
 				Computed:      true,
@@ -141,7 +141,7 @@ func ResourceMLTransform() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"timeout": {
+			names.AttrTimeout: {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  2880,
@@ -149,14 +149,14 @@ func ResourceMLTransform() *schema.Resource {
 			"worker_type": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"max_capacity"},
+				ConflictsWith: []string{names.AttrMaxCapacity},
 				ValidateFunc:  validation.StringInSlice(glue.WorkerType_Values(), false),
 				RequiredWith:  []string{"number_of_workers"},
 			},
 			"number_of_workers": {
 				Type:          schema.TypeInt,
 				Optional:      true,
-				ConflictsWith: []string{"max_capacity"},
+				ConflictsWith: []string{names.AttrMaxCapacity},
 				ValidateFunc:  validation.IntAtLeast(1),
 				RequiredWith:  []string{"worker_type"},
 			},
@@ -164,7 +164,7 @@ func ResourceMLTransform() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"schema": {
+			names.AttrSchema: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -192,12 +192,12 @@ func resourceMLTransformCreate(ctx context.Context, d *schema.ResourceData, meta
 		Name:              aws.String(d.Get(names.AttrName).(string)),
 		Role:              aws.String(d.Get(names.AttrRoleARN).(string)),
 		Tags:              getTagsIn(ctx),
-		Timeout:           aws.Int64(int64(d.Get("timeout").(int))),
+		Timeout:           aws.Int64(int64(d.Get(names.AttrTimeout).(int))),
 		InputRecordTables: expandMLTransformInputRecordTables(d.Get("input_record_tables").([]interface{})),
 		Parameters:        expandMLTransformParameters(d.Get(names.AttrParameters).([]interface{})),
 	}
 
-	if v, ok := d.GetOk("max_capacity"); ok {
+	if v, ok := d.GetOk(names.AttrMaxCapacity); ok {
 		input.MaxCapacity = aws.Float64(v.(float64))
 	}
 
@@ -270,11 +270,11 @@ func resourceMLTransformRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.Set(names.AttrDescription, output.Description)
 	d.Set("glue_version", output.GlueVersion)
-	d.Set("max_capacity", output.MaxCapacity)
+	d.Set(names.AttrMaxCapacity, output.MaxCapacity)
 	d.Set("max_retries", output.MaxRetries)
 	d.Set(names.AttrName, output.Name)
 	d.Set(names.AttrRoleARN, output.Role)
-	d.Set("timeout", output.Timeout)
+	d.Set(names.AttrTimeout, output.Timeout)
 	d.Set("worker_type", output.WorkerType)
 	d.Set("number_of_workers", output.NumberOfWorkers)
 	d.Set("label_count", output.LabelCount)
@@ -287,7 +287,7 @@ func resourceMLTransformRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting parameters: %s", err)
 	}
 
-	if err := d.Set("schema", flattenMLTransformSchemaColumns(output.Schema)); err != nil {
+	if err := d.Set(names.AttrSchema, flattenMLTransformSchemaColumns(output.Schema)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting schema: %s", err)
 	}
 
@@ -298,12 +298,12 @@ func resourceMLTransformUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
-	if d.HasChanges(names.AttrDescription, "glue_version", "max_capacity", "max_retries", "number_of_workers",
-		names.AttrRoleARN, "timeout", "worker_type", names.AttrParameters) {
+	if d.HasChanges(names.AttrDescription, "glue_version", names.AttrMaxCapacity, "max_retries", "number_of_workers",
+		names.AttrRoleARN, names.AttrTimeout, "worker_type", names.AttrParameters) {
 		input := &glue.UpdateMLTransformInput{
 			TransformId: aws.String(d.Id()),
 			Role:        aws.String(d.Get(names.AttrRoleARN).(string)),
-			Timeout:     aws.Int64(int64(d.Get("timeout").(int))),
+			Timeout:     aws.Int64(int64(d.Get(names.AttrTimeout).(int))),
 		}
 
 		if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -321,7 +321,7 @@ func resourceMLTransformUpdate(ctx context.Context, d *schema.ResourceData, meta
 		if v, ok := d.GetOk("number_of_workers"); ok {
 			input.NumberOfWorkers = aws.Int64(int64(v.(int)))
 		} else {
-			if v, ok := d.GetOk("max_capacity"); ok {
+			if v, ok := d.GetOk(names.AttrMaxCapacity); ok {
 				input.MaxCapacity = aws.Float64(v.(float64))
 			}
 		}

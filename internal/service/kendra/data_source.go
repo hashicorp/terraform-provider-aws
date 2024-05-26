@@ -347,7 +347,7 @@ func ResourceDataSource() *schema.Resource {
 							MaxItems: 100,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"condition": func() *schema.Schema {
+									names.AttrCondition: func() *schema.Schema {
 										schema := documentAttributeConditionSchema()
 										return schema
 									}(),
@@ -428,7 +428,7 @@ func ResourceDataSource() *schema.Resource {
 					"Starts with an alphanumeric character. Subsequently, can contain alphanumeric characters and hyphens. Fixed length of 36.",
 				),
 			},
-			"language_code": {
+			names.AttrLanguageCode: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -497,7 +497,7 @@ func hookConfigurationSchema() *schema.Schema {
 					Required:     true,
 					ValidateFunc: verify.ValidARN,
 				},
-				"s3_bucket": {
+				names.AttrS3Bucket: {
 					Type:     schema.TypeString,
 					Required: true,
 					ValidateFunc: validation.All(
@@ -617,7 +617,7 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("language_code"); ok {
+	if v, ok := d.GetOk(names.AttrLanguageCode); ok {
 		input.LanguageCode = aws.String(v.(string))
 	}
 
@@ -702,7 +702,7 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set(names.AttrDescription, resp.Description)
 	d.Set("error_message", resp.ErrorMessage)
 	d.Set("index_id", resp.IndexId)
-	d.Set("language_code", resp.LanguageCode)
+	d.Set(names.AttrLanguageCode, resp.LanguageCode)
 	d.Set(names.AttrName, resp.Name)
 	d.Set(names.AttrRoleARN, resp.RoleArn)
 	d.Set(names.AttrSchedule, resp.Schedule)
@@ -726,7 +726,7 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
-	if d.HasChanges(names.AttrConfiguration, "custom_document_enrichment_configuration", names.AttrDescription, "language_code", names.AttrName, names.AttrRoleARN, names.AttrSchedule) {
+	if d.HasChanges(names.AttrConfiguration, "custom_document_enrichment_configuration", names.AttrDescription, names.AttrLanguageCode, names.AttrName, names.AttrRoleARN, names.AttrSchedule) {
 		id, indexId, err := DataSourceParseResourceID(d.Id())
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
@@ -749,8 +749,8 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
-		if d.HasChange("language_code") {
-			input.LanguageCode = aws.String(d.Get("language_code").(string))
+		if d.HasChange(names.AttrLanguageCode) {
+			input.LanguageCode = aws.String(d.Get(names.AttrLanguageCode).(string))
 		}
 
 		if d.HasChange(names.AttrName) {
@@ -1221,7 +1221,7 @@ func expandInlineCustomDocumentEnrichmentConfiguration(tfList []interface{}) []t
 		data := inlineConfig.(map[string]interface{})
 		inlineConfigExpanded := types.InlineCustomDocumentEnrichmentConfiguration{}
 
-		if v, ok := data["condition"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := data[names.AttrCondition].([]interface{}); ok && len(v) > 0 {
 			inlineConfigExpanded.Condition = expandDocumentAttributeCondition(v)
 		}
 
@@ -1278,7 +1278,7 @@ func expandHookConfiguration(tfList []interface{}) *types.HookConfiguration {
 
 	result := &types.HookConfiguration{
 		LambdaArn: aws.String(tfMap["lambda_arn"].(string)),
-		S3Bucket:  aws.String(tfMap["s3_bucket"].(string)),
+		S3Bucket:  aws.String(tfMap[names.AttrS3Bucket].(string)),
 	}
 
 	if v, ok := tfMap["invocation_condition"].([]interface{}); ok && len(v) > 0 {
@@ -1588,7 +1588,7 @@ func flattenInlineConfigurations(inlineConfigurations []types.InlineCustomDocume
 		}
 
 		if v := inlineConfiguration.Condition; v != nil {
-			m["condition"] = flattenDocumentAttributeCondition(v)
+			m[names.AttrCondition] = flattenDocumentAttributeCondition(v)
 		}
 
 		if v := inlineConfiguration.Target; v != nil {
@@ -1627,8 +1627,8 @@ func flattenHookConfiguration(apiObject *types.HookConfiguration) []interface{} 
 	}
 
 	m := map[string]interface{}{
-		"lambda_arn": aws.ToString(apiObject.LambdaArn),
-		"s3_bucket":  aws.ToString(apiObject.S3Bucket),
+		"lambda_arn":       aws.ToString(apiObject.LambdaArn),
+		names.AttrS3Bucket: aws.ToString(apiObject.S3Bucket),
 	}
 
 	if v := apiObject.InvocationCondition; v != nil {

@@ -39,7 +39,7 @@ func ResourceContact() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"alias": {
+			names.AttrAlias: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -69,7 +69,7 @@ func resourceContactCreate(ctx context.Context, d *schema.ResourceData, meta int
 	client := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 
 	input := &ssmcontacts.CreateContactInput{
-		Alias:       aws.String(d.Get("alias").(string)),
+		Alias:       aws.String(d.Get(names.AttrAlias).(string)),
 		DisplayName: aws.String(d.Get(names.AttrDisplayName).(string)),
 		Plan:        &types.Plan{Stages: []types.Stage{}},
 		Tags:        getTagsIn(ctx),
@@ -78,11 +78,11 @@ func resourceContactCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	output, err := client.CreateContact(ctx, input)
 	if err != nil {
-		return create.DiagError(names.SSMContacts, create.ErrActionCreating, ResNameContact, d.Get("alias").(string), err)
+		return create.DiagError(names.SSMContacts, create.ErrActionCreating, ResNameContact, d.Get(names.AttrAlias).(string), err)
 	}
 
 	if output == nil {
-		return create.DiagError(names.SSMContacts, create.ErrActionCreating, ResNameContact, d.Get("alias").(string), errors.New("empty output"))
+		return create.DiagError(names.SSMContacts, create.ErrActionCreating, ResNameContact, d.Get(names.AttrAlias).(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(output.ContactArn))

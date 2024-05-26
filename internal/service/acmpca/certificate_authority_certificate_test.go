@@ -35,7 +35,7 @@ func TestAccACMPCACertificateAuthorityCertificate_rootCA(t *testing.T) {
 					testAccCheckCertificateAuthorityCertificateExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_authority_arn", "aws_acmpca_certificate_authority.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificate, "aws_acmpca_certificate.test", names.AttrCertificate),
-					resource.TestCheckResourceAttrPair(resourceName, "certificate_chain", "aws_acmpca_certificate.test", "certificate_chain"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateChain, "aws_acmpca_certificate.test", names.AttrCertificateChain),
 				),
 			},
 			{
@@ -66,7 +66,7 @@ func TestAccACMPCACertificateAuthorityCertificate_updateRootCA(t *testing.T) {
 					testAccCheckCertificateAuthorityCertificateExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_authority_arn", "aws_acmpca_certificate_authority.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificate, "aws_acmpca_certificate.test", names.AttrCertificate),
-					resource.TestCheckResourceAttrPair(resourceName, "certificate_chain", "aws_acmpca_certificate.test", "certificate_chain"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateChain, "aws_acmpca_certificate.test", names.AttrCertificateChain),
 				),
 			},
 			{
@@ -75,7 +75,7 @@ func TestAccACMPCACertificateAuthorityCertificate_updateRootCA(t *testing.T) {
 					testAccCheckCertificateAuthorityCertificateExists(ctx, updatedResourceName, &v),
 					resource.TestCheckResourceAttrPair(updatedResourceName, "certificate_authority_arn", "aws_acmpca_certificate_authority.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(updatedResourceName, names.AttrCertificate, "aws_acmpca_certificate.updated", names.AttrCertificate),
-					resource.TestCheckResourceAttrPair(updatedResourceName, "certificate_chain", "aws_acmpca_certificate.updated", "certificate_chain"),
+					resource.TestCheckResourceAttrPair(updatedResourceName, names.AttrCertificateChain, "aws_acmpca_certificate.updated", names.AttrCertificateChain),
 				),
 			},
 		},
@@ -100,7 +100,7 @@ func TestAccACMPCACertificateAuthorityCertificate_subordinateCA(t *testing.T) {
 					testAccCheckCertificateAuthorityCertificateExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_authority_arn", "aws_acmpca_certificate_authority.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificate, "aws_acmpca_certificate.test", names.AttrCertificate),
-					resource.TestCheckResourceAttrPair(resourceName, "certificate_chain", "aws_acmpca_certificate.test", "certificate_chain"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateChain, "aws_acmpca_certificate.test", names.AttrCertificateChain),
 				),
 			},
 			{

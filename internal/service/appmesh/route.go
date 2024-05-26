@@ -72,7 +72,7 @@ func resourceRoute() *schema.Resource {
 					ForceNew:     true,
 					ValidateFunc: validation.StringLenBetween(1, 255),
 				},
-				"resource_owner": {
+				names.AttrResourceOwner: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -126,7 +126,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 												Required:     true,
 												ValidateFunc: validation.StringLenBetween(1, 255),
 											},
-											"weight": {
+											names.AttrWeight: {
 												Type:         schema.TypeInt,
 												Required:     true,
 												ValidateFunc: validation.IntBetween(0, 100),
@@ -144,7 +144,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 						MaxItems: 1,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"header": {
+								names.AttrHeader: {
 									Type:     schema.TypeSet,
 									Optional: true,
 									MinItems: 0,
@@ -328,7 +328,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 							},
 						},
 					},
-					"timeout": {
+					names.AttrTimeout: {
 						Type:     schema.TypeList,
 						Optional: true,
 						MinItems: 0,
@@ -420,7 +420,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 														Required:     true,
 														ValidateFunc: validation.StringLenBetween(1, 255),
 													},
-													"weight": {
+													names.AttrWeight: {
 														Type:         schema.TypeInt,
 														Required:     true,
 														ValidateFunc: validation.IntBetween(0, 100),
@@ -579,7 +579,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 									},
 								},
 							},
-							"timeout": {
+							names.AttrTimeout: {
 								Type:     schema.TypeList,
 								Optional: true,
 								MinItems: 0,
@@ -677,7 +677,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 														Required:     true,
 														ValidateFunc: validation.StringLenBetween(1, 255),
 													},
-													"weight": {
+													names.AttrWeight: {
 														Type:         schema.TypeInt,
 														Required:     true,
 														ValidateFunc: validation.IntBetween(0, 100),
@@ -703,7 +703,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 									},
 								},
 							},
-							"timeout": {
+							names.AttrTimeout: {
 								Type:     schema.TypeList,
 								Optional: true,
 								MinItems: 0,
@@ -794,7 +794,7 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("mesh_name", route.MeshName)
 	d.Set("mesh_owner", route.Metadata.MeshOwner)
 	d.Set(names.AttrName, route.RouteName)
-	d.Set("resource_owner", route.Metadata.ResourceOwner)
+	d.Set(names.AttrResourceOwner, route.Metadata.ResourceOwner)
 	if err := d.Set("spec", flattenRouteSpec(route.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}

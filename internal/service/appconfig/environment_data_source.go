@@ -25,7 +25,7 @@ func DataSourceEnvironment() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEnvironmentRead,
 		Schema: map[string]*schema.Schema{
-			"application_id": {
+			names.AttrApplicationID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[a-z\d]{4,7}`), ""),
@@ -81,7 +81,7 @@ func dataSourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta
 
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
-	appID := d.Get("application_id").(string)
+	appID := d.Get(names.AttrApplicationID).(string)
 	envID := d.Get("environment_id").(string)
 	ID := fmt.Sprintf("%s:%s", envID, appID)
 
@@ -92,7 +92,7 @@ func dataSourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta
 
 	d.SetId(ID)
 
-	d.Set("application_id", appID)
+	d.Set(names.AttrApplicationID, appID)
 	d.Set("environment_id", envID)
 	d.Set(names.AttrDescription, out.Description)
 	d.Set(names.AttrName, out.Name)

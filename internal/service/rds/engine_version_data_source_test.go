@@ -35,7 +35,7 @@ func TestAccRDSEngineVersionDataSource_basic(t *testing.T) {
 			{
 				Config: testAccEngineVersionDataSourceConfig_basic(engine, version, paramGroup),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "engine", engine),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngine, engine),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, version),
 					resource.TestCheckResourceAttr(dataSourceName, "version_actual", version),
 					resource.TestCheckResourceAttr(dataSourceName, "parameter_group_family", paramGroup),

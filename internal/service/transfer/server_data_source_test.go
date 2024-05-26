@@ -27,7 +27,7 @@ func testAccServerDataSource_basic(t *testing.T) {
 				Config: testAccServerDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(datasourceName, "domain", resourceName, "domain"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDomain, resourceName, names.AttrDomain),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrEndpoint, resourceName, names.AttrEndpoint),
 					resource.TestCheckResourceAttrPair(datasourceName, "identity_provider_type", resourceName, "identity_provider_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, "logging_role", resourceName, "logging_role"),

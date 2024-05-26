@@ -37,7 +37,7 @@ func resourceUserPoolDomain() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"aws_account_id": {
+			names.AttrAWSAccountID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -58,13 +58,13 @@ func resourceUserPoolDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain": {
+			names.AttrDomain: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 63),
 			},
-			"s3_bucket": {
+			names.AttrS3Bucket: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -90,7 +90,7 @@ func resourceUserPoolDomainCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
-	domain := d.Get("domain").(string)
+	domain := d.Get(names.AttrDomain).(string)
 	timeout := 1 * time.Minute
 	input := &cognitoidentityprovider.CreateUserPoolDomainInput{
 		Domain:     aws.String(domain),
@@ -135,7 +135,7 @@ func resourceUserPoolDomainRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading Cognito User Pool Domain (%s): %s", d.Id(), err)
 	}
 
-	d.Set("aws_account_id", desc.AWSAccountId)
+	d.Set(names.AttrAWSAccountID, desc.AWSAccountId)
 	d.Set(names.AttrCertificateARN, "")
 	if desc.CustomDomainConfig != nil {
 		d.Set(names.AttrCertificateARN, desc.CustomDomainConfig.CertificateArn)
@@ -143,8 +143,8 @@ func resourceUserPoolDomainRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("cloudfront_distribution", desc.CloudFrontDistribution)
 	d.Set("cloudfront_distribution_arn", desc.CloudFrontDistribution)
 	d.Set("cloudfront_distribution_zone_id", meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID(ctx))
-	d.Set("domain", d.Id())
-	d.Set("s3_bucket", desc.S3Bucket)
+	d.Set(names.AttrDomain, d.Id())
+	d.Set(names.AttrS3Bucket, desc.S3Bucket)
 	d.Set("user_pool_id", desc.UserPoolId)
 	d.Set(names.AttrVersion, desc.Version)
 

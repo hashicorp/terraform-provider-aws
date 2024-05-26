@@ -106,7 +106,7 @@ func ResourceInfrastructureConfiguration() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 1024),
 									},
-									"s3_key_prefix": {
+									names.AttrS3KeyPrefix: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(1, 1024),
@@ -123,7 +123,7 @@ func ResourceInfrastructureConfiguration() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"resource_tags": tftags.TagsSchema(),
+			names.AttrResourceTags: tftags.TagsSchema(),
 			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -191,7 +191,7 @@ func resourceInfrastructureConfigurationCreate(ctx context.Context, d *schema.Re
 		input.Logging = expandLogging(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("resource_tags"); ok && len(v.(map[string]interface{})) > 0 {
+	if v, ok := d.GetOk(names.AttrResourceTags); ok && len(v.(map[string]interface{})) > 0 {
 		input.ResourceTags = Tags(tftags.New(ctx, v.(map[string]interface{})))
 	}
 
@@ -289,7 +289,7 @@ func resourceInfrastructureConfigurationRead(ctx context.Context, d *schema.Reso
 		d.Set("logging", nil)
 	}
 	d.Set(names.AttrName, infrastructureConfiguration.Name)
-	d.Set("resource_tags", KeyValueTags(ctx, infrastructureConfiguration.ResourceTags).Map())
+	d.Set(names.AttrResourceTags, KeyValueTags(ctx, infrastructureConfiguration.ResourceTags).Map())
 	d.Set(names.AttrSecurityGroupIDs, aws.StringValueSlice(infrastructureConfiguration.SecurityGroupIds))
 	d.Set(names.AttrSNSTopicARN, infrastructureConfiguration.SnsTopicArn)
 	d.Set(names.AttrSubnetID, infrastructureConfiguration.SubnetId)
@@ -312,7 +312,7 @@ func resourceInfrastructureConfigurationUpdate(ctx context.Context, d *schema.Re
 		"instance_types",
 		"key_pair",
 		"logging",
-		"resource_tags",
+		names.AttrResourceTags,
 		names.AttrSecurityGroupIDs,
 		names.AttrSNSTopicARN,
 		names.AttrSubnetID,
@@ -347,7 +347,7 @@ func resourceInfrastructureConfigurationUpdate(ctx context.Context, d *schema.Re
 			input.Logging = expandLogging(v.([]interface{})[0].(map[string]interface{}))
 		}
 
-		if v, ok := d.GetOk("resource_tags"); ok && len(v.(map[string]interface{})) > 0 {
+		if v, ok := d.GetOk(names.AttrResourceTags); ok && len(v.(map[string]interface{})) > 0 {
 			input.ResourceTags = Tags(tftags.New(ctx, v.(map[string]interface{})))
 		}
 
@@ -453,7 +453,7 @@ func expandS3Logs(tfMap map[string]interface{}) *imagebuilder.S3Logs {
 		apiObject.S3BucketName = aws.String(v)
 	}
 
-	if v, ok := tfMap["s3_key_prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrS3KeyPrefix].(string); ok && v != "" {
 		apiObject.S3KeyPrefix = aws.String(v)
 	}
 
@@ -504,7 +504,7 @@ func flattenS3Logs(apiObject *imagebuilder.S3Logs) map[string]interface{} {
 	}
 
 	if v := apiObject.S3KeyPrefix; v != nil {
-		tfMap["s3_key_prefix"] = aws.StringValue(v)
+		tfMap[names.AttrS3KeyPrefix] = aws.StringValue(v)
 	}
 
 	return tfMap
