@@ -111,6 +111,31 @@ func TestAccQBusinessPlugin_tags(t *testing.T) {
 	})
 }
 
+func TestAccQBusinessPlugin_customPlugin(t *testing.T) {
+	ctx := acctest.Context(t)
+	var plugin qbusiness.GetPluginOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_qbusiness_plugin.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckPlugin(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, "qbusiness"),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPluginDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPluginConfig_customPlugin(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPluginExists(ctx, resourceName, &plugin),
+					resource.TestCheckResourceAttr(resourceName, "no_auth_configuration.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "type", "CUSTOM"),
+				),
+			},
+		},
+	})
+}
+
 func testAccPreCheckPlugin(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).QBusinessClient(ctx)
 
@@ -177,10 +202,15 @@ func testAccCheckPluginExists(ctx context.Context, n string, v *qbusiness.GetPlu
 func testAccPluginConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
+data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_qbusiness_app" "test" {
-  display_name         = %[1]q
-  iam_service_role_arn = aws_iam_role.test.arn
+  display_name                 = %[1]q
+  iam_service_role_arn         = aws_iam_role.test.arn
+  identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  attachments_configuration {
+    attachments_control_mode = "ENABLED"
+  }
 }
 
 resource "aws_qbusiness_plugin" "test" {
@@ -257,10 +287,15 @@ EOF
 func testAccPluginConfig_tags(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
+data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_qbusiness_app" "test" {
-  display_name         = %[1]q
-  iam_service_role_arn = aws_iam_role.test.arn
+  display_name                 = %[1]q
+  iam_service_role_arn         = aws_iam_role.test.arn
+  identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  attachments_configuration {
+    attachments_control_mode = "ENABLED"
+  }
 }
 
 resource "aws_qbusiness_plugin" "test" {
@@ -273,7 +308,6 @@ resource "aws_qbusiness_plugin" "test" {
   server_url     = "https://yourinstance.service-now.com"
   state          = "ENABLED"
   type           = "SERVICE_NOW"
-
 
   tags = {
     %[2]q = %[3]q
@@ -338,4 +372,72 @@ resource "aws_iam_role" "test" {
 EOF
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccPluginConfig_customPlugin(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+data "aws_ssoadmin_instances" "test" {}
+
+resource "aws_qbusiness_app" "test" {
+  display_name                 = %[1]q
+  iam_service_role_arn         = aws_iam_role.test.arn
+  identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  attachments_configuration {
+    attachments_control_mode = "ENABLED"
+  }
+}
+
+resource "aws_qbusiness_plugin" "test" {
+  application_id = aws_qbusiness_app.test.id
+  display_name   = %[1]q
+  state          = "ENABLED"
+  type           = "CUSTOM"
+  custom_plugin_configuration {
+    api_schema_type = "OPEN_API_V3"
+    description     = "Plugin description"
+    payload         = <<SCHEMA
+openapi: 3.0.0
+info:
+  title: Sample API
+  version: 1.0.0
+servers:
+  - url: https://api.example.com/
+paths:
+  /strings:
+    get:
+      description: Test
+      responses:
+        '200':
+          description: A JSON array of strings
+          content:
+            application/json:
+              schema: 
+                type: array
+                items: 
+                  type: string
+SCHEMA
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = <<EOF
+{
+"Version": "2012-10-17",
+"Statement": [
+    {
+    "Action": "sts:AssumeRole",
+    "Principal": {
+        "Service": "qbusiness.${data.aws_partition.current.dns_suffix}"
+    },
+    "Effect": "Allow",
+    "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+`, rName)
 }

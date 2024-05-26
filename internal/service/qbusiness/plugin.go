@@ -15,7 +15,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/qbusiness/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -25,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -64,27 +64,24 @@ func (r *resourcePlugin) Metadata(_ context.Context, request resource.MetadataRe
 	response.TypeName = "aws_qbusiness_plugin"
 }
 
-func authConfigurationSchema(ctx context.Context) schema.ListNestedBlock {
+func authConfigurationSchema(ctx context.Context, conflictsWith string) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[authConfigurationData](ctx),
 		Validators: []validator.List{
 			listvalidator.SizeAtMost(1),
+			listvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName(conflictsWith)),
 		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"role_arn": schema.StringAttribute{
+					CustomType:  fwtypes.ARNType,
 					Description: "ARN of an IAM role used by Amazon Q to access the basic authentication credentials stored in a Secrets Manager secret.",
 					Required:    true,
-					Validators: []validator.String{
-						stringvalidator.RegexMatches(regexache.MustCompile(`^arn:[a-z0-9-\.]{1,63}:[a-z0-9-\.]{0,63}:[a-z0-9-\.]{0,63}:[a-z0-9-\.]{0,63}:[^/].{0,1023}$`), "must be valid ARN"),
-					},
 				},
 				"secret_arn": schema.StringAttribute{
+					CustomType:  fwtypes.ARNType,
 					Description: "ARN of the Secrets Manager secret that stores the basic authentication credentials used for plugin configuration.",
 					Required:    true,
-					Validators: []validator.String{
-						stringvalidator.RegexMatches(regexache.MustCompile(`^arn:[a-z0-9-\.]{1,63}:[a-z0-9-\.]{0,63}:[a-z0-9-\.]{0,63}:[a-z0-9-\.]{0,63}:[^/].{0,1023}$`), "must be valid ARN"),
-					},
 				},
 			},
 		},
@@ -146,11 +143,8 @@ func (r *resourcePlugin) Schema(ctx context.Context, req resource.SchemaRequest,
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"basic_auth_configuration":               authConfigurationSchema(ctx),
-			"oauth2_client_credential_configuration": authConfigurationSchema(ctx),
-			"no_auth_configuration": schema.SingleNestedBlock{
-				CustomType: fwtypes.NewObjectTypeOf[noAuthConfigurationData](ctx),
-			},
+			"basic_auth_configuration":               authConfigurationSchema(ctx, "oauth2_client_credential_configuration"),
+			"oauth2_client_credential_configuration": authConfigurationSchema(ctx, "basic_auth_configuration"),
 			"custom_plugin_configuration": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[customPluginConfigurationData](ctx),
 				Validators: []validator.List{
@@ -169,7 +163,7 @@ func (r *resourcePlugin) Schema(ctx context.Context, req resource.SchemaRequest,
 						"api_schema_type": schema.StringAttribute{
 							CustomType:  fwtypes.StringEnumType[awstypes.APISchemaType](),
 							Required:    true,
-							Description: "The type of OpenAPI schema to use.",
+							Description: "The type of OpenAPI schema to use. Valid value is `OPEN_API_V3`.",
 							Validators: []validator.String{
 								enum.FrameworkValidate[awstypes.APISchemaType](),
 							},
@@ -227,7 +221,7 @@ func (r *resourcePlugin) Schema(ctx context.Context, req resource.SchemaRequest,
 
 func (r *resourcePlugin) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var data resourcePluginData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, data)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -255,6 +249,8 @@ func (r *resourcePlugin) Create(ctx context.Context, req resource.CreateRequest,
 		}
 		input.CustomPluginConfiguration.ApiSchema = apiSchema
 	}
+	input.Tags = getTagsIn(ctx)
+	input.ClientToken = aws.String(id.UniqueId())
 
 	output, err := conn.CreatePlugin(ctx, input)
 	if err != nil {
@@ -267,7 +263,7 @@ func (r *resourcePlugin) Create(ctx context.Context, req resource.CreateRequest,
 
 	data.setID()
 
-	if _, err := waitPluginCreated(ctx, conn, data.PluginId.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+	if _, err := waitPluginCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
 		resp.Diagnostics.AddError("failed to wait for Q Business plugin to be created", err.Error())
 		return
 	}
@@ -309,7 +305,7 @@ func (r *resourcePlugin) Read(ctx context.Context, req resource.ReadRequest, res
 
 func (r *resourcePlugin) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var old, new resourcePluginData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, new)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &new)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -321,7 +317,6 @@ func (r *resourcePlugin) Update(ctx context.Context, req resource.UpdateRequest,
 
 	if !old.BasicAuthConfiguration.Equal(new.BasicAuthConfiguration) ||
 		!old.OAuth2ClientCredentialConfiguration.Equal(new.OAuth2ClientCredentialConfiguration) ||
-		!old.NoAuthConfiguration.Equal(new.NoAuthConfiguration) ||
 		!old.CustomPluginConfiguration.Equal(new.CustomPluginConfiguration) ||
 		!old.DisplayName.Equal(new.DisplayName) ||
 		!old.ServerURL.Equal(new.ServerURL) ||
@@ -392,14 +387,8 @@ func (r *resourcePlugin) Delete(ctx context.Context, req resource.DeleteRequest,
 	}
 }
 
-func (r *resourcePlugin) ConfigValidators(_ context.Context) []resource.ConfigValidator {
-	return []resource.ConfigValidator{
-		resourcevalidator.ExactlyOneOf(
-			path.MatchRoot("basic_auth_configuration"),
-			path.MatchRoot("oauth2_client_credential_configuration"),
-			path.MatchRoot("no_auth_configuration"),
-		),
-	}
+func (r *resourcePlugin) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, request, response)
 }
 
 type resourcePluginData struct {
@@ -414,7 +403,6 @@ type resourcePluginData struct {
 	Type                                fwtypes.StringEnum[awstypes.PluginType]                        `tfsdk:"type"`
 	BasicAuthConfiguration              fwtypes.ListNestedObjectValueOf[authConfigurationData]         `tfsdk:"basic_auth_configuration"`
 	OAuth2ClientCredentialConfiguration fwtypes.ListNestedObjectValueOf[authConfigurationData]         `tfsdk:"oauth2_client_credential_configuration"`
-	NoAuthConfiguration                 fwtypes.ObjectValueOf[noAuthConfigurationData]                 `tfsdk:"no_auth_configuration"`
 	CustomPluginConfiguration           fwtypes.ListNestedObjectValueOf[customPluginConfigurationData] `tfsdk:"custom_plugin_configuration"`
 	ServerURL                           types.String                                                   `tfsdk:"server_url"`
 	State                               fwtypes.StringEnum[awstypes.PluginState]                       `tfsdk:"state"`
@@ -430,10 +418,6 @@ type customPluginConfigurationData struct {
 	ApiSchemaType fwtypes.StringEnum[awstypes.APISchemaType] `tfsdk:"api_schema_type"`
 	S3            fwtypes.ListNestedObjectValueOf[s3Data]    `tfsdk:"s3"`
 	Payload       types.String                               `tfsdk:"payload"`
-}
-
-type noAuthConfigurationData struct {
-	Description types.String `tfsdk:"description"`
 }
 
 type s3Data struct {
@@ -453,8 +437,6 @@ func (r *resourcePluginData) flattenAuthConfiguration(ctx context.Context, authC
 			RoleArn:   fwflex.StringToFramework(ctx, v.Value.RoleArn),
 			SecretArn: fwflex.StringToFramework(ctx, v.Value.SecretArn),
 		})
-	case *awstypes.PluginAuthConfigurationMemberNoAuthConfiguration:
-		r.NoAuthConfiguration = fwtypes.NewObjectValueOfMust(ctx, &noAuthConfigurationData{})
 	}
 }
 
@@ -489,11 +471,7 @@ func (r *resourcePluginData) expandAuthConfiguration(ctx context.Context) (awsty
 		}, diags
 	}
 
-	if !r.NoAuthConfiguration.IsNull() {
-		return &awstypes.PluginAuthConfigurationMemberNoAuthConfiguration{}, diags
-	}
-
-	return nil, diags
+	return &awstypes.PluginAuthConfigurationMemberNoAuthConfiguration{}, diags
 }
 
 func (r *resourcePluginData) flattenApiSchema(ctx context.Context, apiSchema awstypes.APISchema) {
