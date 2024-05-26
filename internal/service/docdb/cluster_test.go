@@ -492,6 +492,7 @@ func TestAccDocDBCluster_pointInTimeRestore(t *testing.T) {
 					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
 					"master_password",
+					"restore_to_point_in_time",
 					"skip_final_snapshot",
 				},
 			},
@@ -1301,6 +1302,8 @@ resource "aws_docdb_cluster" "restore" {
     restore_type               = "full-copy"
     use_latest_restorable_time = true
   }
+
+  skip_final_snapshot = true
 }
 `, rName))
 }
