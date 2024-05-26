@@ -71,13 +71,13 @@ func storageType_Values() []string {
 }
 
 const (
-	RestoreTypeStandard = "standard"
-	RestoreTypeIOpt1    = "iopt1"
+	RestoreTypeCopyOnWrite = "copy-on-write"
+	RestoreTypeFullCopy    = "full-copy"
 )
 
 func RestoreType_Values() []string {
 	return []string{
-		RestoreTypeStandard,
-		RestoreTypeIOpt1,
+		RestoreTypeCopyOnWrite,
+		RestoreTypeFullCopy,
 	}
 }

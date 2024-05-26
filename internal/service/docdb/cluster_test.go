@@ -1273,12 +1273,6 @@ func testAccClusterConfig_baseForPITR(rName string) string {
 resource "aws_docdb_cluster" "test" {
   cluster_identifier = %[1]q
 
-  restore_to_point_in_time {
-    source_cluster_identifier  = aws_rds_cluster.test.cluster_identifier
-    restore_type               = "standard"
-    use_latest_restorable_time = true
-  }
-
   availability_zones = [
     data.aws_availability_zones.available.names[0],
     data.aws_availability_zones.available.names[1],
