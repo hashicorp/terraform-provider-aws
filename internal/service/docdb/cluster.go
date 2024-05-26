@@ -222,6 +222,43 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"restore_to_point_in_time": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"restore_to_time": {
+							Type:          schema.TypeString,
+							Optional:      true,
+							ForceNew:      true,
+							ValidateFunc:  verify.ValidUTCTimestamp,
+							ConflictsWith: []string{"restore_to_point_in_time.0.use_latest_restorable_time"},
+						},
+						"restore_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(RestoreType_Values(), false),
+						},
+						"source_cluster_identifier": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+						"use_latest_restorable_time": {
+							Type:          schema.TypeBool,
+							Optional:      true,
+							ForceNew:      true,
+							ConflictsWith: []string{"restore_to_point_in_time.0.restore_to_time"},
+						},
+					},
+				},
+				ConflictsWith: []string{
+					"snapshot_identifier",
+				},
+			},
 			"skip_final_snapshot": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -234,6 +271,9 @@ func ResourceCluster() *schema.Resource {
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					// allow snapshot_idenfitier to be removed without forcing re-creation
 					return new == ""
+				},
+				ConflictsWith: []string{
+					"restore_to_point_in_time",
 				},
 			},
 			names.AttrStorageEncrypted: {
@@ -356,6 +396,62 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating DocumentDB Cluster (restore from snapshot) (%s): %s", identifier, err)
+		}
+	} else if v, ok := d.GetOk("restore_to_point_in_time"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		tfMap := v.([]interface{})[0].(map[string]interface{})
+		input := &docdb.RestoreDBClusterToPointInTimeInput{
+			DBClusterIdentifier:       aws.String(identifier),
+			SourceDBClusterIdentifier: aws.String(tfMap["source_cluster_identifier"].(string)),
+			DeletionProtection:        aws.Bool(d.Get("deletion_protection").(bool)),
+			Tags:                      getTagsIn(ctx),
+		}
+
+		if v, ok := tfMap["restore_to_time"].(string); ok && v != "" {
+			v, _ := time.Parse(time.RFC3339, v)
+			input.RestoreToTime = aws.Time(v)
+		}
+
+		if v, ok := tfMap["use_latest_restorable_time"].(bool); ok && v {
+			input.UseLatestRestorableTime = aws.Bool(v)
+		}
+
+		if input.RestoreToTime == nil && input.UseLatestRestorableTime == nil {
+			return sdkdiag.AppendErrorf(diags, `Either "restore_to_time" or "use_latest_restorable_time" must be set`)
+		}
+
+		if v, ok := d.GetOk("db_subnet_group_name"); ok {
+			input.DBSubnetGroupName = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && len(v.([]interface{})) > 0 {
+			input.EnableCloudwatchLogsExports = flex.ExpandStringList(v.([]interface{}))
+		}
+
+		if v, ok := tfMap["restore_type"].(string); ok {
+			input.RestoreType = aws.String(v)
+		}
+
+		if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
+			input.KmsKeyId = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk(names.AttrPort); ok {
+			input.Port = aws.Int64(int64(v.(int)))
+		}
+
+		if v, ok := d.GetOk(names.AttrStorageType); ok {
+			input.StorageType = aws.String(v.(string))
+		}
+
+		if v := d.Get(names.AttrVPCSecurityGroupIDs).(*schema.Set); v.Len() > 0 {
+			input.VpcSecurityGroupIds = flex.ExpandStringSet(v)
+		}
+
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+			return conn.RestoreDBClusterToPointInTimeWithContext(ctx, input)
+		}, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "creating DocumentDB Cluster (restore to point-in-time) (%s): %s", identifier, err)
 		}
 	} else {
 		// Secondary DocDB clusters part of a global cluster will not supply the master_password

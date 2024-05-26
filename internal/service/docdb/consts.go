@@ -69,3 +69,15 @@ func storageType_Values() []string {
 		storageTypeStandard,
 	}
 }
+
+const (
+	RestoreTypeStandard = "standard"
+	RestoreTypeIOpt1    = "iopt1"
+)
+
+func RestoreType_Values() []string {
+	return []string{
+		RestoreTypeStandard,
+		RestoreTypeIOpt1,
+	}
+}
