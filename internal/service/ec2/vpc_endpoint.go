@@ -234,6 +234,8 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	if v, ok := d.GetOk("private_dns_enabled"); ok {
 		input.PrivateDnsEnabled = aws.Bool(v.(bool))
+	} else {
+		input.PrivateDnsEnabled = aws.Bool(false)
 	}
 
 	if v, ok := d.GetOk("route_table_ids"); ok && v.(*schema.Set).Len() > 0 {
