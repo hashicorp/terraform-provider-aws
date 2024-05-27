@@ -29,7 +29,7 @@ import (
 
 // @SDKResource("aws_ssm_parameter", name="Parameter")
 // @Tags(identifierAttribute="id", resourceType="Parameter")
-// @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ssm/types;awstypes;awstypes.Parameter")
 func resourceParameter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceParameterCreate,
