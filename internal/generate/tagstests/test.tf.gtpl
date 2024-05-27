@@ -25,6 +25,13 @@ provider "aws" {
 
 {{ end }}
 
+{{- if .AlternateRegionProvider -}}
+provider "awsalternate" {
+  region = var.alt_region
+}
+
+{{ end }}
+
 {{- if or (eq .Tags "tagsComputed1") (eq .Tags "tagsComputed2") -}}
 provider "null" {}
 
@@ -84,5 +91,13 @@ variable "knownTagValue" {
 variable "provider_tags" {
   type     = map(string)
   nullable = false
+}
+{{ end -}}
+
+{{ if .AlternateRegionProvider }}
+variable "alt_region" {
+  description = "Region for provider awsalternate"
+  type        = string
+  nullable    = false
 }
 {{ end -}}
