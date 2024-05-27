@@ -58,7 +58,7 @@ func TestAccShieldProtectionDataSource_cloudfront(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ShieldEndpointID)
-			acctest.PreCheckPartitionHasService(t, names.CloudFrontServiceID)
+			acctest.PreCheckPartitionHasService(t, "cloudfront")
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ShieldServiceID),
