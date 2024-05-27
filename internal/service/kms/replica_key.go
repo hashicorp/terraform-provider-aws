@@ -31,6 +31,7 @@ import (
 
 // @SDKResource("aws_kms_replica_key", name="Replica Key")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func resourceReplicaKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReplicaKeyCreate,

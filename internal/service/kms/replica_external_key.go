@@ -31,6 +31,7 @@ import (
 
 // @SDKResource("aws_kms_replica_external_key", name="Replica External Key")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func resourceReplicaExternalKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReplicaExternalKeyCreate,
