@@ -221,6 +221,7 @@ func (r *resourcePlugin) Schema(ctx context.Context, req resource.SchemaRequest,
 
 func (r *resourcePlugin) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var data resourcePluginData
+	var diags diag.Diagnostics
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -234,19 +235,15 @@ func (r *resourcePlugin) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	authConf, d := data.expandAuthConfiguration(ctx)
-	if d.HasError() {
-		resp.Diagnostics.Append(d...)
+	if input.AuthConfiguration, diags = data.expandAuthConfiguration(ctx); diags.HasError() {
+		resp.Diagnostics.Append(diags...)
 		return
 	}
-	input.AuthConfiguration = authConf
 
-	customPluginConf, d := data.expandPluginConfiguration(ctx)
-	if d.HasError() {
-		resp.Diagnostics.Append(d...)
+	if input.CustomPluginConfiguration, diags = data.expandPluginConfiguration(ctx); diags.HasError() {
+		resp.Diagnostics.Append(diags...)
 		return
 	}
-	input.CustomPluginConfiguration = customPluginConf
 	input.Tags = getTagsIn(ctx)
 	input.ClientToken = aws.String(id.UniqueId())
 
@@ -302,6 +299,7 @@ func (r *resourcePlugin) Read(ctx context.Context, req resource.ReadRequest, res
 
 func (r *resourcePlugin) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var old, new resourcePluginData
+	var diags diag.Diagnostics
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &new)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -320,21 +318,23 @@ func (r *resourcePlugin) Update(ctx context.Context, req resource.UpdateRequest,
 		!old.State.Equal(new.State) {
 		conn := r.Meta().QBusinessClient(ctx)
 
-		input := &qbusiness.UpdatePluginInput{}
+		input := &qbusiness.UpdatePluginInput{
+			ApplicationId: new.ApplicationId.ValueStringPointer(),
+			PluginId:      new.PluginId.ValueStringPointer(),
+			DisplayName:   new.DisplayName.ValueStringPointer(),
+			ServerUrl:     new.ServerURL.ValueStringPointer(),
+			State:         awstypes.PluginState(new.State.ValueString()),
+		}
 
-		authConf, d := new.expandAuthConfiguration(ctx)
-		if d.HasError() {
-			resp.Diagnostics.Append(d...)
+		if input.AuthConfiguration, diags = new.expandAuthConfiguration(ctx); diags.HasError() {
+			resp.Diagnostics.Append(diags...)
 			return
 		}
-		input.AuthConfiguration = authConf
 
-		customPluginConf, d := new.expandPluginConfiguration(ctx)
-		if d.HasError() {
-			resp.Diagnostics.Append(d...)
+		if input.CustomPluginConfiguration, diags = new.expandPluginConfiguration(ctx); diags.HasError() {
+			resp.Diagnostics.Append(diags...)
 			return
 		}
-		input.CustomPluginConfiguration = customPluginConf
 
 		_, err := conn.UpdatePlugin(ctx, input)
 
@@ -470,24 +470,24 @@ func (r *resourcePluginData) flattenAuthConfiguration(ctx context.Context, authC
 }
 
 func (r *resourcePluginData) expandPluginConfiguration(ctx context.Context) (*awstypes.CustomPluginConfiguration, diag.Diagnostics) {
-	if !r.PluginConfiguration.IsNull() {
-		pluginConf, d := r.PluginConfiguration.ToPtr(ctx)
-		if d.HasError() {
-			return nil, d
-		}
-
-		schema, d := r.expandApiSchema(ctx, pluginConf)
-		if d.HasError() {
-			return nil, d
-		}
-
-		return &awstypes.CustomPluginConfiguration{
-			Description:   pluginConf.Description.ValueStringPointer(),
-			ApiSchemaType: awstypes.APISchemaType(pluginConf.ApiSchemaType.ValueString()),
-			ApiSchema:     schema,
-		}, nil
+	if r.PluginConfiguration.IsNull() {
+		return nil, nil
 	}
-	return nil, nil
+	pluginConf, d := r.PluginConfiguration.ToPtr(ctx)
+	if d.HasError() {
+		return nil, d
+	}
+
+	schema, d := r.expandApiSchema(ctx, pluginConf)
+	if d.HasError() {
+		return nil, d
+	}
+
+	return &awstypes.CustomPluginConfiguration{
+		Description:   pluginConf.Description.ValueStringPointer(),
+		ApiSchemaType: awstypes.APISchemaType(pluginConf.ApiSchemaType.ValueString()),
+		ApiSchema:     schema,
+	}, nil
 }
 
 func (r *resourcePluginData) flattenPluginConfiguration(ctx context.Context, pluginConf *awstypes.CustomPluginConfiguration) {
