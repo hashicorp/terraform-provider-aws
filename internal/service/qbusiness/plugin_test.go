@@ -126,12 +126,19 @@ func TestAccQBusinessPlugin_customPlugin(t *testing.T) {
 		CheckDestroy:             testAccCheckPluginDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPluginConfig_customPlugin(rName),
+				Config: testAccPluginConfig_customPlugin(rName, "ENABLED"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPluginExists(ctx, resourceName, &plugin),
 					resource.TestCheckResourceAttr(resourceName, "no_auth_configuration.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "type", "CUSTOM"),
+				),
+			},
+			{
+				Config: testAccPluginConfig_customPlugin(rName, "DISABLED"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPluginExists(ctx, resourceName, &plugin),
+					resource.TestCheckResourceAttr(resourceName, "state", "DISABLED"),
 				),
 			},
 		},
@@ -376,7 +383,7 @@ EOF
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccPluginConfig_customPlugin(rName string) string {
+func testAccPluginConfig_customPlugin(rName, state string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 data "aws_ssoadmin_instances" "test" {}
@@ -393,7 +400,7 @@ resource "aws_qbusiness_app" "test" {
 resource "aws_qbusiness_plugin" "test" {
   application_id = aws_qbusiness_app.test.id
   display_name   = %[1]q
-  state          = "ENABLED"
+  state          = %[2]q
   type           = "CUSTOM"
   custom_plugin_configuration {
     api_schema_type = "OPEN_API_V3"
@@ -441,5 +448,5 @@ resource "aws_iam_role" "test" {
 EOF
 }
 
-`, rName)
+`, rName, state)
 }
