@@ -36,6 +36,7 @@ import (
 
 // @SDKResource("aws_kms_external_key", name="External Key")
 // @Tags(identifierAttribute="id")
+// @Testing(tagsTest=false)
 func resourceExternalKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceExternalKeyCreate,
