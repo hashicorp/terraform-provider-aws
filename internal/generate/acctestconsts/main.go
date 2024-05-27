@@ -14,8 +14,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 )
 
-//go:embed file.tmpl
-var tmpl string
+//go:embed consts.tmpl
+var constsTmpl string
+
+//go:embed constsOrQuote.gtpl
+var constsOrQuoteTmpl string
 
 //go:embed semgrep.tmpl
 var semgrepTmpl string
@@ -32,9 +35,10 @@ type TemplateData struct {
 
 func main() {
 	const (
-		filename         = "../../../internal/acctest/consts_gen.go"
-		semgrepFilename  = "../../../.ci/.semgrep-test-constants.yml"
-		constantDataFile = "../../../internal/acctest/consts.csv"
+		constsFilename        = "../../../internal/acctest/consts_gen.go"
+		constsOrQuoteFilename = "../../../internal/acctest/const/consts_or_quote_gen.go"
+		semgrepFilename       = "../../../.ci/.semgrep-test-constants.yml"
+		constantDataFile      = "../../../internal/acctest/consts.csv"
 	)
 	g := common.NewGenerator()
 
@@ -47,18 +51,33 @@ func main() {
 	td := TemplateData{}
 	td.Constants = constants
 
-	g.Infof("Generating %s", strings.TrimPrefix(filename, "../../../"))
+	// Constants file
+	g.Infof("Generating %s", strings.TrimPrefix(constsFilename, "../../../"))
 
-	d := g.NewGoFileDestination(filename)
+	d := g.NewGoFileDestination(constsFilename)
 
-	if err := d.WriteTemplate("constantlist", tmpl, td); err != nil {
-		g.Fatalf("generating file (%s): %s", filename, err)
+	if err := d.WriteTemplate("constantlist", constsTmpl, td); err != nil {
+		g.Fatalf("generating file (%s): %s", constsFilename, err)
 	}
 
 	if err := d.Write(); err != nil {
-		g.Fatalf("generating file (%s): %s", filename, err)
+		g.Fatalf("generating file (%s): %s", constsFilename, err)
 	}
 
+	// ConstsOrQuotes helper
+	g.Infof("Generating %s", strings.TrimPrefix(constsOrQuoteFilename, "../../../"))
+
+	d = g.NewGoFileDestination(constsOrQuoteFilename)
+
+	if err := d.WriteTemplate("constsOrQuote", constsOrQuoteTmpl, td); err != nil {
+		g.Fatalf("generating file (%s): %s", constsOrQuoteFilename, err)
+	}
+
+	if err := d.Write(); err != nil {
+		g.Fatalf("generating file (%s): %s", constsOrQuoteFilename, err)
+	}
+
+	// Semgrep
 	g.Infof("Generating %s", strings.TrimPrefix(semgrepFilename, "../../../"))
 
 	d = g.NewUnformattedFileDestination(semgrepFilename)
