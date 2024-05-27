@@ -25,6 +25,7 @@ import (
 
 // @SDKResource("aws_ssm_maintenance_window", name="Maintenance Window")
 // @Tags(identifierAttribute="id", resourceType="MaintenanceWindow")
+// @Testing(tagsTest=false)
 func resourceMaintenanceWindow() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMaintenanceWindowCreate,

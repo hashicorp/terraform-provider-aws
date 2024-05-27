@@ -41,6 +41,7 @@ const (
 
 // @SDKResource("aws_ssm_document", name="Document")
 // @Tags(identifierAttribute="id", resourceType="Document")
+// @Testing(tagsTest=false)
 func resourceDocument() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDocumentCreate,

@@ -29,6 +29,7 @@ import (
 
 // @SDKResource("aws_ssm_parameter", name="Parameter")
 // @Tags(identifierAttribute="id", resourceType="Parameter")
+// @Testing(tagsTest=false)
 func resourceParameter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceParameterCreate,

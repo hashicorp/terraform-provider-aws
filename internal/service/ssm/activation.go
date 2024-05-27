@@ -25,6 +25,7 @@ import (
 
 // @SDKResource("aws_ssm_activation", name="Activation")
 // @Tags
+// @Testing(tagsTest=false)
 func resourceActivation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceActivationCreate,

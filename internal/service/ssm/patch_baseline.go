@@ -32,6 +32,7 @@ import (
 
 // @SDKResource("aws_ssm_patch_baseline", name="Patch Baseline")
 // @Tags(identifierAttribute="id", resourceType="PatchBaseline")
+// @Testing(tagsTest=false)
 func resourcePatchBaseline() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePatchBaselineCreate,
