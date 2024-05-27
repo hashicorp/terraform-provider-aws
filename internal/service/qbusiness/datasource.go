@@ -562,7 +562,7 @@ func (data *resourceDatasourceData) flattenFromGetDataSourceOutput(ctx context.C
 	if d := data.flattenConfiguration(out.Configuration); d.HasError() {
 		return d
 	}
-	if d := data.flattenDocuemntEnrichmentConfiguration(ctx, out.DocumentEnrichmentConfiguration); d.HasError() {
+	if d := data.flattenDocumentEnrichmentConfiguration(ctx, out.DocumentEnrichmentConfiguration); d.HasError() {
 		return d
 	}
 	return nil
@@ -575,7 +575,7 @@ func flattenInlineConfiguration(ctx context.Context, conf []awstypes.InlineDocum
 	for _, c := range conf {
 		var ic resourceInlineDocumentEnrichmentConfigurationData
 		ic.Operator = fwtypes.StringEnumValue(c.DocumentContentOperator)
-		cond, d := flattenDocuemntAttributeCondition(ctx, c.Condition)
+		cond, d := flattenDocumentAttributeCondition(ctx, c.Condition)
 		if d.HasError() {
 			return nil, d
 		}
@@ -612,7 +612,7 @@ func flattenResourceDocumentAttributeTargetData(ctx context.Context, conf *awsty
 	return &dat, diags
 }
 
-func flattenDocuemntAttributeCondition(ctx context.Context, conf *awstypes.DocumentAttributeCondition) (*resourceConditionData, diag.Diagnostics) {
+func flattenDocumentAttributeCondition(ctx context.Context, conf *awstypes.DocumentAttributeCondition) (*resourceConditionData, diag.Diagnostics) {
 	var c resourceConditionData
 	var diags diag.Diagnostics
 
@@ -633,7 +633,7 @@ func flattenHookConfiguration(ctx context.Context, conf *awstypes.HookConfigurat
 	hc.S3BucketName = fwflex.StringToFramework(ctx, conf.S3BucketName)
 
 	if conf.InvocationCondition != nil {
-		c, d := flattenDocuemntAttributeCondition(ctx, conf.InvocationCondition)
+		c, d := flattenDocumentAttributeCondition(ctx, conf.InvocationCondition)
 		if d.HasError() {
 			return nil, d
 		}
@@ -646,7 +646,7 @@ func flattenHookConfiguration(ctx context.Context, conf *awstypes.HookConfigurat
 	return &hc, diags
 }
 
-func (data *resourceDatasourceData) flattenDocuemntEnrichmentConfiguration(ctx context.Context, conf *awstypes.DocumentEnrichmentConfiguration) diag.Diagnostics {
+func (data *resourceDatasourceData) flattenDocumentEnrichmentConfiguration(ctx context.Context, conf *awstypes.DocumentEnrichmentConfiguration) diag.Diagnostics {
 	var dec resourceDocumentEnrichmentConfigurationData
 
 	if conf.InlineConfigurations != nil {
@@ -732,37 +732,31 @@ func flattenValue(ctx context.Context, av awstypes.DocumentAttributeValue) *reso
 }
 
 func (data *resourceDatasourceData) expandToUpdateDataSourceInput(ctx context.Context) (*qbusiness.UpdateDataSourceInput, diag.Diagnostics) {
+	var diags diag.Diagnostics
 	input := &qbusiness.UpdateDataSourceInput{}
 
 	input.ApplicationId = data.ApplicationId.ValueStringPointer()
-	input.DataSourceId = data.DatasourceId.ValueStringPointer()
 	input.DisplayName = data.DisplayName.ValueStringPointer()
 	input.Description = data.Description.ValueStringPointer()
+	input.DisplayName = data.DisplayName.ValueStringPointer()
 	input.IndexId = data.IndexId.ValueStringPointer()
 	input.RoleArn = data.RoleArn.ValueStringPointer()
 	input.SyncSchedule = data.SyncSchedule.ValueStringPointer()
 
-	conf, d := data.expandConfiguration()
-	if d.HasError() {
-		return nil, d
+	if input.Configuration, diags = data.expandConfiguration(); diags.HasError() {
+		return nil, diags
 	}
-	input.Configuration = conf
-
-	econf, d := data.expandDocumentEnrichmentConfiguration(ctx)
-	if d.HasError() {
-		return nil, d
+	if input.DocumentEnrichmentConfiguration, diags = data.expandDocumentEnrichmentConfiguration(ctx); diags.HasError() {
+		return nil, diags
 	}
-	input.DocumentEnrichmentConfiguration = econf
-
-	vpc, d := data.expandVpcConfiguration(ctx)
-	if d.HasError() {
-		return nil, d
+	if input.VpcConfiguration, diags = data.expandVpcConfiguration(ctx); diags.HasError() {
+		return nil, diags
 	}
-	input.VpcConfiguration = vpc
 	return input, nil
 }
 
 func (data *resourceDatasourceData) expandToCreateDataSourceInput(ctx context.Context) (*qbusiness.CreateDataSourceInput, diag.Diagnostics) {
+	var diags diag.Diagnostics
 	input := &qbusiness.CreateDataSourceInput{}
 
 	input.ApplicationId = data.ApplicationId.ValueStringPointer()
@@ -773,23 +767,15 @@ func (data *resourceDatasourceData) expandToCreateDataSourceInput(ctx context.Co
 	input.RoleArn = data.RoleArn.ValueStringPointer()
 	input.SyncSchedule = data.SyncSchedule.ValueStringPointer()
 
-	conf, d := data.expandConfiguration()
-	if d.HasError() {
-		return nil, d
+	if input.Configuration, diags = data.expandConfiguration(); diags.HasError() {
+		return nil, diags
 	}
-	input.Configuration = conf
-
-	econf, d := data.expandDocumentEnrichmentConfiguration(ctx)
-	if d.HasError() {
-		return nil, d
+	if input.DocumentEnrichmentConfiguration, diags = data.expandDocumentEnrichmentConfiguration(ctx); diags.HasError() {
+		return nil, diags
 	}
-	input.DocumentEnrichmentConfiguration = econf
-
-	vpc, d := data.expandVpcConfiguration(ctx)
-	if d.HasError() {
-		return nil, d
+	if input.VpcConfiguration, diags = data.expandVpcConfiguration(ctx); diags.HasError() {
+		return nil, diags
 	}
-	input.VpcConfiguration = vpc
 	return input, nil
 }
 
