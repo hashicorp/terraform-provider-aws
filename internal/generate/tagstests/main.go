@@ -514,7 +514,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		})
 		d.additionalTfVars["certificate_pem"] = "certificatePEM"
 		d.additionalTfVars["private_key_pem"] = "privateKeyPEM"
-
 	}
 
 	if tagged {
