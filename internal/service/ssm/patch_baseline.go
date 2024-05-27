@@ -321,7 +321,7 @@ type PatchRule struct {
 	// that the patch is marked as approved in the patch baseline. For example,
 	// a value of 7 means that patches are approved seven days after they are released.
 	// Not supported on Debian Server or Ubuntu Server.
-	ApproveAfterDays *int64 `type:"integer" json:",omitempty"`
+	ApproveAfterDays *int32 `type:"integer" json:",omitempty"`
 
 	// The cutoff date for auto approval of released patches. Any patches released
 	// on or before this date are installed automatically. Not supported on Debian
@@ -331,7 +331,7 @@ type PatchRule struct {
 	ApproveUntilDate *string `min:"1" type:"string" json:",omitempty"`
 
 	// A compliance severity level for all approved patches in a patch baseline.
-	ComplianceLevel *string `type:"string" enum:"PatchComplianceLevel"`
+	ComplianceLevel awstypes.PatchComplianceLevel `type:"string" enum:"PatchComplianceLevel"`
 
 	// For managed nodes identified by the approval rule filters, enables a patch
 	// baseline to apply non-security updates available in the specified repository.
@@ -341,7 +341,7 @@ type PatchRule struct {
 	// The patch filter group that defines the criteria for the rule.
 	//
 	// PatchFilterGroup is a required field
-	PatchFilterGroup *ssm.PatchFilterGroup `type:"structure" required:"true"`
+	PatchFilterGroup *awstypes.PatchFilterGroup `type:"structure" required:"true"`
 }
 
 func resourcePatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
