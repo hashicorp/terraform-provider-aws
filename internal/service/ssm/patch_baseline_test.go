@@ -528,11 +528,11 @@ resource "aws_ssm_patch_baseline" "test" {
   approved_patches                  = ["KB123456"]
   approved_patches_compliance_level = "CRITICAL"
   approval_rule  {
-	approve_until_date = "2024-01-02"
-	patch_filter {
-		key    = "CLASSIFICATION"
-		values = ["CriticalUpdates"]
-	}
+    approve_until_date = "2024-01-02"
+    patch_filter {
+      key    = "CLASSIFICATION"
+      values = ["CriticalUpdates"]
+    }
   }
 }
 `, rName)
@@ -577,11 +577,11 @@ resource "aws_ssm_patch_baseline" "test" {
   approved_patches                  = ["KB123456", "KB456789"]
   approved_patches_compliance_level = "HIGH"
   approval_rule  {
-	approve_after_days = 7
-	patch_filter {
-		key    = "CLASSIFICATION"
-		values = ["CriticalUpdates"]
-	}
+    approve_after_days = 7
+    patch_filter {
+      key    = "CLASSIFICATION"
+      values = ["CriticalUpdates"]
+    }
   }
 }
 `, rName)
