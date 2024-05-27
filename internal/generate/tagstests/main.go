@@ -23,7 +23,7 @@ import (
 	"text/template"
 
 	"github.com/dlclark/regexp2"
-	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	acctestconsts "github.com/hashicorp/terraform-provider-aws/internal/acctest/const"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -495,8 +495,8 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			Code: fmt.Sprintf(`privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 			certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, %s)`, tlsKeyCN),
 		})
-		d.AdditionalTfVars["certificate_pem"] = []string{acctest.ConstOrQuote("certificate_pem"), "certificatePEM"}
-		d.AdditionalTfVars["private_key_pem"] = []string{acctest.ConstOrQuote("private_key_pem"), "privateKeyPEM"}
+		d.AdditionalTfVars["certificate_pem"] = []string{acctestconsts.ConstOrQuote("certificate_pem"), "certificatePEM"}
+		d.AdditionalTfVars["private_key_pem"] = []string{acctestconsts.ConstOrQuote("private_key_pem"), "privateKeyPEM"}
 
 	}
 
