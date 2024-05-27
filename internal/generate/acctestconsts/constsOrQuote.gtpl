@@ -8,12 +8,6 @@ import (
     "fmt"
 )
 
-const (
-{{- range .Constants }}
-	Ct{{ .Constant }} = "{{ .Literal }}"
-{{- end }}
-)
-
 // ConstOrQuote returns the constant name for the given attribute if it exists.
 // Otherwise, it returns the attribute quoted. This is intended for use in
 // generated code and templates.
