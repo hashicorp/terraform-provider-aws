@@ -6,6 +6,7 @@ package fsx_test
 import (
 	"context"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -46,7 +47,7 @@ func TestAccFSxONTAPVolume_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "security_style", ""),
 					resource.TestCheckResourceAttr(resourceName, "size_in_megabytes", "1024"),
-					resource.TestCheckResourceAttr(resourceName, "skip_final_backup", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "skip_final_backup", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "snaplock_configuration.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_policy", "default"),
 					resource.TestCheckResourceAttr(resourceName, "storage_efficiency_enabled", acctest.CtTrue),
@@ -61,6 +62,10 @@ func TestAccFSxONTAPVolume_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
+					"skip_final_backup",
+				},
 			},
 		},
 	})
@@ -114,10 +119,14 @@ func TestAccFSxONTAPVolume_aggregateConfiguration(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bypass_snaplock_enterprise_retention", "skip_final_backup"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"bypass_snaplock_enterprise_retention",
+					"final_backup_tags",
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccONTAPVolumeConfig_aggregateConstituents(rName, ConstituentsPerAggregate, ConstituentsPerAggregate*204800),
@@ -156,10 +165,14 @@ func TestAccFSxONTAPVolume_copyTagsToBackups(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bypass_snaplock_enterprise_retention", "skip_final_backup"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"bypass_snaplock_enterprise_retention",
+					"final_backup_tags",
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccONTAPVolumeConfig_copyTagsToBackups(rName, false),
@@ -196,10 +209,14 @@ func TestAccFSxONTAPVolume_junctionPath(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bypass_snaplock_enterprise_retention", "skip_final_backup"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"bypass_snaplock_enterprise_retention",
+					"final_backup_tags",
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccONTAPVolumeConfig_junctionPath(rName, jPath2),
@@ -235,10 +252,14 @@ func TestAccFSxONTAPVolume_name(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bypass_snaplock_enterprise_retention", "skip_final_backup"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"bypass_snaplock_enterprise_retention",
+					"final_backup_tags",
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccONTAPVolumeConfig_basic(rName2),
@@ -272,10 +293,14 @@ func TestAccFSxONTAPVolume_ontapVolumeType(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bypass_snaplock_enterprise_retention", "skip_final_backup"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"bypass_snaplock_enterprise_retention",
+					"final_backup_tags",
+					"skip_final_backup",
+				},
 			},
 		},
 	})
@@ -302,10 +327,14 @@ func TestAccFSxONTAPVolume_securityStyle(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bypass_snaplock_enterprise_retention", "skip_final_backup"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"bypass_snaplock_enterprise_retention",
+					"final_backup_tags",
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccONTAPVolumeConfig_securityStyle(rName, "NTFS"),
@@ -354,10 +383,14 @@ func TestAccFSxONTAPVolume_size(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bypass_snaplock_enterprise_retention", "skip_final_backup"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"bypass_snaplock_enterprise_retention",
+					"final_backup_tags",
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccONTAPVolumeConfig_size(rName, size2),
@@ -428,10 +461,14 @@ func TestAccFSxONTAPVolume_snaplock(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bypass_snaplock_enterprise_retention", "skip_final_backup"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"bypass_snaplock_enterprise_retention",
+					"final_backup_tags",
+					"skip_final_backup",
+				},
 			},
 			/*
 				See https://docs.aws.amazon.com/fsx/latest/ONTAPGuide/how-snaplock-works.html#snaplock-audit-log-volume.
@@ -491,10 +528,14 @@ func TestAccFSxONTAPVolume_snapshotPolicy(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bypass_snaplock_enterprise_retention", "skip_final_backup"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"bypass_snaplock_enterprise_retention",
+					"final_backup_tags",
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccONTAPVolumeConfig_snapshotPolicy(rName, policy2),
@@ -530,10 +571,14 @@ func TestAccFSxONTAPVolume_storageEfficiency(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bypass_snaplock_enterprise_retention", "skip_final_backup"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"bypass_snaplock_enterprise_retention",
+					"final_backup_tags",
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccONTAPVolumeConfig_storageEfficiency(rName, false),
@@ -569,10 +614,14 @@ func TestAccFSxONTAPVolume_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bypass_snaplock_enterprise_retention", "skip_final_backup"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"bypass_snaplock_enterprise_retention",
+					"final_backup_tags",
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccONTAPVolumeConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
@@ -618,10 +667,14 @@ func TestAccFSxONTAPVolume_tieringPolicy(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bypass_snaplock_enterprise_retention", "skip_final_backup"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"bypass_snaplock_enterprise_retention",
+					"final_backup_tags",
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccONTAPVolumeConfig_tieringPolicy(rName, "SNAPSHOT_ONLY", 10),
@@ -678,16 +731,76 @@ func TestAccFSxONTAPVolume_volumeStyle(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"bypass_snaplock_enterprise_retention", "skip_final_backup"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"bypass_snaplock_enterprise_retention",
+					"final_backup_tags",
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccONTAPVolumeConfig_ontapStyle(rName, style2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume),
 					resource.TestCheckResourceAttr(resourceName, "volume_style", style2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFSxONTAPVolume_deleteConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	if os.Getenv("FSX_CREATE_FINAL_BACKUP") != acctest.CtTrue {
+		t.Skip("Environment variable FSX_CREATE_FINAL_BACKUP is not set to true")
+	}
+
+	var volume1, volume2 fsx.Volume
+	resourceName := "aws_fsx_ontap_volume.test"
+	rName := fmt.Sprintf("tf_acc_test_%d", sdkacctest.RandInt())
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckONTAPVolumeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccONTAPVolumeConfig_deleteConfig(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume1),
+					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.0.key", acctest.CtKey1),
+					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.0.value", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.1.key", acctest.CtKey2),
+					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.1.value", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, "skip_final_backup", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"bypass_snaplock_enterprise_retention",
+					"final_backup_tags",
+					"skip_final_backup",
+				},
+			},
+			{
+				Config: testAccONTAPVolumeConfig_deleteConfig(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume2),
+					testAccCheckONTAPVolumeNotRecreated(&volume1, &volume2),
+					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.0.key", acctest.CtKey1),
+					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.0.value", acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.1.key", acctest.CtKey2),
+					resource.TestCheckResourceAttr(resourceName, "final_backup_tags.1.value", ""),
+					resource.TestCheckResourceAttr(resourceName, "skip_final_backup", acctest.CtFalse),
 				),
 			},
 		},
@@ -809,6 +922,7 @@ resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
   junction_path              = "/%[1]s"
   size_in_megabytes          = 1024
+  skip_final_backup          = true
   storage_efficiency_enabled = true
   storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
 }
@@ -821,6 +935,7 @@ resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
   junction_path              = "/%[1]s"
   size_in_megabytes          = 16 * 102400
+  skip_final_backup          = true
   storage_efficiency_enabled = true
   storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
   volume_style               = "FLEXGROUP"
@@ -839,6 +954,7 @@ resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
   junction_path              = "/%[1]s"
   size_in_megabytes          = %[3]d
+  skip_final_backup          = true
   storage_efficiency_enabled = true
   storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
   volume_style               = "FLEXGROUP"
@@ -858,6 +974,7 @@ resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
   junction_path              = "/%[1]s"
   size_in_megabytes          = 1024
+  skip_final_backup          = true
   storage_efficiency_enabled = true
   storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
   copy_tags_to_backups       = %[2]t
@@ -870,6 +987,7 @@ func testAccONTAPVolumeConfig_junctionPath(rName, junctionPath string) string {
 resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
   junction_path              = %[2]q
+  skip_final_backup          = true
   size_in_megabytes          = 1024
   storage_efficiency_enabled = true
   storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
@@ -896,6 +1014,7 @@ resource "aws_fsx_ontap_volume" "test" {
   junction_path              = "/%[1]s"
   size_in_megabytes          = 1024
   security_style             = %[2]q
+  skip_final_backup          = true
   storage_efficiency_enabled = true
   storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
 }
@@ -908,6 +1027,7 @@ resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
   junction_path              = "/%[1]s"
   size_in_megabytes          = %[2]d
+  skip_final_backup          = true
   storage_efficiency_enabled = true
   storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
 }
@@ -920,6 +1040,7 @@ resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
   junction_path              = "/%[1]s"
   size_in_bytes              = %[2]d
+  skip_final_backup          = true
   storage_efficiency_enabled = true
   storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
   volume_style               = "FLEXGROUP"
@@ -933,6 +1054,7 @@ resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
   junction_path              = "/%[1]s"
   size_in_megabytes          = 1024
+  skip_final_backup          = true
   storage_efficiency_enabled = true
   storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
 
@@ -952,6 +1074,7 @@ resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
   junction_path              = "/snaplock_audit_log"
   size_in_megabytes          = 1024
+  skip_final_backup          = true
   storage_efficiency_enabled = true
   storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
 
@@ -996,6 +1119,7 @@ resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
   junction_path              = "/%[1]s"
   size_in_megabytes          = 1024
+  skip_final_backup          = true
   snapshot_policy            = %[2]q
   storage_efficiency_enabled = true
   storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
@@ -1009,6 +1133,7 @@ resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
   junction_path              = "/%[1]s"
   size_in_megabytes          = 1024
+  skip_final_backup          = true
   storage_efficiency_enabled = %[2]t
   storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
 }
@@ -1021,6 +1146,7 @@ resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
   junction_path              = "/%[1]s"
   size_in_megabytes          = 1024
+  skip_final_backup          = true
   storage_efficiency_enabled = true
   storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
 
@@ -1038,6 +1164,7 @@ resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
   junction_path              = "/%[1]s"
   size_in_megabytes          = 1024
+  skip_final_backup          = true
   storage_efficiency_enabled = true
   storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
 
@@ -1054,6 +1181,7 @@ resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
   junction_path              = "/%[1]s"
   size_in_megabytes          = 1024
+  skip_final_backup          = true
   storage_efficiency_enabled = true
   storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
 
@@ -1070,6 +1198,7 @@ resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
   junction_path              = "/%[1]s"
   size_in_megabytes          = 1024
+  skip_final_backup          = true
   storage_efficiency_enabled = true
   storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
 
@@ -1093,4 +1222,25 @@ resource "aws_fsx_ontap_volume" "test" {
   storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
 }
 `, rName, style))
+}
+
+func testAccONTAPVolumeConfig_deleteConfig(rName, finalTagKey1, finalTagValue1, finalTagKey2, finalTagValue2 string) string {
+	return acctest.ConfigCompose(testAccONTAPVolumeConfig_base(rName), fmt.Sprintf(`
+resource "aws_fsx_ontap_volume" "test" {
+  name                       = %[1]q
+  junction_path              = "/%[1]s"
+  size_in_megabytes          = 1024
+  skip_final_backup          = false
+  storage_efficiency_enabled = true
+  storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
+  final_backup_tags {
+    key   = %[2]q
+    value = %[3]q
+  }
+  final_backup_tags {
+    key   = %[4]q
+    value = %[5]q
+  }
+}
+`, rName, finalTagKey1, finalTagValue1, finalTagKey2, finalTagValue2))
 }
