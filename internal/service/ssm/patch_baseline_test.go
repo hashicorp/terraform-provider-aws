@@ -527,7 +527,7 @@ resource "aws_ssm_patch_baseline" "test" {
   description                       = "Baseline containing all updates approved for production systems"
   approved_patches                  = ["KB123456"]
   approved_patches_compliance_level = "CRITICAL"
-  approval_rule  {
+  approval_rule {
     approve_until_date = "2024-01-02"
     patch_filter {
       key    = "CLASSIFICATION"
@@ -576,7 +576,7 @@ resource "aws_ssm_patch_baseline" "test" {
   description                       = "Baseline containing all updates approved for production systems - August 2017"
   approved_patches                  = ["KB123456", "KB456789"]
   approved_patches_compliance_level = "HIGH"
-  approval_rule  {
+  approval_rule {
     approve_after_days = 7
     patch_filter {
       key    = "CLASSIFICATION"
