@@ -16,6 +16,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
@@ -533,6 +534,17 @@ func TestAccKMSKey_tags_ignoreTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						acctest.CtKey2: knownvalue.StringExact(acctest.CtValue2),
+						"defkey1":      knownvalue.StringExact("defvalue1"),
+					})),
+				},
 			},
 			// Add an ignored tag.
 			{
@@ -542,6 +554,17 @@ func TestAccKMSKey_tags_ignoreTags(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccKeyConfig_ignoreTags(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyAddTag(ctx, &key, "ignkey1", "ignvalue1"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+			{
 				Config: testAccKeyConfig_ignoreTags(rName, acctest.CtKey1, acctest.CtValue1Updated, "key3", "value3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key),
@@ -549,6 +572,17 @@ func TestAccKMSKey_tags_ignoreTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, "tags.key3", "value3"),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+						"key3":         knownvalue.StringExact("value3"),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1Updated),
+						"key3":         knownvalue.StringExact("value3"),
+						"defkey1":      knownvalue.StringExact("defvalue1"),
+					})),
+				},
 			},
 		},
 	})
