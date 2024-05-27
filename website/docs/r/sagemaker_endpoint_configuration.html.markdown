@@ -86,7 +86,7 @@ This resource supports the following arguments:
 
 #### capture_options
 
-* `capture_mode` - (Required) Specifies the data to be captured. Should be one of `Input` or `Output`.
+* `capture_mode` - (Required) Specifies the data to be captured. Should be one of `Input` or `Output` or `InputAndOutput`.
 
 #### capture_content_type_header
 
