@@ -207,7 +207,107 @@ func testAccCheckDatasourceExists(ctx context.Context, n string, v *qbusiness.Ge
 func testAccDatasourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
+data "aws_ssoadmin_instances" "test" {}
 
+resource "aws_qbusiness_datasource" "test" {
+  application_id       = aws_qbusiness_app.test.id
+  index_id             = aws_qbusiness_index.test.index_id
+  display_name         = %[1]q
+  iam_service_role_arn = aws_iam_role.test.arn
+  sync_schedule		     = "cron(0 0 * * ? *)"
+
+
+  document_enrichment_configuration {
+    inline_configuration {
+
+      condition {
+        key = "STRING_VALUE"
+        operator = "EXISTS"
+        value {
+          string_list_value = ["STRING_VALUE", "STRING_VALUE1"]
+        }
+      }
+
+      document_content_operator = "DELETE"
+
+      target {
+        key = "STRING_VALUE"
+        attribute_value_operator = "DELETE"
+        value {
+          string_value = "STRING_VALUE"
+        }
+      }
+	  }
+  }
+  
+  configuration = jsonencode({
+    type                     = "S3"
+    version                  = "1.0.0"
+    connectionConfiguration  = {
+      repositoryEndpointMetadata = {
+        BucketName = aws_s3_bucket.test.bucket
+      }
+    }
+    enableIdentityCrawler    = false
+    syncMode                 = "FULL_CRAWL"
+    repositoryConfigurations = {
+      document = {
+        fieldMappings = []
+      }
+    }
+  })
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+  force_destroy = true
+} 
+
+resource "aws_qbusiness_app" "test" {
+  display_name         = %[1]q
+  iam_service_role_arn = aws_iam_role.test.arn
+
+  identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+
+  attachments_configuration {
+    attachments_control_mode = "ENABLED"
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+"Version": "2012-10-17",
+"Statement": [
+    {
+    "Action": "sts:AssumeRole",
+    "Principal": {
+        "Service": "qbusiness.${data.aws_partition.current.dns_suffix}"
+    },
+    "Effect": "Allow",
+    "Sid": ""
+    }
+    ]
+}
+EOF
+}
+
+resource "aws_qbusiness_index" "test" {
+  application_id       = aws_qbusiness_app.test.id
+  display_name         = %[1]q
+  capacity_configuration {
+    units = 1
+  }
+  description          = "Index name"
+}
+
+`, rName)
+}
+
+func testAccDatasourceConfig_basic1(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_qbusiness_datasource" "test" {
   application_id       = aws_qbusiness_app.test.application_id
   index_id             = aws_qbusiness_index.test.index_id
