@@ -1,5 +1,9 @@
 ## 5.52.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_kinesisanalyticsv2_application: Add `application_mode` argument ([#37714](https://github.com/hashicorp/terraform-provider-aws/issues/37714))
+
 BUG FIXES:
 
 * resource/aws_lightsail_instance: Fix crash when reading a resource that has a key-only tag ([#37587](https://github.com/hashicorp/terraform-provider-aws/issues/37587))
