@@ -3,10 +3,12 @@ account_id,AccountID
 action,Action
 address,Address
 alias,Alias
+allocated_storage,AllocatedStorage
 application_id,ApplicationID
 apply_immediately,ApplyImmediately
 arn,ARN
 arns,ARNs
+association_id,AssociationID
 attributes,Attributes
 auto_minor_version_upgrade,AutoMinorVersionUpgrade
 availability_zone,AvailabilityZone
@@ -19,6 +21,7 @@ catalog_id,CatalogID
 certificate,Certificate
 certificate_arn,CertificateARN
 certificate_chain,CertificateChain
+cidr_block,CIDRBlock
 client_id,ClientID
 client_secret,ClientSecret
 cluster_identifier,ClusterIdentifier
@@ -26,6 +29,7 @@ cluster_name,ClusterName
 comment,Comment
 condition,Condition
 configuration,Configuration
+connection_id,ConnectionID
 content,Content
 content_type,ContentType
 create_time,CreateTime
@@ -39,6 +43,7 @@ database_name,DatabaseName
 default_action,DefaultAction
 default_value,DefaultValue
 delete_on_termination,DeleteOnTermination
+deletion_protection,DeletionProtection
 description,Description
 destination,Destination
 destination_arn,DestinationARN
@@ -95,6 +100,7 @@ kms_key_arn,KMSKeyARN
 kms_key_id,KMSKeyID
 language_code,LanguageCode
 last_updated_date,LastUpdatedDate
+last_updated_time,LastUpdatedTime
 launch_template,LaunchTemplate
 log_group_name,LogGroupName
 logging_configuration,LoggingConfiguration
@@ -176,6 +182,7 @@ status,Status
 status_code,StatusCode
 status_message,StatusMessage
 status_reason,StatusReason
+storage_class,StorageClass
 storage_encrypted,StorageEncrypted
 storage_type,StorageType
 stream_arn,StreamARN
@@ -199,10 +206,12 @@ unit,Unit
 uri,URI
 url,URL
 user_name,UserName
+user_pool_id,UserPoolID
 username,Username
 value,Value
 values,Values
 version,Version
+virtual_name,VirtualName
 volume_size,VolumeSize
 volume_type,VolumeType
 vpc_config,VPCConfig
