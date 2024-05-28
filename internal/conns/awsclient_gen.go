@@ -164,6 +164,7 @@ import (
 	sts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sts"
 	swf_sdkv2 "github.com/aws/aws-sdk-go-v2/service/swf"
 	synthetics_sdkv2 "github.com/aws/aws-sdk-go-v2/service/synthetics"
+	timestreaminfluxdb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb"
 	timestreamwrite_sdkv2 "github.com/aws/aws-sdk-go-v2/service/timestreamwrite"
 	transcribe_sdkv2 "github.com/aws/aws-sdk-go-v2/service/transcribe"
 	transfer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/transfer"
@@ -1175,6 +1176,10 @@ func (c *AWSClient) StorageGatewayConn(ctx context.Context) *storagegateway_sdkv
 
 func (c *AWSClient) SyntheticsClient(ctx context.Context) *synthetics_sdkv2.Client {
 	return errs.Must(client[*synthetics_sdkv2.Client](ctx, c, names.Synthetics, make(map[string]any)))
+}
+
+func (c *AWSClient) TimestreamInfluxDBClient(ctx context.Context) *timestreaminfluxdb_sdkv2.Client {
+	return errs.Must(client[*timestreaminfluxdb_sdkv2.Client](ctx, c, names.TimestreamInfluxDB, make(map[string]any)))
 }
 
 func (c *AWSClient) TimestreamWriteClient(ctx context.Context) *timestreamwrite_sdkv2.Client {
