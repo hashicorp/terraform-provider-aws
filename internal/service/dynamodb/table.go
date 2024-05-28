@@ -237,6 +237,23 @@ func resourceTable() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"on_demand_throughput": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"max_read_request_units": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"max_write_request_units": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+					},
+				},
+			},
 			"point_in_time_recovery": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -670,15 +687,15 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.GlobalSecondaryIndexes = globalSecondaryIndexes
 		}
 
+		if v, ok := d.GetOk("on_demand_throughput"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.OnDemandThroughput = expandOnDemandThroughput(v.([]interface{})[0].(map[string]interface{}))
+		}
+
 		if v, ok := d.GetOk("stream_enabled"); ok {
 			input.StreamSpecification = &awstypes.StreamSpecification{
 				StreamEnabled:  aws.Bool(v.(bool)),
 				StreamViewType: awstypes.StreamViewType(d.Get("stream_view_type").(string)),
 			}
-		}
-
-		if v, ok := d.GetOk("server_side_encryption"); ok {
-			input.SSESpecification = expandEncryptAtRestOptions(v.([]interface{}))
 		}
 
 		if v, ok := d.GetOk("table_class"); ok {
@@ -803,6 +820,10 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	if err := d.Set("global_secondary_index", flattenTableGlobalSecondaryIndex(table.GlobalSecondaryIndexes)); err != nil {
 		return create.AppendDiagSettingError(diags, names.DynamoDB, resNameTable, d.Id(), "global_secondary_index", err)
+	}
+
+	if err := d.Set("on_demand_throughput", flattenOnDemandThroughput(table.OnDemandThroughput)); err != nil {
+		return create.AppendDiagSettingError(diags, names.DynamoDB, resNameTable, d.Id(), "on_demand_throughput", err)
 	}
 
 	if table.StreamSpecification != nil {
@@ -956,6 +977,13 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("deletion_protection_enabled") {
 		hasTableUpdate = true
 		input.DeletionProtectionEnabled = aws.Bool(d.Get("deletion_protection_enabled").(bool))
+	}
+
+	if d.HasChange("on_demand_throughput") {
+		hasTableUpdate = true
+		if v, ok := d.GetOk("on_demand_throughput"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.OnDemandThroughput = expandOnDemandThroughput(v.([]interface{})[0].(map[string]interface{}))
+		}
 	}
 
 	// make change when
@@ -2029,6 +2057,24 @@ func expandAttributes(cfg []interface{}) []awstypes.AttributeDefinition {
 	return attributes
 }
 
+func flattenOnDemandThroughput(apiObject *awstypes.OnDemandThroughput) []interface{} {
+	if apiObject == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if v := apiObject.MaxReadRequestUnits; v != nil {
+		m["max_read_request_units"] = aws.ToInt64(v)
+	}
+
+	if v := apiObject.MaxWriteRequestUnits; v != nil {
+		m["max_write_request_units"] = aws.ToInt64(v)
+	}
+
+	return []interface{}{m}
+}
+
 func flattenReplicaDescription(apiObject *awstypes.ReplicaDescription) map[string]interface{} {
 	if apiObject == nil {
 		return nil
@@ -2257,6 +2303,24 @@ func expandInputFormatOptions(data []interface{}) *awstypes.InputFormatOptions {
 	}
 
 	return a
+}
+
+func expandOnDemandThroughput(tfMap map[string]interface{}) *awstypes.OnDemandThroughput {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.OnDemandThroughput{}
+
+	if v, ok := tfMap["max_read_request_units"].(int64); ok {
+		apiObject.MaxReadRequestUnits = aws.Int64(v)
+	}
+
+	if v, ok := tfMap["max_write_request_units"].(int64); ok {
+		apiObject.MaxWriteRequestUnits = aws.Int64(v)
+	}
+
+	return apiObject
 }
 
 func expandS3BucketSource(data map[string]interface{}) *awstypes.S3BucketSource {
