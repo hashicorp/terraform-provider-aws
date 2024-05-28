@@ -42,7 +42,7 @@ func testAccProactiveEngagement_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProactiveEngagementAssociationExists(ctx, resourceName, &proactiveengagementassociation),
 					resource.TestCheckResourceAttr(resourceName, "emergency_contact.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 				),
 			},
 			{
@@ -76,7 +76,7 @@ func testAccProactiveEngagement_disabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProactiveEngagementAssociationExists(ctx, resourceName, &proactiveengagementassociation),
 					resource.TestCheckResourceAttr(resourceName, "emergency_contact.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
 		},

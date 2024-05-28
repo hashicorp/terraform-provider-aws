@@ -22,6 +22,7 @@ import (
 	"text/template"
 
 	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -154,7 +155,9 @@ type ResourceDatum struct {
 	ExistsTypeName    string
 	FileName          string
 	Generator         string
+	NoImport          bool
 	ImportStateID     string
+	ImportStateIDFunc string
 	ImportIgnore      []string
 	Implementation    implementation
 	Serialize         bool
@@ -164,7 +167,7 @@ type ResourceDatum struct {
 	GoImports         []goImport
 	GenerateConfig    bool
 	InitCodeBlocks    []codeBlock
-	AdditionalTfVars  map[string]string
+	AdditionalTfVars  map[string][]string
 }
 
 type goImport struct {
@@ -252,11 +255,14 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 	// Look first for tagging annotations.
 	d := ResourceDatum{
 		FileName:         v.fileName,
-		AdditionalTfVars: make(map[string]string),
+		AdditionalTfVars: make(map[string][]string),
 	}
+	dataSource := false
 	tagged := false
 	skip := false
 	generatorSeen := false
+	tlsKey := false
+	var tlsKeyCN string
 
 	for _, line := range funcDecl.Doc.List {
 		line := line.Text
@@ -286,6 +292,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				if attr, ok := args.Keyword["name"]; ok {
 					d.Name = strings.ReplaceAll(attr, " ", "")
 				}
+
+			case "SDKDataSource":
+				dataSource = true
+				break
 
 			case "Tags":
 				tagged = true
@@ -327,8 +337,20 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				if attr, ok := args.Keyword["importStateId"]; ok {
 					d.ImportStateID = attr
 				}
+				if attr, ok := args.Keyword["importStateIdFunc"]; ok {
+					d.ImportStateIDFunc = attr
+				}
 				if attr, ok := args.Keyword["name"]; ok {
 					d.Name = strings.ReplaceAll(attr, " ", "")
+				}
+				if attr, ok := args.Keyword["noImport"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid noImport value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						d.NoImport = b
+					}
+
 				}
 				if attr, ok := args.Keyword["preCheck"]; ok {
 					if b, err := strconv.ParseBool(attr); err != nil {
@@ -380,34 +402,48 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					if b, err := strconv.ParseBool(attr); err != nil {
 						v.errs = append(v.errs, fmt.Errorf("invalid skipEmptyTags value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 						continue
-					} else if b {
-						d.InitCodeBlocks = append(d.InitCodeBlocks, codeBlock{
-							Code: `privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-							certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, "example.com")`,
-						})
-						d.AdditionalTfVars["certificate_pem"] = "certificatePEM"
-						d.AdditionalTfVars["private_key_pem"] = "privateKeyPEM"
+					} else {
+						tlsKey = b
 					}
+				}
+				if attr, ok := args.Keyword["tlsKeyDomain"]; ok {
+					tlsKeyCN = attr
 				}
 			}
 		}
 	}
 
-	if !generatorSeen {
-		d.Generator = "sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)"
-		d.GoImports = append(d.GoImports,
-			goImport{
-				Path:  "github.com/hashicorp/terraform-plugin-testing/helper/acctest",
-				Alias: "sdkacctest",
-			},
-			goImport{
-				Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
-			},
-		)
+	if tlsKey {
+		if len(tlsKeyCN) == 0 {
+			tlsKeyCN = `"example.com"`
+		}
+		d.InitCodeBlocks = append(d.InitCodeBlocks, codeBlock{
+			Code: fmt.Sprintf(`privateKeyPEM := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+			certificatePEM := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKeyPEM, %s)`, tlsKeyCN),
+		})
+		d.AdditionalTfVars["certificate_pem"] = []string{acctest.ConstOrQuote("certificate_pem"), "certificatePEM"}
+		d.AdditionalTfVars["private_key_pem"] = []string{acctest.ConstOrQuote("private_key_pem"), "privateKeyPEM"}
+
 	}
 
-	if tagged && !skip {
-		v.taggedResources = append(v.taggedResources, d)
+	if tagged {
+		if dataSource {
+			v.g.Infof("Skipping tags test for %s.%s: Data Source", v.packageName, v.functionName)
+		} else if !skip {
+			if !generatorSeen {
+				d.Generator = "sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)"
+				d.GoImports = append(d.GoImports,
+					goImport{
+						Path:  "github.com/hashicorp/terraform-plugin-testing/helper/acctest",
+						Alias: "sdkacctest",
+					},
+					goImport{
+						Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
+					},
+				)
+			}
+			v.taggedResources = append(v.taggedResources, d)
+		}
 	}
 
 	v.functionName = ""

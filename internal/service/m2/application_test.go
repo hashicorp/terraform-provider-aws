@@ -43,7 +43,7 @@ func TestAccM2Application_basic(t *testing.T) {
 				Config: testAccApplicationConfig_basic(rName, "bluage"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrApplicationID),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "m2", regexache.MustCompile(`app/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "current_version", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "definition.#", acctest.Ct1),
@@ -169,7 +169,7 @@ func TestAccM2Application_full(t *testing.T) {
 				Config: testAccApplicationConfig_full(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrApplicationID),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "m2", regexache.MustCompile(`app/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "current_version", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "definition.#", acctest.Ct1),

@@ -43,7 +43,7 @@ func testAccStage_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "variables.%", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "canary_settings.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "xray_tracing_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "xray_tracing_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
@@ -66,7 +66,7 @@ func testAccStage_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "variables.%", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "variables.one", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "variables.three", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "xray_tracing_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "xray_tracing_enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -80,7 +80,7 @@ func testAccStage_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "canary_settings.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "variables.%", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "xray_tracing_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "xray_tracing_enabled", acctest.CtFalse),
 				),
 			},
 		},
@@ -103,7 +103,7 @@ func testAccStage_cache(t *testing.T) {
 				Config: testAccStageConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "cache_cluster_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "cache_cluster_enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -117,7 +117,7 @@ func testAccStage_cache(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "cache_cluster_size", "0.5"),
-					resource.TestCheckResourceAttr(resourceName, "cache_cluster_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cache_cluster_enabled", acctest.CtTrue),
 				),
 			},
 
@@ -126,14 +126,14 @@ func testAccStage_cache(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "cache_cluster_size", "1.6"),
-					resource.TestCheckResourceAttr(resourceName, "cache_cluster_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cache_cluster_enabled", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccStageConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "cache_cluster_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "cache_cluster_enabled", acctest.CtFalse),
 				),
 			},
 		},
@@ -158,7 +158,7 @@ func testAccStage_cacheSizeCacheDisabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "cache_cluster_size", "0.5"),
-					resource.TestCheckResourceAttr(resourceName, "cache_cluster_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cache_cluster_enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -172,7 +172,7 @@ func testAccStage_cacheSizeCacheDisabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "cache_cluster_size", "6.1"),
-					resource.TestCheckResourceAttr(resourceName, "cache_cluster_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cache_cluster_enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -180,7 +180,7 @@ func testAccStage_cacheSizeCacheDisabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "cache_cluster_size", ""),
-					resource.TestCheckResourceAttr(resourceName, "cache_cluster_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "cache_cluster_enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -188,7 +188,7 @@ func testAccStage_cacheSizeCacheDisabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "cache_cluster_size", "28.4"),
-					resource.TestCheckResourceAttr(resourceName, "cache_cluster_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "cache_cluster_enabled", acctest.CtFalse),
 				),
 			},
 		},
@@ -484,7 +484,7 @@ func testAccStage_canarySettings(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "variables.one", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.percent_traffic", "33.33"),
 					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.stage_variable_overrides.one", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.use_stage_cache", "true"),
+					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.use_stage_cache", acctest.CtTrue),
 				),
 			},
 			{
@@ -507,7 +507,7 @@ func testAccStage_canarySettings(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "variables.one", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.percent_traffic", "66.66"),
 					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.stage_variable_overrides.four", "5"),
-					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.use_stage_cache", "false"),
+					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.use_stage_cache", acctest.CtFalse),
 				),
 			},
 		},

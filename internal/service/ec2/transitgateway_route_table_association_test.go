@@ -42,7 +42,7 @@ func testAccTransitGatewayRouteTableAssociation_basic(t *testing.T, semaphore tf
 				Config: testAccTransitGatewayRouteTableAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRouteTableAssociationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "replace_existing_association", "false"),
+					resource.TestCheckResourceAttr(resourceName, "replace_existing_association", acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrResourceID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrResourceType),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayAttachmentID, transitGatewayVpcAttachmentResourceName, names.AttrID),
@@ -109,13 +109,13 @@ func testAccTransitGatewayRouteTableAssociation_replaceExistingAssociation(t *te
 				Config: testAccTransitGatewayRouteTableAssociationConfig_replaceExistingAssociation(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRouteTableAssociationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "replace_existing_association", "true"),
+					resource.TestCheckResourceAttr(resourceName, "replace_existing_association", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrResourceID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrResourceType),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayAttachmentID, transitGatewayVpcAttachmentResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_route_table_id", transitGatewayRouteTableResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(transitGatewayVpcAttachmentResourceName, "transit_gateway_default_route_table_association", "true"),
-					resource.TestCheckResourceAttr(transitGatewayVpcAttachmentResourceName, "transit_gateway_default_route_table_propagation", "true"),
+					resource.TestCheckResourceAttr(transitGatewayVpcAttachmentResourceName, "transit_gateway_default_route_table_association", acctest.CtTrue),
+					resource.TestCheckResourceAttr(transitGatewayVpcAttachmentResourceName, "transit_gateway_default_route_table_propagation", acctest.CtTrue),
 				),
 			},
 			{

@@ -45,7 +45,7 @@ func testAccDataLakeSettings_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "create_table_default_permissions.0.principal", "IAM_ALLOWED_PRINCIPALS"),
 					resource.TestCheckResourceAttr(resourceName, "create_table_default_permissions.0.permissions.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "create_table_default_permissions.0.permissions.0", "ALL"),
-					resource.TestCheckResourceAttr(resourceName, "allow_external_data_filtering", "true"),
+					resource.TestCheckResourceAttr(resourceName, "allow_external_data_filtering", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "external_data_filtering_allow_list.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "external_data_filtering_allow_list.0", "data.aws_caller_identity.current", names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "authorized_session_tag_value_list.#", acctest.Ct1),

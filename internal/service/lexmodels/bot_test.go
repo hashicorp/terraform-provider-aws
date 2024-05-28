@@ -57,13 +57,13 @@ func TestAccLexModelsBot_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(rName, "abort_statement"),
 					resource.TestCheckResourceAttrSet(rName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(rName, "checksum"),
-					resource.TestCheckResourceAttr(rName, "child_directed", "false"),
+					resource.TestCheckResourceAttr(rName, "child_directed", acctest.CtFalse),
 					resource.TestCheckNoResourceAttr(rName, "clarification_prompt"),
-					resource.TestCheckResourceAttr(rName, "create_version", "false"),
+					resource.TestCheckResourceAttr(rName, "create_version", acctest.CtFalse),
 					acctest.CheckResourceAttrRFC3339(rName, names.AttrCreatedDate),
 					resource.TestCheckResourceAttr(rName, names.AttrDescription, "Bot to order flowers on the behalf of a user"),
-					resource.TestCheckResourceAttr(rName, "detect_sentiment", "false"),
-					resource.TestCheckResourceAttr(rName, "enable_model_improvements", "false"),
+					resource.TestCheckResourceAttr(rName, "detect_sentiment", acctest.CtFalse),
+					resource.TestCheckResourceAttr(rName, "enable_model_improvements", acctest.CtFalse),
 					resource.TestCheckResourceAttr(rName, "failure_reason", ""),
 					resource.TestCheckResourceAttr(rName, "idle_session_ttl_in_seconds", "300"),
 					resource.TestCheckNoResourceAttr(rName, "intent"),
@@ -301,7 +301,7 @@ func TestAccLexModelsBot_childDirected(t *testing.T) {
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBotExists(ctx, rName, &v),
-					resource.TestCheckResourceAttr(rName, "child_directed", "true"),
+					resource.TestCheckResourceAttr(rName, "child_directed", acctest.CtTrue),
 				),
 			},
 			{
@@ -397,7 +397,7 @@ func TestAccLexModelsBot_detectSentiment(t *testing.T) {
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBotExists(ctx, rName, &v),
-					resource.TestCheckResourceAttr(rName, "detect_sentiment", "true"),
+					resource.TestCheckResourceAttr(rName, "detect_sentiment", acctest.CtTrue),
 				),
 			},
 			{
@@ -445,7 +445,7 @@ func TestAccLexModelsBot_enableModelImprovements(t *testing.T) {
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBotExists(ctx, rName, &v),
-					resource.TestCheckResourceAttr(rName, "enable_model_improvements", "true"),
+					resource.TestCheckResourceAttr(rName, "enable_model_improvements", acctest.CtTrue),
 					resource.TestCheckResourceAttr(rName, "nlu_intent_confidence_threshold", "0.5"),
 				),
 			},

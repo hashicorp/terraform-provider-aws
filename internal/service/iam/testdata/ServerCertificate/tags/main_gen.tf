@@ -31,4 +31,3 @@ variable "resource_tags" {
   type     = map(string)
   nullable = true
 }
-

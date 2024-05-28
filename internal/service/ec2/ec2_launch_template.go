@@ -89,7 +89,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"throughput": {
+									names.AttrThroughput: {
 										Type:         schema.TypeInt,
 										Computed:     true,
 										Optional:     true,
@@ -1393,7 +1393,7 @@ func expandLaunchTemplateEBSBlockDeviceRequest(tfMap map[string]interface{}) *ec
 		apiObject.SnapshotId = aws.String(v)
 	}
 
-	if v, ok := tfMap["throughput"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrThroughput].(int); ok && v != 0 {
 		apiObject.Throughput = aws.Int64(int64(v))
 	}
 
@@ -2415,7 +2415,7 @@ func flattenLaunchTemplateEBSBlockDevice(apiObject *ec2.LaunchTemplateEbsBlockDe
 	}
 
 	if v := apiObject.Throughput; v != nil {
-		tfMap["throughput"] = aws.Int64Value(v)
+		tfMap[names.AttrThroughput] = aws.Int64Value(v)
 	}
 
 	if v := apiObject.VolumeSize; v != nil {

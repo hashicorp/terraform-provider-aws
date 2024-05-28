@@ -52,7 +52,7 @@ func TestAccLightsailDatabase_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
-					resource.TestCheckResourceAttrSet(resourceName, "engine"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngine),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
 					resource.TestCheckResourceAttrSet(resourceName, "cpu_count"),
 					resource.TestCheckResourceAttrSet(resourceName, "ram_size"),
@@ -457,7 +457,7 @@ func TestAccLightsailDatabase_publiclyAccessible(t *testing.T) {
 				Config: testAccDatabaseConfig_publiclyAccessible(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, acctest.CtTrue),
 				),
 			},
 			{
@@ -475,7 +475,7 @@ func TestAccLightsailDatabase_publiclyAccessible(t *testing.T) {
 				Config: testAccDatabaseConfig_publiclyAccessible(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, acctest.CtFalse),
 				),
 			},
 		},
@@ -501,7 +501,7 @@ func TestAccLightsailDatabase_backupRetentionEnabled(t *testing.T) {
 				Config: testAccDatabaseConfig_backupRetentionEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "backup_retention_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -519,7 +519,7 @@ func TestAccLightsailDatabase_backupRetentionEnabled(t *testing.T) {
 				Config: testAccDatabaseConfig_backupRetentionEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "backup_retention_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_enabled", acctest.CtFalse),
 				),
 			},
 		},

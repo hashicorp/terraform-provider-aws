@@ -129,7 +129,7 @@ func ResourceAMI() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 						},
-						"throughput": {
+						names.AttrThroughput: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
@@ -629,7 +629,7 @@ func expandBlockDeviceMappingForAMIEBSBlockDevice(tfMap map[string]interface{}) 
 		apiObject.Ebs.Encrypted = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["throughput"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrThroughput].(int); ok && v != 0 {
 		apiObject.Ebs.Throughput = aws.Int64(int64(v))
 	}
 
@@ -706,7 +706,7 @@ func flattenBlockDeviceMappingForAMIEBSBlockDevice(apiObject *ec2.BlockDeviceMap
 	}
 
 	if v := apiObject.Ebs.Throughput; v != nil {
-		tfMap["throughput"] = aws.Int64Value(v)
+		tfMap[names.AttrThroughput] = aws.Int64Value(v)
 	}
 
 	if v := apiObject.Ebs.VolumeSize; v != nil {

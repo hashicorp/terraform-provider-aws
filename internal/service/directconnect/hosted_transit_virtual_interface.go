@@ -98,7 +98,7 @@ func ResourceHostedTransitVirtualInterface() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"owner_account_id": {
+			names.AttrOwnerAccountID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -125,7 +125,7 @@ func resourceHostedTransitVirtualInterfaceCreate(ctx context.Context, d *schema.
 
 	req := &directconnect.AllocateTransitVirtualInterfaceInput{
 		ConnectionId: aws.String(d.Get("connection_id").(string)),
-		OwnerAccount: aws.String(d.Get("owner_account_id").(string)),
+		OwnerAccount: aws.String(d.Get(names.AttrOwnerAccountID).(string)),
 		NewTransitVirtualInterfaceAllocation: &directconnect.NewTransitVirtualInterfaceAllocation{
 			AddressFamily:        aws.String(d.Get("address_family").(string)),
 			Asn:                  aws.Int64(int64(d.Get("bgp_asn").(int))),
@@ -192,7 +192,7 @@ func resourceHostedTransitVirtualInterfaceRead(ctx context.Context, d *schema.Re
 	d.Set("jumbo_frame_capable", vif.JumboFrameCapable)
 	d.Set("mtu", vif.Mtu)
 	d.Set(names.AttrName, vif.VirtualInterfaceName)
-	d.Set("owner_account_id", vif.OwnerAccount)
+	d.Set(names.AttrOwnerAccountID, vif.OwnerAccount)
 	d.Set("vlan", vif.Vlan)
 
 	return diags

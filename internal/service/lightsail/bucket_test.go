@@ -52,7 +52,7 @@ func TestAccLightsailBucket_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrURL),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrForceDelete),
-					resource.TestCheckResourceAttr(resourceName, names.AttrForceDelete, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrForceDelete, acctest.CtFalse),
 				),
 			},
 			{
@@ -261,7 +261,7 @@ func TestAccLightsailBucket_forceDelete(t *testing.T) {
 				Config: testAccBucketConfig_forceDelete(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrForceDelete, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrForceDelete, acctest.CtTrue),
 				),
 			},
 			{

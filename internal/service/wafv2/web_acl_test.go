@@ -66,9 +66,9 @@ func TestAccWAFV2WebACL_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "token_domains.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -107,9 +107,9 @@ func TestAccWAFV2WebACL_Update_rule(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.allow.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -120,9 +120,9 @@ func TestAccWAFV2WebACL_Update_rule(t *testing.T) {
 						"action.0.block.#":    acctest.Ct0,
 						"action.0.count.#":    acctest.Ct1,
 						"visibility_config.#": acctest.Ct1,
-						"visibility_config.0.cloudwatch_metrics_enabled": "false",
+						"visibility_config.0.cloudwatch_metrics_enabled": acctest.CtFalse,
 						"visibility_config.0.metric_name":                fmt.Sprintf("%s-metric-name-1", webACLName),
-						"visibility_config.0.sampled_requests_enabled":   "false",
+						"visibility_config.0.sampled_requests_enabled":   acctest.CtFalse,
 						"statement.#": acctest.Ct1,
 						"statement.0.size_constraint_statement.#":                                          acctest.Ct1,
 						"statement.0.size_constraint_statement.0.comparison_operator":                      "LT",
@@ -165,9 +165,9 @@ func TestAccWAFV2WebACL_Update_rule(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.allow.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -178,9 +178,9 @@ func TestAccWAFV2WebACL_Update_rule(t *testing.T) {
 						"action.0.block.#":    acctest.Ct0,
 						"action.0.count.#":    acctest.Ct1,
 						"visibility_config.#": acctest.Ct1,
-						"visibility_config.0.cloudwatch_metrics_enabled": "false",
+						"visibility_config.0.cloudwatch_metrics_enabled": acctest.CtFalse,
 						"visibility_config.0.metric_name":                ruleName1,
-						"visibility_config.0.sampled_requests_enabled":   "false",
+						"visibility_config.0.sampled_requests_enabled":   acctest.CtFalse,
 						"statement.#": acctest.Ct1,
 						"statement.0.size_constraint_statement.#":                                 acctest.Ct1,
 						"statement.0.size_constraint_statement.0.comparison_operator":             "LT",
@@ -205,9 +205,9 @@ func TestAccWAFV2WebACL_Update_rule(t *testing.T) {
 						"action.0.block.#":    acctest.Ct0,
 						"action.0.count.#":    acctest.Ct0,
 						"visibility_config.#": acctest.Ct1,
-						"visibility_config.0.cloudwatch_metrics_enabled": "false",
+						"visibility_config.0.cloudwatch_metrics_enabled": acctest.CtFalse,
 						"visibility_config.0.metric_name":                ruleName2,
-						"visibility_config.0.sampled_requests_enabled":   "false",
+						"visibility_config.0.sampled_requests_enabled":   acctest.CtFalse,
 						"statement.#":                                       acctest.Ct1,
 						"statement.0.geo_match_statement.#":                 acctest.Ct1,
 						"statement.0.geo_match_statement.0.country_codes.#": acctest.Ct2,
@@ -250,9 +250,9 @@ func TestAccWAFV2WebACL_Update_ruleProperties(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.allow.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -263,9 +263,9 @@ func TestAccWAFV2WebACL_Update_ruleProperties(t *testing.T) {
 						"action.0.block.#":    acctest.Ct0,
 						"action.0.count.#":    acctest.Ct1,
 						"visibility_config.#": acctest.Ct1,
-						"visibility_config.0.cloudwatch_metrics_enabled": "false",
+						"visibility_config.0.cloudwatch_metrics_enabled": acctest.CtFalse,
 						"visibility_config.0.metric_name":                ruleName1,
-						"visibility_config.0.sampled_requests_enabled":   "false",
+						"visibility_config.0.sampled_requests_enabled":   acctest.CtFalse,
 						"statement.#": acctest.Ct1,
 						"statement.0.size_constraint_statement.#":                                 acctest.Ct1,
 						"statement.0.size_constraint_statement.0.comparison_operator":             "LT",
@@ -290,9 +290,9 @@ func TestAccWAFV2WebACL_Update_ruleProperties(t *testing.T) {
 						"action.0.block.#":    acctest.Ct0,
 						"action.0.count.#":    acctest.Ct0,
 						"visibility_config.#": acctest.Ct1,
-						"visibility_config.0.cloudwatch_metrics_enabled": "false",
+						"visibility_config.0.cloudwatch_metrics_enabled": acctest.CtFalse,
 						"visibility_config.0.metric_name":                ruleName2,
-						"visibility_config.0.sampled_requests_enabled":   "false",
+						"visibility_config.0.sampled_requests_enabled":   acctest.CtFalse,
 						"statement.#":                                       acctest.Ct1,
 						"statement.0.geo_match_statement.#":                 acctest.Ct1,
 						"statement.0.geo_match_statement.0.country_codes.#": acctest.Ct2,
@@ -311,9 +311,9 @@ func TestAccWAFV2WebACL_Update_ruleProperties(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.allow.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -324,9 +324,9 @@ func TestAccWAFV2WebACL_Update_ruleProperties(t *testing.T) {
 						"action.0.block.#":    acctest.Ct0,
 						"action.0.count.#":    acctest.Ct1,
 						"visibility_config.#": acctest.Ct1,
-						"visibility_config.0.cloudwatch_metrics_enabled": "false",
+						"visibility_config.0.cloudwatch_metrics_enabled": acctest.CtFalse,
 						"visibility_config.0.metric_name":                ruleName1,
-						"visibility_config.0.sampled_requests_enabled":   "false",
+						"visibility_config.0.sampled_requests_enabled":   acctest.CtFalse,
 						"statement.#": acctest.Ct1,
 						"statement.0.size_constraint_statement.#":                                 acctest.Ct1,
 						"statement.0.size_constraint_statement.0.comparison_operator":             "LT",
@@ -351,9 +351,9 @@ func TestAccWAFV2WebACL_Update_ruleProperties(t *testing.T) {
 						"action.0.block.#":    acctest.Ct0,
 						"action.0.count.#":    acctest.Ct0,
 						"visibility_config.#": acctest.Ct1,
-						"visibility_config.0.cloudwatch_metrics_enabled": "false",
+						"visibility_config.0.cloudwatch_metrics_enabled": acctest.CtFalse,
 						"visibility_config.0.metric_name":                ruleName2,
-						"visibility_config.0.sampled_requests_enabled":   "false",
+						"visibility_config.0.sampled_requests_enabled":   acctest.CtFalse,
 						"statement.#":                                       acctest.Ct1,
 						"statement.0.geo_match_statement.#":                 acctest.Ct1,
 						"statement.0.geo_match_statement.0.country_codes.#": acctest.Ct2,
@@ -372,9 +372,9 @@ func TestAccWAFV2WebACL_Update_ruleProperties(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.allow.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -385,9 +385,9 @@ func TestAccWAFV2WebACL_Update_ruleProperties(t *testing.T) {
 						"action.0.block.#":    acctest.Ct0,
 						"action.0.count.#":    acctest.Ct1,
 						"visibility_config.#": acctest.Ct1,
-						"visibility_config.0.cloudwatch_metrics_enabled": "false",
+						"visibility_config.0.cloudwatch_metrics_enabled": acctest.CtFalse,
 						"visibility_config.0.metric_name":                ruleName1,
-						"visibility_config.0.sampled_requests_enabled":   "false",
+						"visibility_config.0.sampled_requests_enabled":   acctest.CtFalse,
 						"statement.#": acctest.Ct1,
 						"statement.0.size_constraint_statement.#":                                 acctest.Ct1,
 						"statement.0.size_constraint_statement.0.comparison_operator":             "LT",
@@ -412,9 +412,9 @@ func TestAccWAFV2WebACL_Update_ruleProperties(t *testing.T) {
 						"action.0.block.#":    acctest.Ct0,
 						"action.0.count.#":    acctest.Ct0,
 						"visibility_config.#": acctest.Ct1,
-						"visibility_config.0.cloudwatch_metrics_enabled": "false",
+						"visibility_config.0.cloudwatch_metrics_enabled": acctest.CtFalse,
 						"visibility_config.0.metric_name":                "updated",
-						"visibility_config.0.sampled_requests_enabled":   "false",
+						"visibility_config.0.sampled_requests_enabled":   acctest.CtFalse,
 						"statement.#":                                       acctest.Ct1,
 						"statement.0.geo_match_statement.#":                 acctest.Ct1,
 						"statement.0.geo_match_statement.0.country_codes.#": acctest.Ct2,
@@ -457,9 +457,9 @@ func TestAccWAFV2WebACL_Update_nameForceNew(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.allow.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -475,9 +475,9 @@ func TestAccWAFV2WebACL_Update_nameForceNew(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.allow.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", acctest.CtFalse),
 				),
 			},
 		},
@@ -789,7 +789,7 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_ManagedRuleGroupConfig_ACFPRuleSet(t *t
 						"statement.#":               acctest.Ct1,
 						"statement.0.managed_rule_group_statement.#":                                                                                                                         acctest.Ct1,
 						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.#":                                                          acctest.Ct1,
-						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.enable_regex_in_path":                                     "true",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.enable_regex_in_path":                                     acctest.CtTrue,
 						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.creation_path":                                            "/creation",
 						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.registration_page_path":                                   "/registration",
 						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_acfp_rule_set.0.request_inspection.#":                                     acctest.Ct1,
@@ -885,7 +885,7 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_ManagedRuleGroupConfig_ATPRuleSet(t *te
 						"statement.#":               acctest.Ct1,
 						"statement.0.managed_rule_group_statement.#":                                                                                                                acctest.Ct1,
 						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.#":                                                  acctest.Ct1,
-						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.enable_regex_in_path":                             "true",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.enable_regex_in_path":                             acctest.CtTrue,
 						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.login_path":                                       "/api/2/signin",
 						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.request_inspection.#":                             acctest.Ct1,
 						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_atp_rule_set.0.request_inspection.0.password_field.#":            acctest.Ct1,
@@ -1041,9 +1041,9 @@ func TestAccWAFV2WebACL_minimal(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.allow.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", acctest.CtFalse),
 				),
 			},
 		},
@@ -1426,14 +1426,14 @@ func TestAccWAFV2WebACL_GeoMatch_basic(t *testing.T) {
 						"statement.0.geo_match_statement.0.country_codes.0":       "US",
 						"statement.0.geo_match_statement.0.forwarded_ip_config.#": acctest.Ct0,
 						"visibility_config.#":                            acctest.Ct1,
-						"visibility_config.0.cloudwatch_metrics_enabled": "false",
+						"visibility_config.0.cloudwatch_metrics_enabled": acctest.CtFalse,
 						"visibility_config.0.metric_name":                "friendly-rule-metric-name",
-						"visibility_config.0.sampled_requests_enabled":   "false",
+						"visibility_config.0.sampled_requests_enabled":   acctest.CtFalse,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -1461,14 +1461,14 @@ func TestAccWAFV2WebACL_GeoMatch_basic(t *testing.T) {
 						"statement.0.geo_match_statement.0.country_codes.1":       "CA",
 						"statement.0.geo_match_statement.0.forwarded_ip_config.#": acctest.Ct0,
 						"visibility_config.#":                                     acctest.Ct1,
-						"visibility_config.0.cloudwatch_metrics_enabled":          "false",
+						"visibility_config.0.cloudwatch_metrics_enabled":          acctest.CtFalse,
 						"visibility_config.0.metric_name":                         "friendly-rule-metric-name",
-						"visibility_config.0.sampled_requests_enabled":            "false",
+						"visibility_config.0.sampled_requests_enabled":            acctest.CtFalse,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -1671,17 +1671,17 @@ func TestAccWAFV2WebACL_IPSetReference_basic(t *testing.T) {
 						"statement.0.ip_set_reference_statement.#":                              acctest.Ct1,
 						"statement.0.ip_set_reference_statement.0.ip_set_forwarded_ip_config.#": acctest.Ct0,
 						"visibility_config.#":                            acctest.Ct1,
-						"visibility_config.0.cloudwatch_metrics_enabled": "false",
+						"visibility_config.0.cloudwatch_metrics_enabled": acctest.CtFalse,
 						"visibility_config.0.metric_name":                "friendly-rule-metric-name",
-						"visibility_config.0.sampled_requests_enabled":   "false",
+						"visibility_config.0.sampled_requests_enabled":   acctest.CtFalse,
 					}),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]*regexp.Regexp{
 						"statement.0.ip_set_reference_statement.0.arn": regexache.MustCompile(`regional/ipset/.+$`),
 					}),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -2449,9 +2449,9 @@ func TestAccWAFV2WebACL_Custom_requestHandling(t *testing.T) {
 						names.AttrPriority:     acctest.Ct1,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -2488,9 +2488,9 @@ func TestAccWAFV2WebACL_Custom_requestHandling(t *testing.T) {
 						names.AttrPriority: acctest.Ct1,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -2523,9 +2523,9 @@ func TestAccWAFV2WebACL_Custom_requestHandling(t *testing.T) {
 						"captcha_config.0.immunity_time_property.0.immunity_time": "240",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "captcha_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "captcha_config.0.immunity_time_property.0.immunity_time", "120"),
 					resource.TestCheckResourceAttr(resourceName, "challenge_config.0.immunity_time_property.0.immunity_time", "300"),
@@ -2553,9 +2553,9 @@ func TestAccWAFV2WebACL_Custom_requestHandling(t *testing.T) {
 						names.AttrPriority:     acctest.Ct1,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", acctest.CtFalse),
 				),
 			},
 		},
@@ -2601,9 +2601,9 @@ func TestAccWAFV2WebACL_Custom_response(t *testing.T) {
 						names.AttrPriority: acctest.Ct1,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -2633,9 +2633,9 @@ func TestAccWAFV2WebACL_Custom_response(t *testing.T) {
 						names.AttrPriority: acctest.Ct1,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -2667,9 +2667,9 @@ func TestAccWAFV2WebACL_Custom_response(t *testing.T) {
 						names.AttrPriority: acctest.Ct1,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -2851,9 +2851,9 @@ func TestAccWAFV2WebACL_tokenDomains(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "token_domains.*", domain1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "token_domains.*", domain2),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
@@ -2867,7 +2867,7 @@ func TestAccWAFV2WebACL_tokenDomains(t *testing.T) {
 	})
 }
 
-func TestAccWAFV2WebACL_associationConfig(t *testing.T) {
+func TestAccWAFV2WebACL_associationConfigCloudFront(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.WebACL
 	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2883,7 +2883,7 @@ func TestAccWAFV2WebACL_associationConfig(t *testing.T) {
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLConfig_associationConfig(webACLName),
+				Config: testAccWebACLConfig_associationConfigCloudFront(webACLName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`global/webacl/.+$`)),
@@ -2898,9 +2898,60 @@ func TestAccWAFV2WebACL_associationConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, webACLName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeCloudfront)),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
-					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACL_associationConfigRegional(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.WebACL
+	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLConfig_associationConfigRegional(webACLName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebACLExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "association_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "association_config.0.request_body.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "association_config.0.request_body.0.api_gateway.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "association_config.0.request_body.0.api_gateway.0.default_size_inspection_limit", "KB_16"),
+					resource.TestCheckResourceAttr(resourceName, "association_config.0.request_body.0.cognito_user_pool.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "association_config.0.request_body.0.cognito_user_pool.0.default_size_inspection_limit", "KB_32"),
+					resource.TestCheckResourceAttr(resourceName, "association_config.0.request_body.0.app_runner_service.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "association_config.0.request_body.0.app_runner_service.0.default_size_inspection_limit", "KB_48"),
+					resource.TestCheckResourceAttr(resourceName, "association_config.0.request_body.0.verified_access_instance.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "association_config.0.request_body.0.verified_access_instance.0.default_size_inspection_limit", "KB_64"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.allow.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, webACLName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, webACLName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
+					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -5938,7 +5989,7 @@ resource "aws_wafv2_web_acl" "test" {
 `, rName)
 }
 
-func testAccWebACLConfig_associationConfig(rName string) string {
+func testAccWebACLConfig_associationConfigCloudFront(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
   name        = %[1]q
@@ -5952,6 +6003,43 @@ resource "aws_wafv2_web_acl" "test" {
   association_config {
     request_body {
       cloudfront {
+        default_size_inspection_limit = "KB_64"
+      }
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, rName)
+}
+
+func testAccWebACLConfig_associationConfigRegional(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name        = %[1]q
+  description = %[1]q
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  association_config {
+    request_body {
+      api_gateway {
+        default_size_inspection_limit = "KB_16"
+      }
+      cognito_user_pool {
+        default_size_inspection_limit = "KB_32"
+      }
+      app_runner_service {
+        default_size_inspection_limit = "KB_48"
+      }
+      verified_access_instance {
         default_size_inspection_limit = "KB_64"
       }
     }

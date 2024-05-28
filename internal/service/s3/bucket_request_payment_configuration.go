@@ -41,7 +41,7 @@ func resourceBucketRequestPaymentConfiguration() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 63),
 			},
-			"expected_bucket_owner": {
+			names.AttrExpectedBucketOwner: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -60,7 +60,7 @@ func resourceBucketRequestPaymentConfigurationCreate(ctx context.Context, d *sch
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket := d.Get(names.AttrBucket).(string)
-	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
+	expectedBucketOwner := d.Get(names.AttrExpectedBucketOwner).(string)
 	input := &s3.PutBucketRequestPaymentInput{
 		Bucket: aws.String(bucket),
 		RequestPaymentConfiguration: &types.RequestPaymentConfiguration{
@@ -117,7 +117,7 @@ func resourceBucketRequestPaymentConfigurationRead(ctx context.Context, d *schem
 	}
 
 	d.Set(names.AttrBucket, bucket)
-	d.Set("expected_bucket_owner", expectedBucketOwner)
+	d.Set(names.AttrExpectedBucketOwner, expectedBucketOwner)
 	d.Set("payer", output.Payer)
 
 	return nil

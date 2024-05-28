@@ -49,7 +49,7 @@ func dataSourceRoute() *schema.Resource {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				"resource_owner": {
+				names.AttrResourceOwner: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -85,7 +85,7 @@ func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta inter
 	meshOwner := aws.StringValue(route.Metadata.MeshOwner)
 	d.Set("mesh_owner", meshOwner)
 	d.Set(names.AttrName, route.RouteName)
-	d.Set("resource_owner", route.Metadata.ResourceOwner)
+	d.Set(names.AttrResourceOwner, route.Metadata.ResourceOwner)
 	if err := d.Set("spec", flattenRouteSpec(route.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}

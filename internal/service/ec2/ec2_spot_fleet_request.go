@@ -172,7 +172,7 @@ func ResourceSpotFleetRequest() *schema.Resource {
 										Computed: true,
 										ForceNew: true,
 									},
-									"throughput": {
+									names.AttrThroughput: {
 										Type:     schema.TypeInt,
 										Optional: true,
 										Computed: true,
@@ -296,7 +296,7 @@ func ResourceSpotFleetRequest() *schema.Resource {
 										Computed: true,
 										ForceNew: true,
 									},
-									"throughput": {
+									names.AttrThroughput: {
 										Type:     schema.TypeInt,
 										Optional: true,
 										Computed: true,
@@ -1368,7 +1368,7 @@ func readSpotFleetBlockDeviceMappingsFromConfig(ctx context.Context, d map[strin
 				ebs.Iops = aws.Int64(int64(v))
 			}
 
-			if v, ok := bd["throughput"].(int); ok && v > 0 {
+			if v, ok := bd[names.AttrThroughput].(int); ok && v > 0 {
 				ebs.Throughput = aws.Int64(int64(v))
 			}
 
@@ -1421,7 +1421,7 @@ func readSpotFleetBlockDeviceMappingsFromConfig(ctx context.Context, d map[strin
 				ebs.Iops = aws.Int64(int64(v))
 			}
 
-			if v, ok := bd["throughput"].(int); ok && v > 0 {
+			if v, ok := bd[names.AttrThroughput].(int); ok && v > 0 {
 				ebs.Throughput = aws.Int64(int64(v))
 			}
 
@@ -2004,7 +2004,7 @@ func ebsBlockDevicesToSet(bdm []*ec2.BlockDeviceMapping, rootDevName *string) *s
 			}
 
 			if ebs.Throughput != nil {
-				m["throughput"] = aws.Int64Value(ebs.Throughput)
+				m[names.AttrThroughput] = aws.Int64Value(ebs.Throughput)
 			}
 
 			set.Add(m)
@@ -2065,7 +2065,7 @@ func rootBlockDeviceToSet(bdm []*ec2.BlockDeviceMapping, rootDevName *string) *s
 				}
 
 				if val.Ebs.Throughput != nil {
-					m["throughput"] = aws.Int64Value(val.Ebs.Throughput)
+					m[names.AttrThroughput] = aws.Int64Value(val.Ebs.Throughput)
 				}
 
 				set.Add(m)

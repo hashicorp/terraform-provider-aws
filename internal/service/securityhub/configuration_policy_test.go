@@ -49,7 +49,7 @@ func testAccConfigurationPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "TestPolicy"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "This is a disabled policy"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.service_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.service_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.enabled_standard_arns.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.#", acctest.Ct0),
 				),
@@ -66,7 +66,7 @@ func testAccConfigurationPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "TestPolicy"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "This is an enabled policy"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.service_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.service_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.enabled_standard_arns.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.enabled_standard_arns.0", exampleStandardsARN),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.#", acctest.Ct1),
@@ -155,7 +155,7 @@ func testAccConfigurationPolicy_controlCustomParameters(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.1.parameter.*", map[string]string{
 						names.AttrName: "RequireLowercaseCharacters",
 						"value_type":   "CUSTOM",
-						"bool.0.value": "false",
+						"bool.0.value": acctest.CtFalse,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.1.parameter.*", map[string]string{
 						names.AttrName: "RequireUppercaseCharacters",
@@ -175,14 +175,14 @@ func testAccConfigurationPolicy_controlCustomParameters(t *testing.T) {
 			},
 			{
 				// bool type
-				Config: testAccConfigurationPolicyConfig_controlCustomParametersSingle(nistStandardsARN, "CloudWatch.15", "insufficientDataActionRequired", "bool", "true"),
+				Config: testAccConfigurationPolicyConfig_controlCustomParametersSingle(nistStandardsARN, "CloudWatch.15", "insufficientDataActionRequired", "bool", acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.0.security_control_id", "CloudWatch.15"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.0.parameter.*", map[string]string{
 						names.AttrName: "insufficientDataActionRequired",
 						"value_type":   "CUSTOM",
-						"bool.0.value": "true",
+						"bool.0.value": acctest.CtTrue,
 					}),
 				),
 			},

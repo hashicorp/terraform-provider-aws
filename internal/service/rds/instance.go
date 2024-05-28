@@ -296,7 +296,7 @@ func ResourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"engine": {
+			names.AttrEngine: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -480,7 +480,7 @@ func ResourceInstance() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"parameter_group_name": {
+			names.AttrParameterGroupName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -631,7 +631,7 @@ func ResourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"storage_encrypted": {
+			names.AttrStorageEncrypted: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				ForceNew: true,
@@ -679,7 +679,7 @@ func ResourceInstance() *schema.Resource {
 					return nil
 				}
 
-				engine := d.Get("engine").(string)
+				engine := d.Get(names.AttrEngine).(string)
 				if !slices.Contains(dbInstanceValidBlueGreenEngines(), engine) {
 					return fmt.Errorf(`"blue_green_update.enabled" cannot be set when "engine" is %q.`, engine)
 				}
@@ -817,7 +817,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.OptionGroupName = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("parameter_group_name"); ok {
+		if v, ok := d.GetOk(names.AttrParameterGroupName); ok {
 			crossRegion := false
 			if arn.IsARN(sourceDBInstanceID) {
 				sourceARN, err := arn.Parse(sourceDBInstanceID)
@@ -927,7 +927,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 		}
 
-		if v, ok := d.GetOk("parameter_group_name"); ok {
+		if v, ok := d.GetOk(names.AttrParameterGroupName); ok {
 			if len(output.DBInstance.DBParameterGroups) > 0 {
 				if current, desired := aws.StringValue(output.DBInstance.DBParameterGroups[0].DBParameterGroupName), v.(string); current != desired {
 					modifyDbInstanceInput.DBParameterGroupName = aws.String(desired)
@@ -945,7 +945,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		if _, ok := d.GetOk("allocated_storage"); !ok {
 			diags = sdkdiag.AppendErrorf(diags, `"allocated_storage": required field is not set`)
 		}
-		if _, ok := d.GetOk("engine"); !ok {
+		if _, ok := d.GetOk(names.AttrEngine); !ok {
 			diags = sdkdiag.AppendErrorf(diags, `"engine": required field is not set`)
 		}
 		if _, ok := d.GetOk(names.AttrUsername); !ok {
@@ -965,7 +965,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			DBInstanceIdentifier:    aws.String(identifier),
 			DBName:                  aws.String(d.Get("db_name").(string)),
 			DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
-			Engine:                  aws.String(d.Get("engine").(string)),
+			Engine:                  aws.String(d.Get(names.AttrEngine).(string)),
 			EngineVersion:           aws.String(d.Get(names.AttrEngineVersion).(string)),
 			MasterUsername:          aws.String(d.Get(names.AttrUsername).(string)),
 			PubliclyAccessible:      aws.Bool(d.Get(names.AttrPubliclyAccessible).(bool)),
@@ -974,7 +974,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			S3Prefix:                aws.String(tfMap[names.AttrBucketPrefix].(string)),
 			SourceEngine:            aws.String(tfMap["source_engine"].(string)),
 			SourceEngineVersion:     aws.String(tfMap["source_engine_version"].(string)),
-			StorageEncrypted:        aws.Bool(d.Get("storage_encrypted").(bool)),
+			StorageEncrypted:        aws.Bool(d.Get(names.AttrStorageEncrypted).(bool)),
 			Tags:                    getTagsIn(ctx),
 		}
 
@@ -1042,7 +1042,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.OptionGroupName = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("parameter_group_name"); ok {
+		if v, ok := d.GetOk(names.AttrParameterGroupName); ok {
 			input.DBParameterGroupName = aws.String(v.(string))
 		}
 
@@ -1120,7 +1120,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			Tags:                    getTagsIn(ctx),
 		}
 
-		engine := strings.ToLower(d.Get("engine").(string))
+		engine := strings.ToLower(d.Get(names.AttrEngine).(string))
 		if v, ok := d.GetOk("db_name"); ok {
 			// "Note: This parameter [DBName] doesn't apply to the MySQL, PostgreSQL, or MariaDB engines."
 			// https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_RestoreDBInstanceFromDBSnapshot.html
@@ -1280,7 +1280,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.OptionGroupName = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("parameter_group_name"); ok {
+		if v, ok := d.GetOk(names.AttrParameterGroupName); ok {
 			input.DBParameterGroupName = aws.String(v.(string))
 		}
 
@@ -1450,7 +1450,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.EnableCloudwatchLogsExports = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
-		if v, ok := d.GetOk("engine"); ok {
+		if v, ok := d.GetOk(names.AttrEngine); ok {
 			input.Engine = aws.String(v.(string))
 		}
 
@@ -1498,7 +1498,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.OptionGroupName = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("parameter_group_name"); ok {
+		if v, ok := d.GetOk(names.AttrParameterGroupName); ok {
 			input.DBParameterGroupName = aws.String(v.(string))
 		}
 
@@ -1551,7 +1551,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		if _, ok := d.GetOk("allocated_storage"); !ok {
 			diags = sdkdiag.AppendErrorf(diags, `"allocated_storage": required field is not set`)
 		}
-		if _, ok := d.GetOk("engine"); !ok {
+		if _, ok := d.GetOk(names.AttrEngine); !ok {
 			diags = sdkdiag.AppendErrorf(diags, `"engine": required field is not set`)
 		}
 		if _, ok := d.GetOk(names.AttrUsername); !ok {
@@ -1570,11 +1570,11 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			DBInstanceIdentifier:    aws.String(identifier),
 			DBName:                  aws.String(d.Get("db_name").(string)),
 			DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
-			Engine:                  aws.String(d.Get("engine").(string)),
+			Engine:                  aws.String(d.Get(names.AttrEngine).(string)),
 			EngineVersion:           aws.String(d.Get(names.AttrEngineVersion).(string)),
 			MasterUsername:          aws.String(d.Get(names.AttrUsername).(string)),
 			PubliclyAccessible:      aws.Bool(d.Get(names.AttrPubliclyAccessible).(bool)),
-			StorageEncrypted:        aws.Bool(d.Get("storage_encrypted").(bool)),
+			StorageEncrypted:        aws.Bool(d.Get(names.AttrStorageEncrypted).(bool)),
 			Tags:                    getTagsIn(ctx),
 		}
 
@@ -1698,7 +1698,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.MasterUserPassword = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("parameter_group_name"); ok {
+		if v, ok := d.GetOk(names.AttrParameterGroupName); ok {
 			input.DBParameterGroupName = aws.String(v.(string))
 		}
 
@@ -1868,7 +1868,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("domain_ou", nil)
 	}
 	d.Set("enabled_cloudwatch_logs_exports", aws.StringValueSlice(v.EnabledCloudwatchLogsExports))
-	d.Set("engine", v.Engine)
+	d.Set(names.AttrEngine, v.Engine)
 	d.Set("iam_database_authentication_enabled", v.IAMDatabaseAuthenticationEnabled)
 	d.Set(names.AttrIdentifier, v.DBInstanceIdentifier)
 	d.Set("identifier_prefix", create.NamePrefixFromName(aws.StringValue(v.DBInstanceIdentifier)))
@@ -1911,7 +1911,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("option_group_name", v.OptionGroupMemberships[0].OptionGroupName)
 	}
 	if len(v.DBParameterGroups) > 0 && v.DBParameterGroups[0] != nil {
-		d.Set("parameter_group_name", v.DBParameterGroups[0].DBParameterGroupName)
+		d.Set(names.AttrParameterGroupName, v.DBParameterGroups[0].DBParameterGroupName)
 	}
 	d.Set("performance_insights_enabled", v.PerformanceInsightsEnabled)
 	d.Set("performance_insights_kms_key_id", v.PerformanceInsightsKMSKeyId)
@@ -1923,7 +1923,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("replicate_source_db", v.ReadReplicaSourceDBInstanceIdentifier)
 	d.Set(names.AttrResourceID, v.DbiResourceId)
 	d.Set(names.AttrStatus, v.DBInstanceStatus)
-	d.Set("storage_encrypted", v.StorageEncrypted)
+	d.Set(names.AttrStorageEncrypted, v.StorageEncrypted)
 	d.Set("storage_throughput", v.StorageThroughput)
 	d.Set(names.AttrStorageType, v.StorageType)
 	d.Set("timezone", v.Timezone)
@@ -2173,8 +2173,8 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				// for the source
 			}
 
-			if d.HasChange("parameter_group_name") {
-				input.DBParameterGroupName = aws.String(d.Get("parameter_group_name").(string))
+			if d.HasChange(names.AttrParameterGroupName) {
+				input.DBParameterGroupName = aws.String(d.Get(names.AttrParameterGroupName).(string))
 			}
 
 			err := dbInstanceModify(ctx, conn, d.Id(), input, deadline.Remaining())
@@ -2545,7 +2545,7 @@ func isStorageTypeGP3BelowAllocatedStorageThreshold(d *schema.ResourceData) bool
 		return false
 	}
 
-	switch allocatedStorage, engine := d.Get("allocated_storage").(int), d.Get("engine").(string); engine {
+	switch allocatedStorage, engine := d.Get("allocated_storage").(int), d.Get(names.AttrEngine).(string); engine {
 	case InstanceEngineDB2Advanced, InstanceEngineDB2Standard:
 		return allocatedStorage < 100
 	case InstanceEngineMariaDB, InstanceEngineMySQL, InstanceEnginePostgres:

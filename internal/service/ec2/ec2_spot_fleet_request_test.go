@@ -242,7 +242,7 @@ func TestAccEC2SpotFleetRequest_associatePublicIPAddress(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
-						"associate_public_ip_address": "true",
+						"associate_public_ip_address": acctest.CtTrue,
 					}),
 				),
 			},
@@ -1412,7 +1412,7 @@ func TestAccEC2SpotFleetRequest_LaunchSpecification_ebsBlockDeviceGP3(t *testing
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*.ebs_block_device.*", map[string]string{
 						names.AttrDeviceName: "/dev/xvdcz",
 						names.AttrIOPS:       "4000",
-						"throughput":         "500",
+						names.AttrThroughput: "500",
 						names.AttrVolumeSize: "15",
 						names.AttrVolumeType: "gp3",
 					}),
@@ -1451,7 +1451,7 @@ func TestAccEC2SpotFleetRequest_LaunchSpecification_rootBlockDeviceGP3(t *testin
 					testAccCheckSpotFleetRequestExists(ctx, resourceName, &config),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*.root_block_device.*", map[string]string{
 						names.AttrIOPS:       "4000",
-						"throughput":         "500",
+						names.AttrThroughput: "500",
 						names.AttrVolumeSize: "15",
 						names.AttrVolumeType: "gp3",
 					}),
@@ -1725,7 +1725,7 @@ func TestAccEC2SpotFleetRequest_instanceStoreAMI(t *testing.T) {
 					testAccCheckSpotFleetRequestExists(ctx, resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.0.ebs_block_device.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "launch_specification.0.ebs_optimized", "false"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.0.ebs_optimized", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.0.root_block_device.#", acctest.Ct0),
 				),
 			},
@@ -1761,8 +1761,8 @@ func TestAccEC2SpotFleetRequest_noTerminateInstancesWithExpiration(t *testing.T)
 				Config: testAccSpotFleetRequestConfig_noTerminateInstancesExpiration(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
-					resource.TestCheckResourceAttr(resourceName, "terminate_instances_on_delete", "true"),
-					resource.TestCheckResourceAttr(resourceName, "terminate_instances_with_expiration", "false"),
+					resource.TestCheckResourceAttr(resourceName, "terminate_instances_on_delete", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "terminate_instances_with_expiration", acctest.CtFalse),
 				),
 			},
 			{

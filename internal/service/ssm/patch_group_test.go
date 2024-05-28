@@ -10,6 +10,7 @@ import (
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,7 +22,7 @@ import (
 func TestAccSSMPatchGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_ssm_patch_group.patchgroup"
+	resourceName := "aws_ssm_patch_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -42,7 +43,7 @@ func TestAccSSMPatchGroup_basic(t *testing.T) {
 func TestAccSSMPatchGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_ssm_patch_group.patchgroup"
+	resourceName := "aws_ssm_patch_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -82,6 +83,44 @@ func TestAccSSMPatchGroup_multipleBaselines(t *testing.T) {
 					testAccCheckPatchGroupExists(ctx, resourceName2),
 					testAccCheckPatchGroupExists(ctx, resourceName3),
 				),
+			},
+		},
+	})
+}
+
+// See https://github.com/hashicorp/terraform-provider-aws/issues/37622.
+func TestAccSSMPatchGroup_defaultPatchBaselines(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName1 := "aws_ssm_patch_group.test1"
+	resourceName2 := "aws_ssm_patch_group.test2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.SSMServiceID),
+		CheckDestroy: testAccCheckPatchGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.49.0",
+					},
+				},
+				Config: testAccPatchGroupConfig_defaultPatchBaselines(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPatchGroupExists(ctx, resourceName1),
+					testAccCheckPatchGroupExists(ctx, resourceName2),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccPatchGroupConfig_defaultPatchBaselines(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})
@@ -130,13 +169,13 @@ func testAccCheckPatchGroupExists(ctx context.Context, n string) resource.TestCh
 
 func testAccPatchGroupConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_ssm_patch_baseline" "foo" {
+resource "aws_ssm_patch_baseline" "test" {
   name             = %[1]q
   approved_patches = ["KB123456"]
 }
 
-resource "aws_ssm_patch_group" "patchgroup" {
-  baseline_id = aws_ssm_patch_baseline.foo.id
+resource "aws_ssm_patch_group" "test" {
+  baseline_id = aws_ssm_patch_baseline.test.id
   patch_group = %[1]q
 }
 `, rName)
@@ -174,6 +213,32 @@ resource "aws_ssm_patch_group" "test2" {
 
 resource "aws_ssm_patch_group" "test3" {
   baseline_id = aws_ssm_patch_baseline.test3.id
+  patch_group = %[1]q
+}
+`, rName)
+}
+
+func testAccPatchGroupConfig_defaultPatchBaselines(rName string) string {
+	return fmt.Sprintf(`
+data "aws_ssm_patch_baseline" "test1" {
+  operating_system = "AMAZON_LINUX_2"
+  owner            = "AWS"
+  default_baseline = true
+}
+
+resource "aws_ssm_patch_group" "test1" {
+  baseline_id = data.aws_ssm_patch_baseline.test1.id
+  patch_group = %[1]q
+}
+
+data "aws_ssm_patch_baseline" "test2" {
+  operating_system = "REDHAT_ENTERPRISE_LINUX"
+  owner            = "AWS"
+  default_baseline = true
+}
+
+resource "aws_ssm_patch_group" "test2" {
+  baseline_id = data.aws_ssm_patch_baseline.test2.id
   patch_group = %[1]q
 }
 `, rName)

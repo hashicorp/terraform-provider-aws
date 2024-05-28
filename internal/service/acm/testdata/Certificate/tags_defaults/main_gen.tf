@@ -14,8 +14,6 @@ resource "aws_acm_certificate" "test" {
   tags = var.resource_tags
 }
 
-
-
 variable "certificate_pem" {
   type     = string
   nullable = false

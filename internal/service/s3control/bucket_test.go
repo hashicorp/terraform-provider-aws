@@ -39,7 +39,7 @@ func TestAccS3ControlBucket_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttrPair(resourceName, "outpost_id", "data.aws_outposts_outpost.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "public_access_block_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "public_access_block_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},

@@ -40,7 +40,7 @@ func TestAccKinesisStream_basic(t *testing.T) {
 					testAccCheckStreamExists(ctx, resourceName, &stream),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "kinesis", fmt.Sprintf("stream/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "encryption_type", "NONE"),
-					resource.TestCheckResourceAttr(resourceName, "enforce_consumer_deletion", "false"),
+					resource.TestCheckResourceAttr(resourceName, "enforce_consumer_deletion", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRetentionPeriod, "24"),
