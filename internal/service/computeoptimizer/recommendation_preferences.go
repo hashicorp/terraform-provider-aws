@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 
-	// tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -154,8 +153,6 @@ func ResourceRecommendationPreferences() *schema.Resource {
 					},
 				},
 			},
-			// names.AttrTags:    tftags.TagsSchema(),
-			// names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"utilization_preferences": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -202,11 +199,12 @@ func resourceRecommendationPreferencesCreate(ctx context.Context, d *schema.Reso
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ComputeOptimizerClient(ctx)
 
-	// resourceType := d.Get("resource_type").(string)
-	resourceType := "Ec2Instance"
+	// ISSUE
+	// Potential Test, remove a d.get and use "Ec3Instance"
+	// resourceType := "Ec2Instance"
+	resourceType := d.Get("resource_type").(string)
 	in := &computeoptimizer.PutRecommendationPreferencesInput{
-		// ResourceType: types.ResourceType(*aws.String(d.Get("resource_type").(string))),
-		ResourceType: types.ResourceType(resourceType),
+		ResourceType: types.ResourceType(*aws.String(d.Get("resource_type").(string))),
 	}
 
 	recommendationPreferences := []string{}
@@ -283,7 +281,9 @@ func resourceRecommendationPreferencesRead(ctx context.Context, d *schema.Resour
 		return create.AppendDiagError(diags, names.ComputeOptimizer, create.ErrActionReading, ResNameRecommendationPreferences, d.Id(), err)
 	}
 
-	// TODO - How to set a list?
+	// ISSUE
+	// Question: How should I do an array of maps: resource types. Response is [{}...]
+	// Currently set to use first Resource Type
 	outputData := out.RecommendationPreferencesDetails
 	d.Set("resource_type", outputData[0].ResourceType)
 
@@ -347,7 +347,11 @@ func statusRecommendationPreferences(ctx context.Context, conn *computeoptimizer
 	}
 }
 
-func findRecommendationPreferencesByResource(ctx context.Context, conn *computeoptimizer.Client, resource string) (*computeoptimizer.GetRecommendationPreferencesOutput, error) { // doesn't returns subtype types.RecommendationPreferencesDetails with details
+func findRecommendationPreferencesByResource(ctx context.Context, conn *computeoptimizer.Client, resource string) (*computeoptimizer.GetRecommendationPreferencesOutput, error) { 
+	// ISSUE
+	// doesn't returns subtype types.RecommendationPreferencesDetails with details
+	// Returns metadata: middleware:
+	// https://github.com/aws/aws-sdk-go-v2/blob/service/computeoptimizer/v1.34.5/service/computeoptimizer/api_op_PutRecommendationPreferences.go#L159
 	in := &computeoptimizer.GetRecommendationPreferencesInput{
 		ResourceType: types.ResourceType(resource),
 	}
@@ -368,57 +372,6 @@ func findRecommendationPreferencesByResource(ctx context.Context, conn *computeo
 
 	return out, nil
 }
-
-// TIP: ==== FLEX ====
-// Flatteners and expanders ("flex" functions) help handle complex data
-// types. Flatteners take an API data type and return something you can use in
-// a d.Set() call. In other words, flatteners translate from AWS -> Terraform.
-//
-// On the other hand, expanders take a Terraform data structure and return
-// something that you can send to the AWS API. In other words, expanders
-// translate from Terraform -> AWS.
-//
-// See more:
-// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/
-// func flattenComplexArgument(apiObject *computeoptimizer.ComplexArgument) map[string]interface{} {
-// 	if apiObject == nil {
-// 		return nil
-// 	}
-
-// 	m := map[string]interface{}{}
-
-// 	if v := apiObject.SubFieldOne; v != nil {
-// 		m["sub_field_one"] = aws.ToString(v)
-// 	}
-
-// 	if v := apiObject.SubFieldTwo; v != nil {
-// 		m["sub_field_two"] = aws.ToString(v)
-// 	}
-
-// 	return m
-// }
-
-// TIP: Often the AWS API will return a slice of structures in response to a
-// request for information. Sometimes you will have set criteria (e.g., the ID)
-// that means you'll get back a one-length slice. This plural function works
-// brilliantly for that situation too.
-// func flattenComplexArguments(apiObjects []*computeoptimizer.ComplexArgument) []interface{} {
-// 	if len(apiObjects) == 0 {
-// 		return nil
-// 	}
-
-// 	var l []interface{}
-
-// 	for _, apiObject := range apiObjects {
-// 		if apiObject == nil {
-// 			continue
-// 		}
-
-// 		l = append(l, flattenComplexArgument(apiObject))
-// 	}
-
-// 	return l
-// }
 
 func expandExternalMetricsPreference(tfList []interface{}) *types.ExternalMetricsPreference {
 	if len(tfList) == 0 || tfList[0] == nil {
