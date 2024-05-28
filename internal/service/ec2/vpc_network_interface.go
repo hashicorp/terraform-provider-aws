@@ -1132,7 +1132,7 @@ func flattenNetworkInterfaceAssociation(apiObject *types.NetworkInterfaceAssocia
 	}
 
 	if v := apiObject.AssociationId; v != nil {
-		tfMap["association_id"] = aws.ToString(v)
+		tfMap[names.AttrAssociationID] = aws.ToString(v)
 	}
 
 	if v := apiObject.CarrierIp; v != nil {

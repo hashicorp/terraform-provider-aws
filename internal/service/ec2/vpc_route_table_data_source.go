@@ -62,7 +62,7 @@ func DataSourceRouteTable() *schema.Resource {
 						///
 						// Destinations.
 						///
-						"cidr_block": {
+						names.AttrCIDRBlock: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -293,7 +293,7 @@ func dataSourceRoutesRead(ctx context.Context, conn *ec2.Client, ec2Routes []aws
 		m := make(map[string]interface{})
 
 		if r.DestinationCidrBlock != nil {
-			m["cidr_block"] = aws.ToString(r.DestinationCidrBlock)
+			m[names.AttrCIDRBlock] = aws.ToString(r.DestinationCidrBlock)
 		}
 		if r.DestinationIpv6CidrBlock != nil {
 			m["ipv6_cidr_block"] = aws.ToString(r.DestinationIpv6CidrBlock)
