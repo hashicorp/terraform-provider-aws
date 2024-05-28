@@ -369,6 +369,171 @@ func TestAccGlueConnection_disappears(t *testing.T) {
 	})
 }
 
+func TestAccGlueConnection_azureCosmos(t *testing.T) {
+	ctx := acctest.Context(t)
+	var connection glue.Connection
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_glue_connection.test"
+	cosmosAccountEndpoint := "https://" + rName + ".documents.azure.com:443/"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConnectionConfig_azureCosmos(rName, cosmosAccountEndpoint),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConnectionExists(ctx, resourceName, &connection),
+					resource.TestCheckResourceAttr(resourceName, "connection_properties.%", acctest.Ct1),
+					resource.TestCheckResourceAttrSet(resourceName, "connection_properties.SparkProperties"),
+					resource.TestCheckResourceAttr(resourceName, "connection_type", "AZURECOSMOS"),
+					resource.TestCheckResourceAttr(resourceName, "match_criteria.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "physical_connection_requirements.#", acctest.Ct0),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccGlueConnection_azureSQL(t *testing.T) {
+	ctx := acctest.Context(t)
+	var connection glue.Connection
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_glue_connection.test"
+	url := "jdbc:sqlserver:" + rName + ".database.windows.net:1433;database=gluedatabase"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConnectionConfig_azureSQL(rName, url),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConnectionExists(ctx, resourceName, &connection),
+					resource.TestCheckResourceAttr(resourceName, "connection_properties.%", acctest.Ct1),
+					resource.TestCheckResourceAttrSet(resourceName, "connection_properties.SparkProperties"),
+					resource.TestCheckResourceAttr(resourceName, "connection_type", "AZURESQL"),
+					resource.TestCheckResourceAttr(resourceName, "match_criteria.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "physical_connection_requirements.#", acctest.Ct0),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccGlueConnection_bigQuery(t *testing.T) {
+	ctx := acctest.Context(t)
+	var connection glue.Connection
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_glue_connection.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConnectionConfig_bigQuery(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConnectionExists(ctx, resourceName, &connection),
+					resource.TestCheckResourceAttr(resourceName, "connection_properties.%", acctest.Ct1),
+					resource.TestCheckResourceAttrSet(resourceName, "connection_properties.SparkProperties"),
+					resource.TestCheckResourceAttr(resourceName, "connection_type", "BIGQUERY"),
+					resource.TestCheckResourceAttr(resourceName, "match_criteria.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "physical_connection_requirements.#", acctest.Ct0),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccGlueConnection_openSearch(t *testing.T) {
+	ctx := acctest.Context(t)
+	var connection glue.Connection
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_glue_connection.test"
+	region := acctest.Region()
+	endpoint := "https://" + rName + "-" + sdkacctest.RandString(26) + region + ".es.amazonaws.com"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConnectionConfig_openSearch(rName, endpoint, region),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConnectionExists(ctx, resourceName, &connection),
+					resource.TestCheckResourceAttr(resourceName, "connection_properties.%", acctest.Ct1),
+					resource.TestCheckResourceAttrSet(resourceName, "connection_properties.SparkProperties"),
+					resource.TestCheckResourceAttr(resourceName, "connection_type", "OPENSEARCH"),
+					resource.TestCheckResourceAttr(resourceName, "match_criteria.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "physical_connection_requirements.#", acctest.Ct0),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccGlueConnection_snowflake(t *testing.T) {
+	ctx := acctest.Context(t)
+	var connection glue.Connection
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_glue_connection.test"
+	sfUrl := "https://" + rName + ".snowflakecomputing.com"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConnectionConfig_snowflake(rName, sfUrl),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConnectionExists(ctx, resourceName, &connection),
+					resource.TestCheckResourceAttr(resourceName, "connection_properties.%", acctest.Ct1),
+					resource.TestCheckResourceAttrSet(resourceName, "connection_properties.SparkProperties"),
+					resource.TestCheckResourceAttr(resourceName, "connection_type", "SNOWFLAKE"),
+					resource.TestCheckResourceAttr(resourceName, "match_criteria.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "physical_connection_requirements.#", acctest.Ct0),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckConnectionExists(ctx context.Context, resourceName string, connection *glue.Connection) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -719,4 +884,162 @@ resource "aws_glue_connection" "test" {
   }
 }
 `, rName)
+}
+
+func testAccConnectionConfig_azureCosmos(rName, cosmosAccountEndpoint string) string {
+	return fmt.Sprintf(`
+resource "aws_secretsmanager_secret" "test" {
+  name = %[1]q
+}
+
+resource "aws_secretsmanager_secret_version" "test" {
+  secret_id = aws_secretsmanager_secret.test.id
+  secret_string = jsonencode({
+    username = "testusername"
+    password = "testpassword"
+  })
+}
+
+resource "aws_glue_connection" "test" {
+  name = %[1]q
+
+  connection_type = "AZURECOSMOS"
+  connection_properties = {
+    SparkProperties = jsonencode({
+      secretId                       = aws_secretsmanager_secret.test.name
+      "spark.cosmos.accountEndpoint" = %[2]q
+    })
+  }
+}
+`, rName, cosmosAccountEndpoint)
+}
+
+func testAccConnectionConfig_azureSQL(rName, url string) string {
+	return fmt.Sprintf(`
+resource "aws_secretsmanager_secret" "test" {
+  name = %[1]q
+}
+
+resource "aws_secretsmanager_secret_version" "test" {
+  secret_id = aws_secretsmanager_secret.test.id
+  secret_string = jsonencode({
+    username = "testusername"
+    password = "testpassword"
+  })
+}
+
+resource "aws_glue_connection" "test" {
+  name = %[1]q
+
+  connection_type = "AZURESQL"
+  connection_properties = {
+    SparkProperties = jsonencode({
+      secretId = aws_secretsmanager_secret.test.name
+      url      = %[2]q
+    })
+  }
+}
+`, rName, url)
+}
+
+func testAccConnectionConfig_bigQuery(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_secretsmanager_secret" "test" {
+  name = %[1]q
+}
+
+resource "aws_secretsmanager_secret_version" "test" {
+  secret_id = aws_secretsmanager_secret.test.id
+  secret_string = jsonencode({
+    credentials = base64encode(<<-EOT
+      {
+        "type": "service_account",
+        "project_id": %[1]q,
+        "private_key_id": "test-key",
+        "private_key": "-----BEGIN RSA PRIVATE KEY-----\nREDACTED\n-----END RSA PRIVATE KEY-----",
+        "client_email": "%[1]s@appspot.gserviceaccount.com",
+        "client_id": test-client",
+        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+        "token_uri": "https://oauth2.googleapis.com/token",
+        "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+        "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/%[1]s%%40appspot.gserviceaccount.com",
+        "universe_domain": "googleapis.com"
+      }
+      EOT
+    )
+  })
+}
+
+resource "aws_glue_connection" "test" {
+  name = %[1]q
+
+  connection_type = "BIGQUERY"
+  connection_properties = {
+    SparkProperties = jsonencode({
+      secretId = aws_secretsmanager_secret.test.name
+    })
+  }
+}
+`, rName)
+}
+
+func testAccConnectionConfig_openSearch(rName, endpoint, region string) string {
+	return fmt.Sprintf(`
+resource "aws_secretsmanager_secret" "test" {
+  name = %[1]q
+}
+
+resource "aws_secretsmanager_secret_version" "test" {
+  secret_id = aws_secretsmanager_secret.test.id
+  secret_string = jsonencode({
+    "opensearch.net.http.auth.user" = "testusername"
+    "opensearch.net.http.auth.pass" = "testpassword"
+  })
+}
+
+resource "aws_glue_connection" "test" {
+  name = %[1]q
+
+  connection_type = "OPENSEARCH"
+  connection_properties = {
+    SparkProperties = jsonencode({
+      secretId                       = aws_secretsmanager_secret.test.name
+      "opensearch.nodes"             = %[2]q
+      "opensearch.port"              = "443"
+      "opensearch.aws.sigv4.region"  = %[3]q
+      "opensearch.nodes.wan.only"    = "true"
+      "opensearch.aws.sigv4.enabled" = "true"
+    })
+  }
+}
+`, rName, endpoint, region)
+}
+
+func testAccConnectionConfig_snowflake(rName, sfUrl string) string {
+	return fmt.Sprintf(`
+resource "aws_secretsmanager_secret" "test" {
+  name = %[1]q
+}
+
+resource "aws_secretsmanager_secret_version" "test" {
+  secret_id = aws_secretsmanager_secret.test.id
+  secret_string = jsonencode({
+    sfUser     = "testusername"
+    sfPassword = "testpassword"
+  })
+}
+
+resource "aws_glue_connection" "test" {
+  name = %[1]q
+
+  connection_type = "SNOWFLAKE"
+  connection_properties = {
+    SparkProperties = jsonencode({
+      secretId = aws_secretsmanager_secret.test.name
+      sfRole   = "TESTETLROLE"
+      sfUrl    = %[2]q
+    })
+  }
+}
+`, rName, sfUrl)
 }

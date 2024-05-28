@@ -50,17 +50,19 @@ func ResourceConnection() *schema.Resource {
 				Computed: true,
 			},
 			"connection_properties": {
-				Type:         schema.TypeMap,
-				Optional:     true,
-				Sensitive:    true,
-				ValidateFunc: mapKeyInSlice(glue.ConnectionPropertyKey_Values(), false),
+				Type:      schema.TypeMap,
+				Optional:  true,
+				Sensitive: true,
+				// Temporary workaround for missing enum values in the SDK
+				ValidateFunc: mapKeyInSlice(getConnectionPropertyKeyValues(), false),
 				Elem:         &schema.Schema{Type: schema.TypeString},
 			},
 			"connection_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      glue.ConnectionTypeJdbc,
-				ValidateFunc: validation.StringInSlice(glue.ConnectionType_Values(), false),
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  glue.ConnectionTypeJdbc,
+				// Temporary workaround for missing enum values in the SDK
+				ValidateFunc: validation.StringInSlice(getConnectionTypeValues(), false),
 			},
 			names.AttrDescription: {
 				Type:         schema.TypeString,
@@ -315,4 +317,40 @@ func flattenPhysicalConnectionRequirements(physicalConnectionRequirements *glue.
 	}
 
 	return []map[string]interface{}{m}
+}
+
+func getConnectionPropertyKeyValues() []string {
+	connectionPropertyKeys := glue.ConnectionPropertyKey_Values()
+	missingCOnnectionPropertyKeys := []string{"SparkProperties"}
+	for _, missingConnectionPropertyKey := range missingCOnnectionPropertyKeys {
+		found := false
+		for _, connectionPropertyKey := range connectionPropertyKeys {
+			if connectionPropertyKey == missingConnectionPropertyKey {
+				found = true
+				break
+			}
+		}
+		if !found {
+			connectionPropertyKeys = append(connectionPropertyKeys, missingConnectionPropertyKey)
+		}
+	}
+	return connectionPropertyKeys
+}
+
+func getConnectionTypeValues() []string {
+	connectionTypes := glue.ConnectionType_Values()
+	missingConnectionTypes := []string{"AZURECOSMOS", "AZURESQL", "BIGQUERY", "OPENSEARCH", "SNOWFLAKE"}
+	for _, missingConnectionType := range missingConnectionTypes {
+		found := false
+		for _, connectionType := range connectionTypes {
+			if connectionType == missingConnectionType {
+				found = true
+				break
+			}
+		}
+		if !found {
+			connectionTypes = append(connectionTypes, missingConnectionType)
+		}
+	}
+	return connectionTypes
 }
