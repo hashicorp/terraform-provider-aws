@@ -38,7 +38,7 @@ func ResourceHostedConnection() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validConnectionBandWidth(),
 			},
-			"connection_id": {
+			names.AttrConnectionID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -107,7 +107,7 @@ func resourceHostedConnectionCreate(ctx context.Context, d *schema.ResourceData,
 	name := d.Get(names.AttrName).(string)
 	input := &directconnect.AllocateHostedConnectionInput{
 		Bandwidth:      aws.String(d.Get("bandwidth").(string)),
-		ConnectionId:   aws.String(d.Get("connection_id").(string)),
+		ConnectionId:   aws.String(d.Get(names.AttrConnectionID).(string)),
 		ConnectionName: aws.String(name),
 		OwnerAccount:   aws.String(d.Get(names.AttrOwnerAccountID).(string)),
 		Vlan:           aws.Int64(int64(d.Get("vlan").(int))),
