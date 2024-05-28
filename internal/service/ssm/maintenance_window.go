@@ -25,7 +25,7 @@ import (
 
 // @SDKResource("aws_ssm_maintenance_window", name="Maintenance Window")
 // @Tags(identifierAttribute="id", resourceType="MaintenanceWindow")
-// @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ssm;ssm.GetMaintenanceWindowOutput")
 func resourceMaintenanceWindow() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMaintenanceWindowCreate,
