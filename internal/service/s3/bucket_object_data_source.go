@@ -120,7 +120,7 @@ func dataSourceBucketObject() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"storage_class": {
+			names.AttrStorageClass: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -208,9 +208,9 @@ func dataSourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("sse_kms_key_id", out.SSEKMSKeyId)
 	// The "STANDARD" (which is also the default) storage
 	// class when set would not be included in the results.
-	d.Set("storage_class", types.ObjectStorageClassStandard)
+	d.Set(names.AttrStorageClass, types.ObjectStorageClassStandard)
 	if out.StorageClass != "" {
-		d.Set("storage_class", out.StorageClass)
+		d.Set(names.AttrStorageClass, out.StorageClass)
 	}
 	d.Set("version_id", out.VersionId)
 	d.Set("website_redirect_location", out.WebsiteRedirectLocation)

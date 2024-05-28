@@ -130,7 +130,7 @@ func ResourceProject() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"last_updated_time": {
+			names.AttrLastUpdatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -221,7 +221,7 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set(names.AttrDescription, project.Description)
 	d.Set("experiment_count", project.ExperimentCount)
 	d.Set("feature_count", project.FeatureCount)
-	d.Set("last_updated_time", aws.ToTime(project.LastUpdatedTime).Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedTime, aws.ToTime(project.LastUpdatedTime).Format(time.RFC3339))
 	d.Set("launch_count", project.LaunchCount)
 	d.Set(names.AttrName, project.Name)
 	d.Set(names.AttrStatus, project.Status)

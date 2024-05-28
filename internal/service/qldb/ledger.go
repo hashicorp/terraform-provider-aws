@@ -49,7 +49,7 @@ func resourceLedger() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"deletion_protection": {
+			names.AttrDeletionProtection: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
@@ -91,7 +91,7 @@ func resourceLedgerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	name := create.Name(d.Get(names.AttrName).(string), "tf")
 	input := &qldb.CreateLedgerInput{
-		DeletionProtection: aws.Bool(d.Get("deletion_protection").(bool)),
+		DeletionProtection: aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
 		Name:               aws.String(name),
 		PermissionsMode:    types.PermissionsMode(d.Get("permissions_mode").(string)),
 		Tags:               getTagsIn(ctx),
@@ -132,7 +132,7 @@ func resourceLedgerRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.Set(names.AttrARN, ledger.Arn)
-	d.Set("deletion_protection", ledger.DeletionProtection)
+	d.Set(names.AttrDeletionProtection, ledger.DeletionProtection)
 	if ledger.EncryptionDescription != nil {
 		d.Set(names.AttrKMSKey, ledger.EncryptionDescription.KmsKeyArn)
 	} else {
@@ -158,9 +158,9 @@ func resourceLedgerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	if d.HasChanges("deletion_protection", names.AttrKMSKey) {
+	if d.HasChanges(names.AttrDeletionProtection, names.AttrKMSKey) {
 		input := &qldb.UpdateLedgerInput{
-			DeletionProtection: aws.Bool(d.Get("deletion_protection").(bool)),
+			DeletionProtection: aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
 			Name:               aws.String(d.Id()),
 		}
 

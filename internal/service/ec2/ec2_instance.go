@@ -339,7 +339,7 @@ func ResourceInstance() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
-						"virtual_name": {
+						names.AttrVirtualName: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -349,7 +349,7 @@ func ResourceInstance() *schema.Resource {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
 					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m["virtual_name"].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrVirtualName].(string)))
 					if v, ok := m["no_device"].(bool); ok && v {
 						buf.WriteString(fmt.Sprintf("%t-", v))
 					}
@@ -2609,7 +2609,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 			bd := v.(map[string]interface{})
 			bdm := &ec2.BlockDeviceMapping{
 				DeviceName:  aws.String(bd[names.AttrDeviceName].(string)),
-				VirtualName: aws.String(bd["virtual_name"].(string)),
+				VirtualName: aws.String(bd[names.AttrVirtualName].(string)),
 			}
 			if v, ok := bd["no_device"].(bool); ok && v {
 				bdm.NoDevice = aws.String("")

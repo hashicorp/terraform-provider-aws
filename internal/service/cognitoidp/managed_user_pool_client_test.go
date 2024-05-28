@@ -73,7 +73,7 @@ func TestAccCognitoIDPManagedUserPoolClient_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "supported_identity_providers.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "supported_identity_providers.0", "COGNITO"),
 					resource.TestCheckResourceAttr(resourceName, "token_validity_units.#", acctest.Ct0),
-					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", "aws_cognito_user_pool.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrUserPoolID, "aws_cognito_user_pool.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "write_attributes.#", acctest.Ct0),
 				),
 			},

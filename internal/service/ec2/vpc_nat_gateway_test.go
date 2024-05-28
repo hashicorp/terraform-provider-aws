@@ -37,7 +37,7 @@ func TestAccVPCNATGateway_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
 					resource.TestCheckResourceAttrSet(resourceName, "allocation_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "association_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAssociationID),
 					resource.TestCheckResourceAttr(resourceName, "connectivity_type", "public"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrNetworkInterfaceID),
 					resource.TestCheckResourceAttrSet(resourceName, "private_ip"),
@@ -98,7 +98,7 @@ func TestAccVPCNATGateway_ConnectivityType_private(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
 					resource.TestCheckResourceAttr(resourceName, "allocation_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "association_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAssociationID, ""),
 					resource.TestCheckResourceAttr(resourceName, "connectivity_type", "private"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrNetworkInterfaceID),
 					resource.TestCheckResourceAttrSet(resourceName, "private_ip"),
@@ -134,7 +134,7 @@ func TestAccVPCNATGateway_privateIP(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
 					resource.TestCheckResourceAttr(resourceName, "allocation_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "association_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAssociationID, ""),
 					resource.TestCheckResourceAttr(resourceName, "connectivity_type", "private"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrNetworkInterfaceID),
 					resource.TestCheckResourceAttr(resourceName, "private_ip", "10.0.0.8"),

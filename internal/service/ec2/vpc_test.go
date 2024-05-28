@@ -39,7 +39,7 @@ func TestAccVPC_basic(t *testing.T) {
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc/vpc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "cidr_block", "10.1.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrCIDRBlock, "10.1.0.0/16"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_network_acl_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_route_table_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_security_group_id"),
@@ -1028,7 +1028,7 @@ func TestAccVPC_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "cidr_block", "10.1.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrCIDRBlock, "10.1.0.0/16"),
 					resource.TestCheckResourceAttrSet(resourceName, "ipv6_association_id"),
 					resource.TestMatchResourceAttr(resourceName, "ipv6_cidr_block", regexache.MustCompile(`/56$`)),
 				),
@@ -1043,7 +1043,7 @@ func TestAccVPC_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "cidr_block", "10.1.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrCIDRBlock, "10.1.0.0/16"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_association_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", ""),
 				),
@@ -1053,7 +1053,7 @@ func TestAccVPC_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "cidr_block", "10.1.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrCIDRBlock, "10.1.0.0/16"),
 					resource.TestCheckResourceAttrSet(resourceName, "ipv6_association_id"),
 					resource.TestMatchResourceAttr(resourceName, "ipv6_cidr_block", regexache.MustCompile(`/56$`)),
 				),
@@ -1163,7 +1163,7 @@ func TestAccVPC_IPAMIPv4BasicExplicitCIDR(t *testing.T) {
 				Config: testAccVPCConfig_ipamIPv4ExplicitCIDR(rName, cidr),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
-					resource.TestCheckResourceAttr(resourceName, "cidr_block", cidr),
+					resource.TestCheckResourceAttr(resourceName, names.AttrCIDRBlock, cidr),
 				),
 			},
 		},
@@ -1192,7 +1192,7 @@ func TestAccVPC_IPAMIPv6(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "cidr_block", "10.1.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrCIDRBlock, "10.1.0.0/16"),
 					resource.TestCheckResourceAttrSet(resourceName, "ipv6_association_id"),
 					resource.TestMatchResourceAttr(resourceName, "ipv6_cidr_block", regexache.MustCompile(`/56$`)),
 					resource.TestCheckResourceAttrSet(resourceName, "ipv6_cidr_block_network_border_group"),

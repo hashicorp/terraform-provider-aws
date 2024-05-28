@@ -88,7 +88,7 @@ func ResourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"allocated_storage": {
+			names.AttrAllocatedStorage: {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -242,7 +242,7 @@ func ResourceInstance() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
-			"deletion_protection": {
+			names.AttrDeletionProtection: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -440,7 +440,7 @@ func ResourceInstance() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "0" && new == fmt.Sprintf("%d", d.Get("allocated_storage").(int)) {
+					if old == "0" && new == fmt.Sprintf("%d", d.Get(names.AttrAllocatedStorage).(int)) {
 						return true
 					}
 					return false
@@ -749,13 +749,13 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			CopyTagsToSnapshot:         aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 			DBInstanceClass:            aws.String(d.Get("instance_class").(string)),
 			DBInstanceIdentifier:       aws.String(identifier),
-			DeletionProtection:         aws.Bool(d.Get("deletion_protection").(bool)),
+			DeletionProtection:         aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
 			PubliclyAccessible:         aws.Bool(d.Get(names.AttrPubliclyAccessible).(bool)),
 			SourceDBInstanceIdentifier: aws.String(sourceDBInstanceID),
 			Tags:                       getTagsIn(ctx),
 		}
 
-		if _, ok := d.GetOk("allocated_storage"); ok {
+		if _, ok := d.GetOk(names.AttrAllocatedStorage); ok {
 			// RDS doesn't allow modifying the storage of a replica within the first 6h of creation.
 			// allocated_storage is inherited from the primary so only the same value or no value is correct; a different value would fail the creation.
 			// A different value is possible, granted: the value is higher than the current, there has been 6h between
@@ -942,7 +942,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			requiresModifyDbInstance = true
 		}
 	} else if v, ok := d.GetOk("s3_import"); ok {
-		if _, ok := d.GetOk("allocated_storage"); !ok {
+		if _, ok := d.GetOk(names.AttrAllocatedStorage); !ok {
 			diags = sdkdiag.AppendErrorf(diags, `"allocated_storage": required field is not set`)
 		}
 		if _, ok := d.GetOk(names.AttrEngine); !ok {
@@ -957,14 +957,14 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		tfMap := v.([]interface{})[0].(map[string]interface{})
 		input := &rds.RestoreDBInstanceFromS3Input{
-			AllocatedStorage:        aws.Int64(int64(d.Get("allocated_storage").(int))),
+			AllocatedStorage:        aws.Int64(int64(d.Get(names.AttrAllocatedStorage).(int))),
 			AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
 			BackupRetentionPeriod:   aws.Int64(int64(d.Get("backup_retention_period").(int))),
 			CopyTagsToSnapshot:      aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 			DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
 			DBInstanceIdentifier:    aws.String(identifier),
 			DBName:                  aws.String(d.Get("db_name").(string)),
-			DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
+			DeletionProtection:      aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
 			Engine:                  aws.String(d.Get(names.AttrEngine).(string)),
 			EngineVersion:           aws.String(d.Get(names.AttrEngineVersion).(string)),
 			MasterUsername:          aws.String(d.Get(names.AttrUsername).(string)),
@@ -1115,7 +1115,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
 			DBInstanceIdentifier:    aws.String(identifier),
 			DBSnapshotIdentifier:    aws.String(v.(string)),
-			DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
+			DeletionProtection:      aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
 			PubliclyAccessible:      aws.Bool(d.Get(names.AttrPubliclyAccessible).(bool)),
 			Tags:                    getTagsIn(ctx),
 		}
@@ -1132,7 +1132,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 		}
 
-		if v, ok := d.GetOk("allocated_storage"); ok {
+		if v, ok := d.GetOk(names.AttrAllocatedStorage); ok {
 			modifyDbInstanceInput.AllocatedStorage = aws.Int64(int64(v.(int)))
 			requiresModifyDbInstance = true
 		}
@@ -1366,7 +1366,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			AutoMinorVersionUpgrade:    aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
 			CopyTagsToSnapshot:         aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 			DBInstanceClass:            aws.String(d.Get("instance_class").(string)),
-			DeletionProtection:         aws.Bool(d.Get("deletion_protection").(bool)),
+			DeletionProtection:         aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
 			PubliclyAccessible:         aws.Bool(d.Get(names.AttrPubliclyAccessible).(bool)),
 			Tags:                       getTagsIn(ctx),
 			TargetDBInstanceIdentifier: aws.String(identifier),
@@ -1548,7 +1548,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			resourceID = aws.StringValue(output.DBInstance.DbiResourceId)
 		}
 	} else {
-		if _, ok := d.GetOk("allocated_storage"); !ok {
+		if _, ok := d.GetOk(names.AttrAllocatedStorage); !ok {
 			diags = sdkdiag.AppendErrorf(diags, `"allocated_storage": required field is not set`)
 		}
 		if _, ok := d.GetOk(names.AttrEngine); !ok {
@@ -1562,14 +1562,14 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		input := &rds.CreateDBInstanceInput{
-			AllocatedStorage:        aws.Int64(int64(d.Get("allocated_storage").(int))),
+			AllocatedStorage:        aws.Int64(int64(d.Get(names.AttrAllocatedStorage).(int))),
 			AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
 			BackupRetentionPeriod:   aws.Int64(int64(d.Get("backup_retention_period").(int))),
 			CopyTagsToSnapshot:      aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 			DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
 			DBInstanceIdentifier:    aws.String(identifier),
 			DBName:                  aws.String(d.Get("db_name").(string)),
-			DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
+			DeletionProtection:      aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
 			Engine:                  aws.String(d.Get(names.AttrEngine).(string)),
 			EngineVersion:           aws.String(d.Get(names.AttrEngineVersion).(string)),
 			MasterUsername:          aws.String(d.Get(names.AttrUsername).(string)),
@@ -1833,7 +1833,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.SetId(aws.StringValue(v.DbiResourceId))
 
-	d.Set("allocated_storage", v.AllocatedStorage)
+	d.Set(names.AttrAllocatedStorage, v.AllocatedStorage)
 	d.Set(names.AttrARN, v.DBInstanceArn)
 	d.Set(names.AttrAutoMinorVersionUpgrade, v.AutoMinorVersionUpgrade)
 	d.Set(names.AttrAvailabilityZone, v.AvailabilityZone)
@@ -1850,7 +1850,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("db_subnet_group_name", v.DBSubnetGroup.DBSubnetGroupName)
 	}
 	d.Set("dedicated_log_volume", v.DedicatedLogVolume)
-	d.Set("deletion_protection", v.DeletionProtection)
+	d.Set(names.AttrDeletionProtection, v.DeletionProtection)
 	if len(v.DomainMemberships) > 0 && v.DomainMemberships[0] != nil {
 		v := v.DomainMemberships[0]
 		d.Set(names.AttrDomain, v.Domain)
@@ -2007,7 +2007,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			"replicate_source_db",
 			"skip_final_snapshot",
 			names.AttrTags, names.AttrTagsAll,
-			"deletion_protection",
+			names.AttrDeletionProtection,
 			names.AttrPassword,
 		) {
 			orchestrator := newBlueGreenOrchestrator(conn)
@@ -2100,7 +2100,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment source: %s", d.Get(names.AttrIdentifier).(string), err)
 			}
-			if d.Get("deletion_protection").(bool) {
+			if d.Get(names.AttrDeletionProtection).(bool) {
 				input := &rds_sdkv2.ModifyDBInstanceInput{
 					ApplyImmediately:     aws.Bool(true),
 					DBInstanceIdentifier: aws.String(sourceARN.Identifier),
@@ -2190,9 +2190,9 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.ResourceData) bool {
 	needsModify := false
 
-	if d.HasChanges("allocated_storage", names.AttrIOPS) {
+	if d.HasChanges(names.AttrAllocatedStorage, names.AttrIOPS) {
 		needsModify = true
-		input.AllocatedStorage = aws.Int32(int32(d.Get("allocated_storage").(int)))
+		input.AllocatedStorage = aws.Int32(int32(d.Get(names.AttrAllocatedStorage).(int)))
 
 		// Send Iops if it has changed or not (StorageType == "gp3" and AllocatedStorage < threshold).
 		if d.HasChange(names.AttrIOPS) || !isStorageTypeGP3BelowAllocatedStorageThreshold(d) {
@@ -2240,11 +2240,11 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 		input.DedicatedLogVolume = aws.Bool(d.Get("dedicated_log_volume").(bool))
 	}
 
-	if d.HasChange("deletion_protection") {
+	if d.HasChange(names.AttrDeletionProtection) {
 		needsModify = true
 	}
 	// Always set this. Fixes TestAccRDSInstance_BlueGreenDeployment_updateWithDeletionProtection
-	input.DeletionProtection = aws.Bool(d.Get("deletion_protection").(bool))
+	input.DeletionProtection = aws.Bool(d.Get(names.AttrDeletionProtection).(bool))
 
 	// "InvalidParameterCombination: Specify the parameters for either AWS Managed Active Directory or self-managed Active Directory".
 	if d.HasChanges(names.AttrDomain, "domain_iam_role_name") {
@@ -2323,7 +2323,7 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 		// value when disabling autoscaling. This check ensures that value is set correctly
 		// if the update to the Terraform configuration was removing the argument completely.
 		if v == 0 {
-			v = d.Get("allocated_storage").(int)
+			v = d.Get(names.AttrAllocatedStorage).(int)
 		}
 
 		input.MaxAllocatedStorage = aws.Int32(int32(v))
@@ -2399,7 +2399,7 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 		}
 
 		if input.AllocatedStorage == nil {
-			input.AllocatedStorage = aws.Int32(int32(d.Get("allocated_storage").(int)))
+			input.AllocatedStorage = aws.Int32(int32(d.Get(names.AttrAllocatedStorage).(int)))
 		}
 	}
 
@@ -2479,7 +2479,7 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta in
 	_, err := conn.DeleteDBInstanceWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterCombination, "disable deletion pro") {
-		if v, ok := d.GetOk("deletion_protection"); (!ok || !v.(bool)) && d.Get(names.AttrApplyImmediately).(bool) {
+		if v, ok := d.GetOk(names.AttrDeletionProtection); (!ok || !v.(bool)) && d.Get(names.AttrApplyImmediately).(bool) {
 			_, ierr := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutUpdate),
 				func() (interface{}, error) {
 					return conn.ModifyDBInstanceWithContext(ctx, &rds.ModifyDBInstanceInput{
@@ -2545,7 +2545,7 @@ func isStorageTypeGP3BelowAllocatedStorageThreshold(d *schema.ResourceData) bool
 		return false
 	}
 
-	switch allocatedStorage, engine := d.Get("allocated_storage").(int), d.Get(names.AttrEngine).(string); engine {
+	switch allocatedStorage, engine := d.Get(names.AttrAllocatedStorage).(int), d.Get(names.AttrEngine).(string); engine {
 	case InstanceEngineDB2Advanced, InstanceEngineDB2Standard:
 		return allocatedStorage < 100
 	case InstanceEngineMariaDB, InstanceEngineMySQL, InstanceEnginePostgres:
