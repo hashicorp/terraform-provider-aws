@@ -25,8 +25,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// bedrock has this commented out... double check 
-@FrameworkResource(name="App Bundle")
+//@FrameworkResource(name="App Bundle")
+// @Tags(identifierAttribute="arn")
 
 func newResourceAppBundle(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceAppBundle{}
