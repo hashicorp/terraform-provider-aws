@@ -401,11 +401,11 @@ func TestAccGlueJob_maintenanceWindow(t *testing.T) {
 		CheckDestroy:             testAccCheckJobDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobConfig_maintenanceWindow(rName, "sun:23:00"),
+				Config: testAccJobConfig_maintenanceWindow(rName, "sun:23"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "glue", fmt.Sprintf("job/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "maintenance_window", "sun:23:00"),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_window", "sun:23"),
 				),
 			},
 			{
