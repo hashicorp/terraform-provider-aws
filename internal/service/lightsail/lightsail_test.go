@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // serializing tests so that we do not hit the lightsail rate limit for distributions
@@ -21,7 +22,7 @@ func TestAccLightsail_serial(t *testing.T) {
 	semaphore := tfsync.GetSemaphore("Lightsail", "AWS_LIGHTSAIL_LIMIT", 6)
 
 	testCases := map[string]map[string]func(*testing.T, tfsync.Semaphore){
-		"database": {
+		names.AttrDatabase: {
 			"backupRetentionEnabled":     testAccDatabase_backupRetentionEnabled,
 			acctest.CtBasic:              testAccDatabase_basic,
 			acctest.CtDisappears:         testAccDatabase_disappears,
@@ -37,7 +38,7 @@ func TestAccLightsail_serial(t *testing.T) {
 			"tags":                       testAccDatabase_tags,
 			"keyOnlyTags":                testAccDatabase_keyOnlyTags,
 		},
-		"domain": {
+		names.AttrDomain: {
 			acctest.CtBasic:      testAccDomain_basic,
 			acctest.CtDisappears: testAccDomain_disappears,
 		},
@@ -53,6 +54,6 @@ func TestAccLightsail_serial(t *testing.T) {
 	acctest.RunLimitedConcurrencyTests2Levels(t, semaphore, testCases)
 }
 
-func testAccPreCheckLightsailSynchronize(t *testing.T, semaphore tfsync.Semaphore) {
+func testAccPreCheckLightsailSynchronize(t *testing.T, semaphore tfsync.Semaphore) { // nosemgrep: ci.lightsail-in-func-name
 	tfsync.TestAccPreCheckSyncronize(t, semaphore, "Lightsail")
 }
