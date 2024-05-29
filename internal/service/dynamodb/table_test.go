@@ -839,10 +839,6 @@ func TestAccDynamoDBTable_BillingModeGSI_provisionedToPayPerRequest(t *testing.T
 
 func TestAccDynamoDBTable_onDemandThroughput(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var conf awstypes.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
