@@ -58,7 +58,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Container Service",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
-				ResourceType:        "Container Service",
+				ResourceType:        "ContainerService",
 			},
 		},
 		{

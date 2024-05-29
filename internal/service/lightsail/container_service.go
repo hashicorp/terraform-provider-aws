@@ -26,7 +26,7 @@ import (
 )
 
 // @SDKResource("aws_lightsail_container_service", name="Container Service")
-// @Tags(identifierAttribute="id", resourceType="Container Service")
+// @Tags(identifierAttribute="id", resourceType="ContainerService")
 func ResourceContainerService() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceContainerServiceCreate,
