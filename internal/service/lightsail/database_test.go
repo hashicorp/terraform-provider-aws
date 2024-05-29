@@ -21,17 +21,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
 	tflightsail "github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccLightsailDatabase_basic(t *testing.T) {
+func testAccDatabase_basic(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lightsail_database.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckLightsailSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
 			testAccPreCheck(ctx, t)
@@ -77,7 +79,7 @@ func TestAccLightsailDatabase_basic(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_relationalDatabaseName(t *testing.T) {
+func testAccDatabase_relationalDatabaseName(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lightsail_database.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -89,6 +91,7 @@ func TestAccLightsailDatabase_relationalDatabaseName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckLightsailSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
 			testAccPreCheck(ctx, t)
@@ -139,7 +142,7 @@ func TestAccLightsailDatabase_relationalDatabaseName(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_masterDatabaseName(t *testing.T) {
+func testAccDatabase_masterDatabaseName(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
@@ -152,6 +155,7 @@ func TestAccLightsailDatabase_masterDatabaseName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckLightsailSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
 			testAccPreCheck(ctx, t)
@@ -205,7 +209,7 @@ func TestAccLightsailDatabase_masterDatabaseName(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_masterUsername(t *testing.T) {
+func testAccDatabase_masterUsername(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
@@ -219,6 +223,7 @@ func TestAccLightsailDatabase_masterUsername(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckLightsailSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
 			testAccPreCheck(ctx, t)
@@ -276,7 +281,7 @@ func TestAccLightsailDatabase_masterUsername(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_masterPassword(t *testing.T) {
+func testAccDatabase_masterPassword(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	password := "testpassword"
@@ -289,6 +294,7 @@ func TestAccLightsailDatabase_masterPassword(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckLightsailSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
 			testAccPreCheck(ctx, t)
@@ -325,7 +331,7 @@ func TestAccLightsailDatabase_masterPassword(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_preferredBackupWindow(t *testing.T) {
+func testAccDatabase_preferredBackupWindow(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
@@ -334,6 +340,7 @@ func TestAccLightsailDatabase_preferredBackupWindow(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckLightsailSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
 			testAccPreCheck(ctx, t)
@@ -379,7 +386,7 @@ func TestAccLightsailDatabase_preferredBackupWindow(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_preferredMaintenanceWindow(t *testing.T) {
+func testAccDatabase_preferredMaintenanceWindow(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
@@ -389,6 +396,7 @@ func TestAccLightsailDatabase_preferredMaintenanceWindow(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckLightsailSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
 			testAccPreCheck(ctx, t)
@@ -438,13 +446,14 @@ func TestAccLightsailDatabase_preferredMaintenanceWindow(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_publiclyAccessible(t *testing.T) {
+func testAccDatabase_publiclyAccessible(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckLightsailSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
 			testAccPreCheck(ctx, t)
@@ -482,13 +491,14 @@ func TestAccLightsailDatabase_publiclyAccessible(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_backupRetentionEnabled(t *testing.T) {
+func testAccDatabase_backupRetentionEnabled(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckLightsailSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
 			testAccPreCheck(ctx, t)
@@ -526,7 +536,7 @@ func TestAccLightsailDatabase_backupRetentionEnabled(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_finalSnapshotName(t *testing.T) {
+func testAccDatabase_finalSnapshotName(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
@@ -538,6 +548,7 @@ func TestAccLightsailDatabase_finalSnapshotName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckLightsailSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
 			testAccPreCheck(ctx, t)
@@ -583,13 +594,14 @@ func TestAccLightsailDatabase_finalSnapshotName(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_tags(t *testing.T) {
+func testAccDatabase_tags(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckLightsailSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
 			testAccPreCheck(ctx, t)
@@ -638,13 +650,14 @@ func TestAccLightsailDatabase_tags(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_keyOnlyTags(t *testing.T) {
+func testAccDatabase_keyOnlyTags(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckLightsailSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
 			testAccPreCheck(ctx, t)
@@ -693,13 +706,14 @@ func TestAccLightsailDatabase_keyOnlyTags(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_ha(t *testing.T) {
+func testAccDatabase_ha(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lightsail_database.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckLightsailSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
 			testAccPreCheck(ctx, t)
@@ -732,7 +746,7 @@ func TestAccLightsailDatabase_ha(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_disappears(t *testing.T) {
+func testAccDatabase_disappears(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
@@ -758,6 +772,7 @@ func TestAccLightsailDatabase_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckLightsailSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
 			testAccPreCheck(ctx, t)

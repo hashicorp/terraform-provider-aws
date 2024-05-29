@@ -24,7 +24,7 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 	case "Bucket":
 		tags, err = bucketListTags(ctx, meta.(*conns.AWSClient).LightsailClient(ctx), identifier)
 
-	case "Cetificate":
+	case "Certificate":
 		tags, err = certificateListTags(ctx, meta.(*conns.AWSClient).LightsailClient(ctx), identifier)
 
 	case "Container Service":
