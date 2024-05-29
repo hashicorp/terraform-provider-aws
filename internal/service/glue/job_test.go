@@ -1160,8 +1160,8 @@ resource "aws_glue_job" "test" {
 func testAccJobConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccJobConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_job" "test" {
-  name              = %[1]q
-  role_arn          = aws_iam_role.test.arn
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
 
   command {
     script_location = "testscriptlocation"
