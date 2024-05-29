@@ -190,8 +190,8 @@ func dataSourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, met
 	// See https://forums.aws.amazon.com/thread.jspa?threadID=44003
 	d.Set("etag", strings.Trim(aws.ToString(out.ETag), `"`))
 	d.Set("expiration", out.Expiration)
-	if out.Expires != nil {
-		d.Set("expires", out.Expires.Format(time.RFC1123))
+	if out.ExpiresString != nil {
+		d.Set("expires", out.ExpiresString) // formatted in RFC1123
 	} else {
 		d.Set("expires", nil)
 	}
