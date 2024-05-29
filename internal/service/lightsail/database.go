@@ -402,11 +402,11 @@ func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta in
 
 	// Some Operations can complete before the Database enters the Available state. Added a waiter to make sure the Database is available before continuing.
 	if _, err := waitDatabaseModified(ctx, conn, aws.String(d.Id())); err != nil {
-		if err != nil && IsANotFoundError(err) {
+		if IsANotFoundError(err) {
 			return diags
-		} else {
-			return sdkdiag.AppendErrorf(diags, "waiting for Lightsail Relational Database (%s) to become available: %s", d.Id(), err)
 		}
+
+		return sdkdiag.AppendErrorf(diags, "waiting for Lightsail Relational Database (%s) to become available: %s", d.Id(), err)
 	}
 
 	skipFinalSnapshot := d.Get("skip_final_snapshot").(bool)
@@ -426,7 +426,7 @@ func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta in
 
 	output, err := conn.DeleteRelationalDatabase(ctx, input)
 
-	if err != nil && IsANotFoundError(err) {
+	if IsANotFoundError(err) {
 		return diags
 	}
 
