@@ -35,7 +35,10 @@ func TestAccAppFabricAppBundle_disappears(t *testing.T) {
 	resourceName := "aws_appfabric_app_bundle.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppFabricEndpointID) },
+		PreCheck:                 func() { 
+			acctest.PreCheck(ctx, t); 
+			//acctest.PreCheckPartitionHasService(t, names.AppFabricEndpointID) 
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAppBundleDestroy(ctx),
@@ -147,11 +150,10 @@ resource "aws_appfabric_app_bundle" "test" {
 func testAccAppBundleConfig_full(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_appfabric_app_bundle" "test" {
-	customer_managed_key = "customer-managed-key"
+	customer_managed_key = "arn:aws:kms:us-east-1:732859338261:key/c67081be-29a0-4049-a821-1436d27bde94"
 	tags = {
 		Name = "AppFabricTesting"
 	}
 }
 `)
 }
-
