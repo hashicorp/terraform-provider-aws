@@ -25,6 +25,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// bedrock has this commented out... double check 
+@FrameworkResource(name="App Bundle")
+
 func newResourceAppBundle(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceAppBundle{}
 	r.SetDefaultCreateTimeout(5 * time.Minute)
@@ -125,6 +128,7 @@ func (r *resourceAppBundle) Read(ctx context.Context, req resource.ReadRequest, 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
+// There is no update API, so this method is a no-op
 func (r *resourceAppBundle) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 }
 
