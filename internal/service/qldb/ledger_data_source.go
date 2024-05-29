@@ -26,7 +26,7 @@ func dataSourceLedger() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"deletion_protection": {
+			names.AttrDeletionProtection: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -64,7 +64,7 @@ func dataSourceLedgerRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.SetId(aws.ToString(ledger.Name))
 	d.Set(names.AttrARN, ledger.Arn)
-	d.Set("deletion_protection", ledger.DeletionProtection)
+	d.Set(names.AttrDeletionProtection, ledger.DeletionProtection)
 	if ledger.EncryptionDescription != nil {
 		d.Set(names.AttrKMSKey, ledger.EncryptionDescription.KmsKeyArn)
 	} else {

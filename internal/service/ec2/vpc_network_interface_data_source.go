@@ -44,7 +44,7 @@ func dataSourceNetworkInterface() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"association_id": {
+						names.AttrAssociationID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

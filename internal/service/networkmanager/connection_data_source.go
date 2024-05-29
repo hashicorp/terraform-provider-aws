@@ -32,7 +32,7 @@ func DataSourceConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"connection_id": {
+			names.AttrConnectionID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -64,7 +64,7 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	globalNetworkID := d.Get("global_network_id").(string)
-	connectionID := d.Get("connection_id").(string)
+	connectionID := d.Get(names.AttrConnectionID).(string)
 	connection, err := FindConnectionByTwoPartKey(ctx, conn, globalNetworkID, connectionID)
 
 	if err != nil {
@@ -75,7 +75,7 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrARN, connection.ConnectionArn)
 	d.Set("connected_device_id", connection.ConnectedDeviceId)
 	d.Set("connected_link_id", connection.ConnectedLinkId)
-	d.Set("connection_id", connection.ConnectionId)
+	d.Set(names.AttrConnectionID, connection.ConnectionId)
 	d.Set(names.AttrDescription, connection.Description)
 	d.Set("device_id", connection.DeviceId)
 	d.Set("global_network_id", connection.GlobalNetworkId)

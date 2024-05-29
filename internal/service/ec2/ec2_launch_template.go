@@ -113,7 +113,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"virtual_name": {
+						names.AttrVirtualName: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -1333,7 +1333,7 @@ func expandLaunchTemplateBlockDeviceMappingRequest(tfMap map[string]interface{})
 		apiObject.NoDevice = aws.String(v)
 	}
 
-	if v, ok := tfMap["virtual_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrVirtualName].(string); ok && v != "" {
 		apiObject.VirtualName = aws.String(v)
 	}
 
@@ -2363,7 +2363,7 @@ func flattenLaunchTemplateBlockDeviceMapping(apiObject *ec2.LaunchTemplateBlockD
 	}
 
 	if v := apiObject.VirtualName; v != nil {
-		tfMap["virtual_name"] = aws.StringValue(v)
+		tfMap[names.AttrVirtualName] = aws.StringValue(v)
 	}
 
 	return tfMap

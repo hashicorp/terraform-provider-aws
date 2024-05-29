@@ -28,7 +28,7 @@ import (
 )
 
 // @SDKResource("aws_lightsail_distribution", name="Distribution")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="id", resourceType="Distribution")
 func ResourceDistribution() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDistributionCreate,

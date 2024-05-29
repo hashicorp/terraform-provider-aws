@@ -207,7 +207,7 @@ func resourceBucketLifecycleConfiguration() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: validation.IntAtLeast(0),
 									},
-									"storage_class": {
+									names.AttrStorageClass: {
 										Type:             schema.TypeString,
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[types.TransitionStorageClass](),
@@ -240,7 +240,7 @@ func resourceBucketLifecycleConfiguration() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: validation.IntAtLeast(0),
 									},
-									"storage_class": {
+									names.AttrStorageClass: {
 										Type:             schema.TypeString,
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[types.TransitionStorageClass](),
@@ -790,7 +790,7 @@ func expandNoncurrentVersionTransitions(l []interface{}) []types.NoncurrentVersi
 			transition.NoncurrentDays = aws.Int32(int32(v))
 		}
 
-		if v, ok := tfMap["storage_class"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrStorageClass].(string); ok && v != "" {
 			transition.StorageClass = types.TransitionStorageClass(v)
 		}
 
@@ -828,7 +828,7 @@ func expandTransitions(l []interface{}) []types.Transition {
 			transition.Days = aws.Int32(int32(v))
 		}
 
-		if v, ok := tfMap["storage_class"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrStorageClass].(string); ok && v != "" {
 			transition.StorageClass = types.TransitionStorageClass(v)
 		}
 
@@ -1015,7 +1015,7 @@ func flattenNoncurrentVersionTransitions(transitions []types.NoncurrentVersionTr
 
 	for _, transition := range transitions {
 		m := map[string]interface{}{
-			"storage_class": transition.StorageClass,
+			names.AttrStorageClass: transition.StorageClass,
 		}
 
 		if transition.NewerNoncurrentVersions != nil {
@@ -1041,7 +1041,7 @@ func flattenTransitions(transitions []types.Transition) []interface{} {
 
 	for _, transition := range transitions {
 		m := map[string]interface{}{
-			"storage_class": transition.StorageClass,
+			names.AttrStorageClass: transition.StorageClass,
 		}
 
 		if transition.Date != nil {

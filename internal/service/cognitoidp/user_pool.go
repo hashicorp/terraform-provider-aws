@@ -140,7 +140,7 @@ func resourceUserPool() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"deletion_protection": {
+			names.AttrDeletionProtection: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      cognitoidentityprovider.DeletionProtectionTypeInactive,
@@ -674,7 +674,7 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.EmailConfiguration = expandUserPoolEmailConfig(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("deletion_protection"); ok {
+	if v, ok := d.GetOk(names.AttrDeletionProtection); ok {
 		input.DeletionProtection = aws.String(v.(string))
 	}
 
@@ -848,7 +848,7 @@ func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("auto_verified_attributes", aws.StringValueSlice(userPool.AutoVerifiedAttributes))
 	d.Set(names.AttrCreationDate, userPool.CreationDate.Format(time.RFC3339))
 	d.Set("custom_domain", userPool.CustomDomain)
-	d.Set("deletion_protection", userPool.DeletionProtection)
+	d.Set(names.AttrDeletionProtection, userPool.DeletionProtection)
 	if err := d.Set("device_configuration", flattenUserPoolDeviceConfiguration(userPool.DeviceConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting device_configuration: %s", err)
 	}
@@ -962,7 +962,7 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		"account_recovery_setting",
 		"admin_create_user_config",
 		"auto_verified_attributes",
-		"deletion_protection",
+		names.AttrDeletionProtection,
 		"device_configuration",
 		"email_configuration",
 		"email_verification_message",
@@ -1002,7 +1002,7 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			input.AutoVerifiedAttributes = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
-		if v, ok := d.GetOk("deletion_protection"); ok {
+		if v, ok := d.GetOk(names.AttrDeletionProtection); ok {
 			input.DeletionProtection = aws.String(v.(string))
 		}
 

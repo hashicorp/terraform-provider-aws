@@ -17,8 +17,10 @@ const (
 	AttrAction                     = "action"
 	AttrAddress                    = "address"
 	AttrAlias                      = "alias"
+	AttrAllocatedStorage           = "allocated_storage"
 	AttrApplicationID              = "application_id"
 	AttrApplyImmediately           = "apply_immediately"
+	AttrAssociationID              = "association_id"
 	AttrAttributes                 = "attributes"
 	AttrAutoMinorVersionUpgrade    = "auto_minor_version_upgrade"
 	AttrAvailabilityZone           = "availability_zone"
@@ -26,6 +28,7 @@ const (
 	AttrBucket                     = "bucket"
 	AttrBucketName                 = "bucket_name"
 	AttrBucketPrefix               = "bucket_prefix"
+	AttrCIDRBlock                  = "cidr_block"
 	AttrCatalogID                  = "catalog_id"
 	AttrCertificate                = "certificate"
 	AttrCertificateARN             = "certificate_arn"
@@ -37,6 +40,7 @@ const (
 	AttrComment                    = "comment"
 	AttrCondition                  = "condition"
 	AttrConfiguration              = "configuration"
+	AttrConnectionID               = "connection_id"
 	AttrContent                    = "content"
 	AttrContentType                = "content_type"
 	AttrCreateTime                 = "create_time"
@@ -51,6 +55,7 @@ const (
 	AttrDefaultAction              = "default_action"
 	AttrDefaultValue               = "default_value"
 	AttrDeleteOnTermination        = "delete_on_termination"
+	AttrDeletionProtection         = "deletion_protection"
 	AttrDescription                = "description"
 	AttrDestination                = "destination"
 	AttrDestinationARN             = "destination_arn"
@@ -106,6 +111,7 @@ const (
 	AttrKeyID                      = "key_id"
 	AttrLanguageCode               = "language_code"
 	AttrLastUpdatedDate            = "last_updated_date"
+	AttrLastUpdatedTime            = "last_updated_time"
 	AttrLaunchTemplate             = "launch_template"
 	AttrLogGroupName               = "log_group_name"
 	AttrLoggingConfiguration       = "logging_configuration"
@@ -187,6 +193,7 @@ const (
 	AttrStatusCode                 = "status_code"
 	AttrStatusMessage              = "status_message"
 	AttrStatusReason               = "status_reason"
+	AttrStorageClass               = "storage_class"
 	AttrStorageEncrypted           = "storage_encrypted"
 	AttrStorageType                = "storage_type"
 	AttrStreamARN                  = "stream_arn"
@@ -210,6 +217,7 @@ const (
 	AttrURL                        = "url"
 	AttrUnit                       = "unit"
 	AttrUserName                   = "user_name"
+	AttrUserPoolID                 = "user_pool_id"
 	AttrUsername                   = "username"
 	AttrVPCConfig                  = "vpc_config"
 	AttrVPCConfiguration           = "vpc_configuration"
@@ -219,6 +227,7 @@ const (
 	AttrValue                      = "value"
 	AttrValues                     = "values"
 	AttrVersion                    = "version"
+	AttrVirtualName                = "virtual_name"
 	AttrVolumeSize                 = "volume_size"
 	AttrVolumeType                 = "volume_type"
 	AttrWeight                     = "weight"
@@ -237,8 +246,10 @@ func ConstOrQuote(constant string) string {
 		"action":                        "AttrAction",
 		"address":                       "AttrAddress",
 		"alias":                         "AttrAlias",
+		"allocated_storage":             "AttrAllocatedStorage",
 		"application_id":                "AttrApplicationID",
 		"apply_immediately":             "AttrApplyImmediately",
+		"association_id":                "AttrAssociationID",
 		"attributes":                    "AttrAttributes",
 		"auto_minor_version_upgrade":    "AttrAutoMinorVersionUpgrade",
 		"availability_zone":             "AttrAvailabilityZone",
@@ -246,6 +257,7 @@ func ConstOrQuote(constant string) string {
 		"bucket":                        "AttrBucket",
 		"bucket_name":                   "AttrBucketName",
 		"bucket_prefix":                 "AttrBucketPrefix",
+		"cidr_block":                    "AttrCIDRBlock",
 		"catalog_id":                    "AttrCatalogID",
 		"certificate":                   "AttrCertificate",
 		"certificate_arn":               "AttrCertificateARN",
@@ -257,6 +269,7 @@ func ConstOrQuote(constant string) string {
 		"comment":                       "AttrComment",
 		"condition":                     "AttrCondition",
 		"configuration":                 "AttrConfiguration",
+		"connection_id":                 "AttrConnectionID",
 		"content":                       "AttrContent",
 		"content_type":                  "AttrContentType",
 		"create_time":                   "AttrCreateTime",
@@ -271,6 +284,7 @@ func ConstOrQuote(constant string) string {
 		"default_action":                "AttrDefaultAction",
 		"default_value":                 "AttrDefaultValue",
 		"delete_on_termination":         "AttrDeleteOnTermination",
+		"deletion_protection":           "AttrDeletionProtection",
 		"description":                   "AttrDescription",
 		"destination":                   "AttrDestination",
 		"destination_arn":               "AttrDestinationARN",
@@ -326,6 +340,7 @@ func ConstOrQuote(constant string) string {
 		"key_id":                        "AttrKeyID",
 		"language_code":                 "AttrLanguageCode",
 		"last_updated_date":             "AttrLastUpdatedDate",
+		"last_updated_time":             "AttrLastUpdatedTime",
 		"launch_template":               "AttrLaunchTemplate",
 		"log_group_name":                "AttrLogGroupName",
 		"logging_configuration":         "AttrLoggingConfiguration",
@@ -407,6 +422,7 @@ func ConstOrQuote(constant string) string {
 		"status_code":                   "AttrStatusCode",
 		"status_message":                "AttrStatusMessage",
 		"status_reason":                 "AttrStatusReason",
+		"storage_class":                 "AttrStorageClass",
 		"storage_encrypted":             "AttrStorageEncrypted",
 		"storage_type":                  "AttrStorageType",
 		"stream_arn":                    "AttrStreamARN",
@@ -430,6 +446,7 @@ func ConstOrQuote(constant string) string {
 		"url":                           "AttrURL",
 		"unit":                          "AttrUnit",
 		"user_name":                     "AttrUserName",
+		"user_pool_id":                  "AttrUserPoolID",
 		"username":                      "AttrUsername",
 		"vpc_config":                    "AttrVPCConfig",
 		"vpc_configuration":             "AttrVPCConfiguration",
@@ -439,6 +456,7 @@ func ConstOrQuote(constant string) string {
 		"value":                         "AttrValue",
 		"values":                        "AttrValues",
 		"version":                       "AttrVersion",
+		"virtual_name":                  "AttrVirtualName",
 		"volume_size":                   "AttrVolumeSize",
 		"volume_type":                   "AttrVolumeType",
 		"weight":                        "AttrWeight",

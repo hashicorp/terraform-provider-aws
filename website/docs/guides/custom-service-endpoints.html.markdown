@@ -291,6 +291,7 @@ provider "aws" {
   <li><code>sts</code></li>
   <li><code>swf</code></li>
   <li><code>synthetics</code></li>
+  <li><code>timestreaminfluxdb</code></li>
   <li><code>timestreamwrite</code></li>
   <li><code>transcribe</code> (or <code>transcribeservice</code>)</li>
   <li><code>transfer</code></li>

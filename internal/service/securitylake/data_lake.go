@@ -135,7 +135,7 @@ func (r *dataLakeResource) Schema(ctx context.Context, request resource.SchemaRe
 												"days": schema.Int64Attribute{
 													Optional: true,
 												},
-												"storage_class": schema.StringAttribute{
+												names.AttrStorageClass: schema.StringAttribute{
 													Optional: true,
 												},
 											},

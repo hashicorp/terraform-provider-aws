@@ -66,7 +66,7 @@ func resourceEIP() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"association_id": {
+			names.AttrAssociationID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -234,7 +234,7 @@ func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interface
 	allocationID := aws.ToString(address.AllocationId)
 	d.Set("allocation_id", allocationID)
 	d.Set(names.AttrARN, eipARN(meta.(*conns.AWSClient), allocationID))
-	d.Set("association_id", address.AssociationId)
+	d.Set(names.AttrAssociationID, address.AssociationId)
 	d.Set("carrier_ip", address.CarrierIp)
 	d.Set("customer_owned_ip", address.CustomerOwnedIp)
 	d.Set("customer_owned_ipv4_pool", address.CustomerOwnedIpv4Pool)
@@ -283,7 +283,7 @@ func resourceEIPUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 		o, n := d.GetChange("instance")
 		oldInstanceID, newInstanceID := o.(string), n.(string)
 
-		if associationID := d.Get("association_id").(string); oldInstanceID != "" || associationID != "" {
+		if associationID := d.Get(names.AttrAssociationID).(string); oldInstanceID != "" || associationID != "" {
 			if err := disassociateEIP(ctx, conn, associationID); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
@@ -308,7 +308,7 @@ func resourceEIPDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	// If we are attached to an instance or interface, detach first.
-	if associationID := d.Get("association_id").(string); associationID != "" || d.Get("instance").(string) != "" {
+	if associationID := d.Get(names.AttrAssociationID).(string); associationID != "" || d.Get("instance").(string) != "" {
 		if err := disassociateEIP(ctx, conn, associationID); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}

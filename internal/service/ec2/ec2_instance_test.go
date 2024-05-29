@@ -828,8 +828,8 @@ func TestAccEC2Instance_blockDevices(t *testing.T) {
 					}),
 					resource.TestCheckResourceAttr(resourceName, "ephemeral_block_device.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ephemeral_block_device.*", map[string]string{
-						names.AttrDeviceName: "/dev/sde",
-						"virtual_name":       "ephemeral0",
+						names.AttrDeviceName:  "/dev/sde",
+						names.AttrVirtualName: "ephemeral0",
 					}),
 					testCheck(),
 				),
