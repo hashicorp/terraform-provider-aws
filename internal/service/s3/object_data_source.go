@@ -225,11 +225,7 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta inte
 	// See https://forums.aws.amazon.com/thread.jspa?threadID=44003
 	d.Set("etag", strings.Trim(aws.ToString(output.ETag), `"`))
 	d.Set("expiration", output.Expiration)
-	if output.Expires != nil {
-		d.Set("expires", output.Expires.Format(time.RFC1123))
-	} else {
-		d.Set("expires", nil)
-	}
+	d.Set("expires", output.ExpiresString) // formatted in RFC1123
 	if output.LastModified != nil {
 		d.Set("last_modified", output.LastModified.Format(time.RFC1123))
 	} else {
