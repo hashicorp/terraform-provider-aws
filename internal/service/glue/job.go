@@ -120,8 +120,8 @@ func ResourceJob() *schema.Resource {
 				ConflictsWith: []string{"number_of_workers", "worker_type"},
 			},
 			"maintenance_window": {
-				Type:         schema.TypeString,
-				Optional:     true,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"max_retries": {
 				Type:         schema.TypeInt,
