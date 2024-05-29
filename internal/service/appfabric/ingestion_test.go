@@ -54,7 +54,6 @@ func TestAccAppFabricIngestion_basic(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccIngestionImportStateIDFunc(ctx, resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -165,34 +164,6 @@ func testAccCheckIngestionNotRecreated(before, after *appfabric.GetIngestionOutp
 		}
 
 		return nil
-	}
-}
-
-func testAccIngestionImportStateIDFunc(ctx context.Context, resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		if rs.Primary.ID == "" {
-			return "", errors.New("No Ingestion ID set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppFabricClient(ctx)
-		appBundleIdentifier := rs.Primary.Attributes["app_bundle_identifier"]
-		ingestionARN := rs.Primary.Attributes["arn"]
-
-		_, err := conn.GetIngestion(ctx, &appfabric.GetIngestionInput{
-			AppBundleIdentifier: aws.String(appBundleIdentifier),
-			IngestionIdentifier: aws.String(ingestionARN),
-		})
-
-		if err != nil {
-			return "", err
-		}
-
-		return fmt.Sprintf("%s,%s", appBundleIdentifier, ingestionARN), nil
 	}
 }
 

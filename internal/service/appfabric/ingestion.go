@@ -6,14 +6,11 @@ package appfabric
 import (
 	"context"
 	"errors"
-	"fmt"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appfabric"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appfabric/types"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -22,8 +19,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -47,6 +45,7 @@ const (
 
 type resourceIngestion struct {
 	framework.ResourceWithConfigure
+	framework.WithImportByID
 	framework.WithTimeouts
 }
 
@@ -63,10 +62,7 @@ func (r *resourceIngestion) Schema(ctx context.Context, req resource.SchemaReque
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"app_bundle_arn": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-			},
+			"app_bundle_arn": framework.ARNAttributeComputedOnly(),
 			"app_bundle_identifier": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -107,7 +103,7 @@ func (r *resourceIngestion) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	input := &appfabric.CreateIngestionInput{}
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, input)...)
+	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, input)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -130,14 +126,17 @@ func (r *resourceIngestion) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	plan.App = flex.StringToFramework(ctx, out.Ingestion.App)
-	plan.AppBundleArn = flex.StringToFramework(ctx, out.Ingestion.AppBundleArn)
-	plan.AppBundleIdentifier = flex.StringToFramework(ctx, out.Ingestion.AppBundleArn)
-	plan.ARN = flex.StringToFramework(ctx, out.Ingestion.Arn)
-	plan.ID = types.StringValue(createIngestionID(string(*out.Ingestion.AppBundleArn), string(*out.Ingestion.Arn)))
-	plan.IngestionType = flex.StringToFramework(ctx, aws.String(string(out.Ingestion.IngestionType)))
-	plan.State = flex.StringToFramework(ctx, aws.String(string(out.Ingestion.State)))
-	plan.TenantId = flex.StringToFramework(ctx, out.Ingestion.TenantId)
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Set values for unknowns.
+	plan.AppBundleArn = fwflex.StringToFramework(ctx, out.Ingestion.AppBundleArn)
+	plan.AppBundleIdentifier = fwflex.StringToFramework(ctx, out.Ingestion.AppBundleArn)
+	plan.ARN = fwflex.StringToFramework(ctx, out.Ingestion.Arn)
+	plan.State = fwflex.StringToFramework(ctx, aws.String(string(out.Ingestion.State)))
+	plan.setID()
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -153,7 +152,12 @@ func (r *resourceIngestion) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
-	out, err := findIngestionByID(ctx, conn, state.AppBundleIdentifier.ValueString(), state.ARN.ValueString())
+	if err := state.InitFromID(); err != nil {
+		resp.Diagnostics.AddError("parsing resource ID", err.Error())
+		return
+	}
+
+	out, err := findIngestionByTwoPartKey(ctx, conn, state.AppBundleIdentifier.ValueString(), state.ARN.ValueString())
 
 	if tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.AppFabric, create.ErrActionReading, ResNameIngestion, state.App.ValueString())
@@ -165,12 +169,10 @@ func (r *resourceIngestion) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	state.ID = types.StringValue(createIngestionID(string(*out.AppBundleArn), string(*out.Arn)))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -208,33 +210,33 @@ func (r *resourceIngestion) Delete(ctx context.Context, req resource.DeleteReque
 	}
 }
 
-func (r *resourceIngestion) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	idParts := strings.Split(req.ID, ",")
-
-	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		resp.Diagnostics.AddError(
-			"Unexpected Import Identifier",
-			fmt.Sprintf("Expected import identifier with format: AppBundleIdentifier, IngestionARN. Got: %q", req.ID),
-		)
-		return
-	}
-
-	appBundleId := idParts[0]
-	arn := idParts[1]
-
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("app_bundle_identifier"), aws.String(appBundleId))...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("arn"), aws.String(arn))...)
-}
-
 func (r *resourceIngestion) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	r.SetTagsAll(ctx, req, resp)
 }
 
-func createIngestionID(appBundleARN string, ingestionARN string) string {
-	return strings.Join([]string{appBundleARN, ingestionARN}, ",")
+const (
+	ingestionResourceIDPartCount = 2
+)
+
+func (m *resourceIngestionData) InitFromID() error {
+	id := m.ID.ValueString()
+	parts, err := flex.ExpandResourceId(id, ingestionResourceIDPartCount, false)
+
+	if err != nil {
+		return err
+	}
+
+	m.AppBundleIdentifier = types.StringValue(parts[0])
+	m.ARN = types.StringValue(parts[1])
+
+	return nil
 }
 
-func findIngestionByID(ctx context.Context, conn *appfabric.Client, appBundleIdentifier string, arn string) (*awstypes.Ingestion, error) {
+func (m *resourceIngestionData) setID() {
+	m.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{m.AppBundleIdentifier.ValueString(), m.ARN.ValueString()}, ingestionResourceIDPartCount, false)))
+}
+
+func findIngestionByTwoPartKey(ctx context.Context, conn *appfabric.Client, appBundleIdentifier string, arn string) (*awstypes.Ingestion, error) {
 	in := &appfabric.GetIngestionInput{
 		AppBundleIdentifier: aws.String(appBundleIdentifier),
 		IngestionIdentifier: aws.String(arn),
