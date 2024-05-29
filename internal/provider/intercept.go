@@ -324,13 +324,9 @@ func (r tagsResourceInterceptor) run(ctx context.Context, d schemaResourceData, 
 						// If the service package has a generic resource list tags methods, call it.
 						var err error
 
-						if v, ok := sp.(interface {
-							ListTags(context.Context, any, string) error
-						}); ok {
+						if v, ok := sp.(tftags.ServiceTagLister); ok {
 							err = v.ListTags(ctx, meta, identifier) // Sets tags in Context
-						} else if v, ok := sp.(interface {
-							ListTags(context.Context, any, string, string) error
-						}); ok && r.tags.ResourceType != "" {
+						} else if v, ok := sp.(tftags.ResourceTypeTagLister); ok && r.tags.ResourceType != "" {
 							err = v.ListTags(ctx, meta, identifier, r.tags.ResourceType) // Sets tags in Context
 						} else {
 							tflog.Warn(ctx, "No ListTags method found", map[string]interface{}{

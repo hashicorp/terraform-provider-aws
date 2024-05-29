@@ -18,6 +18,8 @@ import (
 
 type mockService struct{}
 
+var _ tftags.ServiceTagLister = &mockService{}
+
 func (t *mockService) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{}
 }

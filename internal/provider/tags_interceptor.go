@@ -125,13 +125,9 @@ func tagsReadFunc(ctx context.Context, d schemaResourceData, sp conns.ServicePac
 	if identifier != "" {
 		var err error
 
-		if v, ok := sp.(interface {
-			ListTags(context.Context, any, string) error
-		}); ok {
+		if v, ok := sp.(tftags.ServiceTagLister); ok {
 			err = v.ListTags(ctx, meta, identifier) // Sets tags in Context
-		} else if v, ok := sp.(interface {
-			ListTags(context.Context, any, string, string) error
-		}); ok && spt.ResourceType != "" {
+		} else if v, ok := sp.(tftags.ResourceTypeTagLister); ok && spt.ResourceType != "" {
 			err = v.ListTags(ctx, meta, identifier, spt.ResourceType) // Sets tags in Context
 		} else {
 			tflog.Warn(ctx, "No ListTags method found", map[string]interface{}{
