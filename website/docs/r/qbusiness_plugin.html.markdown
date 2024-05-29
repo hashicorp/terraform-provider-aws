@@ -17,14 +17,14 @@ resource "aws_qbusiness_plugin" "example" {
   application_id = aws_qbusiness_app.test.id
 
   basic_auth_configuration {
-    role_arn = aws_iam_role.test.arn
+    role_arn   = aws_iam_role.test.arn
     secret_arn = aws_secretsmanager_secret.test.arn
   }
 
-  display_name   = "Plugin"
-  server_url     = "https://yourinstance.service-now.com"
-  state          = "ENABLED"
-  type           = "SERVICE_NOW"
+  display_name = "Plugin"
+  server_url   = "https://yourinstance.service-now.com"
+  state        = "ENABLED"
+  type         = "SERVICE_NOW"
 }
 ```
 
