@@ -33,18 +33,18 @@ func ResourceVPCIPv4CIDRBlockAssociation() *schema.Resource {
 
 		CustomizeDiff: func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 			// cidr_block can be set by a value returned from IPAM or explicitly in config.
-			if diff.Id() != "" && diff.HasChange("cidr_block") {
+			if diff.Id() != "" && diff.HasChange(names.AttrCIDRBlock) {
 				// If netmask is set then cidr_block is derived from IPAM, ignore changes.
 				if diff.Get("ipv4_netmask_length") != 0 {
-					return diff.Clear("cidr_block")
+					return diff.Clear(names.AttrCIDRBlock)
 				}
-				return diff.ForceNew("cidr_block")
+				return diff.ForceNew(names.AttrCIDRBlock)
 			}
 			return nil
 		},
 
 		Schema: map[string]*schema.Schema{
-			"cidr_block": {
+			names.AttrCIDRBlock: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -85,7 +85,7 @@ func resourceVPCIPv4CIDRBlockAssociationCreate(ctx context.Context, d *schema.Re
 		VpcId: aws.String(vpcID),
 	}
 
-	if v, ok := d.GetOk("cidr_block"); ok {
+	if v, ok := d.GetOk(names.AttrCIDRBlock); ok {
 		input.CidrBlock = aws.String(v.(string))
 	}
 
@@ -131,7 +131,7 @@ func resourceVPCIPv4CIDRBlockAssociationRead(ctx context.Context, d *schema.Reso
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC IPv4 CIDR Block Association (%s): %s", d.Id(), err)
 	}
 
-	d.Set("cidr_block", vpcCidrBlockAssociation.CidrBlock)
+	d.Set(names.AttrCIDRBlock, vpcCidrBlockAssociation.CidrBlock)
 	d.Set(names.AttrVPCID, vpc.VpcId)
 
 	return diags

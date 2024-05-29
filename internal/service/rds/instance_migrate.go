@@ -46,7 +46,7 @@ func resourceInstanceResourceV0() *schema.Resource {
 				Sensitive: true,
 			},
 
-			"deletion_protection": {
+			names.AttrDeletionProtection: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -83,7 +83,7 @@ func resourceInstanceResourceV0() *schema.Resource {
 				ForceNew: true,
 			},
 
-			"allocated_storage": {
+			names.AttrAllocatedStorage: {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -408,7 +408,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"allocated_storage": {
+			names.AttrAllocatedStorage: {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -531,7 +531,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
-			"deletion_protection": {
+			names.AttrDeletionProtection: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -699,7 +699,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "0" && new == fmt.Sprintf("%d", d.Get("allocated_storage").(int)) {
+					if old == "0" && new == fmt.Sprintf("%d", d.Get(names.AttrAllocatedStorage).(int)) {
 						return true
 					}
 					return false

@@ -40,7 +40,7 @@ func TestAccVPCSubnet_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`subnet/subnet-.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone_id"),
-					resource.TestCheckResourceAttr(resourceName, "cidr_block", "10.1.1.0/24"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrCIDRBlock, "10.1.1.0/24"),
 					resource.TestCheckResourceAttr(resourceName, "customer_owned_ipv4_pool", ""),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns64", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_aaaa_record_on_launch", acctest.CtFalse),
@@ -942,7 +942,7 @@ func TestAccVPCSubnet_ipv6Native(t *testing.T) {
 				Config: testAccVPCSubnetConfig_ipv6Native(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "cidr_block", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrCIDRBlock, ""),
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_aaaa_record_on_launch", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_native", acctest.CtTrue),
 				),

@@ -45,7 +45,7 @@ func ResourceReplicationInstance() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"allocated_storage": {
+			names.AttrAllocatedStorage: {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Computed:     true,
@@ -169,7 +169,7 @@ func resourceReplicationInstanceCreate(ctx context.Context, d *schema.ResourceDa
 	// keys that the zero value is valid we cannot know if the zero value was in the config and cannot allow the API
 	// to set the default value. See GitHub Issue #5694 https://github.com/hashicorp/terraform/issues/5694
 
-	if v, ok := d.GetOk("allocated_storage"); ok {
+	if v, ok := d.GetOk(names.AttrAllocatedStorage); ok {
 		input.AllocatedStorage = aws.Int64(int64(v.(int)))
 	}
 	if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
@@ -225,7 +225,7 @@ func resourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading DMS Replication Instance (%s): %s", d.Id(), err)
 	}
 
-	d.Set("allocated_storage", instance.AllocatedStorage)
+	d.Set(names.AttrAllocatedStorage, instance.AllocatedStorage)
 	d.Set(names.AttrAutoMinorVersionUpgrade, instance.AutoMinorVersionUpgrade)
 	d.Set(names.AttrAvailabilityZone, instance.AvailabilityZone)
 	d.Set(names.AttrEngineVersion, instance.EngineVersion)
@@ -261,8 +261,8 @@ func resourceReplicationInstanceUpdate(ctx context.Context, d *schema.ResourceDa
 			ReplicationInstanceArn:   aws.String(d.Get("replication_instance_arn").(string)),
 		}
 
-		if d.HasChange("allocated_storage") {
-			input.AllocatedStorage = aws.Int64(int64(d.Get("allocated_storage").(int)))
+		if d.HasChange(names.AttrAllocatedStorage) {
+			input.AllocatedStorage = aws.Int64(int64(d.Get(names.AttrAllocatedStorage).(int)))
 		}
 
 		if d.HasChange(names.AttrAutoMinorVersionUpgrade) {

@@ -35,7 +35,7 @@ func TestAccDMSReplicationInstance_basic(t *testing.T) {
 				Config: testAccReplicationInstanceConfig_replicationInstanceClass(rName, replicationInstanceClass),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "100"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "100"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
@@ -104,7 +104,7 @@ func TestAccDMSReplicationInstance_allocatedStorage(t *testing.T) {
 				Config: testAccReplicationInstanceConfig_allocatedStorage(rName, 5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "5"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "5"),
 				),
 			},
 			{
@@ -117,7 +117,7 @@ func TestAccDMSReplicationInstance_allocatedStorage(t *testing.T) {
 				Config: testAccReplicationInstanceConfig_allocatedStorage(rName, 6),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "6"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "6"),
 				),
 			},
 		},

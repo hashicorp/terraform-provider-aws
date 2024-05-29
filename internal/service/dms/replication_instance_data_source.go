@@ -23,7 +23,7 @@ func DataSourceReplicationInstance() *schema.Resource {
 		ReadWithoutTimeout: dataSourceReplicationInstanceRead,
 
 		Schema: map[string]*schema.Schema{
-			"allocated_storage": {
+			names.AttrAllocatedStorage: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -110,7 +110,7 @@ func dataSourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	d.SetId(aws.StringValue(instance.ReplicationInstanceIdentifier))
-	d.Set("allocated_storage", instance.AllocatedStorage)
+	d.Set(names.AttrAllocatedStorage, instance.AllocatedStorage)
 	d.Set(names.AttrAutoMinorVersionUpgrade, instance.AutoMinorVersionUpgrade)
 	d.Set(names.AttrAvailabilityZone, instance.AvailabilityZone)
 	d.Set(names.AttrEngineVersion, instance.EngineVersion)

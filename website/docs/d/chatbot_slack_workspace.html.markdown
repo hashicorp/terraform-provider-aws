@@ -16,7 +16,7 @@ Terraform data source for managing an AWS Chatbot Slack Workspace.
 
 ```terraform
 data "aws_chatbot_slack_workspace" "example" {
-  team_slack_name = "abc"
+  slack_team_name = "abc"
 }
 ```
 
@@ -24,7 +24,7 @@ data "aws_chatbot_slack_workspace" "example" {
 
 The following arguments are required:
 
-* `slack_team_name` - (Required) Slack workspace name configured with AWS Chabot.
+* `slack_team_name` - (Required) Slack workspace name configured with AWS Chatbot.
 
 ## Attribute Reference
 

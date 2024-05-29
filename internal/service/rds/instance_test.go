@@ -53,7 +53,7 @@ func TestAccRDSInstance_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					testAccCheckInstanceAttributes(&v),
-					resource.TestCheckResourceAttr(resourceName, "allocated_storage", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, acctest.Ct10),
 					resource.TestCheckNoResourceAttr(resourceName, "allow_major_version_upgrade"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(`db:.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtTrue),
@@ -66,7 +66,7 @@ func TestAccRDSInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "db_name", "test"),
 					resource.TestCheckResourceAttr(resourceName, "db_subnet_group_name", "default"),
 					resource.TestCheckResourceAttr(resourceName, "dedicated_log_volume", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.InstanceEngineMySQL),
@@ -661,7 +661,7 @@ func TestAccRDSInstance_deletionProtection(t *testing.T) {
 				Config: testAccInstanceConfig_deletionProtection(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtTrue),
 				),
 			},
 			{
@@ -680,7 +680,7 @@ func TestAccRDSInstance_deletionProtection(t *testing.T) {
 				Config: testAccInstanceConfig_deletionProtection(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
 				),
 			},
 		},
@@ -1227,7 +1227,7 @@ func TestAccRDSInstance_ReplicateSourceDB_allocatedStorage(t *testing.T) {
 					testAccCheckInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "allocated_storage", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, acctest.Ct10),
 				),
 			},
 		},
@@ -1289,7 +1289,7 @@ func TestAccRDSInstance_ReplicateSourceDB_allocatedStorageAndIops(t *testing.T) 
 					testAccCheckInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "220"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "220"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "2200"),
 				),
 			},
@@ -1578,7 +1578,7 @@ func TestAccRDSInstance_ReplicateSourceDB_deletionProtection(t *testing.T) {
 					testAccCheckInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtTrue),
 				),
 			},
 			// Ensure we disable deletion protection before attempting to delete :)
@@ -1588,7 +1588,7 @@ func TestAccRDSInstance_ReplicateSourceDB_deletionProtection(t *testing.T) {
 					testAccCheckInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
 				),
 			},
 		},
@@ -2379,7 +2379,7 @@ func TestAccRDSInstance_SnapshotIdentifier_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "dedicated_log_volume", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_class", sourceDbResourceName, "instance_class"),
-					resource.TestCheckResourceAttrPair(resourceName, "allocated_storage", sourceDbResourceName, "allocated_storage"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAllocatedStorage, sourceDbResourceName, names.AttrAllocatedStorage),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngine, sourceDbResourceName, names.AttrEngine),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, sourceDbResourceName, names.AttrEngineVersion),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrUsername, sourceDbResourceName, names.AttrUsername),
@@ -2552,7 +2552,7 @@ func TestAccRDSInstance_SnapshotIdentifier_AssociationRemoved(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance2),
 					testAccCheckDBInstanceNotRecreated(&dbInstance1, &dbInstance2),
-					resource.TestCheckResourceAttrPair(resourceName, "allocated_storage", sourceDbResourceName, "allocated_storage"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAllocatedStorage, sourceDbResourceName, names.AttrAllocatedStorage),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngine, sourceDbResourceName, names.AttrEngine),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrUsername, sourceDbResourceName, names.AttrUsername),
 				),
@@ -2587,7 +2587,7 @@ func TestAccRDSInstance_SnapshotIdentifier_allocatedStorage(t *testing.T) {
 					testAccCheckInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "allocated_storage", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, acctest.Ct10),
 				),
 			},
 		},
@@ -2986,7 +2986,7 @@ func TestAccRDSInstance_SnapshotIdentifier_deletionProtection(t *testing.T) {
 					testAccCheckInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtTrue),
 				),
 			},
 			// Ensure we disable deletion protection before attempting to delete :)
@@ -2996,7 +2996,7 @@ func TestAccRDSInstance_SnapshotIdentifier_deletionProtection(t *testing.T) {
 					testAccCheckInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
 				),
 			},
 		},
@@ -3750,7 +3750,7 @@ func TestAccRDSInstance_MSSQL_tz(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					testAccCheckInstanceAttributes_MSSQL(&v, ""),
-					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "20"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "20"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.InstanceEngineSQLServerExpress),
 				),
 			},
@@ -3760,7 +3760,7 @@ func TestAccRDSInstance_MSSQL_tz(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					testAccCheckInstanceAttributes_MSSQL(&v, "Alaskan Standard Time"),
-					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "20"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "20"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.InstanceEngineSQLServerExpress),
 				),
 			},
@@ -5494,7 +5494,7 @@ func TestAccRDSInstance_BlueGreenDeployment_deletionProtectionBypassesBlueGreen(
 				Config: testAccInstanceConfig_BlueGreenDeployment_deletionProtection(rName, true, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", acctest.Ct1),
 				),
 			},
@@ -5517,7 +5517,7 @@ func TestAccRDSInstance_BlueGreenDeployment_deletionProtectionBypassesBlueGreen(
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v2),
 					testAccCheckDBInstanceNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "blue_green_update.0.enabled", acctest.CtTrue),
 				),
 			},
@@ -5594,7 +5594,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateWithDeletionProtection(t *test
 				Config: testAccInstanceConfig_BlueGreenDeployment_deletionProtection(rName, true, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_class", "data.aws_rds_orderable_db_instance.test", "instance_class"),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", acctest.Ct1),
 				),
@@ -5618,7 +5618,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateWithDeletionProtection(t *test
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v2),
 					testAccCheckDBInstanceRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_class", "data.aws_rds_orderable_db_instance.test", "instance_class"),
 					resource.TestCheckResourceAttr(resourceName, "blue_green_update.0.enabled", acctest.CtTrue),
 				),
@@ -5642,7 +5642,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateWithDeletionProtection(t *test
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v3),
 					testAccCheckDBInstanceNotRecreated(&v2, &v3),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "blue_green_update.0.enabled", acctest.CtTrue),
 				),
 			},
@@ -5828,7 +5828,7 @@ func TestAccRDSInstance_Storage_gp3MySQL(t *testing.T) {
 				Config: testAccInstanceConfig_Storage_gp3(rName, testAccInstanceConfig_orderableClassMySQLGP3, 200),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "200"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "200"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "125"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),
@@ -5851,7 +5851,7 @@ func TestAccRDSInstance_Storage_gp3MySQL(t *testing.T) {
 				Config: testAccInstanceConfig_Storage_gp3(rName, testAccInstanceConfig_orderableClassMySQLGP3, 300),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "300"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "300"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "125"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),
@@ -5881,7 +5881,7 @@ func TestAccRDSInstance_Storage_gp3Postgres(t *testing.T) {
 				Config: testAccInstanceConfig_Storage_gp3(rName, testAccInstanceConfig_orderableClassPostgresGP3, 200),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "200"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "200"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "125"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),
@@ -5904,7 +5904,7 @@ func TestAccRDSInstance_Storage_gp3Postgres(t *testing.T) {
 				Config: testAccInstanceConfig_Storage_gp3(rName, testAccInstanceConfig_orderableClassPostgresGP3, 300),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "300"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "300"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "125"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),
@@ -5934,7 +5934,7 @@ func TestAccRDSInstance_Storage_gp3SQLServer(t *testing.T) {
 				Config: testAccInstanceConfig_Storage_gp3(rName, testAccInstanceConfig_orderableClassSQLServerExGP3, 200),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "200"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "200"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "125"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),
@@ -5957,7 +5957,7 @@ func TestAccRDSInstance_Storage_gp3SQLServer(t *testing.T) {
 				Config: testAccInstanceConfig_Storage_gp3(rName, testAccInstanceConfig_orderableClassSQLServerExGP3, 300),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "300"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "300"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "125"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),
@@ -6143,7 +6143,7 @@ func TestAccRDSInstance_Storage_typePostgres(t *testing.T) {
 				Config: testAccInstanceConfig_Storage_typePostgres(rName, "gp2", 200),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "200"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "200"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp2"),
@@ -6166,7 +6166,7 @@ func TestAccRDSInstance_Storage_typePostgres(t *testing.T) {
 				Config: testAccInstanceConfig_Storage_typePostgres(rName, "gp3", 300),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "300"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "300"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "125"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),

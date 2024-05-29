@@ -71,7 +71,7 @@ func ResourceHostedTransitVirtualInterface() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"connection_id": {
+			names.AttrConnectionID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -124,7 +124,7 @@ func resourceHostedTransitVirtualInterfaceCreate(ctx context.Context, d *schema.
 	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	req := &directconnect.AllocateTransitVirtualInterfaceInput{
-		ConnectionId: aws.String(d.Get("connection_id").(string)),
+		ConnectionId: aws.String(d.Get(names.AttrConnectionID).(string)),
 		OwnerAccount: aws.String(d.Get(names.AttrOwnerAccountID).(string)),
 		NewTransitVirtualInterfaceAllocation: &directconnect.NewTransitVirtualInterfaceAllocation{
 			AddressFamily:        aws.String(d.Get("address_family").(string)),
@@ -187,7 +187,7 @@ func resourceHostedTransitVirtualInterfaceRead(ctx context.Context, d *schema.Re
 	d.Set("aws_device", vif.AwsDeviceV2)
 	d.Set("bgp_asn", vif.Asn)
 	d.Set("bgp_auth_key", vif.AuthKey)
-	d.Set("connection_id", vif.ConnectionId)
+	d.Set(names.AttrConnectionID, vif.ConnectionId)
 	d.Set("customer_address", vif.CustomerAddress)
 	d.Set("jumbo_frame_capable", vif.JumboFrameCapable)
 	d.Set("mtu", vif.Mtu)
