@@ -122,7 +122,6 @@ func ResourceJob() *schema.Resource {
 			"maintenance_window": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
 			},
 			"max_retries": {
 				Type:         schema.TypeInt,
