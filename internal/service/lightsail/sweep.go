@@ -31,6 +31,16 @@ func RegisterSweepers() {
 		F:    sweepDisks,
 	})
 
+	resource.AddTestSweepers("aws_lightsail_distribution", &resource.Sweeper{
+		Name: "aws_lightsail_distribution",
+		F:    sweepDistributions,
+	})
+
+	resource.AddTestSweepers("aws_lightsail_domain", &resource.Sweeper{
+		Name: "aws_lightsail_domain",
+		F:    sweepDomains,
+	})
+
 	resource.AddTestSweepers("aws_lightsail_instance", &resource.Sweeper{
 		Name: "aws_lightsail_instance",
 		F:    sweepInstances,
@@ -168,6 +178,94 @@ func sweepDisks(region string) error {
 
 	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		return fmt.Errorf("error sweeping Lightsail Disks for %s: %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepDistributions(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("Error getting client: %s", err)
+	}
+	conn := client.LightsailClient(ctx)
+
+	input := &lightsail.GetDistributionsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = getDistributionsPages(ctx, conn, input, func(page *lightsail.GetDistributionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Distributions {
+			r := ResourceDistribution()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.Name))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+
+	})
+
+	if awsv2.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Lightsail Distributions sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("retrieving Lightsail Distributions (%s): %w", region, err)
+	}
+
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		return fmt.Errorf("error sweeping Lightsail Distributions for %s: %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepDomains(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("Error getting client: %s", err)
+	}
+	conn := client.LightsailClient(ctx)
+
+	input := &lightsail.GetDomainsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = getDomainsPages(ctx, conn, input, func(page *lightsail.GetDomainsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Domains {
+			r := ResourceDomain()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.Name))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+
+	})
+
+	if awsv2.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Lightsail Domain sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("retrieving Lightsail Domain (%s): %w", region, err)
+	}
+
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		return fmt.Errorf("error sweeping Lightsail Domain for %s: %w", region, err)
 	}
 
 	return nil
