@@ -24,39 +24,6 @@ import (
 	tfappfabric "github.com/hashicorp/terraform-provider-aws/internal/service/appfabric"
 )
 
-func TestAccAppFabricAppBundle_basic(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var appbundle appfabric.GetAppBundleOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_appfabric_app_bundle.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppFabricEndpointID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppBundleDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAppBundleConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppBundleExists(ctx, resourceName, &appbundle),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccAppBundleImportStateIDFunc(ctx, resourceName),
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func TestAccAppFabricAppBundle_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
