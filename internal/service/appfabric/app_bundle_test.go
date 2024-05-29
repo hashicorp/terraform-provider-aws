@@ -144,7 +144,6 @@ resource "aws_appfabric_app_bundle" "test" {
 `)
 }
 
-// env varaible for CMK?
 func testAccAppBundleConfig_full(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_appfabric_app_bundle" "test" {
