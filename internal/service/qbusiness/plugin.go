@@ -73,7 +73,7 @@ func authConfigurationSchema(ctx context.Context, conflictsWith string) schema.L
 		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"role_arn": schema.StringAttribute{
+				names.AttrRoleARN: schema.StringAttribute{
 					CustomType:  fwtypes.ARNType,
 					Description: "ARN of an IAM role used by Amazon Q to access the basic authentication credentials stored in a Secrets Manager secret.",
 					Required:    true,
@@ -93,7 +93,7 @@ func (r *resourcePlugin) Schema(ctx context.Context, req resource.SchemaRequest,
 		Attributes: map[string]schema.Attribute{
 			names.AttrID:  framework.IDAttribute(),
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			"application_id": schema.StringAttribute{
+			names.AttrApplicationID: schema.StringAttribute{
 				Description: "Identifier of the Amazon Q application associated with the plugin.",
 				Required:    true,
 				PlanModifiers: []planmodifier.String{
@@ -190,7 +190,7 @@ func (r *resourcePlugin) Schema(ctx context.Context, req resource.SchemaRequest,
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"bucket": schema.StringAttribute{
+									names.AttrBucket: schema.StringAttribute{
 										Description: "The name of the S3 bucket where the OpenAPI schema is stored.",
 										Required:    true,
 										Validators: []validator.String{
@@ -198,7 +198,7 @@ func (r *resourcePlugin) Schema(ctx context.Context, req resource.SchemaRequest,
 											stringvalidator.RegexMatches(regexache.MustCompile(`^[a-z0-9][\.\-a-z0-9]{1,61}[a-z0-9]$`), "must be a valid bucket name"),
 										},
 									},
-									"key": schema.StringAttribute{
+									names.AttrKey: schema.StringAttribute{
 										Description: "The key of the OpenAPI schema object in the S3 bucket.",
 										Required:    true,
 										Validators: []validator.String{
@@ -538,8 +538,8 @@ const (
 	pluginResourceIDPartCount = 2
 )
 
-func (data *resourcePluginData) setID() {
-	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{data.ApplicationId.ValueString(), data.PluginId.ValueString()}, pluginResourceIDPartCount, false)))
+func (r *resourcePluginData) setID() {
+	r.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{r.ApplicationId.ValueString(), r.PluginId.ValueString()}, pluginResourceIDPartCount, false)))
 }
 
 func FindPluginByID(ctx context.Context, conn *qbusiness.Client, id string) (*qbusiness.GetPluginOutput, error) {

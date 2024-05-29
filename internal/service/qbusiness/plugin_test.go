@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfqbusiness "github.com/hashicorp/terraform-provider-aws/internal/service/qbusiness"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccQBusinessPlugin_basic(t *testing.T) {
@@ -34,8 +35,8 @@ func TestAccQBusinessPlugin_basic(t *testing.T) {
 				Config: testAccPluginConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPluginExists(ctx, resourceName, &plugin),
-					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrApplicationID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "plugin_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "basic_auth_configuration.0.role_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "basic_auth_configuration.0.secret_arn"),
@@ -87,12 +88,12 @@ func TestAccQBusinessPlugin_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckPluginDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPluginConfig_tags(rName, "key1", "value1", "key2", "value2"),
+				Config: testAccPluginConfig_tags(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPluginExists(ctx, resourceName, &plugin),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
@@ -104,9 +105,9 @@ func TestAccQBusinessPlugin_tags(t *testing.T) {
 				Config: testAccPluginConfig_tags(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPluginExists(ctx, resourceName, &plugin),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -129,16 +130,16 @@ func TestAccQBusinessPlugin_customPlugin(t *testing.T) {
 				Config: testAccPluginConfig_customPlugin(rName, "ENABLED"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPluginExists(ctx, resourceName, &plugin),
-					resource.TestCheckResourceAttr(resourceName, "no_auth_configuration.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
-					resource.TestCheckResourceAttr(resourceName, "type", "CUSTOM"),
+					resource.TestCheckResourceAttr(resourceName, "no_auth_configuration.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "CUSTOM"),
 				),
 			},
 			{
 				Config: testAccPluginConfig_customPlugin(rName, "DISABLED"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPluginExists(ctx, resourceName, &plugin),
-					resource.TestCheckResourceAttr(resourceName, "state", "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "DISABLED"),
 				),
 			},
 		},
@@ -225,13 +226,13 @@ resource "aws_qbusiness_app" "test" {
 resource "aws_qbusiness_plugin" "test" {
   application_id = aws_qbusiness_app.test.id
   basic_auth_configuration {
-    role_arn = aws_iam_role.test.arn
+    role_arn   = aws_iam_role.test.arn
     secret_arn = aws_secretsmanager_secret.test.arn
   }
-  display_name   = %[1]q
-  server_url     = "https://yourinstance.service-now.com"
-  state          = "ENABLED"
-  type           = "SERVICE_NOW"
+  display_name = %[1]q
+  server_url   = "https://yourinstance.service-now.com"
+  state        = "ENABLED"
+  type         = "SERVICE_NOW"
 }
 
 variable "credentials" {
@@ -252,17 +253,16 @@ resource "aws_secretsmanager_secret_version" "test" {
 }
 
 resource "aws_iam_policy" "test" {
-policy = jsonencode({
-  Version    = "2012-10-17" 
-  Statement  = [
-
-	{
-      Action   = ["secretsmanager:GetSecretValue",]
-      Effect   = "Allow"
-      Resource = aws_secretsmanager_secret.test.arn
-    }
-	
-  ] 
+  policy = jsonencode(
+    {
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Action   = ["secretsmanager:GetSecretValue"]
+          Effect   = "Allow"
+          Resource = aws_secretsmanager_secret.test.arn
+        }
+      ]
   })
 }
 
@@ -310,13 +310,13 @@ resource "aws_qbusiness_app" "test" {
 resource "aws_qbusiness_plugin" "test" {
   application_id = aws_qbusiness_app.test.id
   basic_auth_configuration {
-    role_arn = aws_iam_role.test.arn
+    role_arn   = aws_iam_role.test.arn
     secret_arn = aws_secretsmanager_secret.test.arn
   }
-  display_name   = %[1]q
-  server_url     = "https://yourinstance.service-now.com"
-  state          = "ENABLED"
-  type           = "SERVICE_NOW"
+  display_name = %[1]q
+  server_url   = "https://yourinstance.service-now.com"
+  state        = "ENABLED"
+  type         = "SERVICE_NOW"
 
   tags = {
     %[2]q = %[3]q
@@ -325,34 +325,33 @@ resource "aws_qbusiness_plugin" "test" {
 }
 
 variable "credentials" {
-	default = {
-	  username = "username"
-	  password = "password"
-	}
-	type = map(string)
+  default = {
+    username = "username"
+    password = "password"
   }
-  
-  resource "aws_secretsmanager_secret" "test" {
-	name = %[1]q
-  }
-  
-  resource "aws_secretsmanager_secret_version" "test" {
-	secret_id     = aws_secretsmanager_secret.test.id
-	secret_string = jsonencode(var.credentials)
-  }
+  type = map(string)
+}
+
+resource "aws_secretsmanager_secret" "test" {
+  name = %[1]q
+}
+
+resource "aws_secretsmanager_secret_version" "test" {
+  secret_id     = aws_secretsmanager_secret.test.id
+  secret_string = jsonencode(var.credentials)
+}
 
 resource "aws_iam_policy" "test" {
-policy = jsonencode({
-  Version    = "2012-10-17" 
-  Statement  = [
-
-	{
-      Action   = ["secretsmanager:GetSecretValue",]
-      Effect   = "Allow"
-      Resource = aws_secretsmanager_secret.test.arn
-    }
-
-  ] 
+  policy = jsonencode(
+    {
+      Version = "2012-10-17"
+      Statement = [
+        {
+          Action   = ["secretsmanager:GetSecretValue"]
+          Effect   = "Allow"
+          Resource = aws_secretsmanager_secret.test.arn
+        }
+      ]
   })
 }
 
