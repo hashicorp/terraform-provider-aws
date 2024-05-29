@@ -76,13 +76,9 @@ func tagsUpdateFunc(ctx context.Context, d schemaResourceData, sp conns.ServiceP
 	// If the service package has a generic resource update tags methods, call it.
 	var err error
 
-	if v, ok := sp.(interface {
-		UpdateTags(context.Context, any, string, any, any) error
-	}); ok {
+	if v, ok := sp.(tftags.ServiceTagUpdater); ok {
 		err = v.UpdateTags(ctx, meta, identifier, oldTags, newTags)
-	} else if v, ok := sp.(interface {
-		UpdateTags(context.Context, any, string, string, any, any) error
-	}); ok && spt.ResourceType != "" {
+	} else if v, ok := sp.(tftags.ResourceTypeTagUpdater); ok && spt.ResourceType != "" {
 		err = v.UpdateTags(ctx, meta, identifier, spt.ResourceType, oldTags, newTags)
 	} else {
 		tflog.Warn(ctx, "No UpdateTags method found", map[string]interface{}{
