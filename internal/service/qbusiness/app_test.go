@@ -89,21 +89,21 @@ func TestAccQBusinessApp_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckAppDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppConfig_tags(rName, "key1", "value1", "key2", "value2"),
+				Config: testAccAppConfig_tags(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtTagsKey2),
 				),
 			},
 			{
-				Config: testAccAppConfig_tags(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccAppConfig_tags(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtTagsKey2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtTagsKey2),
 				),
 			},
 		},
@@ -126,7 +126,7 @@ func TestAccQBusinessApp_attachmentsConfiguration(t *testing.T) {
 				Config: testAccAppConfig_attachmentsConfiguration(rName, string(types.AttachmentsControlModeEnabled)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "attachments_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "attachments_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "attachments_configuration.0.attachments_control_mode", string(types.AttachmentsControlModeEnabled)),
 				),
 			},
@@ -134,7 +134,7 @@ func TestAccQBusinessApp_attachmentsConfiguration(t *testing.T) {
 				Config: testAccAppConfig_attachmentsConfiguration(rName, string(types.AttachmentsControlModeDisabled)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "attachments_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "attachments_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "attachments_configuration.0.attachments_control_mode", string(types.AttachmentsControlModeDisabled)),
 				),
 			},

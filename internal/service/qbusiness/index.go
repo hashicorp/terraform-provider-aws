@@ -68,7 +68,7 @@ func (r *resourceIndex) Schema(ctx context.Context, req resource.SchemaRequest, 
 			names.AttrARN:     framework.ARNAttributeComputedOnly(),
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
-			"application_id": schema.StringAttribute{
+			names.AttrApplicationID: schema.StringAttribute{
 				Description: "Identifier of the Amazon Q application associated with the index",
 				Required:    true,
 				PlanModifiers: []planmodifier.String{

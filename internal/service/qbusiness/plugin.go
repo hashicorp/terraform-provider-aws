@@ -479,7 +479,7 @@ func (r *resourcePluginData) expandPluginConfiguration(ctx context.Context) (*aw
 		return nil, d
 	}
 
-	schema, d := r.expandApiSchema(ctx, pluginConf)
+	schema, d := r.expandAPISchema(ctx, pluginConf)
 	if d.HasError() {
 		return nil, d
 	}
@@ -513,7 +513,7 @@ func (r *resourcePluginData) flattenPluginConfiguration(ctx context.Context, plu
 	r.PluginConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &pc)
 }
 
-func (r *resourcePluginData) expandApiSchema(ctx context.Context, pluginConf *customPluginConfigurationData) (awstypes.APISchema, diag.Diagnostics) {
+func (r *resourcePluginData) expandAPISchema(ctx context.Context, pluginConf *customPluginConfigurationData) (awstypes.APISchema, diag.Diagnostics) {
 	if !pluginConf.Payload.IsNull() {
 		return &awstypes.APISchemaMemberPayload{
 			Value: pluginConf.Payload.ValueString(),

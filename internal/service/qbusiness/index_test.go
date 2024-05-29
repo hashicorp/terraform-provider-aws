@@ -35,12 +35,12 @@ func TestAccQBusinessIndex_basic(t *testing.T) {
 				Config: testAccIndexConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIndexExists(ctx, resourceName, &index),
-					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrApplicationID),
 					resource.TestCheckResourceAttrSet(resourceName, "index_id"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Index name"),
-					resource.TestCheckResourceAttr(resourceName, "capacity_configuration.0.units", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_configuration.0.units", acctest.Ct1),
 				),
 			},
 			{
@@ -89,21 +89,21 @@ func TestAccQBusinessIndex_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckIndexDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIndexConfig_tags(rName, "key1", "value1", "key2", "value2"),
+				Config: testAccIndexConfig_tags(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIndexExists(ctx, resourceName, &index),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccIndexConfig_tags(rName, "key1", "value1new", "key2", "value2new"),
+				Config: testAccIndexConfig_tags(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, "value2updated"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIndexExists(ctx, resourceName, &index),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1new"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2new"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, "value2updated"),
 				),
 			},
 		},
@@ -128,7 +128,7 @@ func TestAccQBusinessIndex_documentAttributeConfigurations(t *testing.T) {
 				Config: testAccIndexConfig_documentAttributeConfigurations(rName, attr1, attr2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIndexExists(ctx, resourceName, &index),
-					resource.TestCheckResourceAttr(resourceName, "document_attribute_configuration.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "document_attribute_configuration.#", acctest.Ct2),
 				),
 			},
 			{

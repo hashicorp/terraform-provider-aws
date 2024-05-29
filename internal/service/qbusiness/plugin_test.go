@@ -102,12 +102,12 @@ func TestAccQBusinessPlugin_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccPluginConfig_tags(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccPluginConfig_tags(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, "value2updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPluginExists(ctx, resourceName, &plugin),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, "value2updated"),
 				),
 			},
 		},
