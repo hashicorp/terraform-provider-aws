@@ -225,7 +225,7 @@ func resourceLoadBalancerCertificateDelete(ctx context.Context, d *schema.Resour
 		LoadBalancerName: aws.String(lbName),
 	})
 
-	if err != nil && errs.IsA[*types.NotFoundException](err) {
+	if errs.IsA[*types.NotFoundException](err) {
 		return diags
 	}
 

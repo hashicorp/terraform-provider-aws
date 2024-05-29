@@ -212,7 +212,7 @@ func resourceKeyPairDelete(ctx context.Context, d *schema.ResourceData, meta int
 		KeyPairName: aws.String(d.Id()),
 	})
 
-	if err != nil && errs.IsA[*types.NotFoundException](err) {
+	if errs.IsA[*types.NotFoundException](err) {
 		return diags
 	}
 
