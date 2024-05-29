@@ -99,18 +99,6 @@ func testAccCheckAppBundleExists(ctx context.Context, name string, appbundle *ap
 	}
 }
 
-func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppFabricClient(ctx)
-	input := &appfabric.ListAppBundlesInput{}
-	_, err := conn.ListAppBundles(ctx, input)
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
-
 func testAccCheckAppBundleNotRecreated(before, after *appfabric.GetAppBundleOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if before, after := aws.ToString(before.AppBundle.Arn), aws.ToString(after.AppBundle.Arn); before != after {
