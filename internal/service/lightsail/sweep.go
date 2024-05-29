@@ -120,7 +120,6 @@ func sweepDatabases(region string) error {
 		}
 
 		return !lastPage
-
 	})
 
 	if awsv2.SkipSweepError(err) {
@@ -164,7 +163,6 @@ func sweepDisks(region string) error {
 		}
 
 		return !lastPage
-
 	})
 
 	if awsv2.SkipSweepError(err) {
@@ -208,7 +206,6 @@ func sweepDistributions(region string) error {
 		}
 
 		return !lastPage
-
 	})
 
 	if awsv2.SkipSweepError(err) {
@@ -252,7 +249,6 @@ func sweepDomains(region string) error {
 		}
 
 		return !lastPage
-
 	})
 
 	if awsv2.SkipSweepError(err) {
@@ -345,7 +341,6 @@ func sweepLoadBalancers(region string) error {
 		}
 
 		return !lastPage
-
 	})
 
 	if awsv2.SkipSweepError(err) {
