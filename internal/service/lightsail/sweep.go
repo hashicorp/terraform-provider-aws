@@ -21,9 +21,24 @@ func RegisterSweepers() {
 		F:    sweepContainerServices,
 	})
 
+	resource.AddTestSweepers("aws_lightsail_database", &resource.Sweeper{
+		Name: "aws_lightsail_database",
+		F:    sweepDatabases,
+	})
+
+	resource.AddTestSweepers("aws_lightsail_disk", &resource.Sweeper{
+		Name: "aws_lightsail_disk",
+		F:    sweepDisks,
+	})
+
 	resource.AddTestSweepers("aws_lightsail_instance", &resource.Sweeper{
 		Name: "aws_lightsail_instance",
 		F:    sweepInstances,
+	})
+
+	resource.AddTestSweepers("aws_lightsail_lb", &resource.Sweeper{
+		Name: "aws_lightsail_lb",
+		F:    sweepLoadBalancers,
 	})
 
 	resource.AddTestSweepers("aws_lightsail_static_ip", &resource.Sweeper{
@@ -64,6 +79,95 @@ func sweepContainerServices(region string) error {
 
 	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		return fmt.Errorf("error sweeping Lightsail Container Services for %s: %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepDatabases(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("Error getting client: %s", err)
+	}
+	conn := client.LightsailClient(ctx)
+
+	input := &lightsail.GetRelationalDatabasesInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = getRelationalDatabasesPages(ctx, conn, input, func(page *lightsail.GetRelationalDatabasesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.RelationalDatabases {
+			r := ResourceDatabase()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.Name))
+			d.Set("skip_final_snapshot", true)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+
+	})
+
+	if awsv2.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Lightsail Databases sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("retrieving Lightsail Databases (%s): %w", region, err)
+	}
+
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		return fmt.Errorf("error sweeping Lightsail Databases for %s: %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepDisks(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("Error getting client: %s", err)
+	}
+	conn := client.LightsailClient(ctx)
+
+	input := &lightsail.GetDisksInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = getDisksPages(ctx, conn, input, func(page *lightsail.GetDisksOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Disks {
+			r := ResourceDisk()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.Name))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+
+	})
+
+	if awsv2.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Lightsail Disks sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("retrieving Lightsail Disks (%s): %w", region, err)
+	}
+
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		return fmt.Errorf("error sweeping Lightsail Disks for %s: %w", region, err)
 	}
 
 	return nil
@@ -116,6 +220,50 @@ func sweepInstances(region string) error {
 	}
 
 	return sweeperErrs.ErrorOrNil()
+}
+
+func sweepLoadBalancers(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("Error getting client: %s", err)
+	}
+	conn := client.LightsailClient(ctx)
+
+	input := &lightsail.GetLoadBalancersInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = getLoadBalancersPages(ctx, conn, input, func(page *lightsail.GetLoadBalancersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.LoadBalancers {
+			r := ResourceLoadBalancer()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.Name))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+
+	})
+
+	if awsv2.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Lightsail Load Balanders sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("retrieving Lightsail Load Balanders (%s): %w", region, err)
+	}
+
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		return fmt.Errorf("error sweeping Lightsail Load Balanders for %s: %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepStaticIPs(region string) error {
