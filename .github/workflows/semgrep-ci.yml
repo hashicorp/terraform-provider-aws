@@ -11,6 +11,12 @@ on:
       - .semgrep*yml
       - .github/workflows/semgrep-ci.yml
 
+## NOTE: !!!
+## When changing these workflows, ensure that the following is updated:
+##   - Documentation: docs/continuous-integration.md
+##   - Documentation: docs/makefile-cheat-sheet.md
+##   - Makefile: ./GNUmakefile
+
 env:
   SEMGREP_SEND_METRICS: "off"
   SEMGREP_ENABLE_VERSION_CHECK: false
