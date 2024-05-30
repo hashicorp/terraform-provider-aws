@@ -213,7 +213,6 @@ func (r *resourceDatasource) Metadata(_ context.Context, request resource.Metada
 }
 
 func (r *resourceDatasource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID:  framework.IDAttribute(),
@@ -545,11 +544,11 @@ type resourceVPCConfigurationData struct {
 	SubnetIds        fwtypes.SetValueOf[types.String] `tfsdk:"subnet_ids"`
 }
 
-func (data *resourceDatasourceData) expandConfiguration() (document.Interface, diag.Diagnostics) {
+func (r *resourceDatasourceData) expandConfiguration() (document.Interface, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	var c map[string]interface{}
-	err := json.Unmarshal([]byte(data.Configuration.ValueString()), &c)
+	err := json.Unmarshal([]byte(r.Configuration.ValueString()), &c)
 
 	if err != nil {
 		diags.AddError("failed to unmarshal configuration", err.Error())
@@ -558,25 +557,25 @@ func (data *resourceDatasourceData) expandConfiguration() (document.Interface, d
 	return document.NewLazyDocument(c), nil
 }
 
-func (data *resourceDatasourceData) flattenFromGetDataSourceOutput(ctx context.Context, out *qbusiness.GetDataSourceOutput) diag.Diagnostics {
-	data.ApplicationId = fwflex.StringValueToFramework(ctx, aws.ToString(out.ApplicationId))
-	data.DatasourceArn = fwflex.StringValueToFramework(ctx, aws.ToString(out.DataSourceArn))
-	data.DatasourceId = fwflex.StringValueToFramework(ctx, aws.ToString(out.DataSourceId))
-	data.Description = fwflex.StringValueToFramework(ctx, aws.ToString(out.Description))
-	data.DisplayName = fwflex.StringValueToFramework(ctx, aws.ToString(out.DisplayName))
-	data.IndexId = fwflex.StringValueToFramework(ctx, aws.ToString(out.IndexId))
+func (r *resourceDatasourceData) flattenFromGetDataSourceOutput(ctx context.Context, out *qbusiness.GetDataSourceOutput) diag.Diagnostics {
+	r.ApplicationId = fwflex.StringValueToFramework(ctx, aws.ToString(out.ApplicationId))
+	r.DatasourceArn = fwflex.StringValueToFramework(ctx, aws.ToString(out.DataSourceArn))
+	r.DatasourceId = fwflex.StringValueToFramework(ctx, aws.ToString(out.DataSourceId))
+	r.Description = fwflex.StringValueToFramework(ctx, aws.ToString(out.Description))
+	r.DisplayName = fwflex.StringValueToFramework(ctx, aws.ToString(out.DisplayName))
+	r.IndexId = fwflex.StringValueToFramework(ctx, aws.ToString(out.IndexId))
 	if len(aws.ToString(out.RoleArn)) > 0 {
-		data.RoleArn = fwflex.StringToFrameworkARN(ctx, out.RoleArn)
+		r.RoleArn = fwflex.StringToFrameworkARN(ctx, out.RoleArn)
 	}
-	data.SyncSchedule = fwflex.StringValueToFramework(ctx, aws.ToString(out.SyncSchedule))
+	r.SyncSchedule = fwflex.StringValueToFramework(ctx, aws.ToString(out.SyncSchedule))
 
-	if d := data.flattenConfiguration(out.Configuration); d.HasError() {
+	if d := r.flattenConfiguration(out.Configuration); d.HasError() {
 		return d
 	}
-	if d := data.flattenDocumentEnrichmentConfiguration(ctx, out.DocumentEnrichmentConfiguration); d.HasError() {
+	if d := r.flattenDocumentEnrichmentConfiguration(ctx, out.DocumentEnrichmentConfiguration); d.HasError() {
 		return d
 	}
-	data.setID()
+	r.setID()
 	return nil
 }
 
@@ -654,7 +653,7 @@ func flattenHookConfiguration(ctx context.Context, conf *awstypes.HookConfigurat
 	return &hc, diags
 }
 
-func (data *resourceDatasourceData) flattenDocumentEnrichmentConfiguration(ctx context.Context, conf *awstypes.DocumentEnrichmentConfiguration) diag.Diagnostics {
+func (r *resourceDatasourceData) flattenDocumentEnrichmentConfiguration(ctx context.Context, conf *awstypes.DocumentEnrichmentConfiguration) diag.Diagnostics {
 	var dec resourceDocumentEnrichmentConfigurationData
 	var diags diag.Diagnostics
 
@@ -695,7 +694,7 @@ func (data *resourceDatasourceData) flattenDocumentEnrichmentConfiguration(ctx c
 	}
 
 	if dec.InlineConfigurations.IsNull() && dec.PreExreactionHookConfiguration.IsNull() && dec.PostExtractionHookConfiguration.IsNull() {
-		data.DocumentEnrichmentConfiguration = fwtypes.NewListNestedObjectValueOfNull[resourceDocumentEnrichmentConfigurationData](ctx)
+		r.DocumentEnrichmentConfiguration = fwtypes.NewListNestedObjectValueOfNull[resourceDocumentEnrichmentConfigurationData](ctx)
 		return nil
 	}
 
@@ -703,18 +702,18 @@ func (data *resourceDatasourceData) flattenDocumentEnrichmentConfiguration(ctx c
 	if d.HasError() {
 		return d
 	}
-	data.DocumentEnrichmentConfiguration = l
+	r.DocumentEnrichmentConfiguration = l
 	return nil
 }
 
-func (data *resourceDatasourceData) flattenConfiguration(conf document.Interface) diag.Diagnostics {
+func (r *resourceDatasourceData) flattenConfiguration(conf document.Interface) diag.Diagnostics {
 	var diags diag.Diagnostics
 	b, err := conf.MarshalSmithyDocument()
 	if err != nil {
 		diags.AddError("failed to marshal configuration", err.Error())
 		return diags
 	}
-	data.Configuration = types.StringValue(string(b))
+	r.Configuration = types.StringValue(string(b))
 	return diags
 }
 
@@ -980,11 +979,11 @@ const (
 	datasourceResourceIDPartCount = 3
 )
 
-func (data *resourceDatasourceData) setID() {
-	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{
-		data.ApplicationId.ValueString(),
-		data.IndexId.ValueString(),
-		data.DatasourceId.ValueString(),
+func (r *resourceDatasourceData) setID() {
+	r.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{
+		r.ApplicationId.ValueString(),
+		r.IndexId.ValueString(),
+		r.DatasourceId.ValueString(),
 	}, datasourceResourceIDPartCount, false)))
 }
 
