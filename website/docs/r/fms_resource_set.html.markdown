@@ -5,14 +5,7 @@ page_title: "AWS: aws_fms_resource_set"
 description: |-
   Terraform resource for managing an AWS FMS (Firewall Manager) Resource Set.
 ---
-<!---
-TIP: A few guiding principles for writing documentation:
-1. Use simple language while avoiding jargon and figures of speech.
-2. Focus on brevity and clarity to keep a reader's attention.
-3. Use active voice and present tense whenever you can.
-4. Document your feature as it exists now; do not mention the future or past if you can help it.
-5. Use accessible and inclusive language.
---->`
+
 # Resource: aws_fms_resource_set
 
 Terraform resource for managing an AWS FMS (Firewall Manager) Resource Set.
@@ -23,6 +16,13 @@ Terraform resource for managing an AWS FMS (Firewall Manager) Resource Set.
 
 ```terraform
 resource "aws_fms_resource_set" "example" {
+  resource_set {
+    name = %[1]q
+	resource_type_list {
+		"testing_key" = "testing_val"
+	}
+	resource_set_status = "ACTIVE"
+  }
 }
 ```
 
@@ -30,18 +30,22 @@ resource "aws_fms_resource_set" "example" {
 
 The following arguments are required:
 
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `resource_set` - (Required) Details about the resource set to be created or updated. See [`resource_set` Attribute Reference](#resource_set-Attribute-Reference) below.
 
-The following arguments are optional:
+### `resource_set` Attribute Reference
 
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `name` - (Required) Descriptive name of the resource set. You can't change the name of a resource set after you create it.
+* `resource_type_list` - (Required) Determines the resources that can be associated to the resource set. Depending on your setting for max results and the number of resource sets, a single call might not return the full list.
+* `description` - (Optional) Description of the resource set.
+* `last_update_time` - (Optional) Last time that the reosurce set was changed.
+* `resource_set_status` - (Optional) Indicates whether the resource set is in or out of the admin's Region scope. Valid values are `ACTIVE` (Admin can manage and delete the resource set) or `OUT_OF_ADMIN_SCOPE` (Admin can view the resource set, but theyy can't edit or delete the resource set.)
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Resource Set. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `arn` - ARN of the Resource Set.
+* `id` - Unique identifier for the resource set. It's returned in the responses to create and list commands. You provide it to operations like update and delete.
 
 ## Timeouts
 
