@@ -249,6 +249,22 @@ func main() {
 		}
 	}
 
+	filename := "tags_gen_test.go"
+
+	d := g.NewGoFileDestination(filename)
+	templates, err := template.New("taggingtests").Parse(tagsCheckTmpl)
+	if err != nil {
+		g.Fatalf("parsing base Go test template: %w", err)
+	}
+
+	if err := d.WriteTemplateSet(templates, struct{ ProviderPackage string }{servicePackage}); err != nil {
+		g.Fatalf("error generating %q service package data: %s", servicePackage, err)
+	}
+
+	if err := d.Write(); err != nil {
+		g.Fatalf("generating file (%s): %s", filename, err)
+	}
+
 	if failed {
 		os.Exit(1)
 	}
@@ -380,6 +396,9 @@ var dataSourceTestGoTmpl string
 
 //go:embed test.tf.gtpl
 var testTfTmpl string
+
+//go:embed tags_check.go.gtpl
+var tagsCheckTmpl string
 
 // Annotation processing.
 var (
