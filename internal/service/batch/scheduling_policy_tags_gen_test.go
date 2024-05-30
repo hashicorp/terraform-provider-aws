@@ -964,7 +964,7 @@ func TestAccBatchSchedulingPolicy_tags_DefaultTags_nonOverlapping(t *testing.T) 
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtProviderKey1: config.StringVariable("providervalue1updated"),
+						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1Updated),
 					}),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1Updated),
@@ -980,7 +980,7 @@ func TestAccBatchSchedulingPolicy_tags_DefaultTags_nonOverlapping(t *testing.T) 
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
-						acctest.CtProviderKey1: knownvalue.StringExact("providervalue1updated"),
+						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1Updated),
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
@@ -993,7 +993,7 @@ func TestAccBatchSchedulingPolicy_tags_DefaultTags_nonOverlapping(t *testing.T) 
 							acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 						})),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
-							acctest.CtProviderKey1: knownvalue.StringExact("providervalue1updated"),
+							acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1Updated),
 							acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
 							acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 						})),
@@ -1006,7 +1006,7 @@ func TestAccBatchSchedulingPolicy_tags_DefaultTags_nonOverlapping(t *testing.T) 
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
-						acctest.CtProviderKey1: config.StringVariable("providervalue1updated"),
+						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1Updated),
 					}),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1Updated),
@@ -1894,7 +1894,7 @@ func TestAccBatchSchedulingPolicy_tags_ComputedTag_OnUpdate_Replace(t *testing.T
 	})
 }
 
-func TestAccBatchSchedulingPolicy_tags_IgnoreTags_OnCreate_DefaultTag(t *testing.T) {
+func TestAccBatchSchedulingPolicy_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.SchedulingPolicyDetail
 	resourceName := "aws_batch_scheduling_policy.test"
@@ -1905,6 +1905,7 @@ func TestAccBatchSchedulingPolicy_tags_IgnoreTags_OnCreate_DefaultTag(t *testing
 		ErrorCheck:   acctest.ErrorCheck(t, names.BatchServiceID),
 		CheckDestroy: testAccCheckSchedulingPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
+			// 1: Create
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/SchedulingPolicy/tags_ignore/"),
@@ -1931,7 +1932,7 @@ func TestAccBatchSchedulingPolicy_tags_IgnoreTags_OnCreate_DefaultTag(t *testing
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
 					expectFullTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
-						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1),
+						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
 				},
@@ -1953,11 +1954,109 @@ func TestAccBatchSchedulingPolicy_tags_IgnoreTags_OnCreate_DefaultTag(t *testing
 					},
 				},
 			},
+			// 2: Update ignored tag only
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/SchedulingPolicy/tags_ignore/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1Updated),
+					}),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1),
+					}),
+					"ignore_tag_keys": config.SetVariable(
+						config.StringVariable(acctest.CtProviderKey1),
+					),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSchedulingPolicyExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
+					})),
+					expectFullTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
+						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
+						})),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			// 3: Update both tags
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/SchedulingPolicy/tags_ignore/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1Again),
+					}),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1Updated),
+					}),
+					"ignore_tag_keys": config.SetVariable(
+						config.StringVariable(acctest.CtProviderKey1),
+					),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSchedulingPolicyExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
+					})),
+					expectFullTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtProviderKey1: knownvalue.StringExact(acctest.CtProviderValue1), // TODO: Should not be set
+						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
+						})),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
 		},
 	})
 }
 
-func TestAccBatchSchedulingPolicy_tags_IgnoreTags_OnCreate_ResourceTag(t *testing.T) {
+func TestAccBatchSchedulingPolicy_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.SchedulingPolicyDetail
 	resourceName := "aws_batch_scheduling_policy.test"
@@ -1968,6 +2067,7 @@ func TestAccBatchSchedulingPolicy_tags_IgnoreTags_OnCreate_ResourceTag(t *testin
 		ErrorCheck:   acctest.ErrorCheck(t, names.BatchServiceID),
 		CheckDestroy: testAccCheckSchedulingPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
+			// 1: Create
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/SchedulingPolicy/tags_ignore/"),
@@ -1991,8 +2091,8 @@ func TestAccBatchSchedulingPolicy_tags_IgnoreTags_OnCreate_ResourceTag(t *testin
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
-					expectAllTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
-						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
+					expectFullTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
 						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
 					})),
 				},
@@ -2025,6 +2125,132 @@ func TestAccBatchSchedulingPolicy_tags_IgnoreTags_OnCreate_ResourceTag(t *testin
 						})),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
 							acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
+						})),
+					},
+				},
+				ExpectNonEmptyPlan: true,
+			},
+			// 2: Update ignored tag
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/SchedulingPolicy/tags_ignore/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1Updated),
+						acctest.CtResourceKey2: config.StringVariable(acctest.CtResourceValue2),
+					}),
+					"ignore_tag_keys": config.SetVariable(
+						config.StringVariable(acctest.CtResourceKey1),
+					),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSchedulingPolicyExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
+					})),
+					expectFullTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
+						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
+							acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
+						})),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
+							acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
+						})),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Updated),
+							acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2),
+						})),
+					},
+				},
+				ExpectNonEmptyPlan: true,
+			},
+			// 3: Update both tags
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/SchedulingPolicy/tags_ignore/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1Again),
+						acctest.CtResourceKey2: config.StringVariable(acctest.CtResourceValue2Updated),
+					}),
+					"ignore_tag_keys": config.SetVariable(
+						config.StringVariable(acctest.CtResourceKey1),
+					),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSchedulingPolicyExists(ctx, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2Updated),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2Updated),
+					})),
+					expectFullTags(resourceName, knownvalue.MapExact(map[string]knownvalue.Check{
+						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1), // TODO: Should not be set
+						acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2Updated),
+					})),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Again),
+							acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2Updated),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2Updated),
+						})),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Again),
+							acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2Updated),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2Updated),
+						})),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1Again),
+							acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2Updated),
+						})),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtResourceKey2: knownvalue.StringExact(acctest.CtResourceValue2Updated),
 						})),
 					},
 				},
