@@ -83,6 +83,59 @@ func TestAccFMSResourceSet_disappears(t *testing.T) {
 	})
 }
 
+func TestAccFMSResourceSet_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var resourceset fms.GetResourceSetOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_fms_resource_set.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.FMSEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceSetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceSetConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceSetExists(ctx, resourceName, &resourceset),
+					resource.TestCheckResourceAttr(resourceName, "resource_set.0.name", rName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccResourceSetConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExportExists(ctx, resourceName, &export),
+					resource.TestCheckResourceAttr(resourceName, "export.0.name", rName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccExportConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExportExists(ctx, resourceName, &export),
+					resource.TestCheckResourceAttr(resourceName, "export.0.name", rName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckResourceSetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).FMSClient(ctx)
@@ -150,11 +203,42 @@ func testAccResourceSetConfig_basic(rName string) string {
 resource "aws_fms_resource_set" "test" {
   resource_set {
     name = %[1]q
-	resource_type_list {
-		"testing_key" = "testing_val"
-	}
-	resource_set_status = "ACTIVE"
+    resource_type_list = ["testing"]
+    resource_set_status = "ACTIVE"
   }
 }
 `, rName)
+}
+
+func testAccResourceSetConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_fms_resource_set" "test" {
+  resource_set {
+    name = %[1]q
+    resource_type_list = ["testing"]
+    resource_set_status = "ACTIVE"
+  }
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccResourceSetConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_fms_resource_set" "test" {
+  resource_set {
+    name = %[1]q
+    resource_type_list = ["testing"]
+    resource_set_status = "ACTIVE"
+  }
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
