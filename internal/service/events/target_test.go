@@ -2700,7 +2700,7 @@ resource "aws_cloudwatch_event_target" "test" {
     input_paths = {
       input = "$.detail.input"
     }
-    
+
     input_template = <<EOF
       {
         "input": <input>
@@ -2714,7 +2714,7 @@ resource "aws_cloudwatch_event_target" "test" {
 }
 
 resource "aws_iam_role" "test" {
-  name = %[1]q
+  name               = %[1]q
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -2755,7 +2755,7 @@ EOF
 resource "aws_appsync_graphql_api" "test" {
   name                = %[1]q
   authentication_type = "AWS_IAM"
-  schema = <<EOF
+  schema              = <<EOF
     schema {
       mutation: Mutation
       query: Query

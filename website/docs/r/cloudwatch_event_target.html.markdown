@@ -497,8 +497,8 @@ data "aws_iam_policy_document" "appsync_mutation_role_trust" {
 
 data "aws_iam_policy_document" "appsync_mutation_role_policy_document" {
   statement {
-    actions   = ["appsync:GraphQL"]
-    effect    = "Allow"
+    actions = ["appsync:GraphQL"]
+    effect  = "Allow"
     resources = [
       aws_appsync_graphql_api.graphql-api.arn
     ]
