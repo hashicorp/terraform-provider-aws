@@ -18,14 +18,14 @@ resource "aws_qbusiness_datasource" "example" {
   index_id             = aws_qbusiness_index.test.index_id
   display_name         = "Datasource"
   iam_service_role_arn = aws_iam_role.test.arn
-  configuration        = jsonencode({
-    type                     = "S3"
-    connectionConfiguration  = {
+  configuration = jsonencode({
+    type = "S3"
+    connectionConfiguration = {
       repositoryEndpointMetadata = {
         BucketName = aws_s3_bucket.test.bucket
       }
     }
-    syncMode                 = "FULL_CRAWL"
+    syncMode = "FULL_CRAWL"
     repositoryConfigurations = {
       document = {
         fieldMappings = []
