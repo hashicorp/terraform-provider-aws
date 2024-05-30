@@ -28,6 +28,8 @@ Additionally, these tests provide rapid feedback to contributors, enabling them 
 
 The Makefile included with the Terraform AWS Provider allows you to run many of the CI tests locally before submitting your PR. The file is located in the provider's root directory and is called `GNUmakefile`. You should be able to use `make` with a variety of Linux-type shells that support `bash`, such as a MacOS terminal.
 
+**NOTE:** See the [Makefile cheat sheet](makefile-cheat-sheet.md) for detailed information about the Makefile.
+
 There are many different tests and they change often. This guide doesn't cover everything CI does because, as noted above, many of the CI processes enrich the pull request, such as adding labels. If you notice something important that isn't reflected in this documentation, let us know!
 
 **NOTE:** Many tests simply exit without error if passing. "No news is good news."
