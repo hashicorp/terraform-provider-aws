@@ -47,19 +47,15 @@ This resource supports the following arguments:
 * `iam_service_role_arn` - (Required) ARN of an IAM role with permission to access the data source and required resources.
 * `index_id` - (Required) Identifier of the index that you want to use with the data source connector.
 * `sync_schedule` - (Optional) Frequency for Amazon Q to check the documents in your data source repository and update your index. In `cron` format.
-* `vpc_configuration` - (Optional) Information for an VPC to connect to your data source.
+* `vpc_config` - (Optional) Information for an VPC to connect to your data source.
 
 `document_enrichment_configuration` supports the following:
 
-* `inline_configurations` - (Optional) Information to alter document attributes or metadata fields and content when ingesting documents into Amazon Q.
+* `inline_configuration` - (Optional) Information to alter document attributes or metadata fields and content when ingesting documents into Amazon Q.
 * `post_extraction_hook_configuration` - (Optional) Provides the configuration information for invoking a Lambda function in AWS Lambda to alter document metadata and content when ingesting documents into Amazon Q.
 * `pre_extraction_hook_configuration` - (Optional) Provides the configuration information for invoking a Lambda function in AWS Lambda to alter document metadata and content when ingesting documents into Amazon Q.
 
-`inline_configurations` supports the following:
-
-* `configuration` - (Required) Provides the configuration information for applying basic logic to alter document metadata and content when ingesting documents into Amazon Q. Maximum number of 100 items.
-
-`configuration` supports the following:
+`inline_configuration` supports the following:
 
 * `condition` - (Optional) The condition used for the target document attribute or metadata field when ingesting documents into Amazon Q. You use this with DocumentAttributeTarget to apply the condition.
 * `document_content_operator` - (Optional) `DELETE` to delete content if the condition used for the target attribute is met.
@@ -91,12 +87,17 @@ This resource supports the following arguments:
 * `role_arn` - (Optional) The Amazon Resource Name (ARN) of a role with permission to run `PreExtractionHookConfiguration` and `PostExtractionHookConfiguration` for altering document metadata and content during the document ingestion process.
 * `s3_bucket_name` - (Optional) Stores the original, raw documents or the structured, parsed documents before and after altering them.
 
-`post_extraction_hook_configuration` supports the following:
+`pre_extraction_hook_configuration` supports the following:
 
 * `invocation_condition` - (Optional) The condition used for when a Lambda function should be invoked. Type `condition`
 * `lambda_arn` - (Optional) ARN of a role with permission to run a Lambda function during ingestion.
 * `role_arn` - (Optional) The Amazon Resource Name (ARN) of a role with permission to run `PreExtractionHookConfiguration` and `PostExtractionHookConfiguration` for altering document metadata and content during the document ingestion process.
 * `s3_bucket_name` - (Optional) Stores the original, raw documents or the structured, parsed documents before and after altering them.
+
+`vpc_config` supports the following
+
+* `vpc_security_group_ids` - (Required) List of security group ids.
+* `subnet_ids` - (Required) List of subnet ids.
 
 ## Attribute Reference
 
