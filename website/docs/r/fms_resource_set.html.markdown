@@ -18,10 +18,9 @@ Terraform resource for managing an AWS FMS (Firewall Manager) Resource Set.
 resource "aws_fms_resource_set" "example" {
   resource_set {
     name = %[1]q
-	resource_type_list {
-		"testing_key" = "testing_val"
-	}
-	resource_set_status = "ACTIVE"
+    resource_type_list = ["testing]
+    "testing_key" = "testing_val"
+    resource_set_status = "ACTIVE"
   }
 }
 ```
