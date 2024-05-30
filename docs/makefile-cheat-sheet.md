@@ -1,6 +1,6 @@
 # Makefile Cheat Sheet
 
-The Terraform AWS Provider Makefile includes a lot of functionality to make working on the provider easier and more efficient. Many contributors are familiar with using the Makefile for running acceptance tests but there is a lot more functionality hidden in this humble file.
+The Terraform AWS Provider Makefile includes a lot of functionality to make working on the provider easier and more efficient. Many contributors are familiar with using the Makefile for running acceptance tests, but there is a lot more functionality hidden in this humble file.
 
 **NOTE:** See [Continuous Integration](continuous-integration.md) for more information about the CI-focused parts of the Makefile.
 
@@ -10,11 +10,11 @@ If you're new to our Makefile, this section will bring you up to speed.
 
 ### Location
 
-The Makefile is located in the root of the provider repository and called [GNUmakefile](https://github.com/hashicorp/terraform-provider-aws/blob/main/GNUmakefile).
+The Makefile is located in the root of the provider repository and is called [GNUmakefile](https://github.com/hashicorp/terraform-provider-aws/blob/main/GNUmakefile).
 
 ### Phony Targets
 
-Historically Makefiles were used to help with the complexities of compiling and linking software projects, managing dependencies, and enabling creation of various _target_ files. `make` would create a "target" file as determined by the command line:
+Historically, Makefiles were used to help with the complexities of compiling and linking software projects, managing dependencies, and enabling the creation of various _target_ files. `make` would create a "target" file as determined by the command line:
 
 ```console
 % make <target>
@@ -32,17 +32,17 @@ make testacc TESTS=TestAccIAMRole_basic PKG=iam
 
 _Meta_ targets are `make` targets that only run other targets. They aggregate the functionality of other targets for convenience. In the [Cheat Sheet](#cheat-sheet), meta targets are marked with <sup>M</sup>.
 
-_Dependent_ targets also run other targets, but, in addition, have their own functionality. A dependent target generally runs the other targets first, before its own functionality. In the [Cheat Sheet](#cheat-sheet), dependent targets are marked with <sup>D</sup>.
+_Dependent_ targets also run other targets but, in addition, have their own functionality. A dependent target generally runs the other targets first before executing its own functionality. In the [Cheat Sheet](#cheat-sheet), dependent targets are marked with <sup>D</sup>.
 
 For example, in the cheat sheet, the `ci`, `clean`, and `misspell` targets are meta targets that only run other targets.
 
-On the other hand, we also have examples of dependent targets: `deps-check`, `gen-check`, and `semgrep-code-quality`.
+On the other hand, examples of dependent targets are `deps-check`, `gen-check`, and `semgrep-code-quality`.
 
 When you call a meta or dependent target and it runs other targets, those targets must complete successfully in order for the target you called to succeed.
 
 ## Variables
 
-In the [Cheat Sheet](#cheat-sheet), you see which variables affect which [targets](#phony-targets). This section describes the variables in more detail.
+In the [Cheat Sheet](#cheat-sheet), you can see which variables affect which [targets](#phony-targets). This section describes the variables in more detail.
 
 Variables are often defined before the `make` call on the same line, such as `MY_VAR=42 make my-target`. However, they can also be set on the same line _after_ the `make` call or in your environment, using, for example, `export MY_VAR=42`.
 
@@ -77,11 +77,13 @@ Variables are often defined before the `make` call on the same line, such as `MY
 
 ## Cheat Sheet
 
-* **Target** Use as a subcommand to `make`, such as `make gen`. [Meta and dependent targets](#meta-targets-and-dependent-targets) are marked with <sup>M</sup> and <sup>D</sup> respectively.
-* **Description** When CI related, this aligns with the name of the check as seen on GitHub.
-* **CI?** Whether the target is equivalent or largely equivalent to a check run on the GitHub repository for a pull request. See [continuous integration](continuous-integration.md) for more details.
-* **Legacy?** Whether the target is a legacy holdover. Use caution with a legacy target! It may not work, or may perform a check or fixes that do _not_ align with current practices. At a future date, this target should be removed, modernized, or verified to still have value.
-* **Vars** [Variables](#variables) that you can set when using the target, such as `MY_VAR=42 make my-target`. [Meta and dependent targets](#meta-targets-and-dependent-targets) run other targets that may not respect the same variables.
+* **Target**: Use as a subcommand to `make`, such as `make gen`. [Meta and dependent targets](#meta-targets-and-dependent-targets) are marked with <sup>M</sup> and <sup>D</sup>, respectively.
+* **Description**: When CI-related, this aligns with the name of the check as seen on GitHub.
+* **CI?**: Indicates whether the target is equivalent or largely equivalent to a check run on the GitHub repository for a pull request. See [continuous integration](continuous-integration.md) for more details.
+* **Legacy?**: Indicates whether the target is a legacy holdover. Use caution with a legacy target! It may not work, or it may perform checks or fixes that do _not_ align with current practices. In the future, this target should be removed, modernized, or verified to still have value.
+* **Vars**: [Variables](#variables) that you can set when using the target, such as `MY_VAR=42 make my-target`. [Meta and dependent targets](#meta-targets-and-dependent-targets) run other targets that may not respect the same variables.
+
+**TIP:** Makefile autocompletion works out of the box on Zsh (the default shell for Terminal on macOS) and Fish shells. For Bash, the `bash-completion` package, among others, provides Makefile autocompletion. Using autocompletion allows you, for example, to type `make ac`, press _tab_, and the shell autocompletes `make acctest-lint`.
 
 | Target | Description | CI? | Legacy? | Vars |
 | --- | --- | --- | --- | --- |
