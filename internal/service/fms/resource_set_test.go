@@ -116,18 +116,18 @@ func TestAccFMSResourceSet_tags(t *testing.T) {
 			{
 				Config: testAccResourceSetConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExportExists(ctx, resourceName, &export),
-					resource.TestCheckResourceAttr(resourceName, "export.0.name", rName),
+					testAccCheckResourceSetExists(ctx, resourceName, &resourceset),
+					resource.TestCheckResourceAttr(resourceName, "resource_set.0.name", rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccExportConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccResourceSetConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExportExists(ctx, resourceName, &export),
-					resource.TestCheckResourceAttr(resourceName, "export.0.name", rName),
+					testAccCheckResourceSetExists(ctx, resourceName, &resourceset),
+					resource.TestCheckResourceAttr(resourceName, "resource_set.0.name", rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
