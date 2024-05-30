@@ -18,8 +18,8 @@ TEST                         ?= ./...
 TEST_COUNT                   ?= 1
 
 # NOTE:
-#  - Keep targets in alphabetical order
-#  - For any changes, also update:
+# 1. Keep targets in alphabetical order
+# 2. For any changes, also update:
 #    - docs/makefile-cheat-sheet.md
 #    - docs/continuous-integration.md
 
