@@ -148,6 +148,63 @@ func waitRetrieverDeleted(ctx context.Context, conn *qbusiness.Client, retriever
 	return nil, err
 }
 
+func waitPluginCreated(ctx context.Context, conn *qbusiness.Client, plugin_id string, timeout time.Duration) (*qbusiness.GetPluginOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(types.PluginBuildStatusCreateInProgress),
+		Target:     enum.Slice(types.PluginBuildStatusReady),
+		Refresh:    statusPluginAvailability(ctx, conn, plugin_id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*qbusiness.GetPluginOutput); ok {
+		tfresource.SetLastError(err, errors.New(string(output.BuildStatus)))
+
+		return output, err
+	}
+	return nil, err
+}
+
+func waitPluginUpdated(ctx context.Context, conn *qbusiness.Client, plugin_id string, timeout time.Duration) (*qbusiness.GetPluginOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(types.PluginBuildStatusUpdateInProgress),
+		Target:     enum.Slice(types.PluginBuildStatusReady),
+		Refresh:    statusPluginAvailability(ctx, conn, plugin_id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*qbusiness.GetPluginOutput); ok {
+		tfresource.SetLastError(err, errors.New(string(output.BuildStatus)))
+
+		return output, err
+	}
+	return nil, err
+}
+
+func waitPluginDeleted(ctx context.Context, conn *qbusiness.Client, plugin_id string, timeout time.Duration) (*qbusiness.GetPluginOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(types.PluginBuildStatusDeleteInProgress),
+		Target:     []string{},
+		Refresh:    statusPluginAvailability(ctx, conn, plugin_id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*qbusiness.GetPluginOutput); ok {
+		tfresource.SetLastError(err, errors.New(string(output.BuildStatus)))
+
+		return output, err
+	}
+	return nil, err
+}
+
 func waitDatasourceCreated(ctx context.Context, conn *qbusiness.Client, datasource_id string, timeout time.Duration) (*qbusiness.GetDataSourceOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.DataSourceStatusCreating, types.DataSourceStatusPendingCreation),

@@ -8,4 +8,5 @@ var (
 	ResourceIndex       = newResourceIndex
 	ResourceRetriever   = newResourceRetriever
 	ResourceDatasource  = newResourceDatasource
+	ResourcePlugin      = newResourcePlugin
 )

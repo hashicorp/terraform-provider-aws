@@ -70,7 +70,7 @@ func (r *resourceRetriever) Schema(ctx context.Context, req resource.SchemaReque
 		Attributes: map[string]schema.Attribute{
 			names.AttrID:  framework.IDAttribute(),
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			"application_id": schema.StringAttribute{
+			names.AttrApplicationID: schema.StringAttribute{
 				Description: "Identifier of the Amazon Q application associated with the retriever",
 				Required:    true,
 				PlanModifiers: []planmodifier.String{
