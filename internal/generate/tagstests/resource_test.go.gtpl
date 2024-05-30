@@ -2499,7 +2499,7 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T
 						config.StringVariable(acctest.CtProviderKey1),
 					),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -2551,7 +2551,7 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T
 						config.StringVariable(acctest.CtProviderKey1),
 					),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -2700,7 +2700,7 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_ResourceTag(t *testing.
 						config.StringVariable(acctest.CtResourceKey1),
 					),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -2788,7 +2788,7 @@ func {{ template "testname" . }}_tags_IgnoreTags_Overlap_ResourceTag(t *testing.
 						config.StringVariable(acctest.CtResourceKey1),
 					),
 					{{ range $name, $value := .AdditionalTfVars -}}
-					"{{ $name }}": config.StringVariable({{ $value }}),
+					{{ $name }}: config.StringVariable({{ $value }}),
 					{{ end }}
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
