@@ -30,7 +30,7 @@ resource "aws_fms_resource_set" "example" {
 
 The following arguments are required:
 
-* `resource_set` - (Required) Details about the resource set to be created or updated. See [`resource_set` Attribute Reference](#resource_set-Attribute-Reference) below.
+* `resource_set` - (Required) Details about the resource set to be created or updated. See [`resource_set` Attribute Reference](#resource_set-attribute-reference) below.
 
 ### `resource_set` Attribute Reference
 
