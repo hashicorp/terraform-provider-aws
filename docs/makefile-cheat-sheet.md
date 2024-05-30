@@ -80,8 +80,8 @@ Variables are often defined before the `make` call on the same line, such as `MY
 * **Target** Use as a subcommand to `make`, such as `make gen`.
 * **Description** When CI related, this aligns with the name of the check as seen on GitHub.
 * **CI?** Whether the target is equivalent or largely equivalent to a check run on the GitHub repository for a pull request. See [continuous integration](continuous-integration.md) for more details.
-* **Legacy** Whether the target is a legacy holdover. Use caution with a legacy target! It may not work, or may perform a check or fixes that do _not_ align with current practices. At a future date, this target should be removed, modernized, or verified to still have value.
-* **Vars** [Variables](#variables) that you can set when calling `make`, such as `MY_VAR=42 make my-target`.
+* **Legacy?** Whether the target is a legacy holdover. Use caution with a legacy target! It may not work, or may perform a check or fixes that do _not_ align with current practices. At a future date, this target should be removed, modernized, or verified to still have value.
+* **Vars** [Variables](#variables) that you can set when using the target, such as `MY_VAR=42 make my-target`.
 
 | Target | Description | CI? | Legacy? | Vars |
 | --- | --- | --- | --- | --- |
